@@ -107,23 +107,6 @@ namespace {
       }
       return false;
    }
-
-   // Custom lambda struct, used as the slot handler for the Qt signal/slot connections we create 
-   // when routing Qt events into Lua.
-   template<typename... Args> struct _event_forwarding_lambda {
-      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {}
-
-      QWidget& widget;
-      const std::string event_name;
-      const std::string listener_name;
-
-      void operator()(Args... args) {
-         //
-         // Runs on the main thread.
-         //
-         dovahscript::core::subsystems::events::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), this->listener_name.c_str(), { QVariant::fromValue<Args>(args)... });
-      }
-   };
 }
 
 namespace dovahscript::core::subsystems {

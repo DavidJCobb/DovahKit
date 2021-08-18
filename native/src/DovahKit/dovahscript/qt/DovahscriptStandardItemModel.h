@@ -2,6 +2,7 @@
 #include "../../editor/scripting/ui/util/lua_item_model.h" // TODO: Move this to a different file
 
 class DovahscriptStandardItemModel : public ObservableStandardItemModel {
+   Q_OBJECT;
    protected:
       QList<QWidget*> _associated_widgets;
 

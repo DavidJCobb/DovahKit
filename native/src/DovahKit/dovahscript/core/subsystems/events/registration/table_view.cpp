@@ -2,8 +2,13 @@
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QVariant>
+#include "../../../../../ui/generic/ObservableStandardItemModel.h"
 #include "../../coordinator.h"
 #include "../../events.h"
+
+#include "../../../../wrappers/ui/table_view/cell.h"
+#include "../../../../wrappers/ui/table_view/col.h"
+#include "../../../../wrappers/ui/table_view/row.h"
 
 namespace dovahscript::impl::event_registration {
    /*static*/ result table_view::register_event(QObject& object, const char* event_name, const char* listener_name) {

@@ -1,1 +1,8 @@
 #pragma once
+#include "dds.h"
+#include "dds/collection_images.h"
+#include "dds/cubemap_face_list.h"
+#include "dds/image.h"
+#include "dds/image/collection_mipmaps.h"
+#include "raster.h"
+#include "unknown.h"

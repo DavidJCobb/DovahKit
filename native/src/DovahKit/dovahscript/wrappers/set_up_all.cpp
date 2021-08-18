@@ -43,7 +43,11 @@ namespace dovahscript {
          #pragma endregion
       #pragma endregion
       #pragma region Resources
-         // set_up_class_with_global_singleton<some_wrapper>(L);
+         set_up_class_with_global_singleton<resource::dds>(L);
+            define_wrapper_metatable<resource::dds_cubemap_face_list>(L);
+            define_wrapper_metatable<resource::dds_image_subresource>(L);
+         set_up_class_with_global_singleton<resource::raster>(L);
+         set_up_class_with_global_singleton<resource::unknown>(L);
       #pragma endregion
       #pragma region UI
       {

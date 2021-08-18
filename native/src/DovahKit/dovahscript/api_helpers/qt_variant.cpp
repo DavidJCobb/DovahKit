@@ -6,6 +6,9 @@
 #include "../wrappers/base.h"
 #include "../wrapper.h"
 
+#include "../core/subsystems/resources/DovahscriptResource.h"
+#include "../../editor/form_stub_meta_type.h"
+
 namespace dovahscript::api_helpers {
    extern QVariant pull_variant(lua_State* L, int stack_pos) {
       core::require_script_thread();
@@ -26,6 +29,8 @@ namespace dovahscript::api_helpers {
                return QVariant::fromValue<QObject*>((QObject*)w->pertinent_pointer);
             case wrapper_type::form:
                return QVariant::fromValue<dovah::form_stub*>(w->stub);
+            case wrapper_type::lua_managed_resource:
+               return QVariant::fromValue<DovahscriptResourceHandle>(w->managed_resource);
          }
          return QVariant();
       }

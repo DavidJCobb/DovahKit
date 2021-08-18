@@ -1,8 +1,10 @@
 #include "wrap_native_object.h"
+#include <QButtonGroup>
 #include "../ui/generic/CanvasWidget.h"
 #include "core/subsystems/coordinator.h"
 #include "core/subsystems/userdata.h"
 #include "core/subsystems/resources/DovahscriptResource.h"
+#include "qt/DovahscriptCanvasWidgetLayerData.h"
 
 #include "wrapper.h"
 
@@ -19,11 +21,6 @@ namespace dovahscript {
       out.managed_resource = &resource;
       out.type             = wrapper_type::lua_managed_resource;
       return out;
-   }
-
-   [[nodiscard]] extern wrapper wrap_native_object(DovahscriptResourceHandle resource) {
-      assert(resource.bare() != nullptr);
-      return wrap_native_object(resource.bare());
    }
 
    [[nodiscard]] extern wrapper wrap_native_object(QObject& object) {
@@ -45,7 +42,7 @@ namespace dovahscript {
          out.type          = wrapper_type::canvas_entity;
          return out;
       }
-      if (auto* casted = qobject_cast<LuaScriptableCanvasWidgetLayerData*>(&object)) {
+      if (auto* casted = qobject_cast<DovahscriptCanvasWidgetLayerData*>(&object)) {
          wrapper out;
          out.canvas_layer_data = casted;
          out.type              = wrapper_type::canvas_layer_data;
@@ -55,5 +52,6 @@ namespace dovahscript {
          return wrap_native_object(*casted);
       }
       assert(false && "unknown QObject type passed to push_native_object");
+      return wrapper();
    }
 }

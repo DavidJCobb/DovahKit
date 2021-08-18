@@ -1,6 +1,7 @@
 #include "DovahscriptResource.h"
-#include "../../../../DirectXTex/DirectXTex.h"
-#include "../../../helpers/intrusive_windows_defines.h"
+#include "../../../../../DirectXTex/DirectXTex.h"
+#include "../../../../helpers/intrusive_windows_defines.h"
+#include "../../../constants/qt_graphics.h"
 
 #include "../resources.h"
 #include "../../verify_threading.h"

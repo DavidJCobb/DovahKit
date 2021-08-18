@@ -603,7 +603,7 @@
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerData.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h" />
-    <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />

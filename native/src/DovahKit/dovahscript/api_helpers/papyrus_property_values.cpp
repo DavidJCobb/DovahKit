@@ -4,6 +4,8 @@
 #include "../wrappers/form/papyrus/property.h"
 #include "../wrappers/form/quest/alias.h"
 
+#include "../../dovah/forms/Quest.h"
+
 namespace dovahscript::api_helpers::papyrus {
    extern bool property_scalar_value_typecheck(lua_State* L, int stack_pos, papyrus_property_type pt) {
       pt = dovah::loaded_forms::components::papyrus::scalar_property_type_for(pt);

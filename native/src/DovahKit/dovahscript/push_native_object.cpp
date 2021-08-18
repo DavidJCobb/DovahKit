@@ -1,9 +1,11 @@
 #include "push_native_object.h"
 #include <array>
+#include <QButtonGroup>
 #include "../ui/generic/CanvasWidget.h"
 #include "core/subsystems/coordinator.h"
 #include "core/subsystems/userdata.h"
 #include "core/subsystems/resources/DovahscriptResource.h"
+#include "qt/DovahscriptCanvasWidgetLayerData.h"
 #include "../dovah/form_stub.h"
 
 #include "wrapper.h"
@@ -120,10 +122,6 @@ namespace dovahscript {
       return core::subsystems::userdata::get().push(L, out, metatable);
    }
 
-   extern int push_native_object(DovahscriptResourceHandle resource) {
-      return push_native_object(resource.bare());
-   }
-
    extern int push_native_object(QObject* object) {
       auto* L = core::subsystems::coordinator::get().lua_state;
       if (!object) {
@@ -173,5 +171,6 @@ namespace dovahscript {
          return push_native_object(casted);
       }
       assert(false && "unknown QObject type passed to push_native_object");
+      return 0;
    }
 }
