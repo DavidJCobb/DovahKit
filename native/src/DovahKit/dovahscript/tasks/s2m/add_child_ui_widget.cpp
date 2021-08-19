@@ -13,6 +13,10 @@ namespace dovahscript::tasks::s2m {
          this->error = error_code::child_has_a_forced_parent;
          return;
       }
+      if (auto* window = qobject_cast<QDialog*>(this->child)) {
+         this->error = error_code::child_is_a_window;
+         return;
+      }
       auto* prior_parent = this->child->parent();
       if (cobb::qt::object_is_or_contains(this->child, this->parent)) {
          this->error = error_code::would_be_cyclical;

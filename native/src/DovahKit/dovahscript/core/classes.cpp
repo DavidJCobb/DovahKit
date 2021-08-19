@@ -777,7 +777,7 @@ namespace dovahscript::classes {
                //
                lua_pushstring(L, "__classlist");
                lua_rawget(L, -2);
-               int  index_scl = lua_gettop(L);
+               int  index_scl = lua_gettop(L); // superclass list
                auto sc_len    = lua_rawlen(L, -1);
                for (decltype(sc_len) i = 1; i <= sc_len; ++i) {
                   lua_rawgeti(L, index_scl, i);
@@ -791,8 +791,7 @@ namespace dovahscript::classes {
                      lua_pushboolean(L, true);       // 
                      lua_rawset     (L, index_seen); // seen[scl[i]] = true
                   }
-                  lua_pushvalue(L, -1);
-                  lua_rawseti  (L, index_cl, ++flat_count);
+                  lua_rawseti(L, index_cl, ++flat_count);
                }
                lua_pop(L, 1);
                //

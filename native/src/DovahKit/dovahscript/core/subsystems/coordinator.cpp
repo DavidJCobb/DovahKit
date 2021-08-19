@@ -93,7 +93,8 @@ namespace dovahscript::core::subsystems {
    }
 
    void coordinator::_script_thread_loop() {
-      assert(this->worker_thread_state == coordinator::thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
+      assert(this->worker_thread_state == thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
+      this->script_thread = thread_type::worker;
       //
       // Run all outstanding script files:
       //
@@ -127,15 +128,18 @@ namespace dovahscript::core::subsystems {
       //
       // All script files are executed. Dip into the idle loop now:
       //
-      bool had_any_tasks;
+      bool ran_more_code;
       do {
+         this->_do_worker_thread_wait();
+         //
+         ran_more_code = false;
          this->task_queues.s2m.wait_until_empty();      // these can be non-blocking + fire-and-forget
          this->task_queues.ui.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
-         had_any_tasks |= (this->_run_queued_functions(false) > 0);
-         had_any_tasks |= (events::get().process_pending_events() > 0);
-         had_any_tasks |= (this->_run_queued_functions(true) > 0);
+         ran_more_code |= (this->_run_queued_functions(false) > 0);
+         ran_more_code |= (events::get().process_pending_events() > 0);
+         ran_more_code |= (this->_run_queued_functions(true) > 0);
          lifetime::get().worker_thread_handler();
-      } while (had_any_tasks || this->_should_keep_running());
+      } while (ran_more_code || this->_should_keep_running());
       //
       if constexpr (debug_script_start_stop) {
          qDebug("Script execution finished on the worker thread.");
@@ -162,6 +166,18 @@ namespace dovahscript::core::subsystems {
       return false;
    }
 
+   void coordinator::_do_worker_thread_wait() {
+      auto& counter = this->outstanding_client_thread_script_borrow_requests;
+      if (counter) {
+         assert(this->script_thread == thread_type::worker);
+         this->script_thread       = thread_type::client;
+         this->worker_thread_state = coordinator::thread_wait_state::waiting;
+         while (counter) {}
+         this->worker_thread_state = coordinator::thread_wait_state::running;
+         this->script_thread       = thread_type::worker;
+      }
+   }
+
    /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {
       auto& s = coordinator::get();
       if (s.script_thread == thread_type::worker) {
@@ -169,14 +185,7 @@ namespace dovahscript::core::subsystems {
          while (s.is_paused())
             if (s.is_aborted())
                break;
-         {
-            auto& counter = s.outstanding_client_thread_script_borrow_requests;
-            if (counter) {
-               s.worker_thread_state = coordinator::thread_wait_state::waiting;
-               while (counter) {}
-               s.worker_thread_state = coordinator::thread_wait_state::running;
-            }
-         }
+         s._do_worker_thread_wait();
       }
       if (s.is_aborted()) {
          lua_getfield(L, LUA_REGISTRYINDEX, coordinator::abort_sentinel_userdata);
@@ -257,9 +266,9 @@ namespace dovahscript::core::subsystems {
       //
       this->ui_lock_override = ui_lock_override_state::unchanged;
    }
-   void coordinator::_teardown_lua_state() {// can only safely run on the client thread, since it tears down Qt objects now too
+   void coordinator::_teardown_lua_state() { // can only safely run on the client thread, since it tears down Qt objects now too
       require_client_thread();
-      assert(this->worker_thread_state == coordinator::thread_wait_state::waiting);
+      assert(this->worker_thread_state == coordinator::thread_wait_state::finished);
       this->script_thread = thread_type::client;
       //
       this->in_teardown = true;
@@ -278,6 +287,10 @@ namespace dovahscript::core::subsystems {
       events::get().on_script_teardown();
       lifetime::get().on_script_teardown();
       resources::get().on_script_teardown();
+      //
+      if (this->worker_thread.joinable())
+         this->worker_thread.join();
+      this->worker_thread_state = thread_wait_state::running;
       //
       this->in_teardown = false;
    }

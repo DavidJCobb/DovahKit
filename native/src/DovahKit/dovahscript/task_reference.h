@@ -36,6 +36,10 @@ namespace dovahscript {
          task_reference(T* p) : ptr(p) { _inc(); }
          task_reference(const task_reference& other) : ptr(other.ptr) { _inc(); }
          task_reference(task_reference&& other) { *this = other; }
+         ~task_reference() {
+            _dec();
+            this->ptr = nullptr;
+         }
 
          task_reference& operator=(const task_reference& other) {
             _dec();

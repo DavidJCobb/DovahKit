@@ -42,7 +42,7 @@ namespace cobb {
          using mapped_type = T;
          static constexpr uint32_t element_size    = sizeof(T);
          static constexpr uint32_t count_per_block = count_per_block;
-         //
+         
       protected:
          struct block_t;
          struct block_info {
@@ -182,85 +182,90 @@ namespace cobb {
             #endif
          };
 
-         struct State {
-            std::vector<subheap*> subheaps; // nullptr not allowed
-            std::mutex subheapsLock;
-            block_t*   unowned     = nullptr;
-            std::mutex unownedLock;
-            //
-            void register_subheap(subheap& sub) noexcept {
-               std::lock_guard guard(this->subheapsLock);
-               for (auto*& s : this->subheaps) {
-                  if (!s->first) {
-                     delete s;
-                     s = &sub;
-                     return;
-                  }
-               }
-               this->subheaps.push_back(&sub);
-            }
-            void take_over_subheap(subheap& sub) noexcept {
-               assert(sub.first && "This subheap was already taken over. How did it get here again?");
-               std::lock_guard guard_1(this->subheapsLock);
-               auto* block = sub.first;
-               block->prune();
-               if (!block->has_any_slots_used()) {
-                  auto* n = block->info.next;
-                  delete block;
-                  sub.first = nullptr;
-                  block = n;
-                  if (!block)
-                     return;
-               }
-               std::lock_guard guard_2(this->unownedLock);
-               if (!this->unowned) {
-                  this->unowned = block;
-               } else {
-                  auto* appendTo = this->unowned->get_end();
-                  appendTo->info.next = block;
-                  block->info.prev = appendTo;
-               }
-               sub.first = nullptr;
-            }
-            void free(void* mem) noexcept {
-               {
+         class State {
+            public:
+               std::vector<subheap*> subheaps; // nullptr not allowed
+               std::mutex subheapsLock;
+               block_t*   unowned     = nullptr;
+               std::mutex unownedLock;
+               
+               void register_subheap(subheap& sub) noexcept {
                   std::lock_guard guard(this->subheapsLock);
-                  for (auto* s : this->subheaps) {
-                     auto* block = s->first;
-                     if (block && block->try_free(mem))
+                  for (auto*& s : this->subheaps) {
+                     if (!s->first) {
+                        delete s;
+                        s = &sub;
+                        return;
+                     }
+                  }
+                  this->subheaps.push_back(&sub);
+               }
+               void take_over_subheap(subheap& sub) noexcept {
+                  assert(sub.first && "This subheap was already taken over. How did it get here again?");
+                  std::lock_guard guard_1(this->subheapsLock);
+                  auto* block = sub.first;
+                  block->prune();
+                  if (!block->has_any_slots_used()) {
+                     auto* n = block->info.next;
+                     delete block;
+                     sub.first = nullptr;
+                     block = n;
+                     if (!block)
                         return;
                   }
+                  std::lock_guard guard_2(this->unownedLock);
+                  if (!this->unowned) {
+                     this->unowned = block;
+                  } else {
+                     auto* appendTo = this->unowned->get_end();
+                     appendTo->info.next = block;
+                     block->info.prev = appendTo;
+                  }
+                  sub.first = nullptr;
                }
-               {
-                  std::lock_guard guard(this->unownedLock);
-                  if (this->unowned && this->unowned->try_free(mem))
-                     return;
+               void free(void* mem) noexcept {
+                  {
+                     std::lock_guard guard(this->subheapsLock);
+                     for (auto* s : this->subheaps) {
+                        auto* block = s->first;
+                        if (block && block->try_free(mem))
+                           return;
+                     }
+                  }
+                  {
+                     std::lock_guard guard(this->unownedLock);
+                     if (this->unowned && this->unowned->try_free(mem))
+                        return;
+                  }
+                  assert(false && "This heap cannot free memory that it isn't responsible for.");
                }
-               assert(false && "This heap cannot free memory that it isn't responsible for.");
-            }
-            //
-            void force_destroy_all() noexcept { // probably risky; i wouldn't recommend calling this ever
-               std::lock_guard<std::mutex> guard(this->subheapsLock);
-               std::lock_guard<std::mutex> guard(this->unownedLock);
-               for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
-                  auto last = (*it)->first;
-                  if (last) {
-                     last->destroy_and_prune_list();
-                     //
-                     // Note: Don't destroy the subheap's first block; otherwise crashes will occur, as you delete the main thread's 
-                     // subheap out from under it.
+               
+               void force_destroy_all() noexcept { // probably risky; i wouldn't recommend calling this ever
+                  std::lock_guard<std::mutex> guard(this->subheapsLock);
+                  std::lock_guard<std::mutex> guard(this->unownedLock);
+                  for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
+                     auto last = (*it)->first;
+                     if (last) {
+                        last->destroy_and_prune_list();
+                        //
+                        // Note: Don't destroy the subheap's first block; otherwise crashes will occur, as you delete the main thread's 
+                        // subheap out from under it.
+                     }
+                  }
+                  if (this->unowned) {
+                     this->unowned->destroy_and_prune_list();
+                     delete this->unowned;
+                     this->unowned = nullptr;
                   }
                }
-               if (this->unowned) {
-                  this->unowned->destroy_and_prune_list();
-                  delete this->unowned;
-                  this->unowned = nullptr;
+
+               static State& get() {
+                  static State instance;
+                  return instance;
                }
-            }
          };
          static State& _get_state() {
-            static State instance;
-            return instance;
+            return State::get();
          }
 
          struct subheap_handle {
@@ -343,6 +348,7 @@ namespace cobb {
             multiheap::_get_state().force_destroy_all();
          }
    };
+
    template<typename T, uint32_t count_per_block> class multiheap_allocator {
       //
       // An interface to multiheap that meets the Allocator named requirement.

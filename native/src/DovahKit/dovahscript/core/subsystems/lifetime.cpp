@@ -42,6 +42,12 @@ namespace {
          || _DEBUG
       #endif
    ;
+
+   static constexpr bool debug_task_reference_state = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
    #pragma endregion
 
    const char* _debug_get_object_classname(const QObject* o) {
@@ -102,8 +108,17 @@ namespace dovahscript::core::subsystems {
                   auto& pair = *it;
                   auto* obj  = pair.first;
                   if (pair.second == 0) {
-                     if (!userdata_s.wrapper_exists_for(obj))
+                     bool is_lua_referenced = userdata_s.wrapper_exists_for(obj);
+                     if (!is_lua_referenced)
                         this->pending_lifetime_checks.queue_check(*obj);
+                     //
+                     if constexpr (debug_task_reference_state) {
+                        if (is_lua_referenced) {
+                           qDebug("Object %p (%s) recently became task-unreferenced but is Lua-referenced; no lifetime check needed.", obj, _debug_get_object_classname(obj));
+                        } else {
+                           qDebug("Object %p (%s) recently became task-unreferenced and is Lua-unreferenced; lifetime check queued for it.", obj, _debug_get_object_classname(obj));
+                        }
+                     }
                      //
                      // The return value of std::unordered_map::erase can be used to avoid 
                      // having iterator invalidation break a loop. However, you must be 
@@ -123,8 +138,17 @@ namespace dovahscript::core::subsystems {
                   auto& pair = *it;
                   auto* obj  = pair.first;
                   if (pair.second == 0) {
-                     if (!userdata_s.wrapper_exists_for(obj))
+                     bool is_lua_referenced = userdata_s.wrapper_exists_for(obj);
+                     if (!is_lua_referenced)
                         this->pending_lifetime_checks.queue_check(*obj);
+                     //
+                     if constexpr (debug_task_reference_state) {
+                        if (is_lua_referenced) {
+                           qDebug("Model observer %p recently became task-unreferenced but is Lua-referenced; no lifetime check needed.", obj);
+                        } else {
+                           qDebug("Model observer %p recently became task-unreferenced and is Lua-unreferenced; lifetime check queued for it.", obj);
+                        }
+                     }
                      //
                      // The return value of std::unordered_map::erase can be used to avoid 
                      // having iterator invalidation break a loop. However, you must be 
@@ -374,9 +398,10 @@ namespace dovahscript::core::subsystems {
       {
          auto guard = std::unique_lock(this->object_read_write_lock);
          if (target.isWidgetType()) {
-            _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
-            //
-            if (auto* window = qobject_cast<DovahscriptDialog*>(&target)) {
+            auto* window = qobject_cast<DovahscriptDialog*>(&target);
+            if (!window) {
+               _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
+            } else {
                auto& list = this->hierarchy_objects.windows;
                auto  i    = list.indexOf(window);
                if (i >= 0) {
@@ -476,27 +501,48 @@ namespace dovahscript::core::subsystems {
    void lifetime::add_task_reference(QObject* subject) {
       if (!subject)
          return;
+      if constexpr (debug_task_reference_state) {
+         qDebug("Object gained a task reference: %p (%s)", subject, _debug_get_object_classname(subject));
+      }
       auto& tro   = this->task_referenced_objects;
       auto  guard = std::lock_guard(tro.lock);
-      ++tro.objects[subject];
+      auto& count = tro.objects[subject];
+      ++count;
+      if constexpr (debug_task_reference_state) {
+         qDebug(" - Reference count: %d", count);
+      }
    }
    void lifetime::add_task_reference(model_observer_t* subject) {
       if (!subject)
          return;
+      if constexpr (debug_task_reference_state) {
+         qDebug("Model observer gained a task reference: %p (%s)", subject);
+      }
       auto& tro   = this->task_referenced_objects;
       auto  guard = std::lock_guard(tro.lock);
-      ++tro.model_observers[subject];
+      auto& count = tro.model_observers[subject];
+      ++count;
+      if constexpr (debug_task_reference_state) {
+         qDebug(" - Reference count: %d", count);
+      }
    }
 
    void lifetime::remove_task_reference(QObject* subject) {
       if (!subject)
          return;
+      if constexpr (debug_task_reference_state) {
+         qDebug("Object lost a task reference: %p (%s)", subject, _debug_get_object_classname(subject));
+      }
       auto& tro   = this->task_referenced_objects;
       auto  guard = std::lock_guard(tro.lock);
       auto& count = tro.objects[subject];
       assert(count);
+      --count;
+      if constexpr (debug_task_reference_state) {
+         qDebug(" - Remaining count: %d", count);
+      }
       if constexpr (notify_for_task_references) {
-         if (--count == 0) {
+         if (count == 0) {
             tro.objects.erase(subject);
             this->pending_lifetime_checks.queue_check(*subject);
          }
@@ -505,11 +551,17 @@ namespace dovahscript::core::subsystems {
    void lifetime::remove_task_reference(model_observer_t* subject) {
       if (!subject)
          return;
+      if constexpr (debug_task_reference_state) {
+         qDebug("Model observer lost a task reference: %p (%s)", subject);
+      }
       auto& tro   = this->task_referenced_objects;
       auto  guard = std::lock_guard(tro.lock);
       auto& count = tro.model_observers[subject];
       assert(count);
       --count;
+      if constexpr (debug_task_reference_state) {
+         qDebug(" - Remaining count: %d", count);
+      }
       if constexpr (notify_for_task_references) {
          if (count == 0) {
             tro.model_observers.erase(subject);

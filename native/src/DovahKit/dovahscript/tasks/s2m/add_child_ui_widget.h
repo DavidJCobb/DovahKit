@@ -13,6 +13,7 @@ namespace dovahscript::tasks::s2m {
             would_be_cyclical,
             unknown_layout_type,
             child_has_a_forced_parent,
+            child_is_a_window,
          };
 
          task_reference<QWidget> child  = nullptr;

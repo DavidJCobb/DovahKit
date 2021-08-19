@@ -57,6 +57,7 @@ namespace dovahscript::impl {
          hierarchy_crawler();
          ~hierarchy_crawler();
 
+         void initialize();
          void crawl_from(QObject&);
          void crawl_from(ObservableStandardItemModelObserver&);
          void finalize();

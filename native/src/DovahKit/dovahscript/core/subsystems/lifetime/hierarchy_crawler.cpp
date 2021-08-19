@@ -83,6 +83,9 @@ namespace dovahscript::impl {
       //
       this->stop_at = nullptr;
    }
+   void hierarchy_crawler::initialize() {
+      this->task_ref_checker.set_active_state(true);
+   }
    void hierarchy_crawler::crawl_from(QObject& basis) {
       this->stop_at = core::subsystems::coordinator::get().get_ui_parent();
 

@@ -7,19 +7,21 @@ for k,v in pairs(form_types) do
       total = total + 1
    end)
    --
-   local signature = string.char(
-      (v >> 0x18) & 0xFF,
-      (v >> 0x10) & 0xFF,
-      (v >> 0x08) & 0xFF,
-      v & 0xFF
-   )
-   types[signature] = count
+   types[v] = count
 end
 
-types["CELL"] = 590 -- interior cell count in Skyrim.esm; done manually until we have a cell wrapper and a func to check whether one is an exterior
+types[form_types.cell] = 590 -- interior cell count in Skyrim.esm; done manually until we have a cell wrapper and a func to check whether one is an exterior
 
-local refr = { "ACHR", "REFR" }
-local unconventional = { "INFO", "LAND", "NAVI", "NAVM" }
+local refr = {
+   form_types.actor,
+   form_types.reference,
+}
+local unconventional = {
+   form_types.topic_info,
+   form_types.land,
+   form_types.navmesh_info_map,
+   form_types.navmesh,
+}
 
 local common = total
 for _, v in ipairs(unconventional) do
@@ -42,7 +44,7 @@ dovah.log_message("Total: %d (%d common)", total, common)
 for k,v in pairs(types) do
    if not table.contains(refr, k) and not table.contains(unconventional, k) then
       if (v / common) > 0.01 then
-         dovah.log_message("%s: %d (%f%% of non-ref)", k, v, (v / common * 100))
+         dovah.log_message("%s: %d (%f%% of non-ref)", k.signature, v, (v / common * 100))
       end
    end
 end

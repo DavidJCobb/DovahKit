@@ -407,6 +407,7 @@ namespace dovahscript::lua_libraries {
          //
          lua_createtable(L, 0, _functions.size());
          cobb::lua::setfuncs(L, _functions);
+         lua_setglobal(L, "dovah");
       }
    }
 }

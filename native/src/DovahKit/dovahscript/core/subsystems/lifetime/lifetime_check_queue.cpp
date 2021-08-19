@@ -60,6 +60,7 @@ namespace dovahscript::impl {
       //
       {  // Hierarchy objects.
          hierarchy_crawler crawler;
+         crawler.initialize();
          //
          // Before we start crawling, we need to be able to handle model observers. 
          // Simplest way to do that is to just go over all extant model observers 

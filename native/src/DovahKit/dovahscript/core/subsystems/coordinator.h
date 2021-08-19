@@ -124,6 +124,8 @@ namespace dovahscript::core::subsystems {
          //
          bool _should_keep_running() const noexcept;
 
+         void _do_worker_thread_wait();
+
          static void _lua_debug_hook(lua_State* L, lua_Debug* ar);
 
          static void _lua_warning_function(void* ud, const char* msg, int tocont);

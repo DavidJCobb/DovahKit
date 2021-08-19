@@ -126,6 +126,8 @@ namespace {
                cobb::lua::error(L, "the desired child widget is a parent or ancestor of the desired parent");
             case e::child_has_a_forced_parent:
                cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
+            case e::child_is_a_window:
+               cobb::lua::argerror(L, 2, "a window cannot be made the child of another widget");
          }
          return 0;
       }

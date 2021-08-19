@@ -15,7 +15,13 @@ namespace dovahscript::impl {
          bool is_task_referenced(ObservableStandardItemModelObserver&) const noexcept;
          bool is_task_referenced(QObject&) const noexcept;
 
+         // I would've liked to just have this class manage the mutex on the lifetime singleton 
+         // via RAII, but unfortunately, constructing an instance of this class can involve 
+         // several automatic copies, which can result in the (non-recursive) mutex deadlocking.
+         void set_active_state(bool b);
+
       protected:
          core::subsystems::lifetime& lifetime_sys;
+         bool is_active = false;
    };
 }

@@ -461,6 +461,7 @@
     <ClCompile Include="helpers\lua\tostringex.cpp" />
     <ClCompile Include="helpers\lua\warning.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
+    <ClCompile Include="helpers\multiheap.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\can_have_model.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
@@ -542,6 +543,7 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp" />
+    <ClCompile Include="ui\main_window\script_window_single.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\canvas_widget_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
@@ -1038,6 +1040,7 @@
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h" />
+    <QtMoc Include="ui\main_window\script_window_single.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\canvas_widget_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
