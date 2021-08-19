@@ -139,6 +139,7 @@ namespace dovahscript::impl {
       //
       // And now we're done!
       //
+      this->opportunity_handle.release();
       assert(this->_empty()); // Let's make sure we didn't forget to process and clear any lists.
    }
    void lifetime_check_queue::on_script_teardown(subsystem_passkey) {
