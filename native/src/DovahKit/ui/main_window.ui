@@ -93,6 +93,7 @@
     <addaction name="actionGameSettings"/>
     <addaction name="separator"/>
     <addaction name="actionRunEditorScript"/>
+    <addaction name="actionRunScriptSingle"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -238,6 +239,11 @@
   <action name="actionDebugTestLuaRMResearch">
    <property name="text">
     <string>Run Lua resource manager R&amp;&amp;D tests</string>
+   </property>
+  </action>
+  <action name="actionRunScriptSingle">
+   <property name="text">
+    <string>Run editor script...</string>
    </property>
   </action>
  </widget>
