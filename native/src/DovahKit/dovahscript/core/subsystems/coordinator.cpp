@@ -163,17 +163,19 @@ namespace dovahscript::core::subsystems {
    }
 
    /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {
-      lifetime::get().worker_thread_handler();
       auto& s = coordinator::get();
-      while (s.is_paused())
-         if (s.is_aborted())
-            break;
-      {
-         auto& counter = s.outstanding_client_thread_script_borrow_requests;
-         if (counter) {
-            s.worker_thread_state = coordinator::thread_wait_state::waiting;
-            while (counter) {}
-            s.worker_thread_state = coordinator::thread_wait_state::running;
+      if (s.script_thread == thread_type::worker) {
+         lifetime::get().worker_thread_handler();
+         while (s.is_paused())
+            if (s.is_aborted())
+               break;
+         {
+            auto& counter = s.outstanding_client_thread_script_borrow_requests;
+            if (counter) {
+               s.worker_thread_state = coordinator::thread_wait_state::waiting;
+               while (counter) {}
+               s.worker_thread_state = coordinator::thread_wait_state::running;
+            }
          }
       }
       if (s.is_aborted()) {

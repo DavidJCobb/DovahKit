@@ -4,4 +4,7 @@
     <file>treeview/branch_terminal.gif</file>
     <file>treeview/branch_v.gif</file>
   </qresource>
+  <qresource prefix="icons">
+    <file>refresh.png</file>
+  </qresource>
 </RCC>
