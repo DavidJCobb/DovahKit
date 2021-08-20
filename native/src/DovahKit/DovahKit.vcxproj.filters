@@ -1233,6 +1233,159 @@
     <ClCompile Include="dovahscript\core\collections.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\script\collection_properties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest\collection_aliases.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest\collection_aliases_by_id.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest\alias.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest\loc_alias.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrap_native_object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\qt_alignment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\qt_color.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\ObservableStandardItemModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\model_observers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col\collection_cells.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\qt\can_have_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_rows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_columns.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\qt_variant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\raster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\dds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\dds\cubemap_face_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\dds\collection_images.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\lua_classes\euler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\lua_classes\matrix3x3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\lua_classes\quaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\lua_classes\vector2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\unusual\raster_draw_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\script_window_single.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\multiheap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\send_script_task.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2345,9 +2498,6 @@
     <ClInclude Include="dovahscript\core\class_zombification.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovahscript\lua_libraries\all_standard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2456,9 +2606,6 @@
     <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2526,6 +2673,153 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\core\collections.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\script\collection_properties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest\collection_aliases.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest\collection_aliases_by_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest\alias.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest\loc_alias.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrap_native_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\constants\ui_count_limits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\model_observer_property_handlers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\qt_alignment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\qt_color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\various\font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\ui\util\lua_item_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\model_observers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row\collection_cells.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col\collection_cells.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\can_have_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_rows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_columns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\qt_variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\raster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\dds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\dds\cubemap_face_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\constants\qt_graphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\dds\collection_images.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\lua_classes\vector2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\lua_classes\euler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\lua_classes\matrix3x3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\lua_classes\quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\unusual\raster_draw_path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\unusual\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\send_script_task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\item.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\constants\debugging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2621,6 +2915,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\main_window\script_window_single.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\main_window\script_window_package.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -2802,9 +3102,6 @@
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\scripting\ui\util\lua_item_model.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="editor\scripting\systems\editor_script_inner_core.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -2842,6 +3139,27 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="dovahscript\qt\DovahscriptDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerData.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\ObservableStandardItemModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\script_window_single.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\DKLuaSyntaxHighlighter.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -2895,5 +3213,6 @@
     </None>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
+    <None Include="dovahscript\wrappers\unusual\README.md" />
   </ItemGroup>
 </Project>

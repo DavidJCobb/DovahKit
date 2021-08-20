@@ -504,6 +504,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
     <ClCompile Include="ui\generic\FormPicker.cpp" />
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -1047,6 +1048,7 @@
     <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <QtMoc Include="ui\generic\QLuaCheckBox.h" />
+    <QtMoc Include="ui\generic\DKLuaSyntaxHighlighter.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />

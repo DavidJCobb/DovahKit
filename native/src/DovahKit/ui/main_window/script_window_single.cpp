@@ -7,11 +7,15 @@
 #include <QMessageBox>
 #include <QSaveFile>
 #include <QTextStream>
+#include "../generic/DKLuaSyntaxHighlighter.h"
 
 namespace {
    static QDir _get_script_path() {
       auto path = QCoreApplication::applicationDirPath();
-      auto dir  = QDir(path).absoluteFilePath("userdata/scripts/");
+      auto dir  = QDir(QDir(path).absoluteFilePath("userdata/scripts/"));
+      if (!dir.exists()) {
+         dir = QDir::current().absoluteFilePath("userdata/scripts/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
+      }
       return dir;
    }
 }
@@ -23,6 +27,8 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       QFont font("Lucida Console", 10);
       font.setStyleHint(QFont::Monospace);
       this->ui.script->setFont(font);
+      //
+      auto* highlighter = new DKLuaSyntaxHighlighter(this->ui.script->document());
    }
    {  // Visuals for log pane
       auto* widget = this->ui.log;
@@ -54,15 +60,17 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
          QMessageBox::critical(this, tr("Error"), tr("Unable to open the file."));
          return;
       }
-      auto choice = QMessageBox::question(
-         this,
-         tr("Are you sure?"),
-         tr("Replace the currently loaded script with this file?"),
-         QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No,
-         QMessageBox::StandardButton::NoButton
-      );
-      if (choice == QMessageBox::StandardButton::NoButton)
-         return;
+      if (!this->ui.script->toPlainText().isEmpty()) {
+         auto choice = QMessageBox::question(
+            this,
+            tr("Are you sure?"),
+            tr("Replace the currently loaded script with this file?"),
+            QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No,
+            QMessageBox::StandardButton::NoButton
+         );
+         if (choice == QMessageBox::StandardButton::NoButton)
+            return;
+      }
       this->ui.script->setPlainText(file.readAll());
    });
    QObject::connect(this->ui.actionSaveScript, &QAction::triggered, this, [this]() {
@@ -91,7 +99,7 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       this->ui.log->setVisible(!this->ui.log->isVisible());
    });
    QObject::connect(this->ui.buttonClearLog, &QPushButton::clicked, this, [this]() {
-      this->ui.log->clear();
+      this->ui.log->setRowCount(0);
    });
    //
    auto& host = DovahscriptHost::get();

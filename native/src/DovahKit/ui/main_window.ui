@@ -208,7 +208,7 @@
   </action>
   <action name="actionRunEditorScript">
    <property name="text">
-    <string>Run Editor Script...</string>
+    <string>Run editor script (deprecated)...</string>
    </property>
   </action>
   <action name="actionDebugCompiledPapyrusScriptTests">
