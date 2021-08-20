@@ -7,11 +7,11 @@
 #include "../../../../helpers/strings.h"
 #include "../../../../helpers/type_traits.h"
 #include "../../../../ui/generic/ObservableStandardItemModel.h"
-#include "../../../core/subsystems/coordinator.h"
 #include "../../../core/subsystems/permissions.h"
 #include "../../../core/subsystems/resources.h"
 #include "../../../core/subsystems/userdata.h"
 #include "../../../core/collections.h"
+#include "../../../send_script_task.h"
 #include "../../../tasks/s2m/ui_read_lambda.h"
 #include "../../../tasks/s2m/ui_write_lambda.h"
 #include "../../../qt/DovahscriptCanvasWidgetLayerDataText.h"
@@ -212,7 +212,7 @@ namespace dovahscript::impl::font_properties {
                }
                value = (hnd->get)(font);
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          if (not_set) {
@@ -248,7 +248,7 @@ namespace dovahscript::impl::font_properties {
                cobb::qt::clear_font_properties(font, hnd->resolve_mask);
                _set_font(*wrap, font);
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
             //
             return 0;
@@ -261,7 +261,7 @@ namespace dovahscript::impl::font_properties {
                (hnd->set)(font, value);
                _set_font(*wrap, font);
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          //
@@ -962,7 +962,7 @@ namespace dovahscript::wrappers::ui {
          task->handler = [&out, &wrap]() {
             out = _get_font(*wrap);
          };
-         core::subsystems::coordinator::get().send_ui_read_task(*task);
+         send_script_ui_task(*task);
          delete task;
          //
          return out;

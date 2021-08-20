@@ -3,12 +3,12 @@
 #include "../../../../helpers/lua/qt_variant.h"
 #include "../../../../helpers/qt/layout.h"
 #include "../../../../ui/generic/ObservableStandardItemModel.h"
+#include "../../../core/subsystems/permissions.h"
+#include "../../../core/subsystems/userdata.h"
+#include "../../../send_script_task.h"
 #include "../../../task_reference.h"
 #include "../../../widget_overrides.h"
 #include "../../../wrapper.h"
-#include "../../../core/subsystems/coordinator.h"
-#include "../../../core/subsystems/permissions.h"
-#include "../../../core/subsystems/userdata.h"
 
 #include "../../../tasks/s2m/ui_read_lambda.h"
 #include "../../../tasks/s2m/ui_write_lambda.h"
@@ -53,7 +53,7 @@ namespace {
             task->handler  = [observer, &result]() {
                result = observer->col;
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_pushinteger(L, result);

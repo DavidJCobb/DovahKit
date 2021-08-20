@@ -1,6 +1,5 @@
 #include "quest.h"
 #include "../../../helpers/lua/error.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 

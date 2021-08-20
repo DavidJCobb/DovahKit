@@ -1,8 +1,8 @@
 #include "image.h"
-#include "../../../core/subsystems/coordinator.h"
 #include "../../../core/subsystems/resources.h"
 #include "../../../core/subsystems/userdata.h"
 #include "../../../push_native_object.h"
+#include "../../../send_script_task.h"
 
 #include "../../../tasks/s2m/lambda.h"
 
@@ -65,7 +65,7 @@ namespace {
                   return;
                resource = core::subsystems::resources::get().create_resource(image);
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
             assert(resource);
          }

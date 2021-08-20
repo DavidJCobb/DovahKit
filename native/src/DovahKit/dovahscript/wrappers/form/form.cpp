@@ -1,8 +1,8 @@
 #include "form.h"
 #include "../../../helpers/lua/error.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
+#include "../../send_script_task.h"
 
 #include "../../wrapper.h"
 #include "../../core/classes.h"
@@ -48,7 +48,7 @@ namespace {
             return 0;
          auto* m = new tasks::s2m::delete_form;
          m->stub = self.stub;
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          if (m->results.failed) {
             if (!m->results.text)
                m->results.text = "";
@@ -102,7 +102,7 @@ namespace {
             }
             lua_settop(L, 2);
          }
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          if (m->error) {
             if (!m->error_text)
                m->error_text = "";
@@ -268,7 +268,7 @@ namespace {
          auto* m = new tasks::s2m::renumber_form;
          m->stub      = self.stub;
          m->desiredID = formID;
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          if (m->error) {
             if (!m->error_text)
                m->error_text = "";

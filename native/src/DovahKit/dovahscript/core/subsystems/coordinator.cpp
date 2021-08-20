@@ -47,7 +47,7 @@ namespace dovahscript::core::subsystems {
       QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &coordinator::_main_thread_loop);
       QObject::connect(this, &coordinator::_internal_scriptDone, this, [this]() {
          if constexpr (debug_script_start_stop) {
-            qDebug("DovahKitScriptVMCore received its own scriptEnded signal...");
+            qDebug("dovahscript::core::subsystems::coordinator received its own scriptEnded signal...");
          }
          this->main_thread_tick_timer.stop();
          this->_teardown_lua_state();
@@ -75,6 +75,8 @@ namespace dovahscript::core::subsystems {
    }
 
    void coordinator::_main_thread_loop() {
+      if (!this->running)
+         return;
       auto& lifetime_s = lifetime::get();
       //
       resources::get().main_thread_handler();
@@ -144,7 +146,7 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_script_start_stop) {
          qDebug("Script execution finished on the worker thread.");
       }
-      this->main_thread_tick_timer.stop();
+      //this->main_thread_tick_timer.stop(); // can only stop timers from their owning threads
       this->running = false;
       this->worker_thread_state = coordinator::thread_wait_state::finished;
       emit this->_internal_scriptDone(); // a main-thread handler will catch this and tear down the VM
@@ -275,6 +277,7 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_script_start_stop) {
          qDebug("Tearing down the script VM...");
       }
+      this->main_thread_tick_timer.stop();
       if (auto* L = this->lua_state) {
          lua_close(L);
          this->lua_state = nullptr;

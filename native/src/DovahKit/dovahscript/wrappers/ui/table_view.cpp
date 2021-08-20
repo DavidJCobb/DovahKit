@@ -5,14 +5,14 @@
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/qt/layout.h"
 #include "../../../ui/generic/ObservableStandardItemModel.h"
-#include "../../push_native_object.h"
-#include "../../task_reference.h"
-#include "../../widget_overrides.h"
-#include "../../wrapper.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/resources/DovahscriptResourceStyledItemDelegate.h"
 #include "../../core/subsystems/userdata.h"
+#include "../../push_native_object.h"
+#include "../../send_script_task.h"
+#include "../../task_reference.h"
+#include "../../widget_overrides.h"
+#include "../../wrapper.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"
 #include "../../tasks/s2m/lambda.h"
@@ -126,7 +126,7 @@ namespace {
             }
             model->appendColumn(to_append);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          return 0;
       }
@@ -162,7 +162,7 @@ namespace {
             for (auto it = span_roles.begin(); it != span_roles.end(); ++it)
                model->setDefaultDataForSpan(it.key(), model->colOrientation, col, it.value());
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          return 0;
       }
@@ -209,7 +209,7 @@ namespace {
             }
             model->appendRow(to_append);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          return 0;
       }
@@ -247,7 +247,7 @@ namespace {
             for (auto it = span_roles.begin(); it != span_roles.end(); ++it)
                model->setDefaultDataForSpan(it.key(), model->rowOrientation, row, it.value());
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          return 0;
       }
@@ -294,7 +294,7 @@ namespace {
                insert_at = cc;
             model->insertColumn(insert_at, to_append);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          delete task;
          //
          return 0;
@@ -336,7 +336,7 @@ namespace {
                insert_at = rc;
             model->insertRow(insert_at, to_append);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          delete task;
          //
          return 0;
@@ -411,7 +411,7 @@ namespace {
                   headers.push_back(data.toString());
                }
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_createtable(L, headers.size(), 0);
@@ -452,7 +452,7 @@ namespace {
                   return;
                result = header->minimumSectionSize();
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          if (result < 0)
@@ -513,7 +513,7 @@ namespace {
                      break;
                }
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          size_t size = observers.size();
@@ -587,7 +587,7 @@ namespace {
             task->handler = [widget, &result]() {
                result = !widget->horizontalHeader()->isHidden();
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_pushboolean(L, result);
@@ -612,7 +612,7 @@ namespace {
             task->handler = [widget, &result]() {
                result = !widget->verticalHeader()->isHidden();
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_pushboolean(L, result);
@@ -637,7 +637,7 @@ namespace {
             task->handler = [widget, &ww]() {
                ww = get_word_wrapping_for(widget);
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          switch (ww) {
@@ -693,7 +693,7 @@ namespace {
             auto* model = (ObservableStandardItemModel*)proxy->sourceModel();
             model->setHorizontalHeaderLabels(text);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int has_corner_button(lua_State* L) {
@@ -722,7 +722,7 @@ namespace {
             if (header)
                header->setMinimumSectionSize(width);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int selection_mode(lua_State* L) {
@@ -780,7 +780,7 @@ namespace {
          task->handler = [widget, value]() {
             widget->horizontalHeader()->setHidden(!value);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int show_grid(lua_State* L) {
@@ -803,7 +803,7 @@ namespace {
          task->handler = [widget, value]() {
             widget->verticalHeader()->setHidden(!value);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int sortable(lua_State* L) {
@@ -837,7 +837,7 @@ namespace {
          task->handler = [widget, ww]() {
             set_word_wrapping_for(widget, ww);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
    }
@@ -865,7 +865,7 @@ namespace {
             created->setItemDelegate(new DovahscriptResourceStyledItemDelegate(created));
          };
          //
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          auto* created = task->created;
          delete task;
          //

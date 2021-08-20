@@ -24,8 +24,7 @@ namespace dovahscript {
 
          static constexpr bool has_extra_class_setup = false;
          static void extra_class_setup(lua_State* L) noexcept {
-            // Subclasses can override this, but it will only be called if (has_extra_setup) is 
-            // (true).
+            // Subclasses can override this, but it will only be called if (has_extra_class_setup) is (true).
          };
 
          static constexpr std::initializer_list<luaL_Reg> no_functions = {};

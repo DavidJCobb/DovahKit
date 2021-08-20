@@ -17,6 +17,11 @@
 // 
 // The most recently specified parent  classes take priority over the least recently 
 // specified parent classes, when doing member lookups.
+// 
+// Diamond inheritance is not supported. You can control whether we go to the effort 
+// of checking for it and asserting that it doesn't occur; if we don't check for it, 
+// or if you're compiling on a configuration where asserts are omitted, then it will 
+// simply result in undefined behavior.
 //
 
 // Config

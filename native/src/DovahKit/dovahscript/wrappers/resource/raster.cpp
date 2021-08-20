@@ -9,11 +9,10 @@
 #include "../../../helpers/lua/warning.h"
 #include "../../../helpers/rotation.h"
 #include "../../constants/qt_graphics.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/resources.h"
-#include "../../core/subsystems/userdata.h"
 #include "../../push_native_object.h"
+#include "../../send_script_task.h"
 
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
@@ -1044,7 +1043,7 @@ namespace {
                base.fill(background);
                resource = core::subsystems::resources::get().create_resource(base);
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
             //
             if (!resource)

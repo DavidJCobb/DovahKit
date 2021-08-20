@@ -2,12 +2,12 @@
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/qt/layout.h"
+#include "../../core/subsystems/permissions.h"
 #include "../../push_native_object.h"
+#include "../../send_script_task.h"
 #include "../../task_reference.h"
 #include "../../widget_overrides.h"
 #include "../../wrapper.h"
-#include "../../core/subsystems/coordinator.h"
-#include "../../core/subsystems/permissions.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"
 #include "../../tasks/s2m/lambda.h"
@@ -33,7 +33,7 @@ namespace {
          task->handler = [widget]() {
             widget->done(-1);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int show(lua_State* L) {
@@ -48,7 +48,7 @@ namespace {
          task->handler = [widget]() {
             widget->open();
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          if constexpr (use_blocking_task)
             delete task;
          return 0;
@@ -66,7 +66,7 @@ namespace {
             task->handler = [widget, &result]() {
                result = widget->windowFlags() & Qt::WindowContextHelpButtonHint;
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_pushboolean(L, result);
@@ -101,7 +101,7 @@ namespace {
          task->handler = [widget, value]() {
             widget->setWindowFlags(widget->windowFlags().setFlag(Qt::WindowContextHelpButtonHint, value));
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int has_size_handle(lua_State* L) {
@@ -138,7 +138,7 @@ namespace {
          task->configure = [](wrapped_type* created) {
          };
          */
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          auto* created = task->created;
          delete task;
          //

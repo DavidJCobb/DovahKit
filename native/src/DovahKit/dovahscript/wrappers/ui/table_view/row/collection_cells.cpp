@@ -1,11 +1,11 @@
 #include "collection_cells.h"
 #include "../../../../../helpers/lua/error.h"
 #include "../../../../../ui/generic/ObservableStandardItemModel.h"
-#include "../../../../core/subsystems/coordinator.h"
 #include "../../../../core/subsystems/permissions.h"
 #include "../../../../core/subsystems/userdata.h"
 #include "../../../../core/classes.h"
 #include "../../../../tasks/s2m/ui_read_lambda.h"
+#include "../../../../send_script_task.h"
 #include "../../../../task_reference.h"
 #include "../../../../wrapper.h"
 
@@ -42,6 +42,8 @@ namespace {
          task->handler = [observer, &result]() {
             result = get_model(*observer).columnCount();
          };
+         send_script_ui_task(*task);
+         delete task;
       }
       lua_pushinteger(L, result);
       return 1;
@@ -66,7 +68,7 @@ namespace {
                return;
             result = model.getOrCreateRegisteredObserver(model.indexFromItem(item));
          };
-         core::subsystems::coordinator::get().send_ui_read_task(*task);
+         send_script_ui_task(*task);
          delete task;
       }
       //

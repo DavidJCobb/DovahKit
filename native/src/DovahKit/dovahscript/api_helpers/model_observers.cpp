@@ -1,9 +1,9 @@
 #include "model_observers.h"
 #include "../../helpers/qt/get_model_of.h"
-#include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/lifetime.h"
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
+#include "../send_script_task.h"
 
 namespace dovahscript::api_helpers {
    extern [[nodiscard]] QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
@@ -34,7 +34,7 @@ namespace dovahscript::api_helpers {
          }
          result = model->getDefaultDataForSpan(role, orientation, pos);
       };
-      core::subsystems::coordinator::get().send_ui_read_task(*task);
+      send_script_ui_task(*task);
       delete task;
       //
       return result;
@@ -65,7 +65,7 @@ namespace dovahscript::api_helpers {
          }
          model->setDefaultDataForSpan(role, orientation, pos, data);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
    }
 
    extern void remove_items_from_model(QWidget* widget, int row, int col, QModelIndex parent) {
@@ -111,7 +111,7 @@ namespace dovahscript::api_helpers {
          }
          parent_item->setChild(row, col, nullptr);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
       delete task;
       //
       core::subsystems::lifetime::get().zombify_all_invalid_model_observers();

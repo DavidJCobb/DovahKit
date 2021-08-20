@@ -1,8 +1,8 @@
 #pragma once
 #include <type_traits>
-#include "../core/subsystems/coordinator.h"
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
+#include "../send_script_task.h"
 
 namespace dovahscript::api_helpers {
    template<class W, class Wx, typename R> requires (std::is_base_of_v<Wx, W>) R get_widget_property(const W* widget_bare, R (Wx::* func)() const) {
@@ -14,7 +14,7 @@ namespace dovahscript::api_helpers {
          task->handler = [widget, func, &result]() {
             result = (widget->*func)();
          };
-         core::subsystems::coordinator::get().send_ui_read_task(*task);
+         send_script_ui_task(*task);
          delete task;
       }
       return result;
@@ -31,7 +31,7 @@ namespace dovahscript::api_helpers {
       task->handler = [widget, value, func]() {
          (widget->*func)(value);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
    }
 
    //
@@ -46,7 +46,7 @@ namespace dovahscript::api_helpers {
       task->handler = [widget, value, func]() {
          (widget->*func)(value);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
    }
 
    
@@ -59,7 +59,7 @@ namespace dovahscript::api_helpers {
          const auto blocker = QSignalBlocker(widget);
          (widget->*func)(value);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
    }
    template<class W, class Wx, class T, class U> requires (std::is_base_of_v<Wx, W>&& std::is_convertible_v<T, U> && !std::is_reference_v<T>)
    void set_widget_property_and_block_signals(W* widget_bare, void (Wx::* func)(T), U value) {
@@ -70,6 +70,6 @@ namespace dovahscript::api_helpers {
          const auto blocker = QSignalBlocker(widget);
          (widget->*func)(value);
       };
-      core::subsystems::coordinator::get().send_ui_write_task(*task);
+      send_script_ui_task(*task);
    }
 }

@@ -3,13 +3,13 @@
 #include "../../helpers/lua/warning.h"
 #include "../../helpers/qt/get_model_of.h"
 #include "../../ui/generic/ObservableStandardItemModel.h"
-#include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/resources.h"
 #include "../core/subsystems/userdata.h"
 #include "../core/classes.h"
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
 #include "../push_native_object.h"
+#include "../send_script_task.h"
 #include "../wrapper.h"
 
 #include "../wrappers/resource/dds.h"
@@ -146,7 +146,7 @@ namespace dovahscript::api_helpers::moph {
             }
             model->setDefaultDataForSpan(role, orientation, pos, value);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          return 0;
       }

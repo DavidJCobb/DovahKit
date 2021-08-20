@@ -2,14 +2,14 @@
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/qt/layout.h"
-#include "../../push_native_object.h"
-#include "../../task_reference.h"
-#include "../../widget_overrides.h"
-#include "../../wrapper.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/events.h"
 #include "../../core/subsystems/lifetime.h"
 #include "../../core/subsystems/permissions.h"
+#include "../../push_native_object.h"
+#include "../../send_script_task.h"
+#include "../../task_reference.h"
+#include "../../widget_overrides.h"
+#include "../../wrapper.h"
 
 #include "../../tasks/s2m/add_child_ui_widget.h"
 #include "../../tasks/s2m/create_ui_widget.h"
@@ -111,7 +111,7 @@ namespace {
          task->layout.col     = col;
          task->layout.rowspan = rowspan;
          task->layout.colspan = colspan;
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          //
          auto code = task->error;
          //
@@ -238,7 +238,7 @@ namespace {
             cobb::lua::argcheck(L, col >= 0, 2, "(grid layout) you must specify a column number");
          }
          //
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int can_have_layout(lua_State* L) {
@@ -306,7 +306,7 @@ namespace {
                result = 0;
                return;
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          if (result < 0) {
@@ -361,7 +361,7 @@ namespace {
                child->setParent(nullptr);
                core::subsystems::lifetime::get().on_hierarchy_item_parent_changed(child, prior_parent);
             };
-            core::subsystems::coordinator::get().send_ui_write_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          if (is_not_a_child)
@@ -423,7 +423,7 @@ namespace {
                cobb::qt::remove_layout(widget); // "none"
             }
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int set_layout_stretch_at(lua_State* L) {
@@ -500,7 +500,7 @@ namespace {
                return;
             }
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          delete task;
          //
          if (error.text) {
@@ -537,7 +537,7 @@ namespace {
                if (layout)
                   result = layout->contentsMargins();
             };
-            core::subsystems::coordinator::get().send_ui_read_task(*task);
+            send_script_ui_task(*task);
             delete task;
          }
          lua_createtable(L, 4, 4);
@@ -795,7 +795,7 @@ namespace {
             }
             layout->setContentsMargins(left, top, right, bottom);
          };
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          return 0;
       }
       int max_height(lua_State* L) {
@@ -909,7 +909,7 @@ namespace {
          task->configure = [](wrapped_type* created) {
          };
          */
-         core::subsystems::coordinator::get().send_ui_write_task(*task);
+         send_script_ui_task(*task);
          auto* created = task->created;
          delete task;
          //

@@ -1,17 +1,15 @@
 #include "raster_draw_path.h"
-#include "../../core/subsystems/coordinator.h"
-
-#include "../../tasks/s2m/lambda.h"
-
+#include <QPainterPath>
+#include <QVector2D>
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/istablelike.h"
 #include "../../../helpers/lua/qt_point.h"
 #include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/math.h"
 #include "../../../helpers/rotation.h"
+#include "../../send_script_task.h"
 
-#include <QPainterPath>
-#include <QVector2D>
+#include "../../tasks/s2m/lambda.h"
 
 namespace {
    using namespace dovahscript;
@@ -261,8 +259,8 @@ namespace {
                //
                // Not a table.
                //
-               luaL_argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
-               luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
+               cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
+               cobb::lua::argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
                target.setX(lua_tonumber(L, 2));
                target.setY(lua_tonumber(L, 3));
                break;
@@ -285,8 +283,8 @@ namespace {
                //
                // Not a table.
                //
-               luaL_argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
-               luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
+               cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
+               cobb::lua::argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
                target.setX(lua_tonumber(L, 2));
                target.setY(lua_tonumber(L, 3));
                break;
@@ -315,7 +313,7 @@ namespace {
             task->handler = [instance]() {
                instance->path = new QPainterPath;
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
          }
          return 1;

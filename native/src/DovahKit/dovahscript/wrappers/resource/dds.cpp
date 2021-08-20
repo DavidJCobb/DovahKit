@@ -1,8 +1,8 @@
 #include "dds.h"
-#include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/resources.h"
 #include "../../core/subsystems/userdata.h"
 #include "../../push_native_object.h"
+#include "../../send_script_task.h"
 
 #include "../../tasks/s2m/lambda.h"
 
@@ -28,7 +28,7 @@ namespace {
                assert(!layer.isNull());
                resource = core::subsystems::resources::get().create_resource(layer);
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
             assert(resource);
          }

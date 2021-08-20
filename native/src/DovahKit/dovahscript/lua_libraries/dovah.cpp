@@ -3,11 +3,11 @@
 #include "../../../helpers/lua/dump.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/setfuncs.h"
-#include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/permissions.h"
 #include "../core/subsystems/resources.h"
 #include "../core/subsystems/resources/DovahscriptResource.h"
 #include "../push_native_object.h"
+#include "../send_script_task.h"
 
 #include "form_types.h"
 
@@ -114,7 +114,7 @@ namespace {
             }
             lua_settop(L, 2);
          }
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          if (m->error) {
             if (!m->error_text)
                m->error_text = "";
@@ -131,7 +131,7 @@ namespace {
          //
          auto m = new tasks::s2m::log_message();
          m->text = QString::fromStdString(string);
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          return 0;
       }
       int for_each_form_of_type(lua_State* L) {
@@ -224,7 +224,7 @@ namespace {
          }
          m->text = QString::fromUtf8(out);
          //
-         core::subsystems::coordinator::get().send_script_task(*m);
+         send_script_task(*m);
          return 0;
       }
       int lookup_game_asset(lua_State* L) {
@@ -246,7 +246,7 @@ namespace {
             task->handler = [path, &file]() {
                file.reset(DovahKitCore::get().lookup_game_asset(path, true));
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
          }
          if (!file)
@@ -270,7 +270,7 @@ namespace {
                      task->handler = [&raster, &resource]() {
                         resource = core::subsystems::resources::get().create_resource(raster);
                      };
-                     core::subsystems::coordinator::get().send_script_task(*task);
+                     send_script_task(*task);
                      delete task;
                      assert(resource);
                   }
@@ -285,7 +285,7 @@ namespace {
                task->handler = [&file, &resource]() {
                   resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()), resource_type::dds);
                };
-               core::subsystems::coordinator::get().send_script_task(*task);
+               send_script_task(*task);
                delete task;
             }
             return push_native_object(resource);
@@ -299,7 +299,7 @@ namespace {
             task->handler = [&file, &resource]() {
                resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
             };
-            core::subsystems::coordinator::get().send_script_task(*task);
+            send_script_task(*task);
             delete task;
             assert(resource);
          }

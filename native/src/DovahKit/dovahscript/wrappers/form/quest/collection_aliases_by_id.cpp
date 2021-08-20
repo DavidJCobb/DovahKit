@@ -1,6 +1,5 @@
 #include "collection_aliases_by_id.h"
 #include "../../../../helpers/lua/error.h"
-#include "../../../core/subsystems/permissions.h"
 #include "../../../core/subsystems/userdata.h"
 #include "../../../core/classes.h"
 #include "../../../wrapper.h"

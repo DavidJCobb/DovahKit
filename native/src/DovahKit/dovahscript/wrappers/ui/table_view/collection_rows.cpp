@@ -7,6 +7,7 @@
 #include "../../../core/subsystems/userdata.h"
 #include "../../../core/classes.h"
 #include "../../../tasks/s2m/ui_read_lambda.h"
+#include "../../../send_script_task.h"
 #include "../../../task_reference.h"
 #include "../../../wrapper.h"
 
@@ -50,7 +51,7 @@ namespace {
             auto& model = get_model(self);
             count = model.rowCount();
          };
-         core::subsystems::coordinator::get().send_ui_read_task(*task);
+         send_script_ui_task(*task);
          delete task;
       }
       lua_pushinteger(L, count);
@@ -72,7 +73,7 @@ namespace {
                return;
             observer = model.getOrCreateRegisteredObserver(QModelIndex(), model_t::rowOrientation, index);
          };
-         core::subsystems::coordinator::get().send_ui_read_task(*task);
+         send_script_ui_task(*task);
          delete task;
       }
       if (!observer)
