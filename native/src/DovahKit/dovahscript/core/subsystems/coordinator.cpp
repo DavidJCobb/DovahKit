@@ -259,7 +259,7 @@ namespace dovahscript::core::subsystems {
          lua_newtable(L);
          lua_setfield(L, LUA_REGISTRYINDEX, ui_unlocked_queue_registry_key);
       #pragma endregion
-      events::get().on_script_setup();
+      events::get().initialize(L);
       lifetime::get().on_script_setup();
       resources::get().on_script_setup();
       userdata::get().initialize(L);

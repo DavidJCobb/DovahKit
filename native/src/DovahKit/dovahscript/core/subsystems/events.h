@@ -4,6 +4,7 @@
 #include <QObject>
 #include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
+#include "../../../lua.h"
 #include "events/script_event_queue.h"
 
 struct ObservableStandardItemModelObserver;
@@ -66,7 +67,7 @@ namespace dovahscript::core::subsystems {
       public:
          unsigned int get_pending_event_count() const noexcept;
 
-         void on_script_setup();
+         void initialize(lua_State*);
          void on_script_teardown();
 
          // Call from the script thread's idle loop. Returns the number of events processed.

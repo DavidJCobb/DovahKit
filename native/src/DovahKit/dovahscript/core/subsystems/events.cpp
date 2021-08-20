@@ -114,9 +114,11 @@ namespace dovahscript::core::subsystems {
       return this->pending_event_count;
    }
 
-   void events::on_script_setup() {
+   void events::initialize(lua_State* L) {
       assert(this->pending_events.empty());
       assert(this->pending_event_count == 0);
+      lua_createtable(L, 0, 0);
+      lua_setfield(L, LUA_REGISTRYINDEX, listener_registry_key);
    }
    void events::on_script_teardown() {
       this->pending_events.clear();

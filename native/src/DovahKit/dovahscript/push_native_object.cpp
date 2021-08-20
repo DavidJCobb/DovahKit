@@ -35,6 +35,7 @@ namespace {
    std::array qobject_classes = {
       std::pair{ &QWidget::staticMetaObject,           dovahscript::wrappers::ui::widget::metatable_key },
       //
+      std::pair{ &QPushButton::staticMetaObject,       dovahscript::wrappers::ui::button::metatable_key },
       std::pair{ &QTableView::staticMetaObject,        dovahscript::wrappers::ui::table_view::metatable_key },
       std::pair{ &DovahscriptDialog::staticMetaObject, dovahscript::wrappers::ui::window::metatable_key },
       /*//
@@ -49,7 +50,6 @@ namespace {
       std::pair{ &QLabel::staticMetaObject,         dovahscript::wrappers::ui::text::metatable_key },
       std::pair{ &QLineEdit::staticMetaObject,      dovahscript::wrappers::ui::textbox::metatable_key },
       std::pair{ &QProgressBar::staticMetaObject,   dovahscript::wrappers::ui::progress_bar::metatable_key },
-      std::pair{ &QPushButton::staticMetaObject,    dovahscript::wrappers::ui::button::metatable_key },
       std::pair{ &QRadioButton::staticMetaObject,   dovahscript::wrappers::ui::radio_button::metatable_key },
       std::pair{ &QScrollArea::staticMetaObject,    dovahscript::wrappers::ui::scrollbox::metatable_key },
       std::pair{ &QTabWidget::staticMetaObject,     dovahscript::wrappers::ui::tabbox::metatable_key },

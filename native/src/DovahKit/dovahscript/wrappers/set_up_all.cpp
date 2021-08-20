@@ -66,6 +66,7 @@ namespace dovahscript {
          auto index = lua_gettop(L);
          //
          set_up_class_with_singleton<ui::widget>(L, index);
+            set_up_class_with_singleton<ui::button>(L, index);
             set_up_class_with_singleton<ui::table_view>(L, index);
                set_up_class_with_singleton<ui::table_view_cell>(L, index);
                set_up_class_with_singleton<ui::table_view_col>(L, index);

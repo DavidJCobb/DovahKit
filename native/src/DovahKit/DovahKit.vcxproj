@@ -191,6 +191,7 @@
     <ClCompile Include="dovahscript\wrappers\resource\raster.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\button.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
@@ -661,6 +662,7 @@
     <ClInclude Include="dovahscript\wrappers\resource\unknown.h" />
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\button.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />
