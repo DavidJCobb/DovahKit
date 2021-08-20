@@ -8,6 +8,7 @@
 #include "../verify_threading.h"
 #include "../../qt/DovahscriptCanvasWidgetLayerData.h"
 #include "../../qt/DovahscriptDialog.h"
+#include "../../constants/debugging.h"
 
 namespace {
 
@@ -31,21 +32,19 @@ namespace {
    static constexpr bool notify_for_task_references = false;
 
    #pragma region Logging options
-   static constexpr bool debug_enable_all_logging = false;
-
-   static constexpr bool debug_model_observer_lifetimes = debug_enable_all_logging || false
+   static constexpr bool debug_model_observer_lifetimes = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
          || _DEBUG
       #endif
    ;
 
-   static constexpr bool debug_qobject_lifetimes = debug_enable_all_logging || false
+   static constexpr bool debug_qobject_lifetimes = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
          || _DEBUG
       #endif
    ;
 
-   static constexpr bool debug_task_reference_state = debug_enable_all_logging || false
+   static constexpr bool debug_task_reference_state = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
          || _DEBUG
       #endif

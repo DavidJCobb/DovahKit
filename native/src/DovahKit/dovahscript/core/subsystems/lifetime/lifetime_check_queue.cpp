@@ -77,9 +77,7 @@ namespace dovahscript::impl {
                return;
             if (list.contains(model))
                return;
-            if (userdata_s.wrapper_exists_for(observer))
-               return;
-            if (task_ref_access.is_task_referenced(*observer))
+            if (!userdata_s.wrapper_exists_for(observer) && !task_ref_access.is_task_referenced(*observer))
                return;
             list.push_back(model);
          });

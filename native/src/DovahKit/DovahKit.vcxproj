@@ -569,6 +569,7 @@
     <ClInclude Include="dovahscript\api_helpers\qt_alignment.h" />
     <ClInclude Include="dovahscript\api_helpers\qt_variant.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
+    <ClInclude Include="dovahscript\constants\debugging.h" />
     <ClInclude Include="dovahscript\constants\qt_graphics.h" />
     <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
     <ClInclude Include="dovahscript\core\classes.h" />

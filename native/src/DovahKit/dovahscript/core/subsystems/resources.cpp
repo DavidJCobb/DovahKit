@@ -3,11 +3,12 @@
 #include "../../../helpers/qt/repaint.h"
 #include "coordinator.h"
 #include "../verify_threading.h"
+#include "../../constants/debugging.h"
 
 namespace {
    static constexpr int resource_resynchronize_interval = 17; // 1000 / 60 == 16.6ms
 
-   static constexpr bool debug_log_resource_management = false
+   static constexpr bool debug_log_resource_management = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
          || _DEBUG
       #endif

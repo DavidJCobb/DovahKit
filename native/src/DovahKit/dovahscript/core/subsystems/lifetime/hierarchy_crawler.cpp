@@ -173,7 +173,7 @@ namespace dovahscript::impl {
             //
             // Now, let's handle non-widget descendant objects, along with any hierarchy bridges:
             //
-            if (auto* model = qobject_cast<DovahscriptStandardItemModel*>(cobb::qt::get_model_of(item))) {
+            if (auto* model = qobject_cast<DovahscriptStandardItemModel*>(cobb::qt::get_underlying_model_of(item))) {
                //
                // This widget has a scriptable model. Check if any item in the model is referenced.
                // 

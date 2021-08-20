@@ -29,8 +29,10 @@
 
 #include "../../qt/impl/canvas_context_menu.h"
 
+#include "../../constants/debugging.h"
+
 namespace {
-   static constexpr bool debug_script_start_stop = false
+   static constexpr bool debug_script_start_stop = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
          || _DEBUG
       #endif
