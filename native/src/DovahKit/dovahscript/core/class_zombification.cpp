@@ -94,6 +94,7 @@ namespace {
             end
             --
             local dead = {}
+            dead.__gc       = meta.__gc
             dead.__index    = _dead_index
             dead.__newindex = _dead_newindex
             dead.__name     = "zombie<" .. meta.__name .. ">"
@@ -138,6 +139,8 @@ namespace {
       }
       //
       lua_createtable(L, 0, 3); // dead
+      cobb::lua::rawgetfield(L, index_meta, "__gc");
+      cobb::lua::rawsetfield(L, index_dead, "__gc");
       lua_pushcfunction(L, &_dead_index);
       cobb::lua::rawsetfield(L, index_dead, "__index");
       lua_pushcfunction(L, &_dead_newindex);

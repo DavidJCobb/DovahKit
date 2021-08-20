@@ -60,7 +60,7 @@ namespace {
          auto  observer = task_reference(self.model_observer);
          auto* task     = new tasks::s2m::ui_read_lambda;
          task->handler = [index, observer, &result]() {
-            if (!observer->row)
+            if (observer->row < 0)
                return;
             auto& model = get_model(*observer);
             auto* item  = model.item(observer->row, index);

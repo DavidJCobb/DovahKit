@@ -13,13 +13,15 @@ class  CanvasWidgetLayerData;
 class  DovahscriptCanvasWidgetLayerData;
 class  DovahscriptDialog;
 struct ObservableStandardItemModelObserver;
-
-namespace dovahscript::impl {
-   class hierarchy_crawler;
-   class task_reference_state_multi_checker;
-}
-namespace dovahscript::core::subsystems {
-   class userdata;
+namespace dovahscript {
+   class wrapper;
+   namespace impl {
+      class hierarchy_crawler;
+      class task_reference_state_multi_checker;
+   }
+   namespace core::subsystems {
+      class userdata;
+   }
 }
 
 namespace dovahscript::core::subsystems {
@@ -89,6 +91,8 @@ namespace dovahscript::core::subsystems {
             void on_lua_unreferenced(passkey_to<userdata>, DovahscriptCanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);
             void on_lua_unreferenced(passkey_to<userdata>, QObject*);
+
+            void on_lua_referenced(passkey_to<wrapper>, model_observer_t*);
          #pragma endregion
 
          #pragma region Client thread functions

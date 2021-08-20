@@ -370,6 +370,11 @@ namespace dovahscript {
       luaL_newmetatable(L, params.registry_key); // STACK: [newmeta]
       auto index_mt = lua_gettop(L);
       //
+      lua_createtable(L, 1, 0);  // rtti = {}
+      lua_pushvalue  (L, -2);    //
+      lua_rawseti    (L, -2, 1); // rtti[1] = meta
+      lua_setfield(L, -2, "__classlist"); // meta.__classlist = rtti
+      //
       lua_pushcfunction(L, &__index);
       lua_setfield(L, index_mt, "__index");
       lua_pushcfunction(L, &__newindex);

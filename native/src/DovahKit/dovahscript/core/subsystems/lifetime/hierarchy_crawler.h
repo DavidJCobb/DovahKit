@@ -19,11 +19,12 @@ namespace dovahscript::impl {
                referenced_in_lua  = 0x01,
                referenced_in_task = 0x02,
                referenced_general = 0x04, // we're sure the item is referenced, but we're not 100% sure where anymore
+               is_visible_dialog  = 0x08,
                //
                referenced_across_bridge = 0x40,
                marked_for_delete        = 0x80,
                //
-               referenced_anywhere = referenced_in_lua | referenced_in_task | referenced_general | referenced_across_bridge,
+               referenced_anywhere = referenced_in_lua | referenced_in_task | referenced_general | is_visible_dialog | referenced_across_bridge,
             };
          };
          using hierarchy_flags_t = std::underlying_type_t<hierarchy_flag::type>;

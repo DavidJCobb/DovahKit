@@ -1,5 +1,6 @@
 #include "wrapper.h"
 #include <cassert>
+#include "core/subsystems/lifetime.h"
 #include "core/subsystems/resources.h"
 #include "core/subsystems/userdata.h"
 #include "qt/DovahscriptCanvasWidgetLayerData.h"
@@ -101,7 +102,9 @@ namespace dovahscript {
 
    void wrapper::_on_pushed() {
       switch (this->type) {
+         using lifetime_t = core::subsystems::lifetime;
          case wrapper_type::model_observer:
+            lifetime_t::get().on_lua_referenced(cobb::passkey<lifetime_t, wrapper>(), this->model_observer);
             return;
          case wrapper_type::lua_managed_resource:
             assert(this->managed_resource);

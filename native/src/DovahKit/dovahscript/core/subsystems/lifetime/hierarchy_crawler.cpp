@@ -9,6 +9,7 @@
 #include "../lifetime.h"
 #include "../userdata.h"
 
+#include "../../../qt/DovahscriptDialog.h"
 #include "../../../qt/DovahscriptStandardItemModel.h"
 
 namespace {
@@ -133,13 +134,22 @@ namespace dovahscript::impl {
       // That's all quite convenient for us; it means we can stop traversing the hierarchy as 
       // soon as we see anything that we know is in use.
       //
+      if (auto* dialog = qobject_cast<DovahscriptDialog*>(root)) {
+         //
+         // Visible dialogs should never be considered abandoned.
+         //
+         if (dialog->lastVisibleState()) {
+            base->flags |= hierarchy_flag::is_visible_dialog;
+            return; // break
+         }
+      }
       if (this->task_ref_checker.is_task_referenced(basis)) {
          base->flags |= hierarchy_flag::referenced_in_task;
          return; // break
       }
       if (this->userdata_sys.wrapper_exists_for(&basis)) {
          base->flags |= hierarchy_flag::referenced_in_lua;
-         return;
+         return; // break
       }
       //
       if (root->isWidgetType()) {

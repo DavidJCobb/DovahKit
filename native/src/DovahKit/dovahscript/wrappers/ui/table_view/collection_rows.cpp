@@ -34,7 +34,7 @@ namespace {
       return *self;
    }
    model_t& get_model(QWidget* widget) {
-      auto* model = qobject_cast<model_t*>(cobb::qt::get_model_of(widget));
+      auto* model = qobject_cast<model_t*>(cobb::qt::get_underlying_model_of(widget));
       assert(model);
       return *model;
    }

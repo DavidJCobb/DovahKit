@@ -114,8 +114,8 @@ namespace dovahscript::core::subsystems {
                      if (!is_lua_referenced)
                         this->pending_lifetime_checks.queue_check(*obj);
                      //
-                     if constexpr (debug_task_reference_state) {
-                        if (is_lua_referenced) {
+                     if constexpr (debug_task_reference_state || debug_qobject_lifetimes) {
+                        if (is_lua_referenced && debug_task_reference_state) {
                            qDebug("Object %p (%s) recently became task-unreferenced but is Lua-referenced; no lifetime check needed.", obj, _debug_get_object_classname(obj));
                         } else {
                            qDebug("Object %p (%s) recently became task-unreferenced and is Lua-unreferenced; lifetime check queued for it.", obj, _debug_get_object_classname(obj));
@@ -144,8 +144,8 @@ namespace dovahscript::core::subsystems {
                      if (!is_lua_referenced)
                         this->pending_lifetime_checks.queue_check(*obj);
                      //
-                     if constexpr (debug_task_reference_state) {
-                        if (is_lua_referenced) {
+                     if constexpr (debug_task_reference_state || debug_model_observer_lifetimes) {
+                        if (is_lua_referenced && debug_task_reference_state) {
                            qDebug("Model observer %p recently became task-unreferenced but is Lua-referenced; no lifetime check needed.", obj);
                         } else {
                            qDebug("Model observer %p recently became task-unreferenced and is Lua-unreferenced; lifetime check queued for it.", obj);
@@ -280,11 +280,41 @@ namespace dovahscript::core::subsystems {
       require_script_thread();
       //
       this->pending_lifetime_checks.queue_check(*observer);
+      if constexpr (debug_model_observer_lifetimes) {
+         qDebug("Model observer %p has become Lua-unreferenced; lifetime check queued.", observer);
+      }
    }
    void lifetime::on_lua_unreferenced(passkey_to<userdata>, QObject* object) {
       require_script_thread();
       //
       this->pending_lifetime_checks.queue_check(*object);
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Object %p (%s) has become Lua-unreferenced; lifetime check queued.", object, _debug_get_object_classname(object));
+      }
+   }
+
+   void lifetime::on_lua_referenced(passkey_to<wrapper>, model_observer_t* observer) {
+      require_script_thread();
+      //
+      // Script APIs are not required to create model  observers through the lifetime system; they 
+      // are permitted to call ObservableStandardItemModel::getOrCreateRegisteredObserver directly 
+      // and so create  model observers on their own. However, we still need to  keep track of all 
+      // extant model observers.
+      // 
+      // In practice,  the best way to do this is to be notified by the wrapper that  gets created 
+      // and pushed to Lua when the model observer is pushed into Lua by the userdata subsystem at 
+      // the API's request.
+      //
+      if (!observer)
+         return;
+      auto  guard = std::unique_lock(this->object_read_write_lock);
+      auto& list  = this->hierarchy_objects.model_observers;
+      if (!list.contains(observer)) {
+         list.push_back(observer);
+         if constexpr (debug_model_observer_lifetimes) {
+            qDebug("Model observer %p has been pushed into Lua for the first time.", observer);
+         }
+      }
    }
 
 
@@ -363,11 +393,17 @@ namespace dovahscript::core::subsystems {
       require_client_thread();
       //
       this->pending_lifetime_checks.queue_check(*window);
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Window %p (%s) has been hidden; lifetime check queued.", window, _debug_get_object_classname(window));
+      }
    }
    void lifetime::on_canvas_widget_layer_data_detached(CanvasWidgetLayerData* data) {
       require_client_thread();
       //
       this->pending_lifetime_checks.queue_check(*data);
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Canvas widget layer data object %p (%s) has been detached from all layers; lifetime check queued.", data, _debug_get_object_classname(data));
+      }
    }
 
 
@@ -446,7 +482,7 @@ namespace dovahscript::core::subsystems {
          list.remove(i);
       } else {
          if constexpr (debug_model_observer_lifetimes) {
-            qDebug("Warning: model observer under destruction is not orphaned: %p", &target);
+            qDebug("Warning: model observer under destruction is not tracked: %p", &target);
          }
       }
    }
