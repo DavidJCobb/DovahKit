@@ -393,7 +393,7 @@ namespace {
             lua_rawgeti(L, index_list, i);
             constexpr int index_cls = 6;
             //
-            cobb::lua::rawgetfield(L, index_list, "__setters");
+            cobb::lua::rawgetfield(L, index_cls, "__setters");
             if (lua_istable(L, -1)) {
                cobb::lua::rawgetvalue(L, -1, index_key);
                if (lua_isfunction(L, -1)) {
@@ -424,7 +424,7 @@ namespace {
             lua_pop(L, 1);
             //
             if (!has_getter) {
-               cobb::lua::rawgetfield(L, index_list, "__getters");
+               cobb::lua::rawgetfield(L, index_cls, "__getters");
                if (lua_istable(L, -1)) {
                   cobb::lua::rawgetvalue(L, -1, index_key);
                   has_getter = !lua_isnoneornil(L, -1);

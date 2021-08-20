@@ -157,6 +157,7 @@
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
+    <ClCompile Include="dovahscript\send_script_task.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
@@ -619,6 +620,7 @@
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />
+    <ClInclude Include="dovahscript\send_script_task.h" />
     <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
