@@ -69,8 +69,6 @@ namespace dovahscript::impl {
          //
          lifetime_s.for_each_known_model_observer([this, &crawler, &userdata_s, &task_ref_access](model_observer_t* observer) {
             assert(observer);
-            if (this->queues.model_observers.contains(observer))
-               return;
             auto& list  = crawler.models_known_to_be_referenced;
             auto* model = qobject_cast<DovahscriptStandardItemModel*>(observer->model);
             if (!model)

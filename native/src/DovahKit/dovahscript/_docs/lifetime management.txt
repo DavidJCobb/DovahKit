@@ -124,24 +124,10 @@ to be referenced  in any other way. These three events require  us to perform a
 Lifetime checks must be performed with  the cooperation of both threads, but do 
 not need  to be performed *instantly.* It is enough to maintain a  shared queue 
 of pending  lifetime checks (i.e. objects  to run the checks on),  and have the 
-client thread run those tasks when possible.
-
-As such, we need the following:
-
-
-   The task queue
-
-      A queue of objects to perform lifetime checks on.
-
-
-   The communication status
-
-      An atomic enum with the following states:
-
-       - Nothing to report
-       - Worker asked to wait
-       - Worker is waiting
-
+client thread run those tasks when possible. Accordingly, a queue is present in 
+the lifetime subsystem, while the coordinator subsystem has functionality which 
+allows the client thread to "borrow"  script-thread status using handles, which 
+the queue uses.
 
 Both the client and worker threads shall add lifetime checks to the queue, with 
 a thread lock  to avoid collisions. The  client thread will  periodically check 
@@ -156,3 +142,44 @@ status is "worker  is waiting." If so, it will process the  lifetime check task
 queue (taking  ownership of the Lua state and becoming the script  thread while 
 it does), and then change the status back to "nothing to report" once the queue 
 is empty.
+
+
+=== Model observers ===========================================================
+
+Model observers add a wrinkle to lifetime handling because they aren't directly 
+part of any widget  hierarchy, yet must still be able to  keep widgets alive -- 
+that is,  if a Lua script retains a reference to a model observer, then  all of 
+the widgets using the observer's containing model must be considered referenced 
+and cannot be deleted.
+
+We solve this problem through a few means.
+
+First:  all models  available to Lua  scripts are  DovahscriptStandardItemModel 
+instances. This subclass of ObservableStandardItemModel is capable of holding a 
+list of  "associated widgets." We use this  list to allow these models  to know 
+which widgets are using them.
+
+Second: when we begin processing the  lifetime check queue, we iterate over all 
+extant model observers and create a list  of all models which contain any model 
+observers  that are Lua-  or  task-referenced,  and that aren't  themselves the 
+subject of pending lifetime checks.
+
+(Currently, we only  allow models to be used by single widgets,  and the widget 
+is the parent QObject of the model; this is because we don't currently have any 
+design  for managing the  lifetimes of the models  themselves. The  "associated 
+widget" system,  however, is one of the measures that could  allow us to try to 
+implement many-to-one  relationships between widgets and models  in the future; 
+it also allows the hierarchy crawler to t reat model observers as objects which 
+can potentially "bridge" two or more hierarchies.)
+
+With these systems in place, it's trivial  to determine whether a widget should 
+be kept alive by a model observer:
+
+ - When our hierarchy crawler encounters  any widget capable of having a model, 
+   we check if the widget's model is in our list of models that we know are not 
+   abandoned. This allows model observers to keep widgets alive.
+
+ - When we perform a lifetime check on a model observer, we grab its model and, 
+   from there,  the model's  associated widgets,  and treat those  as hierarchy 
+   roots to crawl from. This ensures that  if the model observer was previously 
+   keeping a widget alive and now no longer can, we discard that widget.
