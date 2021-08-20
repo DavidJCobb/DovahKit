@@ -67,6 +67,8 @@ namespace dovahscript {
          //
          set_up_class_with_singleton<ui::widget>(L, index);
             set_up_class_with_singleton<ui::button>(L, index);
+            set_up_class_with_singleton<ui::dropdown>(L, index);
+               set_up_class_with_singleton<ui::dropdown_item>(L, index);
             set_up_class_with_singleton<ui::table_view>(L, index);
                set_up_class_with_singleton<ui::table_view_cell>(L, index);
                set_up_class_with_singleton<ui::table_view_col>(L, index);

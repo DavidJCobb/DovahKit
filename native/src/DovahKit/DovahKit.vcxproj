@@ -192,6 +192,9 @@
     <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\button.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
@@ -663,6 +666,9 @@
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\button.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\item.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />

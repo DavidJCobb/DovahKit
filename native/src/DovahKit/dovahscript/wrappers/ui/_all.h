@@ -1,5 +1,8 @@
 #pragma once
 #include "button.h"
+#include "dropdown.h"
+#include "dropdown/collection_items.h"
+#include "dropdown/item.h"
 #include "table_view.h"
 #include "table_view/collection_columns.h"
 #include "table_view/collection_rows.h"

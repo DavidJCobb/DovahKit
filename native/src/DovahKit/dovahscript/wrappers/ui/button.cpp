@@ -1,7 +1,5 @@
 #include "button.h"
 #include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/qt_variant.h"
-#include "../../../helpers/qt/layout.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../push_native_object.h"
 #include "../../send_script_task.h"
