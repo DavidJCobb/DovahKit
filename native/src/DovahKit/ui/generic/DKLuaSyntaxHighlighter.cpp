@@ -159,13 +159,82 @@ namespace {
             return &keyword;
       return nullptr;
    }
+
+   // returns length of the number, if there was a valid one at the start of the string
+   static int skip_number(const QStringRef& view) {
+      auto size = view.size();
+      bool hex  = false;
+      int  i    = 0;
+      if (view[0] == '-')
+         ++i;
+      if (view.mid(i, 2).compare(QStringLiteral("0x"), Qt::CaseInsensitive) == 0) {
+         hex  = true;
+         i   += 2;
+      }
+      bool any_digits     = false;
+      bool has_decimal    = false;
+      bool has_scientific = false; // 1234e5 or 0x1234p5
+      for (; i < size; ++i) {
+         QChar c = view[i];
+         if (c.isNumber()) {
+            any_digits = true;
+            continue;
+         }
+         if (c == '.') {
+            if (has_decimal)
+               break;
+            has_decimal = true;
+            continue;
+         }
+         if (c == '-' && i > 0) {
+            //
+            // Allow negative exponents; otherwise, stop.
+            //
+            QChar b = view[i - 1];
+            if (hex) {
+               if (b != 'p' && b != 'P')
+                  break;
+            }
+            if (b != 'e' && b != 'E')
+               break;
+         }
+         if (hex) {
+            if (QStringLiteral("abcdefABCDEF").indexOf(c) >= 0) {
+               any_digits = true;
+               continue;
+            }
+            if (c == 'p' || c == 'P') {
+               if (has_scientific)
+                  break;
+               has_decimal    = false; // ensure decimal points in the exponent are allowed
+               has_scientific = true;
+               continue;
+            }
+         } else {
+            if (c == 'e' || c == 'E') {
+               if (has_scientific)
+                  break;
+               has_decimal    = false; // ensure decimal points in the exponent are allowed
+               has_scientific = true;
+               continue;
+            }
+         }
+         //
+         // Non-number character:
+         //
+         break;
+      }
+      if (!any_digits)
+         return 0;
+      return i;
+   }
 }
 
 DKLuaSyntaxHighlighter::DKLuaSyntaxHighlighter(QTextDocument* document) : QSyntaxHighlighter(document) {
    this->formats.comment.block.setFontItalic(true);
-   this->formats.comment.block.setForeground(QColor::fromRgb(48, 192, 8));
+   this->formats.comment.block.setForeground(QColor::fromRgb(32, 160, 8));
    this->formats.comment.line.setFontItalic(true);
-   this->formats.comment.line.setForeground(QColor::fromRgb(48, 192, 8));
+   this->formats.comment.line.setForeground(QColor::fromRgb(32, 160, 8));
    this->formats.keyword.setFontWeight(QFont::Weight::Bold);
    this->formats.keyword.setForeground(QColor::fromRgb(0, 16, 255));
    this->formats.label.setFontWeight(QFont::Weight::Bold);
@@ -173,8 +242,11 @@ DKLuaSyntaxHighlighter::DKLuaSyntaxHighlighter(QTextDocument* document) : QSynta
    this->formats.number.setForeground(QColor::fromRgb(200, 100, 0));
    this->formats.op.setForeground(QColor::fromRgb(0, 0, 128));
    this->formats.op.setFontWeight(QFont::Weight::Bold);
+   this->formats.preprocessor.setForeground(QColor::fromRgb(128, 64, 0));
    this->formats.string.simple.setForeground(QColor::fromRgb(140, 140, 140));
    this->formats.string.block.setForeground(QColor::fromRgb(160, 0, 80));
+   this->formats.syntax_error.setForeground(QColor::fromRgb(255, 0, 0));
+   this->formats.syntax_error.setFontWeight(QFont::Weight::Bold);
 }
 void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
    auto state   = BlockState(this->previousBlockState());
@@ -195,6 +267,12 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
             }
             this->setFormat(0, kw_size, this->formats.keyword);
             break;
+         }
+      }
+      if (this->features.preprocessor) {
+         if (size && text[0] == '$') {
+            this->setFormat(0, size, this->formats.preprocessor);
+            return;
          }
       }
    }
@@ -280,16 +358,13 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
             }
          }
          if (i == 0 || is_keyword_boundary(text[i - 1])) {
-            if (c.isDigit()) {
-               int j = i;
-               for (; j < size; ++j) {
-                  if (!text[j].isDigit())
-                     break;
+            if (c.isDigit() || c == '-') {
+               int length = skip_number(next);
+               if (length) {
+                  this->setFormat(i, length, this->formats.number);
+                  i += length - 1;
+                  continue;
                }
-               int length = j - i;
-               this->setFormat(i, length, this->formats.number);
-               i += length - 1;
-               continue;
             }
          }
          if (auto* keyword = extract_operator(next)) {
@@ -352,6 +427,9 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
          if (backslash || initial.code() == TokenType::String_Simple) {
             this->setFormat(start, text.size() - start, this->formats.string.simple);
          } else {
+            if (this->features.show_basic_errors) {
+               this->setFormat(start, text.size() - start, this->formats.syntax_error);
+            }
             state.clear();
          }
          break;

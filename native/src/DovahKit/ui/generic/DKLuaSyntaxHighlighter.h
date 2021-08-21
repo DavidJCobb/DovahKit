@@ -46,19 +46,30 @@ class DKLuaSyntaxHighlighter : public QSyntaxHighlighter {
    protected:
        void highlightBlock(const QString &text) override;
 
-   private:
-       struct {
-          struct {
-             QTextCharFormat line;
-             QTextCharFormat block;
-          } comment;
-          QTextCharFormat keyword;
-          QTextCharFormat label;
-          QTextCharFormat number;
-          QTextCharFormat op;
-          struct {
-             QTextCharFormat simple;
-             QTextCharFormat block;
-          } string;
-       } formats;
+   public:
+      //
+      // Configuration values. After changing any of these, you must call rehighlight() 
+      // on this syntax highlighter so that your changes take effect on any already-
+      // highlighted text.
+      //
+      struct {
+         bool preprocessor      = false;
+         bool show_basic_errors = false; // NOT comprehensive. can lead to a bad user experience while typing new code, too
+      } features;
+      struct {
+         struct {
+            QTextCharFormat line;
+            QTextCharFormat block;
+         } comment;
+         QTextCharFormat keyword;
+         QTextCharFormat label;
+         QTextCharFormat number;
+         QTextCharFormat op;
+         QTextCharFormat preprocessor; // obsolete as of Lua 4.0
+         struct {
+            QTextCharFormat simple;
+            QTextCharFormat block;
+         } string;
+         QTextCharFormat syntax_error; // NOT comprehensive
+      } formats;
 };

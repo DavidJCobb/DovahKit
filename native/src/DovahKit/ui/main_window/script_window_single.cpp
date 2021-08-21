@@ -51,42 +51,53 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       widget->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for proper word-wrapping in table cells
    }
    //
-   QObject::connect(this->ui.actionLoadScript, &QAction::triggered, this, [this]() {
-      auto path = QFileDialog::getOpenFileName(this, tr("Select script file"), _get_script_path().path(), tr("Lua scripts (*.lua)"));
-      if (path.isEmpty())
-         return;
-      auto file = QFile(path);
-      if (!file.open(QIODevice::OpenModeFlag::ExistingOnly | QIODevice::OpenModeFlag::ReadOnly)) {
-         QMessageBox::critical(this, tr("Error"), tr("Unable to open the file."));
-         return;
+   {  // Menu bar
+      {  // File
+         QObject::connect(this->ui.actionLoadScript, &QAction::triggered, this, [this]() {
+            auto path = QFileDialog::getOpenFileName(this, tr("Select script file"), _get_script_path().path(), tr("Lua scripts (*.lua)"));
+            if (path.isEmpty())
+               return;
+            auto file = QFile(path);
+            if (!file.open(QIODevice::OpenModeFlag::ExistingOnly | QIODevice::OpenModeFlag::ReadOnly)) {
+               QMessageBox::critical(this, tr("Error"), tr("Unable to open the file."));
+               return;
+            }
+            if (!this->ui.script->toPlainText().isEmpty()) {
+               auto choice = QMessageBox::question(
+                  this,
+                  tr("Are you sure?"),
+                  tr("Replace the currently loaded script with this file?"),
+                  QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No,
+                  QMessageBox::StandardButton::NoButton
+               );
+               if (choice == QMessageBox::StandardButton::NoButton)
+                  return;
+            }
+            this->ui.script->setPlainText(file.readAll());
+         });
+         QObject::connect(this->ui.actionSaveScript, &QAction::triggered, this, [this]() {
+            auto path = QFileDialog::getSaveFileName(this, tr("Select script file"), _get_script_path().path(), tr("Lua scripts (*.lua)"));
+            if (path.isEmpty())
+               return;
+            auto file = QSaveFile(path);
+            if (!file.open(QIODevice::OpenModeFlag::WriteOnly)) {
+               QMessageBox::critical(this, tr("Error"), tr("Unable to open the file for writing."));
+               return;
+            }
+            QTextStream stream(&file);
+            stream.setCodec("UTF-8");
+            stream << this->ui.script->toPlainText();
+            file.commit();
+         });
       }
-      if (!this->ui.script->toPlainText().isEmpty()) {
-         auto choice = QMessageBox::question(
-            this,
-            tr("Are you sure?"),
-            tr("Replace the currently loaded script with this file?"),
-            QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No,
-            QMessageBox::StandardButton::NoButton
-         );
-         if (choice == QMessageBox::StandardButton::NoButton)
-            return;
+      {  // Format
+         this->ui.actionWordWrap->setChecked(this->ui.script->wordWrapMode() != QTextOption::NoWrap);
+         QObject::connect(this->ui.actionWordWrap, &QAction::toggled, this, [this](bool checked) {
+            this->ui.script->setWordWrapMode(checked ? QTextOption::WordWrap : QTextOption::NoWrap);
+         });
       }
-      this->ui.script->setPlainText(file.readAll());
-   });
-   QObject::connect(this->ui.actionSaveScript, &QAction::triggered, this, [this]() {
-      auto path = QFileDialog::getSaveFileName(this, tr("Select script file"), _get_script_path().path(), tr("Lua scripts (*.lua)"));
-      if (path.isEmpty())
-         return;
-      auto file = QSaveFile(path);
-      if (!file.open(QIODevice::OpenModeFlag::WriteOnly)) {
-         QMessageBox::critical(this, tr("Error"), tr("Unable to open the file for writing."));
-         return;
-      }
-      QTextStream stream(&file);
-      stream.setCodec("UTF-8");
-      stream << this->ui.script->toPlainText();
-      file.commit();
-   });
+   }
+   //
    QObject::connect(this->ui.buttonRun, &QPushButton::clicked, this, [this]() {
       if (!this->isVisible())
          return;

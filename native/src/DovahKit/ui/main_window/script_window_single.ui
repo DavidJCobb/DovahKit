@@ -145,7 +145,14 @@
     <addaction name="actionLoadScript"/>
     <addaction name="actionSaveScript"/>
    </widget>
+   <widget class="QMenu" name="menuFormat">
+    <property name="title">
+     <string>Format</string>
+    </property>
+    <addaction name="actionWordWrap"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuFormat"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionLoadScript">
@@ -156,6 +163,14 @@
   <action name="actionSaveScript">
    <property name="text">
     <string>Save script</string>
+   </property>
+  </action>
+  <action name="actionWordWrap">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Word wrap</string>
    </property>
   </action>
  </widget>
