@@ -3,7 +3,6 @@
 #include <QTableView>
 #include <QVariant>
 #include "../../../../../ui/generic/ObservableStandardItemModel.h"
-#include "../../coordinator.h"
 #include "../../events.h"
 
 #include "../../../../wrappers/ui/table_view/cell.h"

@@ -1,7 +1,6 @@
 #include "button.h"
 #include <QPushButton>
 #include <QVariant>
-#include "../../coordinator.h"
 #include "../../events.h"
 
 namespace dovahscript::impl::event_registration {

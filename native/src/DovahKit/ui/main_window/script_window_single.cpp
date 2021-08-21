@@ -23,13 +23,17 @@ namespace {
 EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindow(parent) {
    ui.setupUi(this);
    //
+   #pragma region UI configuration
    {  // Font for script editor
       QFont font("Lucida Console", 10);
       font.setStyleHint(QFont::Monospace);
       this->ui.script->setFont(font);
+      this->ui.eval->setFont(font);
       //
-      auto* highlighter = new DKLuaSyntaxHighlighter(this->ui.script->document());
+      new DKLuaSyntaxHighlighter(this->ui.script->document());
+      new DKLuaSyntaxHighlighter(this->ui.eval->document());
    }
+   this->_updateEvalEnableState();
    {  // Visuals for log pane
       auto* widget = this->ui.log;
       widget->setAlternatingRowColors(true);
@@ -50,8 +54,9 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       //
       widget->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for proper word-wrapping in table cells
    }
+   #pragma endregion
    //
-   {  // Menu bar
+   #pragma region Menu bar
       {  // File
          QObject::connect(this->ui.actionLoadScript, &QAction::triggered, this, [this]() {
             auto path = QFileDialog::getOpenFileName(this, tr("Select script file"), _get_script_path().path(), tr("Lua scripts (*.lua)"));
@@ -96,8 +101,9 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
             this->ui.script->setWordWrapMode(checked ? QTextOption::WordWrap : QTextOption::NoWrap);
          });
       }
-   }
+   #pragma endregion
    //
+   #pragma region Script and log actions
    QObject::connect(this->ui.buttonRun, &QPushButton::clicked, this, [this]() {
       if (!this->isVisible())
          return;
@@ -112,7 +118,25 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
    QObject::connect(this->ui.buttonClearLog, &QPushButton::clicked, this, [this]() {
       this->ui.log->setRowCount(0);
    });
+   #pragma endregion
    //
+   #pragma region Eval
+   QObject::connect(this->ui.buttonEval, &QPushButton::clicked, this, [this]() {
+      if (this->state.eval_pending || !this->state.script_running)
+         return;
+      if (!this->isVisible())
+         return;
+      QString code = this->ui.eval->toPlainText();
+      if (code.isEmpty())
+         return;
+      if (DovahscriptHost::get().evalScript(code)) {
+         this->state.eval_pending = true;
+         this->_updateEvalEnableState();
+      }
+   });
+   #pragma endregion
+   //
+   #pragma region Script execution event handlers
    auto& host = DovahscriptHost::get();
    QObject::connect(&host, &DovahscriptHost::scriptStarted, this, [this]() {
       this->_onScriptStartStop(true);
@@ -130,19 +154,34 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       widget->insertRow(index);
       widget->setItem(index, 0, new QTableWidgetItem(text));
    });
+   QObject::connect(&host, &DovahscriptHost::evalComplete, this, [this]() {
+      this->state.eval_pending = false;
+      this->_updateEvalEnableState();
+   });
    QObject::connect(&host, &DovahscriptHost::userClickedLink, this, [this](const QString& text, QWidget* opener) {
       auto* confirm = new ScriptWindowHyperlinkConfirmDialog(text, opener ? opener : this);
       confirm->open();
    });
    this->_onScriptStartStop(false);
+   #pragma endregion
 }
 void EditorSingleScriptWindow::_onScriptStartStop(bool script_running) {
+   this->state.script_running = script_running;
+   //
    this->ui.buttonRun->setDisabled(script_running);
    this->ui.buttonForceKill->setDisabled(!script_running);
-   this->ui.script->setDisabled(script_running);
+   this->ui.script->setReadOnly(script_running);
    //
    this->ui.actionLoadScript->setDisabled(script_running);
    this->ui.actionSaveScript->setDisabled(script_running);
+   //
+   this->_updateEvalEnableState();
+}
+
+void EditorSingleScriptWindow::_updateEvalEnableState() {
+   bool enable = this->state.script_running && !this->state.eval_pending;
+   this->ui.buttonEval->setEnabled(enable);
+   this->ui.eval->setReadOnly(!enable);
 }
 
 bool EditorSingleScriptWindow::_checkAllowClose() {

@@ -1,6 +1,7 @@
 #include "coordinator.h"
 #include <QLabel>
 #include <QSortFilterProxyModel>
+#include "../../../helpers/lua/dump.h"
 #include "../../../helpers/qt/can_have_model.h"
 #include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/set_model_of.h"
@@ -96,6 +97,48 @@ namespace dovahscript::core::subsystems {
       this->task_queues.ui.write.process();
    }
 
+   void coordinator::_run_eval_script(const QString& code) {
+      auto* L    = this->lua_state;
+      auto  top  = lua_gettop(L);
+      auto& host = host::get();
+      //
+      auto buffer = code.toUtf8();
+      auto result = luaL_loadbufferx(L, buffer.data(), buffer.size(), "<eval>", "t"); // equivalent to (lua_load) with a built-in lua_Reader
+      //
+      switch (result) {
+         case LUA_OK:
+            if constexpr (debug_script_start_stop) {
+               qDebug("Parsed eval script.");
+            }
+            break;
+         case LUA_ERRMEM:
+         case LUA_ERRSYNTAX:
+         default:
+            if constexpr (debug_script_start_stop) {
+               qDebug("Failed to parse eval script.");
+            }
+            auto message = QString::fromUtf8(lua_tostring(L, -1));
+            emit host.messageLogged(message);
+            return;
+      }
+      if (lua_gettop(L) == top)
+         return;
+      safe_call(L, 0, LUA_MULTRET);
+      emit host.evalComplete();
+      //
+      int end   = lua_gettop(L);
+      int count = end - top;
+      if (count > 0) {
+         emit host.messageLogged(QString("Eval script ran to completion and returned %1 value(s):").arg(count));
+         for (int i = top + 1; i <= end; ++i) {
+            auto s = cobb::lua::var_to_string(L, i);
+            emit host.messageLogged(QString::fromStdString(s));
+         }
+         lua_settop(L, top);
+      } else {
+         emit host.messageLogged("Eval script ran to completion.");
+      }
+   }
    void coordinator::_script_thread_loop() {
       assert(this->worker_thread_state == thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
       this->script_thread = thread_type::worker;
@@ -142,6 +185,16 @@ namespace dovahscript::core::subsystems {
          ran_more_code |= (this->_run_queued_functions(false) > 0);
          ran_more_code |= (events::get().process_pending_events() > 0);
          ran_more_code |= (this->_run_queued_functions(true) > 0);
+         {
+            QString eval;
+            {
+               auto& state = this->eval_script_state;
+               auto  guard = std::lock_guard(state.lock);
+               std::swap(eval, state.code);
+            }
+            if (!eval.isEmpty())
+               this->_run_eval_script(eval);
+         }
          lifetime::get().worker_thread_handler();
       } while (ran_more_code || this->_should_keep_running());
       //
@@ -430,6 +483,16 @@ namespace dovahscript::core::subsystems {
       this->_setup_lua_state();
       //
       this->worker_thread = std::thread([this]() { this->_script_thread_loop(); });
+   }
+   bool coordinator::eval_script(const QString& code) {
+      if (code.isEmpty())
+         return false;
+      auto& state = this->eval_script_state;
+      auto  guard = std::lock_guard(state.lock);
+      if (!state.code.isEmpty())
+         return false;
+      state.code = code;
+      return true;
    }
    void coordinator::set_pause_state(bool b) {
       this->paused = b;

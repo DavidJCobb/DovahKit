@@ -10,8 +10,14 @@ class EditorSingleScriptWindow : public QMainWindow {
       
    private:
       Ui::EditorSingleScriptWindow ui;
+      struct {
+         bool eval_pending   = false;
+         bool script_running = false;
+      } state;
       
       void _onScriptStartStop(bool script_running);
+
+      void _updateEvalEnableState();
 
       bool _checkAllowClose();
 

@@ -80,6 +80,10 @@ namespace dovahscript::core::subsystems {
 
          script_set scripts_to_run;
          struct {
+            QString    code; // cleared once the code is run
+            std::mutex lock;
+         } eval_script_state;
+         struct {
             task_queue s2m;
             struct {
                task_queue read;
@@ -115,6 +119,7 @@ namespace dovahscript::core::subsystems {
          void _teardown_lua_state(); // can only safely run on the client thread, since it tears down Qt objects now too
 
          int _run_queued_functions(bool ui_locked); // returns the number of functions executed
+         void _run_eval_script(const QString&);
          void _script_thread_loop();
 
          //
@@ -155,6 +160,7 @@ namespace dovahscript::core::subsystems {
 
          void abort();
          void execute_scripts(const script_set&);
+         bool eval_script(const QString&); // returns true if the eval script could be queued. asynch, so it will likely return before the eval script runs.
          void set_pause_state(bool);
 
          void create_model_for_widget(QWidget&);

@@ -2,7 +2,6 @@
 #include <QComboBox>
 #include <QVariant>
 #include "../../../helpers/qt/combobox.h"
-#include "../../coordinator.h"
 #include "../../events.h"
 
 namespace dovahscript::impl::event_registration {

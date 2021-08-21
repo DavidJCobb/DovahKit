@@ -36,3 +36,7 @@ void DovahscriptHost::setPaused(bool b) {
 void DovahscriptHost::setUIParentWidget(QWidget* widget) {
    coordinator_t::get().set_ui_parent(widget);
 }
+
+bool DovahscriptHost::evalScript(const QString& code) {
+   return coordinator_t::get().eval_script(code);
+}

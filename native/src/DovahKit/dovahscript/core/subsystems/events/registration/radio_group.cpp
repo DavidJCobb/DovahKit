@@ -2,7 +2,6 @@
 #include <QAbstractButton>
 #include <QButtonGroup>
 #include <QVariant>
-#include "../../coordinator.h"
 #include "../../events.h"
 
 namespace dovahscript::impl::event_registration {

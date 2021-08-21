@@ -24,6 +24,8 @@ class DovahscriptHost : public QObject, cobb::singleton {
       void scriptStarted();
       void scriptEnded();
       void userClickedLink(const QString& url, QWidget* opener);
+
+      void evalComplete();
       
    public slots:
       void abort();
@@ -31,6 +33,16 @@ class DovahscriptHost : public QObject, cobb::singleton {
       void runScripts(const dovahscript::script_set&); // use std::move for the argument
       void setPaused(bool);
       void setUIParentWidget(QWidget*); // only allowed when a script is not running
+
+      // Once a script session is up, you can use this to run additional code. Think of it 
+      // like a debug console for the user; if a script with UI throws an error or does 
+      // something unexpected, the user can use this (perhaps through some secondary text 
+      // box) to run Lua commands and inspect the script state.
+      //
+      // Eval scripts are queued to run, not run instantly. Lua is single-threaded, so if 
+      // other script functions are running, the eval script must wait on them to finish. 
+      // This also means that you can't use this to debug infinite loops and similar.
+      bool evalScript(const QString& code);
 };
 
 namespace dovahscript {
