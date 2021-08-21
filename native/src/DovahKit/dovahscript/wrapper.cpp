@@ -30,7 +30,7 @@ namespace dovahscript {
       // it has no room for the desired resource.)
       //
       auto* userdata = (wrapper*)lua_touserdata(L, 1);
-      userdata->teardown();
+      userdata->teardown(true);
       return 0;
    }
    /*static*/ int wrapper::__gc(lua_State* L) {
@@ -62,7 +62,7 @@ namespace dovahscript {
       //
    }
 
-   void wrapper::teardown() {
+   void wrapper::teardown(bool is_toclose) {
       if (this->type == wrapper_type::undefined) {
          //
          // This can happen if the wrapper was closed.
@@ -70,13 +70,8 @@ namespace dovahscript {
          return;
       }
       //
-      core::subsystems::userdata::get().on_wrapper_destroyed(*this);
-      this->widget            = nullptr;
-      this->model_observer    = nullptr;
-      this->button_group      = nullptr;
-      this->managed_resource  = nullptr;
-      this->canvas_entity     = nullptr;
-      this->canvas_layer_data = nullptr;
+      core::subsystems::userdata::get().on_wrapper_destroyed(*this, is_toclose);
+      this->pertinent_pointer = nullptr;
       //
       this->type = wrapper_type::undefined;
    }

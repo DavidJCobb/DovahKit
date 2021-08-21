@@ -203,6 +203,7 @@
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col\collection_cells.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\text.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
@@ -679,6 +680,7 @@
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col\collection_cells.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\row.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\row\collection_cells.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\text.h" />
     <ClInclude Include="dovahscript\wrappers\ui\various\font.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
     <ClInclude Include="dovahscript\wrappers\ui\window.h" />

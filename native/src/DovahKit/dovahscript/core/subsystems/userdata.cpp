@@ -13,6 +13,8 @@
 #include "../../../editor/form_stub_meta_type.h" // needed for QVariants of form stub pointers
 #include "../../qt/DovahscriptCanvasWidgetLayerData.h"
 
+#include "../../constants/debugging.h"
+
 //
 // Given a dovah::form_stub& named stub:
 // 
@@ -29,6 +31,39 @@ namespace {
    inline lua_State* _get_lua() {
       return dovahscript::core::subsystems::coordinator::get().lua_state;
    }
+
+   #pragma region Debug logging
+   // Don't have this respond to (dovahscript::force_enable_debug_logging); if it does, then conventional 
+   // debugging of other systems will be FILLED with log spam.
+   static constexpr bool debug_log_wrapper_events = /*dovahscript::force_enable_debug_logging ||*/ false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+      ;
+
+   static constexpr const char* _wrapper_type_to_string(dovahscript::wrapper_type t) {
+      switch (t) {
+         using wt = dovahscript::wrapper_type;
+         case wt::button_group:
+            return "button group";
+         case wt::canvas_entity:
+            return "canvas entity";
+         case wt::canvas_layer_data:
+            return "canvas layer data";
+         case wt::form:
+            return "form";
+         case wt::lua_managed_resource:
+            return "resource";
+         case wt::model_observer:
+            return "model observer";
+         case wt::undefined:
+            return "undefined";
+         case wt::widget:
+            return "widget";
+      }
+      return "unknown";
+   }
+   #pragma endregion
 }
 
 namespace dovahscript::core::subsystems {
@@ -112,9 +147,11 @@ namespace dovahscript::core::subsystems {
          //
          auto* target = (wrapper*) lua_touserdata(L, -1);
          assert(target && target->lua_key == key);
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("Zombifying wrapper: %p, pertinent pointer %p (%s)", target, target->pertinent_pointer, _wrapper_type_to_string(target->type));
+         }
          target->lua_key = LUA_NOREF;
-         target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
-         target->form    = nullptr;
+         target->form    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
          //
          lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
          //
@@ -166,9 +203,11 @@ namespace dovahscript::core::subsystems {
          if (lua_type(L, si_nv) == LUA_TUSERDATA) {
             if (auto* target = (wrapper*) lua_touserdata(L, si_nv)) {
                assert(target->stub == &stub);
+               if constexpr (debug_log_wrapper_events) {
+                  qDebug("Zombifying wrapper: %p, pertinent pointer %p (%s)", target, target->pertinent_pointer, _wrapper_type_to_string(target->type));
+               }
                target->lua_key = LUA_NOREF;
-               target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
-               target->form    = nullptr;
+               target->form    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
                //
                lua_pushcfunction(L, &dovahscript::zombify_userdata);
                lua_pushvalue    (L, si_nv);
@@ -217,6 +256,9 @@ namespace dovahscript::core::subsystems {
          if (lua_type(L, si_nv) == LUA_TUSERDATA) {
             if (auto* target = (wrapper*) lua_touserdata(L, si_nv)) {
                assert(target->model_observer == &observer);
+               if constexpr (debug_log_wrapper_events) {
+                  qDebug("Zombifying wrapper: %p, pertinent pointer %p (%s)", target, target->pertinent_pointer, _wrapper_type_to_string(target->type));
+               }
                target->lua_key = LUA_NOREF;
                // Don't clear the model-observer pointer from the wrapper here; let the __gc metamethod's call to wrapper::teardown handle that (and the observer's refcount) instead.
                //
@@ -256,7 +298,7 @@ namespace dovahscript::core::subsystems {
       return result;
    }
 
-   void userdata::on_wrapper_destroyed(wrapper& instance) {
+   void userdata::on_wrapper_destroyed(wrapper& instance, bool is_toclose) {
       require_script_thread();
       //
       auto& coordinator_s = coordinator::get();
@@ -279,6 +321,9 @@ namespace dovahscript::core::subsystems {
       lua_pushlightuserdata(L, light);
       lua_rawget(L, -2);
       if (!lua_istable(L, -1)) {
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("A native object has become Lua-unreferenced, but the wrapper list is already gone: %p, pertinent pointer %p (%s)", &instance, instance.pertinent_pointer, _wrapper_type_to_string(instance.type));
+         }
          lua_pop(L, 2);
          //
          // Here's an interesting edge-case that can happen: what if two wrappers for the 
@@ -307,10 +352,44 @@ namespace dovahscript::core::subsystems {
          //
          return;
       }
-      bool destroy = cobb::lua::isempty(L, -1);
+      bool no_wrappers_remain;
+      {  // Check if the wrapper list is empty.
+         //
+         // Let the "wrapper list" refer to the list of wrappers that exist in storage for 
+         // the current wrapper's pertinent pointer.
+         // 
+         // If we're tearing down the current wrapper because it has been garbage-collected 
+         // (i.e. we were called from the wrapper's __gc metamethod), then the current wrap-
+         // per will have been removed from the wrapper list. If the wrapper list is empty, 
+         // then we know that the wrapped native object has just ceased to be Lua-referenced, 
+         // and we can act on that knowledge.
+         // 
+         // If, on the other hand, we're tearing down the current wrapper because it was in 
+         // a to-be-closed variable that has gone out of scope (i.e. we were called from the 
+         // wrapper's __close metamethod), then the current wrapper may still be in the wrap-
+         // per list, as it has not been garbage-collected. Accordingly, we want to check 
+         // whether the wrapper list contains only the current wrapper; if so, we know that 
+         // the wrapped native object has just ceased to be Lua-referenced.
+         //
+         auto idx = lua_absindex(L, -1);
+         //
+         lua_pushnil(L);  // key; popped by next call
+         if (lua_next(L, idx) != 0) {
+            no_wrappers_remain = false;
+            if (is_toclose) {
+               auto* prior = lua_touserdata(L, -1);
+               if (prior == &instance)
+                  no_wrappers_remain = true;
+            }
+            lua_pop(L, 2);
+         }
+      }
       lua_pop(L, 1);
       //
-      if (destroy) {
+      if (no_wrappers_remain) {
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("A native object has become Lua-unreferenced; destroying the wrapper list: %p, pertinent pointer %p (%s)", &instance, instance.pertinent_pointer, _wrapper_type_to_string(instance.type));
+         }
          //
          // The wrapper list is empty. This means a few things:
          // 
@@ -343,7 +422,10 @@ namespace dovahscript::core::subsystems {
       }
       lua_pop(L, 1); // remove wrapper storage table from the stack
       //
-      if (destroy) {
+      if (no_wrappers_remain) {
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("A native object has become Lua-unreferenced; performing wrapper-destroy behaviors: %p, pertinent pointer %p (%s)", &instance, instance.pertinent_pointer, _wrapper_type_to_string(instance.type));
+         }
          auto& lifetime_s = lifetime::get();
          switch (instance.type) {
             using wt = wrapper_type;
@@ -394,6 +476,9 @@ namespace dovahscript::core::subsystems {
          lua_pushlightuserdata(L, light); // push 1
          lua_rawget(L, table);            // push 0 // STACK: - [ ..., storage_root, storage_root[light] ] +
          if (!lua_istable(L, -1)) {
+            if constexpr (debug_log_wrapper_events) {
+               qDebug("Pushing a wrapper into Lua for pertinent pointer %p (%s); creating new wrapper list...", instance.pertinent_pointer, _wrapper_type_to_string(instance.type));
+            }
             lua_settop(L, table);
             //
             lua_createtable (L, 0, 0); // push 1 // storage_sub = {}
@@ -447,6 +532,9 @@ namespace dovahscript::core::subsystems {
          int i = lua_rawlen(L, si_storage) + 1;
          lua_rawseti(L, si_storage, i);
          ptr->lua_key = i;
+      }
+      if constexpr (debug_log_wrapper_events) {
+         qDebug("Pushing a wrapper into Lua: %p, pertinent pointer %p (%s)", ptr, ptr->pertinent_pointer, _wrapper_type_to_string(ptr->type));
       }
       ptr->_on_pushed();
       //
@@ -507,9 +595,11 @@ namespace dovahscript::core::subsystems {
          //
          auto* target = (wrapper*) lua_touserdata(L, -1);
          assert(target && target->lua_key == key);
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("Zombifying wrapper: %p, pertinent pointer %p (%s)", target, target->pertinent_pointer, _wrapper_type_to_string(target->type));
+         }
          target->lua_key = LUA_NOREF;
-         target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
-         target->form    = nullptr;
+         target->form    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
          //
          lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
          //

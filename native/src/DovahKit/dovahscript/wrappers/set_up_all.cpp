@@ -73,6 +73,7 @@ namespace dovahscript {
                set_up_class_with_singleton<ui::table_view_cell>(L, index);
                set_up_class_with_singleton<ui::table_view_col>(L, index);
                set_up_class_with_singleton<ui::table_view_row>(L, index);
+            set_up_class_with_singleton<ui::text>(L, index);
             set_up_class_with_singleton<ui::window>(L, index);
          #pragma region Various
          define_wrapper_metatable<ui::font>(L);

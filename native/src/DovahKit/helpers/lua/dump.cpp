@@ -24,14 +24,17 @@ namespace {
          auto prior = lua_gettop(L);
          lua_pushnil(L);
          while (lua_next(L, pos) != 0) {
+            auto index_k = lua_absindex(L, -2); // luaL_tolstring doesn't handle negative indices, so we have to
+            auto index_v = lua_absindex(L, -1);
+            //
             std::string field(indent + 3, ' ');
-            field += luaL_tolstring(L, -2, nullptr);
+            field += luaL_tolstring(L, index_k, nullptr);
             lua_pop(L, 1);
             field += " = ";
-            if (lua_type(L, -1) == LUA_TTABLE) {
-               field += _print_value(L, seen, lua_absindex(L, -1), indent + 3);
+            if (lua_type(L, index_v) == LUA_TTABLE) {
+               field += _print_value(L, seen, index_v, indent + 3);
             } else {
-               field += luaL_tolstring(L, -1, nullptr);
+               field += luaL_tolstring(L, index_v, nullptr);
                lua_pop(L, 1);
             }
             lua_pop(L, 1);

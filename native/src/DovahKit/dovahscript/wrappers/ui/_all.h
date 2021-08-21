@@ -11,6 +11,7 @@
 #include "table_view/col/collection_cells.h"
 #include "table_view/row.h"
 #include "table_view/row/collection_cells.h"
+#include "text.h"
 #include "various/font.h"
 #include "widget.h"
 #include "window.h"

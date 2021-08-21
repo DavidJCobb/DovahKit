@@ -44,7 +44,7 @@ namespace dovahscript {
          // the VM internals; the wrapper on the stack is then destroyed, but it's the wrapper in the VM 
          // that actually matters, and it's only the latter that should run teardown tasks.
          //
-         void teardown();
+         void teardown(bool is_toclose = false);
 
       public:
          //

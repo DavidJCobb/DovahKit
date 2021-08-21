@@ -28,7 +28,7 @@ namespace dovahscript::core::subsystems {
 
          bool wrapper_exists_for(void*);
 
-         void on_wrapper_destroyed(wrapper&);
+         void on_wrapper_destroyed(wrapper&, bool is_toclose = false);
 
          //
          // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 
