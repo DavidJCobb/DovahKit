@@ -25,6 +25,10 @@ class DovahscriptHost : public QObject, cobb::singleton {
       void scriptEnded();
       void userClickedLink(const QString& url, QWidget* opener);
 
+      // Emitted when an eval script is dealt with, whether it ran to completion, hit an 
+      // error, or failed to even parse. Not emitted if the eval script is skipped as a 
+      // result of the overall script session ending (whether naturally or by force-kill) 
+      // before the eval script had a chance to run.
       void evalComplete();
       
    public slots:

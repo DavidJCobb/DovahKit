@@ -1,0 +1,21 @@
+
+Here's a situation that you're likely to  run into when using DovahKit's script 
+engine: you write a script which performs  some useful task, offering custom UI 
+windows and so on. You go to test your script, but something goes wrong, and an 
+error is thrown. The script doesn't immediately shut down, since it has windows 
+open, but whatever code it was running halts immediately.
+
+Of course,  you may want to inspect the  script's state at this point;  you may 
+even want to run Lua code to dig through the script's state or to hot-patch the 
+script and finish whatever it was you  wanted to test. This is the use case for 
+the "eval scripts" feature.
+
+When DovahKit's script engine is active, you can ask it to run an "eval script" 
+at the earliest possible opportunity. Lua is single-threaded, so a pending eval 
+script can only execute when no other Lua code is running. This of course means 
+that eval scripts cannot be used to debug infinite loops or similar issues; the 
+other scripts  will run forever, and so the eval script will wait  forever (or, 
+in practice, until the script session is force-killed).
+
+Plus, if you're like me and you have a bad habit of only using local variables, 
+then your eval script simply won't be able to access any of what you've made.

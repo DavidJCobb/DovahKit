@@ -119,6 +119,7 @@ namespace dovahscript::core::subsystems {
             }
             auto message = QString::fromUtf8(lua_tostring(L, -1));
             emit host.messageLogged(message);
+            emit host.evalComplete();
             return;
       }
       if (lua_gettop(L) == top)
@@ -336,6 +337,10 @@ namespace dovahscript::core::subsystems {
       if (auto* L = this->lua_state) {
          lua_close(L);
          this->lua_state = nullptr;
+      }
+      {
+         auto guard = std::lock_guard(this->eval_script_state.lock);
+         this->eval_script_state.code.clear();
       }
       //
       this->task_queues.s2m.clear();
