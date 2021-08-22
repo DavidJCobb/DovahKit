@@ -35,21 +35,22 @@ namespace {
    std::array qobject_classes = {
       std::pair{ &QWidget::staticMetaObject,           dovahscript::wrappers::ui::widget::metatable_key },
       //
-      std::pair{ &QPushButton::staticMetaObject,       dovahscript::wrappers::ui::button::metatable_key },
-      std::pair{ &QCheckBox::staticMetaObject,         dovahscript::wrappers::ui::checkbox::metatable_key },
-      std::pair{ &QComboBox::staticMetaObject,         dovahscript::wrappers::ui::dropdown::metatable_key },
-      std::pair{ &FormPicker::staticMetaObject,        dovahscript::wrappers::ui::formpicker::metatable_key },
-      std::pair{ &QProgressBar::staticMetaObject,      dovahscript::wrappers::ui::progress_bar::metatable_key },
-      std::pair{ &QTableView::staticMetaObject,        dovahscript::wrappers::ui::table_view::metatable_key },
-      std::pair{ &QLabel::staticMetaObject,            dovahscript::wrappers::ui::text::metatable_key },
-      std::pair{ &QLineEdit::staticMetaObject,         dovahscript::wrappers::ui::textbox::metatable_key },
-      std::pair{ &DovahscriptDialog::staticMetaObject, dovahscript::wrappers::ui::window::metatable_key },
+      std::pair{ &QPushButton::staticMetaObject,           dovahscript::wrappers::ui::button::metatable_key },
+      std::pair{ &QCheckBox::staticMetaObject,             dovahscript::wrappers::ui::checkbox::metatable_key },
+      std::pair{ &QComboBox::staticMetaObject,             dovahscript::wrappers::ui::dropdown::metatable_key },
+      std::pair{ &FormPicker::staticMetaObject,            dovahscript::wrappers::ui::formpicker::metatable_key },
+      std::pair{ &DovahscriptLineWidget::staticMetaObject, dovahscript::wrappers::ui::line::metatable_key },
+      std::pair{ &QProgressBar::staticMetaObject,          dovahscript::wrappers::ui::progress_bar::metatable_key },
+      std::pair{ &QDoubleSpinBox::staticMetaObject,        dovahscript::wrappers::ui::spinbox::metatable_key },
+      std::pair{ &QTableView::staticMetaObject,            dovahscript::wrappers::ui::table_view::metatable_key },
+      std::pair{ &QLabel::staticMetaObject,                dovahscript::wrappers::ui::text::metatable_key },
+      std::pair{ &QLineEdit::staticMetaObject,             dovahscript::wrappers::ui::textbox::metatable_key },
+      std::pair{ &DovahscriptDialog::staticMetaObject,     dovahscript::wrappers::ui::window::metatable_key },
       /*//
       std::pair{ &QButtonGroup::staticMetaObject, dovahscript::wrappers::ui::radio_group::metatable_key },
       //
       // Widgets:
       //
-      std::pair{ &QDoubleSpinBox::staticMetaObject, dovahscript::wrappers::ui::spinbox::metatable_key },
       std::pair{ &QGroupBox::staticMetaObject,      dovahscript::wrappers::ui::groupbox::metatable_key },
       std::pair{ &QRadioButton::staticMetaObject,   dovahscript::wrappers::ui::radio_button::metatable_key },
       std::pair{ &QScrollArea::staticMetaObject,    dovahscript::wrappers::ui::scrollbox::metatable_key },
@@ -72,6 +73,12 @@ namespace {
    };
 
    const char* get_metatable_for_qobject(const QMetaObject* rtti) {
+      //
+      // Use a do-while loop instead of mass qobject_casts both because I suspect it'd be 
+      // faster, and to properly handle the possibility that a class and its subclass might 
+      // both be in the list with different metatables (we want to ensure we'd pick the 
+      // subclass).
+      //
       do {
          for (auto& pair : qobject_classes)
             if (rtti == pair.first)

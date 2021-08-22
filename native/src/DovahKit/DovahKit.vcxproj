@@ -154,6 +154,7 @@
     <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptLineWidget.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
@@ -197,7 +198,9 @@
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\formpicker.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\line.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\progress_bar.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
@@ -628,6 +631,7 @@
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptLineWidget.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />
@@ -678,7 +682,9 @@
     <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h" />
     <ClInclude Include="dovahscript\wrappers\ui\dropdown\item.h" />
     <ClInclude Include="dovahscript\wrappers\ui\formpicker.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\line.h" />
     <ClInclude Include="dovahscript\wrappers\ui\progress_bar.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\spinbox.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />

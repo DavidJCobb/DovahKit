@@ -268,9 +268,8 @@ namespace {
             text = QString::fromUtf8(lua_tostring(L, 1));
          }
          //
-         bool  html = core::subsystems::permissions::check_ui_html_permissions();
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
-         task->configure = [html, text](wrapped_type* created) {
+         task->configure = [text](wrapped_type* created) {
             created->setText(text);
          };
          send_script_ui_task(*task);
