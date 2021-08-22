@@ -67,16 +67,21 @@ namespace dovahscript {
          //
          set_up_class_with_singleton<ui::widget>(L, index);
             set_up_class_with_singleton<ui::button>(L, index);
+            set_up_class_with_singleton<ui::checkbox>(L, index);
             set_up_class_with_singleton<ui::dropdown>(L, index);
                set_up_class_with_singleton<ui::dropdown_item>(L, index);
+            set_up_class_with_singleton<ui::formpicker>(L, index);
+            set_up_class_with_singleton<ui::progress_bar>(L, index);
             set_up_class_with_singleton<ui::table_view>(L, index);
                set_up_class_with_singleton<ui::table_view_cell>(L, index);
                set_up_class_with_singleton<ui::table_view_col>(L, index);
                set_up_class_with_singleton<ui::table_view_row>(L, index);
             set_up_class_with_singleton<ui::text>(L, index);
+            set_up_class_with_singleton<ui::textbox>(L, index);
             set_up_class_with_singleton<ui::window>(L, index);
+         //
          #pragma region Various
-         define_wrapper_metatable<ui::font>(L);
+            define_wrapper_metatable<ui::font>(L);
          #pragma endregion
          //
          assert(lua_gettop(L) == index);

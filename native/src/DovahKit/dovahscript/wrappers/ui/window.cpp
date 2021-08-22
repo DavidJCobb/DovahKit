@@ -128,7 +128,7 @@ namespace {
       int new_(lua_State* L) {
          core::subsystems::permissions::verify_ui_permissions();
          if (lua_gettop(L) > 0)
-            cobb::lua::error(L, "the ui.widget.new function should not be called with a colon or passed any arguments");
+            cobb::lua::error(L, "the ui.%s.new function should not be called with a colon or passed any arguments", cls::global_name);
          //
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
          /*

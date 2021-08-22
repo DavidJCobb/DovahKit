@@ -27,7 +27,7 @@
 
 namespace {
    using namespace dovahscript;
-   using cls = wrappers::ui::widget;
+   using cls          = wrappers::ui::widget;
    using wrapped_type = cls::wrapped_type;
 
    bool _can_have_layout(QWidget& widget) {
@@ -899,7 +899,7 @@ namespace {
       int new_(lua_State* L) {
          core::subsystems::permissions::verify_ui_permissions();
          if (lua_gettop(L) > 0)
-            cobb::lua::error(L, "the ui.widget.new function should not be called with a colon or passed any arguments");
+            cobb::lua::error(L, "the ui.%s.new function should not be called with a colon or passed any arguments", cls::global_name);
          //
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
          /*
