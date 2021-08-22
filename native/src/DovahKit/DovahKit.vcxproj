@@ -1182,6 +1182,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovahscript\_docs\abstract.txt" />
+    <Text Include="dovahscript\_docs\eval scripts.txt" />
     <Text Include="dovahscript\_docs\lifetime management.txt" />
     <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />
     <Text Include="dovahscript\_docs\userdata wrappers.txt" />

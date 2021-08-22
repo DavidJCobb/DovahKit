@@ -71,6 +71,24 @@ namespace dovahscript::core::subsystems {
          //
          list.clear();
       }
+      //
+      // Resource deletions done during teardown need to be direct instead of 
+      // relying on QObject::deleteLater as normal. This is due to the order of 
+      // operations during teardown:
+      // 
+      //  - Handle resources, and then forget about them
+      //  - Handle widgets, and then forget about them
+      // 
+      // Widgets are handled by running deleteLater, which means that if a widget 
+      // has a DovahscriptResourceHandle, then it will clear that handle on the 
+      // next program tick *after* teardown is complete. This will in turn cause 
+      // us to attempt to handle the case of the resource becoming unreferenced 
+      // after we've already forgotten that the resource exists.
+      // 
+      // If we simply delete the resource here, then the DovahscriptResourceHandles 
+      // will receive its "destroyed" signal and sever their references to it, which 
+      // avoids the problem.
+      //
       {
          auto& base = this->stored_resources.extant;
          auto& list = base.list;
@@ -81,7 +99,7 @@ namespace dovahscript::core::subsystems {
             assert(QThread::currentThread() == resource->thread());
             if constexpr (debug_log_resource_management)
                qDebug("Teardown is deleting extant Lua-managed resource: %p", resource);
-            resource->deleteLater();
+            delete resource;
          }
          list.clear();
       }
@@ -95,7 +113,7 @@ namespace dovahscript::core::subsystems {
             assert(QThread::currentThread() == resource->thread());
             if constexpr (debug_log_resource_management)
                qDebug("Teardown is deleting marked-for-delete Lua-managed resource: %p", resource);
-            resource->deleteLater();
+            delete resource;
          }
          list.clear();
       }
@@ -195,11 +213,30 @@ namespace dovahscript::core::subsystems {
          return;
       if constexpr (debug_log_resource_management)
          qDebug("Marking Lua-managed resource for delete: %p", &resource);
+      bool present;
       {
          std::unique_lock guard_a(this->stored_resources.desynched.lock);
          std::unique_lock guard_b(this->stored_resources.extant.lock);
          this->stored_resources.desynched.list.removeAll(&resource);
-         this->stored_resources.extant.list.removeAll(&resource);
+         int i = this->stored_resources.extant.list.removeAll(&resource);
+         present = i > 0;
+      }
+      if (!present) {
+         //
+         // The resource isn't present in the extant-list. This can happen during script teardown: 
+         // we delete the resources from our teardown handler, and after that, a userdata referring 
+         // to the resource is deleted, bringing us here.
+         // 
+         assert(coordinator::get().teardown_in_progress());
+         //
+         // Proper behavior in this case is to just return early; we DO NOT want to add the resource 
+         // to the pending deletion list. It's already had deleteLater called on it, so if we add it 
+         // to the pending deletion list, then immediately upon starting the *next* script session, 
+         // we'll delete the already-deleted resource.
+         //
+         if constexpr (debug_log_resource_management)
+            qDebug(" - Resource not present in the extant-list. This can happen if the VM has already torn down.");
+         return;
       }
       {
          auto& base = this->stored_resources.pending_deletion;

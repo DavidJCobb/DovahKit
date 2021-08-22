@@ -179,6 +179,9 @@ namespace dovahscript::core::subsystems {
       {
          auto& list = this->hierarchy_objects.windows;
          for (auto* e : list) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Teardown is deleting hierarchy window: %p (%s)", e, _debug_get_object_classname(e));
+            }
             events_s.abandon_object(*e);
             e->deleteLater();
          }
@@ -187,6 +190,9 @@ namespace dovahscript::core::subsystems {
       {
          auto& list = this->hierarchy_objects.button_groups;
          for (auto* e : list) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Teardown is deleting hierarchy object: %p (%s)", e, _debug_get_object_classname(e));
+            }
             events_s.abandon_object(*e);
             e->deleteLater();
          }
@@ -194,13 +200,20 @@ namespace dovahscript::core::subsystems {
       }
       {
          auto& list = this->hierarchy_objects.model_observers;
-         for (auto* e : list)
+         for (auto* e : list) {
+            if constexpr (debug_model_observer_lifetimes) {
+               qDebug("Teardown is deleting model observer: %p", e);
+            }
             delete e;
+         }
          list.clear();
       }
       {
          auto& list = this->hierarchy_objects.orphans.canvas_widget_entities;
          for (auto* e : list) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Teardown is deleting orphaned hierarchy canvas-entity: %p (%s)", e, _debug_get_object_classname(e));
+            }
             events_s.abandon_object(*e);
             e->deleteLater();
          }
@@ -209,6 +222,9 @@ namespace dovahscript::core::subsystems {
       {
          auto& list = this->hierarchy_objects.orphans.widgets;
          for (auto* e : list) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Teardown is deleting orphaned hierarchy widget: %p (%s)", e, _debug_get_object_classname(e));
+            }
             events_s.abandon_object(*e);
             e->deleteLater();
          }
@@ -217,8 +233,12 @@ namespace dovahscript::core::subsystems {
       this->extant_widget_count = 0;
       {
          auto& list = this->non_hierarchy_objects.canvas_layer_data;
-         for (auto* e : list)
+         for (auto* e : list) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Teardown is deleting non-hierarchy object: %p (%s)", e, _debug_get_object_classname(e));
+            }
             e->deleteLater();
+         }
          list.clear();
       }
    }
@@ -236,7 +256,7 @@ namespace dovahscript::core::subsystems {
          if (o->isValid())
             continue;
          if constexpr (debug_model_observer_lifetimes) {
-            qDebug("Zombifying observer %p...", o);
+            qDebug(" - Zombifying observer %p...", o);
          }
          userdata_s.destroy_all(*o);
       }
@@ -513,8 +533,10 @@ namespace dovahscript::core::subsystems {
       //
       auto& lock = this->task_referenced_objects.lock;
       if (state)
+         #pragma warning(suppress: 26115) // suppress warning about not releasing a lock
          lock.lock();
       else
+         #pragma warning(suppress: 26110 26117) // suppress warning about releasing an un-held lock
          lock.unlock();
    }
    bool lifetime::lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, QObject& subject) const noexcept {
