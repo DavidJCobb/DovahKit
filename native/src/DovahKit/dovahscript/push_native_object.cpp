@@ -35,24 +35,29 @@ namespace {
    std::array qobject_classes = {
       std::pair{ &QWidget::staticMetaObject,           dovahscript::wrappers::ui::widget::metatable_key },
       //
+      // Widget types:
+      //
       std::pair{ &QPushButton::staticMetaObject,           dovahscript::wrappers::ui::button::metatable_key },
       std::pair{ &QCheckBox::staticMetaObject,             dovahscript::wrappers::ui::checkbox::metatable_key },
       std::pair{ &QComboBox::staticMetaObject,             dovahscript::wrappers::ui::dropdown::metatable_key },
       std::pair{ &FormPicker::staticMetaObject,            dovahscript::wrappers::ui::formpicker::metatable_key },
       std::pair{ &DovahscriptLineWidget::staticMetaObject, dovahscript::wrappers::ui::line::metatable_key },
       std::pair{ &QProgressBar::staticMetaObject,          dovahscript::wrappers::ui::progress_bar::metatable_key },
+      std::pair{ &QRadioButton::staticMetaObject,          dovahscript::wrappers::ui::radio_button::metatable_key },
       std::pair{ &QDoubleSpinBox::staticMetaObject,        dovahscript::wrappers::ui::spinbox::metatable_key },
       std::pair{ &QTableView::staticMetaObject,            dovahscript::wrappers::ui::table_view::metatable_key },
       std::pair{ &QLabel::staticMetaObject,                dovahscript::wrappers::ui::text::metatable_key },
       std::pair{ &QLineEdit::staticMetaObject,             dovahscript::wrappers::ui::textbox::metatable_key },
       std::pair{ &DovahscriptDialog::staticMetaObject,     dovahscript::wrappers::ui::window::metatable_key },
+      //
+      // Other QObjects:
+      //
+      std::pair{ &QButtonGroup::staticMetaObject,          dovahscript::wrappers::ui::radio_group::metatable_key },
       /*//
-      std::pair{ &QButtonGroup::staticMetaObject, dovahscript::wrappers::ui::radio_group::metatable_key },
       //
       // Widgets:
       //
       std::pair{ &QGroupBox::staticMetaObject,      dovahscript::wrappers::ui::groupbox::metatable_key },
-      std::pair{ &QRadioButton::staticMetaObject,   dovahscript::wrappers::ui::radio_button::metatable_key },
       std::pair{ &QScrollArea::staticMetaObject,    dovahscript::wrappers::ui::scrollbox::metatable_key },
       std::pair{ &QTabWidget::staticMetaObject,     dovahscript::wrappers::ui::tabbox::metatable_key },
       std::pair{ &CanvasWidget::staticMetaObject,   dovahscript::wrappers::ui::canvas::metatable_key },

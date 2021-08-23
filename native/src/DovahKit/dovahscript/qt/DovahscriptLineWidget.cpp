@@ -1,5 +1,5 @@
 #include "DovahscriptLineWidget.h"
 
-DovahscriptLineWidget::DovahscriptLineWidget(QObject* parent) : QFrame(parent) {
+DovahscriptLineWidget::DovahscriptLineWidget(QWidget* parent) : QFrame(parent) {
    this->setFrameShadow(QFrame::Sunken);
 }

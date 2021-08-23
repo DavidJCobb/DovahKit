@@ -73,6 +73,8 @@ namespace dovahscript {
             set_up_class_with_singleton<ui::formpicker>(L, index);
             set_up_class_with_singleton<ui::line>(L, index);
             set_up_class_with_singleton<ui::progress_bar>(L, index);
+            set_up_class_with_singleton<ui::radio_button>(L, index);
+            set_up_class_with_singleton<ui::radio_group>(L, index);
             set_up_class_with_singleton<ui::spinbox>(L, index);
             set_up_class_with_singleton<ui::table_view>(L, index);
                set_up_class_with_singleton<ui::table_view_cell>(L, index);

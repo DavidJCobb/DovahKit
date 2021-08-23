@@ -167,6 +167,8 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
 }
 void EditorSingleScriptWindow::_onScriptStartStop(bool script_running) {
    this->state.script_running = script_running;
+   if (!script_running)
+      this->state.eval_pending = false;
    //
    this->ui.buttonRun->setDisabled(script_running);
    this->ui.buttonForceKill->setDisabled(!script_running);

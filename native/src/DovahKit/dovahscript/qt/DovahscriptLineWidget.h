@@ -5,5 +5,5 @@
 class DovahscriptLineWidget : public QFrame {
    Q_OBJECT;
    public:
-      DovahscriptLineWidget(QObject* parent = nullptr);
+      DovahscriptLineWidget(QWidget* parent = nullptr);
 };

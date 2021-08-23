@@ -7,6 +7,8 @@
 #include "formpicker.h"
 #include "line.h"
 #include "progress_bar.h"
+#include "radio_button.h"
+#include "radio_group.h"
 #include "spinbox.h"
 #include "table_view.h"
 #include "table_view/collection_columns.h"

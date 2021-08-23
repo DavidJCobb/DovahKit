@@ -160,6 +160,7 @@
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\send_script_task.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\create_button_group.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp" />
@@ -200,6 +201,8 @@
     <ClCompile Include="dovahscript\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\line.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\progress_bar.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\radio_button.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\radio_group.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
@@ -637,6 +640,7 @@
     <ClInclude Include="dovahscript\script_set.h" />
     <ClInclude Include="dovahscript\send_script_task.h" />
     <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\create_button_group.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
     <ClInclude Include="dovahscript\tasks\s2m\delete_form.h" />
@@ -684,6 +688,8 @@
     <ClInclude Include="dovahscript\wrappers\ui\formpicker.h" />
     <ClInclude Include="dovahscript\wrappers\ui\line.h" />
     <ClInclude Include="dovahscript\wrappers\ui\progress_bar.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\radio_button.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\radio_group.h" />
     <ClInclude Include="dovahscript\wrappers\ui\spinbox.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
