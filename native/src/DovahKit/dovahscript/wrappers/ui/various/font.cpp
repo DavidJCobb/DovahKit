@@ -374,7 +374,7 @@ namespace {
          }
          if constexpr (std::is_same_v<T, float>)
             return QVariant::fromValue<float>(lua_tonumber(L, stack_pos));
-         QVariant::fromValue<double>(lua_tonumber(L, stack_pos));
+         return QVariant::fromValue<double>(lua_tonumber(L, stack_pos));
       } else if constexpr (std::is_same_v<T, bool>) {
          if (!lua_isboolean(L, stack_pos)) {
             cobb::lua::error(L, "boolean or nil expected");
@@ -501,7 +501,6 @@ namespace {
                error += '"';
             }
             cobb::lua::error(L, error.c_str());
-            __assume(0);
          }
       }
       namespace family {
