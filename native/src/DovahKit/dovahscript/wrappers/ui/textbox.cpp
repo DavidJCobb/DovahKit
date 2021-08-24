@@ -227,10 +227,13 @@ namespace {
       }
       int validation_mask(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "mask (string) expected");
+         QString value;
+         if (!lua_isnoneornil(L, 2)) {
+            luaL_argcheck(L, lua_isstring(L, 2), 2, "mask (string) expected");
+            value = QString::fromUtf8(lua_tostring(L, 2));
+         }
          if (!self.widget)
             return 0;
-         auto value = QString::fromUtf8(lua_tostring(L, 2));
          api_helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setInputMask, value);
          return 0;
       }
