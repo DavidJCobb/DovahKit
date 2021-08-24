@@ -178,7 +178,7 @@ namespace {
                after |= ph;
             if (!av)
                after |= pv;
-            widget->setAlignment(align);
+            widget->setAlignment(after);
          };
          send_script_ui_task(*task);
          return 0;
@@ -252,6 +252,9 @@ namespace {
             cobb::lua::error(L, "the ui.%s.new function should not be called with a colon or passed any arguments", cls::global_name);
          //
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
+         task->configure = [](wrapped_type* created) {
+            created->setAlignment(Qt::AlignmentFlag::AlignHCenter);
+         };
          send_script_ui_task(*task);
          auto* created = task->created;
          delete task;

@@ -133,7 +133,7 @@ namespace {
                after |= ph;
             if (!av)
                after |= pv;
-            widget->setAlignment(align);
+            widget->setAlignment(after);
          };
          send_script_ui_task(*task);
          return 0;
