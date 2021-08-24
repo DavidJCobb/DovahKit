@@ -9,7 +9,7 @@ namespace dovahscript::impl::event_registration {
       auto* casted = qobject_cast<QButtonGroup*>(&object);
       if (!casted)
          return result::no_match;
-      if (_stricmp(event_name, "OnChanged") == 0) {
+      if (_stricmp(event_name, "OnSelectionChanged") == 0) {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),

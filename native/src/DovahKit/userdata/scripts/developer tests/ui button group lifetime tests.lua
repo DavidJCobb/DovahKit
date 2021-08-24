@@ -1,7 +1,7 @@
-local button1 = ui.radio_button.new("Radio Button #1")
-local button2 = ui.radio_button.new("Radio Button #2")
+button1 = ui.radio_button.new("Radio Button #1")
+button2 = ui.radio_button.new("Radio Button #2")
 
-local group = ui.radio_group.new()
+group = ui.radio_group.new()
 button1.group = group
 button2.group = group
 

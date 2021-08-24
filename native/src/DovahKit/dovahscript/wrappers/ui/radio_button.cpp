@@ -41,6 +41,15 @@ namespace {
          return push_native_object(result);
       }
       int id(lua_State* L) {
+         //
+         // Within Qt, negative IDs counting down from -2 are used for auto-assigned IDs 
+         // when a button is added to a group. Positive IDs are left available for users 
+         // to manually assign.
+         // 
+         // Within Lua, negative IDs counting down from -1 are auto-assigned; positive 
+         // IDs counting up from 1 are manually assigned; and 0 is not allowed. We can 
+         // smoothly map between the two by adding 1 to convert from Qt to Lua.
+         //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -113,6 +122,15 @@ namespace {
          return 0;
       }
       int id(lua_State* L) {
+         //
+         // Within Qt, negative IDs counting down from -2 are used for auto-assigned IDs 
+         // when a button is added to a group. Positive IDs are left available for users 
+         // to manually assign.
+         // 
+         // Within Lua, negative IDs counting down from -1 are auto-assigned; positive 
+         // IDs counting up from 1 are manually assigned; and 0 is not allowed. We can 
+         // smoothly map between the two by subtracting 1 to convert from Lua to Qt.
+         //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          int id = -1;
          if (!lua_isnoneornil(L, 2)) {
@@ -144,9 +162,9 @@ namespace {
          delete task;
          //
          if (!in_group)
-            luaL_error(L, "you must assign the radio button to a radio group before you can set the button's ID");
+            cobb::lua::error(L, "you must assign the radio button to a radio group before you can set the button's ID");
          if (id_taken)
-            luaL_error(L, "the ID %d is already taken by another radio button in this radio button's group", id + 1);
+            cobb::lua::error(L, "the ID %d is already taken by another radio button in this radio button's group", id + 1);
          //
          return 0;
       }

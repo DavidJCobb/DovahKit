@@ -243,7 +243,7 @@ namespace dovahscript::impl {
                continue;
             bool known = false;
             for (auto* h : this->found) {
-               if (h->root == root) {
+               if (h->root != root) {
                   base->bridged_to.push_back(h);
                   h->bridged_to.push_back(base);
                   known = true;

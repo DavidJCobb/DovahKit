@@ -33,7 +33,7 @@ namespace dovahscript::impl {
    }
    void lifetime_check_queue::queue_check(QObject& target) {
       auto  guard = std::lock_guard(this->lock);
-      if (target.isWidgetType() || qobject_cast<CanvasWidgetEntity*>(&target)) {
+      if (target.isWidgetType() || qobject_cast<CanvasWidgetEntity*>(&target) || qobject_cast<QButtonGroup*>(&target)) {
          auto& list = this->queues.hierarchy_objects;
          if (!list.contains(&target))
             list.push_back(&target);
