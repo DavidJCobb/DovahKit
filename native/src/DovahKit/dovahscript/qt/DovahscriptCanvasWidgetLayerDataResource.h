@@ -1,8 +1,8 @@
 #pragma once
-#include "../../ui/generic/CanvasWidget.h"
+#include "DovahscriptCanvasWidgetLayerData.h"
 #include "../core/subsystems/resources.h"
 
-class DovahscriptCanvasWidgetLayerDataResource : public CanvasWidgetLayerData {
+class DovahscriptCanvasWidgetLayerDataResource : public DovahscriptCanvasWidgetLayerData {
    Q_OBJECT;
    using DSRH = dovahscript::DovahscriptResourceHandle;
    protected:

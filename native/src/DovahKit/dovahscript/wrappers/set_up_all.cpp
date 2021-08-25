@@ -67,6 +67,10 @@ namespace dovahscript {
          //
          set_up_class_with_singleton<ui::widget>(L, index);
             set_up_class_with_singleton<ui::button>(L, index);
+            set_up_class_with_singleton<ui::canvas>(L, index);
+               define_wrapper_metatable<ui::canvas_layer>(L);
+               define_wrapper_metatable<ui::canvas_layer_group>(L);
+               set_up_class_with_singleton<ui::canvas_text_data>(L, index);
             set_up_class_with_singleton<ui::checkbox>(L, index);
             set_up_class_with_singleton<ui::dropdown>(L, index);
                set_up_class_with_singleton<ui::dropdown_item>(L, index);

@@ -194,6 +194,12 @@
     <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\button.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\canvas_text_data.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\collection_layers.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group\collection_layers.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\checkbox.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
@@ -681,6 +687,12 @@
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\button.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\canvas_text_data.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\collection_layers.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer_group.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer_group\collection_layers.h" />
     <ClInclude Include="dovahscript\wrappers\ui\checkbox.h" />
     <ClInclude Include="dovahscript\wrappers\ui\dropdown.h" />
     <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h" />

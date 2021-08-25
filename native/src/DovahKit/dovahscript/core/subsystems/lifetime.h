@@ -55,7 +55,7 @@ namespace dovahscript::core::subsystems {
             } orphans;
          } hierarchy_objects;
          struct {
-            QVector<CanvasWidgetLayerData*> canvas_layer_data;
+            QVector<DovahscriptCanvasWidgetLayerData*> canvas_layer_data;
          } non_hierarchy_objects;
 
          // Maps of object pointers to refcounts.
@@ -97,6 +97,7 @@ namespace dovahscript::core::subsystems {
 
          #pragma region Client thread functions
             void on_hierarchy_item_created(QObject&);
+            void on_non_hierarchy_object_created(QObject&);
 
             void on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from); // e.g. if a QButtonGroup loses a button, the group would be the basis and the button, the severed-from object
             void on_hierarchy_item_parent_changed(QObject* subject, QObject* prior_parent); // call from the client thread after the subject's parent has been changed

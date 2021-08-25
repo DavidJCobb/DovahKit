@@ -1,5 +1,9 @@
 #pragma once
 #include "button.h"
+#include "canvas.h"
+#include "canvas/canvas_text_data.h"
+#include "canvas/layer.h"
+#include "canvas/layer_group.h"
 #include "checkbox.h"
 #include "dropdown.h"
 #include "dropdown/collection_items.h"

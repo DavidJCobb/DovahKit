@@ -8,6 +8,7 @@
 #include "hierarchy_crawler.h"
 #include "task_reference_state_multi_checker.h"
 
+#include "../../../qt/DovahscriptCanvasWidgetLayerData.h"
 #include "../../../qt/DovahscriptStandardItemModel.h"
 
 namespace {
@@ -118,7 +119,9 @@ namespace dovahscript::impl {
          // (Incidentally, this check probably hinges on us handling hierarchical 
          // objects first.)
          //
-         if (auto* cwld = qobject_cast<CanvasWidgetLayerData*>(obj)) {
+         if (auto* cwld = qobject_cast<DovahscriptCanvasWidgetLayerData*>(obj)) {
+            if (cwld->is_lua_referenced)
+               continue;
             if (!cwld->users().isEmpty())
                continue;
          }
