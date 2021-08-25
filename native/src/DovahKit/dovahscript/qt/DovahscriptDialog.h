@@ -16,4 +16,8 @@ class DovahscriptDialog : public QDialog {
       inline bool lastVisibleState() const noexcept {
          return this->_visible;
       }
+
+   signals:
+      void shown();
+      void hidden();
 };

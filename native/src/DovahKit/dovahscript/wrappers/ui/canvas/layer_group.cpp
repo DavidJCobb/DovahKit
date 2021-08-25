@@ -50,10 +50,11 @@ namespace {
          CanvasWidgetLayer* layer = nullptr;
          {
             auto* task    = new tasks::s2m::ui_write_lambda(true);
-            auto  group   = task_reference((CanvasWidgetLayerGroup*)layer);
+            auto  group   = task_reference((CanvasWidgetLayerGroup*)self.canvas_entity);
             task->handler = [group, &layer]() {
                layer = group->createLayer();
                layer->setVisible(true);
+               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
             };
             send_script_ui_task(*task);
             delete task;
@@ -68,10 +69,11 @@ namespace {
          CanvasWidgetLayerGroup* layer = nullptr;
          {
             auto* task    = new tasks::s2m::ui_write_lambda(true);
-            auto  group   = task_reference((CanvasWidgetLayerGroup*)layer);
+            auto  group   = task_reference((CanvasWidgetLayerGroup*)self.canvas_entity);
             task->handler = [group, &layer]() {
                layer = group->createLayerGroup();
                layer->setVisible(true);
+               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
             };
             send_script_ui_task(*task);
             delete task;

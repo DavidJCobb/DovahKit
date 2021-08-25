@@ -182,6 +182,7 @@ namespace dovahscript::core::subsystems {
             if constexpr (debug_qobject_lifetimes) {
                qDebug("Teardown is deleting hierarchy window: %p (%s)", e, _debug_get_object_classname(e));
             }
+            QObject::disconnect(e, &DovahscriptDialog::hidden, nullptr, nullptr); // ensure we don't receive "hidden" signals for lifetime management
             events_s.abandon_object(*e);
             e->deleteLater();
          }
@@ -237,6 +238,7 @@ namespace dovahscript::core::subsystems {
             if constexpr (debug_qobject_lifetimes) {
                qDebug("Teardown is deleting non-hierarchy object: %p (%s)", e, _debug_get_object_classname(e));
             }
+            QObject::disconnect(e, &CanvasWidgetLayerData::detached, nullptr, nullptr); // ensure we don't receive "detached" signals for lifetime management
             e->deleteLater();
          }
          list.clear();
@@ -346,6 +348,7 @@ namespace dovahscript::core::subsystems {
          ++this->extant_widget_count;
          if (auto* dialog = qobject_cast<DovahscriptDialog*>(&object)) {
             this->hierarchy_objects.windows.push_back(dialog);
+            QObject::connect(dialog, &DovahscriptDialog::hidden, [this, dialog]() { this->on_window_hidden(dialog); });
          } else {
             if (!object.parent())
                this->hierarchy_objects.orphans.widgets.push_back(widget);
@@ -353,8 +356,9 @@ namespace dovahscript::core::subsystems {
       } else {
          if (auto* bg = qobject_cast<QButtonGroup*>(&object)) {
             this->hierarchy_objects.button_groups.push_back(bg);
-         } else if (auto* cwld = qobject_cast<DovahscriptCanvasWidgetLayerData*>(&object)) {
-            this->non_hierarchy_objects.canvas_layer_data.push_back(cwld);
+         } else if (auto* casted = qobject_cast<CanvasWidgetEntity*>(&object)) {
+            if (!casted->parent())
+               this->hierarchy_objects.orphans.canvas_widget_entities.push_back(casted);
          } else {
             assert(false && "lifetime::on_hierarchy_item_created: unhandled object type!");
          }
@@ -366,6 +370,7 @@ namespace dovahscript::core::subsystems {
       auto guard = std::unique_lock(this->object_read_write_lock);
       if (auto* casted = qobject_cast<DovahscriptCanvasWidgetLayerData*>(&object)) {
          this->non_hierarchy_objects.canvas_layer_data.push_back(casted);
+         QObject::connect(casted, &CanvasWidgetLayerData::detached, [this, casted]() { this->on_canvas_widget_layer_data_detached(casted); });
       } else {
          assert(false && "lifetime::on_hierarchy_item_created: unhandled object type!");
       }

@@ -1,17 +1,23 @@
 
-local window = ui.window.new()
-local widget = ui.canvas.new()
+window = ui.window.new()
+widget = ui.canvas.new()
 window:set_layout("grid")
 window:add_child(widget)
 
-local l_logo  = widget:append_layer()
-local l_color = widget:append_layer_group()
-local l_mask  = l_color:append_layer()
-local l_grad  = l_color:append_layer()
-local l_text  = widget:append_layer()
+l_logo  = widget:append_layer()
+l_color = widget:append_layer_group()
+l_mask  = l_color:append_layer()
+l_grad  = l_color:append_layer()
+l_text  = widget:append_layer()
 
 l_grad.blend_mode = "multiply"
 l_color.blend_mode = "multiply"
+
+l_logo.name  = "Logo"
+l_color.name = "Color"
+l_mask.name  = "Mask"
+l_grad.name  = "Grad"
+l_text.name  = "Text"
 
 widget.width  = 300
 widget.height = 300
@@ -82,8 +88,8 @@ do
       local layer = l_color
       local b = ui.checkbox.new("Grad + Mask")
       b.checked = true
-      b:on("OnChanged", "", function()
-         layer.visible = not layer.visible
+      b:on("OnToggled", "", function(checked)
+         layer.visible = checked
       end)
       list:add_child(b)
    end
@@ -91,8 +97,8 @@ do
       local layer = l_grad
       local b = ui.checkbox.new("Grad")
       b.checked = true
-      b:on("OnChanged", "", function()
-         layer.visible = not layer.visible
+      b:on("OnToggled", "", function(checked)
+         layer.visible = checked
       end)
       list:add_child(b)
    end
@@ -100,8 +106,8 @@ do
       local layer = l_mask
       local b = ui.checkbox.new("Mask")
       b.checked = true
-      b:on("OnChanged", "", function()
-         layer.visible = not layer.visible
+      b:on("OnToggled", "", function(checked)
+         layer.visible = checked
       end)
       list:add_child(b)
    end
@@ -109,8 +115,8 @@ do
       local layer = l_logo
       local b = ui.checkbox.new("Logo")
       b.checked = true
-      b:on("OnChanged", "", function()
-         layer.visible = not layer.visible
+      b:on("OnToggled", "", function(checked)
+         layer.visible = checked
       end)
       list:add_child(b)
    end

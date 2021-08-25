@@ -219,11 +219,9 @@ QList<QObject*> CanvasWidget::allAssociatedObjects(bool includeWidgets) const no
 
 #pragma region CanvasWidgetEntity
 CanvasWidget* CanvasWidgetEntity::canvas() const noexcept {
-   QObject* o = this->parent();
-   do {
-      if (auto* c = qobject_cast<CanvasWidget*>(o))
-         return c;
-   } while (o = o->parent());
+   for (auto* object = this->parent(); object; object = object->parent())
+      if (auto* casted = qobject_cast<CanvasWidget*>(object))
+         return casted;
    return nullptr;
 }
 QPoint CanvasWidgetEntity::effectivePosition() const noexcept {
@@ -316,14 +314,8 @@ void CanvasWidgetLayer::setData(CanvasWidgetLayerData* d) {
       if (list.size() == 1)
          emit d->attached();
    }
-   if (prior_rect.isValid() || after_rect.isValid()) {
-      QRegion region;
-      if (prior_rect.isValid())
-         region = region.united(prior_rect);
-      if (after_rect.isValid())
-         region = region.united(after_rect);
-      c->update(region);
-   }
+   if (c)
+      c->update();
 }
 
 QRegion CanvasWidgetLayer::region() const noexcept {

@@ -232,17 +232,20 @@ namespace {
          return 0;
       }
       int data(lua_State* L) {
-         auto&    self = get_wrapper_for_thiscall<cls>(L);
-         QVariant value;
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         //
+         auto pointer  = task_reference<DovahscriptCanvasWidgetLayerData>(nullptr);
+         auto resource = DovahscriptResourceHandle();
+         //
          if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, 2)) {
             if (wrap->managed_resource)
-               value = QVariant::fromValue<DovahscriptResourceHandle>(wrap->managed_resource);
+               resource = wrap->managed_resource;
          } else if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, 2)) {
             if (wrap->managed_resource)
-               value = QVariant::fromValue<DovahscriptResourceHandle>(wrap->managed_resource);
+               resource = wrap->managed_resource;
          } else if (auto* wrap = wrapper_from_stack<wrappers::ui::canvas_text_data>(L, 2)) {
             if (wrap->canvas_layer_data)
-               value = QVariant::fromValue<QObject*>(wrap->canvas_layer_data);
+               pointer  = wrap->canvas_layer_data;
          } else {
             if (!lua_isnoneornil(L, 2)) {
                cobb::lua::argerror(L, 2, "dds_resource, raster, or nil expected");
@@ -254,27 +257,23 @@ namespace {
          //
          auto* task    = new tasks::s2m::ui_write_lambda(false);
          auto  layer   = task_reference((CanvasWidgetLayer*) self.canvas_entity);
-         task->handler = [layer, value]() {
-            if (!value.isValid()) {
+         task->handler = [layer, pointer, resource]() {
+            if (!pointer && !resource) {
                layer->setData(nullptr);
                return;
             }
-            if (value.userType() == qMetaTypeId<DovahscriptResourceHandle>()) {
-               auto* resource = DovahscriptResourceHandle::extract_from_variant(value);
-               assert(resource);
-               auto* data = new DovahscriptCanvasWidgetLayerDataResource;
-               core::subsystems::lifetime::get().on_non_hierarchy_object_created(*data);
+            if (resource) {
+               auto* data = qobject_cast<DovahscriptCanvasWidgetLayerDataResource*>(layer->data());
+               if (!data) {
+                  data = new DovahscriptCanvasWidgetLayerDataResource;
+                  core::subsystems::lifetime::get().on_non_hierarchy_object_created(*data);
+               }
                data->setResource(resource);
                layer->setData(data);
                return;
             }
-            if (value.userType() == QMetaType::QObjectStar) {
-               auto* object = value.value<QObject*>();
-               if (auto* data = qobject_cast<DovahscriptCanvasWidgetLayerDataResource*>(object)) {
-                  layer->setData(data);
-                  return;
-               }
-               assert(false && "Unrecognized QObject type passed in as layer data!");
+            if (pointer) {
+               layer->setData(pointer);
                return;
             }
          };

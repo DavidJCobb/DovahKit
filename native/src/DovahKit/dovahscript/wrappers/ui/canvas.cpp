@@ -35,6 +35,7 @@ namespace {
             task->handler = [widget, &layer]() {
                layer = widget->createLayer();
                layer->setVisible(true);
+               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
             };
             send_script_ui_task(*task);
             delete task;
@@ -52,6 +53,7 @@ namespace {
             task->handler = [widget, &layer]() {
                layer = widget->createLayerGroup();
                layer->setVisible(true);
+               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
             };
             send_script_ui_task(*task);
             delete task;
