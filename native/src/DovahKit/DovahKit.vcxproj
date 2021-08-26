@@ -157,6 +157,7 @@
     <ClCompile Include="dovahscript\qt\DovahscriptLineWidget.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptImageWidget.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\send_script_task.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
@@ -205,6 +206,8 @@
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\formpicker.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\groupbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\image_widget.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\line.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\radio_button.cpp" />
@@ -642,6 +645,7 @@
     <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptLineWidget.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptImageWidget.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />
     <ClInclude Include="dovahscript\send_script_task.h" />
@@ -698,6 +702,8 @@
     <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h" />
     <ClInclude Include="dovahscript\wrappers\ui\dropdown\item.h" />
     <ClInclude Include="dovahscript\wrappers\ui\formpicker.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\groupbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\image_widget.h" />
     <ClInclude Include="dovahscript\wrappers\ui\line.h" />
     <ClInclude Include="dovahscript\wrappers\ui\progress_bar.h" />
     <ClInclude Include="dovahscript\wrappers\ui\radio_button.h" />

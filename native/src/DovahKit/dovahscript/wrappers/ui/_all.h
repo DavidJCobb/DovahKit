@@ -9,6 +9,8 @@
 #include "dropdown/collection_items.h"
 #include "dropdown/item.h"
 #include "formpicker.h"
+#include "groupbox.h"
+#include "image_widget.h"
 #include "line.h"
 #include "progress_bar.h"
 #include "radio_button.h"

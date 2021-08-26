@@ -42,6 +42,8 @@ namespace {
       std::pair{ &QCheckBox::staticMetaObject,              dovahscript::wrappers::ui::checkbox::metatable_key },
       std::pair{ &QComboBox::staticMetaObject,              dovahscript::wrappers::ui::dropdown::metatable_key },
       std::pair{ &FormPicker::staticMetaObject,             dovahscript::wrappers::ui::formpicker::metatable_key },
+      std::pair{ &QGroupBox::staticMetaObject,              dovahscript::wrappers::ui::groupbox::metatable_key },
+      std::pair{ &DovahscriptImageWidget::staticMetaObject, dovahscript::wrappers::ui::image_widget::metatable_key },
       std::pair{ &DovahscriptLineWidget::staticMetaObject,  dovahscript::wrappers::ui::line::metatable_key },
       std::pair{ &QProgressBar::staticMetaObject,           dovahscript::wrappers::ui::progress_bar::metatable_key },
       std::pair{ &QRadioButton::staticMetaObject,           dovahscript::wrappers::ui::radio_button::metatable_key },
@@ -61,10 +63,8 @@ namespace {
       //
       // Widgets:
       //
-      std::pair{ &QGroupBox::staticMetaObject,      dovahscript::wrappers::ui::groupbox::metatable_key },
       std::pair{ &QScrollArea::staticMetaObject,    dovahscript::wrappers::ui::scrollbox::metatable_key },
       std::pair{ &QTabWidget::staticMetaObject,     dovahscript::wrappers::ui::tabbox::metatable_key },
-      std::pair{ &LuaManagedRasterWidget::staticMetaObject, dovahscript::wrappers::ui::image_widget::metatable_key },
       //*/
    };
 
