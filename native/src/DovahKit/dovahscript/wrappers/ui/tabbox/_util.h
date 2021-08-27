@@ -24,7 +24,7 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
       {
          auto* task = new tasks::s2m::ui_read_lambda();
          auto  tab  = task_reference(widget);
-         task->handler = [widget, &found, tabbox_func, &result]() {
+         task->handler = [tab, &found, tabbox_func, &result]() {
             auto* parent = tab->containingTabWidget();
             if (!parent)
                return;
@@ -65,7 +65,7 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
          auto* parent = tab->containingTabWidget();
          if (!parent)
             return;
-         (parent->*tabbox_func)(parent->indexOf(widget), value);
+         (parent->*tabbox_func)(parent->indexOf(tab), value);
       };
       send_script_ui_task(*task);
    }

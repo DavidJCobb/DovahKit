@@ -3,6 +3,7 @@
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
 #include "../send_script_task.h"
+#include "../task_reference.h"
 
 namespace dovahscript::api_helpers {
    template<class W, class Wx, typename R> requires (std::is_base_of_v<Wx, W>) R get_widget_property(const W* widget_bare, R (Wx::* func)() const) {

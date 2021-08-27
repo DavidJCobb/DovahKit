@@ -7,7 +7,7 @@ namespace cobb::qt {
    extern QWidget* topmost_container_of(QWidget*);
 
    // returns the nearest self-or-ancestor widget of the given type
-   extern QWidget* nearest_widget_of_type(const QWidget* base, const QMetaObject& type);
+   extern QWidget* nearest_widget_of_type(QWidget* base, const QMetaObject& type);
 
    extern bool object_is_or_contains(const QObject* haystack, const QObject* needle);
 }

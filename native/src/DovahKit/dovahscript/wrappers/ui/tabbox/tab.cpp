@@ -28,7 +28,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool found;
-         bool result = _impl::get_tab_property(self.widget, found, &QTabWidget::isTabEnabled);
+         bool result = _impl::get_tab_property((wrapped_type*)self.widget, found, &QTabWidget::isTabEnabled);
          if (!found)
             return 0;
          lua_pushboolean(L, result);
@@ -39,7 +39,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool    found;
-         QString result = _impl::get_tab_property(self.widget, found, &QTabWidget::tabText);
+         QString result = _impl::get_tab_property((wrapped_type*)self.widget, found, &QTabWidget::tabText);
          if (!found)
             return 0;
          lua_pushstring(L, result.toUtf8());
@@ -50,7 +50,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool    found;
-         QString result = _impl::get_tab_property(self.widget, found, &QTabWidget::tabToolTip);
+         QString result = _impl::get_tab_property((wrapped_type*)self.widget, found, &QTabWidget::tabToolTip);
          if (!found)
             return 0;
          lua_pushstring(L, result.toUtf8());
@@ -61,7 +61,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool    found;
-         QString result = _impl::get_tab_property(self.widget, found, &QTabWidget::tabWhatsThis);
+         QString result = _impl::get_tab_property((wrapped_type*)self.widget, found, &QTabWidget::tabWhatsThis);
          if (!found)
             return 0;
          lua_pushstring(L, result.toUtf8());
@@ -75,7 +75,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool value = lua_toboolean(L, 2);
-         _impl::set_tab_property(self.widget, &QTabWidget::setTabEnabled, value);
+         _impl::set_tab_property((wrapped_type*)self.widget, &QTabWidget::setTabEnabled, value);
          return 0;
       }
       int tab_name(lua_State* L) {
@@ -84,7 +84,7 @@ namespace {
          if (!self.widget)
             return 0;
          QString value = QString::fromUtf8(lua_tostring(L, 2));
-         _impl::set_tab_property(self.widget, &QTabWidget::setTabText, value);
+         _impl::set_tab_property((wrapped_type*)self.widget, &QTabWidget::setTabText, value);
          return 0;
       }
       int tab_tooltip(lua_State* L) {
@@ -93,7 +93,7 @@ namespace {
          if (!self.widget)
             return 0;
          QString value = QString::fromUtf8(lua_tostring(L, 2));
-         _impl::set_tab_property(self.widget, &QTabWidget::setTabToolTip, value);
+         _impl::set_tab_property((wrapped_type*)self.widget, &QTabWidget::setTabToolTip, value);
          return 0;
       }
       int tab_whats_this(lua_State* L) {
@@ -102,7 +102,7 @@ namespace {
          if (!self.widget)
             return 0;
          QString value = QString::fromUtf8(lua_tostring(L, 2));
-         _impl::set_tab_property(self.widget, &QTabWidget::setTabWhatsThis, value);
+         _impl::set_tab_property((wrapped_type*)self.widget, &QTabWidget::setTabWhatsThis, value);
          return 0;
       }
    }

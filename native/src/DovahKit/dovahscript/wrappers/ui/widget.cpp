@@ -24,6 +24,7 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
+#include "../../qt/DovahscriptTabboxTab.h"
 
 namespace {
    using namespace dovahscript;
@@ -38,6 +39,8 @@ namespace {
       if (qobject_cast<QFrame*>(&widget))
          return true;
       if (qobject_cast<QGroupBox*>(&widget))
+         return true;
+      if (qobject_cast<DovahscriptTabboxTab*>(&widget))
          return true;
       return false;
    }
