@@ -15,12 +15,12 @@ namespace cobb::qt {
       return subject;
    }
 
-   extern QWidget* nearest_widget_of_type(QWidget* base, const QMetaObject& type) {
+   extern QWidget* nearest_widget_of_type(const QWidget* base, const QMetaObject& type) {
       auto* parent = base;
       do {
          const auto* pm = parent->metaObject();
          if (pm->inherits(&type))
-            return parent;
+            return const_cast<QWidget*>(parent);
       } while (parent = parent->parentWidget());
       return nullptr;
    }

@@ -156,6 +156,7 @@
     <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptLineWidget.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptTabboxTab.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptImageWidget.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
@@ -212,7 +213,12 @@
     <ClCompile Include="dovahscript\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\radio_button.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\radio_group.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\scrollbox.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\spinbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\collection_tabs.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\tab.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\_util.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
@@ -644,6 +650,7 @@
     <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptLineWidget.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptTabboxTab.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptImageWidget.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
@@ -708,7 +715,12 @@
     <ClInclude Include="dovahscript\wrappers\ui\progress_bar.h" />
     <ClInclude Include="dovahscript\wrappers\ui\radio_button.h" />
     <ClInclude Include="dovahscript\wrappers\ui\radio_group.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\scrollbox.h" />
     <ClInclude Include="dovahscript\wrappers\ui\spinbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\collection_tabs.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\tab.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\_util.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />

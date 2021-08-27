@@ -47,7 +47,10 @@ namespace {
       std::pair{ &DovahscriptLineWidget::staticMetaObject,  dovahscript::wrappers::ui::line::metatable_key },
       std::pair{ &QProgressBar::staticMetaObject,           dovahscript::wrappers::ui::progress_bar::metatable_key },
       std::pair{ &QRadioButton::staticMetaObject,           dovahscript::wrappers::ui::radio_button::metatable_key },
+      std::pair{ &QScrollArea::staticMetaObject,            dovahscript::wrappers::ui::scrollbox::metatable_key },
       std::pair{ &QDoubleSpinBox::staticMetaObject,         dovahscript::wrappers::ui::spinbox::metatable_key },
+      std::pair{ &QTabWidget::staticMetaObject,             dovahscript::wrappers::ui::tabbox::metatable_key },
+      std::pair{ &DovahscriptTabboxTab::staticMetaObject,   dovahscript::wrappers::ui::tabbox_tab::metatable_key },
       std::pair{ &QTableView::staticMetaObject,             dovahscript::wrappers::ui::table_view::metatable_key },
       std::pair{ &QLabel::staticMetaObject,                 dovahscript::wrappers::ui::text::metatable_key },
       std::pair{ &QLineEdit::staticMetaObject,              dovahscript::wrappers::ui::textbox::metatable_key },
@@ -59,13 +62,6 @@ namespace {
       std::pair{ &CanvasWidgetLayer::staticMetaObject,      dovahscript::wrappers::ui::canvas_layer::metatable_key },
       std::pair{ &CanvasWidgetLayerGroup::staticMetaObject, dovahscript::wrappers::ui::canvas_layer_group::metatable_key },
       std::pair{ &DovahscriptCanvasWidgetLayerDataText::staticMetaObject, dovahscript::wrappers::ui::canvas_text_data::metatable_key },
-      /*//
-      //
-      // Widgets:
-      //
-      std::pair{ &QScrollArea::staticMetaObject,    dovahscript::wrappers::ui::scrollbox::metatable_key },
-      std::pair{ &QTabWidget::staticMetaObject,     dovahscript::wrappers::ui::tabbox::metatable_key },
-      //*/
    };
 
    std::array resource_classes = {

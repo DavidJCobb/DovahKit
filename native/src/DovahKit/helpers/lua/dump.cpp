@@ -11,6 +11,7 @@ namespace {
    std::string _print_value(lua_State* L, table_pointer_vector& seen, int pos, int indent = 0) {
       std::string line = luaL_tolstring(L, pos, nullptr);
       lua_pop(L, 1);
+      lua_checkstack(L, 4);
       if (!lua_istable(L, pos))
          return line;
       //
