@@ -27,7 +27,6 @@ namespace dovahscript::tasks::s2m {
          error_code error = error_code::none;
          
          virtual bool is_blocking() const noexcept override { return true; } // must be blocking in order to return an error
-         virtual bool is_fire_and_forget() const noexcept override { return true; }
       protected:
          virtual void _exec_impl() override;
    };

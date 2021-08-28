@@ -11,7 +11,6 @@ namespace dovahscript::tasks::s2m {
          QString text;
          
          virtual bool is_blocking() const noexcept override { return false; }
-         virtual bool is_fire_and_forget() const noexcept override { return true; }
       protected:
          virtual void _exec_impl() override;
    };

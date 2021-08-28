@@ -155,7 +155,7 @@ namespace dovahscript::wrappers {
       { "walk_away_topic",     &_setters::walk_away_topic },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) {
+   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
       define_collection_metatable(L, collections::topic_info_responses);
    }
 }

@@ -17,7 +17,7 @@ namespace dovahscript::core {
       for (auto* task : list) {
          bool blocking = task->is_blocking();
          task->execute();
-         if (!blocking && task->is_fire_and_forget())
+         if (!blocking)
             delete task;
       }
       list.clear();
@@ -29,7 +29,7 @@ namespace dovahscript::core {
       auto& list = this->list;
       //
       for (auto* task : list)
-         if (!task->is_blocking() && task->is_fire_and_forget())
+         if (!task->is_blocking()) // blocking tasks are deleted by their senders; ensure we don't double-free
             delete task;
       list.clear();
       this->is_empty = true;

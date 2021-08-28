@@ -12,7 +12,6 @@ namespace dovahscript::tasks::s2m {
          std::function<void()> handler;
          
          virtual bool is_blocking() const noexcept override { return this->_blocking; }
-         virtual bool is_fire_and_forget() const noexcept override { return !this->_blocking; }
       protected:
          virtual void _exec_impl() override {
             if (this->handler)

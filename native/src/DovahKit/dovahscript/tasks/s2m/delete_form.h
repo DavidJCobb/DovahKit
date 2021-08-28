@@ -23,7 +23,6 @@ namespace dovahscript::tasks::s2m {
          } results;
          
          virtual bool is_blocking() const noexcept override { return true; }
-         virtual bool is_fire_and_forget() const noexcept override { return false; }
       protected:
          virtual void _exec_impl() override;
          virtual void run_lua_before(lua_State* L) override;

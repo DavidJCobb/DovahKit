@@ -1,6 +1,5 @@
 #pragma once
 #include "../topic_info.h"
-
 #include "../../../../dovah/forms/TopicInfo.h"
 
 namespace dovahscript::wrappers {
@@ -13,6 +12,5 @@ namespace dovahscript::wrappers {
       static method_list_t metatable_setters;
 
       using wrapped_type = dovah::loaded_forms::TopicInfo::response;
-      static wrapped_type* unwrap(wrapper& w);
    };
 }

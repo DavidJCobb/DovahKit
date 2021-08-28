@@ -21,6 +21,7 @@ namespace dovahscript {
       class _ui_write_base;
       namespace s2m {
          class delete_form;
+         class internal_signal_form_edit;
       }
    }
 }
@@ -92,7 +93,8 @@ namespace dovahscript::core::subsystems {
          } task_queues;
 
          // Access from the client thread only:
-         std::vector<dovah::form_stub*> expected_deletions;
+         std::vector<dovah::form_stub*> expected_deletions;     // Detect when form stubs are deleted out from under the script engine, so we can assert that that never happens.
+         std::vector<dovah::form_stub*> expected_modifications; // Handle the case of the script being aborted while a form modification is in progress, so we don't leave the form in limbo.
 
          // Parent widget outside of the script engine, which scripted windows should be children of.
          QWidget* ui_parent = nullptr;
@@ -172,6 +174,9 @@ namespace dovahscript::core::subsystems {
 
          void expect_deletion_of(passkey_to<tasks::s2m::delete_form>, const std::vector<dovah::form_stub*>&);
          void on_deletion_completion_expected(passkey_to<tasks::s2m::delete_form>);
+
+         void expect_modification_of(passkey_to<tasks::s2m::internal_signal_form_edit>, dovah::form_stub&);
+         void on_modification_complete(passkey_to<tasks::s2m::internal_signal_form_edit>, dovah::form_stub&);
          
       protected slots:
          void _main_thread_loop();

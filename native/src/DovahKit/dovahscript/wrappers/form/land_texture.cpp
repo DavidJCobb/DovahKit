@@ -102,7 +102,7 @@ namespace dovahscript::wrappers {
       { "texture_set",       &_setters::texture_set },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) {
+   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
       define_collection_metatable(L, collections::land_texture_grasses);
    }
 }

@@ -156,7 +156,7 @@ namespace {
 }
 
 namespace dovahscript::wrappers::collections {
-   extern const collection_definition_params quest_alias_by_id_set = {
+   extern const collection_definition_params formlist_entries = {
       .registry_key           = collection_metatable_key,
       .garbage_collection     = &wrapper::__gc,
       //

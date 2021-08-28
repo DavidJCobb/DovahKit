@@ -167,6 +167,7 @@
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\duplicate_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\internal_signal_form_edit.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\log_message.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\renumber_form.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
@@ -687,6 +688,7 @@
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
     <ClInclude Include="dovahscript\tasks\s2m\delete_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\duplicate_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\internal_signal_form_edit.h" />
     <ClInclude Include="dovahscript\tasks\s2m\lambda.h" />
     <ClInclude Include="dovahscript\tasks\s2m\log_message.h" />
     <ClInclude Include="dovahscript\tasks\s2m\renumber_form.h" />
@@ -1282,6 +1284,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovahscript\_docs\abstract.txt" />
+    <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />
     <Text Include="dovahscript\_docs\eval scripts.txt" />
     <Text Include="dovahscript\_docs\lifetime management.txt" />
     <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />

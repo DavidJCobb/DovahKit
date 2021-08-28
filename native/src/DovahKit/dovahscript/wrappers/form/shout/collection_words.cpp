@@ -1,4 +1,5 @@
 #include "collection_words.h"
+#include "../../../../helpers/lua/error.h"
 #include "../../../core/subsystems/userdata.h"
 #include "../../../core/classes.h"
 #include "../../../wrapper.h"
@@ -47,7 +48,7 @@ namespace {
 }
 
 namespace dovahscript::wrappers::collections {
-   extern const collection_definition_params quest_alias_by_id_set = {
+   extern const collection_definition_params shout_words = {
       .registry_key           = collection_metatable_key,
       .garbage_collection     = &wrapper::__gc,
       //

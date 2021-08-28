@@ -92,9 +92,19 @@ namespace dovahscript::core::subsystems {
          }
       }
       lifetime_s.main_thread_handler();
-      this->task_queues.s2m.process();
-      this->task_queues.ui.read.process();
-      this->task_queues.ui.write.process();
+      if (this->aborted) {
+         //
+         // Do not run cross-thread tasks if an abort has been called. Partly that's because 
+         // we don't want the script to be able to do very much once the user has decided to 
+         // abort it. Partly it's to avoid a nasty race condition within the task system. 
+         // Refer to comments on the "send task" functions.
+         //
+         return;
+      } else {
+         this->task_queues.s2m.process();
+         this->task_queues.ui.read.process();
+         this->task_queues.ui.write.process();
+      }
    }
 
    void coordinator::_run_eval_script(const QString& code) {
@@ -293,6 +303,7 @@ namespace dovahscript::core::subsystems {
    void coordinator::_setup_lua_state() {
       assert(this->lua_state == nullptr);
       assert(!this->in_teardown);
+      assert(this->expected_modifications.empty());
       //
       this->lua_state = luaL_newstate();
       auto* L = this->lua_state;
@@ -346,6 +357,11 @@ namespace dovahscript::core::subsystems {
       this->task_queues.s2m.clear();
       this->task_queues.ui.read.clear();
       this->task_queues.ui.write.clear();
+      {
+         for (auto* stub : this->expected_modifications)
+            emit DovahKitCore::get().formModified(stub);
+         this->expected_modifications.clear();
+      }
       //
       events::get().on_script_teardown();
       lifetime::get().on_script_teardown();
@@ -393,8 +409,14 @@ namespace dovahscript::core::subsystems {
       return this->in_teardown;
    }
 
+   // For important implementation information on this and the other "send task" 
+   // functions, refer to the <cross-thread tasks and script aborts.txt> file 
+   // in the documentatio folder.
    void coordinator::send_script_task(task_queue::task_t& task) {
       require_script_thread();
+      if (this->aborted)
+         return;
+      auto& queue = this->task_queues.s2m;
       //
       bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
       bool needs_lua = task.needs_lua_ownership();
@@ -405,19 +427,26 @@ namespace dovahscript::core::subsystems {
          this->script_thread = thread_type::client;
          task.run_lua_before(this->lua_state);
       }
-      this->task_queues.s2m.push_back(&task);
+      queue.push_back(&task);
       if (blocking) {
-         while (!task.seen)
-            if (this->is_aborted())
+         while (!task.seen) {
+            if (this->is_aborted()) {
+               queue.clear();
                break;
+            }
+         }
          if (needs_lua)
             this->script_thread = prior;
       }
    }
    void coordinator::send_ui_read_task(tasks::_ui_read_base& task) {
       require_script_thread();
+      if (this->aborted)
+         return;
+      auto& queue       = this->task_queues.ui.read;
+      auto& counterpart = this->task_queues.ui.write;
       //
-      this->task_queues.ui.write.wait_until_empty();
+      counterpart.wait_until_empty();
       //
       bool needs_lua = task.needs_lua_ownership();
       thread_type prior;
@@ -426,17 +455,24 @@ namespace dovahscript::core::subsystems {
          this->script_thread = thread_type::client;
          task.run_lua_before(this->lua_state);
       }
-      this->task_queues.ui.read.push_back(&task);
-      while (!task.seen)
-         if (this->is_aborted())
+      queue.push_back(&task);
+      while (!task.seen) {
+         if (this->is_aborted()) {
+            queue.clear();
             break;
+         }
+      }
       if (needs_lua)
          this->script_thread = prior;
    }
    void coordinator::send_ui_write_task(tasks::_ui_write_base& task) {
       require_script_thread();
+      if (this->aborted)
+         return;
+      auto& queue       = this->task_queues.ui.write;
+      auto& counterpart = this->task_queues.ui.read;
       //
-      this->task_queues.ui.read.wait_until_empty();
+      counterpart.wait_until_empty();
       //
       bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
       bool needs_lua = task.needs_lua_ownership();
@@ -447,11 +483,14 @@ namespace dovahscript::core::subsystems {
          this->script_thread = thread_type::client;
          task.run_lua_before(this->lua_state);
       }
-      this->task_queues.ui.write.push_back(&task);
+      queue.push_back(&task);
       if (blocking) {
-         while (!task.seen)
-            if (this->is_aborted())
+         while (!task.seen) {
+            if (this->is_aborted()) {
+               queue.clear();
                break;
+            }
+         }
          if (needs_lua)
             this->script_thread = prior;
       }
@@ -540,15 +579,33 @@ namespace dovahscript::core::subsystems {
    }
 
    void coordinator::expect_deletion_of(passkey_to<tasks::s2m::delete_form>, const std::vector<dovah::form_stub*>& append) {
+      require_client_thread();
       require_script_thread();
       //
       auto& list = this->expected_deletions;
       list.insert(list.begin(), append.begin(), append.end());
    }
    void coordinator::on_deletion_completion_expected(passkey_to<tasks::s2m::delete_form>) {
+      require_client_thread();
       require_script_thread();
       //
       auto& list = this->expected_deletions;
       assert(list.empty() && "A delete_form task didn't delete all of the forms it expected to delete!");
+   }
+
+
+   void coordinator::expect_modification_of(passkey_to<tasks::s2m::internal_signal_form_edit>, dovah::form_stub& stub) {
+      require_client_thread();
+      //
+      auto& list = this->expected_modifications;
+      list.push_back(&stub);
+   }
+   void coordinator::on_modification_complete(passkey_to<tasks::s2m::internal_signal_form_edit>, dovah::form_stub& stub) {
+      require_client_thread();
+      //
+      auto& list = this->expected_modifications;
+      auto  it   = std::find(list.begin(), list.end(), &stub);
+      assert(it != list.end() && "An internal_signal_form_edit task failed to tell us to expect the modification of a form!");
+      list.erase(it);
    }
 }

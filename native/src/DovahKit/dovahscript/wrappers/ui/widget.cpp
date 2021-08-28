@@ -198,7 +198,7 @@ namespace {
          //
          const QMetaObject* layout_mt = nullptr;
          task_reference     widget    = self.widget;
-         auto* task = new tasks::s2m::ui_write_lambda(false);
+         auto* task = new tasks::s2m::ui_write_lambda(true);
          task->handler = [widget, row, col, rowspan, colspan, axis, &layout_mt]() {
             auto* layout = widget->layout();
             if (!layout)
@@ -235,13 +235,12 @@ namespace {
                layout->invalidate();
             }
          };
-         //
+         send_script_ui_task(*task);
+         delete task;
          if (layout_mt == &QGridLayout::staticMetaObject) {
             cobb::lua::argcheck(L, row >= 0, 2, "(grid layout) you must specify a row number");
             cobb::lua::argcheck(L, col >= 0, 2, "(grid layout) you must specify a column number");
          }
-         //
-         send_script_ui_task(*task);
          return 0;
       }
       int can_have_layout(lua_State* L) {

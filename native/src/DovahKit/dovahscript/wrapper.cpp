@@ -8,7 +8,7 @@
 
 // For signaling before and after a form is edited:
 #include "core/subsystems/coordinator.h"
-#include "tasks/s2m/lambda.h"
+#include "tasks/s2m/internal_signal_form_edit.h"
 #include "../editor/core.h"
 
 namespace dovahscript {
@@ -206,48 +206,17 @@ namespace dovahscript {
       if (!this->stub)
          return;
       //
-      // We need to emit the form-modification-imminent signal, but to avoid race conditions 
-      // within the rest of the editor frontend and possibly even within the backend, we need 
-      // to ensure that we perform this operation in lockstep: script execution cannot be 
-      // allowed to continue until the signal is emitted and responded to.
-      //
-      // If we emit the signal on our own thread, then it will trigger a queued connection, 
-      // which means that the script thread may be able to modify the form before the signal 
-      // is responded to. There are a few systems that will break if this occurs; for example, 
-      // the Object Window will not be able to accurately maintain Use Info counts when one 
-      // form is modified to no longer use another, because in order to detect that case, it 
-      // has to pre-cache the former's outbound connections when form modification is imminent 
-      // (but, explicitly, before it has occurred) and then compare that to the outbound 
-      // connections that remain when the form modification is complete.
-      //
-      // If we emit the signal on the main thread, then it will trigger a direct connection, 
-      // calling any registered slots and handlers immediately and synchronously. If we wait 
-      // on this (e.g. by using our messaging system to effect it), then we, too, will block.
-      //
-      // Firing messages from within the wrapper internals feels like a disgusting hack and 
-      // a total failure of encapsulation. And it is! But if it works, it works.
-      //
-      auto* task    = new dovahscript::tasks::s2m::lambda(true);
-      auto* stub    = this->stub;
-      task->handler = [stub]() {
-         emit DovahKitCore::get().formModificationImminent(stub);
-      };
+      auto* task = new dovahscript::tasks::s2m::internal_signal_form_edit(*this->stub, true);
       core::subsystems::coordinator::get().send_script_task(*task);
       delete task;
    }
    void wrapper::after_edit() {
       if (!this->stub)
          return;
+      //
       this->stub->set_edited(true);
       //
-      // As with the form-modification-imminent signal, we should emit the form-modified 
-      // signal in lockstep for safety's sake.
-      //
-      auto* task    = new dovahscript::tasks::s2m::lambda(true);
-      auto* stub    = this->stub;
-      task->handler = [stub]() {
-         emit DovahKitCore::get().formModified(stub);
-      };
+      auto* task = new dovahscript::tasks::s2m::internal_signal_form_edit(*this->stub, false);
       core::subsystems::coordinator::get().send_script_task(*task);
       delete task;
    }

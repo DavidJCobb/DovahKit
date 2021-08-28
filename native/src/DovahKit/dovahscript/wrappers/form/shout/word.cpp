@@ -16,24 +16,39 @@ namespace {
    using form_type    = dovah::loaded_forms::Shout;
    using wrapped_type = cls::wrapped_type;
 
+   wrapped_type* _unwrap(wrapper& w) {
+      if (w.is_collection)
+         return nullptr;
+      if (w.parts[0].signature != wrapper_part_types::shout_word)
+         return nullptr;
+      auto* form = w.get_loaded_form_data<form_type>();
+      if (!form)
+         return nullptr;
+      auto& list = form->words;
+      auto  i = w.parts[0].index;
+      if (i >= list.size())
+         return nullptr;
+      return &list[i];
+   }
+
    namespace _getters {
       int word_of_power(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* word = wrappers::shout_word::unwrap(self);
+         auto* word = _unwrap(self);
          if (word == nullptr)
             cobb::lua::error(L, "shout_word wrapper has no underlying object (deleted?)");
          return push_native_object(word->word_of_power);
       }
       int spell(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* word = wrappers::shout_word::unwrap(self);
+         auto* word = _unwrap(self);
          if (word == nullptr)
             cobb::lua::error(L, "shout_word wrapper has no underlying object (deleted?)");
          return push_native_object(word->spell);
       }
       int cooldown(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* word = wrappers::shout_word::unwrap(self);
+         auto* word = _unwrap(self);
          if (word == nullptr)
             cobb::lua::error(L, "shout_word wrapper has no underlying object (deleted?)");
          lua_pushnumber(L, word->recoveryTime);
@@ -45,7 +60,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto* word  = wrappers::shout_word::unwrap(self);
+         auto* word  = _unwrap(self);
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::word_of_power);
          if (!word)
             return 0;
@@ -58,7 +73,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto* word  = wrappers::shout_word::unwrap(self);
+         auto* word  = _unwrap(self);
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::spell);
          if (!word)
             return 0;
@@ -72,7 +87,7 @@ namespace {
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
-         auto* word = wrappers::shout_word::unwrap(self);
+         auto* word = _unwrap(self);
          if (!word)
             return 0;
          self.before_edit();
@@ -95,19 +110,4 @@ namespace dovahscript::wrappers {
       { "spell",         &_setters::spell },
       { "cooldown",      &_setters::cooldown },
    };
-
-   /*static*/ cls::wrapped_type* cls::unwrap(wrapper& w) {
-      if (w.is_collection)
-         return nullptr;
-      if (w.parts[0].signature != wrapper_part_types::shout_word)
-         return nullptr;
-      auto* form = w.get_loaded_form_data<form_type>();
-      if (!form)
-         return nullptr;
-      auto& list = form->words;
-      auto  i    = w.parts[0].index;
-      if (i >= list.size())
-         return nullptr;
-      return &list[i];
-   }
 }

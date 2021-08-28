@@ -23,7 +23,6 @@ namespace dovahscript::tasks::s2m {
          widget_type* created = nullptr;
          
          virtual bool is_blocking() const noexcept override { return true; }
-         virtual bool is_fire_and_forget() const noexcept override { return false; }
       protected:
          virtual void _exec_impl() override {
             if constexpr (std::is_same_v<DovahscriptDialog, widget_type>) {

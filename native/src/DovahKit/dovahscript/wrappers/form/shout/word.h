@@ -13,6 +13,5 @@ namespace dovahscript::wrappers {
       static method_list_t metatable_setters;
 
       using wrapped_type = dovah::loaded_forms::Shout::Word;
-      static wrapped_type* unwrap(wrapper& w);
    };
 }
