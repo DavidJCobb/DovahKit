@@ -21,9 +21,9 @@ namespace {
 namespace {
    using namespace dovahscript;
 
-   using root_wrapper_t   = dovahscript::wrappers::papyrus_root;
-   using script_wrapper_t = dovahscript::wrappers::papyrus_script;
-   using prop_wrapper_t   = dovahscript::wrappers::papyrus_property;
+   using root_wrapper_type   = dovahscript::wrappers::papyrus_root;
+   using script_wrapper_type = dovahscript::wrappers::papyrus_script;
+   using prop_wrapper_type   = dovahscript::wrappers::papyrus_property;
    
    wrapper& get_collection_wrapper(lua_State* L) {
       auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
@@ -35,7 +35,7 @@ namespace {
 
    int get_collection_length(lua_State* L) {
       auto& self = get_collection_wrapper(L);
-      auto* prop = prop_wrapper_t::unwrap(self, false);
+      auto* prop = prop_wrapper_type::unwrap(self, false);
       if (!prop) {
          lua_pushinteger(L, 0);
          return 1;
@@ -62,7 +62,7 @@ namespace {
    }
    int lookup_item_by_index(lua_State* L) {
       auto& self = get_collection_wrapper(L);
-      auto* prop = prop_wrapper_t::unwrap(self, false);
+      auto* prop = prop_wrapper_type::unwrap(self, false);
       if (!prop)
          return 0;
       auto  i    = lua_tointeger(L, 2);
@@ -106,7 +106,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
       //
       auto& self = get_collection_wrapper(L);
-      auto* prop = prop_wrapper_t::unwrap(self, false);
+      auto* prop = prop_wrapper_type::unwrap(self, false);
       //
       int  pos_value = 2;
       bool has_index = false;
@@ -147,7 +147,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
       //
       auto& self = get_collection_wrapper(L);
-      auto* prop = prop_wrapper_t::unwrap(self, false);
+      auto* prop = prop_wrapper_type::unwrap(self, false);
       luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected an integer index");
       int isnum;
       int i = lua_tointegerx(L, 2, &isnum);
@@ -180,7 +180,7 @@ namespace {
       --i;
       //
       auto& self = get_collection_wrapper(L);
-      auto* prop = prop_wrapper_t::unwrap(self, false);
+      auto* prop = prop_wrapper_type::unwrap(self, false);
       if (!prop)
          return 0;
       //

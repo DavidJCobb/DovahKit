@@ -45,10 +45,31 @@ namespace dovahscript {
                   define_wrapper_metatable<papyrus_property>(L);
          #pragma endregion
          #pragma region Form types
+            define_wrapper_metatable<cell>(L);
+               define_wrapper_metatable<cell_grid_coords>(L);
+            define_wrapper_metatable<formlist>(L);
+            define_wrapper_metatable<land_texture>(L);
+               define_wrapper_metatable<land_texture_havok>(L);
+            define_wrapper_metatable<landscape>(L);
+               define_wrapper_metatable<landscape_quad>(L);
+               define_wrapper_metatable<landscape_quad_alpha_layer>(L);
+               define_wrapper_metatable<landscape_quad_list>(L);
             define_wrapper_metatable<quest>(L);
                define_wrapper_metatable<quest_alias>(L);
                   define_wrapper_metatable<quest_loc_alias>(L);
                   define_wrapper_metatable<quest_ref_alias>(L);
+            define_wrapper_metatable<shout>(L);
+               define_wrapper_metatable<shout_word>(L);
+            define_wrapper_metatable<texture_set>(L);
+               define_wrapper_metatable<texture_set_path_list>(L);
+            define_wrapper_metatable<topic>(L);
+            define_wrapper_metatable<topic_info>(L);
+               define_wrapper_metatable<topic_info_response>(L);
+            define_wrapper_metatable<voicetype>(L);
+            define_wrapper_metatable<word_of_power>(L);
+            define_wrapper_metatable<worldspace>(L);
+               define_wrapper_metatable<worldspace_grid_bounds>(L);
+               define_wrapper_metatable<worldspace_grid_bounds_extent>(L);
          #pragma endregion
       #pragma endregion
       #pragma region Resources

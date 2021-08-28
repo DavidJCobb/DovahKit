@@ -226,9 +226,9 @@ namespace {
 }
 
 namespace dovahscript::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
    
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+   /*static*/ cls::method_list_t cls::metatable_getters = {
       { "aliases",                &_getters::aliases }, // collection
       { "aliases_by_id",          &_getters::aliases_by_id }, // collection
       { "name",                   &_getters::name },
@@ -237,7 +237,7 @@ namespace dovahscript::wrappers {
       { "quest_flags",            &_getters::quest_flags },
       { "quest_type",             &_getters::quest_type },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+   /*static*/ cls::method_list_t cls::metatable_setters = {
       { "name",                   &_setters::name },
       { "object_window_category", &_setters::object_window_category },
       { "priority",               &_setters::priority },

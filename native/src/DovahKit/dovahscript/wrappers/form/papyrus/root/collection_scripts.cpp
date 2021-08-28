@@ -15,8 +15,8 @@ namespace {
 namespace {
    using namespace dovahscript;
 
-   using root_wrapper_t   = dovahscript::wrappers::papyrus_root;
-   using script_wrapper_t = dovahscript::wrappers::papyrus_script;
+   using root_wrapper_type   = dovahscript::wrappers::papyrus_root;
+   using script_wrapper_type = dovahscript::wrappers::papyrus_script;
 
    wrapper& get_collection_wrapper(lua_State* L) {
       auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
@@ -31,7 +31,7 @@ namespace {
       // args: wrapper<papyrus_root>, name
       //
       auto& self = get_collection_wrapper(L);
-      auto* root = root_wrapper_t::unwrap(self, false);
+      auto* root = root_wrapper_type::unwrap(self, false);
       if (!root)
          luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", collection_metatable_key);
       const char* name = lua_tostring(L, 2);
@@ -52,7 +52,7 @@ namespace {
    }
    int get_all_item_names(lua_State* L) {
       auto& self = get_collection_wrapper(L);
-      auto* root = root_wrapper_t::unwrap(self, false);
+      auto* root = root_wrapper_type::unwrap(self, false);
       if (!root)
          cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", collection_metatable_key);
       auto& list = root->scripts;
@@ -74,7 +74,7 @@ namespace {
       constexpr auto index_value = 3;
       //
       auto& self = get_collection_wrapper(L);
-      auto* root = root_wrapper_t::unwrap(self, false);
+      auto* root = root_wrapper_type::unwrap(self, false);
       if (!root)
          cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", collection_metatable_key);
       if (!lua_isstring(L, index_key))
@@ -103,10 +103,10 @@ namespace {
             }
          }
       } else {
-         auto* arg = (wrapper*) classes::cast_to_class(L, index_value, script_wrapper_t::metatable_key);
+         auto* arg = (wrapper*) classes::cast_to_class(L, index_value, script_wrapper_type::metatable_key);
          if (!arg)
             cobb::lua::error(L, "you can only overwrite a Papyrus script with nil or with another Papyrus script");
-         auto* source = script_wrapper_t::unwrap(*arg, true);
+         auto* source = script_wrapper_type::unwrap(*arg, true);
          if (source == nullptr)
             cobb::lua::error(L, "the script wrapper provided as a value to set has no underlying object (deleted?)");
          //

@@ -60,11 +60,11 @@ namespace {
 }
 
 namespace dovahscript::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = no_functions;
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+   /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_getters = {
       { "display_name", &_getters::display_name },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+   /*static*/ cls::method_list_t cls::metatable_setters = {
       { "display_name", &_setters::display_name },
    };
 

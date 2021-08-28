@@ -281,7 +281,7 @@ namespace {
 }
 
 namespace dovahscript::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+   /*static*/ cls::method_list_t cls::metatable_methods = {
       { "delete",               &_methods::delete_ },
       { "duplicate",            &_methods::duplicate },
       { "form_id_to_string",    &_methods::form_id_to_string },
@@ -290,13 +290,13 @@ namespace dovahscript::wrappers {
       { "get_source_file_list", &_methods::get_source_file_list },
       { "get_user_forms",       &_methods::get_user_forms },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+   /*static*/ cls::method_list_t cls::metatable_getters = {
       { "editor_id", &_getters::editor_id },
       { "flags",     &_getters::flags },
       { "form_id",   &_getters::form_id },
       { "papyrus",   &_getters::papyrus },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+   /*static*/ cls::method_list_t cls::metatable_setters = {
       { "editor_id", &_setters::editor_id },
       { "form_id",   &_setters::form_id },
    };

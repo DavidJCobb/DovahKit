@@ -31,9 +31,9 @@ namespace {
 }
 
 namespace dovahscript::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = no_functions;
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = no_functions;
-   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_getters = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_setters = no_functions;
 
    /*static*/ cls::wrapped_type* quest_loc_alias::unwrap(wrapper& w) {
       auto* alias = quest_alias::unwrap(w);

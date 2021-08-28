@@ -15,8 +15,8 @@ namespace {
 namespace {
    using namespace dovahscript;
 
-   using script_wrapper_t = dovahscript::wrappers::papyrus_script;
-   using prop_wrapper_t   = dovahscript::wrappers::papyrus_property;
+   using script_wrapper_type = dovahscript::wrappers::papyrus_script;
+   using prop_wrapper_type   = dovahscript::wrappers::papyrus_property;
    
    wrapper& get_collection_wrapper(lua_State* L) {
       auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
@@ -31,7 +31,7 @@ namespace {
       // args: wrapper<papyrus_root>, name
       //
       auto& self   = get_collection_wrapper(L);
-      auto* script = script_wrapper_t::unwrap(self, false);
+      auto* script = script_wrapper_type::unwrap(self, false);
       if (!script)
          cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", collection_metatable_key);
       const char* name = lua_tostring(L, 2);
@@ -45,14 +45,14 @@ namespace {
             wrapper out = self;
             assert(out.is_collection);
             out.into_collection(i);
-            return core::subsystems::userdata::get().push(L, out, prop_wrapper_t::metatable_key);
+            return core::subsystems::userdata::get().push(L, out, prop_wrapper_type::metatable_key);
          }
       }
       return 0;
    }
    int get_all_item_names(lua_State* L) {
       auto& self   = get_collection_wrapper(L);
-      auto* script = script_wrapper_t::unwrap(self, false);
+      auto* script = script_wrapper_type::unwrap(self, false);
       if (!script)
          cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", collection_metatable_key);
       auto& list = script->properties;
@@ -74,7 +74,7 @@ namespace {
       constexpr auto index_value = 3;
       //
       auto& self   = get_collection_wrapper(L);
-      auto* script = script_wrapper_t::unwrap(self, false);
+      auto* script = script_wrapper_type::unwrap(self, false);
       if (!script)
          return 0;
       if (!lua_isstring(L, index_key))
@@ -103,10 +103,10 @@ namespace {
             }
          }
       } else {
-         auto* arg = (wrapper*)classes::cast_to_class(L, index_value, prop_wrapper_t::metatable_key);
+         auto* arg = (wrapper*)classes::cast_to_class(L, index_value, prop_wrapper_type::metatable_key);
          if (!arg)
             cobb::lua::error(L, "you can only overwrite a Papyrus property with nil or with another Papyrus property");
-         auto* source = prop_wrapper_t::unwrap(*arg, true);
+         auto* source = prop_wrapper_type::unwrap(*arg, true);
          if (source == nullptr)
             cobb::lua::error(L, "the script property wrapper provided as a value to set has no underlying object (deleted?)");
          //

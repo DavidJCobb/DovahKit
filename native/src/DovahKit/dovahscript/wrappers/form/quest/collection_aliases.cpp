@@ -15,9 +15,9 @@ namespace {
 namespace {
    using namespace dovahscript;
 
-   using quest_wrapper_t = dovahscript::wrappers::quest;
-   using alias_wrapper_t = dovahscript::wrappers::quest_alias;
-   using wrapped_type    = dovah::loaded_forms::Quest;
+   using quest_wrapper_type = dovahscript::wrappers::quest;
+   using alias_wrapper_type = dovahscript::wrappers::quest_alias;
+   using wrapped_type       = dovah::loaded_forms::Quest;
    
    wrapper& get_collection_wrapper(lua_State* L) {
       auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
@@ -53,7 +53,7 @@ namespace {
       for (size_t i = 0; i < size; ++i) {
          const auto* alias = list[i];
          if (stricmp(alias->name.c_str(), name) == 0)
-            return alias_wrapper_t::wrap(L, self, alias);
+            return alias_wrapper_type::wrap(L, self, alias);
       }
       return 0;
    }
@@ -67,7 +67,7 @@ namespace {
       if (i > list.size() || i <= 0)
          return 0;
       --i;
-      return alias_wrapper_t::wrap(L, self, list[i]);
+      return alias_wrapper_type::wrap(L, self, list[i]);
    }
    int get_all_item_names(lua_State* L) {
       auto& self = get_collection_wrapper(L);

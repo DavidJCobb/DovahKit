@@ -16,12 +16,11 @@
 namespace {
    std::array form_classes = {
       std::pair{ dovah::form_type::none,          dovahscript::wrappers::form::metatable_key },
-      std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
-      /*//
       std::pair{ dovah::form_type::cell,          dovahscript::wrappers::cell::metatable_key },
       std::pair{ dovah::form_type::formlist,      dovahscript::wrappers::formlist::metatable_key },
       std::pair{ dovah::form_type::land,          dovahscript::wrappers::landscape::metatable_key },
       std::pair{ dovah::form_type::land_texture,  dovahscript::wrappers::land_texture::metatable_key },
+      std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
       std::pair{ dovah::form_type::shout,         dovahscript::wrappers::shout::metatable_key },
       std::pair{ dovah::form_type::texture_set,   dovahscript::wrappers::texture_set::metatable_key },
       std::pair{ dovah::form_type::topic,         dovahscript::wrappers::topic::metatable_key },
@@ -29,7 +28,6 @@ namespace {
       std::pair{ dovah::form_type::voicetype,     dovahscript::wrappers::voicetype::metatable_key },
       std::pair{ dovah::form_type::word_of_power, dovahscript::wrappers::word_of_power::metatable_key },
       std::pair{ dovah::form_type::worldspace,    dovahscript::wrappers::worldspace::metatable_key },
-      //*/
    };
 
    std::array qobject_classes = {
@@ -106,6 +104,10 @@ namespace dovahscript {
       out.stub = stub;
       out.type = wrapper_type::form;
       return core::subsystems::userdata::get().push(L, out, metatable);
+   }
+
+   extern int push_native_object(const dovah::form_reference_t& ref) {
+      return push_native_object(ref.get_form_stub());
    }
 
    extern int push_native_object(DovahscriptResource* resource) {
