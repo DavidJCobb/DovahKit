@@ -1,9 +1,9 @@
 
-local TRANSPARENT     = "#00000000"
-local WATER_DEPTH     = 4096
-local WATER_MIN_ALPHA = 0.5
+TRANSPARENT     = "#00000000"
+WATER_DEPTH     = 4096
+WATER_MIN_ALPHA = 0.5
 
-local CELL_OUTLINE_FILL_OPACITY = 30 -- [0, 255]
+CELL_OUTLINE_FILL_OPACITY = 30 -- [0, 255]
 
 -- Comprehensive but slow; haven't yet found cases where it's actually needed
 local TEST_FOR_PERSISTENT_REFS = false
@@ -88,7 +88,7 @@ do -- FileOutlineWidget contents
    end
 end
 
-local HeightmapWindow = {
+HeightmapWindow = {
    controls = {
       window   = ui.window.new(),
       scroll   = ui.scrollbox.new(),
@@ -219,7 +219,12 @@ do -- HeightmapWindow contents
          end
       end
       for i = 1, #layers do
-         layers[i]:delete()
+         local l = layers[i]
+         if l.delete then
+            l:delete() -- accommodation for old engine; TODO: remove this
+         else
+            canvas:remove_layer(l)
+         end
       end
       self.state.layers = {}
    end
@@ -282,7 +287,7 @@ end
 
 ---
 
-local TextureManager = {
+TextureManager = {
    map = {},
 }
 do -- TextureManager contents

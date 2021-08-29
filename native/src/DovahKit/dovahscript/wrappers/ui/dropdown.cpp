@@ -56,14 +56,6 @@ namespace {
    using namespace dovahscript;
    using cls          = wrappers::ui::dropdown;
    using wrapped_type = cls::wrapped_type;
-   
-   ObservableStandardItemModel& get_model(QComboBox* w) {
-      auto* proxy = (QSortFilterProxyModel*) w->model();
-      assert(proxy);
-      auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-      assert(model);
-      return *model;
-   }
 
    namespace _methods {
       using role_map_t = api_helpers::moph::handler_set::role_map_t;

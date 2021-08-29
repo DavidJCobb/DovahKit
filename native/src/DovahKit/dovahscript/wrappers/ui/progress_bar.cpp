@@ -11,6 +11,7 @@
 #include "../../tasks/s2m/create_ui_widget.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
+#include "../../tasks/s2m/ui_write_lambda_ex.h"
 
 #include "../../api_helpers/qt_alignment.h"
 #include "../../api_helpers/widget_properties.h"
@@ -26,9 +27,9 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*)self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget]() { widget->reset(); };
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [widget = task_reference((wrapped_type*)self.widget)]() {
+            widget->reset();
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -57,14 +58,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->text(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::text);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -72,14 +66,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->format(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::format);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -87,14 +74,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->maximum(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::maximum);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -102,14 +82,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->minimum(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::minimum);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -117,14 +90,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->isTextVisible(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::isTextVisible);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -132,14 +98,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->value(); };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::value);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -188,11 +147,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*) self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setFormat(value); };
-         send_script_ui_task(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setFormat, value);
          return 0;
       }
       int maximum(lua_State* L) {
@@ -200,11 +156,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*) self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         int   value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() { widget->setMaximum(value); };
-         send_script_ui_task(*task);
+         int value = lua_tointeger(L, 2);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setMaximum, value);
          return 0;
       }
       int minimum(lua_State* L) {
@@ -212,11 +165,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*) self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         int   value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() { widget->setMinimum(value); };
-         send_script_ui_task(*task);
+         int value = lua_tointeger(L, 2);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setMinimum, value);
          return 0;
       }
       int show_text(lua_State* L) {
@@ -224,11 +174,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*) self.widget);
-         auto* task = new tasks::s2m::ui_write_lambda(false);
-         bool  value = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setTextVisible(value); };
-         send_script_ui_task(*task);
+         bool value = lua_toboolean(L, 2);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setTextVisible, value);
          return 0;
       }
       int value(lua_State* L) {
@@ -236,12 +183,10 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto  widget  = task_reference((wrapped_type*) self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         int   value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() { widget->setValue(value); };
-         send_script_ui_task(*task);
+         int value = lua_tointeger(L, 2);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setValue, value);
          return 0;
+
       }
    }
 

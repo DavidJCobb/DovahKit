@@ -694,6 +694,7 @@
     <ClInclude Include="dovahscript\tasks\s2m\renumber_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\ui_read_lambda.h" />
     <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda_ex.h" />
     <ClInclude Include="dovahscript\tasks\_base.h" />
     <ClInclude Include="dovahscript\tasks\_ui_base.h" />
     <ClInclude Include="dovahscript\task_reference.h" />

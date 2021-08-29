@@ -155,13 +155,8 @@ namespace {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QFont font    = wrappers::ui::font::pull(L, 2);
-         auto  widget  = task_reference(self.widget);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, font]() {
-            widget->setFont(font);
-         };
-         send_script_ui_task(*task);
+         QFont font = wrappers::ui::font::pull(L, 2);
+         api_helpers::set_widget_property(self.widget, &QWidget::setFont, font);
          return 0;
       }
       int text(lua_State* L) {

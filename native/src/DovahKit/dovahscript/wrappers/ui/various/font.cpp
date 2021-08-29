@@ -242,7 +242,7 @@ namespace dovahscript::impl::font_properties {
             cobb::lua::error(L, "property `%1` is not available here", property_name);
          //
          if (hnd->resolve_mask && lua_isnoneornil(L, 2)) {
-            auto* task = new tasks::s2m::ui_read_lambda();
+            auto* task = new tasks::s2m::ui_write_lambda(true);
             task->handler = [hnd, &wrap, class_handler_set]() {
                QFont font = _get_font(*wrap);
                cobb::qt::clear_font_properties(font, hnd->resolve_mask);
@@ -255,7 +255,7 @@ namespace dovahscript::impl::font_properties {
          }
          auto value = (hnd->pull)(L, 2);
          {
-            auto* task = new tasks::s2m::ui_read_lambda();
+            auto* task = new tasks::s2m::ui_write_lambda(true);
             task->handler = [hnd, &wrap, &value]() {
                auto font = _get_font(*wrap);
                (hnd->set)(font, value);

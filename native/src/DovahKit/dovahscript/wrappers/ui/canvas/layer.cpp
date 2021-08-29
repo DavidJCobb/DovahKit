@@ -11,6 +11,9 @@
 
 #include "../../../tasks/s2m/ui_read_lambda.h"
 #include "../../../tasks/s2m/ui_write_lambda.h"
+#include "../../../tasks/s2m/ui_write_lambda_ex.h"
+
+#include "../../../api_helpers/widget_properties.h"
 
 #include "../../../qt/DovahscriptCanvasWidgetLayerDataResource.h"
 #include "../../../qt/DovahscriptCanvasWidgetLayerDataText.h"
@@ -50,16 +53,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_entity)
             return 0;
-         CanvasWidgetEntity::CompositionMode result;
-         {
-            auto  layer   = task_reference(self.canvas_entity);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->compositionMode();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         CanvasWidgetEntity::CompositionMode result = api_helpers::get_widget_property(self.canvas_entity, &CanvasWidgetEntity::compositionMode);
          for (auto& pair : _modes_to_strings) {
             if (result == pair.first) {
                lua_pushstring(L, pair.second);
@@ -72,17 +66,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_entity)
             return 0;
-         assert(self.canvas_entity->isLayer());
-         CanvasWidget* result = nullptr;
-         {
-            auto  layer   = task_reference(self.canvas_entity);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->canvas();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         CanvasWidget* result = api_helpers::get_widget_property(self.canvas_entity, &CanvasWidgetEntity::canvas);
          return push_native_object(result);
       }
       int data(lua_State* L) {
@@ -91,16 +75,7 @@ namespace {
             return 0;
          assert(self.canvas_entity->isLayer());
          //
-         CanvasWidgetLayerData* result = nullptr;
-         {
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            auto  layer   = task_reference((CanvasWidgetLayer*) self.canvas_entity);
-            task->handler = [layer, &result]() {
-               result = layer->data();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         CanvasWidgetLayerData* result = api_helpers::get_widget_property((CanvasWidgetLayer*)self.canvas_entity, &CanvasWidgetLayer::data);
          if (!result)
             return 0;
          if (auto* res_layer = qobject_cast<DovahscriptCanvasWidgetLayerDataResource*>(result)) {
@@ -121,16 +96,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_entity)
             return 0;
-         QString result;
-         {
-            auto  layer   = task_reference(self.canvas_entity);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->objectName();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         QString result = api_helpers::get_widget_property(self.canvas_entity, &QObject::objectName);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -138,16 +104,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_entity)
             return 0;
-         lua_Number result;
-         {
-            auto  layer   = task_reference(self.canvas_entity);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->opacity();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         lua_Number result = api_helpers::get_widget_property(self.canvas_entity, &CanvasWidgetEntity::opacity);
          lua_pushnumber(L, result);
          return 1;
       }
@@ -155,16 +112,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_entity)
             return 0;
-         bool result;
-         {
-            auto  layer   = task_reference(self.canvas_entity);
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->visible();
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         bool result = api_helpers::get_widget_property(self.canvas_entity, &CanvasWidgetEntity::visible);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -174,9 +122,8 @@ namespace {
             return 0;
          int result;
          {
-            auto  layer   = task_reference(self.canvas_entity);
             auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
+            task->handler = [layer = task_reference(self.canvas_entity), &result]() {
                result = layer->position().x();
             };
             send_script_ui_task(*task);
@@ -191,9 +138,8 @@ namespace {
             return 0;
          int result;
          {
-            auto  layer   = task_reference(self.canvas_entity);
             auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
+            task->handler = [layer = task_reference(self.canvas_entity), &result]() {
                result = layer->position().y();
             };
             send_script_ui_task(*task);
@@ -219,16 +165,11 @@ namespace {
                   break;
                }
             }
-            luaL_argcheck(L, found, 2, "the specified name is not a recognized blend mode");
+            cobb::lua::argcheck(L, found, 2, "the specified name is not a recognized blend mode");
          }
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
-            layer->setCompositionMode(value);
-         };
-         send_script_ui_task(*task);
+         api_helpers::set_widget_property(self.canvas_entity, &CanvasWidgetEntity::setCompositionMode, value);
          return 0;
       }
       int data(lua_State* L) {
@@ -283,15 +224,10 @@ namespace {
       int name(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
-         auto* value = lua_tostring(L, 2);
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
-            layer->setObjectName(value);
-         };
-         send_script_ui_task(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         api_helpers::set_widget_property(self.canvas_entity, &QObject::setObjectName, value);
          return 0;
       }
       int opacity(lua_State* L) {
@@ -302,25 +238,16 @@ namespace {
          luaL_argcheck(L, value <= 1.0, 2, "opacity cannot exceed 1.0");
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
-            layer->setOpacity(value);
-         };
-         send_script_ui_task(*task);
+         api_helpers::set_widget_property(self.canvas_entity, &CanvasWidgetEntity::setOpacity, value);
          return 0;
       }
       int visible(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          bool  value = lua_toboolean(L, 2);
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
-            layer->setVisible(value);
-         };
-         send_script_ui_task(*task);
+         api_helpers::set_widget_property(self.canvas_entity, &CanvasWidgetEntity::setVisible, value);
          return 0;
       }
       int x(lua_State* L) {
@@ -330,13 +257,11 @@ namespace {
          luaL_argcheck(L, isnum, 2, "x-position (integer) expected");
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, layer = task_reference(self.canvas_entity)]() {
             auto p = layer->position();
             p.setX(value);
             layer->setPosition(p);
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -347,13 +272,11 @@ namespace {
          luaL_argcheck(L, isnum, 2, "y-position (integer) expected");
          if (!self.canvas_entity)
             return 0;
-         auto  layer   = task_reference(self.canvas_entity);
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [layer, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, layer = task_reference(self.canvas_entity)]() {
             auto p = layer->position();
             p.setY(value);
             layer->setPosition(p);
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }

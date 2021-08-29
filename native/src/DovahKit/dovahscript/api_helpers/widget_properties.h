@@ -2,12 +2,13 @@
 #include <type_traits>
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
+#include "../tasks/s2m/ui_write_lambda_ex.h"
 #include "../send_script_task.h"
 #include "../task_reference.h"
 
 namespace dovahscript::api_helpers {
-   template<class W, class Wx, typename R> requires (std::is_base_of_v<Wx, W>) R get_widget_property(const W* widget_bare, R (Wx::* func)() const) {
-      R result;
+   template<class W, class Wx, typename R> requires (std::is_base_of_v<Wx, W>) std::decay_t<R> get_widget_property(const W* widget_bare, R (Wx::* func)() const) {
+      std::decay_t<R> result;
       {
          task_reference widget = widget_bare;
          //
@@ -26,12 +27,9 @@ namespace dovahscript::api_helpers {
    // the argument should be passed by reference.
    //
    template<class W, class Wx, class T> requires (std::is_base_of_v<Wx, W>) void set_widget_property(W* widget_bare, void (Wx::* func)(const T&), const T& value) {
-      task_reference widget = widget_bare;
-      //
-      auto* task = new tasks::s2m::ui_write_lambda(false);
-      task->handler = [widget, value, func]() {
+      auto* task = new tasks::s2m::ui_write_lambda_ex(false, [func, value, widget = task_reference(widget_bare)]() {
          (widget->*func)(value);
-      };
+      });
       send_script_ui_task(*task);
    }
 
@@ -41,36 +39,27 @@ namespace dovahscript::api_helpers {
    // pass in inexact matches, e.g. passing a lua_Integer value to a function that takes int.
    //
    template<class W, class Wx, class T, class U> requires (std::is_base_of_v<Wx, W> && std::is_convertible_v<T, U> && !std::is_reference_v<T>) void set_widget_property(W* widget_bare, void (Wx::* func)(T), U value) {
-      task_reference widget = widget_bare;
-      //
-      auto* task = new tasks::s2m::ui_write_lambda(false);
-      task->handler = [widget, value, func]() {
+      auto* task = new tasks::s2m::ui_write_lambda_ex(false, [func, value, widget = task_reference(widget_bare)]() {
          (widget->*func)(value);
-      };
+      });
       send_script_ui_task(*task);
    }
 
    
    template<class W, class Wx, class T> requires (std::is_base_of_v<Wx, W>)
    void set_widget_property_and_block_signals(W* widget_bare, void (Wx::* func)(const T&), const T& value) {
-      task_reference widget = widget_bare;
-      //
-      auto* task = new tasks::s2m::ui_write_lambda(false);
-      task->handler = [widget, value, func]() {
+      auto* task = new tasks::s2m::ui_write_lambda_ex(false, [func, value, widget = task_reference(widget_bare)]() {
          const auto blocker = QSignalBlocker(widget);
          (widget->*func)(value);
-      };
+      });
       send_script_ui_task(*task);
    }
    template<class W, class Wx, class T, class U> requires (std::is_base_of_v<Wx, W>&& std::is_convertible_v<T, U> && !std::is_reference_v<T>)
    void set_widget_property_and_block_signals(W* widget_bare, void (Wx::* func)(T), U value) {
-      task_reference widget = widget_bare;
-      //
-      auto* task = new tasks::s2m::ui_write_lambda(false);
-      task->handler = [widget, value, func]() {
+      auto* task = new tasks::s2m::ui_write_lambda_ex(false, [func, value, widget = task_reference(widget_bare)]() {
          const auto blocker = QSignalBlocker(widget);
          (widget->*func)(value);
-      };
+      });
       send_script_ui_task(*task);
    }
 }

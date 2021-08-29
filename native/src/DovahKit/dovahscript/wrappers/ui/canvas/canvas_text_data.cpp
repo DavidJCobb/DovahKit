@@ -10,6 +10,7 @@
 
 #include "../../../tasks/s2m/ui_read_lambda.h"
 #include "../../../tasks/s2m/ui_write_lambda.h"
+#include "../../../tasks/s2m/ui_write_lambda_ex.h"
 
 #include "../../../api_helpers/qt_color.h"
 
@@ -135,12 +136,10 @@ namespace {
          auto  value = api_helpers::pull_color(L, 2);
          if (!cast)
             return 0;
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         auto  data    = task_reference(cast);
-         task->handler = [data, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, data = task_reference(cast)]() {
             data->color = value;
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -150,12 +149,10 @@ namespace {
          QFont font = wrappers::ui::font::pull(L, 2);
          if (!cast)
             return 0;
-         auto  data    = task_reference(cast);
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         task->handler = [data, font]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [font, data = task_reference(cast)]() {
             data->font = font;
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -171,12 +168,10 @@ namespace {
          }
          if (!cast)
             return 0;
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         auto  data    = task_reference(cast);
-         task->handler = [data, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, data = task_reference(cast)]() {
             data->constrain.setHeight(value);
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -192,12 +187,10 @@ namespace {
          }
          if (!cast)
             return 0;
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         auto  data    = task_reference(cast);
-         task->handler = [data, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, data = task_reference(cast)]() {
             data->constrain.setWidth(value);
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -208,12 +201,10 @@ namespace {
          auto  value = QString::fromUtf8(lua_tostring(L, 2));
          if (!cast)
             return 0;
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         auto  data    = task_reference(cast);
-         task->handler = [data, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, data = task_reference(cast)]() {
             data->text = value;
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }
@@ -224,12 +215,10 @@ namespace {
          bool  value = lua_toboolean(L, 2);
          if (!cast)
             return 0;
-         auto* task    = new tasks::s2m::ui_write_lambda;
-         auto  data    = task_reference(cast);
-         task->handler = [data, value]() {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [value, data = task_reference(cast)]() {
             data->wordWrap = value;
             data->update();
-         };
+         });
          send_script_ui_task(*task);
          return 0;
       }

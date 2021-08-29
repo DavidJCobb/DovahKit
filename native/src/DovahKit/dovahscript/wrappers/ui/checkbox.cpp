@@ -7,10 +7,7 @@
 #include "../../wrapper.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"
-#include "../../tasks/s2m/ui_read_lambda.h"
-#include "../../tasks/s2m/ui_write_lambda.h"
 
-#include "../../api_helpers/qt_alignment.h"
 #include "../../api_helpers/widget_properties.h"
 
 namespace {

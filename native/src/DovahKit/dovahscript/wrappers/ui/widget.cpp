@@ -532,8 +532,8 @@ namespace {
             return 0;
          QMargins result;
          {
-            task_reference widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
+            auto  widget  = task_reference((wrapped_type*) self.widget);
+            auto* task    = new tasks::s2m::ui_read_lambda();
             task->handler = [widget, &result]() {
                auto* layout = widget->layout();
                if (layout)

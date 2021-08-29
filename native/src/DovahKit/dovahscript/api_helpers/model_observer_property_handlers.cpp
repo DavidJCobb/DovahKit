@@ -8,8 +8,10 @@
 #include "../core/classes.h"
 #include "../tasks/s2m/ui_read_lambda.h"
 #include "../tasks/s2m/ui_write_lambda.h"
+#include "../tasks/s2m/ui_write_lambda_ex.h"
 #include "../push_native_object.h"
 #include "../send_script_task.h"
+#include "../task_reference.h"
 #include "../wrapper.h"
 
 #include "../wrappers/resource/dds.h"
@@ -109,9 +111,7 @@ namespace dovahscript::api_helpers::moph {
                cobb::lua::error(L, "the value is invalid"); // TODO: can we report specific errors?
          }
          //
-         auto* task     = new tasks::s2m::ui_write_lambda(false);
-         auto* observer = self.model_observer;
-         task->handler  = [observer, value, moph]() mutable {
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [observer = task_reference(self.model_observer), value, moph]() mutable {
             int role = moph->role;
             //
             bool has_row = observer->row >= 0;
@@ -145,9 +145,8 @@ namespace dovahscript::api_helpers::moph {
                value = (moph->transform)(prior, value);
             }
             model->setDefaultDataForSpan(role, orientation, pos, value);
-         };
+         });
          send_script_ui_task(*task);
-         //
          return 0;
       }
    }

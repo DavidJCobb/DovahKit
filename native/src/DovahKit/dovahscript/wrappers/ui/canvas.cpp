@@ -9,8 +9,8 @@
 #include "../../wrapper.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"
-#include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
+#include "../../tasks/s2m/ui_write_lambda_ex.h"
 
 #include "../../api_helpers/widget_properties.h"
 
@@ -29,17 +29,13 @@ namespace {
          if (!self.widget)
             return 0;
          CanvasWidgetLayer* layer = nullptr;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_write_lambda(true);
-            task->handler = [widget, &layer]() {
-               layer = widget->createLayer();
-               layer->setVisible(true);
-               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         auto* task = new tasks::s2m::ui_write_lambda_ex(true, [&layer, widget = task_reference((wrapped_type*)self.widget)]() {
+            layer = widget->createLayer();
+            layer->setVisible(true);
+            core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
+         });
+         send_script_ui_task(*task);
+         delete task;
          return push_native_object(layer);
       }
       int append_layer_group(lua_State* L) {
@@ -47,17 +43,13 @@ namespace {
          if (!self.widget)
             return 0;
          CanvasWidgetLayerGroup* layer = nullptr;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_write_lambda(true);
-            task->handler = [widget, &layer]() {
-               layer = widget->createLayerGroup();
-               layer->setVisible(true);
-               core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
-            };
-            send_script_ui_task(*task);
-            delete task;
-         }
+         auto* task = new tasks::s2m::ui_write_lambda_ex(true, [&layer, widget = task_reference((wrapped_type*)self.widget)]() {
+            layer = widget->createLayerGroup();
+            layer->setVisible(true);
+            core::subsystems::lifetime::get().on_hierarchy_item_created(*layer);
+         });
+         send_script_ui_task(*task);
+         delete task;
          return push_native_object(layer);
       }
       int remove_layer(lua_State* L) {
@@ -85,7 +77,7 @@ namespace {
          //
          int group_child_count = -1;
          {
-            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* task    = new tasks::s2m::ui_write_lambda();
             task->handler = [parent, orphan, index, &group_child_count]() {
                CanvasWidgetEntity* child_to_remove = orphan;
                if (!orphan) {

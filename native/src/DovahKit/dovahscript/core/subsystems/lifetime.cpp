@@ -88,6 +88,18 @@ namespace dovahscript::core::subsystems {
 
    void lifetime::worker_thread_handler() {
       if constexpr (!notify_for_task_references) {
+         //
+         // We're generally not going to have objects become task-unreferenced on every go-
+         // around unless objects are rapidly being used, in which case they may repeatedly 
+         // become task-reference and task-unreferenced. That means that during both periods 
+         // of heavy activity and periods of relative calm, we benefit from throttling our 
+         // checks for task-unreferenced objects.
+         //
+         static int blind_throttle = 0;
+         blind_throttle = (blind_throttle + 1) % 4;
+         if (blind_throttle)
+            return;
+         //
          if (coordinator::get().script_thread == thread_type::worker) {
             //
             // We've been configured so that instead of immediately acting on objects becoming 

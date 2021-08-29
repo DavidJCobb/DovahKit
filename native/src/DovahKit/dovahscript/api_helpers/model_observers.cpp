@@ -2,8 +2,9 @@
 #include "../../helpers/qt/get_model_of.h"
 #include "../core/subsystems/lifetime.h"
 #include "../tasks/s2m/ui_read_lambda.h"
-#include "../tasks/s2m/ui_write_lambda.h"
+#include "../tasks/s2m/ui_write_lambda_ex.h"
 #include "../send_script_task.h"
+#include "../task_reference.h"
 
 namespace dovahscript::api_helpers {
    extern [[nodiscard]] QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
@@ -40,8 +41,7 @@ namespace dovahscript::api_helpers {
       return result;
    }
    extern void set_model_items_data(ObservableStandardItemModelObserver* observer, int role, QVariant data) {
-      auto* task = new tasks::s2m::ui_write_lambda(false);
-      task->handler = [observer, role, data]() {
+      auto* task = new tasks::s2m::ui_write_lambda_ex(false, [data, role, observer = task_reference(observer)]() {
          bool has_row = observer->row >= 0;
          bool has_col = observer->col >= 0;
          if (!has_row && !has_col)
@@ -64,7 +64,7 @@ namespace dovahscript::api_helpers {
             orientation = ObservableStandardItemModelObserver::colOrientation;
          }
          model->setDefaultDataForSpan(role, orientation, pos, data);
-      };
+      });
       send_script_ui_task(*task);
    }
 
@@ -77,8 +77,7 @@ namespace dovahscript::api_helpers {
          if (col != -2)
             return;
       }
-      auto* task    = new tasks::s2m::ui_write_lambda(true);
-      task->handler = [widget, row, col, parent]() {
+      auto* task    = new tasks::s2m::ui_write_lambda_ex(true, [row, col, parent, widget = task_reference(widget)]() {
          auto* base = cobb::qt::get_underlying_model_of(widget);
          if (!base)
             return;
@@ -110,7 +109,7 @@ namespace dovahscript::api_helpers {
             return;
          }
          parent_item->setChild(row, col, nullptr);
-      };
+      });
       send_script_ui_task(*task);
       delete task;
       //

@@ -138,15 +138,7 @@ namespace {
          cobb::lua::argcheck(L, isnum, 2, "integer expected");
          if (!self.widget)
             return 0;
-         {
-            auto  widget  = task_reference((wrapped_type*) self.widget);
-            auto* task    = new tasks::s2m::ui_write_lambda(false);
-            task->handler = [widget, index]() {
-               const auto blocker = QSignalBlocker(widget);
-               widget->setCurrentIndex(index);
-            };
-            send_script_ui_task(*task);
-         }
+         api_helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &QTabWidget::setCurrentIndex, index);
          return 0;
       }
       int selected_tab(lua_State* L) {

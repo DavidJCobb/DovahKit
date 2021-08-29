@@ -18,6 +18,7 @@
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
+#include "../../tasks/s2m/ui_write_lambda_ex.h"
 
 #include "../../api_helpers/model_observers.h"
 #include "../../api_helpers/model_observer_property_handlers.h"
@@ -108,10 +109,8 @@ namespace {
          QVector<role_map_t> roles;
          _extract_cell_arg_list(L, 2, roles);
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, roles]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [roles, widget = task_reference((wrapped_type*)self.widget)]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+            auto* proxy = (QSortFilterProxyModel*)       widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             //
             int size = roles.size();
@@ -125,9 +124,8 @@ namespace {
                to_append.push_back(item);
             }
             model->appendColumn(to_append);
-         };
+         });
          send_script_ui_task(*task);
-         //
          return 0;
       }
       int append_column_with_options(lua_State* L) {
@@ -140,10 +138,8 @@ namespace {
          QVector<role_map_t> roles;
          _extract_cell_arg_list(L, 3, roles);
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, span_roles, roles]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [roles, span_roles, widget = task_reference((wrapped_type*)self.widget)]() {
+            auto* proxy = (QSortFilterProxyModel*)       widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             //
             int size = roles.size();
@@ -161,9 +157,8 @@ namespace {
             int col = model->columnCount() - 1;
             for (auto it = span_roles.begin(); it != span_roles.end(); ++it)
                model->setDefaultDataForSpan(it.key(), model->colOrientation, col, it.value());
-         };
+         });
          send_script_ui_task(*task);
-         //
          return 0;
       }
       int append_row(lua_State* L) {
@@ -189,10 +184,8 @@ namespace {
          //
          // We've extracted the Lua arguments. Now, let's pass them in.
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, roles]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [roles, widget = task_reference((wrapped_type*)self.widget)]() {
+            auto* proxy = (QSortFilterProxyModel*)       widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
                disable_word_wrap_without_changing_truncation(widget);
@@ -208,9 +201,8 @@ namespace {
                to_append.push_back(item);
             }
             model->appendRow(to_append);
-         };
+         });
          send_script_ui_task(*task);
-         //
          return 0;
       }
       int append_row_with_options(lua_State* L) {
@@ -223,10 +215,8 @@ namespace {
          QVector<role_map_t> roles;
          _extract_cell_arg_list(L, 3, roles);
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, span_roles, roles]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [roles, span_roles, widget = task_reference((wrapped_type*)self.widget)]() {
+            auto* proxy = (QSortFilterProxyModel*)       widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
                disable_word_wrap_without_changing_truncation(widget);
@@ -246,9 +236,8 @@ namespace {
             int row = model->rowCount() - 1;
             for (auto it = span_roles.begin(); it != span_roles.end(); ++it)
                model->setDefaultDataForSpan(it.key(), model->rowOrientation, row, it.value());
-         };
+         });
          send_script_ui_task(*task);
-         //
          return 0;
       }
       int clear(lua_State* L) {
@@ -273,9 +262,7 @@ namespace {
          QVector<role_map_t> roles;
          _extract_cell_arg_list(L, 3, roles);
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(true);
-         task->handler = [widget, roles, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         auto* task = new tasks::s2m::ui_write_lambda_ex(true, [roles, insert_at, widget = task_reference((wrapped_type*)self.widget)]() mutable {
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             //
@@ -293,10 +280,9 @@ namespace {
             if (insert_at > cc)
                insert_at = cc;
             model->insertColumn(insert_at, to_append);
-         };
+         });
          send_script_ui_task(*task);
          delete task;
-         //
          return 0;
       }
       int insert_row(lua_State* L) {
@@ -313,9 +299,7 @@ namespace {
          QVector<role_map_t> roles;
          _extract_cell_arg_list(L, 3, roles);
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::ui_write_lambda(true);
-         task->handler = [widget, roles, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         auto* task = new tasks::s2m::ui_write_lambda_ex(true, [roles, insert_at, widget = task_reference((wrapped_type*)self.widget)]() mutable {
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
@@ -335,10 +319,9 @@ namespace {
             if (insert_at > rc)
                insert_at = rc;
             model->insertRow(insert_at, to_append);
-         };
+         });
          send_script_ui_task(*task);
          delete task;
-         //
          return 0;
       }
       int remove_column(lua_State* L) {
@@ -478,7 +461,7 @@ namespace {
          const char* metatable_key = nullptr;
          {
             auto* task    = new tasks::s2m::ui_read_lambda();
-            auto* widget  = (wrapped_type*) self.widget;
+            auto  widget  = task_reference((wrapped_type*)self.widget);
             task->handler = [widget, &observers, &metatable_key]() {
                auto* proxy = (QSortFilterProxyModel*) widget->model();
                auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
@@ -582,8 +565,8 @@ namespace {
             return 0;
          bool result;
          {
-            auto* task = new tasks::s2m::ui_read_lambda();
-            auto* widget = (wrapped_type*)self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto  widget  = task_reference((wrapped_type*)self.widget);
             task->handler = [widget, &result]() {
                result = !widget->horizontalHeader()->isHidden();
             };
@@ -608,7 +591,7 @@ namespace {
          bool result;
          {
             auto* task    = new tasks::s2m::ui_read_lambda();
-            auto* widget  = (wrapped_type*)self.widget;
+            auto  widget  = task_reference((wrapped_type*)self.widget);
             task->handler = [widget, &result]() {
                result = !widget->verticalHeader()->isHidden();
             };
@@ -687,7 +670,7 @@ namespace {
             lua_pop(L, 1);
          }
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto* widget  = (wrapped_type*)self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          task->handler = [widget, text]() {
             auto* proxy = (QSortFilterProxyModel*)widget->model();
             auto* model = (ObservableStandardItemModel*)proxy->sourceModel();
@@ -716,7 +699,7 @@ namespace {
             width = -1;
          }
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto* widget  = (wrapped_type*)self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          task->handler = [widget, width]() {
             auto* header = widget->horizontalHeader();
             if (header)
@@ -776,7 +759,7 @@ namespace {
             return 0;
          auto  value   = lua_toboolean(L, 2);
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto* widget  = (wrapped_type*) self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          task->handler = [widget, value]() {
             widget->horizontalHeader()->setHidden(!value);
          };
@@ -799,7 +782,7 @@ namespace {
             return 0;
          auto  value   = lua_toboolean(L, 2);
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto* widget  = (wrapped_type*) self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          task->handler = [widget, value]() {
             widget->verticalHeader()->setHidden(!value);
          };
@@ -830,10 +813,10 @@ namespace {
             else if (_stricmp(vis, "wrap") == 0)
                ww = _word_wrap_mode::wrap;
             else
-               luaL_error(L, "string `%s` is not a recognized word wrap type", vis);
+               cobb::lua::error(L, "string `%s` is not a recognized word wrap type", vis);
          }
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto* widget  = (wrapped_type*)self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          task->handler = [widget, ww]() {
             set_word_wrapping_for(widget, ww);
          };
