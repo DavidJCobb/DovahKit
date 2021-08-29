@@ -54,8 +54,8 @@ namespace {
       }
       int remove_layer(lua_State* L) {
          auto& self   = get_wrapper_for_thiscall<cls>(L);
-         auto  parent = task_reference((wrapped_type*) self.widget);
-         auto  orphan = task_reference<CanvasWidgetEntity>(nullptr);
+         auto  parent = (wrapped_type*) self.widget;
+         auto  orphan = (CanvasWidgetEntity*) nullptr;
          int   index  = -1;
          //
          if (lua_isnumber(L, 2)) {
@@ -66,7 +66,7 @@ namespace {
             --index;
          } else {
             cobb::lua::argcheck(L, lua_isuserdata(L, 2), 2, "integer or userdata expected");
-            if (auto* arg = wrapper_from_stack<cls>(L, 2))
+            if (auto* arg = wrapper_from_stack<wrappers::ui::canvas_layer_group>(L, 2))
                orphan = arg->canvas_entity;
             else if (auto* arg = wrapper_from_stack<wrappers::ui::canvas_layer>(L, 2))
                orphan = arg->canvas_entity;
@@ -75,12 +75,17 @@ namespace {
          if (!parent || !orphan)
             return 0;
          //
-         int group_child_count = -1;
+         int  group_child_count = -1;
+         bool is_wrong_parent   = false;
          {
-            auto* task    = new tasks::s2m::ui_write_lambda();
-            task->handler = [parent, orphan, index, &group_child_count]() {
+            auto* task    = new tasks::s2m::ui_write_lambda(true);
+            task->handler = [parent = task_reference(parent), orphan = task_reference(orphan), index, &group_child_count, &is_wrong_parent]() {
                CanvasWidgetEntity* child_to_remove = orphan;
-               if (!orphan) {
+               if (child_to_remove) {
+                  is_wrong_parent = child_to_remove->parent() != parent;
+                  if (is_wrong_parent)
+                     return;
+               } else {
                   assert(index >= 0);
                   auto list = parent->layers();
                   group_child_count = list.size();
@@ -94,9 +99,10 @@ namespace {
             send_script_ui_task(*task);
             delete task;
          }
-         if (index >= 0 && index >= group_child_count) {
+         if (is_wrong_parent)
+            cobb::lua::error(L, "the specified child layer isn't actually a child of the specified canvas");
+         if (index >= 0 && index >= group_child_count)
             cobb::lua::error(L, "you cannot remove child layer #%d from a canvas with only %d child layers", index + 1, group_child_count);
-         }
          return 0;
       }
    }
