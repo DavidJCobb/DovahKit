@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <mutex>
 
 namespace dovahscript {
@@ -12,8 +13,7 @@ namespace dovahscript::core {
       public:
          using task_t = dovahscript::tasks::_base;
       protected:
-         task_t* task = nullptr;
-         mutable std::mutex lock;
+         std::atomic<task_t*> task = nullptr;
          
       public:
          // Call only from the sending thread.

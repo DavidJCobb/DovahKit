@@ -6,6 +6,7 @@
 #include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/set_model_of.h"
 #include "../../../helpers/qt/repaint.h"
+#include "../../../helpers/set_current_thread_name.h"
 #include "../../../ui/generic/CanvasWidget.h"
 #include "events.h"
 #include "lifetime.h"
@@ -156,6 +157,7 @@ namespace dovahscript::core::subsystems {
    void coordinator::_script_thread_loop() {
       assert(this->worker_thread_state == thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
       this->script_thread = thread_type::worker;
+      cobb::set_current_thread_name(L"Dovahscript");
       //
       // Run all outstanding script files:
       //

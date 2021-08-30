@@ -5,19 +5,13 @@
 namespace dovahscript::core {
    // Call only from the sending thread.
    void blocking_task_slot::send(task_t& task) {
-      auto guard = std::unique_lock(this->lock);
-      assert(!this->task);
-      this->task = &task;
+      auto* prior = this->task.exchange(&task);
+      assert(!prior && "How did the sender thread send one blocking task before we finished handling the last one it sent?!");
    }
 
    // Call only from the receiving thread.
    void blocking_task_slot::process() {
-      task_t* task = nullptr;
-      {
-         auto guard = std::unique_lock(this->lock);
-         task = this->task;
-         this->task = nullptr;
-      }
+      auto* task = this->task.exchange(nullptr);
       if (task) {
          task->execute();
          task->mark_as_seen();
@@ -26,12 +20,7 @@ namespace dovahscript::core {
 
    // Call only from the receiving thread.
    void blocking_task_slot::discard() {
-      task_t* task = nullptr;
-      {
-         auto guard = std::unique_lock(this->lock);
-         task = this->task;
-         this->task = nullptr;
-      }
+      auto* task = this->task.exchange(nullptr);
       if (task)
          task->mark_as_seen();
    }
