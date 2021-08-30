@@ -1,0 +1,419 @@
+
+Here's an interesting question: how do we allow Lua scripts to work with raster 
+images and use them within various parts of the UI, such that we properly track 
+and garbage-collect those images once neither Lua nor the UI refer to them? You 
+might think that we can handle this the  same way as with widget lifetimes, but 
+there are some extra issues that come into play.
+
+   1. Lua must be able to modify the content of a resource. We want Lua scripts 
+      to be able to create  and display rasters for a  variety of purposes, and 
+      we want Lua scripts to be able to  perform operations on rasters that may 
+      involve modifying  them (e.g.  identifying the  dominant color  of a game 
+      texture by resizing it to a single pixel and sampling the pixel's color).
+
+   2. Resources must  be usable by model  items, not just widgets.  Model items 
+      can store icons in their Qt::DecorationRole,  which means that we need to 
+      somehow know when items start and  stop using a given resource. There are 
+      no model signals that are suitable for this purpose.
+
+So how, indeed, do we meet these needs?
+
+
+=== THREAD-SAFE MODIFICATION OF RESOURCES =====================================
+
+It must be possible  for Lua code to modify the content of  a resource, without 
+causing issues for client-thread UI code which may be attempting to render that 
+resource.  The naive approach to enabling this would be to apply a  thread-lock 
+to the  resource's content;  the problem  with this  approach is that it  would 
+allow script code to bog down rendering.
+
+Instead,  we rely on double-buffering.  Each resource stores two copies  of its 
+QImage content: a raster intended for use on the script thread, and another for 
+use on the client thread.  We take steps to ensure that  scripted modifications 
+to the content  always flag the resource as "desynchronized," and  we have code 
+on the client thread which resynchronizes these resources, with this code being 
+throttled to 60 FPS to prevent the client thread from being too beholden to the 
+script thread.
+
+The resources are stored in a dedicated subsystem, which manages them and their 
+lifetimes, and which resynchronizes them on an interval. The subsystem stores a 
+list of all desynchronized resources, in order to avoid having to walk the full 
+resource list on every pass.
+
+When we resynchronize, we need to do so  carefully. QImages and similar classes 
+rely on "implicit  data sharing," a  Qt system intended  to help manage memory. 
+Each QImage  is little more than a handle to a set of underlying  data that may 
+or may not be shared by  other handles.  (This is why  you can allocate them on 
+the stack,  and pass them as arguments, without causing copy operations.)  This 
+means that if we  want to  actually overwrite one  QImage's data  with another, 
+while still keeping them separate, we need to call QImage::detach:
+
+   QImage a;
+   QImage b;
+   //
+   // ...
+   //
+   a = b;      // a and b point to the same single copy of data
+   a.detach(); // a and b point to different identical copies of data
+
+Even that,  however, can result in some poor memory management:  in the example 
+above, the "a" image would free its existing data, and then allocate memory for 
+new data -- the  copy of "b." However, if  the two images are  of the same size 
+and format, then this is a bit wasteful.  Accordingly, when we resynchronize an 
+image, we check whether the size and  format are unchanged and if so, we simply 
+use QPainter to replace the content of the old image with the new image:
+
+   QPainter p(&a);
+   p.setCompositionMode(QPainter::CompositionMode_Source);
+   p.drawImage(0, 0, b);
+
+The "composition mode" we use here essentially tells QPainter to wholly replace 
+the pixels it's drawing over, instead of performing any blending.
+
+
+=== USING RESOURCES WITHIN THE UI =============================================
+
+This introduces the question of how we  even use resources within the UI in the 
+first place. When Lua code modifies the content of a resource that is currently 
+being displayed in the UI, the widget  displaying that resource should show the 
+script's changes as soon as possible. How do we allow this to happen?
+
+The naive  approach would be to have a widget use the resource's  client-thread 
+QImage directly, such  that changes to the QImage are  forwarded to the widget. 
+However,  as mentioned above, QImages use implicit data sharing, and  we detach 
+the images to prevent this  from causing problems.  (Moreover, any write to the 
+image data would automatically detach it.) This fact means that if we take this 
+approach to  using the image in a widget,  then the widget will be  left with a 
+stale copy of the image should the image be modified.
+
+What we need to do instead, then, is this: instead of having UI widgets rely on 
+a QPixmap, we need to have them refer  to the resource itself. For model items, 
+this is very simple: we can simply store  something else in Qt::DecorationRole. 
+This can perhaps be some sort of pointer to  the resource, which a widget could 
+theoretically use to access the resource's  QPixmap (which we can update at our 
+leisure) at render time.
+
+That begs  the question of  how we actually render  the pointer.  Given an item 
+data role and a QVariant, how does Qt interpret the data and render it? Special 
+classes called "delegates"  are used to perform this task.  A model view widget 
+will have  a delegate  (typically  QStyledItemDelegate) with a  virtual  member 
+function that is  used to initialize predefined  render  options for each model 
+item. Qt allows us to  define our own  delegates (including  by subclassing the 
+normal QStyledItemDelegate class),  create  instances of them, and assign those 
+instances  to any model  view control  (though each control  must have  its own 
+delegate instance).
+
+This, of course, doesn't solve using  Lua-managed resources for single widgets, 
+such as QToolButton. We'll circle back to that later.
+
+There's just one thing left to take care of: we need to actually get widgets to 
+live-update their renders if they use a  resource that has been resynchronized. 
+It turns out that there isn't any "clean" way to do that; delegates can control 
+how an item data role  is rendered when  the widget  actually decides to render 
+it, but they can't force the widget to render. In practice, there's really only 
+one way to do what we want: we need to gather up every single UI control in the 
+entire scripted UI, and call QWidget::update on them individually.
+
+That seems like it  should be wrong, right? If you run some  tests, you'll find 
+that calling QWidget::update  on a window seems to  force all of its descendant 
+widgets to repaint,  so why can't we just do that for each  scripted window? As 
+it turns out, that's a platform-dependent  behavior; Qt does not guarantee that 
+repainting a parent widget will repaint  its descendants. Moreover, it fails to 
+account for  special cases:  QComboBox, for example,  stores its  "drawer" as a 
+private  QAbstractItemView not attached to the widget hierarchy, so  repainting 
+the combobox alone doesn't update the  view. The only guaranteed way to repaint 
+all widgets is  to actually call  QWidget::update on all widgets,  handling any 
+QComboBoxes we find as a special case.
+
+
+=== TRACKING RESOURCE USAGE, EVEN FROM MODEL ITEMS ============================
+
+Next, we need to figure out how to track  when model items start and stop using 
+a Lua-managed resource. We just decided that model items should store a pointer 
+to the resource, so  what if instead of  using a bare pointer,  we use a custom 
+smart pointer? A typical  smart  pointer will manage  the memory of its target, 
+but that's not what  we want; we just want to track how many  different systems 
+within Qt are referring to a resource. More formally, we want to give resources 
+an intrusive  refcount, and  design a smart pointer  class which  modifies this 
+refcount (and perhaps  calls some  code when it  hits zero)  but which does not 
+attempt to delete the resource when the refcount hits zero.
+
+Our resources are  instances of DovahscriptResource,  so let's  call our custom 
+smart pointer "DovahscriptResourceHandle."  We'll have model items wrap this up 
+in a QVariant,  and we'll configure it so that when the resource  (DSR) has its 
+refcount drop to zero, we'll call some  code within our resource registry. This 
+code can delete the resource if it is, at that time, also not referenced by Lua 
+anymore.
+
+(From here on out, we may abbreviate DovahscriptResourceHandle as "DSRH.")
+
+Of course, we need to have DSRHs actually function within QVariants. We can use 
+two macros for this purpose: the usual  Q_DECLARE_METATYPE macro used to enable 
+the use of any type in a QVariant, as well as Q_DECLARE_SMART_POINTER_METATYPE, 
+to ensure  that smart pointer  behavior works  properly. The latter  macro only 
+works on a class templated on some typename  T, which must subclass QObject. We 
+need to use both macros: the former on  the template specialization; the latter 
+on the template.
+
+   Q_DECLARE_SMART_POINTER_METATYPE(Foo);
+   Q_DECLARE_METATYPE(Foo<Bar>);
+
+This of course means that DovahscriptResource needs to subclass QObject, but we 
+get a few conveniences  from that. Firstly,  DSRH can hook  QObject::destroyed, 
+allowing us to delete DSRs even if there  are still extant DSRHs which refer to 
+them, which makes  VM teardown simpler (we just wipe all resources  immediately 
+as part of a central process). Secondly, we can offer a "resynchronized" signal 
+on DSR, which  can be used by  custom widgets. I said  earlier that  I'd circle 
+back to use cases like QToolButton, so  here we are: there's no way to take any 
+arbitrary widget that relies on QPixmap and  get it to use an DSRH instead, but 
+we can create custom widget (sub)classes  that use DSRH, and have them hook the 
+DSR's "resynchronized"  signal to know  when to repaint  (although this may not 
+even be strictly  necessary since we force all scripted windows  and widgets to 
+repaint anyway).
+
+
+=== SUBRESOURCES ==============================================================
+
+In addition to  raster DSRs,  we also have DDS DSRs,  which store  a DirectDraw 
+Surface texture. "Texture," here, is of course a misleading term: DDS files can 
+store an array of multiple images, and some "images," namely cubemaps, are them-
+selves a set of multiple raster images. A DDS file, then, can have layouts like 
+these:
+
+   DDS
+    - Array element 0
+       - Mipmap 0
+       - Mipmap 1
+       - Mipmap 2
+    - Array element 1
+       - Mipmap 0
+       - Mipmap 1
+       - Mipmap 2
+
+All elements in  the array have the same  number of mipmap  levels. Cubemap DDS 
+files are  implemented as  an array of  six images;  an array of N  cubemaps is 
+implemented as a flat array of (N * 6) images; and each of these, too, can have 
+mipmaps.
+
+We can conceive of each individual raster  as a "subresource." How do we handle 
+subresources within our system?
+
+The short answer is  that we simply don't. Handling subresources  would require 
+being able to refer to a  subresource from an DSRH, either  by allowing DSRs to 
+be nestable  or by allowing DSRHs to encode "path" information  similar to that 
+stored in  Lua wrappers'  C-side data. The former  approach will  require us to 
+change  how DSR lifetimes work, making them more similar to QWidget  lifetimes: 
+we will need to ensure that whole DSR trees are deleted only when every element 
+in the tree is  unreferenced within both Lua and Qt. The latter  approach would 
+require us to configure DSRHs individually every time we use them to refer to a 
+subresource. Either way, we would also  need to store a refcount for each of an 
+DSR's individual subresources...
+
+Here's where DDS  files get complicated: we rely on the DirectXTex  library for 
+loading DDS files, converting  them to a pixel format  ideal for scripting with 
+rasters. DirectXTex produces a ScratchImage  which contains the raw pixel data, 
+along with metadata for identifying the  size and flags. The trouble is that as 
+of this writing, there is no explicit API  for taking ownership of the internal 
+pixel buffers; we can only copy them.  (That is to say: we certainly *could* go 
+and look at the DirectXTex source code, determine whether it is safe to "steal" 
+a ScratchImage's  buffers, and then do so; but we wouldn't be  acting according 
+to any sort of spec; future  changes to the library  could break our behavior.)
+
+That gives us three choices, then:
+
+   a) When loading a DDS, preemptively copy all of its raster subresources into 
+      QImage instances  that we'll assign  to new DSRs. This  will incur a time 
+      cost and (briefly) double our memory usage.
+
+   b) Design DSRs  so that they  can pull assets  from parent or  ancestor DSRs 
+      instead of containing their own  data. This will further complicate every 
+      piece of code in which we work with DSRs.
+
+   c) Don't.
+
+We only  need to explicitly  handle subresources if  we want them to be  usable 
+from within Qt.  Lua's own wrapper "part" data is suitable for  allowing Lua to 
+refer to  an DSR subresource. This will  lead to some ugliness, of  course; for 
+example, the code below will not have the desired effect:
+
+   my_table_cell.icon = my_dds.images[4]
+
+We simply can't store a subresource in  Qt::DecorationRole without any explicit 
+support for  subresources, so  the above code will  fail. A script  author will 
+have to explicitly create a new DSR:
+
+   my_table_cell.icon = my_dds.images[4]:copy_to_raster()
+
+
+=== BEST PRACTICES FOR SCRIPTING WITH DSRs ====================================
+
+We may impose a cap on the total  size of all Lua-managed resources, to prevent 
+a renegade Lua script from blowing DovahKit up with an out-of-memory error. One 
+should be mindful of this when writing scripts. Consider the following code, in 
+which (item_a) and (item_b) are Qt widgets  or model items of some sort and the 
+"icon" field is a setter API which passes its input into Qt somehow:
+
+   do
+      local a = raster.new({
+         width  = 50,
+         height = 50,
+         background_color = blue
+      })
+      item_a.icon = a
+   end
+   do
+      local b = raster.new({
+         width  = 50,
+         height = 50,
+         background_color = blue
+      })
+      item_b.icon = b
+   end
+
+One would expect the  (a) raster to become Lua-unreferenced  as soon as it goes 
+out of scope; after all, once  it's out of scope,  nothing within Lua refers to 
+it. However, garbage-collection in  Lua is not  instantaneous; it may take some 
+time before the  rasters actually are  marked as Lua-unreferenced,  which means 
+that they may hang around even if (item_a) and (item_b) are deleted somehow.
+
+This can cause problems if a script is  working with very many small rasters or 
+with a few large rasters; if the rasters  "live" for longer than expected, then 
+they will contribute  to memory limitations for longer than  expected. To avoid 
+this issue, script authors are encouraged to use to-be-closed Lua variables for 
+rasters that should not survive past a given block:
+
+   do
+      local a <close> = raster.new({
+         width  = 50,
+         height = 50,
+         background_color = blue
+      })
+      item_a.icon = a
+   end
+   do
+      local b <close> = raster.new({
+         width  = 50,
+         height = 50,
+         background_color = blue
+      })
+      item_b.icon = b
+   end
+
+Putting the <close> attribute on a local variable will mark it as to-be-closed. 
+When a to-be-closed variable goes out of  scope, Lua will check its value for a 
+__close metamethod and call any it finds. Our hardcoded wrappers are programmed 
+to run teardown  code on __close and on  __gc (whichever runs  first), and that 
+teardown code includes marking a wrapped  DSR as Lua-unreferenced. In the above 
+code snippet, the (a)  and (b) variables will be closed as  soon as they go out 
+of scope,  which in turn guarantees that those rasters will be deleted  as soon 
+as everything else stops referring to them.
+
+
+=== IMPLEMENTATION DETAILS ====================================================
+
+When a script API receives a DovahscriptResource, with the intention of passing 
+that resource to  some UI control via a  lambda-task, the script  API must wrap 
+the DovahscriptResource  in a DovahscriptResourceHandle  outside of  the lambda 
+body (i.e.  before calling the lambda).  This is necessary in  order to prevent 
+premature deletion of the resource; this usage of DovahscriptResourceHandles is 
+essentially functionally equivalent to task references.
+
+Consider:
+
+   do
+      local r <close> = raster.new({
+         width  = 50,
+         height = 50,
+         background_color = blue
+      })
+      my_dropdown_item.icon = r
+   end
+
+In the code above, the (r) variable has been marked as a to-be-closed variable; 
+this means that the very instant it goes out of scope, Lua will run the value's 
+__close metamethod. We've designed our wrappers so that this runs the same tear-
+down code as __gc, in order to allow  script authors to ensure that Lua-managed 
+resources  aren't held onto by the Lua  garbage collector for longer  than they 
+need to be.
+
+In the above code, assigning to (my_dropdown_item.icon) invokes a setter, which 
+receives (my_dropdown_item) as its first argument and (r) as a second argument. 
+The setter function will identify the second argument as a wrapped DSR and pull 
+the DSR pointer; it will then need to  pass this pointer into some cross-thread 
+task object to actually store it into the model item. Commonly, we will use the 
+generic "lambda"  task object, since it takes a lambda -- nice  and convenient. 
+We will have the lambda capture the DSR  pointer by value. Commonly, we'll also 
+flag the lambda as non-blocking, so that script execution can continue while we 
+make this change to the UI. That's where we risk falling into a trap.
+
+Assume that this is the C-side code for our API:
+
+   int icon(lua_State* L) {
+      auto& self = get_wrapper_for_thiscall<cls>(L);
+      //
+      DovahscriptResource* value = nullptr;
+      if (!lua_isnoneornil(L, 2)) {
+         auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+         value = arg->managed_resource;
+      }
+      //
+      auto* observer = task_reference(self.model_observer);
+      auto* task     = new tasks::s2m::ui_write_lambda(false);
+      task->handler  = [observer, value]() mutable {
+         if (auto* item = observer->item()) {
+            auto wrapped = QVariant::fromValue<DovahscriptResourceHandle>(value);
+            item->setData(wrapped, Qt::DecorationRole);
+         }
+      };
+      send_script_ui_Task(*task);
+      return 0;
+   }
+   
+The above code is vulnerable to a race condition. We create a non-blocking task 
+(as indicated by passing false to the  lambda-task constructor) and pass an DSR 
+pointer by value.  We then queue the  task to run and then  return back to Lua, 
+without waiting for the  task to complete, and within  our Lua code, the DSR -- 
+the raster -- immediately  goes out of  scope. It's  possible for the DSR to go 
+out of scope and be deleted before the task runs and wraps it in an DSRH, which 
+will result in our DSRH wrapping a dangling pointer.
+
+Consider this alternative:
+
+   int icon(lua_State* L) {
+      auto& self = get_wrapper_for_thiscall<cls>(L);
+      //
+      DovahscriptResourceHandle value = nullptr;
+      if (!lua_isnoneornil(L, 2)) {
+         auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+         value = arg->managed_resource;
+      }
+      //
+      auto* observer = task_reference(self.model_observer);
+      auto* task     = new tasks::s2m::ui_write_lambda(false);
+      task->handler  = [observer, value]() mutable {
+         if (auto* item = observer->item()) {
+            auto wrapped = QVariant::fromValue<DovahscriptResourceHandle>(value);
+            item->setData(wrapped, Qt::DecorationRole);
+         }
+      };
+      send_script_ui_task(*task);
+      return 0;
+   }
+
+Incidentally, this is also why DSRs' intrusive refcounts need to be atomic: the 
+DSRHs can be created and destroyed on multiple threads, sometimes at around the 
+same time. We create  DSRH #1 in the API body and copy it  into the lambda (the 
+capture-by-value) to create  DSRH #2. The lambda  copies DSRH #2 into the model 
+item's  Qt::DecorationRole to create DSRH  #3 on the main thread,  and then the 
+lambda and DSRH #2  are destroyed on the  main thread;  meanwhile, the API body 
+returns to  Lua, taking  DSRH #1 out of scope and destroying  it. All  of these 
+operations after the creation of DSRH #2  are essentially unordered, and so the 
+refcount must  be atomic to allow  thread-safe usage.
+
+Incidentally, the model observer property handler system behaves as needed here 
+because its  setter stuffs the  to-be-stored value  into a QVariant  within the 
+script thread; so long as we ensure to  use an DSRH there (and we do), it works 
+fine.
+

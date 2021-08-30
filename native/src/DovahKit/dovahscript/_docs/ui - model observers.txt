@@ -1,0 +1,72 @@
+
+DovahKit's scripting API allows Lua scripts to refer directly to model items in 
+their various forms: entries within a  drop-down list, and cells within a table 
+view widget. However, DovahKit also allows  Lua scripts to refer to entire rows 
+and columns. How does this work?
+
+A "model observer" is a simple struct consisting of a parent QModelIndex, a row 
+number, a column number, and a model  pointer. Model observers are created from 
+"observable standard  item models," a subclass of Qt's  built-in "standard item 
+model." These "observable"  models allow you to heap-allocate  an observer; the 
+model will  keep track of the observer and update it whenever rows  and columns 
+change.
+
+An example will  make this easier. Imagine  a table with  three rows: in order, 
+they are a red row, a green row, and a  blue row. Their respective row numbers, 
+then, are 0, 1, and 2. If you delete the  green row, however, then the blue row 
+will shift to occupy row number 1, and crucially, if something was referring to 
+the blue row by its row number, then that something will no longer be accurate. 
+This is  the problem that  "model observers" are  meant to solve: if  you use a 
+model observer to  refer to a row (or  column or cell) in  an observable model, 
+your model observer will  automatically have its  stored row and column numbers 
+updated as the model's layout changes.
+
+Model observers,  then, are a  safe way for  Lua scripts to  refer to arbitrary 
+rows, columns, and cells. But why use them and not some other system?
+
+
+=== PERSISTENT MODEL INDEXES ==================================================
+
+Typically, when  you need to refer to an  individual piece of data  within a Qt 
+model, you use a QModelIndex.  This is essentially a  handle and is meant to be 
+viewed as mostly opaque. If you want to  access the data of a given model item, 
+you pass the QModelIndex and the desired  Qt::ItemDataRole into the model's get 
+and set  functions for model data. Some  models, like QStandardItemModel,  will 
+allow you to access  model items directly, but models aren't  required to grant 
+that level of access.
+
+Internally, of course, QModelIndex stores a  pointer to its model, an arbitrary 
+pointer (typically used to represent a "parent" item of some kind), and row and 
+column numbers. This means that when  a model changes its layout, QModelIndexes 
+existing outside of the  model can become  desynched.  QPersistentModelIndex is 
+the intended solution to this problem: every QPersistentModelIndex, or QPMI, is 
+tracked by its owning model, and the model will go out of its way to update the 
+QPMI's row and column numbers as appropriate whenever the model layout changes. 
+In fact, QPMIs are the inspiration for model observers, though the mechanics of 
+each differ somewhat.
+
+(Internally, a QPMI is just a single pointer to a heap-allocated data structure 
+called a  QPersistentModelIndexData. This  allows you to create  QPMIs wherever 
+and however you please, including on the stack, and still let models track them 
+accurately. Also,  if you've ever made your own Qt models  and wondered why you 
+have to use beginInsertRows and friends, it's largely to automate QPMI handling 
+for you.)
+
+The issue with QPMIs is that they can only accurately track a single model item 
+and not  a range of model items. You could  try using a pair of  QPMIs to track 
+the bounds of a  range (the upper-left and lower-right  corners), but that idea 
+falls apart if you think  through the implications:  you're not really tracking 
+"the bounds  of a range" so much  as you're tracking the  two individual  items 
+*at* the bounds of the  range; if either  of those  items gets removed from the 
+model, then the item's respective QPMI  will be invalidated and you will pretty 
+much lose that bound entirely. If you're tracking a range of table cells in Row 
+4 spanning from Column  2 to Column 5, and then Column 2  gets removed from the 
+table, you will be left with the range [?, 5].
+
+Moreover, if your goal  is to be able to track entire rows  and columns, then a 
+pair of QPMIs will fall short when new  rows or columns are inserted. If you're 
+working with a table view containing four rows and five columns, you can try to 
+track Row 2 by generating  a pair of QPMIs for (2, 1)  and (2, 5), but if a new 
+column  is then appended or prepended outside  of that range, your  QPMIs won't 
+include it.
+

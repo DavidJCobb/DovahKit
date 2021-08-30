@@ -1,0 +1,88 @@
+
+DovahKit has to provide access to natively-managed objects to Lua scripts. Each 
+natively-managed object is "wrapped"  with a userdata. While Lua can manage the 
+object lifetimes of  the userdata themselves, it cannot  necessarily manage the 
+lifetimes of the wrapped native objects: we don't want to delete forms when Lua 
+scripts' references to them go out of scope;  we only want to delete forms when 
+Lua scripts explicitly tell us to, by  calling "delete" functions which we have 
+provided. What happens, then, to variables  that point to a form when we delete 
+that form?
+
+Lua is an excellent  scripting language, but this is a  situation that it's not 
+well-suited for. Given a userdata, there's no way to tell the Lua VM to set all 
+variables (and table members,  et cetera) which refer  to that userdata to nil. 
+There's  also no way to  make a userdata impersonate nil or  otherwise  test as 
+falsy. This means that  when a Lua script asks to delete  some natively managed 
+object, any variables that referred  to that object  will be left dangling: the 
+userdata, the wrapper, still exists, but the underlying object is gone. So what 
+do we do about that?
+
+   local form = dovah.get_form_by_id(0x0000C0BB)
+   form:delete()
+
+   if form then
+      local name = form:get_editor_id()  -- whoops, seems we've made a mistake!
+   end
+
+It's a bit of a contrived example. A more complex script could make essentially 
+the same mistake in a less obvious way. So what should happen above? There's no 
+way to make the "form" variable test as  falsy even after it's been deleted, so 
+how should we react when a script tries to  use a deleted form, and what should 
+we offer to scripts to allow them to  check whether an object has gone missing?
+
+DovahKit's script API has  a system called "zombie classes."  The basic idea is 
+that when we decide  to delete a native object, we also "zombify"  the userdata 
+wrapper. The "zombification" process involves creating (if one does not already 
+exist) a "zombie class" that parallels  the userdata's class, and then swapping 
+the userdata's  metatable out  for the zombie class  metatable.  Zombie classes 
+behave as follows:
+
+ - Calling any member function on a zombie object is an error.
+
+ - Setting any  property on a  zombie object is  an error, whether  or not that 
+   property was recognized when the object was alive.
+
+ - The zombie object has no non-function members,  so trying to access any will 
+   result in nil.
+
+The class system (described in <native classes.txt>) supports inheritance along 
+with members  powered by native getters  and setters. Zombie  classes mimic the 
+inheritance chain but offer no getters: creating  a zombie class that parallels 
+a living subclass  will result in the  creation of  zombie classes  paralleling 
+each of its ancestor classes.
+
+Zombie classes are all marked with a sentinel value:  an "__iszombie" key whose 
+value is the same userdata  object hidden in the  Lua C registry. This value is 
+not used  anywhere else,  and serves as a way  of telling a  zombie class apart 
+from a normal metatable. The  userdata object is created  when the first zombie 
+class is created, and zombie classes are  created at the time that an object is 
+zombified; with that in mind, we check if an object is a zombie as follows:
+
+ - If the object is not a userdata, then it's not a zombie.
+
+ - Get the object's metatable. If there isn't one, then it's not a zombie.
+ 
+ - Get the  "__iszombie"  field on the metatable,  and attempt to  retrieve the 
+   hidden sentinel userdata  from the C registry. If either  value is nil, then 
+   the object can't be a zombie.
+
+ - If the two values are equal, then the object is a zombie.
+
+This allows script authors to check for zombification as follows:
+
+   local form = dovah.get_form_by_id(0x0000C0BB)
+
+   object_is_zombie(form) -- false
+
+   form:delete()
+   object_is_zombie(form) -- true
+
+A global function is offered because  our implementation of collections doesn't 
+allow members  or member functions. If we  were to add an "exists"  member to a 
+collection, then it would be impossible  to access collection items that happen 
+to be named "exists".
+   
+It could be argued that a script shouldn't be designed in such a way that it is 
+at risk of using objects  that it has deleted, and I  think I'd agree with that 
+argument, but it would still be unacceptable not to provide scripts with an API 
+for identifying zombies.

@@ -92,7 +92,6 @@
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
     <addaction name="separator"/>
-    <addaction name="actionRunEditorScript"/>
     <addaction name="actionRunScriptSingle"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
