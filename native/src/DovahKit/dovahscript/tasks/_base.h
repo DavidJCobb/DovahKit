@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 
 struct lua_State;
 
@@ -7,7 +8,7 @@ namespace dovahscript::tasks {
       public:
          virtual ~_base() {}
 
-         volatile bool seen = false; // has this message been received and acknowledged by its recipient?
+         std::atomic<bool> seen = false; // only used by blocking tasks: has this message been received and acknowledged by its recipient?
       protected:
          //
          // For blocking script-to-client tasks only, this bool indicates whether the 
@@ -22,16 +23,8 @@ namespace dovahscript::tasks {
 
       public:
          void execute();
+         void mark_as_seen();
 
-         //
-         // To send a non-blocking task, simply add it to the VM's task queue and then 
-         // continue on. To send a blocking message, add it to the VM's task queue and 
-         // then loop until its (seen) property is set to (true); then, delete the task 
-         // on your own.
-         // 
-         // This function may be called multiple times and should always return a 
-         // consistent value.
-         //
          virtual bool is_blocking() const noexcept { return false; }
 
          inline bool needs_lua_ownership() const noexcept { return this->_needs_lua_ownership; }

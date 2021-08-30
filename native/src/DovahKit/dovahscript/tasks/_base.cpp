@@ -6,6 +6,9 @@ namespace dovahscript::tasks {
 
    void _base::execute() {
       this->_exec_impl();
+   }
+   void _base::mark_as_seen() {
       this->seen = true;
+      this->seen.notify_one();
    }
 }

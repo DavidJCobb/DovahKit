@@ -5,6 +5,7 @@
 #include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
 #include "../../../dovah/core.h"
+#include "../blocking_task_slot.h"
 #include "../task_queue.h"
 #include "../../script_set.h"
 
@@ -87,9 +88,9 @@ namespace dovahscript::core::subsystems {
          struct {
             task_queue s2m;
             struct {
-               task_queue read;
                task_queue write;
             } ui;
+            blocking_task_slot blocking;
          } task_queues;
 
          // Access from the client thread only:
@@ -136,6 +137,9 @@ namespace dovahscript::core::subsystems {
          static void _lua_debug_hook(lua_State* L, lua_Debug* ar);
 
          static void _lua_warning_function(void* ud, const char* msg, int tocont);
+
+         void _clear_all_task_queues();
+         void _send_blocking_task(task_queue::task_t&);
 
       public:
          lua_State*      lua_state = nullptr;

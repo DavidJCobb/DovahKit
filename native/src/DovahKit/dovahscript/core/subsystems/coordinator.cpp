@@ -99,11 +99,14 @@ namespace dovahscript::core::subsystems {
          // abort it. Partly it's to avoid a nasty race condition within the task system. 
          // Refer to comments on the "send task" functions.
          //
+         this->task_queues.s2m.clear();
+         this->task_queues.ui.write.clear();
+         this->task_queues.blocking.discard();
          return;
       } else {
          this->task_queues.s2m.process();
-         this->task_queues.ui.read.process();
          this->task_queues.ui.write.process();
+         this->task_queues.blocking.process();
       }
    }
 
@@ -355,8 +358,8 @@ namespace dovahscript::core::subsystems {
       }
       //
       this->task_queues.s2m.clear();
-      this->task_queues.ui.read.clear();
       this->task_queues.ui.write.clear();
+      this->task_queues.blocking.discard();
       {
          for (auto* stub : this->expected_modifications)
             emit DovahKitCore::get().formModified(stub);
@@ -411,89 +414,51 @@ namespace dovahscript::core::subsystems {
 
    // For important implementation information on this and the other "send task" 
    // functions, refer to the <cross-thread tasks and script aborts.txt> file 
-   // in the documentatio folder.
-   void coordinator::send_script_task(task_queue::task_t& task) {
-      require_script_thread();
-      if (this->aborted)
-         return;
-      auto& queue = this->task_queues.s2m;
-      //
-      bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
-      bool needs_lua = task.needs_lua_ownership();
+   // in the documentation folder.
+   void coordinator::_clear_all_task_queues() {
+      this->task_queues.s2m.clear();
+      this->task_queues.ui.write.clear();
+   }
+   void coordinator::_send_blocking_task(task_queue::task_t& task) {
       thread_type prior;
+      bool needs_lua = task.needs_lua_ownership();
       if (needs_lua) {
-         assert(blocking);
          prior = this->script_thread;
          this->script_thread = thread_type::client;
          task.run_lua_before(this->lua_state);
       }
-      queue.push_back(&task);
-      if (blocking) {
-         while (!task.seen) {
-            if (this->is_aborted()) {
-               queue.clear();
-               break;
-            }
-         }
-         if (needs_lua)
-            this->script_thread = prior;
+      this->task_queues.blocking.send(task);
+      task.seen.wait(false);
+      if (needs_lua)
+         this->script_thread = prior;
+   }
+   void coordinator::send_script_task(task_queue::task_t& task) {
+      require_script_thread();
+      if (this->aborted)
+         return;
+      if (task.is_blocking()) {
+         this->_send_blocking_task(task);
+         return;
       }
+      this->task_queues.s2m.push_back(&task);
    }
    void coordinator::send_ui_read_task(tasks::_ui_read_base& task) {
       require_script_thread();
       if (this->aborted)
          return;
-      auto& queue       = this->task_queues.ui.read;
-      auto& counterpart = this->task_queues.ui.write;
-      //
-      counterpart.wait_until_empty();
-      //
-      bool needs_lua = task.needs_lua_ownership();
-      thread_type prior;
-      if (needs_lua) {
-         prior = this->script_thread;
-         this->script_thread = thread_type::client;
-         task.run_lua_before(this->lua_state);
-      }
-      queue.push_back(&task);
-      while (!task.seen) {
-         if (this->is_aborted()) {
-            queue.clear();
-            break;
-         }
-      }
-      if (needs_lua)
-         this->script_thread = prior;
+      this->task_queues.ui.write.wait_until_empty();
+      assert(task.is_blocking());
+      this->_send_blocking_task(task);
    }
    void coordinator::send_ui_write_task(tasks::_ui_write_base& task) {
       require_script_thread();
       if (this->aborted)
          return;
-      auto& queue       = this->task_queues.ui.write;
-      auto& counterpart = this->task_queues.ui.read;
-      //
-      counterpart.wait_until_empty();
-      //
-      bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
-      bool needs_lua = task.needs_lua_ownership();
-      thread_type prior;
-      if (needs_lua) {
-         assert(blocking);
-         prior = this->script_thread;
-         this->script_thread = thread_type::client;
-         task.run_lua_before(this->lua_state);
+      if (task.is_blocking()) {
+         this->_send_blocking_task(task);
+         return;
       }
-      queue.push_back(&task);
-      if (blocking) {
-         while (!task.seen) {
-            if (this->is_aborted()) {
-               queue.clear();
-               break;
-            }
-         }
-         if (needs_lua)
-            this->script_thread = prior;
-      }
+      this->task_queues.ui.write.push_back(&task);
    }
 
 

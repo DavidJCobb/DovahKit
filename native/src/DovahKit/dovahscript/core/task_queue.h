@@ -11,7 +11,7 @@ namespace dovahscript {
 
 namespace dovahscript::core {
    //
-   // A queue suitable for receiving and executing cross-thread tasks.
+   // A queue suitable for receiving and executing non-blocking cross-thread tasks.
    //
    class task_queue {
       public:
