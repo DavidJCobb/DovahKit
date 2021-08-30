@@ -1,7 +1,7 @@
 
 When we want Lua to be able to access  some sort of native data, such as a form 
-or part of a form,  we create a "wrapper" for that data;  that is, we create an 
-(editor_script::wrapper) as a piece of  Lua userdata, and store data on the new 
+or part of a form,  we create a "wrapper"  for that data;  that is, we create a 
+(dovahscript::wrapper)  as a piece of  Lua userdata, and store  data on the new 
 wrapper which indicates precisely how to get to the wrapped data. We then store 
 the new userdata in a private weak-table before returning it to the script; the 
 private weak-table is a set of flat lists, one per form ID. Storing userdata in 

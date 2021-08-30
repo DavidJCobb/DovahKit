@@ -4,47 +4,17 @@ a variety of editing operations between the client and worker threads. However,
 care must be taken to avoid some nasty  edge-cases that can arise when the user 
 force-kills the script -- that is, when the user calls an abort.
 
-Ordinarily, the script  thread will send a task to the  client thread and then, 
-if the task is a "blocking" task, the script thread will spin until the task is 
-marked as "seen." However, if an abort is called, there's no guarantee that the 
-task will ever be seen; there also isn't  a guarantee that it'll never be seen. 
-Therefore, the "send task" functions must stop spinning upon noticing an abort. 
+Ordinarily, when the script thread sends  a blocking task to the client thread, 
+it will perform  an atomic wait until that task has been marked  as "seen." The 
+task would ordinarily be marked as "seen"  after it has been executed; however, 
+if an abort has  been called, the task will  not be executed.  Accordingly, the 
+coordinator subsystem needs to ensure  that if an abort is called, any blocking 
+task that is pending execution gets marked as "seen" without being executed.
 
-However,  there's a wrinkle here: when working with blocking tasks,  the sender 
-is responsible for deleting  the task after it has been  processed. This allows 
-the sender to  potentially retrieve information from fields on  the task object 
-before disposing of  the task. However,  non-blocking  tasks are deleted by the 
-task queue, because there's no guarantee  that they'll complete in time for the 
-sender to be able to retrieve information from  them. This means that tasks can 
-be deleted either by the sender API or  by the coordinator subsystem, and so we 
-are exposed to some nasty edge-cases when an abort is called.
-
-In order to avoid a variety of possible failure scenarios, we therefore need to 
-take the following steps:
-
- - The main thread must  refuse to process any more tasks  if an abort has been 
-   called.
-
- - If an abort is called while the "send task" functions are spinning, then the 
-   functions must clear the task queue and then stop spinning.
-
-    - If the main thread is currently processing the task queue, then we'll hit 
-      the lock,  wait for the processing to finish, and then empty  the already 
-      empty queue. Harmless.
-
-    - If the main thread isn't yet processing  the task queue, then this is the 
-      only way to ensure that blocking tasks don't linger in the queue.
-
-If we don't honor the above constraints,  then we're exposed to these potential 
-failure cases:
-
- - If the main thread  attempts to execute tasks after an abort,  then it risks 
-   accessing an already-deleted blocking  task, triggering an access violation. 
-   The same risk is  present if the main thread tries to clear  the task queues 
-   on its own following an abort, as a task's data must be accessed in order to 
-   know whether it is a blocking task.
-
- - If the task queues  are not cleared, then the script  thread can deadlock if 
-   it reaches the point in its loop where  it waits for the queues to empty. If 
-   the main thread refuses to run tasks after  an abort is called, then none of 
-   the queues will ever be emptied from that point onward.
+There are consequences for non-blocking tasks as well, however. When the worker 
+thread is in  between executing units of  Lua code, in its idle  cycle, it will 
+perform an atomic wait until the task  queues for non-blocking tasks are empty. 
+If an abort has been  called, these queues  will never  be processed; thus, the 
+coordinator  subsystem must clear the queues in the main thread  handler, along 
+with discarding any  blocking tasks, in order to ensure  that the worker thread 
+does not deadlock.

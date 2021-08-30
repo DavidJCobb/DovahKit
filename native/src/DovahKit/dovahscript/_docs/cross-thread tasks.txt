@@ -1,0 +1,37 @@
+
+DovahKit's  script engine relies on  cross-thread tasks in order to  coordinate 
+a variety of editing  operations between  the client and worker  threads. These 
+tasks are handled and executed by the "coordinator" subsystem.
+
+The coordinator  subsystem maintains two  queues for non-blocking  tasks, and a 
+single storage slot for blocking tasks. One queue is for generic tasks; another 
+queue is for UI write operations, and sending  any UI read operation will block 
+until  the UI write  queue is empty. This behavior  ensures that the  following 
+script code isn't vulnerable to race conditions:
+
+   local widget = ui.text.new("Text label")
+   widget.text = "ABC"
+   widget.text = "DEF"
+
+   dovah.log_message(widget.text)
+   --
+   -- This is a read operation, so we wait  for the two write operations to the 
+   -- "text" property to complete.
+   --
+
+A single storage slot is used for blocking tasks because scripts are run on one 
+thread and cooperate with the other thread.  Only one thread can send messages; 
+ergo if that thread sends a blocking  message, then no other messages (blocking 
+or otherwise) can be sent until the blocking message is attended to. A blocking 
+message therefore must run after all queued messages, because it must have been 
+sent after them; and only one blocking message  can be in transit at a time; so 
+we don't need them to use a queuing system.
+
+No queue  exists for UI  read operations, because these  operations  are always 
+blocking (the script is asking for information;  it must necessarily wait to be 
+answered).
+
+We use an  atomic wait to block the worker thread while a blocking  task awaits 
+execution by the client  thread. The worker thread also  uses atomic waits when 
+in between  executing units of Lua code, to ensure that all non-blocking  tasks 
+sent by one unit of Lua code complete  before the next unit of Lua code is run.

@@ -48,6 +48,17 @@ was chosen, and what the alternatives were. Our specific priorities are:
    need to specify whether they return a table or a userdata.
 
 
+   WE NEED TO SUPPORT MULTIPLE INHERITANCE
+   I want to provide utilities to script  authors for things like rotation math 
+   and vectors.  I'd also like for these utilities  to be applicable  to things 
+   like the position and rotation values that one can get from ObjectReferences 
+   and similar forms. This means that  positions and rotations returned by APIs 
+   would need to multiply inherit from the utility classes and from the wrapper 
+   classes that provide access to the underlying data.
+
+   Diamond inheritance, however, is not  needed and is therefore not supported.
+
+
 To that end, I've  taken a generic "Lua classes" framework  that I built for an 
 unreleased project, and  I've upgraded it  to meet  these needs. The metatables 
 for userdata work as follows:
@@ -61,9 +72,13 @@ for userdata work as follows:
    getters and setters. To continue with  our voicetype example from above, the 
    metatable defines (meta.__getters.is_female) and (meta.__setters.is_female).
 
- - Class metatables have a "__superclass" field, which is a direct reference to 
-   the metatable  of the superclass. This  field is used to  handle casting and 
-   inheritance.
+ - Class  metatables have  a "__superclasses" field,  which is a list of  their 
+   direct superclasses.
+
+ - Class metatables have a "__classlist"  field, which is a flat list of all of 
+   the class's ancestor classes, as well as the class itself. This was inspired 
+   by MSVC's handling of C++ RTTI, and  makes it easy to look up members on all 
+   superclasses without having to recurse for ancestor classes.
 
 Our Lua  classes require special  implementations for "__index",  "__newindex", 
 and  "__pairs".
@@ -72,42 +87,31 @@ and  "__pairs".
 ===== INDEXING ================================================================
 
 The "__index" metamethod for classes is implemented in C++ using the Lua C API, 
-but is here translated into Lua for simplicity's sake. It works by checking for 
-a matching field (i.e. a static class variable or class member function) on the 
-metatable; if one is found, it is returned. It then checks for a getter and, if 
-one is found,  calls it and  returns the result. If  nothing is found,  then it 
-moves on  to the superclass (if any) and repeats the process,  stopping when it 
-advances past the topmost class.
+but is  here translated into  Lua for simplicity's  sake. It iterates  over the 
+classlist in reverse order (subclasses before superclasses). For each class, we 
+check for a static  class member or class member function;  if one is found, it 
+is  returned. If no such  member is present, we check  for a getter; if one  is 
+found, we invoke it and return the result.
 
    function __index(t, k)
-      local meta = getmetatable(t)
-      if not meta then
-         return nil
-      end
       if _should_skip_name(k) then
          return nil
       end
-      while true do
-         local a = rawget(meta, k)
+      local meta  = getmetatable(t)
+      local list  = rawget(meta, "__classlist")
+      local count = #list
+      for i = count, 1, -1 do
+         local cls = list[i]
+         local a   = rawget(cls, k)
          if a then
             return a
          end
-         --
-         -- Check for getters:
-         --
-         a = rawget(meta, "__getters")
+         a = rawget(cls, "__getters")
          if a then
             a = rawget(a, k)
             if a then
-               return a(t) -- remember: selfcall is just self as arg 1
+               return a(t)
             end
-         end
-         --
-         -- Traverse up to the next superclass:
-         --
-         meta = meta.__superclass
-         if not meta then
-            return
          end
       end
    end
@@ -128,13 +132,16 @@ no setter is found.  The text of the  error differs depending  on whether there
 exists a matching getter on the userdata's class or any superclass.
 
    function __newindex(t, k, v)
-      local meta = getmetatable(t)
-      if not meta then
+      if _should_skip_name(k) then
          return nil
       end
       local has_getter = false
-      while true do
-         local a = meta.__setters
+      local meta  = getmetatable(t)
+      local list  = rawget(meta, "__classlist")
+      local count = #list
+      for i = count, 1, -1 do
+         local cls = list[i]
+         local a   = rawget(cls, "__setters")
          if a then
             a = a[k]
             if a then
@@ -143,23 +150,17 @@ exists a matching getter on the userdata's class or any superclass.
             end
          end
          if not has_getter then
-            a = meta.__getters
+            a = rawget(meta, "__getters")
             if a and a[k] then
                has_getter = true
             end
          end
-         --
-         -- Traverse up to the next superclass:
-         --
-         meta = meta.__superclass
-         if not meta then
-            break
-         end
       end
+      local classname = getmetatable(t).__name or "?"
       if has_getter then
-         error(string.format("DovahKit does not allow you to assign to property '%s' on this class", k))
+         error(string.format("DovahKIt does not allow you to assign to property '%s' on class %s", k, classname))
       end
-      error(string.format("class %s does not offer a property named '%s'", getmetatable(t).__name, k))
+      error(string.format("class %s does not offer a property named '%s'", classname, k))
    end
 
 
@@ -184,12 +185,15 @@ a function; it can be a table with a "__call" metamethod, and this is the means
 through which one would use a stateful iterator. Indeed, our class system needs 
 stateful iterators. Here, then, is the implementation for "__pairs" itself:
 
-   function meta.__pairs(self)
-      local iterator = {}
-      iterator.meta    = getmetatable(self)
-      iterator.getters = false
-      setmetatable(iterator, _iterator_metatable)
-      return iterator, self, nil
+   function __pairs(t)
+      local iter = {
+         meta    = getmetatable(t),
+         seen    = {},
+         done    = 0,
+         getters = false,
+      }
+      setmetatable(iter, REGISTRY[PAIRS_ITERATORS_METATABLE_KEY])
+      return iter, t, nil
    end
    
 And below is the  implementation for "__call" on the  iterator metatable. It is 
@@ -198,54 +202,48 @@ uses a loop to traverse up the class hierarchy.  In this case, however, it uses
 Lua's built-in  "next" function to  iterate over the members  of each metatable 
 and then the members of the metatable's "__getters" list.
 
-   function _iterator_metatable.__call(self, t, k)
-      while true do
-         local meta = self.meta
-         if self.getters and meta then
-            meta = meta.__getters
-         end
-         --
-         if meta then
-            local k, v = next(meta)
-            while _should_skip_name(k) do
-               k, v = next(meta)
+   function __call(self, t, k)
+      if getmetatable(t) ~= self.meta then
+         return
+      end
+      if k then
+         self.seen[k] = true
+      end
+      local v     = nil
+      local list  = rawget(self.meta, "__classlist")
+      local count = #list
+      for i = count - self.done, 1, -1 do
+         local cls = list[i]
+         if not self.getters then
+            k, v = next(cls, k)
+            while _should_skip_name(k) or self.seen[k] do
+               k, v = next(cls, k)
             end
-            if v ~= nil then
-               if self.getters then -- if it's a getter, return its result
+            if k then
+               return k, v
+            end
+            self.getters = true
+         end
+         if self.getters then
+            cls = cls.__getters
+            --
+            k, v = next(cls, k)
+            while _should_skip_name(k) or self.seen[k] do
+               k, v = next(cls, k)
+            end
+            if k then
+               if v then
                   v = (v)(t)
                end
                return k, v
             end
-         end
-         --
-         if not self.getters then
             --
-            -- Move on to the getters.
+            -- No getters or all getters iterated; move on to
+            -- next class.
             --
-            self.getters = true
-         else
-            --
-            -- Move on to the next superclass.
-            --
+            self.done    = self.done + 1
             self.getters = false
-            meta = self.meta.__superclass
-            self.meta = meta
-            if not meta then
-               return
-            end
-            k = nil -- iterating new table, so must iterate from the start
          end
       end
+      return nil, nil -- implicit
    end
-   
-As of this writing (a week into developing the script API), you can use "pairs" 
-on a voicetype to produce the following output:
-
-   -- given: string.format("%s=%s", k, v)
-
-   allow_default_dialogue=false   -- member backed by a getter; value is result
-   is_female=true                 -- member backed by a getter; value is result
-   get_editor_id=function...      -- member function, inherited from superclass
-   get_form_id=function...        -- member function, inherited from superclass
-   get_form_type=function...      -- member function, inherited from superclass
-   get_user_forms=function...     -- member function, inherited from superclass

@@ -77,7 +77,7 @@ in the code snippet below:
       -- ... and then you can print info about the achievement itself...
       --
    end
-   --
+   
    for i = 1, GetNumAchievementCategories() do
       local name, subCount, achCount = GetAchievementCategoryInfo(i)
       print("Category: " .. name)
@@ -112,7 +112,7 @@ been expressed as follows:
       -- ... and then you can print info about the achievement itself...
       --
    end
-   --
+   
    for name, cat in pairs(game.achievements.by_category) do
       print("Category: " .. name)
       --
