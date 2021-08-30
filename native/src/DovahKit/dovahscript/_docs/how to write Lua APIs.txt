@@ -7,45 +7,91 @@ most API functions will need to perform some sort of cross-thread task.
 The easiest and most versatile task  type to work with is the "lambda" task. As 
 the name suggests, lambda tasks can  have any std::function stored on them, and 
 so this one  task type covers pretty much every task that doesn't  need special 
-behavior within the script engine. However, there are a few pitfalls here.
+behavior within the script engine.
 
-First, API authors must be careful to  use the right "lambda" type. All UI read 
-operations must use the "UI read lambda" type rather than the standard "lambda" 
-type.
+   auto* task = new tasks::s2m::lambda;
+   task->handler = []() {
+      //
+      // ... do stuff ...
+      //
+   };
+   send_script_task(*task);
 
-Second, API  authors must be careful about lambda captures. If a  task needs to 
-make use of a native  object whose lifetime is controlled  by Lua, then the API 
-must assist the script engine in tracking  when these objects are in use by the 
-task being sent. In practice, this is most easily achieved by having the lambda 
-capture "task_reference" instances, which are akin to smart pointers.
+There are  a few pitfalls here. First, "lambda" tasks are, by default,  asynch-
+ronous; they don't block the sending thread. This means that after you send the 
+task, code  execution will continue without  waiting for the task to  complete. 
+This  is a problem if you  need to have the lambda  capture local variables  by 
+reference:
 
-In other words, instead of doing this:
+   int result;
+   //
+   auto* task = new tasks::s2m::lambda;
+   task->handler = [&result]() {
+      result = 5;
+   };
+   send_script_task(*task);
+
+In the code above,  the API will queue the task and then  move on, and it might 
+well finish  execution -- causing (result) to go out of scope,  and leaving the 
+task with a dangling pointer to the stack -- before the task runs. Because it's 
+a local  variable that we've  captured, this probably  won't trigger  an access 
+violation or other easily-debugged crash; rather, it'll corrupt local variables 
+in some other  stack frame, giving the appearance  of random  memory corruption 
+and causing program instability or a  crash at a distance away from the problem 
+code. (And sadly, there don't seem to be  any <type_traits> for checking any of 
+the characteristics of a lambda, such as whether it captures by reference, so I 
+can't protect you from this with static assertions.)
+
+If you need  to do something like the code above, then you must  use a blocking 
+task -- that is, a  task that forces the  sender to wait  until it's completed. 
+The "lambda" task type allows you to specify a bool indicating whether the task 
+should block.  However, there  are additional  responsibilities  that come with 
+blocking tasks: the sender is responsible for deleting them.
+
+   int result;
+   //
+   auto* task = new tasks::s2m::lambda(true);
+   task->handler = [&result]() {
+      result = 5;
+   };
+   send_script_task(*task);
+   delete task;
+
+The sender must delete blocking tasks  because some non-lambda task types store 
+result information on themselves as members, which senders must be able to grab 
+and read. This design may change in the future.
+
+For UI-related tasks, or any tasks which  act on a native object whose lifetime 
+is controlled  by Lua, the API must  assist the script engine in  tracking when 
+these objects are  in use by the task  being sent. Accordingly,  an RAII struct 
+called "task_reference" is provided to aid in this.
+
+Instead of doing this:
 
    // Given "self" as a wrapper&:
    //
    auto* widget = self.widget;
-   auto* task   = new tasks::s2m::lambda(false);
+   auto* task   = new tasks::s2m::ui_write_lambda(false);
    task->handler = [widget]() {
       auto* old = widget->layout();
       //
       // ... do stuff ...
       //
    };
-   core::subsystems::coordinator::get().send_ui_write_task(*task);
+   send_script_ui_task(*task);
 
 Do this instead:
 
    // Given "self" as a wrapper&:
    //
-   task_reference widget = self.widget;
-   auto* task = new tasks::s2m::lambda(false);
-   task->handler = [widget]() {
+   auto* task = new tasks::s2m::ui_write_lambda(false);
+   task->handler = [widget = task_reference(self.widget)]() {
       auto* old = widget->layout();
       //
       // ... do stuff ...
       //
    };
-   core::subsystems::coordinator::get().send_ui_write_task(*task);
+   send_script_ui_task(*task);
 
 Here, we see that the widget needed  by the task is wrapped in a task_reference 
 struct, which again has behavior akin to a smart pointer. The struct is created 
@@ -62,3 +108,40 @@ Failing to use a task reference may result in a native object being deleted out
 from under an API,  if the API's task is non-blocking  and if the native object 
 goes  out of scope within  Lua and is garbage-collected  shortly after the  Lua 
 function call.
+
+-------------------------------------------------------------------------------
+
+The "send_script_task" function is provided  as a helper for sending any non-UI 
+tasks,  and the "send_script_ui_task" function is provided as a helper  for any 
+UI tasks.  No checks are performed to ensure that UI tasks are kept  out of the 
+non-UI queue, so be sure to use the right function.
+
+When creating  UI-related APIs, you should use one of the  following task types 
+as a base:
+
+ - ui_read_lambda
+ - ui_write_lambda
+ - ui_write_lambda_ex
+
+The "UI read lambda" must be used for any tasks which read information from the 
+UI without also making changes. UI read  operations will wait until all pending 
+UI write operations are complete, and then execute synchronously.
+
+The "UI write lambda"  classes should be  used for tasks  which make changes to 
+the UI.  Like "lambda," these classes allow you to specify whether the  task is 
+blocking or not. Non-blocking tasks are usually sufficient for most changes.
+
+The "ui_write_lambda" class is the older  of the two, and uses std::function to 
+store the  handler you provide. The "ui_write_lambda_ex" class is  the newer of 
+the two,  and uses templates to avoid relying on std::function;  this affords a 
+number of performance  benefits. The performance difference  is not significant 
+when firing small numbers of tasks, but over large numbers of tasks, the differ-
+ence will scale up, so the latter class is preferred.
+
+The benefits of "ui_write_lambda_ex" include:
+
+ - One fewer virtual call: the lambda can be inlined into the task's own "exec" 
+   function.
+
+ - The lambda  and any  captured  task_reference  objects are guaranteed  to be 
+   moved rather than copied. 

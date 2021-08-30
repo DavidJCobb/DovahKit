@@ -1,6 +1,10 @@
 #include "task_queue.h"
 #include "../tasks/_base.h"
 
+namespace {
+   static constexpr bool use_atomic_waits = true;
+}
+
 namespace dovahscript::core {
    void task_queue::push_back(task_t* task) {
       auto  guard = std::lock_guard(this->lock);
@@ -22,6 +26,9 @@ namespace dovahscript::core {
       }
       list.clear();
       this->is_empty = true;
+      if constexpr (use_atomic_waits) {
+         this->is_empty.notify_one();
+      }
    }
 
    void task_queue::clear() {
@@ -33,9 +40,16 @@ namespace dovahscript::core {
             delete task;
       list.clear();
       this->is_empty = true;
+      if constexpr (use_atomic_waits) {
+         this->is_empty.notify_one();
+      }
    }
 
    void task_queue::wait_until_empty() const noexcept {
-      while (!this->empty()) {}
+      if constexpr (use_atomic_waits) {
+         this->is_empty.wait(false); // wait until the variable is no longer false
+      } else {
+         while (!this->empty()) {}
+      }
    }
 }
