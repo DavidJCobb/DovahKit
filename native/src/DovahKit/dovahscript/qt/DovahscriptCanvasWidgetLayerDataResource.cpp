@@ -17,11 +17,11 @@ void DovahscriptCanvasWidgetLayerDataResource::paint(QPainter& painter, const QP
       default:
          return;
    }
-   auto pixmap = resource->get_raster_widget_side();
+   auto content = resource->get_raster_widget_side();
    if (crop_to.isValid())
-      painter.drawPixmap(0, 0, pixmap, pos.x(), pos.y(), crop_to.width(), crop_to.height());
+      painter.drawImage(0, 0, content, pos.x(), pos.y(), crop_to.width(), crop_to.height());
    else
-      painter.drawPixmap(pos, pixmap);
+      painter.drawImage(pos, content);
 }
 QRect DovahscriptCanvasWidgetLayerDataResource::rect() const noexcept {
    auto* resource = this->_handle.bare();

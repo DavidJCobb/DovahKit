@@ -1,4 +1,5 @@
 #include "DovahscriptResource.h"
+#include <QPainter>
 #include "../../../../../DirectXTex/DirectXTex.h"
 #include "../../../../helpers/intrusive_windows_defines.h"
 #include "../../../constants/qt_graphics.h"
@@ -192,7 +193,7 @@ namespace dovahscript {
             {
                auto data = this->get_dds_layer(0, 0);
                if (!data.isNull())
-                  this->content.raster.client = QPixmap::fromImage(this->get_dds_layer(0, 0));
+                  this->content.raster.client = data;
             }
             break;
          case decltype(this->type)::raster:
@@ -200,12 +201,30 @@ namespace dovahscript {
                auto& raster = this->content.raster;
                if (raster.script.isNull()) {
                   if (!raster.client.isNull()) {
-                     raster.client = QPixmap();
+                     raster.client = QImage();
                      break;
                   }
                   return;
                }
-               raster.client = QPixmap::fromImage(raster.script);
+               auto& src = raster.script;
+               auto& dst = raster.client;
+               if (!dst.isNull() && src.size() == dst.size() && src.format() == dst.format()) {
+                  //
+                  // If the image size or format have not changed, then updating it this way should 
+                  // hopefully avoid having to free and allocate entirely new data for the client-
+                  // thread QImage.
+                  //
+                  QPainter p(&dst);
+                  p.setCompositionMode(QPainter::CompositionMode_Source); // "replace"
+                  p.drawImage(0, 0, src);
+               } else {
+                  //
+                  // If the image size or format has changed, replace the old client-thread data with 
+                  // a new copy of the worker-thread data.
+                  //
+                  dst = src;
+                  dst.detach();
+               }
             }
             break;
          default:

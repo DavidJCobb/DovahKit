@@ -39,8 +39,8 @@ namespace dovahscript {
                DirectX::TexMetadata*  info = nullptr;
             } dds;
             struct {
-               QImage  script;
-               QPixmap client;
+               QImage script;
+               QImage client;
             } raster;
          } content;
          
@@ -53,8 +53,8 @@ namespace dovahscript {
 
          inline const resource_type resource_type() const noexcept { return this->type; }
 
-         inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
-         inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }
+         inline const QImage get_raster_script_side() const noexcept { return this->content.raster.script; }
+         inline const QImage get_raster_widget_side() const noexcept { return this->content.raster.client; }
          void modify_raster_script_side(std::function<void(QImage&)> task); // Accessor to let Lua scripts modify image data.
 
          inline const QByteArray get_binary_script_side() const noexcept { return this->content.binary; }
@@ -63,7 +63,7 @@ namespace dovahscript {
          bool   is_cubemap()         const noexcept;
          size_t texture_array_size() const noexcept; // returns 1 for a non-array; 0 on failure. // NOTE: textures in an array can be mipmapped
          size_t mipmap_count()       const noexcept; // returns 0 for a non-mipmapped image
-         QImage get_dds_layer(size_t array_index, size_t mipmap_index, uint8_t cubemap_face = 0) const noexcept;
+         QImage get_dds_layer(size_t array_index, size_t mipmap_index, uint8_t cubemap_face = 0) const noexcept; // returns a detached QImage
 
       protected:
          void on_referenced();

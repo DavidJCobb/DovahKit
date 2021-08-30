@@ -17,7 +17,7 @@ namespace dovahscript {
          const auto pm = resource->get_raster_widget_side();
          if (pm.isNull())
             return;
-         option->icon = QIcon(pm);
+         option->icon = QIcon(QPixmap::fromImage(pm));
          {
             //option->decorationSize = pm.size() / pm.devicePixelRatio(); // displays icon at actual size
             auto size = pm.size() / pm.devicePixelRatio();

@@ -74,8 +74,6 @@ namespace dovahscript::core::subsystems {
       this->abort();
       if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
          this->worker_thread.join();
-      this->_teardown_lua_state();
-      this->running = false;
    }
 
    void coordinator::_main_thread_loop() {

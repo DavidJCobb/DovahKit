@@ -6,10 +6,10 @@ DovahscriptImageWidget::DovahscriptImageWidget(QWidget* parent) : QWidget(parent
    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-const QPixmap DovahscriptImageWidget::_getPixmap() const noexcept {
+const QImage DovahscriptImageWidget::_getContent() const noexcept {
    if (this->_resource)
       return this->_resource->get_raster_widget_side();
-   return QPixmap();
+   return QImage();
 }
 
 void DovahscriptImageWidget::setDesiredSize(const QSize& s) noexcept {
@@ -46,10 +46,10 @@ void DovahscriptImageWidget::setResource(const DSRH& input) {
 
 bool DovahscriptImageWidget::hasHeightForWidth() const {
    return false;
-   return !this->_getPixmap().isNull();
+   return !this->_getContent().isNull();
 }
 int DovahscriptImageWidget::heightForWidth(int w) const {
-   auto pm = this->_getPixmap();
+   auto pm = this->_getContent();
    if (pm.isNull())
       return QWidget::heightForWidth(w);
    double ratio = (double)pm.height() / pm.width();
@@ -59,7 +59,7 @@ int DovahscriptImageWidget::heightForWidth(int w) const {
 }
 QSize DovahscriptImageWidget::minimumSizeHint() const {
    QSize desired = this->_desiredSize;
-   auto  pm      = this->_getPixmap();
+   auto  pm      = this->_getContent();
    auto  w = desired.width();
    auto  h = desired.height();
    if (w < 0 && h < 0) {
@@ -83,14 +83,14 @@ QSize DovahscriptImageWidget::minimumSizeHint() const {
    return QSize(w, h);
 }
 QSize DovahscriptImageWidget::sizeHint() const {
-   auto pm = this->_getPixmap();
+   auto pm = this->_getContent();
    if (pm.isNull())
       return QSize(-1, -1);
    return pm.size() / pm.devicePixelRatio();
 }
 
 void DovahscriptImageWidget::paintEvent(QPaintEvent* event) {
-   auto pm = this->_getPixmap();
+   auto pm = this->_getContent();
    if (pm.isNull())
       return;
    QSize space = this->size();
@@ -99,5 +99,5 @@ void DovahscriptImageWidget::paintEvent(QPaintEvent* event) {
    int y = (space.height() - size.height()) / 2;
    //
    QPainter painter(this);
-   painter.drawPixmap(x, y, size.width(), size.height(), pm);
+   painter.drawImage(x, y, pm, size.width(), size.height());
 }

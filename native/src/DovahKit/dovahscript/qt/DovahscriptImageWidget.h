@@ -28,5 +28,5 @@ class DovahscriptImageWidget : public QWidget {
 
       virtual void paintEvent(QPaintEvent*) override;
 
-      const QPixmap _getPixmap() const noexcept;
+      const QImage _getContent() const noexcept;
 };
