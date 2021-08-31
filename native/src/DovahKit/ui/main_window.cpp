@@ -15,6 +15,7 @@
 #include "main_window/game_setting_window.h"
 #include "main_window/default_object_window.h"
 #include "main_window/script_window_single.h"
+#include "main_window/script_window_package.h"
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -256,6 +257,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       });
       modal->show();
       modal->setWindowModality(Qt::ApplicationModal);
+   });
+   QObject::connect(this->ui.actionRunScriptPackage, &QAction::triggered, this, [this]() {
+      auto* modal = new EditorScriptPackageWindow(this);
+      modal->setModal(true);
+      modal->exec();
+      modal->deleteLater();
    });
 
    #pragma region Debugging

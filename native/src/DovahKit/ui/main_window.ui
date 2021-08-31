@@ -93,6 +93,7 @@
     <addaction name="actionGameSettings"/>
     <addaction name="separator"/>
     <addaction name="actionRunScriptSingle"/>
+    <addaction name="actionRunScriptPackage"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -243,6 +244,11 @@
   <action name="actionRunScriptSingle">
    <property name="text">
     <string>Run editor script...</string>
+   </property>
+  </action>
+  <action name="actionRunScriptPackage">
+   <property name="text">
+    <string>Run script package...</string>
    </property>
   </action>
  </widget>

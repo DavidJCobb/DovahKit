@@ -1,0 +1,21 @@
+<package>
+   <metadata>
+      <name>Worldspace heightmap render</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>Render a top-down view of any worldspace's water and heightmapped terrain, and optionally outline all of the cells modified by different files in the load order.</description>
+   </metadata>
+   <permissions>
+      <request id="ui" />
+   </permissions>
+   <files>
+config.lua
+texture-cache.lua
+cell-outline-island.lua
+cell-outline-map.lua
+cell-outline-map-set.lua
+window.lua
+main.lua
+   </files>
+</package>

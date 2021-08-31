@@ -398,6 +398,7 @@
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
+    <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -497,6 +498,7 @@
     <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp" />
+    <ClCompile Include="ui\main_window\script_window_package.cpp" />
     <ClCompile Include="ui\main_window\script_window_single.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\canvas_widget_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
@@ -565,6 +567,7 @@
     <ClInclude Include="dovahscript\lua_libraries\form_types.h" />
     <ClInclude Include="dovahscript\lua_libraries\unscoped.h" />
     <ClInclude Include="dovahscript\lua_libraries\_import_all.h" />
+    <ClInclude Include="dovahscript\permission_set.h" />
     <ClInclude Include="dovahscript\pull_native_object.h" />
     <ClInclude Include="dovahscript\push_native_object.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptDialog.h" />
@@ -868,6 +871,8 @@
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\papyrus_dictionary.h" />
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
+    <ClInclude Include="editor\script_packages\manifest.h" />
+    <ClInclude Include="editor\script_packages\manifest_parser.h" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\function_traits.h" />
     <ClInclude Include="helpers\geometry.h" />
@@ -938,6 +943,7 @@
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h" />
     <QtMoc Include="ui\main_window\script_window_single.h" />
+    <QtMoc Include="ui\main_window\script_window_package.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\canvas_widget_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
