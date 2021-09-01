@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Editor Scripting - Script Package</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
+  <layout class="QGridLayout" name="gridLayout" rowstretch="0,1,0,1">
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="layoutPackagePicker" stretch="1,0">
      <item>
@@ -42,7 +42,7 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <layout class="QGridLayout" name="layoutPackage">
+    <layout class="QGridLayout" name="layoutPackage" rowstretch="0,1">
      <item row="0" column="0">
       <widget class="QLabel" name="packageName">
        <property name="font">
@@ -60,30 +60,70 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="packageDescription">
-       <property name="text">
-        <string>No description available.</string>
+      <widget class="QTabWidget" name="packageBody">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       <property name="currentIndex">
+        <number>0</number>
        </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
+       <widget class="QWidget" name="packageTabDesc">
+        <attribute name="title">
+         <string>Description</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="packageDescription">
+           <property name="text">
+            <string>No description available.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>5</width>
+             <height>62</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="packageTabAuthors">
+        <attribute name="title">
+         <string>Credits</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>5</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -146,7 +186,7 @@
        <item>
         <widget class="QPushButton" name="buttonToggleLog">
          <property name="text">
-          <string>Hide log</string>
+          <string>Toggle log</string>
          </property>
         </widget>
        </item>

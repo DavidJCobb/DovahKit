@@ -27,6 +27,8 @@ class EditorScriptPackageWindow : public QDialog {
       void logMessage(const QString&);
 
    protected:
+      script_packages::manifest* _getSelectedManifest() noexcept;
+
       void _onScriptStartStop(bool script_running);
       void _updateEvalEnableState();
 

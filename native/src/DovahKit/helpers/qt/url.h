@@ -15,13 +15,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include <QAbstractItemModel>
-#include <QWidget>
+#include <QString>
+#include <QUrl>
 
 namespace cobb::qt {
-   extern QAbstractItemModel* get_model_of(QWidget* root);
+   extern QStringList split_url_path(const QUrl&); // "http://foo.com/bar/baz/" -> "bar", "baz"
 
-   // peeks below any QSortFilterProxyModel that may be present
-   extern QAbstractItemModel* get_underlying_model_of(QWidget* root);
+   extern QVector<std::pair<QString, QString>> split_url_query(const QUrl&);
+
+   extern bool url_is_web_scheme(const QUrl&);
 }
-

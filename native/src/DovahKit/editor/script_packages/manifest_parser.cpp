@@ -1,4 +1,5 @@
 #include "manifest_parser.h"
+#include "../../helpers/qt/minimize_indent.h"
 
 namespace {
    QString case_insensitive_attr(QXmlStreamReader& xml, QLatin1String name) {
@@ -14,7 +15,7 @@ namespace script_packages {
       while (xml.readNextStartElement()) {
          auto name = xml.name();
          if (name.compare(QLatin1String("name"), Qt::CaseInsensitive) == 0) {
-            this->out.name = xml.readElementText(QXmlStreamReader::IncludeChildElements);
+            this->out.name = cobb::qt::minimize_indent(xml.readElementText(QXmlStreamReader::IncludeChildElements));
             continue;
          }
          if (name.compare(QLatin1String("author"), Qt::CaseInsensitive) == 0) {
@@ -22,7 +23,7 @@ namespace script_packages {
             continue;
          }
          if (name.compare(QLatin1String("description"), Qt::CaseInsensitive) == 0) {
-            this->out.description = xml.readElementText(QXmlStreamReader::IncludeChildElements);
+            this->out.description = cobb::qt::minimize_indent(xml.readElementText(QXmlStreamReader::IncludeChildElements));
             continue;
          }
          xml.skipCurrentElement();

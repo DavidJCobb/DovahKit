@@ -15,13 +15,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include <QAbstractItemModel>
-#include <QWidget>
+#include <QString>
 
 namespace cobb::qt {
-   extern QAbstractItemModel* get_model_of(QWidget* root);
-
-   // peeks below any QSortFilterProxyModel that may be present
-   extern QAbstractItemModel* get_underlying_model_of(QWidget* root);
+   extern uint get_minimum_indent(const QString&, uint* last_non_space = nullptr);
+   extern QString minimize_indent(const QString&);
 }
-

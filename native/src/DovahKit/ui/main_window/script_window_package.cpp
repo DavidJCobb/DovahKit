@@ -5,6 +5,7 @@
 #include "../../dovahscript/dovahscript_host.h"
 #include "../../editor/script_packages/manifest_parser.h"
 #include "script_window/hyperlink_confirm.h"
+#include "script_window_package/DovahscriptAuthorWidget.h"
 
 namespace {
    static QDir _get_script_path() {
@@ -122,42 +123,52 @@ void EditorScriptPackageWindow::reloadPackageList() {
 }
 
 void EditorScriptPackageWindow::redrawPackage() {
-   script_packages::manifest* manifest = nullptr;
+   int tab_credits = this->ui.packageBody->indexOf(this->ui.packageTabAuthors);
+   assert(tab_credits >= 0);
    //
-   auto selection = this->ui.packagePicker->currentData().toString();
-   if (!selection.isEmpty()) {
-      for (auto& m : this->script_packages) {
-         if (m.root_folder == selection) {
-            manifest = &m;
-            break;
-         }
-      }
-   }
+   script_packages::manifest* manifest = this->_getSelectedManifest();
    if (!manifest) {
       this->ui.packageName->setText(tr("No package selected", "script package window"));
+      this->ui.packageBody->setTabVisible(tab_credits, false);
       this->ui.packageDescription->setText(tr("No description available.", "script package window"));
       return;
    }
    //
    this->ui.packageName->setText(manifest->name);
    this->ui.packageDescription->setText(manifest->description);
+   {  // Authors
+      auto* body   = this->ui.packageTabAuthors;
+      auto* layout = body->layout();
+      assert(layout);
+      //
+      QLayoutItem* child;
+      while ((child = layout->takeAt(0)) != nullptr) {
+         if (auto* widget = child->widget())
+            delete widget;
+         delete child;
+      }
+      //
+      this->ui.packageBody->setTabVisible(tab_credits, !manifest->authors.isEmpty());
+      for (auto& author : manifest->authors) {
+         auto* widget = new DovahscriptAuthorWidget(body);
+         layout->addWidget(widget);
+         if (author.name.isEmpty()) {
+            widget->setName(tr("Anonymous", "script package window - unnamed author"));
+         } else {
+            widget->setName(author.name);
+         }
+         for (auto& link : author.links)
+            widget->addLink(link.name, link.url);
+      }
+      layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding));
+   }
    return;
 }
 
 void EditorScriptPackageWindow::runCurrentPackage() {
    if (!this->isVisible())
       return;
-   script_packages::manifest* manifest = nullptr;
-   //
-   auto selection = this->ui.packagePicker->currentData().toString();
-   if (!selection.isEmpty()) {
-      for (auto& m : this->script_packages) {
-         if (m.root_folder == selection) {
-            manifest = &m;
-            break;
-         }
-      }
-   }
+   script_packages::manifest* manifest = this->_getSelectedManifest();
    if (!manifest)
       return;
    //
@@ -189,6 +200,15 @@ void EditorScriptPackageWindow::logMessage(const QString& text) {
    auto  index  = widget->rowCount();
    widget->insertRow(index);
    widget->setItem(index, 0, new QTableWidgetItem(text));
+}
+
+script_packages::manifest* EditorScriptPackageWindow::_getSelectedManifest() noexcept {
+   auto selection = this->ui.packagePicker->currentData().toString();
+   if (!selection.isEmpty())
+      for (auto& m : this->script_packages)
+         if (m.root_folder == selection)
+            return &m;
+   return nullptr;
 }
 
 void EditorScriptPackageWindow::_onScriptStartStop(bool script_running) {

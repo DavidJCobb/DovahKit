@@ -7,73 +7,29 @@
 #include <QGuiApplication>
 #include <QLabel>
 #include <QPushButton>
+#include "../../../helpers/qt/url.h"
 
 namespace {
-   bool _is_web_scheme(const QUrl& url) {
-      auto scheme = url.scheme();
-      if (scheme.compare("http", Qt::CaseInsensitive) == 0)
-         return true;
-      if (scheme.compare("https", Qt::CaseInsensitive) == 0)
-         return true;
-      return false;
-   }
    bool _has_user_info(const QUrl& url) {
       return !url.userInfo().isEmpty();
    }
 
-   QStringList _split_path(const QUrl& url) {
-      QString     path = url.path(QUrl::NormalizePathSegments | QUrl::StripTrailingSlash);
-      QStringList list;
-      int size = path.size();
-      int from = 0;
-      for (int i = 0; i < size; ++i) {
-         QChar c = path[i];
-         if (c == '/' || c == '\\') {
-            if (i != 0)
-               list.push_back(QStringRef(&path, from, i - from).toString());
-            from = i + 1;
-            continue;
-         }
-      }
-      if (from < size)
-         list.push_back(QStringRef(&path, from, size - from).toString());
-      return list;
+   bool _is_website_link(const QUrl& url) {
+      if (url.port(-1) != -1)
+         return false;
+      if (!cobb::qt::url_is_web_scheme(url))
+         return false;
+      if (_has_user_info(url))
+         return false;
+      return true;
    }
-   std::vector<std::pair<QString, QString>> _split_query(const QUrl& url) {
-      std::vector<std::pair<QString, QString>> out;
-      QString query = url.query();
-      int     size  = query.size();
-      bool    key   = true;
-      std::pair<QString, QString> current;
-      //
-      for (int i = 0; i <= size; ++i) {
-         QChar c = i < size ? query[i] : QChar('&');
-         if (key) {
-            if (c == '&') {
-               if (!current.first.isEmpty()) {
-                  out.push_back(current);
-                  current.first.clear();
-                  current.second.clear();
-               }
-               continue;
-            }
-            if (c == '=') {
-               key = false;
-               continue;
-            }
-            current.first += c;
-         } else {
-            if (c == '&') {
-               out.push_back(current);
-               current.first.clear();
-               current.second.clear();
-               key = true;
-               continue;
-            }
-            current.second += c;
-         }
-      }
-      return out;
+   bool _is_nexusmods_domain(const QUrl& url) {
+      auto host = url.host();
+      if (host.startsWith("www.", Qt::CaseInsensitive))
+         host = host.remove(0, 4);
+      if (host.compare("nexusmods.com", Qt::CaseInsensitive) != 0)
+         return false;
+      return true;
    }
 
    bool _is_nexus_nxm_link(const QUrl& url) {
@@ -96,7 +52,7 @@ namespace {
          if (host.contains('.'))
             return false;
       }
-      auto path = _split_path(url);
+      auto path = cobb::qt::split_url_path(url); // "mods", mod ID, "files", file ID
       if (path.size() < 4)
          return false;
       if (path[0].compare("mods", Qt::CaseInsensitive) != 0)
@@ -113,20 +69,12 @@ namespace {
       return true;
    }
    bool _is_nexus_mod_link(const QUrl& url) {
-      if (url.port(-1) != -1)
-         return false;
-      if (!_is_web_scheme(url))
-         return false;
-      if (_has_user_info(url))
-         return false;
-      {
-         auto host = url.host();
-         if (host.startsWith("www.", Qt::CaseInsensitive))
-            host = host.remove(0, 4);
-         if (host.compare("nexusmods.com", Qt::CaseInsensitive) != 0)
-            return false;
-      }
-      auto path = _split_path(url);
+      //
+      // The caller should run the following first, on its own:
+      //  - _is_website_link
+      //  - _is_nexusmods_domain
+      //
+      auto path = cobb::qt::split_url_path(url);
       if (path.size() < 3)
          return false;
       if (path[1].compare("mods", Qt::CaseInsensitive) != 0)
@@ -140,7 +88,42 @@ namespace {
       //
       if (url.hasQuery()) {
          // don't allow arbitrary query strings e.g. "?tags_yes[]=1032"
-         auto query = _split_query(url);
+         auto query = cobb::qt::split_url_query(url);
+         for (auto& pair : query) {
+            const auto& key = pair.first;
+            if (key.compare("tab", Qt::CaseInsensitive) != 0)
+               return false;
+         }
+      }
+      return true;
+   }
+   bool _is_nexus_user_link(const QUrl& url) {
+      //
+      // The caller should run the following first, on its own:
+      //  - _is_website_link
+      //  - _is_nexusmods_domain
+      //
+      auto path = cobb::qt::split_url_path(url);
+      int  id   = 1;
+      if (path.size() < 2)
+         return false;
+      if (path[0].compare("users", Qt::CaseInsensitive) != 0) {
+         if (path[1].compare("users", Qt::CaseInsensitive) != 0)
+            return false;
+         ++id;
+         if (path.size() <= id)
+            return false;
+      }
+      bool ok = false;
+      path[id].toInt(&ok); // user ID
+      if (!ok)
+         return false;
+      //
+      // Verify query:
+      //
+      if (url.hasQuery()) {
+         // don't allow arbitrary query strings e.g. "?tags_yes[]=1032"
+         auto query = cobb::qt::split_url_query(url);
          for (auto& pair : query) {
             const auto& key = pair.first;
             if (key.compare("tab", Qt::CaseInsensitive) != 0)
@@ -198,13 +181,28 @@ ScriptWindowHyperlinkConfirmDialog::ScriptWindowHyperlinkConfirmDialog(const QSt
       QGuiApplication::clipboard()->setText(url);
    });
    //
-   if (_is_nexus_mod_link(url)) {
-      intro->setText(tr("This link leads to a mod uploaded to NexusMods. Open it in your default web browser?"));
-   } else if (_is_nexus_nxm_link(url)) {
+   if (_is_nexus_nxm_link(url)) {
       intro->setText(tr("This is a download link for a mod uploaded to NexusMods. Open it in your default web browser?"));
    } else {
-      intro->setText(tr("Open this link in your default web browser?"));
-      outro->setText(tr("Avoid opening links that you don't recognize. You shouldn't go somewhere just because you were told to by a script that you got from some random person on the Internet."));
+      bool matched = false;
+      if (_is_website_link(url)) {
+         matched = true;
+         if (_is_nexusmods_domain(url)) {
+            if (_is_nexus_mod_link(url)) {
+               intro->setText(tr("This link leads to a mod uploaded to NexusMods. Open it in your default web browser?"));
+            } else if (_is_nexus_user_link(url)) {
+               intro->setText(tr("This link leads to a user profile on NexusMods. Open it in your default web browser?"));
+            } else {
+               matched = false;
+            }
+         } else {
+            matched = false;
+         }
+      }
+      if (!matched) {
+         intro->setText(tr("Open this link in your default web browser?"));
+         outro->setText(tr("Avoid opening links that you don't recognize. You shouldn't go somewhere just because you were told to by a script that you got from some random person on the Internet."));
+      }
    }
    outro->setVisible(!outro->text().isEmpty());
 }
