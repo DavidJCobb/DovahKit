@@ -2,11 +2,11 @@
 
 A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "Creation Kit" and "*Dovahkiin*," which means "Dragonborn" in the Dragon language.
 
-This tool was built using Visual Studio 2019. It dynamically links Qt, which was licensed under LGPLv3. Zlib and LZ4 are used as well; see zlib.h for its license terms, and refer to the LICENSE file in the LZ4 directory for its license terms.
+This tool was built using Visual Studio 2019. It dynamically links Qt.
 
 ## Build environment
 
-This program was built using Microsoft Visual Studio Community 2019 with the [Qt Visual Studio Tools](https://marketplace.visualstudio.com/items?itemName=TheQtCompany.QtVisualStudioTools2019) plug-in. That plug-in is [GPL-licensed with a special exemption](https://marketplace.visualstudio.com/items/TheQtCompany.QtVisualStudioTools2019/license) which allows its use in developing non-GPL software. Qt Designer was also used to build this program, with [a similar exception](https://opensource.stackexchange.com/questions/7709/using-qt-designer-to-create-ui-design-for-closed-source-application). The [version of Qt used](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) was 5.15.2, 64-bit, for MSVC 2019 x64.
+This program was built using Microsoft Visual Studio Community 2019 with the [Qt Visual Studio Tools](https://marketplace.visualstudio.com/items?itemName=TheQtCompany.QtVisualStudioTools2019) plug-in and Qt Designer. The [version of Qt used](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) was 5.15.2, 64-bit, for MSVC 2019 x64.
 
 Lua is compiled as C++; this means that Lua errors properly unwind the stack (calling destructors within any C-functions we make available to Lua) instead of using setjmp/longjmp.
 
@@ -16,8 +16,12 @@ This program uses C++20 via the `/std:c++latest` compiler option. The included p
 
 ## License
 
-My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain as indicated by code comments, etc.).
+DovahKit's code is licensed under the GNU General Public License version 3 (GPLv3) unless otherwise stated (some files are licensed under CC0 i.e. public domain as indicated by code comments, etc.).
+
+The content of DovahKit's help manual, if one exists, is licensed under the Creative Commons 0 License (CC0). This includes the content of the documentation in both a raw form, a processed and publication-ready form, and any intermediate forms (e.g. page layout files with placeholders where content should be inserted). This also includes any assets meant to be included in the help manual (e.g. images, CSS, JavaScript). This does not include the code for any system which processes raw documentation into a publication-ready form (e.g. code for a program which might take "raw" documentation in a format such as XML, and stitch files and code together to produce "friendly" HTML-formatted documentation). This also does not include any external assets linked or embedded in the documentation (e.g. YouTube videos displayed in an embedded video player).
 
 [DirectXTex](https://github.com/microsoft/DirectXTex), Lua, and [miniz](https://github.com/richgel999/miniz) are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
 
 Qt and its components are licensed under LGPL v3. Per the terms of LGPL, I am required to make [the source code for Qt 5.15.2](https://download.qt.io/archive/qt/5.15/5.15.2/single/) available to you in case you're unable to acquire it on your own. Presently I have a copy saved to my machine.
+
+The Qt Visual Studio Tools plug-in is [GPL-licensed with a special exemption](https://marketplace.visualstudio.com/items/TheQtCompany.QtVisualStudioTools2019/license) which allows its use in developing non-GPL software. Qt Designer has [a similar exception](https://opensource.stackexchange.com/questions/7709/using-qt-designer-to-create-ui-design-for-closed-source-application).
