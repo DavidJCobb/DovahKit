@@ -25,7 +25,7 @@ namespace cobb::qt::ini {
    #pragma region Setting
    Setting::Setting(File& f, const QString& c, const QString& n, SettingSerializationType st, const QVariant& value) :
       QObject(&f),
-      category(c), name(n), serializationType(st), values{ .initial = value, .current = value }
+      category(c), name(n), serializationType(st != SettingSerializationType::Undefined ? st : _best_serialization_type_for(value)), values{ .initial = value, .current = value }
    {
    }
    Setting::Setting(File& f, const QString& c, const QString& n, const QVariant& value) :
@@ -65,10 +65,50 @@ namespace cobb::qt::ini {
    #pragma endregion
 
    #pragma region File
+   File::File(std::initializer_list<_CategoryConstructParams> cats, QObject* parent) : QObject(parent) {
+      for (auto& cat : cats) {
+         QString cn = cat.name;
+         this->_by_category[cn].reserve(cat.settings.size());
+         for (auto& s : cat.settings)
+            new Setting(*this, cn, s.name, s.serializationType, s.value);
+      }
+   }
+
    void File::childEvent(QChildEvent* event) {
       auto* setting = qobject_cast<Setting*>(event->child());
       if (!setting)
          return;
+
+      
+      static_assert(false, "This won't work.");
+      //
+      // Per Qt documentation:
+      // 
+      //    Child events are sent immediately to objects when children are added or removed.
+      // 
+      //    In both cases you can only rely on the child being a QObject(or , if QObject::isWidgetType() 
+      //    returns true, a QWidget).This is because in the QEvent::ChildAdded case the child is not yet 
+      //    fully constructed; in the QEvent::ChildRemoved case it might have already been destructed.
+      //
+      // We need another way to maintain the by-category cache.
+      // 
+      // I think we're gonna have to avoid using the QObject parenting mechanism, in favor of...
+      // 
+      //  - Settings need to call a member function on a File to register themselves when created.
+      // 
+      //  - Files need to hook the Setting::destroyed signal and unregister the Setting when it is 
+      //    destroyed.
+      // 
+      //  - When a File is destroyed, it should unregister all Settings and sever any Setting::destroyed 
+      //    signals it requested.
+      // 
+      //  - File::setting(const QString& name) will need to be modified to not crawl the QObject child 
+      //    list. Ditto for File::commitPendingChanges() and File::discardPendingChanges().
+      // 
+      //  - This event handler will need to be removed.
+      //
+
+
       //
       auto& map = this->_by_category;
       if (event->added()) {

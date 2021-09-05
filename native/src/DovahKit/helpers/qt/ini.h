@@ -21,7 +21,25 @@
 //    local to the main loop (for the main window) or static heap-allocated variables. What impact will that have 
 //    on defining settings? Should we block locally allocating them (i.e. by privating the destructor)?
 // 
+//    What's more, static instances of a QObject outside of a function are vulnerable to the static initialization 
+//    order fiasco: the QObject instances can be created before their own QMetaObjects (i.e. Qt RTTI) are created.
+// 
 //     - Same concern is present for files.
+// 
+//        - The File() constructor that takes setting definitions may help. We can have a singleton-style getter 
+//          function for an INI file which heap-allocates a File with setting definitions; that'll also create 
+//          its settings; and then we can...
+// 
+//           - ...only ever access settings through the File.
+// 
+//           - ...have specific pieces of code that need a setting use their own getter functions, which get the 
+//             setting through the file and then cache the setting pointer in a static local variable for faster 
+//             access later.
+// 
+//     - We also want to support constructing INI file specs at run-time. I want to be able to define all of 
+//       Skyrim's INI settings and their default values within the `dovah` folder in a Qt-independent manner, 
+//       even if I have the frontend, Dovahscript, render window, etc., all rely on this system here to actually 
+//       load and work with Skyrim.ini.
 //
 
 namespace cobb::qt::ini {
@@ -74,6 +92,35 @@ namespace cobb::qt::ini {
    // Each Setting is a child-QObject of the File.
    class File : public QObject {
       Q_OBJECT;
+      public:
+         struct _SettingConstructParams {
+            QString  name;
+            QVariant value;
+            SettingSerializationType serializationType = SettingSerializationType::Undefined;
+         };
+         struct _CategoryConstructParams {
+            QString name;
+            std::initializer_list<_SettingConstructParams> settings;
+         };
+
+         File(QObject* parent = nullptr) : QObject(parent) {}
+         File(std::initializer_list<_CategoryConstructParams>, QObject* parent = nullptr); // automatically heap-allocate Setting instances
+
+         //
+         // e.g.
+         // 
+         // static File& getMyINIFile() {
+         //    static auto* instance = new cobb::qt::ini::File({
+         //       { "CategoryName", {
+         //          { "bSettingName", false },
+         //          { "iSettingName", 5 },
+         //          { "xSettingName", MyStruct{}, SettingSerializationType::String },
+         //       }},
+         //    });
+         //    return *instance;
+         // }
+         //
+         
       protected:
          QHash<QString, QVector<Setting*>> _by_category;
 
