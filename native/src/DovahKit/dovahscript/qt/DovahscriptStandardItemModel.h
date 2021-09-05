@@ -1,5 +1,5 @@
 #pragma once
-#include "../../editor/scripting/ui/util/lua_item_model.h" // TODO: Move this to a different file
+#include "../../ui/generic/ObservableStandardItemModel.h"
 
 class DovahscriptStandardItemModel : public ObservableStandardItemModel {
    Q_OBJECT;

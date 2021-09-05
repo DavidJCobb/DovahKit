@@ -1,7 +1,6 @@
 #pragma once
 #include <QTimer>
 #include "../../../lua.h"
-#include "../../../helpers/lockable_bool.h"
 #include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
 #include "../../../dovah/core.h"
