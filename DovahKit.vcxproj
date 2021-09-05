@@ -1,0 +1,1134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{27AD41A9-254C-460D-B111-C9A52C5FEF7F}</ProjectGuid>
+    <Keyword>QtVS_v303</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.18362.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
+    <Import Project="$(QtMsBuild)\qt.props" />
+  </ImportGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_color.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_alignment.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_variant.cpp" />
+    <ClCompile Include="dovahscript\core\blocking_task_slot.cpp" />
+    <ClCompile Include="dovahscript\core\classes.cpp" />
+    <ClCompile Include="dovahscript\core\class_zombification.cpp" />
+    <ClCompile Include="dovahscript\core\collections.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\button.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\groupbox.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\radio_button.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\radio_group.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\checkbox.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\dropdown.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\formpicker.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\spinbox.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\tabbox.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\table_view.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\textbox.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\script_event_queue.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResource.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
+    <ClCompile Include="dovahscript\core\task_queue.cpp" />
+    <ClCompile Include="dovahscript\core\verify_threading.cpp" />
+    <ClCompile Include="dovahscript\dovahscript_host.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\benchmark.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\euler.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\matrix3x3.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\quaternion.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\vector2.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\vector3.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\_import_all.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\all_standard.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\dovah.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\form_types.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
+    <ClCompile Include="dovahscript\pull_native_object.cpp" />
+    <ClCompile Include="dovahscript\push_native_object.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptLineWidget.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptTabboxTab.cpp" />
+    <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptImageWidget.cpp" />
+    <ClCompile Include="dovahscript\qt\impl\DovahscriptCanvasExporter.cpp" />
+    <ClCompile Include="dovahscript\safe_call.cpp" />
+    <ClCompile Include="dovahscript\send_script_task.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\create_button_group.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\create_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\duplicate_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\internal_signal_form_edit.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\log_message.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\renumber_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\_base.cpp" />
+    <ClCompile Include="dovahscript\task_reference.cpp" />
+    <ClCompile Include="dovahscript\widget_overrides.cpp" />
+    <ClCompile Include="dovahscript\wrapper.cpp" />
+    <ClCompile Include="dovahscript\wrappers\base.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\cell.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\cell\grid_coords.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\formlist.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\formlist\collection_entries.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\landscape.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\landscape\quad.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\landscape\quad_layer.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\landscape\quad_list.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\land_texture.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\land_texture\collection_grasses.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\land_texture\havok.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\root.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\script.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\script\collection_properties.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest\alias.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest\collection_aliases.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest\collection_aliases_by_id.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest\loc_alias.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\shout.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\shout\collection_words.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\shout\word.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\texture_set.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\texture_set\path_list.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\topic.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\topic_info.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\topic_info\collection_responses.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\topic_info\response.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\voicetype.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\word_of_power.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\worldspace.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds_root.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\collection_images.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\cubemap_face_list.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\raster.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp" />
+    <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\button.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\canvas_text_data.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\collection_layers.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group\collection_layers.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\checkbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\formpicker.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\groupbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\image_widget.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\line.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\progress_bar.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\radio_button.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\radio_group.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\scrollbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\spinbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\collection_tabs.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\tab.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\tabbox\_util.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_columns.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_rows.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col\collection_cells.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\text.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\textbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
+    <ClCompile Include="dovahscript\wrappers\unusual\raster_draw_path.cpp" />
+    <ClCompile Include="dovahscript\wrap_native_object.cpp" />
+    <ClCompile Include="dovah\bs_hash.cpp" />
+    <ClCompile Include="dovah\core.cpp" />
+    <ClCompile Include="dovah\data\actor_values.cpp" />
+    <ClCompile Include="dovah\data\conditions.cpp" />
+    <ClCompile Include="dovah\data\default_objects.cpp" />
+    <ClCompile Include="dovah\data\game_settings.cpp" />
+    <ClCompile Include="dovah\data\ini_settings.cpp" />
+    <ClCompile Include="dovah\data\story_manager.cpp" />
+    <ClCompile Include="dovah\detailed_notice.cpp" />
+    <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
+    <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
+    <ClCompile Include="dovah\files\bsa\threads.cpp" />
+    <ClCompile Include="dovah\files\papyrus\compiled_script.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
+    <ClCompile Include="dovah\files\file_load_order.cpp" />
+    <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\basic_reader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\elements.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_loader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_or_file_part_loader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_part_loader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\results.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\config.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\elements.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\results.cpp" />
+    <ClCompile Include="dovah\forms\Activator.cpp" />
+    <ClCompile Include="dovah\forms\ActorBase.cpp" />
+    <ClCompile Include="dovah\forms\Cell.cpp" />
+    <ClCompile Include="dovah\forms\Color.cpp" />
+    <ClCompile Include="dovah\forms\components\attack_data.cpp" />
+    <ClCompile Include="dovah\forms\components\bounds.cpp" />
+    <ClCompile Include="dovah\forms\components\conditions.cpp" />
+    <ClCompile Include="dovah\forms\components\container.cpp" />
+    <ClCompile Include="dovah\forms\components\decal_data.cpp" />
+    <ClCompile Include="dovah\forms\components\destruction.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\action.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\activate_parent_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\activate_ref.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\alpha_cutoff.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\ammo.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\cell_region_list.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\collision_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\count.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\distant_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\enable_state_parent.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\health.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\health_percent.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\leveled_creature_modifier.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\light.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\linked_ref.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\linked_ref_color.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\lit_water.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\lock.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\map_marker.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\multibound_bounds.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\navmesh_door_portal.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\occlusion_plane.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\package_start_location.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\patrol_ref_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\poison.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\portal.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\portal_origin_and_destination.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\primitive.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\ragdoll_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\rank.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\reflector_refs.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\room_ref_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\teleport.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\_unknown.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\water_current_zone_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\water_data.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\_factory.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp" />
+    <ClCompile Include="dovah\forms\components\interior_lighting.cpp" />
+    <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
+    <ClCompile Include="dovah\forms\components\legacy_script.cpp" />
+    <ClCompile Include="dovah\forms\components\model.cpp" />
+    <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp" />
+    <ClCompile Include="dovah\forms\components\package_location.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus.cpp" />
+    <ClCompile Include="dovah\forms\Container.cpp" />
+    <ClCompile Include="dovah\forms\DefaultObjectManager.cpp" />
+    <ClCompile Include="dovah\forms\DialogueBranch.cpp" />
+    <ClCompile Include="dovah\forms\Faction.cpp" />
+    <ClCompile Include="dovah\forms\factories\construct.cpp" />
+    <ClCompile Include="dovah\forms\factories\hardcoded.cpp" />
+    <ClCompile Include="dovah\forms\factories\use_info.cpp" />
+    <ClCompile Include="dovah\forms\form.cpp" />
+    <ClCompile Include="dovah\forms\FormList.cpp" />
+    <ClCompile Include="dovah\forms\Landscape.cpp" />
+    <ClCompile Include="dovah\forms\LandTexture.cpp" />
+    <ClCompile Include="dovah\forms\Location.cpp" />
+    <ClCompile Include="dovah\forms\MagicEffect.cpp" />
+    <ClCompile Include="dovah\forms\Note.cpp" />
+    <ClCompile Include="dovah\forms\ObjectReference.cpp" />
+    <ClCompile Include="dovah\forms\Quest.cpp" />
+    <ClCompile Include="dovah\forms\Shout.cpp" />
+    <ClCompile Include="dovah\forms\structs\color_dword.cpp" />
+    <ClCompile Include="dovah\forms\TextureSet.cpp" />
+    <ClCompile Include="dovah\forms\Topic.cpp" />
+    <ClCompile Include="dovah\forms\TopicInfo.cpp" />
+    <ClCompile Include="dovah\forms\Voicetype.cpp" />
+    <ClCompile Include="dovah\forms\WordOfPower.cpp" />
+    <ClCompile Include="dovah\forms\Worldspace.cpp" />
+    <ClCompile Include="dovah\form_stub.cpp" />
+    <ClCompile Include="dovah\form_stub_addenda.cpp" />
+    <ClCompile Include="dovah\form_stub_helpers.cpp" />
+    <ClCompile Include="dovah\form_stub_use_info_builder.cpp" />
+    <ClCompile Include="dovah\localization\common.cpp" />
+    <ClCompile Include="dovah\localization\localized_string_store.cpp" />
+    <ClCompile Include="dovah\localized_strings.cpp" />
+    <ClCompile Include="dovah\logging.cpp" />
+    <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
+    <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
+    <ClCompile Include="editor\core.cpp" />
+    <ClCompile Include="editor\core_internals\load_task.cpp" />
+    <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
+    <ClCompile Include="editor\form_data_cache.cpp" />
+    <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
+    <ClCompile Include="editor\get_condition_description.cpp" />
+    <ClCompile Include="editor\get_default_object_info.cpp" />
+    <ClCompile Include="editor\get_game_setting_description.cpp" />
+    <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp" />
+    <ClCompile Include="editor\helpers\form_type_name_to_string.cpp" />
+    <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
+    <ClCompile Include="editor\helpers\stringify_conditions.cpp" />
+    <ClCompile Include="editor\helpers\stringify_condition_argument.cpp" />
+    <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
+    <ClCompile Include="editor\open_window_for_form.cpp" />
+    <ClCompile Include="editor\papyrus_dictionary.cpp" />
+    <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
+    <ClCompile Include="helpers\assert.cpp" />
+    <ClCompile Include="helpers\endianness.cpp" />
+    <ClCompile Include="helpers\files.cpp" />
+    <ClCompile Include="helpers\filesystem.cpp" />
+    <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
+    <ClCompile Include="helpers\lua\for_each_in_array.cpp" />
+    <ClCompile Include="helpers\lua\isempty.cpp" />
+    <ClCompile Include="helpers\lua\metamethod_names.cpp" />
+    <ClCompile Include="helpers\lua\dump.cpp" />
+    <ClCompile Include="helpers\lua\qt_point.cpp" />
+    <ClCompile Include="helpers\lua\qt_variant.cpp" />
+    <ClCompile Include="helpers\lua\setfuncs.cpp" />
+    <ClCompile Include="helpers\lua\tostringex.cpp" />
+    <ClCompile Include="helpers\lua\warning.cpp" />
+    <ClCompile Include="helpers\memory.cpp" />
+    <ClCompile Include="helpers\multiheap.cpp" />
+    <ClCompile Include="helpers\qt\basic_bindings.cpp" />
+    <ClCompile Include="helpers\qt\can_have_model.cpp" />
+    <ClCompile Include="helpers\qt\combobox.cpp" />
+    <ClCompile Include="helpers\qt\font.cpp" />
+    <ClCompile Include="helpers\qt\get_model_of.cpp" />
+    <ClCompile Include="helpers\qt\layout.cpp" />
+    <ClCompile Include="helpers\qt\minimize_intent.cpp" />
+    <ClCompile Include="helpers\qt\ownership.cpp" />
+    <ClCompile Include="helpers\qt\repaint.cpp" />
+    <ClCompile Include="helpers\qt\set_model_of.cpp" />
+    <ClCompile Include="helpers\qt\strings.cpp" />
+    <ClCompile Include="helpers\qt\string_scanner.cpp" />
+    <ClCompile Include="helpers\qt\traversal.cpp" />
+    <ClCompile Include="helpers\qt\url.cpp" />
+    <ClCompile Include="helpers\qt\vector3.cpp" />
+    <ClCompile Include="helpers\rotation.cpp" />
+    <ClCompile Include="helpers\set_current_thread_name.cpp" />
+    <ClCompile Include="helpers\strings.cpp" />
+    <ClCompile Include="helpers\windows_environment.cpp" />
+    <ClCompile Include="helpers\windows_ini.cpp" />
+    <ClCompile Include="helpers\windows_registry.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ui\form_windows\cell.cpp" />
+    <ClCompile Include="ui\form_windows\color.cpp" />
+    <ClCompile Include="ui\form_windows\formlist.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
+    <ClCompile Include="ui\form_windows\quest.cpp" />
+    <ClCompile Include="ui\form_windows\shout.cpp" />
+    <ClCompile Include="ui\form_windows\voicetype.cpp" />
+    <ClCompile Include="ui\form_windows\word_of_power.cpp" />
+    <ClCompile Include="ui\form_windows\_base.cpp" />
+    <ClCompile Include="ui\generic\CanvasWidget.cpp" />
+    <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
+    <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
+    <ClCompile Include="ui\generic\FormPicker.cpp" />
+    <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
+    <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
+    <ClCompile Include="ui\generic\impl\FormPickerImpl.cpp" />
+    <ClCompile Include="ui\generic\ObservableStandardItemModel.cpp" />
+    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
+    <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
+    <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
+    <ClCompile Include="ui\generic\QLuaCheckBox.cpp" />
+    <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
+    <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp" />
+    <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
+    <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
+    <ClCompile Include="ui\generic\RefPickerButton.cpp" />
+    <ClCompile Include="ui\generic\TESFilePicker.cpp" />
+    <ClCompile Include="ui\generic\windows\ref_picker_window.cpp" />
+    <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\cell_view.cpp" />
+    <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
+    <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp" />
+    <ClCompile Include="ui\main_window\default_object_window.cpp" />
+    <ClCompile Include="ui\main_window\default_object_window\default_object_list.cpp" />
+    <ClCompile Include="ui\main_window\delete_form_dialog.cpp" />
+    <ClCompile Include="ui\main_window\delete_form_dialog\delete_form_table.cpp" />
+    <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
+    <ClCompile Include="ui\main_window\form_use_info.cpp" />
+    <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
+    <ClCompile Include="ui\main_window\game_setting_window.cpp" />
+    <ClCompile Include="ui\main_window\game_setting_window\game_setting_list.cpp" />
+    <ClCompile Include="ui\main_window\load_window.cpp" />
+    <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
+    <ClCompile Include="ui\main_window\log_window.cpp" />
+    <ClCompile Include="ui\main_window\log_window\log_list_view.cpp" />
+    <ClCompile Include="ui\main_window\object_window.cpp" />
+    <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
+    <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
+    <ClCompile Include="ui\main_window\save_window.cpp" />
+    <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp" />
+    <ClCompile Include="ui\main_window\script_window_package.cpp" />
+    <ClCompile Include="ui\main_window\script_window_package\DovahscriptAuthorWidget.cpp" />
+    <ClCompile Include="ui\main_window\script_window_single.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\canvas_widget_tests.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
+    <ClInclude Include="dovahscript\api_helpers\model_observers.h" />
+    <ClInclude Include="dovahscript\api_helpers\model_observer_property_handlers.h" />
+    <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_color.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_alignment.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_variant.h" />
+    <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
+    <ClInclude Include="dovahscript\constants\debugging.h" />
+    <ClInclude Include="dovahscript\constants\qt_graphics.h" />
+    <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
+    <ClInclude Include="dovahscript\core\blocking_task_slot.h" />
+    <ClInclude Include="dovahscript\core\classes.h" />
+    <ClInclude Include="dovahscript\core\class_zombification.h" />
+    <ClInclude Include="dovahscript\core\collections.h" />
+    <ClInclude Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\script_event_queue.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\button.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\groupbox.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\radio_button.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\radio_group.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\checkbox.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\dropdown.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\formpicker.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\spinbox.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\tabbox.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\table_view.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\textbox.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\script_event.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h" />
+    <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
+    <QtMoc Include="dovahscript\core\subsystems\resources\DovahscriptResource.h" />
+    <ClInclude Include="dovahscript\core\subsystems\resources.h" />
+    <ClInclude Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.h" />
+    <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
+    <ClInclude Include="dovahscript\core\task_queue.h" />
+    <ClInclude Include="dovahscript\core\verify_threading.h" />
+    <QtMoc Include="dovahscript\dovahscript_host.h" />
+    <ClInclude Include="dovahscript\lua_classes\benchmark.h" />
+    <ClInclude Include="dovahscript\lua_classes\euler.h" />
+    <ClInclude Include="dovahscript\lua_classes\matrix3x3.h" />
+    <ClInclude Include="dovahscript\lua_classes\quaternion.h" />
+    <ClInclude Include="dovahscript\lua_classes\vector2.h" />
+    <ClInclude Include="dovahscript\lua_classes\vector3.h" />
+    <ClInclude Include="dovahscript\lua_classes\_import_all.h" />
+    <ClInclude Include="dovahscript\lua_libraries\all_standard.h" />
+    <ClInclude Include="dovahscript\lua_libraries\dovah.h" />
+    <ClInclude Include="dovahscript\lua_libraries\form_types.h" />
+    <ClInclude Include="dovahscript\lua_libraries\unscoped.h" />
+    <ClInclude Include="dovahscript\lua_libraries\_import_all.h" />
+    <ClInclude Include="dovahscript\permission_set.h" />
+    <ClInclude Include="dovahscript\pull_native_object.h" />
+    <ClInclude Include="dovahscript\push_native_object.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptDialog.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerData.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptLineWidget.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptTabboxTab.h" />
+    <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptImageWidget.h" />
+    <ClInclude Include="dovahscript\qt\impl\DovahscriptCanvasExporter.h" />
+    <ClInclude Include="dovahscript\safe_call.h" />
+    <ClInclude Include="dovahscript\script_set.h" />
+    <ClInclude Include="dovahscript\send_script_task.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\create_button_group.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\create_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\delete_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\duplicate_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\internal_signal_form_edit.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\lambda.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\log_message.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\renumber_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\ui_read_lambda.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda_ex.h" />
+    <ClInclude Include="dovahscript\tasks\_base.h" />
+    <ClInclude Include="dovahscript\tasks\_ui_base.h" />
+    <ClInclude Include="dovahscript\task_reference.h" />
+    <ClInclude Include="dovahscript\widget_overrides.h" />
+    <ClInclude Include="dovahscript\wrapper.h" />
+    <ClInclude Include="dovahscript\wrappers\base.h" />
+    <ClInclude Include="dovahscript\wrappers\form\cell.h" />
+    <ClInclude Include="dovahscript\wrappers\form\cell\grid_coords.h" />
+    <ClInclude Include="dovahscript\wrappers\form\form.h" />
+    <ClInclude Include="dovahscript\wrappers\form\formlist.h" />
+    <ClInclude Include="dovahscript\wrappers\form\formlist\collection_entries.h" />
+    <ClInclude Include="dovahscript\wrappers\form\landscape.h" />
+    <ClInclude Include="dovahscript\wrappers\form\landscape\quad.h" />
+    <ClInclude Include="dovahscript\wrappers\form\landscape\quad_layer.h" />
+    <ClInclude Include="dovahscript\wrappers\form\landscape\quad_list.h" />
+    <ClInclude Include="dovahscript\wrappers\form\land_texture.h" />
+    <ClInclude Include="dovahscript\wrappers\form\land_texture\collection_grasses.h" />
+    <ClInclude Include="dovahscript\wrappers\form\land_texture\havok.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\property.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\root.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\script.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\script\collection_properties.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest\alias.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest\collection_aliases.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest\collection_aliases_by_id.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest\loc_alias.h" />
+    <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias.h" />
+    <ClInclude Include="dovahscript\wrappers\form\shout.h" />
+    <ClInclude Include="dovahscript\wrappers\form\shout\collection_words.h" />
+    <ClInclude Include="dovahscript\wrappers\form\shout\word.h" />
+    <ClInclude Include="dovahscript\wrappers\form\texture_set.h" />
+    <ClInclude Include="dovahscript\wrappers\form\texture_set\path_list.h" />
+    <ClInclude Include="dovahscript\wrappers\form\topic.h" />
+    <ClInclude Include="dovahscript\wrappers\form\topic_info.h" />
+    <ClInclude Include="dovahscript\wrappers\form\topic_info\collection_responses.h" />
+    <ClInclude Include="dovahscript\wrappers\form\topic_info\response.h" />
+    <ClInclude Include="dovahscript\wrappers\form\voicetype.h" />
+    <ClInclude Include="dovahscript\wrappers\form\word_of_power.h" />
+    <ClInclude Include="dovahscript\wrappers\form\worldspace.h" />
+    <ClInclude Include="dovahscript\wrappers\form\worldspace\grid_bounds.h" />
+    <ClInclude Include="dovahscript\wrappers\form\worldspace\grid_bounds_root.h" />
+    <ClInclude Include="dovahscript\wrappers\form\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\collection_images.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\cubemap_face_list.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\raster.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\unknown.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\button.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\canvas_text_data.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\collection_layers.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer_group.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\canvas\layer_group\collection_layers.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\checkbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\collection_items.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\dropdown\item.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\formpicker.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\groupbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\image_widget.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\line.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\progress_bar.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\radio_button.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\radio_group.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\scrollbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\spinbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\collection_tabs.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\tab.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\tabbox\_util.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_columns.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_rows.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col\collection_cells.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row\collection_cells.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\text.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\textbox.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\various\font.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\window.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\unusual\raster_draw_path.h" />
+    <ClInclude Include="dovahscript\wrappers\unusual\_all.h" />
+    <ClInclude Include="dovahscript\wrap_native_object.h" />
+    <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />
+    <ClInclude Include="dovah\bs_hash.h" />
+    <ClInclude Include="dovah\core.h" />
+    <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\data\conditions.h" />
+    <ClInclude Include="dovah\data\default_objects.h" />
+    <ClInclude Include="dovah\data\game_settings.h" />
+    <ClInclude Include="dovah\data\ini_settings.h" />
+    <ClInclude Include="dovah\detailed_notice.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
+    <ClInclude Include="dovah\files\bsa\threads.h" />
+    <ClInclude Include="dovah\files\common.h" />
+    <ClInclude Include="dovah\files\file_header.h" />
+    <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
+    <ClInclude Include="dovah\files\papyrus\compiled_script.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_header.h" />
+    <ClInclude Include="dovah\files\file_load_order.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\elements.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_loader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_or_file_part_loader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_part_loader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\localized_string_file.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\results.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\threads.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\config.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\elements.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\file_writer.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\results.h" />
+    <ClInclude Include="dovah\forms\Activator.h" />
+    <ClInclude Include="dovah\forms\ActorBase.h" />
+    <ClInclude Include="dovah\forms\Cell.h" />
+    <ClInclude Include="dovah\forms\Color.h" />
+    <ClInclude Include="dovah\forms\components\attack_data.h" />
+    <ClInclude Include="dovah\forms\components\conditions.h" />
+    <ClInclude Include="dovah\forms\components\decal_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\action.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\activate_parent_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\activate_ref.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\alpha_cutoff.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\ammo.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\attach_ref.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_acoustic_space.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_climate.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_grass_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_imagespace.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_music_override.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_region_list.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\cell_water_type.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\charge.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\collision_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\count.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\distant_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\emittance_source.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\enable_state_parent.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\encounter_zone.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\favor_cost.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\global.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\headtracking_weight.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\health.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\health_percent.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\horse.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\ignored_by_sandbox.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\interior_lock_list.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\leveled_creature_modifier.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\leveled_item_base.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\light.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\linked_ref.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\linked_ref_color.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\lit_water.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\location.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\location_ref_type.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\lock.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\map_marker.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\merchant_container.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\multibound_bounds.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\multibound_ref.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\navmesh_door_portal.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\occlusion_plane.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\occlusion_plane_ref_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\ownership.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\package_start_location.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\patrol_ref_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\poison.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\portal.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\portal_origin_and_destination.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\primitive.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\radius.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\ragdoll_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\random_teleport_marker.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\rank.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\reflector_refs.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\room_ref_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\scale.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\spawn_container.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\teleport.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\teleport_name.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\time_left.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\water_current_zone_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\water_data.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\water_environment_map.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\_factory.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\_templates.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\_unknown.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\_use_info.h" />
+    <ClInclude Include="dovah\forms\components\interior_lighting.h" />
+    <ClInclude Include="dovah\forms\components\keyword_list.h" />
+    <ClInclude Include="dovah\forms\components\legacy_script.h" />
+    <ClInclude Include="dovah\forms\components\package_location.h" />
+    <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
+    <ClInclude Include="dovah\data\story_manager.h" />
+    <ClInclude Include="dovah\forms\DefaultObjectManager.h" />
+    <ClInclude Include="dovah\forms\DialogueBranch.h" />
+    <ClInclude Include="dovah\forms\Faction.h" />
+    <ClInclude Include="dovah\forms\factories\hardcoded.h" />
+    <ClInclude Include="dovah\forms\factories\use_info.h" />
+    <ClInclude Include="dovah\forms\Actor.h" />
+    <ClInclude Include="dovah\forms\impl\component_templates.h" />
+    <ClInclude Include="dovah\forms\Landscape.h" />
+    <ClInclude Include="dovah\forms\LandTexture.h" />
+    <ClInclude Include="dovah\forms\Note.h" />
+    <ClInclude Include="dovah\forms\Package.h" />
+    <ClInclude Include="dovah\forms\structs\color_dword.h" />
+    <ClInclude Include="dovah\forms\TextureSet.h" />
+    <ClInclude Include="dovah\forms\Topic.h" />
+    <ClInclude Include="dovah\forms\WordOfPower.h" />
+    <ClInclude Include="dovah\forms\Worldspace.h" />
+    <ClInclude Include="dovah\forms\_common_cpp.h" />
+    <ClInclude Include="dovah\forms\components\bounds.h" />
+    <ClInclude Include="dovah\forms\components\container.h" />
+    <ClInclude Include="dovah\forms\components\destruction.h" />
+    <ClInclude Include="dovah\forms\components\model.h" />
+    <ClInclude Include="dovah\forms\components\papyrus.h" />
+    <ClInclude Include="dovah\forms\Container.h" />
+    <ClInclude Include="dovah\forms\factories\construct.h" />
+    <ClInclude Include="dovah\forms\form.h" />
+    <ClInclude Include="dovah\forms\FormList.h" />
+    <ClInclude Include="dovah\forms\Location.h" />
+    <ClInclude Include="dovah\forms\MagicEffect.h" />
+    <ClInclude Include="dovah\forms\ObjectReference.h" />
+    <ClInclude Include="dovah\forms\Quest.h" />
+    <ClInclude Include="dovah\forms\Shout.h" />
+    <ClInclude Include="dovah\forms\TopicInfo.h" />
+    <ClInclude Include="dovah\forms\Voicetype.h" />
+    <ClInclude Include="dovah\forms\_common.h" />
+    <ClInclude Include="dovah\form_stub.h" />
+    <ClInclude Include="dovah\form_stub_addenda.h" />
+    <ClInclude Include="dovah\form_stub_heap.h" />
+    <ClInclude Include="dovah\form_stub_helpers.h" />
+    <ClInclude Include="dovah\form_stub_use_info_builder.h" />
+    <ClInclude Include="dovah\localization\common.h" />
+    <ClInclude Include="dovah\localization\localized_string_store.h" />
+    <ClInclude Include="dovah\localized_strings.h" />
+    <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="dovah\notice_code_list.h" />
+    <ClInclude Include="dovah\notice_code_t.h" />
+    <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
+    <ClInclude Include="dovah\utils\get_user_language_name.h" />
+    <QtMoc Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.h" />
+    <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
+    <ClInclude Include="dovah\utils\loose_enum.h" />
+    <QtMoc Include="editor\form_data_cache.h" />
+    <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h" />
+    <ClInclude Include="editor\form_stub_meta_type.h" />
+    <ClInclude Include="editor\get_condition_description.h" />
+    <ClInclude Include="editor\get_default_object_info.h" />
+    <ClInclude Include="editor\get_game_setting_description.h" />
+    <ClInclude Include="editor\helpers\actor_value_index_to_name.h" />
+    <ClInclude Include="editor\helpers\form_type_name_to_string.h" />
+    <ClInclude Include="editor\helpers\stringify_conditions.h" />
+    <ClInclude Include="editor\helpers\stringify_condition_argument.h" />
+    <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
+    <QtMoc Include="editor\papyrus_dictionary.h" />
+    <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
+    <ClInclude Include="editor\script_packages\manifest.h" />
+    <ClInclude Include="editor\script_packages\manifest_parser.h" />
+    <ClInclude Include="helpers\eight_cc.h" />
+    <ClInclude Include="helpers\function_traits.h" />
+    <ClInclude Include="helpers\geometry.h" />
+    <ClInclude Include="helpers\lua\discontiguous_list.h" />
+    <ClInclude Include="helpers\lua\error.h" />
+    <ClInclude Include="helpers\lua\for_each_in_array.h" />
+    <ClInclude Include="helpers\lua\isempty.h" />
+    <ClInclude Include="helpers\lua\istablelike.h" />
+    <ClInclude Include="helpers\lua\metamethod_names.h" />
+    <ClInclude Include="helpers\lua\dump.h" />
+    <ClInclude Include="helpers\lua\qt_point.h" />
+    <ClInclude Include="helpers\lua\qt_variant.h" />
+    <ClInclude Include="helpers\lua\raw.h" />
+    <ClInclude Include="helpers\lua\setfuncs.h" />
+    <ClInclude Include="helpers\lua\set_top_on_exit.h" />
+    <ClInclude Include="helpers\lua\tostringex.h" />
+    <ClInclude Include="helpers\lua\warning.h" />
+    <ClInclude Include="helpers\math.h" />
+    <ClInclude Include="helpers\matrix.h" />
+    <ClInclude Include="helpers\passkey.h" />
+    <ClInclude Include="helpers\qt\basic_bindings.h" />
+    <ClInclude Include="helpers\qt\can_have_model.h" />
+    <ClInclude Include="helpers\qt\combobox.h" />
+    <ClInclude Include="helpers\qt\font.h" />
+    <ClInclude Include="helpers\qt\get_model_of.h" />
+    <ClInclude Include="helpers\qt\layout.h" />
+    <ClInclude Include="helpers\qt\minimize_indent.h" />
+    <ClInclude Include="helpers\qt\ownership.h" />
+    <ClInclude Include="helpers\qt\repaint.h" />
+    <ClInclude Include="helpers\qt\set_model_of.h" />
+    <ClInclude Include="helpers\qt\string_scanner.h" />
+    <ClInclude Include="helpers\qt\traversal.h" />
+    <ClInclude Include="helpers\qt\url.h" />
+    <ClInclude Include="helpers\rotation.h" />
+    <ClInclude Include="helpers\set_current_thread_name.h" />
+    <ClInclude Include="helpers\singleton.h" />
+    <ClInclude Include="helpers\vector.h" />
+    <ClInclude Include="helpers\windows_environment.h" />
+    <ClInclude Include="helpers\windows_ini.h" />
+    <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
+    <QtMoc Include="ui\main_window\log_window.h" />
+    <QtMoc Include="ui\main_window\log_window\log_list_view.h" />
+    <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h" />
+    <QtMoc Include="ui\main_window\game_setting_window.h" />
+    <QtMoc Include="ui\main_window\default_object_window.h" />
+    <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
+    <QtMoc Include="ui\form_windows\formlist.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\formlist_listview.h" />
+    <QtMoc Include="ui\form_windows\quest.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
+    <QtMoc Include="ui\generic\RefPickerButton.h" />
+    <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
+    <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
+    <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
+    <QtMoc Include="ui\generic\FormPicker.h" />
+    <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
+    <ClInclude Include="lua.h" />
+    <QtMoc Include="ui\generic\CanvasWidget.h" />
+    <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />
+    <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
+    <QtMoc Include="ui\generic\QLuaCheckBox.h" />
+    <QtMoc Include="ui\generic\DKLuaSyntaxHighlighter.h" />
+    <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
+    <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
+    <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
+    <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h" />
+    <QtMoc Include="ui\main_window\script_window_single.h" />
+    <QtMoc Include="ui\main_window\script_window_package.h" />
+    <QtMoc Include="ui\main_window\script_window_package\DovahscriptAuthorWidget.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\canvas_widget_tests.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\form_picker_debug.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
+    <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
+    <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
+    <QtMoc Include="ui\main_window\delete_form_dialog.h" />
+    <QtMoc Include="ui\generic\TESFilePicker.h" />
+    <QtMoc Include="ui\form_windows\cell.h" />
+    <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
+    <ClInclude Include="helpers\endianness.h" />
+    <ClInclude Include="helpers\qt\spinbox.h" />
+    <ClInclude Include="helpers\qt\vector3.h" />
+    <ClInclude Include="helpers\unordered_map.h" />
+    <ClInclude Include="ui\form_windows\_base_cpp.h" />
+    <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h" />
+    <QtMoc Include="ui\generic\impl\_FormSignatureComboboxProxy.h" />
+    <QtMoc Include="ui\generic\FormSignatureCombobox.h" />
+    <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h" />
+    <QtMoc Include="ui\main_window\cell_view\cell_list.h" />
+    <QtMoc Include="ui\main_window\cell_view.h" />
+    <QtMoc Include="ui\form_windows\_base.h" />
+    <QtMoc Include="ui\main_window\file_metadata_window.h" />
+    <QtMoc Include="ui\main_window\save_window.h" />
+    <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />
+    <QtMoc Include="ui\main_window\form_use_info.h" />
+    <QtMoc Include="editor\core_internals\load_task.h" />
+    <ClInclude Include="editor\open_window_for_form.h" />
+    <ClInclude Include="helpers\assert.h" />
+    <ClInclude Include="helpers\filesystem.h" />
+    <ClInclude Include="helpers\int24_t.h" />
+    <ClInclude Include="helpers\performance.h" />
+    <ClInclude Include="helpers\qt\strings.h" />
+    <ClInclude Include="helpers\windows_registry.h" />
+    <ClInclude Include="resource.h" />
+    <QtMoc Include="ui\main_window\load_window\file_list.h" />
+    <QtMoc Include="ui\main_window\load_window.h" />
+    <QtMoc Include="ui\generic\ColorPickerButton.h" />
+    <QtMoc Include="ui\form_windows\color.h" />
+    <QtMoc Include="ui\form_windows\word_of_power.h" />
+    <QtMoc Include="ui\form_windows\voicetype.h" />
+    <QtMoc Include="ui\generic\FormsOfTypeCombobox.h" />
+    <QtMoc Include="ui\form_windows\shout.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\shout_word.h" />
+    <QtMoc Include="ui\main_window\object_window\form_table.h" />
+    <QtMoc Include="ui\generic\QLinedTreeView.h" />
+    <QtMoc Include="ui\main_window\object_window.h" />
+    <QtMoc Include="editor\core.h" />
+    <ClInclude Include="helpers\bitset.h" />
+    <ClInclude Include="helpers\bitwise.h" />
+    <ClInclude Include="helpers\files.h" />
+    <ClInclude Include="helpers\ini.h" />
+    <ClInclude Include="helpers\intrusive_windows_defines.h" />
+    <ClInclude Include="helpers\memory.h" />
+    <ClInclude Include="helpers\miscellaneous.h" />
+    <ClInclude Include="helpers\multiheap.h" />
+    <ClInclude Include="helpers\strings.h" />
+    <ClInclude Include="helpers\type_traits.h" />
+    <ClInclude Include="helpers\vector3.h" />
+    <QtMoc Include="ui\main_window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="ui\form_windows\cell.ui" />
+    <QtUic Include="ui\form_windows\color.ui" />
+    <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
+    <QtUic Include="ui\form_windows\quest.ui" />
+    <QtUic Include="ui\form_windows\reference.ui" />
+    <QtUic Include="ui\form_windows\shout.ui" />
+    <QtUic Include="ui\form_windows\voicetype.ui" />
+    <QtUic Include="ui\form_windows\word_of_power.ui" />
+    <QtUic Include="ui\generic\PapyrusFragmentEditor.ui" />
+    <QtUic Include="ui\generic\TESFilePicker.ui" />
+    <QtUic Include="ui\generic\windows\ref_picker_window.ui" />
+    <QtUic Include="ui\main_window.ui" />
+    <QtUic Include="ui\main_window\cell_view.ui" />
+    <QtUic Include="ui\main_window\default_object_window.ui" />
+    <QtUic Include="ui\main_window\delete_form_dialog.ui" />
+    <QtUic Include="ui\main_window\file_metadata_window.ui" />
+    <QtUic Include="ui\main_window\form_use_info.ui" />
+    <QtUic Include="ui\main_window\game_setting_window.ui" />
+    <QtUic Include="ui\main_window\load_window.ui" />
+    <QtUic Include="ui\main_window\log_window.ui" />
+    <QtUic Include="ui\main_window\object_window.ui" />
+    <QtUic Include="ui\main_window\save_window.ui" />
+    <QtUic Include="ui\main_window\script_window_package.ui" />
+    <QtUic Include="ui\main_window\script_window_single.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="ui\resources\resources.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2019.vcxproj">
+      <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\miniz\miniz.vcxproj">
+      <Project>{28161b06-6b94-4a77-84c1-29125df58551}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\zlib\zlib.vcxproj">
+      <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Lua\Lua.vcxproj">
+      <Project>{c298946c-9949-4d6e-9802-4c614cde3718}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lz4\lz4.vcxproj">
+      <Project>{02c8f0a9-3325-46e7-8857-9fd6d7332bce}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DovahKit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="dovahscript\_docs\abstract.txt" />
+    <Text Include="dovahscript\_docs\case studies.txt" />
+    <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />
+    <Text Include="dovahscript\_docs\cross-thread tasks.txt" />
+    <Text Include="dovahscript\_docs\dovahscript resources.txt" />
+    <Text Include="dovahscript\_docs\eval scripts.txt" />
+    <Text Include="dovahscript\_docs\lifetime management.txt" />
+    <Text Include="dovahscript\_docs\classes in Lua.txt" />
+    <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />
+    <Text Include="dovahscript\_docs\ui - model observer property handlers.txt" />
+    <Text Include="dovahscript\_docs\ui - model observers.txt" />
+    <Text Include="dovahscript\_docs\userdata wrappers.txt" />
+    <Text Include="dovahscript\_docs\zombie wrappers.txt" />
+    <Text Include="dovah\form stub addenda.txt" />
+    <Text Include="dovah\_docs\basics.txt" />
+    <Text Include="dovah\_docs\conditions.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
+    <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
+    <Text Include="dovah\_docs\extra data.txt" />
+    <Text Include="dovah\_docs\feature list.txt" />
+    <Text Include="dovah\_docs\form stubs.txt" />
+    <Text Include="dovah\_docs\form versions 43 and 44.txt" />
+    <Text Include="dovah\_docs\game settings.txt" />
+    <Text Include="dovah\_docs\how the game loads forms.txt" />
+    <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
+    <Text Include="dovah\_docs\persistent cells.txt" />
+    <Text Include="dovah\_docs\plugin types.txt" />
+    <Text Include="dovah\_docs\reading files.txt" />
+    <Text Include="dovah\_docs\singleton forms.txt" />
+    <Text Include="dovah\_docs\threading.txt" />
+    <Text Include="dovah\_docs\topic infos%27 placement in topics%27 info lists.txt" />
+    <Text Include="dovah\_docs\use info build process - extra data.txt" />
+    <Text Include="dovah\_docs\use info build process.txt" />
+    <Text Include="editor\scripting\_docs\abstract.txt" />
+    <Text Include="editor\scripting\_docs\case studies.txt" />
+    <Text Include="editor\scripting\_docs\lua-managed resources.txt" />
+    <Text Include="editor\scripting\_docs\native classes.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observer property handlers.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observers.txt" />
+    <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
+    <Text Include="editor\scripting\_docs\ui.txt" />
+    <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
+    <Text Include="ui\_docs\FormPicker.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovah\forms\impl\form_subclass_components.txt" />
+    <None Include="userdata\scripts\simple\count persistent refs.lua" />
+    <None Include="userdata\scripts\simple\dialogue search.lua" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
