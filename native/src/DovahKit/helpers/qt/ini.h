@@ -1,6 +1,9 @@
 #pragma once
+#include <concepts>
 #include <QObject>
+#include <QPointer>
 #include <QVariant>
+#include "../passkey.h"
 
 //
 // TODO:
@@ -40,6 +43,21 @@
 //       Skyrim's INI settings and their default values within the `dovah` folder in a Qt-independent manner, 
 //       even if I have the frontend, Dovahscript, render window, etc., all rely on this system here to actually 
 //       load and work with Skyrim.ini.
+// 
+//  - Arbitrary structs are supported as values given the following details:
+// 
+//     - The values are serialized as strings.
+// 
+//     - You must register the struct type using Q_DECLARE_METATYPE.
+// 
+//     - You must register a "converter" from the struct to QString using either of these methods:
+// 
+//        - QMetaType::registerConverter(&T::toString);
+//        - QMetaType::registerConverter(&myStructToString); // given: extern QString myStructToString(const T&);
+// 
+//     - You must register a "converter" from QString to the struct using:
+// 
+//        - QMetaType::registerConverter(&stringToMyStruct); // given: extern T stringToMyString(const QString&);
 //
 
 namespace cobb::qt::ini {
@@ -64,6 +82,7 @@ namespace cobb::qt::ini {
          const QString name;     // case-sensitive at run-time, but different cases are accepted when loading from a file
          const QString category; // case-sensitive at run-time, but different cases are accepted when loading from a file
          const SettingSerializationType serializationType = SettingSerializationType::Undefined;
+         const int qMetaTypeID;
       protected:
          struct {
             const QVariant initial;
@@ -82,6 +101,9 @@ namespace cobb::qt::ini {
 
          void discardPendingValue();
          void commitPendingValue();
+
+         void load(QStringRef);
+         QString currentValueString() const noexcept;
 
       signals:
          void pendingValueDiscarded();
@@ -122,23 +144,69 @@ namespace cobb::qt::ini {
          //
          
       protected:
-         QHash<QString, QVector<Setting*>> _by_category;
-
-         // If a (Setting) is removed because someone called setParent on it for some reason, 
-         // take it out of our by-category map. Also adds new settings to the map.
-         virtual void childEvent(QChildEvent* event) override;
+         QHash<QString, QVector<QPointer<Setting>>> _by_category;
+         QVector<QPointer<Setting>> _all_settings;
+         QChar _comment_char = ';';
 
       public:
+         void _addSetting(cobb::passkey<File, Setting>, Setting&);
+
+         Setting* setting(const QString& category, const QString& name, Qt::CaseSensitivity) const noexcept;
          Setting* setting(const QString& category, const QString& name) const noexcept;
          Setting* setting(const QString& name) const noexcept;
          QList<QString> categoryNames() const noexcept;
          QVector<Setting*> settingsByCategory(const QString& category) const noexcept;
+
+         QString categoryNameCanonicalCase(const QString& name) const noexcept; // given a category named "FooBar", converts "FoObAr", "foobar", etc., to "FooBar"; returns empty string if category doesn't exist
 
          void commitPendingChanges();
          void discardPendingChanges();
 
          void load(const QString& text);
          QString save(); // also commits any pending changes
-         QString save(const QString& old); // attempts to preserve the whitespace, comments, etc., of (old) while writing the new values in place
+         QString save(const QString& old); // given existing INI file content (old), attempts to preserve the whitespace, comments, order, etc., of (old) while writing the new values in place and adding any missing data
+   };
+
+   // This concept matches any function which takes no arguments and returns a File&.
+   template<typename T> concept IsFileGetter = requires(T g) { { g() } -> std::same_as<File&>; };
+
+   //
+   // Helper class for references to a setting, when your code plans on using the setting 
+   // frequently. Given a FileGetter (which would presumably lazy-construct the File in a 
+   // manner similar to a Meyers singleton) and the setting category and name, this class 
+   // will retrieve the setting on demand and then cache it for later. Essentially, you 
+   // can do:
+   // 
+   //    // given static File& GetMainINI():
+   //    static SettingPointer sMySetting = SettingPointer(&GetMainINI, "General", "sMySetting");
+   // 
+   // and then you'll be able to retrieve the setting the first time you access sMySetting, 
+   // with the class caching the pointer for you automatically.
+   // 
+   // You can alternatively also do the following, but doing it across your code may cause 
+   // a lot of lookups to happen all at once, on startup:
+   // 
+   //    static Setting* sMySetting = GetMainINI().setting("General", "sMySetting");
+   //
+   template<typename FileGetter> requires IsFileGetter<FileGetter>
+   class SettingPointer {
+      protected:
+         QPointer<Setting> setting = nullptr;
+         //
+         const FileGetter getter;
+         const QString    name;
+         const QString    category;
+
+      public:
+         SettingPointer(FileGetter g, const QString& category, const QString& name) : getter(g), name(name), category(category) {}
+
+         Setting* get() {
+            if (this->setting)
+               return this->setting;
+            this->setting = (this->getter()).setting(this->category, this->name);
+         }
+
+         Setting* operator->() { return this->get(); }
+         Setting& operator*() { return *this->get(); }
    };
 }
