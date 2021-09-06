@@ -1,5 +1,7 @@
 #include "ini.h"
-#include <QChildEvent>
+#include <QFile>
+#include <QSaveFile>
+#include <QTextStream>
 
 namespace {
    QString _extractCategoryName(QStringRef view, QChar comment_char) {
@@ -193,8 +195,9 @@ namespace cobb::qt::ini {
    #pragma endregion
 
    #pragma region File
-   File::File(std::initializer_list<_CategoryConstructParams> cats, QObject* parent) : QObject(parent) {
-      for (auto& cat : cats) {
+   File::File(_FileConstructParams params, QObject* parent) : QObject(parent) {
+      this->_path = params.path;
+      for (auto& cat : params.categories) {
          QString cn = cat.name;
          this->_by_category[cn].reserve(cat.settings.size());
          for (auto& s : cat.settings)
@@ -279,7 +282,49 @@ namespace cobb::qt::ini {
             s->discardPendingValue();
    }
 
-   void File::load(const QString& text) {
+   void File::setPath(QString path) {
+      this->_path = path;
+   }
+
+   bool File::load() {
+      if (this->_path.isEmpty())
+         return false;
+      QString text;
+      {
+         QFile file(this->_path);
+         if (!file.open(QIODevice::ReadOnly))
+            return false;
+         text = QString::fromUtf8(file.readAll());
+      }
+      this->importFromString(text);
+      return true;
+   }
+   bool File::save(bool preserve_formatting) {
+      if (this->_path.isEmpty())
+         return false;
+      QString data;
+      if (preserve_formatting) {
+         QFile file(this->_path);
+         if (!file.open(QIODevice::ReadOnly))
+            return false;
+         data = QString::fromUtf8(file.readAll());
+         data = this->exportToString(data);
+      }
+      QSaveFile file(this->_path);
+      if (file.open(QIODevice::WriteOnly)) {
+         if (!preserve_formatting) {
+            data = this->exportToString();
+         }
+         QTextStream stream(&file);
+         stream.setCodec("UTF-8");
+         stream << data;
+         file.commit();
+         return true;
+      }
+      return false;
+   }
+
+   void File::importFromString(const QString& text) {
       QString category;
       //
       int i    = 0;
@@ -291,7 +336,7 @@ namespace cobb::qt::ini {
             if (j < 0)
                j = size;
             line = QStringRef(&text, i, j - i).trimmed();
-            i = j;
+            i = j + 1;
          }
          if (line.isEmpty())
             continue;
@@ -337,7 +382,7 @@ namespace cobb::qt::ini {
       }
    }
 
-   QString File::save() {
+   QString File::exportToString() {
       QString out;
       //
       auto& map = this->_by_category;
@@ -384,11 +429,13 @@ namespace cobb::qt::ini {
          _PendingCategory(const QString& n, const QString& h) : name(n), header(h) {}
 
          QString toString() const noexcept {
+            if (this->header.isEmpty()) // can happen for content at the start of the file, outside of any section
+               return this->body;
             return QString("%1\n%2").arg(this->header).arg(this->body);
          }
       };
    }
-   QString File::save(const QString& old) { // attempts to preserve the whitespace, comments, etc., of (old) while writing the new values in place
+   QString File::exportToString(const QString& old) { // attempts to preserve the whitespace, comments, etc., of (old) while writing the new values in place
       QString out;
       //
       _PendingCategory current;
@@ -404,10 +451,11 @@ namespace cobb::qt::ini {
             if (j < 0)
                j = size;
             line = QStringRef(&old, i, j - i).trimmed();
-            i = j;
+            i = j + 1;
          }
          if (line.trimmed().isEmpty()) {
             current.body += line;
+            current.body += '\n';
             continue;
          }
          //
@@ -415,6 +463,7 @@ namespace cobb::qt::ini {
             auto cn = _extractCategoryName(line, this->_comment_char);
             if (cn.isEmpty()) { // bad line
                current.body += line;
+               current.body += '\n';
                continue;
             }
             //
@@ -442,12 +491,14 @@ namespace cobb::qt::ini {
          int equal_at   = line.indexOf('=');
          if (equal_at < 0 || (comment_at >= 0 && equal_at > comment_at)) { // invalid line, entire line is a comment, etc.
             current.body += line;
+            current.body += '\n';
             continue;
          }
          QString  name    = line.mid(0, equal_at).trimmed().toString();
          Setting* setting = this->setting(current.name, name, Qt::CaseInsensitive);
          if (!setting) {
             current.body += line;
+            current.body += '\n';
             continue;
          }
          current.found_settings.push_back(setting);
@@ -481,7 +532,7 @@ namespace cobb::qt::ini {
                   for (first_space_at = comment_at - 1; first_space_at > 0; --first_space_at)
                      if (!line[first_space_at].isSpace())
                         break;
-                  current.body += line.mid(first_space_at);
+                  current.body += line.mid(first_space_at + 1);
                } else {
                   current.body += line.mid(comment_at);
                }
@@ -490,7 +541,7 @@ namespace cobb::qt::ini {
                   for (first_space_at = line.size() - 1; first_space_at > 0; --first_space_at)
                      if (!line[first_space_at].isSpace())
                         break;
-                  current.body += line.mid(first_space_at);
+                  current.body += line.mid(first_space_at + 1);
                }
             }
          }
@@ -501,10 +552,11 @@ namespace cobb::qt::ini {
       for (Setting* s : this->settingsByCategory(current.name)) {
          if (current.found_settings.contains(s))
             continue;
+         if (!out.isEmpty())
+            out += '\n';
          out += s->name;
          out += '=';
          out += s->currentValueString();
-         out += '\n';
       }
       //
       // Write any missing categories:
@@ -512,12 +564,12 @@ namespace cobb::qt::ini {
       for (const auto& cat : missing) {
          if (!out.isEmpty())
             out += "\n\n";
-         out += QString("[%1]\n").arg(cat);
+         out += QString("[%1]").arg(cat);
          for (Setting* s : this->settingsByCategory(cat)) {
+            out += '\n';
             out += s->name;
             out += '=';
             out += s->currentValueString();
-            out += '\n';
          }
       }
       //

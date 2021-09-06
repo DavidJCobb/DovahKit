@@ -36,6 +36,7 @@
 #include "main_window/_debug_hooks/form_picker_debug.h"
 #include "main_window/_debug_hooks/canvas_widget_tests.h"
 #include "main_window/_debug_hooks/lua_resource_manager_tests.h"
+#include "main_window/_debug_hooks/qt_ini_tests.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -349,6 +350,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    QObject::connect(this->ui.actionDebugTestLuaRMResearch, & QAction::triggered, this, [this]() {
       DovahKitDebug::run_lua_resource_manager_tests(this);
    });
+   {
+      auto* action = new QAction("Debug: test Qt INI helper", this);
+      this->ui.menuDebug->addAction(action);
+      QObject::connect(action, &QAction::triggered, this, [this]() {
+         DovahKitDebug::debug_qt_ini_helpers(this);
+      });
+   }
    #pragma endregion
 }
 

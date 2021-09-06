@@ -1,5 +1,6 @@
 #pragma once
 #include <concepts>
+#include <QDir>
 #include <QObject>
 #include <QPointer>
 #include <QVariant>
@@ -124,9 +125,13 @@ namespace cobb::qt::ini {
             QString name;
             std::initializer_list<_SettingConstructParams> settings;
          };
+         struct _FileConstructParams {
+            QString path;
+            std::initializer_list<_CategoryConstructParams> categories;
+         };
 
          File(QObject* parent = nullptr) : QObject(parent) {}
-         File(std::initializer_list<_CategoryConstructParams>, QObject* parent = nullptr); // automatically heap-allocate Setting instances
+         File(_FileConstructParams, QObject* parent = nullptr); // automatically heap-allocate Setting instances
 
          //
          // e.g.
@@ -147,6 +152,7 @@ namespace cobb::qt::ini {
          QHash<QString, QVector<QPointer<Setting>>> _by_category;
          QVector<QPointer<Setting>> _all_settings;
          QChar _comment_char = ';';
+         QString _path;
 
       public:
          void _addSetting(cobb::passkey<File, Setting>, Setting&);
@@ -162,9 +168,18 @@ namespace cobb::qt::ini {
          void commitPendingChanges();
          void discardPendingChanges();
 
-         void load(const QString& text);
-         QString save(); // also commits any pending changes
-         QString save(const QString& old); // given existing INI file content (old), attempts to preserve the whitespace, comments, order, etc., of (old) while writing the new values in place and adding any missing data
+         inline QString path() const noexcept { return this->_path; }
+         void setPath(QString);
+         
+         // Load/save functions require that there be a non-empty path. They're provided for convenience; 
+         // you can just as easily call the import/export functions yourself and manage QFiles, etc., to 
+         // get the data where it needs to go.
+         bool load();
+         bool save(bool preserve_formatting = false);
+
+         void importFromString(const QString& text);
+         QString exportToString();
+         QString exportToString(const QString& old); // given existing INI file content (old), attempts to preserve the whitespace, comments, order, etc., of (old) while writing the new values in place and adding any missing data
    };
 
    // This concept matches any function which takes no arguments and returns a File&.
