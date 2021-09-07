@@ -32,6 +32,7 @@ namespace cobb::qt::ini {
       (widget->*setter)(data.value<std::decay_t<value_type>>());
       //
       QObject::connect(&setting, &Setting::pendingValueDiscarded, widget, [widget, setter, &setting]() {
+         const auto blocker = QSignalBlocker(widget);
          (widget->*setter)(setting.currentValue().value<std::decay_t<value_type>>());
       }, Qt::ConnectionType::QueuedConnection);
       //
@@ -56,6 +57,7 @@ namespace cobb::qt::ini {
       (widget->*setter)(data.value<std::decay_t<value_type>>());
       //
       QObject::connect(&setting, &Setting::pendingValueDiscarded, widget, [widget, setter, &setting]() {
+         const auto blocker = QSignalBlocker(widget);
          (widget->*setter)(setting.currentValue().value<std::decay_t<value_type>>());
       }, Qt::ConnectionType::QueuedConnection);
       //

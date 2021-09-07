@@ -100,6 +100,32 @@ namespace cobb::qt::ini {
          void setCurrentValue(const QVariant&) noexcept; // an invalid variant resets the value to its initial
          void setPendingValue(const QVariant&) noexcept; // an invalid variant clears the pending value
 
+         inline bool hasPendingValue() const noexcept { return this->pendingValue().isValid(); }
+         inline QVariant pendingOrCurrentValue() const noexcept {
+            auto data = this->pendingValue();
+            if (!data.isValid())
+               data = this->currentValue();
+            return data;
+         }
+
+         template<typename T> requires (!std::constructible_from<QVariant, T>) void setCurrentValue(T value) {
+            this->setCurrentValue(QVariant::fromValue<T>(value));
+         }
+         template<typename T> requires (!std::constructible_from<QVariant, T>) void setPendingValue(T value) {
+            this->setPendingValue(QVariant::fromValue<T>(value));
+         }
+
+         // Helper for struct-type settings. Call setting->modifyPendingValue<StructType>(...) passing 
+         // a function pointer or lambda as an argument; the function should take a non-const reference 
+         // to a struct to modify, and return void.
+         template<typename T, typename functor_type> requires std::is_invocable_v<functor_type, T&>
+         void modifyPendingValue(functor_type f) {
+            auto data  = this->pendingOrCurrentValue();
+            auto value = data.isValid() ? data.value<T>() : T{};
+            f(value);
+            this->setPendingValue(value);
+         }
+
          void discardPendingValue();
          void commitPendingValue();
 

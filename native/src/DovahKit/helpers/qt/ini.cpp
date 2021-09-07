@@ -305,10 +305,16 @@ namespace cobb::qt::ini {
       QString data;
       if (preserve_formatting) {
          QFile file(this->_path);
-         if (!file.open(QIODevice::ReadOnly))
-            return false;
-         data = QString::fromUtf8(file.readAll());
-         data = this->exportToString(data);
+         if (!file.open(QIODevice::ReadOnly)) {
+            //
+            // If there's no original file, then there's no formatting to preserve. 
+            // Do a normal save.
+            //
+            preserve_formatting = false;
+         } else {
+            data = QString::fromUtf8(file.readAll());
+            data = this->exportToString(data);
+         }
       }
       QSaveFile file(this->_path);
       if (file.open(QIODevice::WriteOnly)) {
