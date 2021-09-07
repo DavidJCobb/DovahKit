@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include "../../../helpers/qt/ini.h"
+#include "../../../helpers/qt/ini/binding.h"
 
 namespace {
    using File    = cobb::qt::ini::File;
@@ -46,19 +47,15 @@ namespace DovahKitDebug {
          auto* setting      = ini.setting("General", "bTestSetting");
          {
             auto value = setting->currentValue().toBool();
-            checkbox_set->setChecked(value);
             checkbox_get->setChecked(value);
             checkbox_get->setEnabled(false);
          }
-         QObject::connect(checkbox_set, &QCheckBox::toggled, dialog, [setting](bool checked) {
-            setting->setPendingValue(checked);
-         });
-         QObject::connect(setting, &Setting::valueChanged, dialog, [checkbox_get](QVariant old, const QVariant& now) {
+         QObject::connect(setting, &Setting::valueChanged, dialog, [checkbox_get](QVariant old, const QVariant& now) { // "echo" widget handler, to show the current value
             checkbox_get->setChecked(now.toBool());
          }, Qt::ConnectionType::QueuedConnection);
-         QObject::connect(setting, &Setting::pendingValueDiscarded, dialog, [setting, checkbox_set]() {
-            checkbox_set->setChecked(setting->currentValue().toBool());
-         }, Qt::ConnectionType::QueuedConnection);
+         //
+         cobb::qt::ini::bindSettingControl(*setting, checkbox_set, &QCheckBox::setChecked, &QCheckBox::toggled); // setter widget handler, to work with the pending value
+         //
          layout->addWidget(checkbox_get, row, 0);
          layout->addWidget(checkbox_set, row, 1);
          ++row;
@@ -87,5 +84,6 @@ namespace DovahKitDebug {
       //
       dialog->exec();
       delete dialog;
+      ini.discardPendingChanges(); // discard any pending changes when the dialog is closed
    }
 }

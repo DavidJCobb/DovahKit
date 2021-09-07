@@ -422,6 +422,7 @@
     <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\font.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
+    <ClCompile Include="helpers\qt\ini.cpp" />
     <ClCompile Include="helpers\qt\layout.cpp" />
     <ClCompile Include="helpers\qt\minimize_intent.cpp" />
     <ClCompile Include="helpers\qt\ownership.cpp" />
@@ -514,8 +515,11 @@
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="helpers\qt\ini\binding.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\qt_ini_tests.h" />
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
     <ClInclude Include="dovahscript\api_helpers\model_observers.h" />
     <ClInclude Include="dovahscript\api_helpers\model_observer_property_handlers.h" />
@@ -903,6 +907,7 @@
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\font.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
+    <QtMoc Include="helpers\qt\ini.h" />
     <ClInclude Include="helpers\qt\layout.h" />
     <ClInclude Include="helpers\qt\minimize_indent.h" />
     <ClInclude Include="helpers\qt\ownership.h" />
