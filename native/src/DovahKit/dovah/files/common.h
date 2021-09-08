@@ -104,6 +104,7 @@ namespace dovah {
          enum {
             deleted    = 0x00000020,
             persistent = 0x00000400, // only used for some forms, including REFR and CELL
+            ignored    = 0x00001000, // used at run-time in the Creation Kit; prevents a form from being saved; shouldn't appear in files
             partial    = 0x00004000,
             compressed = 0x00040000,
          };

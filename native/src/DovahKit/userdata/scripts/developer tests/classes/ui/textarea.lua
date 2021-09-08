@@ -1,10 +1,10 @@
-subject = ui.textbox.new("initial")
+subject = ui.textarea.new("initial")
 
 subject.max_length  = 50
 subject.placeholder = "placeholder text"
 
-subject:on("AfterChanged", "", function(v)
-   dovah.log_message("event AfterChanged: %s", tostring(v))
+subject:on("OnCommitted", "", function(v)
+   dovah.log_message("event OnCommitted: %s", tostring(v))
 end)
 subject:on("OnInputRejected", "", function()
    dovah.log_message("event OnInputRejected")

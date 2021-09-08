@@ -7,10 +7,8 @@
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
 
-
-#ifndef _DEBUG
-   #pragma message("WARNING: Are you compiling in Release? The backend is incomplete: MagicEffect is mostly a placeholder.")
-#endif
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for MagicEffect is incomplete.");
 
 namespace dovah::loaded_forms {
    class MagicEffect : public Form {

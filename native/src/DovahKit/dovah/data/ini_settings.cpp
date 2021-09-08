@@ -1,3 +1,25 @@
+/*
+
+   This file contains data mined from The Elder Scrolls: Skyrim, including text strings.
+   What pieces of text are long and distinctive enough to be copyrightable are the sole
+   intellectual property of Bethesda Game Studios. DovahKit's author is operating under
+   the good-faith belief that the project's use of this data-mined text falls under fair
+   use -- that DovahKit as a whole is sufficiently transformative.
+
+   The portions of this document that do not consist of data mined from Skyrim are code
+   provided under the Creative Commons 0 License; they are public domain or the closest
+   legal equivalent.
+   <https://creativecommons.org/publicdomain/zero/1.0/legalcode>
+   <https://creativecommons.org/publicdomain/zero/1.0/>
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 #include "ini_settings.h"
 #include <cassert>
 

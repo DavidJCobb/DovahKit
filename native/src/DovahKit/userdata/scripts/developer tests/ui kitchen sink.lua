@@ -5,8 +5,8 @@ local show_c  = ui.text.new()
 window:set_layout("grid")
 window:add_child(input, 1, 1, 1, 2)
 do
-   window:add_child(ui.text.new("OnChanged:"),    2, 1)
-   window:add_child(ui.text.new("OnKeyPressed:"), 3, 1)
+   window:add_child(ui.text.new("AfterChanged:"), 2, 1)
+   window:add_child(ui.text.new("OnChanged:"),   3, 1)
    window:add_child(show_c,  2, 2)
    window:add_child(show_kp, 3, 2)
    --
@@ -15,10 +15,10 @@ do
 end
 
 input.placeholder = "Test!"
-input:on("OnChanged", "", function(text)
+input:on("AfterChanged", "", function(text)
    show_c.text = text
 end)
-input:on("OnKeyPressed", "", function(text)
+input:on("OnChanged", "", function(text)
    show_kp.text = text
 end)
 show_c.text, show_kp.text = input.placeholder, input.placeholder

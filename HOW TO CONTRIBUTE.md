@@ -1,3 +1,4 @@
+#How to contribute
 
 In order to contribute to DovahKit, you'll need to set up your build environment:
 
@@ -19,7 +20,7 @@ GitHub has an equivalent clause in their Terms of Service (when contributing to 
 
 The help manual (when we create one...) is licensed under CC0 so that people can share excerpts, etc., without having to bundle any raw source files or program code used to create and publish the help manual. That is: if we design the help manual so that it is initially written in a raw format, with a program used to generate human-readable HTML, users should not have to bundle that program and its source in order to share the help manual or excerpts from the manual.
 
-Everything else is under GPLv3, which stipulates that:
+Other contributions are under GPLv3, which stipulates that:
 
 * Users can redistribute the program without having to ask for permission.
 * Users can create their own forks of the program without having to ask for permission.
@@ -29,7 +30,7 @@ Everything else is under GPLv3, which stipulates that:
 It's my understanding that any original content (i.e. content wholly created or owned by you) that you license to this project under GPLv3 remains yours. People can take that content from this repo and use it under the terms of GPLv3, but you can still share that content with other parties, or use it in your own works, under any license you wish, without any interference from this project or its maintainers.
 
 
-== Tips ==
+## Tips
 
 In order to build a copy of DovahKit suitable for redistribution, with all Qt DLLs in place, you must:
 
@@ -42,6 +43,6 @@ In order to build a copy of DovahKit suitable for redistribution, with all Qt DL
 When committing to the repo, please refrain from committing an updated project file unless you have changed this setting back to "No" first.
 
 
-=== Working with the Dovahscript engine ===
+### Working with the Dovahscript engine
 
 The Dovahscript engine allows users to run Lua scripts on a worker thread, with the engine handling cross-thread communication and allowing scripts to control UI widgets and similar. Multithreaded systems like these can be tricky to write and maintain. When making changes to the script engine, please test in both the Debug and Release configurations. Race conditions and other threading mishaps can be sensitive to execution speeds (relative and absolute), so testing in only one configuration may cause you to miss potential problems (be they of your making or mine) and contribute broken code.

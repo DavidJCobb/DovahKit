@@ -280,7 +280,7 @@ namespace dovah::loaded_forms {
                flatter                          = 'FLAT',
                follow                           = 'FOLL',
                reject                           = 'FRJT',
-               fvdl                             = 'FVDL', // Follower Voice Dialogue?
+               fvdl                             = 'FVDL', // Follower Voice Dialogue? called "Custom" in-engine
                gift                             = 'GIFF',
                goodbye                          = 'GBYE', // the player has exited dialogue with the speaker
                group_strategy                   = 'GRST', // 

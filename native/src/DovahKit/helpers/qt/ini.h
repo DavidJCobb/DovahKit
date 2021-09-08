@@ -1,3 +1,19 @@
+/*
+
+This file is provided under the Creative Commons 0 License.
+License: <https://creativecommons.org/publicdomain/zero/1.0/legalcode>
+Summary: <https://creativecommons.org/publicdomain/zero/1.0/>
+
+One-line summary: This file is public domain or the closest legal equivalent.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 #pragma once
 #include <concepts>
 #include <QDir>
@@ -6,13 +22,6 @@
 #include <QVariant>
 #include "../passkey.h"
 
-//
-// TODO:
-// 
-//  - Settings with structs should rely on Qt meta-type converters for serialization and loading; see answers at:
-//    <https://stackoverflow.com/questions/23984421/custom-type-in-qvariant-converts-to-empty-string>
-// 
-//  - File load/save code
 // 
 // USAGE GUIDE:
 // 
@@ -130,14 +139,16 @@ namespace cobb::qt::ini {
             QVariant pending; // invalid variant == no pending changes
          } values;
 
+         bool _typeCheckValue(const QVariant&) const noexcept;
+
       public:
          File* file() const noexcept;
 
          inline QVariant initialValue() const noexcept { return this->values.initial; }
          inline QVariant currentValue() const noexcept { return this->values.current; }
          inline QVariant pendingValue() const noexcept { return this->values.pending; }
-         void setCurrentValue(const QVariant&) noexcept; // an invalid variant resets the value to its initial
-         void setPendingValue(const QVariant&) noexcept; // an invalid variant clears the pending value
+         void setCurrentValue(const QVariant&) noexcept; // an invalid variant resets the value to its initial. a variant not convertible to the setting's qMetaTypeID is ignored and no change is made.
+         void setPendingValue(const QVariant&) noexcept; // an invalid variant clears the pending value. a variant not convertible to the setting's qMetaTypeID is ignored and no change is made.
 
          inline bool hasPendingValue() const noexcept { return this->pendingValue().isValid(); }
          inline QVariant pendingOrCurrentValue() const noexcept {

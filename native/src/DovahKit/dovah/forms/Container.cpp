@@ -1,9 +1,8 @@
 #include "Container.h"
 #include "_common_cpp.h"
 
-#ifndef _DEBUG
-   #pragma message("WARNING: Are you compiling in Release? The backend is incomplete: Container is missing save code, and possibly other things.")
-#endif
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for Containers is incomplete (missing save code; maybe other stuff).");
 
 namespace dovah::loaded_forms {
    void Container::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {

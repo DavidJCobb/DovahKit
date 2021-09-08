@@ -4,9 +4,8 @@
 #include "Form.h"
 #include "_common.h"
 
-#ifndef _DEBUG
-   #pragma message("WARNING: Are you compiling in Release? The backend is incomplete: Package is an empty class.")
-#endif
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for Package is incomplete.");
 
 namespace dovah::loaded_forms {
    class Package : public Form {
