@@ -1,4 +1,4 @@
-#How to contribute
+# How to contribute
 
 In order to contribute to DovahKit, you'll need to set up your build environment:
 
