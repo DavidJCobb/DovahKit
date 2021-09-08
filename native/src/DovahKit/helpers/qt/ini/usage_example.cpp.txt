@@ -1,0 +1,267 @@
+#include "usage_example.h"
+#include "binding.h"
+
+#include <QApplication>
+#include <QCheckBox>
+#include <QDialog>
+#include <QGridLayout>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QSpinBox>
+
+namespace Example {
+   //
+   // In our getter, we heap-allocate the INI file, both to guard against the 
+   // static initialization order fiasco (which can break QObjects) and to 
+   // guard against QObject lifetime management (parent objects delete their 
+   // children; if the children are static, then that's deletion of something 
+   // that was never allocated on the heap).
+   //
+   // One of our INI settings uses a struct type as its value, so we need to 
+   // register converter functions within Qt so that QVariant can automatically 
+   // convert between the struct and QString. That has to be done before the 
+   // file is loaded or the settings are accessed, so this is a good place to 
+   // do it.
+   //
+   // Of course, we also have to remember to actually load the file.
+   //
+   cobb::qt::ini::File& get_ini() {
+      static File* instance = nullptr;
+      if (instance)
+         return *instance;
+      QMetaType::registerConverter(&MyStruct::toString);
+      QMetaType::registerConverter<QString, MyStruct>(&MyStruct::fromString);
+      //
+      // We can define our INI file's path, categories, and settings all in one 
+      // go.
+      //
+      instance = new File({
+         .path       = "test_ini.ini",
+         .categories = {
+            {  .name     = "General",
+               .settings = {
+                  { "bTestSetting", true },
+                  { "iTestSetting", 5 },
+                  { "xTestSetting", QVariant::fromValue<MyStruct>({ 1, "Initial" }) },
+               }
+            },
+         }
+      });
+      instance->load();
+      return *instance;
+   }
+
+   //
+   // To clarify, you want to AVOID doing THIS in the global scope or in a 
+   // namespace scope:
+   //
+   //    static File my_file = ...;
+   //
+   //    static Setting my_setting = ...;
+   //
+   // That leaves you vulnerable to the static initialization order fiasco, 
+   // which results from there being no well-defined order in which static 
+   // objects defined in different files are constructed. You can have an 
+   // instance of a QObject subclass be constructed before the QMetaObject 
+   // (Qt RTTI) for its own class is constructed, for example, which breaks 
+   // virtually all QObject-related functionality. That's why code like the 
+   // following can crash when in the global scope or a namespace scope:
+   //
+   //   static QString errorMessage = QObject::tr("some error message");
+   //
+   // The way we define our file and settings above, using a Meyers singleton-
+   // style getter, ensures that we avoid this issue. It unfortunately means 
+   // that the initial access to any Setting has to go through the File, 
+   // rather than being direct, but you can always cache the pointer for 
+   // faster access.
+   //
+
+   //
+   // Here are our converters. Our example struct stores a number and a string, 
+   // and we store it in the format `number:string`.
+   //
+   /*static*/ MyStruct MyStruct::fromString(const QString& text) {
+      auto view = QStringRef(&text).trimmed();
+      auto i    = view.indexOf(':');
+      if (i <= 0)
+         return MyStruct{};
+      bool ok;
+      int  value = view.left(i).toInt(&ok);
+      if (!ok)
+         return MyStruct{};
+      //
+      MyStruct out;
+      out.number = value;
+      out.text   = view.mid(i + 1).toString();
+      return out;
+   }
+   QString MyStruct::toString() const noexcept {
+      return QString("%1:%2").arg(this->number).arg(this->text);
+   }
+
+   //
+   // And here's our options dialog example. Our dialog will write moment-to-moment 
+   // changes to a setting's pending value, so that we don't have to rely exclusively 
+   // on UI state. If the user decides to discard those changes or commit them, we 
+   // can easily do that en masse for all settings.
+   //
+   extern void debug_qt_ini_helpers(QWidget* parent) {
+      auto* dialog = new QDialog(parent);
+      auto* layout = new QGridLayout(dialog);
+      dialog->setLayout(layout);
+      //
+      auto& ini = get_ini();
+      int   row = 0;
+      {
+         //
+         // Let's start with a simple boolean option. We'll spawn two checkboxes: one to display 
+         // the setting's current value, and another to edit the pending value. You'll see that 
+         // when the user saves their changes, the former checkbox updates to reflect the changes.
+         //
+         // For a normal options dialog, you'd only have the "edit" checkbox. This example adds a 
+         // checkbox for displaying the value for demonstration and testing purposes.
+         //
+         auto* checkbox_set = new QCheckBox("bTestSetting");
+         auto* checkbox_get = new QCheckBox("bTestSetting echo");
+         auto* setting      = ini.setting("General", "bTestSetting");
+         {
+            auto value = setting->currentValue().toBool();
+            checkbox_get->setChecked(value);
+            checkbox_get->setEnabled(false);
+         }
+         //
+         // The checkbox for displaying the setting's current value will need signals in order to 
+         // reflect the user's changes as those changes are saved. We'll use a "queued connection" 
+         // for reasons that will be explained further below, when we dive into the "save" button.
+         //
+         QObject::connect(setting, &Setting::valueChanged, dialog, [checkbox_get](QVariant old, const QVariant& now) { // "echo" widget handler, to show the current value
+            checkbox_get->setChecked(now.toBool());
+         }, Qt::ConnectionType::QueuedConnection);
+         //
+         // Let's use a helper function to quickly wire up our "edit" checkbox to the setting:
+         //
+         cobb::qt::ini::bindSettingControl(*setting, checkbox_set, &QCheckBox::setChecked, &QCheckBox::toggled); // setter widget handler, to work with the pending value
+         //
+         layout->addWidget(checkbox_get, row, 0);
+         layout->addWidget(checkbox_set, row, 1);
+         ++row;
+      }
+      {
+         //
+         // Now, let's try out our struct option. We have a spinbox to edit the number, and a 
+         // textbox to edit the string. As with our boolean option, we have controls to display 
+         // the current value and controls to edit the pending value.
+         //
+         auto* spinbox_get = new QSpinBox;
+         auto* spinbox_set = new QSpinBox;
+         auto* textbox_get = new QLineEdit;
+         auto* textbox_set = new QLineEdit;
+         auto* setting     = ini.setting("General", "xTestSetting");
+         textbox_get->setPlaceholderText("xTestSetting echo");
+         textbox_set->setPlaceholderText("xTestSetting");
+         {
+            auto value = setting->currentValue().value<INIValueTestStruct>();
+            spinbox_get->setEnabled(false);
+            spinbox_get->setValue(value.number);
+            spinbox_set->setValue(value.number);
+            textbox_get->setEnabled(false);
+            textbox_get->setText(value.text);
+            textbox_set->setText(value.text);
+         }
+         QObject::connect(setting, &Setting::valueChanged, dialog, [spinbox_get, textbox_get](QVariant old, const QVariant& now) { // "echo" widget handler, to show the current value
+            auto value = now.value<INIValueTestStruct>();
+            spinbox_get->setValue(value.number);
+            textbox_get->setText(value.text);
+         }, Qt::ConnectionType::QueuedConnection);
+         //
+         // Unfortunately, the `cobb::qt::ini::bindSettingControl` helper function that we used 
+         // above can only effectively handle a single control controlling the entirety of a single 
+         // value. For a struct, we need to do things by hand.
+         //
+         // First, we want to reset the "edit" controls whenever the pending value is discarded. 
+         // A program may wish to offer a button to discard all pending changes, or a button to 
+         // reload the INI from disk (and that button would ideally discard pending changes as 
+         // well).
+         //
+         QObject::connect(setting, &Setting::pendingValueDiscarded, dialog, [spinbox_set, textbox_set, setting]() {
+            const auto blocker0 = QSignalBlocker(spinbox_set);
+            const auto blocker1 = QSignalBlocker(textbox_set);
+            //
+            auto value = setting->currentValue().value<INIValueTestStruct>();
+            spinbox_set->setValue(value.number);
+            textbox_set->setText(value.text);
+         }, Qt::ConnectionType::QueuedConnection);
+         //
+         // Now, we need to react to the user changing the states of the "edit" controls. Although 
+         // there's no one-shot helper to wire up absolutely all of the functionality, the Setting 
+         // class does offer a templated member function that is very helpful for editing just one 
+         // part of a larger struct value.
+         //
+         QObject::connect(spinbox_set, QOverload<int>::of(&QSpinBox::valueChanged), setting, [setting](int v) {
+            setting->modifyPendingValue<INIValueTestStruct>([v](INIValueTestStruct& s) {
+               s.number = v;
+            });
+         });
+         QObject::connect(textbox_set, &QLineEdit::textEdited, setting, [setting](const QString& v) {
+            setting->modifyPendingValue<INIValueTestStruct>([&v](INIValueTestStruct& s) {
+               s.text = v;
+            });
+         });
+         //
+         layout->addWidget(spinbox_get, row, 0);
+         layout->addWidget(spinbox_set, row, 1);
+         ++row;
+         layout->addWidget(textbox_get, row, 0);
+         layout->addWidget(textbox_set, row, 1);
+         ++row;
+      }
+      //
+      {
+         //
+         // Next, let's do a button to reload the INI file from disk. We'll want to discard any 
+         // pending changes after we perform the load operation. Our controls above are designed 
+         // to show the current value whenever the pending value is discarded; if the user changed 
+         // the INI file on disk while our program was running, their changes will only be reflected 
+         // in the "edit" controls' states if we discard our pending changes after reloading the INI.
+         //
+         auto* button = new QPushButton("Reload");
+         QObject::connect(button, &QPushButton::clicked, dialog, []() {
+            auto& ini = get_ini();
+            ini.load();
+            ini.discardPendingChanges();
+         });
+         layout->addWidget(button, row, 0);
+      }
+      {
+         //
+         // And finally, let's add a button to save the user's changes. We'll want to commit the 
+         // pending changes first, and then save the INI file.
+         //
+         // Earlier, I mentioned that code which reacts to changes in a setting's current value 
+         // should do so using Qt::ConnectionType::QueuedConnection. The reason for this is so that 
+         // any such code waits until after the save operation has fully completed before reacting. 
+         // 
+         // Application theming via Qt stylesheets is a useful case study. Qt stylesheets cost a 
+         // fair bit of time to apply at program startup, and can take significantly longer to apply 
+         // after that unless some unintuitive (and not always available) tricks are used. If we add 
+         // an option to change the application's stylesheet, we may want that option to apply without 
+         // having to restart the program... but actually applying the changes could take a long time. 
+         // If we use a queued connection, then we ensure that the user's preferences are fully saved 
+         // before we attempt to act on the changes, and so if something goes wrong (e.g. the user 
+         // force-killing the program because they think it froze), the setting changes aren't lost.
+         //
+         auto* button = new QPushButton("Save");
+         QObject::connect(button, &QPushButton::clicked, dialog, []() {
+            auto& ini = get_ini();
+            ini.commitPendingChanges();
+            ini.save(true);
+         });
+         layout->addWidget(button, row, 1);
+         ++row;
+      }
+      //
+      dialog->exec();
+      delete dialog;
+      ini.discardPendingChanges(); // discard any pending changes when the dialog is closed
+   }
+}

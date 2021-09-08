@@ -1,7 +1,7 @@
 #pragma once
 #include <QCheckBox>
 
-class QLuaCheckBox : public QCheckBox {
+class DovahscriptCheckbox : public QCheckBox {
    Q_OBJECT;
    public:
       using QCheckBox::QCheckBox;

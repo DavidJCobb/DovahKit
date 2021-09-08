@@ -11,9 +11,8 @@
 //  - TXST/DODT: Decal Object Data
 //  - TXST/OBND: Object Bounds
 //
-#ifndef _DEBUG
-   #pragma message("WARNING: Are you compiling in Release? The Lua API for texture_sets is incomplete!")
-#endif
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_script_apis, "The Lua API for texture_sets is incomplete.");
 
 namespace {
    using namespace dovahscript;

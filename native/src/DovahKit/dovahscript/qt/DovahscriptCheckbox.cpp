@@ -1,6 +1,6 @@
-#include "QLuaCheckBox.h"
+#include "DovahscriptCheckbox.h"
 
-void QLuaCheckBox::nextCheckState() {
+void DovahscriptCheckbox::nextCheckState() {
    if (!this->isCheckable())
       return;
    if (this->checkState() == Qt::Checked)

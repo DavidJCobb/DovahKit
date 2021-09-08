@@ -22,9 +22,8 @@
 //  - LAND/ATXT+VTXT: Layer data
 //  - LAND/VTEX:      Texture list(?)
 //
-#ifndef _DEBUG
-   #pragma message("WARNING: Are you compiling in Release? The Lua API for landscapes is incomplete!")
-#endif
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_script_apis, "The Lua API for landscapes is incomplete.");
 
 namespace {
    using namespace dovahscript;

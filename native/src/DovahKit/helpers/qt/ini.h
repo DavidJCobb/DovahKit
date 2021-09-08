@@ -14,6 +14,43 @@
 // 
 //  - File load/save code
 // 
+// USAGE GUIDE:
+// 
+//  = The "ini" subfolder contains helper files as well as example code.
+// 
+//  - Settings have an "initial" value, which is an executable-level default; a "current" value, which is the 
+//    actual value of the setting at the present moment; and a "pending" value, which exists as an aid to code 
+//    which wishes to make changes to settings with the option to commit or discard those changes later (e.g. 
+//    a program options UI). Each of these is stored, internally, as a QVariant.
+// 
+//    Writing an invalid QVariant into the current value resets it to the default (i.e. the current value is 
+//    overwritten with a copy of the initial value). Writing an invalid QVariant into the pending value discards 
+//    the pending value, if there was a value (i.e. if the pending value wasn't already an invalid QVariant).
+// 
+//    A file's pending values can be committed en masse, or they can be committed individually. You can also 
+//    directly set a setting's current value, though this is better for things other than options UI.
+// 
+//  - Settings can store structs as their values; however, these structs must be made compatible with QVariant, 
+//    and Qt must know how to convert the struct types to and from QString. This means that you must...
+// 
+//     - Use the Q_DECLARE_METATYPE macro on the type.
+// 
+//     - Ensure that QMetaType::registerConverter is called to register conversion functions, before the INI 
+//       file is ever loaded or its settings are ever written to. You must make two calls in order to register 
+//       converters in both directions.
+// 
+//        - If your type has a member function which converts to a QString, then you can pass a pointer to that 
+//          member function as an argument to one of the QMetaType::registerConverter calls, with no further 
+//          work required.
+// 
+//        - You will need to define a non-member function which takes a const QString& argument and returns an 
+//          instance of your struct, and then call QMetaType::registerConverter<QString, YourType>(&YourFunction).
+// 
+//    Doing things this way, however, allows you to mostly automate conversion between your struct and a string, 
+//    and it allows you to store an instance of your struct directly in the setting's QVariant (instead of having 
+//    to cache the struct instance elsewhere e.g. as a member on a program options dialog, or alternatively, 
+//    convert back and forth between the string representation with each change to the value).
+// 
 // NOTES:
 // 
 //  - Code which performs some long task in response to a setting being changed (e.g. changing the application 
@@ -21,24 +58,26 @@
 //    application commits pending changes and then saves the INI file, it can be sure that the file will be saved 
 //    before the long-running task happens.
 // 
-//  - Qt really doesn't like it when widgets, at the very least, are static local variables, rather than being 
-//    local to the main loop (for the main window) or static heap-allocated variables. What impact will that have 
-//    on defining settings? Should we block locally allocating them (i.e. by privating the destructor)?
+//  - Static instances of a QObject (outside of a function scope) are vulnerable to the static initialization 
+//    order fiasco: the QObject instances can be created before their class's QMetaObject (Qt RTTI) has been 
+//    created, and this breaks virtually all QObject functionality.
 // 
-//    What's more, static instances of a QObject outside of a function are vulnerable to the static initialization 
-//    order fiasco: the QObject instances can be created before their own QMetaObjects (i.e. Qt RTTI) are created.
+//    What's more, the QObject hierarchy system isn't strictly compatible with non-heap-allocated instances of a 
+//    QObject: if a static QObject instance has a parent set on it through any means, then the parent will try to 
+//    delete it when the parent is destroyed. Deleting something that was never actually heap-allocated will cause 
+//    a crash... if you're lucky.
 // 
-//     - Same concern is present for files.
+//    These considerations affect both Setting objects and File objects.
 // 
-//        - The File() constructor that takes setting definitions may help. We can have a singleton-style getter 
-//          function for an INI file which heap-allocates a File with setting definitions; that'll also create 
-//          its settings; and then we can...
+//     - The File() constructor that takes setting definitions can help. We can have a singleton-style getter 
+//       function for an INI file which heap-allocates a File with setting definitions; that'll also create 
+//       its settings; and then we can...
 // 
-//           - ...only ever access settings through the File.
+//        - ...only ever access settings through the File.
 // 
-//           - ...have specific pieces of code that need a setting use their own getter functions, which get the 
-//             setting through the file and then cache the setting pointer in a static local variable for faster 
-//             access later.
+//        - ...have specific pieces of code that need a setting use their own getter functions, which get the 
+//          setting through the file and then cache the setting pointer in a static local variable for faster 
+//          access later.
 // 
 //     - We also want to support constructing INI file specs at run-time. I want to be able to define all of 
 //       Skyrim's INI settings and their default values within the `dovah` folder in a Qt-independent manner, 

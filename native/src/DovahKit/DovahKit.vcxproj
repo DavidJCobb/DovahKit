@@ -124,6 +124,7 @@
     <ClCompile Include="dovahscript\core\subsystems\events\registration\spinbox.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\tabbox.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\table_view.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\textarea.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\textbox.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\script_event_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
@@ -158,9 +159,11 @@
     <ClCompile Include="dovahscript\qt\DovahscriptLineWidget.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptTabboxTab.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptTextarea.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptImageWidget.cpp" />
     <ClCompile Include="dovahscript\qt\impl\DovahscriptCanvasExporter.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptCheckbox.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\send_script_task.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
@@ -256,6 +259,7 @@
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\text.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\textarea.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\textbox.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
@@ -472,7 +476,6 @@
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
-    <ClCompile Include="ui\generic\QLuaCheckBox.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
@@ -518,7 +521,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\textarea.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\textarea.h" />
     <ClInclude Include="helpers\qt\ini\binding.h" />
+    <ClInclude Include="incomplete_code_warnings.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_ini_tests.h" />
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
     <ClInclude Include="dovahscript\api_helpers\model_observers.h" />
@@ -947,7 +955,6 @@
     <QtMoc Include="ui\generic\CanvasWidget.h" />
     <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
-    <QtMoc Include="ui\generic\QLuaCheckBox.h" />
     <QtMoc Include="ui\generic\DKLuaSyntaxHighlighter.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
@@ -1122,6 +1129,8 @@
     <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
+    <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
+    <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -27,6 +27,7 @@
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QTabWidget>
+#include "../../qt/DovahscriptTextarea.h"
 #include "../../../ui/generic/FormPicker.h"
 
 #include "events/registration/button.h"
@@ -39,6 +40,7 @@
 #include "events/registration/spinbox.h"
 #include "events/registration/tabbox.h"
 #include "events/registration/table_view.h"
+#include "events/registration/textarea.h"
 #include "events/registration/textbox.h"
 
 namespace {
@@ -59,6 +61,9 @@ namespace {
       _event_list_for_target_type(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
    };
    std::array _events_by_target_type = {
+      _event_list_for_target_type(&DovahscriptTextarea::staticMetaObject,
+         dovahscript::impl::event_registration::textarea::event_names
+      ),
       _event_list_for_target_type(&FormPicker::staticMetaObject,
          dovahscript::impl::event_registration::formpicker::event_names
       ),
@@ -169,6 +174,7 @@ namespace dovahscript::core::subsystems {
          &impl::event_registration::spinbox::register_event,
          &impl::event_registration::tabbox::register_event,
          &impl::event_registration::table_view::register_event,
+         &impl::event_registration::textarea::register_event,
          &impl::event_registration::textbox::register_event,
       };
       for (auto* registrar : registrars) {

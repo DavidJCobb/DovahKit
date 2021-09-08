@@ -19,6 +19,8 @@ namespace {
       static File* instance = nullptr;
       if (instance)
          return *instance;
+      QMetaType::registerConverter(&DovahKitDebug::INIValueTestStruct::toString);
+      QMetaType::registerConverter<QString, DovahKitDebug::INIValueTestStruct>(&DovahKitDebug::INIValueTestStruct::fromString);
       instance = new File({
          .path       = "test_ini.ini",
          .categories = {
@@ -58,11 +60,6 @@ namespace DovahKitDebug {
 
 
    extern void debug_qt_ini_helpers(QWidget* parent) {
-      if (!QMetaType::hasRegisteredConverterFunction<INIValueTestStruct, QString>()) {
-         QMetaType::registerConverter(&INIValueTestStruct::toString);
-         QMetaType::registerConverter<QString, INIValueTestStruct>(&INIValueTestStruct::fromString);
-      }
-      //
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);
       dialog->setLayout(layout);
@@ -143,8 +140,8 @@ namespace DovahKitDebug {
          auto* button = new QPushButton("Reload");
          QObject::connect(button, &QPushButton::clicked, dialog, []() {
             auto& ini = get_ini();
-            ini.discardPendingChanges();
             ini.load();
+            ini.discardPendingChanges();
          });
          layout->addWidget(button, row, 0);
          //++row;

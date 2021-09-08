@@ -28,6 +28,7 @@
 #include "table_view/row.h"
 #include "table_view/row/collection_cells.h"
 #include "text.h"
+#include "textarea.h"
 #include "textbox.h"
 #include "various/font.h"
 #include "widget.h"

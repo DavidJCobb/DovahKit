@@ -1,0 +1,17 @@
+#pragma once
+#include "../ini.h"
+
+namespace Example {
+   extern cobb::qt::ini::File& get_ini();
+
+   struct MyStruct {
+      int     number = 0;
+      QString text   = "";
+      //
+      static MyStruct fromString(const QString&);
+      QString toString() const noexcept;
+   };
+
+   extern void open_options_dialog(QWidget* parent);
+}
+Q_DECLARE_METATYPE(Example::MyStruct);

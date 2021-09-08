@@ -192,10 +192,13 @@ namespace {
       }
       int max_length(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isinteger(L, 2), 2, "max length (integer) expected");
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         cobb::lua::argcheck(L, isnum,      2, "max length (integer) expected");
+         cobb::lua::argcheck(L, value >= 0, 2, "the maximum length cannot be negative");
          if (!self.widget)
             return 0;
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setMaxLength, lua_tointeger(L, 2));
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setMaxLength, value);
          return 0;
       }
       int placeholder(lua_State* L) {

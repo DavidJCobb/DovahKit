@@ -51,6 +51,7 @@ namespace {
       std::pair{ &DovahscriptTabboxTab::staticMetaObject,   dovahscript::wrappers::ui::tabbox_tab::metatable_key },
       std::pair{ &QTableView::staticMetaObject,             dovahscript::wrappers::ui::table_view::metatable_key },
       std::pair{ &QLabel::staticMetaObject,                 dovahscript::wrappers::ui::text::metatable_key },
+      std::pair{ &DovahscriptTextarea::staticMetaObject,    dovahscript::wrappers::ui::textarea::metatable_key },
       std::pair{ &QLineEdit::staticMetaObject,              dovahscript::wrappers::ui::textbox::metatable_key },
       std::pair{ &DovahscriptDialog::staticMetaObject,      dovahscript::wrappers::ui::window::metatable_key },
       //

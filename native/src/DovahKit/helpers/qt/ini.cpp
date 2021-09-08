@@ -79,6 +79,10 @@ namespace cobb::qt::ini {
          emit valueChanged(old, this->values.current);
    }
    void Setting::setPendingValue(const QVariant& v) noexcept {
+      if (!v.isValid()) {
+         this->discardPendingValue();
+         return;
+      }
       this->values.pending = v;
    }
 

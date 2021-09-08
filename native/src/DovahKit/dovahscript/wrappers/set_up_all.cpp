@@ -111,6 +111,7 @@ namespace dovahscript {
                set_up_class_with_singleton<ui::table_view_col>(L, index);
                set_up_class_with_singleton<ui::table_view_row>(L, index);
             set_up_class_with_singleton<ui::text>(L, index);
+            set_up_class_with_singleton<ui::textarea>(L, index);
             set_up_class_with_singleton<ui::textbox>(L, index);
             set_up_class_with_singleton<ui::window>(L, index);
          //

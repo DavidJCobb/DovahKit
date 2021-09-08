@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../ui/generic/QLuaCheckBox.h"
+#include "../../qt/DovahscriptCheckbox.h"
 #include "widget.h"
 
 namespace dovahscript::wrappers::ui {
@@ -12,7 +12,7 @@ namespace dovahscript::wrappers::ui {
       static method_list_t metatable_setters;
 
       static constexpr const char* global_name = "checkbox";
-      using wrapped_type = QLuaCheckBox;
+      using wrapped_type = DovahscriptCheckbox;
 
       // Creates a singleton for this class, and leaves it at the top of the stack.
       static void import_singleton(lua_State*);

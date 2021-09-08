@@ -26,10 +26,7 @@ namespace cobb::qt::ini {
       value_type(Wx::*getter)(),
       void (Wx::*signal)()
    ) {
-      auto data = setting.pendingValue();
-      if (!data.isValid())
-         data = setting.currentValue();
-      (widget->*setter)(data.value<std::decay_t<value_type>>());
+      (widget->*setter)(setting.pendingOrCurrentValue().value<std::decay_t<value_type>>());
       //
       QObject::connect(&setting, &Setting::pendingValueDiscarded, widget, [widget, setter, &setting]() {
          const auto blocker = QSignalBlocker(widget);
@@ -51,10 +48,7 @@ namespace cobb::qt::ini {
       void (Wx::*setter)(value_type),
       void (Wx::*signal)(value_type)
    ) {
-      auto data = setting.pendingValue();
-      if (!data.isValid())
-         data = setting.currentValue();
-      (widget->*setter)(data.value<std::decay_t<value_type>>());
+      (widget->*setter)(setting.pendingOrCurrentValue().value<std::decay_t<value_type>>());
       //
       QObject::connect(&setting, &Setting::pendingValueDiscarded, widget, [widget, setter, &setting]() {
          const auto blocker = QSignalBlocker(widget);
