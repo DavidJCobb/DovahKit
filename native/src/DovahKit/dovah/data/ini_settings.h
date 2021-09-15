@@ -44,7 +44,6 @@ namespace dovah {
             const char* const  name = "";
             const setting_type type = setting_type::none;
             setting_value default_value;
-            setting_value current_value;
             struct {
                bool skyrim_classic = true;
                bool skyrim_special = true;
