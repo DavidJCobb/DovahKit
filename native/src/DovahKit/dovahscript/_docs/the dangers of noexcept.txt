@@ -1,0 +1,126 @@
+
+The "noexcept"  specifier has some pitfalls when used with Lua APIs,  and these 
+can be easy to overlook. Moreover, articles  documenting the actual function of 
+the "noexcept" specifier tend to either explain the concept incorrectly or else 
+bury the lede under tons of extraneous  detail. As such, it seems prudent to go 
+over the "noexcept"  specifier and its precise function,  both as a reminder of 
+how the specifier interacts with Lua, and as a primer for anyone who may have a 
+mistaken impression of its function.
+
+
+=== What is "noexcept," and what is it for? ===================================
+
+Declaring a  function as "noexcept" doesn't necessarily mean that  the function 
+will never throw an exception. Rather,  it means that an exception should never 
+leave the  function's bounds: an exception  thrown by the function  or anything 
+deeper into the call stack should always  be caught before it bubbles up out of 
+the function. Let's look at an example:
+
+   void Outermost() {
+      try {
+         A();
+      } catch (...) {} // catch any exception, without caring what it is
+   }
+
+   void A() noexcept {
+      B();
+   }
+
+   void B() {
+      C();
+   }
+
+   void C() {
+      D();
+   }
+
+   void D() {
+      throw "Hi!";
+   }
+   
+The code above will cause a program to  abort instantly. The outermost function 
+wraps its  call to A in a try/catch block,  but because A is noexcept,  it will 
+never actually  allow an exception to bubble up to its caller.  If an exception 
+is thrown by A or any of its callees, that exception must be caught by A; if it 
+isn't, then std::terminate will automatically be called.
+
+Why is the above behavior useful?
+
+It is commonly said that the "noexcept"  specifier exists to enable performance 
+optimizations. This is true, but the optimizations in question are not compiler 
+optimizations;  they are optimizations  within the standard  library. There are 
+type traits  that can be used to check for the "noexcept" specifier  on various 
+functions including a type's move  constructor, and these allow some operations 
+to be designed in an exception-safe way.
+
+Consider the  tasks that must be performed  in order to resize a  std::vector's 
+storage area:
+
+   1. Allocate a larger storage area.
+
+   2. Begin  transferring vector elements from the smaller storage area  to the 
+      larger storage area.
+
+   3. Delete the old storage area.
+
+The std::vector::resize function (usually)  has a "strong exception" guarantee: 
+if an exception is thrown at any point in this process, then the vector will be 
+unmodified. But when can exceptions be thrown?
+
+   a) If memory allocation fails in step 1.
+
+   b) If the  vector moves elements instead of copying them, and any  element's 
+      move constructor throws an exception.
+
+An exception  during memory allocation is easy: just back out of  the operation 
+immediately, as no change has actually  been made yet. However, if an exception 
+is thrown while moving an  individual element, then  things get harder, because 
+previous  elements have already been moved.  As such, std::vector::resize  will 
+actually check if its value type has a  noexcept move constructor, and will act 
+as follows:
+
+   a) If the value type has a noexcept  move constructor, then use std::move to 
+      transfer elements from the old storage to the new storage.
+
+   b) If the value  type does not have a noexcept move constructor,  but it can 
+      be copy-constructed in place, then  copy elements from the old storage to 
+      the new storage. After all elements are transferred, destroy the outdated 
+      copies in the old storage.
+
+   c) If the value  type does not have a noexcept move constructor,  and cannot 
+      be constructed  in place, then  waive the strong  exception guarantee and 
+      std::move the elements.
+
+Those are the kinds of optimizations that  the "noexcept" specifier is meant to 
+enable. It  doesn't allow the compiler to waive exception handling  altogether, 
+because a noexcept function's callees are still allowed to throw; and compilers 
+don't use it to decide on the fly whether  to compile in exception handling for 
+a function  (e.g. skipping it if all of the callees are also noexcept),  though 
+even if compilers attempted  to make such an optimization,  the "std::terminate 
+if an exception leaks out" behavior would still apply.
+
+Essentially,  the "noexcept" specifier makes a promise to any  other code which 
+wishes, through  templating, to optimize  around that  promise... but something 
+has to *be*  promised. The specifier's behavior as a "boundary" for  exceptions 
+is the promise being made.
+
+
+=== Why is "noexcept" dangerous when working with Lua? ========================
+
+Lua uses  exceptions for error signalling.  If you wish to safely run  Lua APIs 
+without any risk of an unhandled  exception crashing the program, then you must 
+run those  APIs from inside of Lua or C++  functions that have been  called via 
+the lua_pcall  (protected call)  API. However, that  API relies on a  try/catch 
+block internally. Looking back at our code example above, lua_pcall essentially 
+is our "Outermost()" function.
+
+If a noexcept function is called at some point during a pcall, and it or any of 
+its callees  throw an exception, then that exception will not be  caught by the 
+pcall. If the noexcept  function or any of its callees  interact with Lua, then 
+exceptions could be thrown at any time: Lua's own error-handling system handles 
+not just bad data access and type mismatches and the like, but also things like 
+memory allocation failures within the Lua engine.
+
+As such, functions within Dovahscript  can be declared "noexcept" if they don't 
+work with Lua and if they don't call anything  that works with Lua, but we must 
+be especially careful with the "noexcept" specifier.

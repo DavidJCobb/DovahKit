@@ -399,7 +399,7 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
       switch (state.code()) {
          case TokenType::String_Simple:
             backslash = (c == '\\');
-            if (c == QChar::fromLatin1(state.param())) {
+            if (c == QChar::fromLatin1(state.param()) && (i == 0 || text[i - 1] != '\\')) {
                this->setFormat(start, i - start + 1, this->formats.string.simple);
                state.clear();
             }

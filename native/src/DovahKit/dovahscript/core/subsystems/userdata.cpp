@@ -371,6 +371,7 @@ namespace dovahscript::core::subsystems {
          // whether the wrapper list contains only the current wrapper; if so, we know that 
          // the wrapped native object has just ceased to be Lua-referenced.
          //
+         no_wrappers_remain = true;
          auto idx = lua_absindex(L, -1);
          //
          lua_pushnil(L);  // key; popped by next call

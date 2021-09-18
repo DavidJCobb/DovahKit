@@ -112,6 +112,7 @@
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\collections.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\coordinator\borrow_counter.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\button.cpp" />
@@ -523,8 +524,12 @@
   <ItemGroup>
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
+    <ClInclude Include="dovahscript\core\subsystems\coordinator\borrow_counter.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\registration\textarea.h" />
     <ClInclude Include="dovahscript\wrappers\ui\textarea.h" />
+    <ClInclude Include="dovah\utils\game_list.h" />
+    <ClInclude Include="helpers\concepts.h" />
+    <ClInclude Include="helpers\enum_bitfields.h" />
     <ClInclude Include="helpers\qt\ini\binding.h" />
     <ClInclude Include="incomplete_code_warnings.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_ini_tests.h" />
@@ -1096,6 +1101,7 @@
     <Text Include="dovahscript\_docs\lifetime management.txt" />
     <Text Include="dovahscript\_docs\classes in Lua.txt" />
     <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />
+    <Text Include="dovahscript\_docs\the dangers of noexcept.txt" />
     <Text Include="dovahscript\_docs\ui - model observer property handlers.txt" />
     <Text Include="dovahscript\_docs\ui - model observers.txt" />
     <Text Include="dovahscript\_docs\userdata wrappers.txt" />
