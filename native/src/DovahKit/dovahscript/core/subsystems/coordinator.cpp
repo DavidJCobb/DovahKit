@@ -238,15 +238,17 @@ namespace dovahscript::core::subsystems {
    }
 
    void coordinator::_do_worker_thread_wait() {
-      auto& counter = this->outstanding_client_thread_script_borrow_requests;
-      if (counter) {
-         assert(this->script_thread == thread_type::worker);
-         this->script_thread       = thread_type::client;
-         this->worker_thread_state = coordinator::thread_wait_state::waiting;
-         while (counter) {}
-         this->worker_thread_state = coordinator::thread_wait_state::running;
-         this->script_thread       = thread_type::worker;
-      }
+      this->outstanding_client_thread_script_borrow_requests.wait_until_zero(
+         [this]() { // Pre-wait
+            assert(this->script_thread == thread_type::worker);
+            this->script_thread       = thread_type::client;
+            this->worker_thread_state = coordinator::thread_wait_state::waiting;
+         },
+         [this]() { // Post-wait
+            this->worker_thread_state = coordinator::thread_wait_state::running;
+            this->script_thread       = thread_type::worker;
+         }
+      );
    }
 
    /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {

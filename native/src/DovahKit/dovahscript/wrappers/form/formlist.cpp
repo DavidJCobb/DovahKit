@@ -40,7 +40,7 @@ namespace dovahscript::wrappers {
    };
    /*static*/ cls::method_list_t cls::metatable_setters = no_functions;
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, collections::formlist_entries);
    }
 }

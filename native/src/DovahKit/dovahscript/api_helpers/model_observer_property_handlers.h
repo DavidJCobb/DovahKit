@@ -45,9 +45,9 @@ namespace dovahscript::api_helpers::moph {
             return nullptr;
          }
 
-         void extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept;
+         void extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const;
 
-         role_map_t extract(lua_State* L, int table_pos) const noexcept;
+         role_map_t extract(lua_State* L, int table_pos) const;
    };
 
    extern int push_alignment(lua_State*, const QVariant&, const wrapper& observer);

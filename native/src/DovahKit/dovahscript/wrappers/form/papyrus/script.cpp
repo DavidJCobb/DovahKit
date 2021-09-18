@@ -247,7 +247,7 @@ namespace dovahscript::wrappers {
       return &list[i];
    }
 
-   /*static*/ void wrapper_t::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void wrapper_t::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, collections::papyrus_property_list);
    }
 }

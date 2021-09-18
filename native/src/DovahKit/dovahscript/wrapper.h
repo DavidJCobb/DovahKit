@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <QWidget>
+#include "../../helpers/lua/error.h"
 #include "../../helpers/eight_cc.h"
 #include "../../dovah/form_stub.h"
 #include "../../lua.h"
@@ -144,16 +145,14 @@ namespace dovahscript {
          bool is_collection_at_depth(uint8_t) const noexcept;
    };
 
-   template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {
+   template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) {
       auto* ptr = (wrapper*) dovahscript::classes::cast_to_class(L, pos, T::metatable_key);
       return ptr;
    }
-   template<typename T> wrapper& get_wrapper_for_thiscall(lua_State* L, int pos = 1) noexcept {
+   template<typename T> wrapper& get_wrapper_for_thiscall(lua_State* L, int pos = 1) {
       auto* self = (wrapper*) dovahscript::classes::cast_to_class(L, pos, T::metatable_key);
-      if (self == nullptr) {
-         luaL_error(L, "function called with bad self (expected %s)", T::metatable_key);
-      }
-      __assume(self != nullptr);
+      if (self == nullptr)
+         cobb::lua::error(L, "function called with bad self (expected %s)", T::metatable_key);
       return *self;
    }
 }

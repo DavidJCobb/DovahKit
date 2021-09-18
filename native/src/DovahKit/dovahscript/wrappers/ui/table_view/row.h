@@ -14,7 +14,7 @@ namespace dovahscript::wrappers::ui {
       static constexpr const char* global_name = "table_view_row";
 
       static constexpr bool has_extra_class_setup = true;
-      static void extra_class_setup(lua_State* L) noexcept;
+      static void extra_class_setup(lua_State* L);
 
       // Creates a singleton for this class, and leaves it at the top of the stack.
       static void import_singleton(lua_State*);

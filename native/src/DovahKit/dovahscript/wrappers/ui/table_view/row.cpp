@@ -124,7 +124,7 @@ namespace dovahscript::wrappers::ui {
       { "text_color", &_setters::text_color },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, wrappers::ui::collections::table_view_row_cell_list);
    }
    /*static*/ void cls::import_singleton(lua_State* L) {

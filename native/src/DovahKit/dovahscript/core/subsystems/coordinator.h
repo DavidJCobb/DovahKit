@@ -7,6 +7,7 @@
 #include "../blocking_task_slot.h"
 #include "../task_queue.h"
 #include "../../script_set.h"
+#include "coordinator/borrow_counter.h"
 
 class DovahscriptStandardItemModel;
 namespace dovah {
@@ -77,7 +78,7 @@ namespace dovahscript::core::subsystems {
          std::mutex start_stop_lock; // used for any function that the outside world would use to start or abort a script
 
          std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
-         std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
+         impl::borrow_counter outstanding_client_thread_script_borrow_requests;
 
          script_set scripts_to_run;
          struct {

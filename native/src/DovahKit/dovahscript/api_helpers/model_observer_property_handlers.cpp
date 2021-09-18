@@ -151,7 +151,7 @@ namespace dovahscript::api_helpers::moph {
       }
    }
 
-   void handler_set::extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept {
+   void handler_set::extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const {
       getter_list_stack_pos = lua_absindex(L, getter_list_stack_pos);
       setter_list_stack_pos = lua_absindex(L, setter_list_stack_pos);
       lua_checkstack(L, 5);
@@ -172,7 +172,7 @@ namespace dovahscript::api_helpers::moph {
          lua_setfield(L, setter_list_stack_pos, moph.name);
       }
    }
-   QMap<Qt::ItemDataRole, QVariant> handler_set::extract(lua_State* L, int table_pos) const noexcept {
+   QMap<Qt::ItemDataRole, QVariant> handler_set::extract(lua_State* L, int table_pos) const {
       table_pos = lua_absindex(L, table_pos);
       int top = lua_gettop(L);
       //

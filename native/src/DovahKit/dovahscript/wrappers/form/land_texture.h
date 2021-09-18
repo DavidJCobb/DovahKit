@@ -22,6 +22,6 @@ namespace dovahscript::wrappers {
       using wrapped_type = dovah::loaded_forms::LandTexture;
 
       static constexpr bool has_extra_class_setup = true;
-      static void extra_class_setup(lua_State* L) noexcept;
+      static void extra_class_setup(lua_State* L);
    };
 }

@@ -20,7 +20,7 @@ namespace dovahscript::wrappers::resource {
       static method_list_t metatable_setters;
 
       static constexpr bool has_extra_class_setup = true;
-      static void extra_class_setup(lua_State* L) noexcept;
+      static void extra_class_setup(lua_State* L);
 
       static constexpr const char* cubemap_face_collection_key = "collection<dovah.classes.resource.dds_image_subresource.cubemap_faces>";
       static constexpr const char* mipmap_collection_key       = "collection<dovah.classes.resource.dds_image_subresource.mipmaps>";

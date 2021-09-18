@@ -907,7 +907,7 @@ namespace dovahscript::wrappers::ui {
       { "word_wrap",            &_setters::word_wrap },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, collections::table_view_row_list);
       define_collection_metatable(L, collections::table_view_column_list);
    }

@@ -106,7 +106,7 @@ namespace dovahscript::wrappers::ui {
       moph::model_observer_property_handler{ "text_color", Qt::ItemDataRole::ForegroundRole,    moph::push_color,     moph::pull_color,     moph::model_observer_property_handler::default_transform, true },
    }};
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       int index_class   = lua_absindex(L, -3);
       int index_getters = lua_absindex(L, -2);
       int index_setters = lua_absindex(L, -1);

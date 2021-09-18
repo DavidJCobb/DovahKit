@@ -319,16 +319,16 @@ namespace {
          switch (ini_setting->type) {
             using t = dovah::game_ini::setting_type;
             case t::boolean:
-               lua_pushboolean(L, ini_setting->current_value.b);
+               lua_pushboolean(L, ini_setting->default_value.b);
                return 1;
             case t::float32:
-               lua_pushnumber(L, ini_setting->current_value.f);
+               lua_pushnumber(L, ini_setting->default_value.f);
                return 1;
             case t::integer:
-               lua_pushinteger(L, ini_setting->current_value.i);
+               lua_pushinteger(L, ini_setting->default_value.i);
                return 1;
             case t::string:
-               lua_pushstring(L, ini_setting->current_value.s.c_str());
+               lua_pushstring(L, ini_setting->default_value.s);
                return 1;
          }
          return 0;

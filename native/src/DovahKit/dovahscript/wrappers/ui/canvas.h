@@ -20,7 +20,7 @@ namespace dovahscript::wrappers::ui {
       using wrapped_type = CanvasWidget;
 
       static constexpr bool has_extra_class_setup = true;
-      static void extra_class_setup(lua_State* L) noexcept;
+      static void extra_class_setup(lua_State* L);
 
       static void import_singleton(lua_State*); // the "ui" table should be at the top of the stack
    };

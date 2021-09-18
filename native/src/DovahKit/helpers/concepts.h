@@ -68,8 +68,8 @@ namespace cobb {
    //    };
    //
    template<auto value> concept is_std_array_instance = requires {
-      typename decltype(value)::value_type;
+      typename std::decay<decltype(value)>::value_type;
       { value.size() } -> std::same_as<size_t>;
-      std::is_same_v<decltype(value), std::array<typename decltype(value)::value_type, value.size()>>;
+      std::is_same_v<std::decay<decltype(value)>, std::array<typename std::decay<decltype(value)>::value_type, value.size()>>;
    };
 }

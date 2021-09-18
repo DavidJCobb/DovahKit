@@ -3,6 +3,10 @@
 #include "concepts.h"
 
 namespace cobb {
+   namespace impl::enum_bitfield {
+      extern constexpr auto dummy_array = std::array{ 0 }; // MSVC complains about enum_bitfield even if it's not instantiated... -_-
+   }
+
    //
    // Use to give data structures a compile-time-specified bitmask of values from a 
    // discontiguous enum. Start by defining your enum type:
@@ -31,10 +35,10 @@ namespace cobb {
    // 
    //    bool foo = a.contains(my_enum::foo);
    //
-   template<auto _values, typename M = uint32_t> requires (cobb::is_std_array_instance<_values> && std::integral<M>)
+   template<auto _values = impl::enum_bitfield::dummy_array, typename M = uint32_t > requires (cobb::is_std_array_instance<_values> && std::integral<M>)
    class enum_bitfield {
       public:
-         using item_type = decltype(_values)::value_type;
+         using item_type = std::decay<decltype(_values)>::value_type;
          using mask_type = M;
       protected:
          static constexpr int available_bits = sizeof(mask_type) * 8;
@@ -121,12 +125,16 @@ namespace cobb {
 
       public:
          constexpr simple_enum_bitfield() {}
-         constexpr simple_enum_bitfield(const simple_enum_bitfield<T>& o) : mask(o.mask) {}
+         constexpr simple_enum_bitfield(const simple_enum_bitfield<T>& o) : mask(o.as_mask()) {}
          constexpr simple_enum_bitfield(mask_type m) : mask(m) {}
 
          inline constexpr mask_type as_mask() const noexcept { return this->mask; }
          inline constexpr bool contains(item_type e) const noexcept {
             return (this->mask & item_to_mask(e)) != 0;
+         }
+
+         static consteval simple_enum_bitfield<item_type> from_all() {
+            return simple_enum_bitfield<item_type>(mask_type(-1));
          }
 
          // Initialize a simple_enum_bitfield at compile-time with a list of values. Validity of the 

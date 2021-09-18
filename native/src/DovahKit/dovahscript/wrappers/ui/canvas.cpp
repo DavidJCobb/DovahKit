@@ -195,7 +195,7 @@ namespace dovahscript::wrappers::ui {
       { "width",  &_setters::width },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, collections::canvas_layers);
    }
    /*static*/ void cls::import_singleton(lua_State* L) {

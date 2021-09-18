@@ -38,9 +38,9 @@ namespace dovahscript::impl::font_properties {
             return nullptr;
          }
 
-         void extend_lua_class(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept;
+         void extend_lua_class(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const;
 
-         QFont table_to_struct(lua_State* L, int table_pos) const noexcept;
+         QFont table_to_struct(lua_State* L, int table_pos) const;
    };
 }
 
@@ -56,7 +56,7 @@ namespace dovahscript::wrappers::ui {
       static const impl::font_properties::handler_set fph_handlers;
 
       static constexpr bool has_extra_class_setup = true;
-      static void extra_class_setup(lua_State* L) noexcept;
+      static void extra_class_setup(lua_State* L);
 
       using wrapped_type = QFont;
 

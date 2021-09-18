@@ -200,7 +200,7 @@ namespace dovahscript::wrappers::ui {
       { "selected_tab",     &_setters::selected_tab },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, wrappers::ui::collections::tabbox_tabs);
    }
 

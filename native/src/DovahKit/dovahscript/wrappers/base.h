@@ -23,7 +23,7 @@ namespace dovahscript {
          static method_list_t metatable_setters; // subclasses must override this even if they offer no setters
 
          static constexpr bool has_extra_class_setup = false;
-         static void extra_class_setup(lua_State* L) noexcept {
+         static void extra_class_setup(lua_State* L) {
             // Subclasses can override this, but it will only be called if (has_extra_class_setup) is (true).
          };
 

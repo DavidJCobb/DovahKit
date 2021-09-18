@@ -269,7 +269,7 @@ namespace dovahscript::impl::font_properties {
       }
    }
 
-   void handler_set::extend_lua_class(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept {
+   void handler_set::extend_lua_class(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const {
       getter_list_stack_pos = lua_absindex(L, getter_list_stack_pos);
       setter_list_stack_pos = lua_absindex(L, setter_list_stack_pos);
       lua_checkstack(L, 5);
@@ -290,7 +290,7 @@ namespace dovahscript::impl::font_properties {
          lua_setfield(L, setter_list_stack_pos, hnd.name);
       }
    }
-   QFont handler_set::table_to_struct(lua_State* L, int table_pos) const noexcept {
+   QFont handler_set::table_to_struct(lua_State* L, int table_pos) const {
       table_pos = lua_absindex(L, table_pos);
       int top = lua_gettop(L);
       //
@@ -945,7 +945,7 @@ namespace dovahscript::wrappers::ui {
       },
    }};
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       int index_class   = lua_absindex(L, -3);
       int index_getters = lua_absindex(L, -2);
       int index_setters = lua_absindex(L, -1);

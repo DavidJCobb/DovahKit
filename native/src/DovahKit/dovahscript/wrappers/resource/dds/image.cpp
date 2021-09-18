@@ -111,7 +111,7 @@ namespace dovahscript::wrappers::resource {
    /*static*/ cls::method_list_t cls::metatable_setters = {
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       dovahscript::define_collection_metatable(L, collections::dds_image_mipmap_list);
    }
 }

@@ -342,7 +342,7 @@ namespace dovahscript::wrappers::ui {
       { "visible",    &_setters::visible },
    };
 
-   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
       define_collection_metatable(L, collections::canvas_layer_group_children);
    }
 }
