@@ -1,9 +1,23 @@
 local TRANSPARENT  = "#00000000"
 local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
-   diffuse  = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandDiffuseTexture"),
-   normal   = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandNormalTexture"),
+   diffuse  = nil,
+   normal   = nil,
    material = nil, -- TODO: set this to Default Object "DLMT"
 }
+do
+   local s = dovah.lookup_game_ini_setting("Skyrim.ini", "Landscape", "sDefaultLandDiffuseTexture")
+   if s then
+      DEFAULT_LAND.diffuse = "Landscape\\" .. s.current_value
+   else
+      error("Unable to get the default land diffuse texture. Failed to access game INI settings.")
+   end
+   s = dovah.lookup_game_ini_setting("Skyrim.ini", "Landscape", "sDefaultLandNormalTexture")
+   if s then
+      DEFAULT_LAND.normal = "Landscape\\" .. s.current_value
+   else
+      error("Unable to get the default land diffuse texture. Failed to access game INI settings.")
+   end
+end
 
 TextureManager = {
    map = {},

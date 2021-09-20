@@ -453,6 +453,10 @@ namespace dovahscript::core::subsystems {
             case wt::canvas_layer_data:
                lifetime_s.on_lua_unreferenced(cobb::passkey<lifetime,userdata>(), instance.canvas_layer_data);
                break;
+            case wt::ini_setting:
+               // These objects' lifetimes are not managed by Lua at all; they belong to 
+               // the application frontend. Don't mess with them here.
+               break;
          }
       }
    }

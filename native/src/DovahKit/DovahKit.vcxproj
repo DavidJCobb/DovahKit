@@ -219,6 +219,7 @@
     <ClCompile Include="dovahscript\wrappers\form\worldspace.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds_root.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ini\setting.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds\collection_images.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds\cubemap_face_list.cpp" />
@@ -405,6 +406,7 @@
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
+    <ClCompile Include="editor\subsystems\game_inis.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -526,8 +528,10 @@
     <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
     <ClInclude Include="dovahscript\core\subsystems\coordinator\borrow_counter.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\registration\textarea.h" />
+    <ClInclude Include="dovahscript\wrappers\ini\setting.h" />
     <ClInclude Include="dovahscript\wrappers\ui\textarea.h" />
     <ClInclude Include="dovah\utils\game_list.h" />
+    <ClInclude Include="editor\subsystems\game_inis.h" />
     <ClInclude Include="helpers\concepts.h" />
     <ClInclude Include="helpers\enum_bitfields.h" />
     <ClInclude Include="helpers\qt\ini\binding.h" />

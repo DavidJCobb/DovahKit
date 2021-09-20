@@ -12,10 +12,14 @@ class  CanvasWidgetEntity;
 class  DovahscriptCanvasWidgetLayerData;
 class  QButtonGroup;
 struct ObservableStandardItemModelObserver;
-
+namespace cobb::qt::ini {
+   class Setting;
+}
 namespace dovahscript {
    class DovahscriptResource;
+}
 
+namespace dovahscript {
    enum class wrapper_type {
       undefined,
       form,
@@ -25,6 +29,7 @@ namespace dovahscript {
       lua_managed_resource,
       canvas_entity,
       canvas_layer_data,
+      ini_setting,
    };
 
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
@@ -124,6 +129,7 @@ namespace dovahscript {
             QButtonGroup*                        button_group;
             CanvasWidgetEntity*                  canvas_entity;
             DovahscriptCanvasWidgetLayerData*    canvas_layer_data;
+            cobb::qt::ini::Setting*              game_ini_setting;
             DovahscriptResource*                 managed_resource;
             ObservableStandardItemModelObserver* model_observer;
             dovah::form_stub*                    stub;

@@ -27,6 +27,7 @@
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/_base.h"
 #include <QDebug>
+#include "subsystems/game_inis.h"
 
 #include "form_stub_meta_type.h"
 
@@ -104,6 +105,18 @@ DovahKitCore::DovahKitCore() {
       HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
       if (!FAILED(hr)) {
          this->com_is_ready = true;
+      }
+      //
+      {
+         //
+         // Prep game INI settings.
+         //
+         auto bench = cobb::benchmark();
+         bench.begin();
+         editor::game_inis::get_skyrim();
+         editor::game_inis::get_skyrim_prefs();
+         bench.end();
+         qDebug("Time to generate INIs: %u ms", bench.milliseconds());
       }
    }
 }
@@ -189,6 +202,13 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, worker](file_load_stats stats) {
          emit dataAcquireComplete(worker->results);
          emit fileLoadStatisticsAvailable(stats);
+         {
+            auto bench = cobb::benchmark();
+            bench.begin();
+            editor::game_inis::load_inis(this->get_current_game());
+            bench.end();
+            qDebug("Time to load INIs: %u ms", bench.milliseconds());
+         }
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this, worker]() {
          emit dataAcquireFailed(worker->results);
@@ -213,6 +233,13 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    if (task.result) {
       emit dataAcquireComplete(task.results);
       emit fileLoadStatisticsAvailable(task.stats);
+      {
+         auto bench = cobb::benchmark();
+         bench.begin();
+         editor::game_inis::load_inis(this->get_current_game());
+         bench.end();
+         qDebug("Time to load INIs: %u ms", bench.milliseconds());
+      }
    } else {
       emit dataAcquireFailed(task.results);
    }

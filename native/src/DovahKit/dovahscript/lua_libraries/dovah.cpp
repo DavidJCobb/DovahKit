@@ -23,6 +23,9 @@
 
 #include "../lua_classes/benchmark.h"
 
+#include "../../editor/subsystems/game_inis.h"
+#include "../wrappers/ini/setting.h"
+
 // For resources:
 #include <QBuffer>
 #include <QImage>
@@ -306,32 +309,57 @@ namespace {
          return push_native_object(resource);
       }
       int lookup_game_ini_setting(lua_State* L) {
-         luaL_argcheck(L, lua_isstring(L, 1), 1, "string (INI section name) expected");
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "string (INI setting name) expected");
-         const char* section = lua_tostring(L, 1);
-         const char* setting = lua_tostring(L, 2);
-         auto* ini_setting = dovah::game_ini::files::skyrim.lookup(section, setting);
-         if (!ini_setting)
-            return 0;
-         #if !_DEBUG
-            #pragma message("TODO: Lua: dovah.lookup_game_ini_setting: The editor core should load the game's INIs.")
-         #endif
-         switch (ini_setting->type) {
-            using t = dovah::game_ini::setting_type;
-            case t::boolean:
-               lua_pushboolean(L, ini_setting->default_value.b);
-               return 1;
-            case t::float32:
-               lua_pushnumber(L, ini_setting->default_value.f);
-               return 1;
-            case t::integer:
-               lua_pushinteger(L, ini_setting->default_value.i);
-               return 1;
-            case t::string:
-               lua_pushstring(L, ini_setting->default_value.s);
-               return 1;
+         QString filename;
+         QString category;
+         QString setting;
+         if (lua_isstring(L, 1)) {
+            luaL_argcheck(L, lua_isstring(L, 2), 2, "string (category name) expected");
+            luaL_argcheck(L, lua_isstring(L, 3), 3, "string (setting name) expected");
+            filename = QString::fromUtf8(lua_tostring(L, 1));
+            category = QString::fromUtf8(lua_tostring(L, 2));
+            setting  = QString::fromUtf8(lua_tostring(L, 3));
+         } else {
+            lua_settop(L, 1);
+            if (!lua_istable(L, 1) && !lua_isuserdata(L, 1))
+               cobb::lua::argerror(L, 1, "expected three strings (file, category, and setting names), or a table or userdata with the same info");
+            lua_getfield(L, 1, "filename");
+            lua_getfield(L, 1, "category");
+            lua_getfield(L, 1, "setting");
+            if (!lua_isstring(L, 2))
+               cobb::lua::argerror(L, 1, "argument.filename was not a string");
+            if (!lua_isstring(L, 3))
+               cobb::lua::argerror(L, 1, "argument.category was not a string");
+            if (!lua_isstring(L, 4))
+               cobb::lua::argerror(L, 1, "argument.setting was not a string");
+            filename = QString::fromUtf8(lua_tostring(L, 2));
+            category = QString::fromUtf8(lua_tostring(L, 3));
+            setting  = QString::fromUtf8(lua_tostring(L, 4));
+            lua_pop(L, 3);
          }
-         return 0;
+         //
+         cobb::qt::ini::File* file = nullptr;
+         if (filename.endsWith(".ini", Qt::CaseInsensitive))
+            filename.chop(4);
+         if (filename.compare("Skyrim", Qt::CaseInsensitive) == 0) {
+            file = &editor::game_inis::get_skyrim();
+         } else if (filename.compare("SkyrimPrefs", Qt::CaseInsensitive) == 0) {
+            file = &editor::game_inis::get_skyrim_prefs();
+         } else {
+            cobb::lua::error(L, "filename '%s' is not a known game INI file", filename.toUtf8());
+         }
+         //
+         cobb::qt::ini::Setting* result = nullptr;
+         {
+            auto* task = new tasks::s2m::lambda(true);
+            task->handler = [file, &category, &setting, &result]() {
+               result = file->setting(category, setting);
+            };
+            send_script_task(*task);
+            delete task;
+         }
+         if (!result)
+            return 0;
+         return push_native_object(result);
       }
       int object_is(lua_State* L) {
          lua_settop(L, 2);

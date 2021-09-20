@@ -5,6 +5,7 @@
 #include "resource/_all.h"
 #include "ui/_all.h"
 #include "unusual/_all.h"
+#include "ini/setting.h"
 
 namespace {
    template<typename T> concept _HasSingletonToImport = requires (lua_State* L) {
@@ -71,6 +72,9 @@ namespace dovahscript {
                define_wrapper_metatable<worldspace_grid_bounds>(L);
                define_wrapper_metatable<worldspace_grid_bounds_extent>(L);
          #pragma endregion
+      #pragma endregion
+      #pragma region INI
+         define_wrapper_metatable<ini::setting>(L);
       #pragma endregion
       #pragma region Resources
          define_wrapper_metatable<resource::dds>(L);

@@ -289,6 +289,13 @@ namespace cobb::qt::ini {
          out[i] = list[i];
       return out;
    }
+   QVector<Setting*> File::allSettings() const noexcept {
+      QVector<Setting*> out;
+      out.reserve(this->_all_settings.size());
+      for (Setting* s : this->_all_settings) // explicit type needed, since the vector actually contains QPointers
+         out.push_back(s);
+      return out;
+   }
 
    QString File::categoryNameCanonicalCase(const QString& name) const noexcept {
       auto& map = this->_by_category;
@@ -327,6 +334,7 @@ namespace cobb::qt::ini {
          text = QString::fromUtf8(file.readAll());
       }
       this->importFromString(text);
+      emit this->fileLoaded();
       return true;
    }
    bool File::save(bool preserve_formatting) {

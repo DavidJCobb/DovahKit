@@ -238,6 +238,7 @@ namespace cobb::qt::ini {
          Setting* setting(const QString& name) const noexcept;
          QList<QString> categoryNames() const noexcept;
          QVector<Setting*> settingsByCategory(const QString& category) const noexcept;
+         QVector<Setting*> allSettings() const noexcept;
 
          QString categoryNameCanonicalCase(const QString& name) const noexcept; // given a category named "FooBar", converts "FoObAr", "foobar", etc., to "FooBar"; returns empty string if category doesn't exist
 
@@ -256,6 +257,9 @@ namespace cobb::qt::ini {
          void importFromString(const QString& text);
          QString exportToString();
          QString exportToString(const QString& old); // given existing INI file content (old), attempts to preserve the whitespace, comments, order, etc., of (old) while writing the new values in place and adding any missing data
+
+      signals:
+         void fileLoaded();
    };
 
    // This concept matches any function which takes no arguments and returns a File&.

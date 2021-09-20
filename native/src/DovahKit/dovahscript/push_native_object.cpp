@@ -12,6 +12,7 @@
 #include "wrappers/form/_all.h"
 #include "wrappers/resource/_all.h"
 #include "wrappers/ui/_all.h"
+#include "wrappers/ini/setting.h"
 
 namespace {
    std::array form_classes = {
@@ -61,6 +62,7 @@ namespace {
       std::pair{ &CanvasWidgetLayer::staticMetaObject,      dovahscript::wrappers::ui::canvas_layer::metatable_key },
       std::pair{ &CanvasWidgetLayerGroup::staticMetaObject, dovahscript::wrappers::ui::canvas_layer_group::metatable_key },
       std::pair{ &DovahscriptCanvasWidgetLayerDataText::staticMetaObject, dovahscript::wrappers::ui::canvas_text_data::metatable_key },
+      std::pair{ &cobb::qt::ini::Setting::staticMetaObject, dovahscript::wrappers::ini::setting::metatable_key },
    };
 
    std::array resource_classes = {
@@ -145,6 +147,9 @@ namespace dovahscript {
       if (auto* desired = get_metatable_for_qobject(object->metaObject()))
          metatable = desired;
       //
+      // Now that we know what Lua class to use for this object, let's figure out what kind of 
+      // pointer it has, and how to store it on a wrapper.
+      //
       if (object->isWidgetType()) {
          if (!metatable)
             metatable = wrappers::ui::widget::metatable_key;
@@ -180,7 +185,20 @@ namespace dovahscript {
       if (auto* casted = qobject_cast<DovahscriptResource*>(object)) {
          return push_native_object(casted);
       }
+      if (auto* casted = qobject_cast<cobb::qt::ini::Setting*>(object)) {
+         assert(metatable);
+         wrapper out;
+         out.game_ini_setting = casted;
+         out.type             = wrapper_type::ini_setting;
+         return core::subsystems::userdata::get().push(L, out, metatable);
+      }
+      //
+      // NOTE: It's not enough just to specify a metatable for a given QObject class; you also have 
+      // to actually indicate what kind of "pertinent pointer," on the wrapper, it needs to be stored 
+      // in, using the if-statements above.
+      //
       assert(false && "unknown QObject type passed to push_native_object");
+      //
       return 0;
    }
 }
