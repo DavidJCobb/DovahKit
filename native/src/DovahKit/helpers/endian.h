@@ -15,6 +15,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <array>
 #include <bit>
 #include <cstdint>
 #include <cstdlib>
@@ -76,7 +77,7 @@ namespace cobb {
             return intrinsic_byteswap(value);
          }
       }
-      std::is_array<uint8_t, sizeof(T)> bytes;
+      std::array<uint8_t, sizeof(T)> bytes;
       const uint8_t* raw = (const uint8_t*)&value;
       for (size_t i = 0; i < bytes.size(); ++i) {
          bytes[i] = raw[bytes.size() - i - 1];
@@ -86,6 +87,12 @@ namespace cobb {
 
    template<std::endian which, typename T> [[nodiscard]] constexpr T endian_cast(T value) {
       if constexpr (std::endian::native == which)
+         return value;
+      return byteswap<T>(value);
+   }
+
+   template<typename T> [[nodiscard]] T endian_cast(std::endian which, T value) {
+      if (std::endian::native == which)
          return value;
       return byteswap<T>(value);
    }

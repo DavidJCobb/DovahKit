@@ -45,8 +45,8 @@ namespace {
          size_t offset = lua_tointegerx(L, pos, &isnum);
          cobb::lua::argcheck(L, isnum,       arg, "offset (integer) expected");
          cobb::lua::argcheck(L, offset >= 0, arg, "offset cannot be negative");
-         cobb::lua::argcheck(L, offset < buffer_size,               arg, "offset exceeds the bounds of the data view");
-         cobb::lua::argcheck(L, offset + sizeof(T) < buffer.size(), arg, "the desired value would extend past the bounds of the data view");
+         cobb::lua::argcheck(L, offset < buffer_size,             arg, "offset exceeds the bounds of the data view");
+         cobb::lua::argcheck(L, offset + sizeof(T) < buffer_size, arg, "the desired value would extend past the bounds of the data view");
          return offset;
       }
    }
@@ -185,7 +185,7 @@ namespace {
          cobb::lua::argcheck(L, size >= 0, 2, "the size cannot be negative");
          auto buffer = self.managed_resource->get_binary_script_side();
          if (size <= buffer.size())
-            return;
+            return 0;
          if (size > max_synthetic_size)
             size = max_synthetic_size;
          buffer.reserve(size);
@@ -230,7 +230,7 @@ namespace {
          size_t initial = 0;
          {
             int isnum;
-            initial = lua_tointeger(L, 1, &isnum);
+            initial = lua_tointegerx(L, 1, &isnum);
             if (!isnum)
                initial = 0;
             cobb::lua::argcheck(L, initial <= max_synthetic_size, 2, "max size limit: you cannot create a buffer larger than 1GB");
