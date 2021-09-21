@@ -1,5 +1,5 @@
 #include "bsa_archive.h"
-#include "../../../helpers/endianness.h"
+#include <bit>
 #include "../../logging.h"
 #include "bsa_archived_file.h"
 extern "C" {
@@ -159,7 +159,7 @@ namespace dovah {
          dovah::logging::print_line("Warning: The BSA we're loading seems to have unknown content between its file header and its folder listing, or its header is longer than we expect.");
       }
       this->needs_endianness_flip = this->header.flags & bsa_header::flag::big_endian;
-      if (cobb::endian::native == cobb::endian::big)
+      if constexpr (std::endian::native == std::endian::big)
          this->needs_endianness_flip = !this->needs_endianness_flip;
       this->filename_blob_offset = this->header.expected_filename_blob_position();
       //

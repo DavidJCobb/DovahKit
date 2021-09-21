@@ -77,6 +77,7 @@ namespace dovahscript {
          define_wrapper_metatable<ini::setting>(L);
       #pragma endregion
       #pragma region Resources
+         set_up_class_with_global_singleton<resource::binary_view>(L);
          define_wrapper_metatable<resource::dds>(L);
             define_wrapper_metatable<resource::dds_cubemap_face_list>(L);
             define_wrapper_metatable<resource::dds_image_subresource>(L);

@@ -169,6 +169,8 @@ namespace dovahscript::core::subsystems {
          bool eval_script(const QString&); // returns true if the eval script could be queued. asynch, so it will likely return before the eval script runs.
          void set_pause_state(bool);
 
+         inline QString package_folder_path() const noexcept { return this->scripts_to_run.package_folder_name; }
+
          void create_model_for_widget(QWidget&);
          void force_ui_repaint();
 

@@ -57,6 +57,7 @@ namespace dovahscript {
          inline const QImage get_raster_widget_side() const noexcept { return this->content.raster.client; }
          void modify_raster_script_side(std::function<void(QImage&)> task); // Accessor to let Lua scripts modify image data.
 
+         inline QByteArray get_binary_script_side() noexcept { return this->content.binary; }
          inline const QByteArray get_binary_script_side() const noexcept { return this->content.binary; }
 
          inline bool is_dds() const noexcept { return this->type == resource_type::dds; }

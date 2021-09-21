@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <type_traits>
 #include <vector>
-#include "../../helpers/endianness.h"
 #include "../core.h"
 
 namespace dovah {

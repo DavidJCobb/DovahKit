@@ -1,4 +1,5 @@
 #pragma once
+#include "binary_view.h"
 #include "dds.h"
 #include "dds/collection_images.h"
 #include "dds/cubemap_face_list.h"

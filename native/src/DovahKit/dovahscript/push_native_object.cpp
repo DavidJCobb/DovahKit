@@ -69,7 +69,7 @@ namespace {
       std::pair{ dovahscript::resource_type::undefined, (const char*)nullptr },
       std::pair{ dovahscript::resource_type::dds,       dovahscript::wrappers::resource::dds::metatable_key },
       std::pair{ dovahscript::resource_type::raster,    dovahscript::wrappers::resource::raster::metatable_key },
-      std::pair{ dovahscript::resource_type::binary,    dovahscript::wrappers::resource::unknown::metatable_key },
+      std::pair{ dovahscript::resource_type::binary,    dovahscript::wrappers::resource::binary_view::metatable_key },
    };
 
    const char* get_metatable_for_qobject(const QMetaObject* rtti) {

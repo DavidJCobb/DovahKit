@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\load_resource.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
@@ -220,6 +221,7 @@
     <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\worldspace\grid_bounds_root.cpp" />
     <ClCompile Include="dovahscript\wrappers\ini\setting.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\binary_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds\collection_images.cpp" />
     <ClCompile Include="dovahscript\wrappers\resource\dds\cubemap_face_list.cpp" />
@@ -408,7 +410,6 @@
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
-    <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
@@ -526,13 +527,16 @@
   <ItemGroup>
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
+    <ClInclude Include="dovahscript\api_helpers\load_resource.h" />
     <ClInclude Include="dovahscript\core\subsystems\coordinator\borrow_counter.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\registration\textarea.h" />
     <ClInclude Include="dovahscript\wrappers\ini\setting.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\binary_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\textarea.h" />
     <ClInclude Include="dovah\utils\game_list.h" />
     <ClInclude Include="editor\subsystems\game_inis.h" />
     <ClInclude Include="helpers\concepts.h" />
+    <ClInclude Include="helpers\endian.h" />
     <ClInclude Include="helpers\enum_bitfields.h" />
     <ClInclude Include="helpers\qt\ini\binding.h" />
     <ClInclude Include="incomplete_code_warnings.h" />
@@ -987,7 +991,6 @@
     <QtMoc Include="ui\generic\TESFilePicker.h" />
     <QtMoc Include="ui\form_windows\cell.h" />
     <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
-    <ClInclude Include="helpers\endianness.h" />
     <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="helpers\qt\vector3.h" />
     <ClInclude Include="helpers\unordered_map.h" />
