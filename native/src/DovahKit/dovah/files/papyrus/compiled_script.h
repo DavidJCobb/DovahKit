@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "../../../helpers/endianness.h"
+#include "../../../helpers/endian.h"
 
 namespace dovah {
    struct papyrus_assembly_opcode {

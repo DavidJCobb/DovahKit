@@ -18,6 +18,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstdint>
 #include <string>
 #include "../core.h"
+#include "../utils/game_list.h"
 
 namespace dovah {
    namespace game_ini {
@@ -26,44 +27,40 @@ namespace dovah {
          boolean,
          float32,
          integer,
+         integer_unsigned,
          string,
       };
-      extern setting_type get_setting_type_from_name(const char* name);
+      extern constexpr setting_type get_setting_type_from_name(const char* name);
       
       struct setting_value {
          union {
-            bool    b;
-            float   f;
-            int32_t i = 0;
+            bool     b;
+            float    f;
+            int32_t  i = 0;
+            uint32_t u;
          };
-         std::string s;
+         const char* const s = "";
+
+         constexpr setting_value() {}
+         constexpr explicit setting_value(bool v) : b(v) {}
+         constexpr explicit setting_value(float v) : f(v) {}
+         constexpr explicit setting_value(const char* v) : s(v) {}
+         constexpr setting_value(int32_t v) : i(v) {}
       };
 
       class setting_definition {
          public:
-            const char* const  name = "";
-            const setting_type type = setting_type::none;
-            setting_value default_value;
-            struct {
-               bool skyrim_classic = true;
-               bool skyrim_special = true;
-            } games;
+            const char* const   name = "";
+            const setting_value default_value;
+            game_list games;
+
+            constexpr setting_definition() {}
+
+            template<typename T> constexpr setting_definition(const char* n, T value) : name(n), default_value(value), games(game_list::from_all()) {}
+            template<typename T> constexpr setting_definition(game_list g, const char* n, T value) : name(n), default_value(value), games(g) {}
             
-            setting_definition(setting_type t) : type(t) {}
-            setting_definition(const char* n, bool value);
-            setting_definition(const char* n, float value);
-            setting_definition(const char* n, int32_t value);
-            setting_definition(const char* n, const char* value);
-            setting_definition(std::initializer_list<game>, const char* n, bool value);
-            setting_definition(std::initializer_list<game>, const char* n, float value);
-            setting_definition(std::initializer_list<game>, const char* n, int32_t value);
-            setting_definition(std::initializer_list<game>, const char* n, const char* value);
-            //
-            inline bool is_none() const noexcept { return this->type == setting_type::none; }
-            bool exists_in_game(game) const noexcept;
-            
-         protected:
-            void _set_games(std::initializer_list<game>&);
+            inline constexpr bool exists_in_game(game g) const noexcept { return this->games.contains(g); }
+            inline constexpr setting_type type() const noexcept { return get_setting_type_from_name(this->name); }
       };
 
       struct section_definition {
@@ -84,6 +81,7 @@ namespace dovah {
 
       namespace files {
          extern const file_definition skyrim;
+         extern const file_definition skyrim_prefs;
       }
    }
 }

@@ -25,7 +25,7 @@
 
 namespace dovah::game_ini {
    #pragma region Class internals
-   extern setting_type get_setting_type_from_name(const char* name) {
+   extern constexpr setting_type get_setting_type_from_name(const char* name) {
       if (!name)
          return setting_type::none;
       switch (name[0]) {
@@ -38,63 +38,14 @@ namespace dovah::game_ini {
          case 'i':
          case 'I':
             return setting_type::integer;
+         case 'u':
+         case 'U':
+            return setting_type::integer_unsigned;
          case 's':
          case 'S':
             return setting_type::string;
       }
       return setting_type::none;
-   }
-
-   setting_definition::setting_definition(const char* n, bool value) : name(n), type(setting_type::boolean) {
-      this->default_value.b = value;
-   }
-   setting_definition::setting_definition(const char* n, float value) : name(n), type(setting_type::float32) {
-      this->default_value.f = value;
-   }
-   setting_definition::setting_definition(const char* n, int32_t value) : name(n), type(setting_type::integer) {
-      this->default_value.i = value;
-   }
-   setting_definition::setting_definition(const char* n, const char* value) : name(n), type(setting_type::string) {
-      this->default_value.s = value;
-   }
-
-   void setting_definition::_set_games(std::initializer_list<game>& g) {
-      this->games.skyrim_classic = false;
-      this->games.skyrim_special = false;
-      for (auto v : g) {
-         switch (v) {
-            case game::skyrim_classic: this->games.skyrim_classic = true; break;
-            case game::skyrim_special: this->games.skyrim_special = true; break;
-            default:
-               assert(false && "dovah::game_ini::setting_definition: Unrecognized game passed to constructor!");
-               //
-               // Add a member to (setting_definition::games), and then reset it to (false) at the start of 
-               // this function and add a case for it to this switch. Be sure to update the (exists_in_game) 
-               // member function, too!
-               //
-         }
-      }
-   }
-
-   setting_definition::setting_definition(std::initializer_list<game> g, const char* n, bool value) : setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   setting_definition::setting_definition(std::initializer_list<game> g, const char* n, float value) : setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   setting_definition::setting_definition(std::initializer_list<game> g, const char* n, int32_t value) : setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   setting_definition::setting_definition(std::initializer_list<game> g, const char* n, const char* value) : setting_definition(n, value) {
-      this->_set_games(g);
-   }
-
-   bool setting_definition::exists_in_game(game g) const noexcept {
-      switch (g) {
-         case game::skyrim_classic: return this->games.skyrim_classic; break;
-         case game::skyrim_special: return this->games.skyrim_special; break;
-      }
-      return false;
    }
 
    section_definition::section_definition(const char* name, std::initializer_list<setting_definition> settings) : name(name), settings(settings) {
@@ -117,87 +68,39 @@ namespace dovah::game_ini {
    #pragma endregion
 
    namespace files {
-      /*//
-      extern const file_definition skyrim = file_definition("Skyrim.ini", {
-         section_definition("Landscape", {
-            { "sDefaultLandDiffuseTexture", "Dirt02.dds" },
-            { "sDefaultLandNormalTexture",  "Dirt02_N.dds" },
-         }),
-      });
-      //
-      // TODO: Dump all INI settings from the executable, along with their program-level defaults.
-      //
-      //*/
+      namespace {
+         static constexpr game_list sse_only = game_list::from<game::skyrim_special>();
+      }
+
       #pragma region Skyrim.ini
-
-      static_assert(false, "TODO: When we generate these definitions, don't group settings within a type into alphabetized regions (i.e. category > type > letter) if there are fewer than 8 settings for that type");
-      static_assert(false, "TODO: Investigate placing SSE-only settings at the bottom of each category.");
-      static_assert(false, "TODO: Investigate giving setting_definition a constexpr constructor; will that prevent warning C6262 (too much stack space used)?");
-      static_assert(false, "TODO: The constructor form that takes a game list can be made constexpr, with compile-time validity checks, if we use a bitfield on the setting for games and use templating to map between game constants and bit indices.");
-
-
       extern const file_definition skyrim = file_definition("Skyrim", {
-         section_definition("", {
+         section_definition("", { // Unnamed section
             #pragma region Booleans
-               #pragma region E
-                  { "bEnableLipLookup", true },
-               #pragma endregion
-               #pragma region P
-                  { "bPrimitivesOn", false },
-               #pragma endregion
-               #pragma region U
-                  { "bUseWaterHDR", true },
-               #pragma endregion
+               { "bEnableLipLookup", true },
+               { "bPrimitivesOn", false },
+               { "bUseWaterHDR", true },
             #pragma endregion
             #pragma region Floats
-               #pragma region F
-                  { { game::skyrim_special }, "fFadingFracStart", 0.25F },
-               #pragma endregion
-               #pragma region K
-                  { "fKeyboardRepeatDelay", 0.30000001192092896F },
-                  { "fKeyboardRepeatRate", 0.05000000074505806F },
-               #pragma endregion
-               #pragma region L
-                  { "fLowPerfCombatantVoiceDistance", 1000.0F },
-               #pragma endregion
-               #pragma region M
-                  { "fMapWorldTargetTransitionTime", 0.5F },
-               #pragma endregion
-               #pragma region S
-                  { { game::skyrim_special }, "fSnowSSSDarkColorIntensity", 0.10000000149011612F },
-               #pragma endregion
+               { sse_only, "fFadingFracStart", 0.25F },
+               { "fKeyboardRepeatDelay", 0.3F },
+               { "fKeyboardRepeatRate", 0.05F },
+               { "fLowPerfCombatantVoiceDistance", 1000.0F },
+               { "fMapWorldTargetTransitionTime", 0.5F },
+               { sse_only, "fSnowSSSDarkColorIntensity", 0.1F },
             #pragma endregion
             #pragma region Integers
-               #pragma region D
-                  { "iDetectionHighNumPicks", 40 },
-               #pragma endregion
-               #pragma region L
-                  { "iLastHDRSetting", -1 },
-               #pragma endregion
-               #pragma region M
-                  { "iMaxQuestObjectives", 3000 },
-               #pragma endregion
-               #pragma region S
-                  { { game::skyrim_special }, "iSnowNoiseTextureSize", 512 },
-               #pragma endregion
+               { "iDetectionHighNumPicks", 40 },
+               { "iLastHDRSetting", -1 },
+               { "iMaxQuestObjectives", 3000 },
+               { sse_only, "iSnowNoiseTextureSize", 512 },
             #pragma endregion
             #pragma region Strings
-               #pragma region C
-                  { "sControlsDefinitionFile", "Interface/Controls/PC/ControlMap.txt" },
-                  { "sControlsRemapFile", "ControlMap_Custom.txt" },
-               #pragma endregion
-               #pragma region G
-                  { "sGamepadDefinitionFile", "Interface/Controls/PC/Gamepad.txt" },
-               #pragma endregion
-               #pragma region K
-                  { "sKeyboardDefinitionFile", "Interface/Controls/PC/Keyboard_" },
-               #pragma endregion
-               #pragma region M
-                  { "sMouseDefinitionFile", "Interface/Controls/PC/Mouse.txt" },
-               #pragma endregion
-               #pragma region S
-                  { "sSaveGameScreenshotName", "BGSSaveLoadHeader_Screenshot" },
-               #pragma endregion
+               { "sControlsDefinitionFile", "Interface/Controls/PC/ControlMap.txt" },
+               { "sControlsRemapFile", "ControlMap_Custom.txt" },
+               { "sGamepadDefinitionFile", "Interface/Controls/PC/Gamepad.txt" },
+               { "sKeyboardDefinitionFile", "Interface/Controls/PC/Keyboard_" },
+               { "sMouseDefinitionFile", "Interface/Controls/PC/Mouse.txt" },
+               { "sSaveGameScreenshotName", "BGSSaveLoadHeader_Screenshot" },
             #pragma endregion
          }),
          section_definition("Actor", {
@@ -215,7 +118,7 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region D
                   { "bDisplayMarkWarning", false },
-                  { { game::skyrim_special }, "bDrawAnimPoseInVDB", false },
+                  { sse_only, "bDrawAnimPoseInVDB", false },
                   { "bDriveRagdollWithGraph", true },
                #pragma endregion
                #pragma region E
@@ -255,7 +158,7 @@ namespace dovah::game_ini {
                #pragma region A
                   { "fAnimInterpFarDist", 800.0F },
                   { "fAnimInterpMaxTime", 0.25F },
-                  { "fAnimInterpMinTime", 0.07999999821186066F },
+                  { "fAnimInterpMinTime", 0.08F },
                   { "fAnimInterpNearDist", 400.0F },
                   { "fAnimInterpSlop", 0.25F },
                #pragma endregion
@@ -270,7 +173,7 @@ namespace dovah::game_ini {
                   { "fIdleChangeClearTime", 1.0F },
                #pragma endregion
                #pragma region M
-                  { "fMaxFrameCounterDifferenceToConsiderVisible", 0.06666667014360428F },
+                  { "fMaxFrameCounterDifferenceToConsiderVisible", 0.06666666666666667F },
                   { "fMaxTimeToMarkSec", 3.0F },
                   { "fMotionFeedbackMinAngleDelta", 20.0F },
                   { "fMotionFeedbackMinSpeed", 5.0F },
@@ -282,7 +185,7 @@ namespace dovah::game_ini {
                   { "fPlayerCharacterAttackComboStartFraction", 0.5F },
                   { "fPlayerCharacterAttackIntroLength", 0.0F },
                   { "fPlayerCharacterDrawSheatheTimeout", 3.0F },
-                  { "fPlayerCharacterPowerAttackStartTime", 0.36666667461395264F },
+                  { "fPlayerCharacterPowerAttackStartTime", 0.36666666666666664F },
                #pragma endregion
                #pragma region S
                   { "fSpecialIdlePickTime", 250.0F },
@@ -292,58 +195,36 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region M
-                  { "iMinBonesToGenerateWhileSitting", 5 },
-               #pragma endregion
-               #pragma region P
-                  { "iPlayerCharacterImagespaceModifierAnimCount", 2 },
-               #pragma endregion
+               { "iMinBonesToGenerateWhileSitting", 5 },
+               { "iPlayerCharacterImagespaceModifierAnimCount", 2 },
             #pragma endregion
             #pragma region Strings
-               #pragma region H
-                  { "sHkxDBNameContextPrefix", "meshes\\" },
-               #pragma endregion
-               #pragma region T
-                  { "strPlayerCharacterBehavior1stPGraph", "Actors\\Character\\_1stPerson\\FirstPerson.hkx" },
-               #pragma endregion
+               { "sHkxDBNameContextPrefix", "meshes\\" },
+               { "strPlayerCharacterBehavior1stPGraph", "Actors\\Character\\_1stPerson\\FirstPerson.hkx" },
             #pragma endregion
          }),
          section_definition("Archive", {
             #pragma region Booleans
-               #pragma region C
-                  { "bCheckRuntimeCollisions", false },
-               #pragma endregion
-               #pragma region F
-                  { { game::skyrim_special }, "bForceAsync", false },
-               #pragma endregion
-               #pragma region I
-                  { "bInvalidateOlderFiles", true },
-               #pragma endregion
-               #pragma region L
-                  { { game::skyrim_special }, "bLoadArchiveInMemory", false },
-                  { { game::skyrim_special }, "bLoadEsmInMemory", true },
-               #pragma endregion
-               #pragma region T
-                  { "bTrackFileLoading", false },
-               #pragma endregion
-               #pragma region U
-                  { "bUseArchives", true },
-               #pragma endregion
+               { "bCheckRuntimeCollisions", false },
+               { sse_only, "bForceAsync", false },
+               { "bInvalidateOlderFiles", true },
+               { sse_only, "bLoadArchiveInMemory", false },
+               { sse_only, "bLoadEsmInMemory", true },
+               { "bTrackFileLoading", false },
+               { "bUseArchives", true },
             #pragma endregion
             #pragma region Integers
-               #pragma region R
-                  { "iRetainDirectoryStringTable", 1 },
-                  { "iRetainFilenameOffsetTable", 1 },
-                  { "iRetainFilenameStringTable", 1 },
-               #pragma endregion
+               { "iRetainDirectoryStringTable", 1 },
+               { "iRetainFilenameOffsetTable", 1 },
+               { "iRetainFilenameStringTable", 1 },
             #pragma endregion
             #pragma region Strings
                #pragma region A
                   { "sArchiveList", "Skyrim - Textures.bsa, Skyrim - Meshes.bsa, Skyrim - Voices.bsa" },
-                  { { game::skyrim_special }, "sArchiveToLoadInMemoryList", "Skyrim - Animations.bsa, Skyrim - Interface.bsa, Skyrim - Misc.bsa, Skyrim - Sounds.bsa" },
+                  { sse_only, "sArchiveToLoadInMemoryList", "Skyrim - Animations.bsa, Skyrim - Interface.bsa, Skyrim - Misc.bsa, Skyrim - Sounds.bsa" },
                #pragma endregion
                #pragma region E
-                  { { game::skyrim_special }, "sEsmToLoadInMemoryList", "Skyrim.esm, Update.esm, Dawnguard.esm, HearthFires.esm, Dragonborn.esm" },
+                  { sse_only, "sEsmToLoadInMemoryList", "Skyrim.esm, Update.esm, Dawnguard.esm, HearthFires.esm, Dragonborn.esm" },
                #pragma endregion
                #pragma region I
                   { "sInvalidationFile", "ArchiveInvalidation.txt" },
@@ -359,24 +240,22 @@ namespace dovah::game_ini {
          }),
          section_definition("Audio", {
             #pragma region Booleans
-               #pragma region E
-                  { "bEnableAudio", true },
-                  { "bEnableAudioCache", true },
-               #pragma endregion
+               { "bEnableAudio", true },
+               { "bEnableAudioCache", true },
             #pragma endregion
             #pragma region Floats
                #pragma region A
                   { "fASFadeInTime", 3.0F },
                   { "fASFadeOutTime", 8.0F },
-                  { { game::skyrim_special }, "fAudioRumbleBigDeadZone", 0.0F },
+                  { sse_only, "fAudioRumbleBigDeadZone", 0.0F },
                   { "fAudioRumbleBigExponent", 0.5F },
-                  { { game::skyrim_special }, "fAudioRumbleBigLerpMax", 1.0F },
-                  { { game::skyrim_special }, "fAudioRumbleBigLerpMin", 0.0F },
-                  { "fAudioRumblePowerAttackAdj", 0.15000000596046448F },
-                  { { game::skyrim_special }, "fAudioRumbleSmallDeadZone", 0.0F },
-                  { "fAudioRumbleSmallExponent", 0.4000000059604645F },
-                  { { game::skyrim_special }, "fAudioRumbleSmallLerpMax", 1.0F },
-                  { { game::skyrim_special }, "fAudioRumbleSmallLerpMin", 0.0F },
+                  { sse_only, "fAudioRumbleBigLerpMax", 1.0F },
+                  { sse_only, "fAudioRumbleBigLerpMin", 0.0F },
+                  { "fAudioRumblePowerAttackAdj", 0.15F },
+                  { sse_only, "fAudioRumbleSmallDeadZone", 0.0F },
+                  { "fAudioRumbleSmallExponent", 0.4F },
+                  { sse_only, "fAudioRumbleSmallLerpMax", 1.0F },
+                  { sse_only, "fAudioRumbleSmallLerpMin", 0.0F },
                #pragma endregion
                #pragma region C
                   { "fCollisionSoundHeavyThreshold", 160.0F },
@@ -421,23 +300,13 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region C
-                  { "iCollisionSoundTimeDelta", 150 },
-               #pragma endregion
-               #pragma region H
-                  { "iHighlightSpeechOverlap", 500 },
-               #pragma endregion
+               { "iCollisionSoundTimeDelta", 150 },
+               { "iHighlightSpeechOverlap", 500 },
             #pragma endregion
             #pragma region Strings
-               #pragma region A
-                  { "sAudioAPI", "XAudio2" },
-               #pragma endregion
-               #pragma region D
-                  { "sDeathCameraEffect", "MAGShoutSlowTimeActiveLP" },
-               #pragma endregion
-               #pragma region M
-                  { "sMissingAssetSoundFile", "Not enough arguments..." },
-               #pragma endregion
+               { "sAudioAPI", "XAudio2" },
+               { "sDeathCameraEffect", "MAGShoutSlowTimeActiveLP" },
+               { "sMissingAssetSoundFile", "Not enough arguments..." },
             #pragma endregion
          }),
          section_definition("BackgroundLoad", {
@@ -456,74 +325,52 @@ namespace dovah::game_ini {
          }),
          section_definition("Bethesda.net", {
             #pragma region Booleans
-               #pragma region A
-                  { { game::skyrim_special }, "bAutoSkipMainMenuLogin", true },
-               #pragma endregion
-               #pragma region E
-                  { { game::skyrim_special }, "bEnableLocalLogging", false },
-                  { { game::skyrim_special }, "bEnablePlatform", true },
-               #pragma endregion
-               #pragma region M
-                  { { game::skyrim_special }, "bModShowDownloadInsteadOfInstallLimit", false },
-               #pragma endregion
-               #pragma region T
-                  { { game::skyrim_special }, "bTESTGameDataWait", true },
-               #pragma endregion
+               { sse_only, "bAutoSkipMainMenuLogin", true },
+               { sse_only, "bEnableLocalLogging", false },
+               { sse_only, "bEnablePlatform", true },
+               { sse_only, "bModShowDownloadInsteadOfInstallLimit", false },
+               { sse_only, "bTESTGameDataWait", true },
             #pragma endregion
             #pragma region Floats
-               #pragma region E
-                  { { game::skyrim_special }, "fEULATimeOutSeconds", 30.0F },
-               #pragma endregion
-               #pragma region M
-                  { { game::skyrim_special }, "fModIntroWarningDisplayTime", 5.0F },
-                  { { game::skyrim_special }, "fModLimitVisibilityThreshold", 0.8500000238418579F },
-               #pragma endregion
-               #pragma region S
-                  { { game::skyrim_special }, "fSteamPollDuration", 90.0F },
-                  { { game::skyrim_special }, "fSteamPollInterval", 10.0F },
-               #pragma endregion
+               { sse_only, "fEULATimeOutSeconds", 30.0F },
+               { sse_only, "fModIntroWarningDisplayTime", 5.0F },
+               { sse_only, "fModLimitVisibilityThreshold", 0.85F },
+               { sse_only, "fSteamPollDuration", 90.0F },
+               { sse_only, "fSteamPollInterval", 10.0F },
             #pragma endregion
             #pragma region Integers
-               #pragma region B
-                  { { game::skyrim_special }, "iBethesdaEntitlementsProductId", 0 },
-                  { { game::skyrim_special }, "iBethesdaLoggingProductId", 0 },
-                  { { game::skyrim_special }, "iBethesdaMotdProductId", 0 },
-               #pragma endregion
-               #pragma region E
-                  { { game::skyrim_special }, "iEnableEventLogging", -1 },
-                  { { game::skyrim_special }, "iEnableLogging", -1 },
-               #pragma endregion
-               #pragma region I
-                  { { game::skyrim_special }, "iIsLiveEventLogging", -1 },
-               #pragma endregion
-               #pragma region M
-                  { { game::skyrim_special }, "iMinHttpResonseStatusToLog", 0 },
-               #pragma endregion
+               { sse_only, "iBethesdaEntitlementsProductId", 0 },
+               { sse_only, "iBethesdaLoggingProductId", 0 },
+               { sse_only, "iBethesdaMotdProductId", 0 },
+               { sse_only, "iEnableEventLogging", -1 },
+               { sse_only, "iEnableLogging", -1 },
+               { sse_only, "iIsLiveEventLogging", -1 },
+               { sse_only, "iMinHttpResonseStatusToLog", 0 },
             #pragma endregion
             #pragma region Strings
                #pragma region A
-                  { { game::skyrim_special }, "sAccountsURL", "Not enough arguments..." },
+                  { sse_only, "sAccountsURL", "Not enough arguments..." },
                #pragma endregion
                #pragma region B
-                  { { game::skyrim_special }, "sBethesdaBeamKey", "Not enough arguments..." },
-                  { { game::skyrim_special }, "sBethesdaLoggingKey", "Not enough arguments..." },
-                  { { game::skyrim_special }, "sBethesdaOAuthId", "Not enough arguments..." },
+                  { sse_only, "sBethesdaBeamKey", "Not enough arguments..." },
+                  { sse_only, "sBethesdaLoggingKey", "Not enough arguments..." },
+                  { sse_only, "sBethesdaOAuthId", "Not enough arguments..." },
                #pragma endregion
                #pragma region C
-                  { { game::skyrim_special }, "sCreationsDownloadDirectory", "Creations" },
-                  { { game::skyrim_special }, "sCreationsInstallDirectory", "Not enough arguments..." },
+                  { sse_only, "sCreationsDownloadDirectory", "Creations" },
+                  { sse_only, "sCreationsInstallDirectory", "Not enough arguments..." },
                #pragma endregion
                #pragma region D
-                  { { game::skyrim_special }, "sDeveloperEmail", "Not enough arguments..." },
-                  { { game::skyrim_special }, "sDeveloperUsername", "Not enough arguments..." },
+                  { sse_only, "sDeveloperEmail", "Not enough arguments..." },
+                  { sse_only, "sDeveloperUsername", "Not enough arguments..." },
                #pragma endregion
                #pragma region E
-                  { { game::skyrim_special }, "sEnvironment", "Auto" },
+                  { sse_only, "sEnvironment", "Auto" },
                #pragma endregion
                #pragma region M
-                  { { game::skyrim_special }, "sModsDownloadDirectory", "Mods" },
-                  { { game::skyrim_special }, "sModsInstallDirectory", "Not enough arguments..." },
-                  { { game::skyrim_special }, "sModsURL", "Not enough arguments..." },
+                  { sse_only, "sModsDownloadDirectory", "Mods" },
+                  { sse_only, "sModsInstallDirectory", "Not enough arguments..." },
+                  { sse_only, "sModsURL", "Not enough arguments..." },
                #pragma endregion
             #pragma endregion
          }),
@@ -543,51 +390,45 @@ namespace dovah::game_ini {
          }),
          section_definition("BudgetCaps", {
             { "fMaxMsUsagePerFrame", 28.0F },
-            { "fMsActiveRefCount", 0.05000000074505806F },
-            { "fMsActorRefCount", 0.24500000476837158F },
-            { "fMsAnimatedObjectsCount", 0.05000000074505806F },
-            { "fMsDecalCount", 0.0010000000474974513F },
-            { "fMsEmittersCount", 0.009999999776482582F },
-            { "fMsGeometryCount", 0.009999999776482582F },
-            { "fMsHavokTriCount", 0.0010000000474974513F },
-            { "fMsLightCount", 0.009999999776482582F },
-            { "fMsLightExcessGeometry", 0.009999999776482582F },
-            { "fMsParticlesCount", 0.0010000000474974513F },
-            { "fMsRefCount", 0.020999999716877937F },
-            { "fMsTriangleCount", 0.00009999999747378752F },
-            { "fMsWaterCount", 0.10000000149011612F },
+            { "fMsActiveRefCount", 0.05F },
+            { "fMsActorRefCount", 0.245F },
+            { "fMsAnimatedObjectsCount", 0.05F },
+            { "fMsDecalCount", 0.001F },
+            { "fMsEmittersCount", 0.01F },
+            { "fMsGeometryCount", 0.01F },
+            { "fMsHavokTriCount", 0.001F },
+            { "fMsLightCount", 0.01F },
+            { "fMsLightExcessGeometry", 0.01F },
+            { "fMsParticlesCount", 0.001F },
+            { "fMsRefCount", 0.021F },
+            { "fMsTriangleCount", 0.0001F },
+            { "fMsWaterCount", 0.1F },
          }),
          section_definition("Camera", {
             #pragma region Booleans
-               #pragma region D
-                  { "bDisableAutoVanityMode", false },
-                  { "bDragonCameraTargetPlayer", true },
-               #pragma endregion
-               #pragma region F
-                  { { game::skyrim_special }, "bForceAutoVanityMode", false },
-               #pragma endregion
-               #pragma region R
-                  { "bReturnTo1stPersonFromVanity", false },
-               #pragma endregion
+               { "bDisableAutoVanityMode", false },
+               { "bDragonCameraTargetPlayer", true },
+               { sse_only, "bForceAutoVanityMode", false },
+               { "bReturnTo1stPersonFromVanity", false },
             #pragma endregion
             #pragma region Floats
                #pragma region 1
                   { "f1st3rdSwitchDelay", 0.25F },
-                  { { game::skyrim_special }, "f1stHorzDampeningSpringConstant", 0.00009999999747378752F },
-                  { { game::skyrim_special }, "f1stHorzDampeningVelocityDampening", 0.4000000059604645F },
+                  { sse_only, "f1stHorzDampeningSpringConstant", 0.0001F },
+                  { sse_only, "f1stHorzDampeningVelocityDampening", 0.4F },
                   { "f1stPitchOffsetMouseFollowSpeed", 15.0F },
                   { "f1stPitchOffsetMouseMaxLag", 4.0F },
                   { "f1stPitchOffsetMultOffAccel", 1.0F },
                   { "f1stPitchOffsetMultOffMaxSpeed", 1.0F },
                   { "f1stPitchOffsetMultOnAccel", 0.5F },
-                  { "f1stPitchOffsetMultOnMaxSpeed", 0.6000000238418579F },
+                  { "f1stPitchOffsetMultOnMaxSpeed", 0.6F },
                   { "f1stPitchOffsetTarget", 0.75F },
-                  { { game::skyrim_special }, "f1stVertDampeningSpringConstant", 0.0010000000474974513F },
-                  { { game::skyrim_special }, "f1stVertDampeningVelocityDampening", 0.6000000238418579F },
+                  { sse_only, "f1stVertDampeningSpringConstant", 0.001F },
+                  { sse_only, "f1stVertDampeningVelocityDampening", 0.6F },
                #pragma endregion
                #pragma region A
                   { "fActorFadeOutLimit", 30.0F },
-                  { "fAutoVanityIncrement", 0.009999999776482582F },
+                  { "fAutoVanityIncrement", 0.01F },
                   { "fAutoVanityModeDelay", 120.0F },
                #pragma endregion
                #pragma region C
@@ -608,27 +449,27 @@ namespace dovah::game_ini {
                #pragma region F
                   { "fFirstPersonDisablePOVLerpDPS", 2.0F },
                   { "fFirstPersonSittingAngleLimit", 1.5707963705062866F },
-                  { "fFirstPersonSittingRotationSpeed", 0.10000000149011612F },
+                  { "fFirstPersonSittingRotationSpeed", 0.1F },
                   { "fFreeCameraRotationSpeed", 3.0F },
                   { "fFreeCameraRunSpeed", 2.0F },
                   { "fFreeCameraTranslationSpeed", 20.0F },
-                  { "fFreeCameraTriggerDeadzone", 0.10000000149011612F },
+                  { "fFreeCameraTriggerDeadzone", 0.1F },
                   { "fFreeRotationSpeed", 3.0F },
                   { "fFurnitureCameraAngle", 0.39269909262657166F },
                   { "fFurnitureCameraZoom", 250.0F },
                #pragma endregion
                #pragma region H
-                  { "fHorseDismountYawCorrection", 0.3199999928474426F },
+                  { "fHorseDismountYawCorrection", 0.32F },
                   { "fHorseMaxAngleBeforeTurn", 90.0F },
                #pragma endregion
                #pragma region L
-                  { "fLookingSpeed", 0.10000000149011612F },
+                  { "fLookingSpeed", 0.1F },
                #pragma endregion
                #pragma region M
-                  { "fMinCurrentZoom", -0.20000000298023224F },
-                  { "fMouseWheelZoomIncrement", 0.07500000298023224F },
-                  { "fMouseWheelZoomMinDelta", 0.004999999888241291F },
-                  { "fMouseWheelZoomSpeed", 0.800000011920929F },
+                  { "fMinCurrentZoom", -0.2F },
+                  { "fMouseWheelZoomIncrement", 0.075F },
+                  { "fMouseWheelZoomMinDelta", 0.005F },
+                  { "fMouseWheelZoomSpeed", 0.8F },
                #pragma endregion
                #pragma region O
                   { "fOverShoulderCombatAddY", -100.0F },
@@ -649,11 +490,11 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region S
                   { "fShoulderDollySpeed", 3.0F },
-                  { { game::skyrim_special }, "fSlowVanityIncrement", 0.019999999552965164F },
+                  { sse_only, "fSlowVanityIncrement", 0.02F },
                #pragma endregion
                #pragma region T
-                  { "fThumbstickZoomSpeed", 0.05000000074505806F },
-                  { "fTweenCamRotAngle", 0.05000000074505806F },
+                  { "fThumbstickZoomSpeed", 0.05F },
+                  { "fTweenCamRotAngle", 0.05F },
                   { "fTweenCamRotClosingSpeed", 10.0F },
                   { "fTweenCamRotSpeed", 4.0F },
                   { "fTweenCamZoomFOVMod", 10.0F },
@@ -675,15 +516,9 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region A
-                  { "iAnimatedTransitionMillis", 1000 },
-               #pragma endregion
-               #pragma region B
-                  { "iBleedoutTransitionMillis", 500 },
-               #pragma endregion
-               #pragma region H
-                  { "iHorseTransitionMillis", 500 },
-               #pragma endregion
+               { "iAnimatedTransitionMillis", 1000 },
+               { "iBleedoutTransitionMillis", 500 },
+               { "iHorseTransitionMillis", 500 },
             #pragma endregion
          }),
          section_definition("CameraPath", {
@@ -702,7 +537,7 @@ namespace dovah::game_ini {
                   { "fCartLimitMin", -0.75F },
                   { "fCartPivotX", 0.0F },
                   { "fCartPivotY", 3.0F },
-                  { "fCartPivotZ", 0.699999988079071F },
+                  { "fCartPivotZ", 0.7F },
                   { "fCartRot1", 10.0F },
                   { "fCartRot2", 10.0F },
                #pragma endregion
@@ -733,16 +568,14 @@ namespace dovah::game_ini {
                   { "fTipImpulse", 500.0F },
                #pragma endregion
                #pragma region W
-                  { "fWheelAngDamp", 0.009999999776482582F },
+                  { "fWheelAngDamp", 0.01F },
                #pragma endregion
             #pragma endregion
             #pragma region Strings
-               #pragma region H
-                  { "sHarnessBoneCart", "FrontHorseCarriage01" },
-                  { "sHarnessBoneLeft", "HarnessLeftBone" },
-                  { "sHarnessBoneRight", "HarnessRightBone" },
-                  { "sHorseConnect", "HorseSpine2" },
-               #pragma endregion
+               { "sHarnessBoneCart", "FrontHorseCarriage01" },
+               { "sHarnessBoneLeft", "HarnessLeftBone" },
+               { "sHarnessBoneRight", "HarnessRightBone" },
+               { "sHorseConnect", "HorseSpine2" },
             #pragma endregion
          }),
          section_definition("Clouds", {
@@ -827,9 +660,9 @@ namespace dovah::game_ini {
                   { "fDecapInitialSpeed", 250.0F },
                #pragma endregion
                #pragma region H
-                  { "fHitEffectThresholdMod", 0.03999999910593033F },
-                  { "fHitEffectThresholdSevere", 0.0430000014603138F },
-                  { "fHitVectorDelay", 0.4000000059604645F },
+                  { "fHitEffectThresholdMod", 0.04F },
+                  { "fHitEffectThresholdSevere", 0.043F },
+                  { "fHitVectorDelay", 0.4F },
                #pragma endregion
                #pragma region I
                   { "fIronSightsZoomDefault", 50.0F },
@@ -854,12 +687,8 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region M
-                  { "iMaxHiPerfCombatCount", 4 },
-               #pragma endregion
-               #pragma region S
-                  { "iShowHitVector", 0 },
-               #pragma endregion
+               { "iMaxHiPerfCombatCount", 4 },
+               { "iShowHitVector", 0 },
             #pragma endregion
          }),
          section_definition("Controls", {
@@ -874,10 +703,10 @@ namespace dovah::game_ini {
                   { "bFreezeDirectionOnLargeDelta", true },
                #pragma endregion
                #pragma region G
-                  { { game::skyrim_special }, "bGamepadLookApplyMaxedOutAcceleration", true },
-                  { { game::skyrim_special }, "bGamepadLookApplySensitivityThreshold", false },
-                  { { game::skyrim_special }, "bGamepadLookApplySnapToAxis", true },
-                  { { game::skyrim_special }, "bGamepadLookTimeNormalizeInputs", true },
+                  { sse_only, "bGamepadLookApplyMaxedOutAcceleration", true },
+                  { sse_only, "bGamepadLookApplySensitivityThreshold", false },
+                  { sse_only, "bGamepadLookApplySnapToAxis", true },
+                  { sse_only, "bGamepadLookTimeNormalizeInputs", true },
                #pragma endregion
                #pragma region I
                   { "bInvertMovementThumbstick", false },
@@ -891,9 +720,9 @@ namespace dovah::game_ini {
             #pragma endregion
             #pragma region Floats
                #pragma region C
-                  { "fControllerBufferDepth", 0.14000000059604645F },
-                  { "fControllerDampenTime", 0.18000000715255737F },
-                  { "fControllerSampleThreshold", 0.10000000149011612F },
+                  { "fControllerBufferDepth", 0.14F },
+                  { "fControllerDampenTime", 0.18F },
+                  { "fControllerSampleThreshold", 0.1F },
                #pragma endregion
                #pragma region D
                   { "fDialogueHardStopAngle1P", 45.0F },
@@ -901,71 +730,71 @@ namespace dovah::game_ini {
                   { "fDialogueSoftStopAngle1P", 20.0F },
                   { "fDialogueSoftStopAngle3P", 25.0F },
                   { "fDirectionalDeadzone", 0.5F },
-                  { "fDualCastChordTime", 0.05000000074505806F },
+                  { "fDualCastChordTime", 0.05F },
                #pragma endregion
                #pragma region F
                   { "fFreezeDirectionDefaultAngleThreshold", 60.0F },
                   { "fFreezeDirectionDefaultSpeedThreshold", 100.0F },
                #pragma endregion
                #pragma region G
-                  { { game::skyrim_special }, "fGamepadHeadingSensitivityDefault", 0.6667199730873108F },
-                  { "fGamepadHeadingSensitivityMax", 3.549999952316284F },
+                  { sse_only, "fGamepadHeadingSensitivityDefault", 0.6667199730873108F },
+                  { "fGamepadHeadingSensitivityMax", 3.55F },
                   { "fGamepadHeadingSensitivityMin", 0.25F },
-                  { "fGamepadHeadingXScale", 0.8999999761581421F },
+                  { "fGamepadHeadingXScale", 0.9F },
                   { "fGamepadHeadingYScale", 23.0F },
-                  { { game::skyrim_special }, "fGamepadLookAccelPitchMult", 2.5F },
-                  { { game::skyrim_special }, "fGamepadLookAccelSec", 0.9200000166893005F },
-                  { { game::skyrim_special }, "fGamepadLookAccelYawMult", 2.5F },
-                  { { game::skyrim_special }, "fGamepadLookMultExponent", 0.0F },
+                  { sse_only, "fGamepadLookAccelPitchMult", 2.5F },
+                  { sse_only, "fGamepadLookAccelSec", 0.92F },
+                  { sse_only, "fGamepadLookAccelYawMult", 2.5F },
+                  { sse_only, "fGamepadLookMultExponent", 0.0F },
                #pragma endregion
                #pragma region H
-                  { "fHeadingAxisDeadzone", 0.15000000596046448F },
+                  { "fHeadingAxisDeadzone", 0.15F },
                   { "fHorseClampAngle", 10.0F },
                   { "fHorseControlsDampenTime", 1.0F },
                   { "fHorseHeadingMovementMult", 0.75F },
                   { "fHotKeyDelay", 0.25F },
                #pragma endregion
                #pragma region I
-                  { "fInitialPowerAttackDelay", 0.30000001192092896F },
-                  { "fInitialPowerBashDelay", 0.30000001192092896F },
+                  { "fInitialPowerAttackDelay", 0.3F },
+                  { "fInitialPowerBashDelay", 0.3F },
                #pragma endregion
                #pragma region L
-                  { "fLThumbDeadzone", 0.23999999463558197F },
-                  { { game::skyrim_special }, "fLThumbDeadzoneMax", 0.9700000286102295F },
-                  { { game::skyrim_special }, "fLookCurveSensitivityThreshold", 0.10000000149011612F },
-                  { { game::skyrim_special }, "fLookGraphCoefficient1", 0.11514099687337875F },
-                  { { game::skyrim_special }, "fLookGraphCoefficient2", -0.3826659917831421F },
-                  { { game::skyrim_special }, "fLookGraphCoefficient3", 2.0286500453948975F },
-                  { { game::skyrim_special }, "fLookGraphCoefficient4", -0.7544990181922913F },
-                  { "fLookGraphX1", 0.4000000059604645F },
-                  { "fLookGraphX2", 0.6000000238418579F },
-                  { "fLookGraphX3", 0.800000011920929F },
-                  { "fLookGraphX4", 0.8999999761581421F },
-                  { "fLookGraphY1", 0.10000000149011612F },
-                  { "fLookGraphY2", 0.20000000298023224F },
-                  { "fLookGraphY3", 0.30000001192092896F },
-                  { "fLookGraphY4", 0.6000000238418579F },
-                  { { game::skyrim_special }, "fLookSnapToAxisStrength", 0.15000000596046448F },
-                  { { game::skyrim_special }, "fLookTimeNormalizingFloorFramerate", 20.0F },
-                  { { game::skyrim_special }, "fLookTimeNormalizingTargetFramerate", 30.0F },
+                  { "fLThumbDeadzone", 0.24F },
+                  { sse_only, "fLThumbDeadzoneMax", 0.97F },
+                  { sse_only, "fLookCurveSensitivityThreshold", 0.1F },
+                  { sse_only, "fLookGraphCoefficient1", 0.11514099687337875F },
+                  { sse_only, "fLookGraphCoefficient2", -0.3826659917831421F },
+                  { sse_only, "fLookGraphCoefficient3", 2.0286500453948975F },
+                  { sse_only, "fLookGraphCoefficient4", -0.7544990181922913F },
+                  { "fLookGraphX1", 0.4F },
+                  { "fLookGraphX2", 0.6F },
+                  { "fLookGraphX3", 0.8F },
+                  { "fLookGraphX4", 0.9F },
+                  { "fLookGraphY1", 0.1F },
+                  { "fLookGraphY2", 0.2F },
+                  { "fLookGraphY3", 0.3F },
+                  { "fLookGraphY4", 0.6F },
+                  { sse_only, "fLookSnapToAxisStrength", 0.15F },
+                  { sse_only, "fLookTimeNormalizingFloorFramerate", 20.0F },
+                  { sse_only, "fLookTimeNormalizingTargetFramerate", 30.0F },
                #pragma endregion
                #pragma region M
-                  { "fMaxLookRampUpDelta", 0.12999999523162842F },
+                  { "fMaxLookRampUpDelta", 0.13F },
                   { "fMaxMoveRampDownDelta", 500.0F },
-                  { "fMouseHeadingSensitivityMax", 0.05000000074505806F },
-                  { "fMouseHeadingSensitivityMin", 0.009999999776482582F },
-                  { "fMouseHeadingXScale", 0.019999999552965164F },
-                  { "fMouseHeadingYScale", 0.8500000238418579F },
-                  { "fMoveGraphX1", 0.20000000298023224F },
-                  { "fMoveGraphX2", 0.699999988079071F },
-                  { "fMoveGraphX3", 0.8999999761581421F },
-                  { "fMoveGraphY1", 0.10000000149011612F },
+                  { "fMouseHeadingSensitivityMax", 0.05F },
+                  { "fMouseHeadingSensitivityMin", 0.01F },
+                  { "fMouseHeadingXScale", 0.02F },
+                  { "fMouseHeadingYScale", 0.85F },
+                  { "fMoveGraphX1", 0.2F },
+                  { "fMoveGraphX2", 0.7F },
+                  { "fMoveGraphX3", 0.9F },
+                  { "fMoveGraphY1", 0.1F },
                   { "fMoveGraphY2", 0.5F },
-                  { "fMoveGraphY3", 0.8999999761581421F },
-                  { "fMovementAxisDeadzone", 0.15000000596046448F },
+                  { "fMoveGraphY3", 0.9F },
+                  { "fMovementAxisDeadzone", 0.15F },
                #pragma endregion
                #pragma region O
-                  { "fOutsideDialogueAngleRotationDampen", 0.33000001311302185F },
+                  { "fOutsideDialogueAngleRotationDampen", 0.33F },
                #pragma endregion
                #pragma region P
                   { "fPCDialogueLookSpeed", 10.0F },
@@ -973,9 +802,9 @@ namespace dovah::game_ini {
                   { "fPlayerThirdPersonDampenTime", 0.25F },
                #pragma endregion
                #pragma region R
-                  { "fRThumbDeadzone", 0.26499998569488525F },
-                  { { game::skyrim_special }, "fRThumbDeadzoneMax", 0.9700000286102295F },
-                  { "fReverseDirThreshold", 0.30000001192092896F },
+                  { "fRThumbDeadzone", 0.265F },
+                  { sse_only, "fRThumbDeadzoneMax", 0.97F },
+                  { "fReverseDirThreshold", 0.3F },
                #pragma endregion
                #pragma region S
                   { "fSprintStopThreshold", 0.5F },
@@ -984,18 +813,16 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region T
                   { "fTogglePOVDelay", 0.0F },
-                  { "fTriggerDeadzone", 0.30000001192092896F },
+                  { "fTriggerDeadzone", 0.3F },
                #pragma endregion
                #pragma region Z
-                  { "fZKeyDelay", 0.20000000298023224F },
+                  { "fZKeyDelay", 0.2F },
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region N
-                  { "iNumHotkeys", 37 },
-                  { "iNumLookGraphSettings", 4 },
-                  { "iNumMoveGraphSettings", 3 },
-               #pragma endregion
+               { "iNumHotkeys", 37 },
+               { "iNumLookGraphSettings", 4 },
+               { "iNumMoveGraphSettings", 3 },
             #pragma endregion
          }),
          section_definition("CopyProtectionStrings", {
@@ -1008,7 +835,7 @@ namespace dovah::game_ini {
             { "bDebugFaceGenCriticalSection", false },
             { "bDebugFaceGenMultithreading", false },
             { "bDebugFlyingMountLeash", false },
-            { { game::skyrim_special }, "bWriteTACOutputToFile", false },
+            { sse_only, "bWriteTACOutputToFile", false },
          }),
          section_definition("Decals", {
             { "bAllowDecalsOnAlpha", true },
@@ -1018,10 +845,10 @@ namespace dovah::game_ini {
             { "bDecals", true },
             { "bForceAllDecals", false },
             { "bSkinnedDecals", true },
-            { "fDebrisDecalTimer", 0.004999999888241291F },
+            { "fDebrisDecalTimer", 0.005F },
          }),
          section_definition("Dialogue", {
-            { "fDialogueRotationPitchOffset", 0.17000000178813934F },
+            { "fDialogueRotationPitchOffset", 0.17F },
             { "fDialogueRotationSecs", 1.0F },
          }),
          section_definition("Display", {
@@ -1032,29 +859,29 @@ namespace dovah::game_ini {
                   { "bAllow30Shaders", false },
                   { "bAllowPartialPrecision", true },
                   { "bAllowScreenShot", false },
-                  { { game::skyrim_special }, "bAllowShaderCache", true },
-                  { { game::skyrim_special }, "bAssertOnShaderCompileAtRuntime", true },
+                  { sse_only, "bAllowShaderCache", true },
+                  { sse_only, "bAssertOnShaderCompileAtRuntime", true },
                   { "bAutoViewDistance", false },
                #pragma endregion
                #pragma region B
-                  { { game::skyrim_special }, "bBreakOnValidationError", true },
-                  { { game::skyrim_special }, "bBreakOnValidationWarning", false },
+                  { sse_only, "bBreakOnValidationError", true },
+                  { sse_only, "bBreakOnValidationWarning", false },
                #pragma endregion
                #pragma region C
-                  { { game::skyrim_special }, "bCharacterLighting", true },
-                  { { game::skyrim_special }, "bCompensateUnstableFrameTime", true },
+                  { sse_only, "bCharacterLighting", true },
+                  { sse_only, "bCompensateUnstableFrameTime", true },
                   { "bCompileOnRender", true },
-                  { { game::skyrim_special }, "bCreateShadowRenderTarget", false },
+                  { sse_only, "bCreateShadowRenderTarget", false },
                #pragma endregion
                #pragma region D
-                  { { game::skyrim_special }, "bDOFApplyCenterWeight", true },
-                  { { game::skyrim_special }, "bDOFBilateralBlur", true },
-                  { { game::skyrim_special }, "bDeactivateAOOnSnow", true },
+                  { sse_only, "bDOFApplyCenterWeight", true },
+                  { sse_only, "bDOFBilateralBlur", true },
+                  { sse_only, "bDeactivateAOOnSnow", true },
                   { "bDecalsOnSkinnedGeometry", true },
-                  { { game::skyrim_special }, "bDirShadowMapFullViewPort", true },
-                  { { game::skyrim_special }, "bDisableHighTreeShadow", true },
-                  { { game::skyrim_special }, "bDisableShadowJumps", true },
-                  { { game::skyrim_special }, "bDisableZPrepassOutput", false },
+                  { sse_only, "bDirShadowMapFullViewPort", true },
+                  { sse_only, "bDisableHighTreeShadow", true },
+                  { sse_only, "bDisableShadowJumps", true },
+                  { sse_only, "bDisableZPrepassOutput", false },
                   { "bDo30VFog", true },
                   { "bDoAmbientPass", true },
                   { "bDoDiffusePass", true },
@@ -1062,21 +889,21 @@ namespace dovah::game_ini {
                   { "bDoTallGrassEffect", true },
                   { "bDoTestHDR", false },
                   { "bDoTexturePass", true },
-                  { { game::skyrim_special }, "bDownSampleNormalSSR", true },
-                  { { game::skyrim_special }, "bDynamicDOF", true },
+                  { sse_only, "bDownSampleNormalSSR", true },
+                  { sse_only, "bDynamicDOF", true },
                   { "bDynamicWindowReflections", true },
                #pragma endregion
                #pragma region E
-                  { { game::skyrim_special }, "bEnableAutoDynamicResolution", false },
-                  { { game::skyrim_special }, "bEnableDownsampleComputeShader", true },
-                  { { game::skyrim_special }, "bEnableFrontToBackPrepass", false },
-                  { { game::skyrim_special }, "bEnableLandFade", true },
-                  { { game::skyrim_special }, "bEnableParallaxOcclusion", false },
-                  { { game::skyrim_special }, "bEnableProjecteUVDiffuseNormalsOnCubemap", false },
-                  { { game::skyrim_special }, "bEnableSnowMask", true },
-                  { { game::skyrim_special }, "bEnableSnowRimLighting", true },
-                  { { game::skyrim_special }, "bEnableStippleFade", true },
-                  { { game::skyrim_special }, "bEnableVolumetricLighting", false },
+                  { sse_only, "bEnableAutoDynamicResolution", false },
+                  { sse_only, "bEnableDownsampleComputeShader", true },
+                  { sse_only, "bEnableFrontToBackPrepass", false },
+                  { sse_only, "bEnableLandFade", true },
+                  { sse_only, "bEnableParallaxOcclusion", false },
+                  { sse_only, "bEnableProjecteUVDiffuseNormalsOnCubemap", false },
+                  { sse_only, "bEnableSnowMask", true },
+                  { sse_only, "bEnableSnowRimLighting", true },
+                  { sse_only, "bEnableStippleFade", true },
+                  { sse_only, "bEnableVolumetricLighting", false },
                   { "bEquippedTorchesCastShadows", false },
                #pragma endregion
                #pragma region F
@@ -1087,146 +914,146 @@ namespace dovah::game_ini {
                #pragma region I
                   { "bIgnoreResolutionCheck", false },
                   { "bImageSpaceEffects", true },
-                  { { game::skyrim_special }, "bIndDownscaled", false },
-                  { { game::skyrim_special }, "bIndNormalMap", true },
+                  { sse_only, "bIndDownscaled", false },
+                  { sse_only, "bIndNormalMap", true },
                #pragma endregion
                #pragma region L
                   { "bLODNoiseAniso", true },
                   { "bLoadMarkers", true },
-                  { { game::skyrim_special }, "bLockFramerate", true },
-                  { { game::skyrim_special }, "bLodZPrepass", true },
+                  { sse_only, "bLockFramerate", true },
+                  { sse_only, "bLodZPrepass", true },
                   { "bLowHealthIModEnabled", true },
                #pragma endregion
                #pragma region M
                   { "bMTRendering", false },
                #pragma endregion
                #pragma region O
-                  { { game::skyrim_special }, "bOutputMissingTexture", true },
+                  { sse_only, "bOutputMissingTexture", true },
                #pragma endregion
                #pragma region P
-                  { { game::skyrim_special }, "bProjectileOnReflection", false },
+                  { sse_only, "bProjectileOnReflection", false },
                #pragma endregion
                #pragma region R
                   { "bReportBadTangentSpace", false },
                #pragma endregion
                #pragma region S
-                  { { game::skyrim_special }, "bSAOApplyFog", true },
-                  { { game::skyrim_special }, "bSAODownscaled", false },
-                  { { game::skyrim_special }, "bSAONormalMap", true },
-                  { { game::skyrim_special }, "bSAO_CS_Downscaled", false },
-                  { { game::skyrim_special }, "bShadowsOnGrass", true },
+                  { sse_only, "bSAOApplyFog", true },
+                  { sse_only, "bSAODownscaled", false },
+                  { sse_only, "bSAONormalMap", true },
+                  { sse_only, "bSAO_CS_Downscaled", false },
+                  { sse_only, "bShadowsOnGrass", true },
                   { "bShowMarkers", false },
                   { "bShowMenuTextureUse", true },
                   { "bSimpleLighting", false },
-                  { { game::skyrim_special }, "bSparklesOnly", false },
+                  { sse_only, "bSparklesOnly", false },
                   { "bStaticMenuBackground", true },
                #pragma endregion
                #pragma region T
-                  { { game::skyrim_special }, "bTAAWater", false },
+                  { sse_only, "bTAAWater", false },
                #pragma endregion
                #pragma region U
                   { "bUse Shaders", true },
-                  { { game::skyrim_special }, "bUse16BitsDepthTarget", true },
-                  { { game::skyrim_special }, "bUseDeviceDebug", false },
+                  { sse_only, "bUse16BitsDepthTarget", true },
+                  { sse_only, "bUseDeviceDebug", false },
                   { "bUseFakeFullScreenMotionBlur", false },
-                  { { game::skyrim_special }, "bUseFilmicCurve", false },
-                  { { game::skyrim_special }, "bUseMultipleLuminanceReferences", true },
-                  { { game::skyrim_special }, "bUsePrecomputedNoise", false },
+                  { sse_only, "bUseFilmicCurve", false },
+                  { sse_only, "bUseMultipleLuminanceReferences", true },
+                  { sse_only, "bUsePrecomputedNoise", false },
                   { "bUseRefractionShader", true },
                   { "bUseSunbeams", false },
                #pragma endregion
                #pragma region V
-                  { { game::skyrim_special }, "bValidateRenderTargets", true },
-                  { { game::skyrim_special }, "bVolumetricLightingDisableInterior", true },
-                  { { game::skyrim_special }, "bVolumetricLightingEnableTemporalAccumulation", true },
-                  { { game::skyrim_special }, "bVolumetricLightingUpdateWeather", true },
+                  { sse_only, "bValidateRenderTargets", true },
+                  { sse_only, "bVolumetricLightingDisableInterior", true },
+                  { sse_only, "bVolumetricLightingEnableTemporalAccumulation", true },
+                  { sse_only, "bVolumetricLightingUpdateWeather", true },
                #pragma endregion
             #pragma endregion
             #pragma region Floats
                #pragma region 1
-                  { { game::skyrim_special }, "f1stPersonFarDepthRange", 0.009999999776482582F },
-                  { { game::skyrim_special }, "f1stPersonFarDepthRangeControlDriven", 0.10000000149011612F },
+                  { sse_only, "f1stPersonFarDepthRange", 0.01F },
+                  { sse_only, "f1stPersonFarDepthRangeControlDriven", 0.1F },
                #pragma endregion
                #pragma region A
-                  { { game::skyrim_special }, "fAlphaWeight", 1.0F },
+                  { sse_only, "fAlphaWeight", 1.0F },
                #pragma endregion
                #pragma region C
-                  { { game::skyrim_special }, "fCharacterLightLumMax", 0.75F },
-                  { { game::skyrim_special }, "fCharacterLightLumScale", 2.0F },
-                  { { game::skyrim_special }, "fCharacterLightPrimaryLightIntensity", 0.75F },
-                  { { game::skyrim_special }, "fCharacterLightSecondaryLightIntensity", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fClampScale", 0.4000000059604645F },
-                  { { game::skyrim_special }, "fConstHDRAdaptTimerForMenu", 0.30000001192092896F },
+                  { sse_only, "fCharacterLightLumMax", 0.75F },
+                  { sse_only, "fCharacterLightLumScale", 2.0F },
+                  { sse_only, "fCharacterLightPrimaryLightIntensity", 0.75F },
+                  { sse_only, "fCharacterLightSecondaryLightIntensity", 0.3F },
+                  { sse_only, "fClampScale", 0.4F },
+                  { sse_only, "fConstHDRAdaptTimerForMenu", 0.3F },
                #pragma endregion
                #pragma region D
-                  { { game::skyrim_special }, "fDDOFAngleThreshold", 2.0F },
-                  { { game::skyrim_special }, "fDDOFFocusCenterweightExt", 1.600000023841858F },
-                  { { game::skyrim_special }, "fDDOFFocusCenterweightInt", 1.0F },
-                  { { game::skyrim_special }, "fDDOFFocusDelay", 500.0F },
-                  { { game::skyrim_special }, "fDDOFFocusDuration", 1000.0F },
-                  { { game::skyrim_special }, "fDDOFPositionThreshold", 5.0F },
-                  { { game::skyrim_special }, "fDOFCenterWeight", 0.6000000238418579F },
-                  { { game::skyrim_special }, "fDOFMaxDepthParticipation", 50000.0F },
-                  { { game::skyrim_special }, "fDRClampOffset", 0.0020000000949949026F },
-                  { { game::skyrim_special }, "fDRClampOffsetNeo", 0.0005000000237487257F },
+                  { sse_only, "fDDOFAngleThreshold", 2.0F },
+                  { sse_only, "fDDOFFocusCenterweightExt", 1.6F },
+                  { sse_only, "fDDOFFocusCenterweightInt", 1.0F },
+                  { sse_only, "fDDOFFocusDelay", 500.0F },
+                  { sse_only, "fDDOFFocusDuration", 1000.0F },
+                  { sse_only, "fDDOFPositionThreshold", 5.0F },
+                  { sse_only, "fDOFCenterWeight", 0.6F },
+                  { sse_only, "fDOFMaxDepthParticipation", 50000.0F },
+                  { sse_only, "fDRClampOffset", 0.002F },
+                  { sse_only, "fDRClampOffsetNeo", 0.0005F },
                   { "fDecalLOD0", 800.0F },
                   { "fDecalLifetime", 30.0F },
-                  { { game::skyrim_special }, "fDecreaseDRMilliseconds", 32.0F },
+                  { sse_only, "fDecreaseDRMilliseconds", 32.0F },
                   { "fDefault1stPersonFOV", 65.0F },
                   { "fDefaultFOV", 65.0F },
                   { "fDefaultWorldFOV", 65.0F },
-                  { { game::skyrim_special }, "fDynamicDOFBlurMultiplierMax", 1.0F },
-                  { { game::skyrim_special }, "fDynamicDOFBlurMultiplierMin", 0.0F },
-                  { { game::skyrim_special }, "fDynamicDOFFarBlur", 0.699999988079071F },
-                  { { game::skyrim_special }, "fDynamicDOFFarDist", 1000.0F },
-                  { { game::skyrim_special }, "fDynamicDOFFarRange", 10000.0F },
-                  { { game::skyrim_special }, "fDynamicDOFNearBlur", 1.0F },
-                  { { game::skyrim_special }, "fDynamicDOFNearDist", 100.0F },
-                  { { game::skyrim_special }, "fDynamicDOFNearRange", 100.0F },
+                  { sse_only, "fDynamicDOFBlurMultiplierMax", 1.0F },
+                  { sse_only, "fDynamicDOFBlurMultiplierMin", 0.0F },
+                  { sse_only, "fDynamicDOFFarBlur", 0.7F },
+                  { sse_only, "fDynamicDOFFarDist", 1000.0F },
+                  { sse_only, "fDynamicDOFFarRange", 10000.0F },
+                  { sse_only, "fDynamicDOFNearBlur", 1.0F },
+                  { sse_only, "fDynamicDOFNearDist", 100.0F },
+                  { sse_only, "fDynamicDOFNearRange", 100.0F },
                #pragma endregion
                #pragma region E
                   { "fEnvMapLOD1", 1500.0F },
                   { "fEnvMapLOD2", 1800.0F },
-                  { { game::skyrim_special }, "fExponentialShadowMapScale", 10.0F },
+                  { sse_only, "fExponentialShadowMapScale", 10.0F },
                   { "fEyeEnvMapLOD1", 500.0F },
                   { "fEyeEnvMapLOD2", 800.0F },
                #pragma endregion
                #pragma region F
-                  { { game::skyrim_special }, "fFilmicWhiteScale", 1.399999976158142F },
-                  { { game::skyrim_special }, "fFilteringAlphaThreshold", 0.009999999776482582F },
-                  { { game::skyrim_special }, "fFilteringWaterDepthThreshold", 0.004999999888241291F },
-                  { { game::skyrim_special }, "fFirstSliceDistance", 1250.0F },
+                  { sse_only, "fFilmicWhiteScale", 1.4F },
+                  { sse_only, "fFilteringAlphaThreshold", 0.01F },
+                  { sse_only, "fFilteringWaterDepthThreshold", 0.005F },
+                  { sse_only, "fFirstSliceDistance", 1250.0F },
                #pragma endregion
                #pragma region G
-                  { "fGammaMax", 0.6000000238418579F },
-                  { "fGammaMin", 1.399999976158142F },
-                  { { game::skyrim_special }, "fGlobalBloomThresholdBoost", 0.0F },
-                  { { game::skyrim_special }, "fGlobalBrightnessBoost", 0.0F },
-                  { { game::skyrim_special }, "fGlobalContrastBoost", 0.0F },
-                  { { game::skyrim_special }, "fGlobalEyeAdaptSpeedScale", 2.0F },
-                  { { game::skyrim_special }, "fGlobalEyeAdaptStrengthScale", 0.4000000059604645F },
-                  { { game::skyrim_special }, "fGlobalMapBloomThresholdBoost", 0.25F },
-                  { { game::skyrim_special }, "fGlobalMapBrightnessBoost", 0.25F },
-                  { { game::skyrim_special }, "fGlobalMapContrastBoost", -0.30000001192092896F },
-                  { { game::skyrim_special }, "fGlobalSaturationBoost", 0.0F },
+                  { "fGammaMax", 0.6F },
+                  { "fGammaMin", 1.4F },
+                  { sse_only, "fGlobalBloomThresholdBoost", 0.0F },
+                  { sse_only, "fGlobalBrightnessBoost", 0.0F },
+                  { sse_only, "fGlobalContrastBoost", 0.0F },
+                  { sse_only, "fGlobalEyeAdaptSpeedScale", 2.0F },
+                  { sse_only, "fGlobalEyeAdaptStrengthScale", 0.4F },
+                  { sse_only, "fGlobalMapBloomThresholdBoost", 0.25F },
+                  { sse_only, "fGlobalMapBrightnessBoost", 0.25F },
+                  { sse_only, "fGlobalMapContrastBoost", -0.3F },
+                  { sse_only, "fGlobalSaturationBoost", 0.0F },
                #pragma endregion
                #pragma region I
-                  { { game::skyrim_special }, "fIBLFAnamorphicsIntensity", 0.10000000149011612F },
-                  { { game::skyrim_special }, "fIBLFAnamorphicsIntensityFar", 1.0F },
-                  { { game::skyrim_special }, "fIBLFBloomIntensity", 0.0F },
-                  { { game::skyrim_special }, "fIBLFChannelsDistortionBlue", -2.0F },
-                  { { game::skyrim_special }, "fIBLFChannelsDistortionGreen", 0.0F },
-                  { { game::skyrim_special }, "fIBLFChannelsDistortionRed", 2.0F },
-                  { { game::skyrim_special }, "fIBLFFlaresDispersal", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fIBLFGlobalIntensity", 0.699999988079071F },
-                  { { game::skyrim_special }, "fIBLFHaloFetch", 0.5F },
-                  { { game::skyrim_special }, "fIBLFHaloWidthPow", 3.0F },
-                  { { game::skyrim_special }, "fIBLFLightsBurn", 1.0F },
-                  { { game::skyrim_special }, "fIBLFLightsRangeDownshift", 1.0F },
-                  { { game::skyrim_special }, "fIncreaseDRMilliseconds", 30.0F },
-                  { { game::skyrim_special }, "fIndBias", 2.5F },
-                  { { game::skyrim_special }, "fIndIntensity", 50.0F },
-                  { { game::skyrim_special }, "fIndRadius", 100.0F },
+                  { sse_only, "fIBLFAnamorphicsIntensity", 0.1F },
+                  { sse_only, "fIBLFAnamorphicsIntensityFar", 1.0F },
+                  { sse_only, "fIBLFBloomIntensity", 0.0F },
+                  { sse_only, "fIBLFChannelsDistortionBlue", -2.0F },
+                  { sse_only, "fIBLFChannelsDistortionGreen", 0.0F },
+                  { sse_only, "fIBLFChannelsDistortionRed", 2.0F },
+                  { sse_only, "fIBLFFlaresDispersal", 0.3F },
+                  { sse_only, "fIBLFGlobalIntensity", 0.7F },
+                  { sse_only, "fIBLFHaloFetch", 0.5F },
+                  { sse_only, "fIBLFHaloWidthPow", 3.0F },
+                  { sse_only, "fIBLFLightsBurn", 1.0F },
+                  { sse_only, "fIBLFLightsRangeDownshift", 1.0F },
+                  { sse_only, "fIncreaseDRMilliseconds", 30.0F },
+                  { sse_only, "fIndBias", 2.5F },
+                  { sse_only, "fIndIntensity", 50.0F },
+                  { sse_only, "fIndRadius", 100.0F },
                #pragma endregion
                #pragma region L
                   { "fLODNoiseMipBias", 0.0F },
@@ -1236,17 +1063,17 @@ namespace dovah::game_ini {
                   { "fLightLODMinStartFade", 200.0F },
                   { "fLightLODRange", 500.0F },
                   { "fLinePrimitiveWidth", 8.0F },
-                  { { game::skyrim_special }, "fLoadingMenuShadowBias", 30.639999389648438F },
-                  { { game::skyrim_special }, "fLoadingMenuShadowFallOff", 0.0F },
+                  { sse_only, "fLoadingMenuShadowBias", 30.64F },
+                  { sse_only, "fLoadingMenuShadowFallOff", 0.0F },
                   { "fLowHealthIModInterval", 2.0F },
                   { "fLowHealthIModStrengthMax", 1.5F },
-                  { "fLowHealthIModStrengthMin", 0.800000011920929F },
-                  { { game::skyrim_special }, "fLowestDynamicHeightRatio", 1.0F },
-                  { { game::skyrim_special }, "fLowestDynamicWidthRatio", 0.699999988079071F },
+                  { "fLowHealthIModStrengthMin", 0.8F },
+                  { sse_only, "fLowestDynamicHeightRatio", 1.0F },
+                  { sse_only, "fLowestDynamicWidthRatio", 0.7F },
                #pragma endregion
                #pragma region M
-                  { { game::skyrim_special }, "fMaxFocusShadowMapDistance", 450.0F },
-                  { { game::skyrim_special }, "fMaxHeightShadowCastingTrees", 5000.0F },
+                  { sse_only, "fMaxFocusShadowMapDistance", 450.0F },
+                  { sse_only, "fMaxHeightShadowCastingTrees", 5000.0F },
                   { "fMeshLODFadeTime", 1.0F },
                   { "fMipBias", 0.0F },
                #pragma endregion
@@ -1256,95 +1083,95 @@ namespace dovah::game_ini {
                   { "fNoLODFarDistanceMax", 10240.0F },
                   { "fNoLODFarDistanceMin", 100.0F },
                   { "fNoLODFarDistancePct", 1.0F },
-                  { { game::skyrim_special }, "fNonSpecularSparklesIntensity", 0.4000000059604645F },
+                  { sse_only, "fNonSpecularSparklesIntensity", 0.4F },
                #pragma endregion
                #pragma region P
-                  { { game::skyrim_special }, "fPoissonRadiusScale", 4.0F },
+                  { sse_only, "fPoissonRadiusScale", 4.0F },
                #pragma endregion
                #pragma region R
-                  { { game::skyrim_special }, "fRatioDecreasePerSeconds", 0.07000000029802322F },
-                  { { game::skyrim_special }, "fRatioIncreasePerSeconds", 0.029999999329447746F },
-                  { { game::skyrim_special }, "fReflectionMarchingRadius", 0.4000000059604645F },
-                  { { game::skyrim_special }, "fReflectionRayThickness", 0.0010000000474974513F },
-                  { { game::skyrim_special }, "fReflectionsIntensityScale", 0.800000011920929F },
-                  { { game::skyrim_special }, "fReflectionsMotionVectorScale", 1.0F },
-                  { { game::skyrim_special }, "fReinhardWhiteScale", 1.100000023841858F },
+                  { sse_only, "fRatioDecreasePerSeconds", 0.07F },
+                  { sse_only, "fRatioIncreasePerSeconds", 0.03F },
+                  { sse_only, "fReflectionMarchingRadius", 0.4F },
+                  { sse_only, "fReflectionRayThickness", 0.001F },
+                  { sse_only, "fReflectionsIntensityScale", 0.8F },
+                  { sse_only, "fReflectionsMotionVectorScale", 1.0F },
+                  { sse_only, "fReinhardWhiteScale", 1.1F },
                #pragma endregion
                #pragma region S
-                  { { game::skyrim_special }, "fSAOBias", 2.5F },
-                  { { game::skyrim_special }, "fSAOExpFactor", 0.10999999940395355F },
-                  { { game::skyrim_special }, "fSAOIntensity", 15.0F },
-                  { { game::skyrim_special }, "fSAORadius", 250.0F },
-                  { { game::skyrim_special }, "fSAOValueDiffFactor", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fSAO_CS_Bias", 2.5F },
-                  { { game::skyrim_special }, "fSAO_CS_Intensity", 10.0F },
-                  { { game::skyrim_special }, "fSAO_CS_Radius", 250.0F },
-                  { "fScopeScissorAmount", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fShadowBiasScale", 1.0F },
-                  { { game::skyrim_special }, "fShadowClampValue", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fShadowDirectionalBiasScale", 0.30000001192092896F },
+                  { sse_only, "fSAOBias", 2.5F },
+                  { sse_only, "fSAOExpFactor", 0.11F },
+                  { sse_only, "fSAOIntensity", 15.0F },
+                  { sse_only, "fSAORadius", 250.0F },
+                  { sse_only, "fSAOValueDiffFactor", 0.3F },
+                  { sse_only, "fSAO_CS_Bias", 2.5F },
+                  { sse_only, "fSAO_CS_Intensity", 10.0F },
+                  { sse_only, "fSAO_CS_Radius", 250.0F },
+                  { "fScopeScissorAmount", 0.3F },
+                  { sse_only, "fShadowBiasScale", 1.0F },
+                  { sse_only, "fShadowClampValue", 0.3F },
+                  { sse_only, "fShadowDirectionalBiasScale", 0.3F },
                   { "fShadowFadeTime", 1.0F },
                   { "fShadowLODDefaultStartFade", 200.0F },
                   { "fShadowLODMaxStartFade", 300.0F },
                   { "fShadowLODMinStartFade", 100.0F },
                   { "fShadowLODRange", 200.0F },
-                  { { game::skyrim_special }, "fShadowSparkleIntensity", 0.25F },
+                  { sse_only, "fShadowSparkleIntensity", 0.25F },
                   { "fSkinnedDecalLOD0", 300.0F },
                   { "fSkinnedDecalLOD1", 500.0F },
                   { "fSkinnedDecalLOD2", 800.0F },
-                  { { game::skyrim_special }, "fSnowGeometrySpecPower", 3.0F },
-                  { { game::skyrim_special }, "fSnowNormalSpecPower", 2.0F },
-                  { { game::skyrim_special }, "fSnowRimLightIntensity", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fSnowSSSColorB", 0.07999999821186066F },
-                  { { game::skyrim_special }, "fSnowSSSColorG", 0.0F },
-                  { { game::skyrim_special }, "fSnowSSSColorR", 0.0F },
-                  { { game::skyrim_special }, "fSnowSSSDepthDiff", 0.5F },
-                  { { game::skyrim_special }, "fSnowSSSStrength", 50.0F },
-                  { { game::skyrim_special }, "fSnowSparklesColorB", 1.0F },
-                  { { game::skyrim_special }, "fSnowSparklesColorG", 1.0F },
-                  { { game::skyrim_special }, "fSnowSparklesColorR", 1.0F },
-                  { { game::skyrim_special }, "fSparklesDensity", 0.8500000238418579F },
-                  { { game::skyrim_special }, "fSparklesIntensity", 1.0F },
-                  { { game::skyrim_special }, "fSparklesMaxDistance", 1000.0F },
-                  { { game::skyrim_special }, "fSparklesSize", 6.0F },
-                  { { game::skyrim_special }, "fSparklesSpecularPower", 2.0F },
-                  { { game::skyrim_special }, "fSpecMaskBegin", 0.10000000149011612F },
-                  { { game::skyrim_special }, "fSpecMaskSpan", 0.0F },
+                  { sse_only, "fSnowGeometrySpecPower", 3.0F },
+                  { sse_only, "fSnowNormalSpecPower", 2.0F },
+                  { sse_only, "fSnowRimLightIntensity", 0.3F },
+                  { sse_only, "fSnowSSSColorB", 0.08F },
+                  { sse_only, "fSnowSSSColorG", 0.0F },
+                  { sse_only, "fSnowSSSColorR", 0.0F },
+                  { sse_only, "fSnowSSSDepthDiff", 0.5F },
+                  { sse_only, "fSnowSSSStrength", 50.0F },
+                  { sse_only, "fSnowSparklesColorB", 1.0F },
+                  { sse_only, "fSnowSparklesColorG", 1.0F },
+                  { sse_only, "fSnowSparklesColorR", 1.0F },
+                  { sse_only, "fSparklesDensity", 0.85F },
+                  { sse_only, "fSparklesIntensity", 1.0F },
+                  { sse_only, "fSparklesMaxDistance", 1000.0F },
+                  { sse_only, "fSparklesSize", 6.0F },
+                  { sse_only, "fSparklesSpecularPower", 2.0F },
+                  { sse_only, "fSpecMaskBegin", 0.1F },
+                  { sse_only, "fSpecMaskSpan", 0.0F },
                   { "fSpecularLODDefaultStartFade", 500.0F },
                   { "fSpecularLODMaxStartFade", 600.0F },
                   { "fSpecularLODMinStartFade", 200.0F },
                   { "fSpecularLODRange", 300.0F },
-                  { { game::skyrim_special }, "fSpecularSparklesIntensity", 1.0F },
-                  { { game::skyrim_special }, "fSplitOverlap", 100.0F },
+                  { sse_only, "fSpecularSparklesIntensity", 1.0F },
+                  { sse_only, "fSplitOverlap", 100.0F },
                   { "fSunShadowUpdateTime", 1.0F },
-                  { { game::skyrim_special }, "fSunStaticTimeUpdateScale", 0.10000000149011612F },
+                  { sse_only, "fSunStaticTimeUpdateScale", 0.1F },
                   { "fSunUpdateThreshold", 0.5F },
                #pragma endregion
                #pragma region T
-                  { { game::skyrim_special }, "fTAAEffectThreshold", 0.10000000149011612F },
-                  { { game::skyrim_special }, "fTAAHighFreq", 0.800000011920929F },
-                  { { game::skyrim_special }, "fTAALowFreq", 0.5F },
-                  { { game::skyrim_special }, "fTAAPostOverlay", 0.20999999344348907F },
-                  { { game::skyrim_special }, "fTAAPostSharpen", 0.20999999344348907F },
-                  { { game::skyrim_special }, "fTAASharpen", 1.0F },
+                  { sse_only, "fTAAEffectThreshold", 0.1F },
+                  { sse_only, "fTAAHighFreq", 0.8F },
+                  { sse_only, "fTAALowFreq", 0.5F },
+                  { sse_only, "fTAAPostOverlay", 0.21F },
+                  { sse_only, "fTAAPostSharpen", 0.21F },
+                  { sse_only, "fTAASharpen", 1.0F },
                #pragma endregion
                #pragma region V
-                  { { game::skyrim_special }, "fVolumetricLightingCustomColorContribution", 0.0F },
-                  { { game::skyrim_special }, "fVolumetricLightingDensityContribution", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fVolumetricLightingDensityScale", 300.0F },
-                  { { game::skyrim_special }, "fVolumetricLightingIntensity", 2.0F },
-                  { { game::skyrim_special }, "fVolumetricLightingPhaseContribution", 0.8299999833106995F },
-                  { { game::skyrim_special }, "fVolumetricLightingPhaseScattering", 0.8500000238418579F },
-                  { { game::skyrim_special }, "fVolumetricLightingRangeFactor", 40.0F },
-                  { { game::skyrim_special }, "fVolumetricLightingTemporalAccumulationFactor", 0.75F },
-                  { { game::skyrim_special }, "fVolumetricLightingWindFallingSpeed", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fVolumetricLightingWindSpeedScale", 15.0F },
+                  { sse_only, "fVolumetricLightingCustomColorContribution", 0.0F },
+                  { sse_only, "fVolumetricLightingDensityContribution", 0.3F },
+                  { sse_only, "fVolumetricLightingDensityScale", 300.0F },
+                  { sse_only, "fVolumetricLightingIntensity", 2.0F },
+                  { sse_only, "fVolumetricLightingPhaseContribution", 0.83F },
+                  { sse_only, "fVolumetricLightingPhaseScattering", 0.85F },
+                  { sse_only, "fVolumetricLightingRangeFactor", 40.0F },
+                  { sse_only, "fVolumetricLightingTemporalAccumulationFactor", 0.75F },
+                  { sse_only, "fVolumetricLightingWindFallingSpeed", 0.3F },
+                  { sse_only, "fVolumetricLightingWindSpeedScale", 15.0F },
                #pragma endregion
                #pragma region W
-                  { { game::skyrim_special }, "fWaterSSRBlurAmount", 0.30000001192092896F },
-                  { { game::skyrim_special }, "fWaterSSRIntensity", 1.2999999523162842F },
-                  { { game::skyrim_special }, "fWaterSSRNormalPerturbationScale", 0.05000000074505806F },
-                  { { game::skyrim_special }, "fWindGrassMultiplier", 1.0F },
+                  { sse_only, "fWaterSSRBlurAmount", 0.3F },
+                  { sse_only, "fWaterSSRIntensity", 1.3F },
+                  { sse_only, "fWaterSSRNormalPerturbationScale", 0.05F },
+                  { sse_only, "fWindGrassMultiplier", 1.0F },
                #pragma endregion
             #pragma endregion
             #pragma region Integers
@@ -1360,11 +1187,11 @@ namespace dovah::game_ini {
                   { "iDebugTextTopBottomOffset", 20 },
                #pragma endregion
                #pragma region E
-                  { { game::skyrim_special }, "iEnableShadowCastingFlag", 2 },
+                  { sse_only, "iEnableShadowCastingFlag", 2 },
                #pragma endregion
                #pragma region L
-                  { { game::skyrim_special }, "iLandscapeMultiNormalTilingFactor", 4 },
-                  { { game::skyrim_special }, "iLoadingMenuShadowLightFlags", 1 },
+                  { sse_only, "iLandscapeMultiNormalTilingFactor", 4 },
+                  { sse_only, "iLoadingMenuShadowLightFlags", 1 },
                   { "iLocation X", 5 },
                   { "iLocation Y", 5 },
                #pragma endregion
@@ -1378,40 +1205,36 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region S
                   { "iShaderPackageMemoryCap", 409600 },
-                  { { game::skyrim_special }, "iSnowSSSCurrentColor", 2 },
-                  { { game::skyrim_special }, "iSnowSparklesColor", 2 },
+                  { sse_only, "iSnowSSSCurrentColor", 2 },
+                  { sse_only, "iSnowSparklesColor", 2 },
                #pragma endregion
                #pragma region T
                   { "iTrilinearThreshold", 3 },
                #pragma endregion
                #pragma region U
-                  { { game::skyrim_special }, "iUnstableFrameTimeHistorySize", 8 },
+                  { sse_only, "iUnstableFrameTimeHistorySize", 8 },
                #pragma endregion
                #pragma region V
-                  { { game::skyrim_special }, "iVolumetricLightingNoiseTextureDepth", 32 },
-                  { { game::skyrim_special }, "iVolumetricLightingNoiseTextureHeight", 32 },
-                  { { game::skyrim_special }, "iVolumetricLightingNoiseTextureWidth", 32 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureDepthHigh", 90 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureDepthLow", 50 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureDepthMedium", 70 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureFormatHigh", 1 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureFormatLow", 0 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureFormatMedium", 1 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureHeightHigh", 192 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureHeightLow", 96 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureHeightMedium", 128 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureWidthHigh", 320 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureWidthLow", 160 },
-                  { { game::skyrim_special }, "iVolumetricLightingTextureWidthMedium", 224 },
+                  { sse_only, "iVolumetricLightingNoiseTextureDepth", 32 },
+                  { sse_only, "iVolumetricLightingNoiseTextureHeight", 32 },
+                  { sse_only, "iVolumetricLightingNoiseTextureWidth", 32 },
+                  { sse_only, "iVolumetricLightingTextureDepthHigh", 90 },
+                  { sse_only, "iVolumetricLightingTextureDepthLow", 50 },
+                  { sse_only, "iVolumetricLightingTextureDepthMedium", 70 },
+                  { sse_only, "iVolumetricLightingTextureFormatHigh", 1 },
+                  { sse_only, "iVolumetricLightingTextureFormatLow", 0 },
+                  { sse_only, "iVolumetricLightingTextureFormatMedium", 1 },
+                  { sse_only, "iVolumetricLightingTextureHeightHigh", 192 },
+                  { sse_only, "iVolumetricLightingTextureHeightLow", 96 },
+                  { sse_only, "iVolumetricLightingTextureHeightMedium", 128 },
+                  { sse_only, "iVolumetricLightingTextureWidthHigh", 320 },
+                  { sse_only, "iVolumetricLightingTextureWidthLow", 160 },
+                  { sse_only, "iVolumetricLightingTextureWidthMedium", 224 },
                #pragma endregion
             #pragma endregion
             #pragma region Strings
-               #pragma region D
-                  { "sDebugText", "VATS" },
-               #pragma endregion
-               #pragma region S
-                  { "sScreenShotBaseName", "ScreenShot" },
-               #pragma endregion
+               { "sDebugText", "VATS" },
+               { "sScreenShotBaseName", "ScreenShot" },
             #pragma endregion
          }),
          section_definition("FaceGen", {
@@ -1423,109 +1246,79 @@ namespace dovah::game_ini {
          }),
          section_definition("FootIK", {
             #pragma region Booleans
-               #pragma region F
-                  { "bFootPlacementOn", true },
-               #pragma endregion
-               #pragma region R
-                  { "bRigidBodyController", true },
-               #pragma endregion
+               { "bFootPlacementOn", true },
+               { "bRigidBodyController", true },
             #pragma endregion
             #pragma region Floats
                #pragma region A
-                  { "fAnkleOffset", 0.20000000298023224F },
+                  { "fAnkleOffset", 0.2F },
                #pragma endregion
                #pragma region C
                   { "fControllerTetherLen", 6.0F },
                #pragma endregion
                #pragma region F
                   { "fFootPlantedGain", 1.0F },
-                  { "fFootRaisedGain", 0.8999999761581421F },
+                  { "fFootRaisedGain", 0.9F },
                #pragma endregion
                #pragma region G
-                  { "fGroundAscendingGain", 0.4000000059604645F },
-                  { "fGroundDescendingGain", 0.4000000059604645F },
+                  { "fGroundAscendingGain", 0.4F },
+                  { "fGroundDescendingGain", 0.4F },
                #pragma endregion
                #pragma region M
-                  { "fMaxFootCastMilliSec", 0.6000000238418579F },
+                  { "fMaxFootCastMilliSec", 0.6F },
                   { "fMaxStepVertError", 3.5F },
                #pragma endregion
                #pragma region O
                   { "fOnOffGain", 0.5F },
-                  { "fOriginalGroundHeightMS", -0.10999999940395355F },
+                  { "fOriginalGroundHeightMS", -0.11F },
                #pragma endregion
                #pragma region P
-                  { "fPelvisOffsetDamping", 0.20000000298023224F },
+                  { "fPelvisOffsetDamping", 0.2F },
                   { "fPelvisUpDownBias", 0.75F },
                #pragma endregion
                #pragma region R
-                  { "fRagdollFeedback", 0.699999988079071F },
+                  { "fRagdollFeedback", 0.7F },
                #pragma endregion
                #pragma region V
                   { "fVertErrorGain", 0.5F },
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region N
-                  { "iNumFramesFootEaseOut", 30 },
-               #pragma endregion
+               { "iNumFramesFootEaseOut", 30 },
             #pragma endregion
          }),
          section_definition("Gameplay", {
             #pragma region Booleans
-               #pragma region A
-                  { "bAllowDragonFlightLocationDiscovery", false },
-                  { "bAllowHavokGrabTheLiving", false },
-               #pragma endregion
-               #pragma region E
-                  { "bEssentialTakeNoDamage", true },
-               #pragma endregion
-               #pragma region H
-                  { "bHealthBarShowing", false },
-               #pragma endregion
-               #pragma region I
-                  { "bInstantLevelUp", false },
-               #pragma endregion
-               #pragma region T
-                  { "bTargetLockIsToggle", true },
-                  { "bTrackProgress", false },
-               #pragma endregion
+               { "bAllowDragonFlightLocationDiscovery", false },
+               { "bAllowHavokGrabTheLiving", false },
+               { "bEssentialTakeNoDamage", true },
+               { "bHealthBarShowing", false },
+               { "bInstantLevelUp", false },
+               { "bTargetLockIsToggle", true },
+               { "bTrackProgress", false },
             #pragma endregion
             #pragma region Floats
-               #pragma region F
-                  { "fFootIKDistance", 1024.0F },
-               #pragma endregion
-               #pragma region M
-                  { "fMagicTargetLocationExtraLargeActorRadius", 256.0F },
-                  { "fMagicTargetLocationNormalActorRadius", 32.0F },
-                  { "fMapMarkerUpdateTime", 0.05000000074505806F },
-               #pragma endregion
-               #pragma region P
-                  { "fPlayerHealthSaveOnPauseLimit", 0.25F },
-                  { "fPlayerSunGazeDelta", 0.9848080277442932F },
-                  { "fPlayerSunGazeStartTimer", 0.5F },
-               #pragma endregion
-               #pragma region T
-                  { "fTargetLockXYRange", 7500.0F },
-               #pragma endregion
+               { "fFootIKDistance", 1024.0F },
+               { "fMagicTargetLocationExtraLargeActorRadius", 256.0F },
+               { "fMagicTargetLocationNormalActorRadius", 32.0F },
+               { "fMapMarkerUpdateTime", 0.05F },
+               { "fPlayerHealthSaveOnPauseLimit", 0.25F },
+               { "fPlayerSunGazeDelta", 0.9848080277442932F },
+               { "fPlayerSunGazeStartTimer", 0.5F },
+               { "fTargetLockXYRange", 7500.0F },
             #pragma endregion
             #pragma region Integers
-               #pragma region A
-                  { "iActorsDismemberedPerFrame", 2 },
-               #pragma endregion
-               #pragma region D
-                  { "iDetectionPicks", 21 },
-               #pragma endregion
+               { "iActorsDismemberedPerFrame", 2 },
+               { "iDetectionPicks", 21 },
             #pragma endregion
             #pragma region Strings
-               #pragma region T
-                  { "sTrackProgressPath", "\\\\vault2\\Fallout\\LevelData\\" },
-               #pragma endregion
+               { "sTrackProgressPath", "\\\\vault2\\Fallout\\LevelData\\" },
             #pragma endregion
          }),
          section_definition("General", {
             #pragma region Booleans
                #pragma region A
-                  { { game::skyrim_special }, "bActivateFromSave", false },
+                  { sse_only, "bActivateFromSave", false },
                   { "bAlwaysActive", false },
                   { "bAnimateDoorPhysics", false },
                #pragma endregion
@@ -1540,7 +1333,7 @@ namespace dovah::game_ini {
                   { "bCheckCellOffsetsOnInit", false },
                   { "bCheckPurgedTextureList", false },
                   { "bCreate Maps Enable", false },
-                  { { game::skyrim_special }, "bCullingJobEnablePlaneOptimization", false },
+                  { sse_only, "bCullingJobEnablePlaneOptimization", false },
                #pragma endregion
                #pragma region D
                   { "bDebugSpectatorThreats", false },
@@ -1549,13 +1342,13 @@ namespace dovah::game_ini {
                   { "bDisableAllGore", false },
                   { "bDisableDuplicateReferenceCheck", true },
                   { "bDisableGearedUp", true },
-                  { { game::skyrim_special }, "bDisableWarningWindows", false },
+                  { sse_only, "bDisableWarningWindows", false },
                   { "bDisplayBoundingVolumes", false },
                #pragma endregion
                #pragma region E
                   { "bEnableBoundingVolumeOcclusion", true },
                   { "bEnableFileCaching", false },
-                  { { game::skyrim_special }, "bEnableFriendHenchman", false },
+                  { sse_only, "bEnableFriendHenchman", false },
                   { "bExternalLODDataFiles", true },
                #pragma endregion
                #pragma region F
@@ -1568,7 +1361,7 @@ namespace dovah::game_ini {
                   { "bHealthRegenFromRacePlayerOnly", true },
                #pragma endregion
                #pragma region J
-                  { { game::skyrim_special }, "bJoblistActiveWait", true },
+                  { sse_only, "bJoblistActiveWait", true },
                #pragma endregion
                #pragma region K
                   { "bKeepDLStringBlocksLoaded", false },
@@ -1576,16 +1369,16 @@ namespace dovah::game_ini {
                   { "bKeepPluginWhenMerging", false },
                #pragma endregion
                #pragma region M
-                  { { game::skyrim_special }, "bModManagerMenuEnabled", true },
+                  { sse_only, "bModManagerMenuEnabled", true },
                   { "bMultiThreadMovement", true },
                #pragma endregion
                #pragma region P
                   { "bParallelAnimUpdate", false },
-                  { { game::skyrim_special }, "bPauseWhenConstrained", true },
+                  { sse_only, "bPauseWhenConstrained", true },
                   { "bPreCullActors", true },
                   { "bPreemptivelyUnloadCells", false },
                   { "bPreloadIntroSequence", true },
-                  { { game::skyrim_special }, "bPreloadLinkedInteriors", false },
+                  { sse_only, "bPreloadLinkedInteriors", false },
                #pragma endregion
                #pragma region Q
                   { "bQueueWarnings", false },
@@ -1659,8 +1452,8 @@ namespace dovah::game_ini {
                   { "fMasterFilePreLoadMB", 40.0F },
                #pragma endregion
                #pragma region N
-                  { "fNormalDoorFadeSecs", 0.4000000059604645F },
-                  { "fNormalDoorFadeWait", 0.009999999776482582F },
+                  { "fNormalDoorFadeSecs", 0.4F },
+                  { "fNormalDoorFadeWait", 0.01F },
                #pragma endregion
                #pragma region P
                   { "fPlayerFlyingMountBaseTargetSpeed", 700.0F },
@@ -1705,7 +1498,7 @@ namespace dovah::game_ini {
                   { "iLowProcessingMilliseconds", 2 },
                #pragma endregion
                #pragma region M
-                  { { game::skyrim_special }, "iMaxJobThreads", 32 },
+                  { sse_only, "iMaxJobThreads", 32 },
                #pragma endregion
                #pragma region N
                   { "iNumBitsForFullySeen", 248 },
@@ -1730,7 +1523,7 @@ namespace dovah::game_ini {
                   { "sEssentialFileCacheList", "Not enough arguments..." },
                #pragma endregion
                #pragma region G
-                  { { game::skyrim_special }, "sGamerIconTextureName", "BGSUserIcon" },
+                  { sse_only, "sGamerIconTextureName", "BGSUserIcon" },
                #pragma endregion
                #pragma region I
                   { "sIntroMovie", "Not enough arguments..." },
@@ -1738,7 +1531,7 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region L
                   { "sLanguage", "ENGLISH" },
-                  { { game::skyrim_special }, "sLocalCharacterDataPath", "Saves\\Character\\" },
+                  { sse_only, "sLocalCharacterDataPath", "Saves\\Character\\" },
                   { "sLocalMasterPath", "Data\\" },
                   { "sLocalSavePath", "Saves\\" },
                #pragma endregion
@@ -1768,7 +1561,7 @@ namespace dovah::game_ini {
                   { "sUnessentialFileCacheList", "Not enough arguments..." },
                #pragma endregion
                #pragma region T
-                  { { game::skyrim_special }, "strPluginsFileHeader", "# This file is used by Skyrim to keep track of your downloaded content." },
+                  { sse_only, "strPluginsFileHeader", "# This file is used by Skyrim to keep track of your downloaded content." },
                #pragma endregion
             #pragma endregion
          }),
@@ -1777,53 +1570,35 @@ namespace dovah::game_ini {
             { "sMasterMismatchWarning", "One of the files that \"%s\" is dependent on has changed since the last save." },
          }),
          section_definition("GethitShader", {
-            { "fBlockedTexOffset", 0.0010000000474974513F },
+            { "fBlockedTexOffset", 0.001F },
             { "fBlurAmmount", 0.5F },
-            { "fHitTexOffset", 0.004999999888241291F },
+            { "fHitTexOffset", 0.005F },
          }),
          section_definition("GrabIK", {
             { "fDriveGain", 0.25F },
          }),
          section_definition("Grass", {
             #pragma region Booleans
-               #pragma region A
-                  { "bAllowCreateGrass", false },
-                  { "bAllowLoadGrass", true },
-               #pragma endregion
-               #pragma region D
-                  { "bDrawShaderGrass", true },
-               #pragma endregion
-               #pragma region E
-                  { { game::skyrim_special }, "bEnableGrassFade", true },
-               #pragma endregion
-               #pragma region G
-                  { "bGenerateGrassDataFiles", false },
-                  { "bGrassPointLighting", false },
-               #pragma endregion
+               { "bAllowCreateGrass", false },
+               { "bAllowLoadGrass", true },
+               { "bDrawShaderGrass", true },
+               { sse_only, "bEnableGrassFade", true },
+               { "bGenerateGrassDataFiles", false },
+               { "bGrassPointLighting", false },
             #pragma endregion
             #pragma region Floats
-               #pragma region G
-                  { "fGrassDefaultStartFadeDistance", 3500.0F },
-                  { { game::skyrim_special }, "fGrassFadeInTime", 1.7999999523162842F },
-                  { "fGrassFadeRange", 1000.0F },
-                  { "fGrassWindMagnitudeMax", 125.0F },
-                  { "fGrassWindMagnitudeMin", 5.0F },
-               #pragma endregion
-               #pragma region T
-                  { "fTexturePctThreshold", 0.0F },
-               #pragma endregion
-               #pragma region W
-                  { "fWaveOffsetRange", 1.75F },
-               #pragma endregion
+               { "fGrassDefaultStartFadeDistance", 3500.0F },
+               { sse_only, "fGrassFadeInTime", 1.8F },
+               { "fGrassFadeRange", 1000.0F },
+               { "fGrassWindMagnitudeMax", 125.0F },
+               { "fGrassWindMagnitudeMin", 5.0F },
+               { "fTexturePctThreshold", 0.0F },
+               { "fWaveOffsetRange", 1.75F },
             #pragma endregion
             #pragma region Integers
-               #pragma region G
-                  { "iGrassCellRadius", 2 },
-               #pragma endregion
-               #pragma region M
-                  { "iMaxGrassTypesPerTexure", 2 },
-                  { "iMinGrassSize", 20 },
-               #pragma endregion
+               { "iGrassCellRadius", 2 },
+               { "iMaxGrassTypesPerTexure", 2 },
+               { "iMinGrassSize", 20 },
             #pragma endregion
          }),
          section_definition("HAVOK", {
@@ -1871,26 +1646,26 @@ namespace dovah::game_ini {
                   { "fDefaultWaterfallCurrentVelocity", 6.0F },
                #pragma endregion
                #pragma region G
-                  { "fGoodPosCastCheckDepth", 0.10000000149011612F },
-                  { "fGoodPosCheckDepth", 0.10000000149011612F },
+                  { "fGoodPosCastCheckDepth", 0.1F },
+                  { "fGoodPosCheckDepth", 0.1F },
                #pragma endregion
                #pragma region I
-                  { "fInAirFallingCharGravityMult", 1.350000023841858F },
+                  { "fInAirFallingCharGravityMult", 1.35F },
                #pragma endregion
                #pragma region J
                   { "fJumpAnimDelay", 0.75F },
                #pragma endregion
                #pragma region M
-                  { "fMaxPickTime", 0.003000000026077032F },
-                  { "fMaxPickTimeDebug", 0.05999999865889549F },
-                  { "fMaxPickTimeDebugVATS", 0.6000000238418579F },
-                  { "fMaxPickTimeVATS", 0.029999999329447746F },
-                  { "fMaxTime", 0.01666666753590107F },
-                  { "fMaxTimeComplex", 0.03333333507180214F },
+                  { "fMaxPickTime", 0.003F },
+                  { "fMaxPickTimeDebug", 0.06F },
+                  { "fMaxPickTimeDebugVATS", 0.6F },
+                  { "fMaxPickTimeVATS", 0.03F },
+                  { "fMaxTime", 0.01666666666666666F },
+                  { "fMaxTimeComplex", 0.03333333333333333F },
                   { "fMoveLimitMass", 95.0F },
                #pragma endregion
                #pragma region O
-                  { "fOD", 0.8999999761581421F },
+                  { "fOD", 0.9F },
                #pragma endregion
                #pragma region Q
                   { "fQuadrupedPitchMult", 10.0F },
@@ -1899,11 +1674,11 @@ namespace dovah::game_ini {
                   { "fRF", 1000.0F },
                #pragma endregion
                #pragma region S
-                  { "fSD", 0.9800000190734863F },
-                  { "fSE", 0.30000001192092896F },
+                  { "fSD", 0.98F },
+                  { "fSE", 0.3F },
                #pragma endregion
                #pragma region T
-                  { "fTimePerSubStep", 0.00800000037997961F },
+                  { "fTimePerSubStep", 0.008F },
                   { "fTrapHitEventDelayMS", 500.0F },
                   { "fTriggerEventDelayMS", 500.0F },
                #pragma endregion
@@ -1916,18 +1691,10 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region E
-                  { "iEntityBatchRemoveRate", 100 },
-               #pragma endregion
-               #pragma region M
-                  { "iMinNumSubSteps", 8 },
-               #pragma endregion
-               #pragma region N
-                  { "iNumThreads", 1 },
-               #pragma endregion
-               #pragma region S
-                  { "iSimType", 1 },
-               #pragma endregion
+               { "iEntityBatchRemoveRate", 100 },
+               { "iMinNumSubSteps", 8 },
+               { "iNumThreads", 1 },
+               { "iSimType", 1 },
             #pragma endregion
          }),
          section_definition("HeadTracking", {
@@ -1944,8 +1711,8 @@ namespace dovah::game_ini {
          }),
          section_definition("Imagespace", {
             { "bDoRadialBlur", true },
-            { { game::skyrim_special }, "fLensFlareFalloffRange", 256.0F },
-            { { game::skyrim_special }, "fLensFlareGlobalIntensity", 1.0F },
+            { sse_only, "fLensFlareFalloffRange", 256.0F },
+            { sse_only, "fLensFlareGlobalIntensity", 1.0F },
             { "fRenderDepthMaxDepth", 10000.0F },
             { "iRadialBlurLevel", 0 },
          }),
@@ -1974,24 +1741,24 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region B
                   { "fBookDistance", 110.0F },
-                  { "fBookLight2DiffuseColorB", 0.8299999833106995F },
-                  { "fBookLight2DiffuseColorG", 0.949999988079071F },
-                  { "fBookLight2DiffuseColorR", 0.9800000190734863F },
+                  { "fBookLight2DiffuseColorB", 0.83F },
+                  { "fBookLight2DiffuseColorG", 0.95F },
+                  { "fBookLight2DiffuseColorR", 0.98F },
                   { "fBookLight2DimmerValue", 1.0F },
                   { "fBookLight2Radius", 400.0F },
                   { "fBookLight2X", 10.0F },
                   { "fBookLight2Y", -75.0F },
                   { "fBookLight2Z", 10.0F },
-                  { "fBookLightDiffuseColorB", 0.8299999833106995F },
-                  { "fBookLightDiffuseColorG", 0.949999988079071F },
-                  { "fBookLightDiffuseColorR", 0.9800000190734863F },
+                  { "fBookLightDiffuseColorB", 0.83F },
+                  { "fBookLightDiffuseColorG", 0.95F },
+                  { "fBookLightDiffuseColorR", 0.98F },
                   { "fBookLightDimmerValue", 1.75F },
                   { "fBookLightRadius", 400.0F },
                   { "fBookLightX", 100.0F },
                   { "fBookLightY", -350.0F },
                   { "fBookLightZ", 100.0F },
                   { "fBookOpenTime", 1000.0F },
-                  { "fBookPosHeightPercentage", 0.4449999928474426F },
+                  { "fBookPosHeightPercentage", 0.445F },
                   { "fBookPosWidthPercentage", 0.5F },
                   { "fBookXRotation", -25.0F },
                #pragma endregion
@@ -2002,7 +1769,7 @@ namespace dovah::game_ini {
                   { "fCrafting3DItemPosYWide", -500.0F },
                   { "fCrafting3DItemPosZ", 16.0F },
                   { "fCrafting3DItemPosZWide", 12.0F },
-                  { "fCrafting3DItemScale", 1.8700000047683716F },
+                  { "fCrafting3DItemScale", 1.87F },
                   { "fCrafting3DItemScaleWide", 1.5F },
                #pragma endregion
                #pragma region D
@@ -2019,7 +1786,7 @@ namespace dovah::game_ini {
                   { "fInterfaceTintG", 0.9843000173568726F },
                   { "fInterfaceTintR", 0.6313999891281128F },
                   { "fInventory3DBoundRadiusScale", 12.5F },
-                  { "fInventory3DItemPosScale", 1.8700000047683716F },
+                  { "fInventory3DItemPosScale", 1.87F },
                   { "fInventory3DItemPosScaleWide", 1.5F },
                   { "fInventory3DItemPosX", -29.0F },
                   { "fInventory3DItemPosXWide", -22.0F },
@@ -2034,14 +1801,14 @@ namespace dovah::game_ini {
                   { "fInventory3DItemZoomX", 0.0F },
                   { "fInventory3DItemZoomY", -500.0F },
                   { "fInventory3DItemZoomZ", 0.0F },
-                  { "fInventoryLight2DiffuseColorB", 0.8299999833106995F },
-                  { "fInventoryLight2DiffuseColorG", 0.949999988079071F },
-                  { "fInventoryLight2DiffuseColorR", 0.9800000190734863F },
+                  { "fInventoryLight2DiffuseColorB", 0.83F },
+                  { "fInventoryLight2DiffuseColorG", 0.95F },
+                  { "fInventoryLight2DiffuseColorR", 0.98F },
                   { "fInventoryLight2DimmerValue", 1.75F },
                   { "fInventoryLight2Radius", 0.0F },
-                  { "fInventoryLightDiffuseColorB", 0.8299999833106995F },
-                  { "fInventoryLightDiffuseColorG", 0.949999988079071F },
-                  { "fInventoryLightDiffuseColorR", 0.9800000190734863F },
+                  { "fInventoryLightDiffuseColorB", 0.83F },
+                  { "fInventoryLightDiffuseColorG", 0.95F },
+                  { "fInventoryLightDiffuseColorR", 0.98F },
                   { "fInventoryLightDimmerValue", 1.75F },
                   { "fInventoryLightRadius", 400.0F },
                   { "fInventoryMenuLight2X", 100.0F },
@@ -2052,8 +1819,8 @@ namespace dovah::game_ini {
                   { "fInventoryMenuLightZ", 100.0F },
                #pragma endregion
                #pragma region J
-                  { "fJournalLongRepeatRate", 0.20000000298023224F },
-                  { "fJournalShortRepeatRate", 0.07500000298023224F },
+                  { "fJournalLongRepeatRate", 0.2F },
+                  { "fJournalShortRepeatRate", 0.075F },
                #pragma endregion
                #pragma region L
                   { "fLargeActivatePickLength_G", 500.0F },
@@ -2066,9 +1833,9 @@ namespace dovah::game_ini {
                   { "fLockRotCenterOffsetX", -14.5F },
                   { "fLockRotCenterOffsetZ", 3.0F },
                   { "fLockRotationSpeed", 80.0F },
-                  { "fLockpickLightDiffuseColorB", 0.8299999833106995F },
-                  { "fLockpickLightDiffuseColorG", 0.949999988079071F },
-                  { "fLockpickLightDiffuseColorR", 0.9800000190734863F },
+                  { "fLockpickLightDiffuseColorB", 0.83F },
+                  { "fLockpickLightDiffuseColorG", 0.95F },
+                  { "fLockpickLightDiffuseColorR", 0.98F },
                   { "fLockpickLightDimmerValue", 1.75F },
                   { "fLockpickLightRadius", 400.0F },
                   { "fLockpickLightX", 100.0F },
@@ -2076,7 +1843,7 @@ namespace dovah::game_ini {
                   { "fLockpickLightZ", 100.0F },
                #pragma endregion
                #pragma region M
-                  { "fMagic3DItemPosScale", 1.8700000047683716F },
+                  { "fMagic3DItemPosScale", 1.87F },
                   { "fMagic3DItemPosScaleWide", 1.75F },
                   { "fMagic3DItemPosX", 29.0F },
                   { "fMagic3DItemPosXWide", 22.0F },
@@ -2086,7 +1853,7 @@ namespace dovah::game_ini {
                   { "fMagic3DItemPosZWide", 6.0F },
                   { "fMaxSubtitleDistance", 1250.0F },
                   { "fMenuKeyRepeatLong", 0.5F },
-                  { "fMenuKeyRepeatShort", 0.10000000149011612F },
+                  { "fMenuKeyRepeatShort", 0.1F },
                   { "fMinSecondsForLoadFadeIn", 1.5F },
                #pragma endregion
                #pragma region N
@@ -2102,19 +1869,19 @@ namespace dovah::game_ini {
                   { "fPlayerZoomTime", 1000.0F },
                #pragma endregion
                #pragma region R
-                  { "fRSMCameraLookAtPercent", 0.9549999833106995F },
-                  { "fRSMLookAtOnGain", 0.05999999865889549F },
+                  { "fRSMCameraLookAtPercent", 0.955F },
+                  { "fRSMLookAtOnGain", 0.06F },
                #pragma endregion
                #pragma region S
                   { "fSafeZoneX", 15.0F },
                   { "fSafeZoneXWide", 15.0F },
                   { "fSafeZoneY", 15.0F },
                   { "fSafeZoneYWide", 15.0F },
-                  { "fSleepFaderTime", 0.699999988079071F },
+                  { "fSleepFaderTime", 0.7F },
                #pragma endregion
                #pragma region T
-                  { "fTweenLongRepeatRate", 0.20000000298023224F },
-                  { "fTweenShortRepeatRate", 0.10000000149011612F },
+                  { "fTweenLongRepeatRate", 0.2F },
+                  { "fTweenShortRepeatRate", 0.1F },
                #pragma endregion
                #pragma region U
                   { "fUIAltLogoModel_TranslateX_G", 0.0F },
@@ -2122,15 +1889,15 @@ namespace dovah::game_ini {
                   { "fUIAltLogoModel_TranslateZ_G", 0.0F },
                   { "fUICameraFarDistance", 20480.0F },
                   { "fUICameraNearDistance", 15.0F },
-                  { "fUILogoModel_AutoRotateSpeed", 0.10000000149011612F },
-                  { "fUILogoModel_FadeSecs", 0.00009999999747378752F },
+                  { "fUILogoModel_AutoRotateSpeed", 0.1F },
+                  { "fUILogoModel_FadeSecs", 0.0001F },
                   { "fUILogoModel_MouseThreshold", 2.0F },
                   { "fUILogoModel_MouseToPanSpeed", 1.0F },
-                  { "fUILogoModel_MouseToRotateSpeed", 0.019999999552965164F },
-                  { "fUILogoModel_MouseToZoomSpeed", 0.6000000238418579F },
+                  { "fUILogoModel_MouseToRotateSpeed", 0.02F },
+                  { "fUILogoModel_MouseToZoomSpeed", 0.6F },
                   { "fUILogoModel_RotationPauseDuration", 0.25F },
                   { "fUILogoModel_ThumbstickToPanSpeed", 8.0F },
-                  { "fUILogoModel_ThumbstickToRotateSpeed", 0.44999998807907104F },
+                  { "fUILogoModel_ThumbstickToRotateSpeed", 0.45F },
                   { "fUILogoModel_ThumbstickToZoomSpeed", 5.0F },
                   { "fUIMistMenu_CameraFOV_G", 75.0F },
                   { "fUIMistMenu_CameraLookAtX_G", -50.0F },
@@ -2141,19 +1908,19 @@ namespace dovah::game_ini {
                   { "fUIMistMenu_CameraZ_G", 80.0F },
                   { "fUIMistMenu_DefaultLogoNIFScale", 1.0F },
                   { "fUIMistMenu_LogoOnscreenPanThresholdX", 0.5F },
-                  { "fUIMistMenu_LogoOnscreenPanThresholdY", 0.33000001311302185F },
+                  { "fUIMistMenu_LogoOnscreenPanThresholdY", 0.33F },
                   { "fUIMistMenu_LogoOnscreenZoomMaxFOV", 95.0F },
                   { "fUIMistMenu_LogoOnscreenZoomMinFOV", 60.0F },
-                  { "fUIMistMenu_LogoOnscreenZoomThresholdFar", 0.10000000149011612F },
+                  { "fUIMistMenu_LogoOnscreenZoomThresholdFar", 0.1F },
                   { "fUIMistMenu_LogoOnscreenZoomThresholdNear", 3.5F },
                   { "fUIMistModel_FadeOutTime", 0.0F },
                   { "fUIMistModel_RotateZ_G", -180.0F },
                   { "fUIMistModel_TranslateX_G", 0.0F },
                   { "fUIMistModel_TranslateY_G", 0.0F },
                   { "fUIMistModel_TranslateZ_G", 0.0F },
-                  { "fUIPlayerSceneLight2DiffuseColorB", 0.800000011920929F },
-                  { "fUIPlayerSceneLight2DiffuseColorG", 0.8100000023841858F },
-                  { "fUIPlayerSceneLight2DiffuseColorR", 0.699999988079071F },
+                  { "fUIPlayerSceneLight2DiffuseColorB", 0.8F },
+                  { "fUIPlayerSceneLight2DiffuseColorG", 0.81F },
+                  { "fUIPlayerSceneLight2DiffuseColorR", 0.7F },
                   { "fUIPlayerSceneLight2DimmerValue", 3.0F },
                   { "fUIPlayerSceneLight2Radius", 1024.0F },
                   { "fUIPlayerSceneLight2X", 160.0F },
@@ -2162,31 +1929,31 @@ namespace dovah::game_ini {
                   { "fUIPlayerSceneLight3DiffuseColorB", 1.0F },
                   { "fUIPlayerSceneLight3DiffuseColorG", 1.0F },
                   { "fUIPlayerSceneLight3DiffuseColorR", 1.0F },
-                  { "fUIPlayerSceneLight3DimmerValue", 0.10000000149011612F },
+                  { "fUIPlayerSceneLight3DimmerValue", 0.1F },
                   { "fUIPlayerSceneLight3Radius", 1024.0F },
                   { "fUIPlayerSceneLight3X", 128.0F },
                   { "fUIPlayerSceneLight3Y", 160.0F },
                   { "fUIPlayerSceneLight3Z", -96.0F },
-                  { "fUIPlayerSceneLightDiffuseColorB", 0.8199999928474426F },
-                  { "fUIPlayerSceneLightDiffuseColorG", 0.9599999785423279F },
-                  { "fUIPlayerSceneLightDiffuseColorR", 0.9599999785423279F },
-                  { "fUIPlayerSceneLightDimmerValue", 1.600000023841858F },
+                  { "fUIPlayerSceneLightDiffuseColorB", 0.82F },
+                  { "fUIPlayerSceneLightDiffuseColorG", 0.96F },
+                  { "fUIPlayerSceneLightDiffuseColorR", 0.96F },
+                  { "fUIPlayerSceneLightDimmerValue", 1.6F },
                   { "fUIPlayerSceneLightRadius", 1500.0F },
                   { "fUIPlayerSceneLightX", -160.0F },
                   { "fUIPlayerSceneLightY", 160.0F },
                   { "fUIPlayerSceneLightZ", 128.0F },
-                  { "fUIRaceSexLight2DiffuseColorB", 0.8299999833106995F },
-                  { "fUIRaceSexLight2DiffuseColorG", 0.949999988079071F },
-                  { "fUIRaceSexLight2DiffuseColorR", 0.9800000190734863F },
+                  { "fUIRaceSexLight2DiffuseColorB", 0.83F },
+                  { "fUIRaceSexLight2DiffuseColorG", 0.95F },
+                  { "fUIRaceSexLight2DiffuseColorR", 0.98F },
                   { "fUIRaceSexLight2DimmerValue", 1.75F },
                   { "fUIRaceSexLight2Radius", 1400.0F },
                   { "fUIRaceSexLight2X", 0.5F },
                   { "fUIRaceSexLight2Y", -150.0F },
                   { "fUIRaceSexLight2Z", 60.5F },
-                  { "fUIRaceSexLightDiffuseColorB", 0.8299999833106995F },
-                  { "fUIRaceSexLightDiffuseColorG", 0.949999988079071F },
-                  { "fUIRaceSexLightDiffuseColorR", 0.9800000190734863F },
-                  { "fUIRaceSexLightDimmerValue", 0.6499999761581421F },
+                  { "fUIRaceSexLightDiffuseColorB", 0.83F },
+                  { "fUIRaceSexLightDiffuseColorG", 0.95F },
+                  { "fUIRaceSexLightDiffuseColorR", 0.98F },
+                  { "fUIRaceSexLightDimmerValue", 0.65F },
                   { "fUIRaceSexLightRadius", 1400.0F },
                   { "fUIRaceSexLightX", 0.5F },
                   { "fUIRaceSexLightY", -600.0F },
@@ -2195,46 +1962,32 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region F
-                  { "iFavoriteItemQueueSize", 100 },
-               #pragma endregion
-               #pragma region M
-                  { "iMaxViewCasterPicksFuzzy", 5 },
-                  { "iMaxViewCasterPicksGamebryo", 10 },
-                  { "iMaxViewCasterPicksHavok", 10 },
-               #pragma endregion
-               #pragma region S
-                  { "iSubtitleSpeakerNameColor", 8947848 },
-               #pragma endregion
+               { "iFavoriteItemQueueSize", 100 },
+               { "iMaxViewCasterPicksFuzzy", 5 },
+               { "iMaxViewCasterPicksGamebryo", 10 },
+               { "iMaxViewCasterPicksHavok", 10 },
+               { "iSubtitleSpeakerNameColor", 8947848 },
             #pragma endregion
             #pragma region Strings
-               #pragma region C
-                  { "sCreditsFile", "Interface/Credits.txt" },
-                  { "sCreditsFileFrench", "Interface/Credits_French.txt" },
-                  { { game::skyrim_special }, "sCreditsFilePLRU", "Interface/Credits_PLRU.txt" },
-               #pragma endregion
-               #pragma region F
-                  { "sForcedLoadScreenEditorID", "Not enough arguments..." },
-               #pragma endregion
-               #pragma region P
-                  { "sPosePlayerRaceSexMenu", "OffsetBoundStandingPlayerInstant" },
-               #pragma endregion
-               #pragma region U
-                  { "sUIMistMenu_DefaultLogoCameraPath", "Not enough arguments..." },
-               #pragma endregion
+               { "sCreditsFile", "Interface/Credits.txt" },
+               { "sCreditsFileFrench", "Interface/Credits_French.txt" },
+               { sse_only, "sCreditsFilePLRU", "Interface/Credits_PLRU.txt" },
+               { "sForcedLoadScreenEditorID", "Not enough arguments..." },
+               { "sPosePlayerRaceSexMenu", "OffsetBoundStandingPlayerInstant" },
+               { "sUIMistMenu_DefaultLogoCameraPath", "Not enough arguments..." },
             #pragma endregion
          }),
          section_definition("Kinect", {
             { "fKinectMaxAllyTradeDistance", 60000.0F },
-            { "fKinectMinConfidence", 0.30000001192092896F },
-            { "fKinectMinReportConfidence", 0.009999999776482582F },
-            { "fKinectMinReportShoutConfidence", 0.004999999888241291F },
+            { "fKinectMinConfidence", 0.3F },
+            { "fKinectMinReportConfidence", 0.01F },
+            { "fKinectMinReportShoutConfidence", 0.005F },
             { "fKinectMinRuleConfidence", 0.25F },
-            { "fKinectMinShoutConfidence", 0.007499999832361937F },
+            { "fKinectMinShoutConfidence", 0.0075F },
          }),
          section_definition("Landscape", {
             { "bCurrentCellOnly", false },
-            { { game::skyrim_special }, "bLandSpecular", true },
+            { sse_only, "bLandSpecular", true },
             { "fLandFriction", 2.5F },
             { "fLandTextureTilingMult", 3.0F },
             { "iLandBorder1B", 0 },
@@ -2252,8 +2005,8 @@ namespace dovah::game_ini {
                   { "sFailureMessage", "Something is broken" },
                #pragma endregion
                #pragma region G
-                  { { game::skyrim_special }, "sGamepadDisconnectedMessage", "Please connect a controller to continue." },
-                  { { game::skyrim_special }, "sGamepadDisconnectedTitle", "Controller disconnected." },
+                  { sse_only, "sGamepadDisconnectedMessage", "Please connect a controller to continue." },
+                  { sse_only, "sGamepadDisconnectedTitle", "Controller disconnected." },
                #pragma endregion
                #pragma region S
                   { "sSysUtil_AutoSaveWarning", "No Default string.  Must be loaded from INIFile" },
@@ -2279,21 +2032,19 @@ namespace dovah::game_ini {
             { "fLightEnableDisableFadeTime", 1.0F },
          }),
          section_definition("LightingShader", {
-            { "fDecalLODFadeEnd", 0.05999999865889549F },
-            { "fDecalLODFadeStart", 0.05000000074505806F },
-            { "fEnvmapLODFadeEnd", 0.10000000149011612F },
-            { "fEnvmapLODFadeStart", 0.09000000357627869F },
-            { "fEyeEnvmapLODEnd", 0.05000000074505806F },
-            { "fRefractionLODFadeEnd", 0.029999999329447746F },
-            { "fRefractionLODFadeStart", 0.02500000037252903F },
-            { "fSpecularLODFadeEnd", 0.10000000149011612F },
-            { "fSpecularLODFadeStart", 0.09000000357627869F },
+            { "fDecalLODFadeEnd", 0.06F },
+            { "fDecalLODFadeStart", 0.05F },
+            { "fEnvmapLODFadeEnd", 0.1F },
+            { "fEnvmapLODFadeStart", 0.09F },
+            { "fEyeEnvmapLODEnd", 0.05F },
+            { "fRefractionLODFadeEnd", 0.03F },
+            { "fRefractionLODFadeStart", 0.025F },
+            { "fSpecularLODFadeEnd", 0.1F },
+            { "fSpecularLODFadeStart", 0.09F },
          }),
          section_definition("LOD", {
             #pragma region Booleans
-               #pragma region D
-                  { "bDisplayLODLand", true },
-               #pragma endregion
+               { "bDisplayLODLand", true },
             #pragma endregion
             #pragma region Floats
                #pragma region A
@@ -2304,9 +2055,9 @@ namespace dovah::game_ini {
                   { "fDistanceMultiplier", 1.0F },
                #pragma endregion
                #pragma region F
-                  { "fFadeInThreshold", 0.699999988079071F },
-                  { "fFadeInTime", 1.2000000476837158F },
-                  { "fFadeOutThreshold", 0.30000001192092896F },
+                  { "fFadeInThreshold", 0.7F },
+                  { "fFadeInTime", 1.2F },
+                  { "fFadeOutThreshold", 0.3F },
                   { "fFadeOutTime", 2.0F },
                #pragma endregion
                #pragma region I
@@ -2324,7 +2075,7 @@ namespace dovah::game_ini {
                   { "fLODFadeOutObjectMultCity", 1.0F },
                   { "fLODFadeOutObjectMultComplex", 1.0F },
                   { "fLODFadeOutObjectMultInterior", 1.0F },
-                  { "fLODFadeOutPercent", 0.6000000238418579F },
+                  { "fLODFadeOutPercent", 0.6F },
                   { "fLODLandDropAmount", 230.0F },
                   { "fLODLandVerticalBias", 0.0F },
                   { "fLODMultTrees", 0.5F },
@@ -2339,9 +2090,7 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region F
-                  { "iFadeNodeMinNearDistance", 500 },
-               #pragma endregion
+               { "iFadeNodeMinNearDistance", 500 },
             #pragma endregion
          }),
          section_definition("LookIK", {
@@ -2358,9 +2107,7 @@ namespace dovah::game_ini {
          }),
          section_definition("MapMenu", {
             #pragma region Booleans
-               #pragma region W
-                  { "bWorldMapNoSkyDepthBlur", false },
-               #pragma endregion
+               { "bWorldMapNoSkyDepthBlur", false },
             #pragma endregion
             #pragma region Floats
                #pragma region G
@@ -2369,23 +2116,23 @@ namespace dovah::game_ini {
                #pragma region M
                   { "fMapLocalCursorPanSpeed", 2000.0F },
                   { "fMapLocalGamepadPanSpeed", 100.0F },
-                  { "fMapLocalGamepadZoomSpeed", 0.029999999329447746F },
+                  { "fMapLocalGamepadZoomSpeed", 0.03F },
                   { "fMapLocalHeight", 40000.0F },
-                  { "fMapLocalMarkerSelectionDist", 0.029999999329447746F },
+                  { "fMapLocalMarkerSelectionDist", 0.03F },
                   { "fMapLocalMinFrustumWidth", 4000.0F },
                   { "fMapLocalMousePanSpeed", 20.0F },
-                  { "fMapLocalMouseZoomSpeed", 0.10000000149011612F },
+                  { "fMapLocalMouseZoomSpeed", 0.1F },
                   { "fMapLookGamepadSpeed", 1.5F },
                   { "fMapLookMouseSpeed", 3.0F },
                   { "fMapLoopFadeTimeSeconds", 1.0F },
                   { "fMapMenuNearClipPlane", 128.0F },
-                  { "fMapMenuOverlayNormalSnowStrength", 0.4000000059604645F },
-                  { "fMapMenuOverlayNormalStrength", 1.100000023841858F },
-                  { "fMapMenuOverlayScale", 0.000035000000934815034F },
-                  { "fMapMenuOverlaySnowScale", 0.000045000000682193786F },
-                  { "fMapMoveKeyboardSpeed", 0.019999999552965164F },
+                  { "fMapMenuOverlayNormalSnowStrength", 0.4F },
+                  { "fMapMenuOverlayNormalStrength", 1.1F },
+                  { "fMapMenuOverlayScale", 0.000035F },
+                  { "fMapMenuOverlaySnowScale", 0.000045F },
+                  { "fMapMoveKeyboardSpeed", 0.02F },
                   { "fMapTransitionSpeed", 0.75F },
-                  { "fMapWorldCursorMoveArea", 0.8999999761581421F },
+                  { "fMapWorldCursorMoveArea", 0.9F },
                   { "fMapWorldHeightAdjustmentForce", 4.0F },
                   { "fMapWorldMaxPanSpeed", 75000.0F },
                   { "fMapWorldMaxPitch", 75.0F },
@@ -2395,28 +2142,22 @@ namespace dovah::game_ini {
                   { "fMapWorldYawRange", 80.0F },
                   { "fMapWorldZoomSpeed", 2.0F },
                   { "fMapZoomMouseSpeed", 2.0F },
-                  { "fMaxMarkerSelectionDist", 0.003000000026077032F },
+                  { "fMaxMarkerSelectionDist", 0.003F },
                #pragma endregion
                #pragma region W
-                  { "fWorldMapDepthBlurScale", 0.30000001192092896F },
+                  { "fWorldMapDepthBlurScale", 0.3F },
                   { "fWorldMapFocalDepth", 45000.0F },
-                  { "fWorldMapMaximumDepthBlur", 0.44999998807907104F },
+                  { "fWorldMapMaximumDepthBlur", 0.45F },
                   { "fWorldMapNearDepthBlurScale", 4.0F },
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region R
-                  { "iRightStickRepeatRate", 250 },
-               #pragma endregion
+               { "iRightStickRepeatRate", 250 },
             #pragma endregion
             #pragma region Strings
-               #pragma region M
-                  { "sMapWorldDefaultWorldSpace", "Tamriel" },
-               #pragma endregion
-               #pragma region W
-                  { "sWorldMapOverlayNormalSnowTexture", "Data\\Textures\\Terrain\\WorldMapOverlaySnow_n.dds" },
-                  { "sWorldMapOverlayNormalTexture", "Data\\Textures\\Terrain\\WorldMapOverlay_n.dds" },
-               #pragma endregion
+               { "sMapWorldDefaultWorldSpace", "Tamriel" },
+               { "sWorldMapOverlayNormalSnowTexture", "Data\\Textures\\Terrain\\WorldMapOverlaySnow_n.dds" },
+               { "sWorldMapOverlayNormalTexture", "Data\\Textures\\Terrain\\WorldMapOverlay_n.dds" },
             #pragma endregion
          }),
          section_definition("Menu", {
@@ -2427,18 +2168,18 @@ namespace dovah::game_ini {
          section_definition("MESSAGES", {
             { "bAllowFileWrite", true },
             { "bAllowYesToAll", true },
-            { { game::skyrim_special }, "bAssertsWithoutDebugger", false },
+            { sse_only, "bAssertsWithoutDebugger", false },
             { "bBlockMessageBoxes", false },
             { "bDisableAssertQueuing", true },
             { "bFaceGenWarnings", false },
-            { { game::skyrim_special }, "bNoBreaksForAsserts", false },
+            { sse_only, "bNoBreaksForAsserts", false },
             { "bShowMissingAudioWarnings", true },
             { "bShowMissingLipWarnings", true },
             { "bSkipInitializationFlows", true },
             { "bSkipProgramFlows", true },
             { "bUseWindowsMessageBox", false },
             { "iFileLogging", 0 },
-            { { game::skyrim_special }, "sDisabledProgramFlowContexts", "Not enough arguments..." },
+            { sse_only, "sDisabledProgramFlowContexts", "Not enough arguments..." },
          }),
          section_definition("NavMeshGeneration", {
             { "bGlobalNavMeshCheck", false },
@@ -2450,9 +2191,9 @@ namespace dovah::game_ini {
             { "bEnableTrace", false },
             { "bLoadDebugInformation", false },
             { "fArchiveInitBufferMB", 8.0F },
-            { "fExtraTaskletBudgetMS", 1.2000000476837158F },
+            { "fExtraTaskletBudgetMS", 1.2F },
             { "fPostLoadUpdateTimeMS", 2000.0F },
-            { "fUpdateBudgetMS", 1.2000000476837158F },
+            { "fUpdateBudgetMS", 1.2F },
             { "iMaxAllocatedMemoryBytes", 76800 },
             { "iMaxMemoryPageSize", 512 },
             { "iMinMemoryPageSize", 128 },
@@ -2509,7 +2250,7 @@ namespace dovah::game_ini {
                #pragma region A
                   { "fAICombatTurnSpeedScale", 2.5F },
                   { "fAITurnSpeedScale", 1.5F },
-                  { "fAcceptableErrorRatio", 0.8999999761581421F },
+                  { "fAcceptableErrorRatio", 0.9F },
                   { "fAvoidNodeCost", 24.0F },
                   { "fAvoidNodeRadiusAdd", 11.0F },
                   { "fAvoidPreferredTriangleCrossingMultiplier", 10.0F },
@@ -2530,7 +2271,7 @@ namespace dovah::game_ini {
                   { "fDistFromPathForFollowingRadiusMult", 2.0F },
                #pragma endregion
                #pragma region F
-                  { "fFindMaxSpeedMinParamIncrementPercent", 0.10000000149011612F },
+                  { "fFindMaxSpeedMinParamIncrementPercent", 0.1F },
                   { "fFollowerTeleportOffsetFudge", 10.0F },
                #pragma endregion
                #pragma region H
@@ -2558,13 +2299,13 @@ namespace dovah::game_ini {
                   { "fMinFrictionSpeed", 2.0F },
                   { "fMinNormalizedSpeedForSlowdown", 0.75F },
                   { "fMinStairSpeed", 80.0F },
-                  { "fMinTimeToNextPoint", 0.30000001192092896F },
+                  { "fMinTimeToNextPoint", 0.3F },
                   { "fMinimalUsePathingCost", 409600.0F },
-                  { "fMovementBlockedTimer", 0.019999999552965164F },
+                  { "fMovementBlockedTimer", 0.02F },
                #pragma endregion
                #pragma region N
                   { "fNavmeshBoundsActorRadiusMultiplier", 1.0F },
-                  { "fNavmeshBoundsMinTimeOfImpact", 0.0333000011742115F },
+                  { "fNavmeshBoundsMinTimeOfImpact", 0.0333F },
                   { "fNodeDistanceThreshold", 25.0F },
                #pragma endregion
                #pragma region O
@@ -2578,7 +2319,7 @@ namespace dovah::game_ini {
                   { "fPathManagerDebugInfoWindow", 1.0F },
                   { "fPathToAnimLengthMaxMultiplier", 2.0F },
                   { "fPathingLargeActorRadius", 80.0F },
-                  { "fPreferredTriangleMultiplier", 0.009999999776482582F },
+                  { "fPreferredTriangleMultiplier", 0.01F },
                #pragma endregion
                #pragma region R
                   { "fRotateTowardsPathThreshold", 5.0F },
@@ -2594,11 +2335,11 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region T
                   { "fTeleportNodeAngleTolerance", 5.0F },
-                  { "fTotalDisplacementThresholdRadiusMult", 0.6600000262260437F },
+                  { "fTotalDisplacementThresholdRadiusMult", 0.66F },
                   { "fTotalTimePadding", 0.5F },
                   { "fTotalTimeThreshold", 1.0F },
-                  { "fTweenerAnimDurationOffset", 0.10000000149011612F },
-                  { "fTweeningMaxPercentSpeedDelta", 0.20000000298023224F },
+                  { "fTweenerAnimDurationOffset", 0.1F },
+                  { "fTweeningMaxPercentSpeedDelta", 0.2F },
                #pragma endregion
                #pragma region W
                   { "fWarpMaxTime", 5.0F },
@@ -2636,22 +2377,12 @@ namespace dovah::game_ini {
          }),
          section_definition("RagdollAnim", {
             #pragma region Booleans
-               #pragma region F
-                  { "bFootIK", true },
-               #pragma endregion
-               #pragma region G
-                  { "bGrabIK", true },
-               #pragma endregion
-               #pragma region L
-                  { "bLookIK", true },
-               #pragma endregion
-               #pragma region P
-                  { "bPoseMatching", true },
-               #pragma endregion
-               #pragma region R
-                  { "bRagdollAnim", true },
-                  { "bRagdollFeedback", true },
-               #pragma endregion
+               { "bFootIK", true },
+               { "bGrabIK", true },
+               { "bLookIK", true },
+               { "bPoseMatching", true },
+               { "bRagdollAnim", true },
+               { "bRagdollFeedback", true },
             #pragma endregion
             #pragma region Floats
                #pragma region A
@@ -2666,31 +2397,31 @@ namespace dovah::game_ini {
                #pragma endregion
                #pragma region F
                   { "fFeedbackImpulseMult", 500.0F },
-                  { "fFeedbackOnOffGain", 0.30000001192092896F },
+                  { "fFeedbackOnOffGain", 0.3F },
                   { "fFeedbackOnOffGainTimeMS", 1000.0F },
                   { "fFeedbackTimeMS", 10000.0F },
                #pragma endregion
                #pragma region H
-                  { "fHierarchyGain", 0.17000000178813934F },
+                  { "fHierarchyGain", 0.17F },
                #pragma endregion
                #pragma region I
                   { "fImpulseLimit", 15.0F },
                #pragma endregion
                #pragma region P
-                  { "fPositionGain", 0.05000000074505806F },
+                  { "fPositionGain", 0.05F },
                   { "fPositionMaxAngularVelocity", 18.0F },
                   { "fPositionMaxLinearVelocity", 14.0F },
                #pragma endregion
                #pragma region S
-                  { "fSnapGain", 0.10000000149011612F },
+                  { "fSnapGain", 0.1F },
                   { "fSnapMaxAngularDistance", 1.0F },
-                  { "fSnapMaxAngularVelocity", 0.30000001192092896F },
-                  { "fSnapMaxLinearDistance", 0.30000001192092896F },
+                  { "fSnapMaxAngularVelocity", 0.3F },
+                  { "fSnapMaxLinearDistance", 0.3F },
                   { "fSnapMaxLinearVelocity", 3.0F },
                #pragma endregion
                #pragma region V
                   { "fVelocityDamping", 0.0F },
-                  { "fVelocityGain", 0.6000000238418579F },
+                  { "fVelocityGain", 0.6F },
                #pragma endregion
             #pragma endregion
          }),
@@ -2700,11 +2431,11 @@ namespace dovah::game_ini {
                   { "bAllowProfileTransfer", false },
                   { "bAllowScriptedAutosave", true },
                   { "bAllowScriptedForceSave", true },
-                  { { game::skyrim_special }, "bAutoSaveOnUserStale", true },
+                  { sse_only, "bAutoSaveOnUserStale", true },
                #pragma endregion
                #pragma region C
-                  { { game::skyrim_special }, "bCompressBuffer", false },
-                  { { game::skyrim_special }, "bConvertNonUtilitySaves", false },
+                  { sse_only, "bCompressBuffer", false },
+                  { sse_only, "bConvertNonUtilitySaves", false },
                   { "bCopySaveGameToHostOrMemStick", false },
                #pragma endregion
                #pragma region D
@@ -2720,18 +2451,12 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region A
-                  { "iAutoSaveCount", 3 },
-               #pragma endregion
-               #pragma region S
-                  { "iSaveGameBackupCount", 1 },
-               #pragma endregion
+               { "iAutoSaveCount", 3 },
+               { "iSaveGameBackupCount", 1 },
             #pragma endregion
             #pragma region Strings
-               #pragma region S
-                  { "sSaveGameGameVersionOutdated", "This save game was created on a later version of Skyrim. Please download any updates." },
-                  { "sSaveGameSafeMarkerID", "1DC0A" },
-               #pragma endregion
+               { "sSaveGameGameVersionOutdated", "This save game was created on a later version of Skyrim. Please download any updates." },
+               { "sSaveGameSafeMarkerID", "1DC0A" },
             #pragma endregion
          }),
          section_definition("ScreenSplatter", {
@@ -2742,7 +2467,7 @@ namespace dovah::game_ini {
             { "fLocalTreeMipMapLODBias", -0.25F },
          }),
          section_definition("StreamInstall", {
-            { { game::skyrim_special }, "bResetGameAfterStreamingInstall", false },
+            { sse_only, "bResetGameAfterStreamingInstall", false },
          }),
          section_definition("Terrain", {
             { "fHDLODSnowThresholdAngle", 87.0F },
@@ -2775,21 +2500,19 @@ namespace dovah::game_ini {
          }),
          section_definition("VATS", {
             #pragma region Booleans
-               #pragma region V
-                  { "bVATSAllowNoKill", false },
-                  { "bVATSDisable", false },
-                  { "bVATSForceRanged", false },
-                  { "bVATSIgnoreProjectileTest", false },
-                  { "bVATSMultipleCombatants", false },
-                  { "bVATSRangedSelective", true },
-                  { "bVATSSmartCameraCheckDebug", false },
-                  { "bVatsDebug", false },
-               #pragma endregion
+               { "bVATSAllowNoKill", false },
+               { "bVATSDisable", false },
+               { "bVATSForceRanged", false },
+               { "bVATSIgnoreProjectileTest", false },
+               { "bVATSMultipleCombatants", false },
+               { "bVATSRangedSelective", true },
+               { "bVATSSmartCameraCheckDebug", false },
+               { "bVatsDebug", false },
             #pragma endregion
             #pragma region Floats
                #pragma region V
-                  { "fVATSCastingAfterKillDelay", 1.2000000476837158F },
-                  { "fVATSFocus", 3.200000047683716F },
+                  { "fVATSCastingAfterKillDelay", 1.2F },
+                  { "fVATSFocus", 3.2F },
                   { "fVATSKillMoveEnd", 4.0F },
                   { "fVATSLightAngle", 0.0F },
                   { "fVATSLightDistance", 100.0F },
@@ -2801,7 +2524,7 @@ namespace dovah::game_ini {
                   { "fVATSRangedPercentMin", 50.0F },
                   { "fVATSRangedPercentSneakKill", 20.0F },
                   { "fVATSRangedPercentTargetNoThreat", 10.0F },
-                  { "fVATSRangedTargetLowLevelMult", 0.30000001192092896F },
+                  { "fVATSRangedTargetLowLevelMult", 0.3F },
                   { "fVatsLightColorB", 1.0F },
                   { "fVatsLightColorG", 1.0F },
                   { "fVatsLightColorR", 1.0F },
@@ -2874,15 +2597,11 @@ namespace dovah::game_ini {
                #pragma endregion
             #pragma endregion
             #pragma region Integers
-               #pragma region W
-                  { "iWaterBlurAmount", 1 },
-                  { "iWaterNoiseResolution", 256 },
-               #pragma endregion
+               { "iWaterBlurAmount", 1 },
+               { "iWaterNoiseResolution", 256 },
             #pragma endregion
             #pragma region Strings
-               #pragma region S
-                  { "sSurfaceTexture", "water" },
-               #pragma endregion
+               { "sSurfaceTexture", "water" },
             #pragma endregion
          }),
          section_definition("Weather", {
@@ -2890,12 +2609,263 @@ namespace dovah::game_ini {
             { "bPrecipitation", true },
             { "fAlphaReduce", 1.0F },
             { "fSunBaseSize", 425.0F },
-            { { game::skyrim_special }, "fSunBoost", 1.0F },
-            { { game::skyrim_special }, "fSunGlareMultiplier", 2.0F },
+            { sse_only, "fSunBoost", 1.0F },
+            { sse_only, "fSunGlareMultiplier", 2.0F },
             { "fSunGlareSize", 600.0F },
             { "sBumpFadeColor", "255,255,255,255" },
             { "sEnvReduceColor", "255,255,255,255" },
             { "sLerpCloseColor", "255,255,255,255" },
+         }),
+      });
+      #pragma endregion
+
+      #pragma region SkyrimPrefs.ini
+      extern const file_definition skyrim_prefs = file_definition("SkyrimPrefs", {
+         section_definition("", { // Unnamed section
+            { "bCrosshairEnabled", true },
+            { "bGamepadEnable", false },
+            { "bSaveOnPause", true },
+            { "bSaveOnRest", true },
+            { "bSaveOnTravel", true },
+            { "bSaveOnWait", true },
+            { "fHUDOpacity", 1.0F },
+            { "fSkyCellRefFadeDistance", 150000.0F },
+         }),
+         section_definition("AudioMenu", {
+            { "fAudioMasterVolume", 1.0F },
+            { "fVal0", 1.0F },
+            { "fVal1", 1.0F },
+            { "fVal2", 1.0F },
+            { "fVal3", 1.0F },
+            { "fVal4", 1.0F },
+            { "fVal5", 1.0F },
+            { "fVal6", 1.0F },
+            { "fVal7", 1.0F },
+         }),
+         section_definition("Clouds", {
+            { "fCloudLevel0Distance", 16384.0F },
+            { "fCloudLevel1Distance", 32768.0F },
+            { "fCloudLevel2Distance", 262144.0F },
+            { "fCloudNearFadeDistance", 9000.0F },
+         }),
+         section_definition("Controls", {
+            { "bAlwaysRunByDefault", true },
+            { "bGamePadRumble", true },
+            { "bInvertYValues", false },
+            { "bUseKinect", false },
+            { "fGamepadHeadingSensitivity", 1.9F },
+            { "fMouseHeadingSensitivity", 0.0125F },
+         }),
+         section_definition("Decals", {
+            { sse_only, "bDecals", true },
+            { sse_only, "bSkinnedDecals", true },
+         }),
+         section_definition("Display", {
+            #pragma region Booleans
+               #pragma region B
+                  { sse_only, "bBorderless", false },
+               #pragma endregion
+               #pragma region D
+                  { "bDeferredShadows", true },
+                  { "bDrawLandShadows", false },
+                  { "bDrawShadows", true },
+               #pragma endregion
+               #pragma region E
+                  { sse_only, "bEnableImprovedSnow", true },
+                  { sse_only, "bEnableProjecteUVDiffuseNormals", true },
+               #pragma endregion
+               #pragma region F
+                  { "bFXAAEnabled", false },
+                  { "bFloatPointRenderTarget", true },
+                  { sse_only, "bForceCreateTarget", false },
+                  { "bFull Screen", false },
+               #pragma endregion
+               #pragma region I
+                  { sse_only, "bIBLFEnable", true },
+                  { sse_only, "bIndEnable", false },
+               #pragma endregion
+               #pragma region M
+                  { "bMainZPrepass", false },
+               #pragma endregion
+               #pragma region S
+                  { sse_only, "bSAOEnable", true },
+                  { sse_only, "bSAO_CS_Enable", false },
+                  { sse_only, "bScreenSpaceReflectionEnabled", true },
+                  { "bShadowMaskZPrepass", false },
+                  { "bShadowsOnGrass", true },
+               #pragma endregion
+               #pragma region T
+                  { sse_only, "bToggleSparkles", true },
+                  { "bTransparencyMultisampling", false },
+                  { "bTreesReceiveShadows", false },
+               #pragma endregion
+               #pragma region U
+                  { sse_only, "bUse64bitsHDRRenderTarget", false },
+                  { sse_only, "bUsePrecipitationOcclusion", true },
+                  { sse_only, "bUseTAA", true },
+               #pragma endregion
+               #pragma region V
+                  { sse_only, "bVolumetricLightingEnable", true },
+               #pragma endregion
+            #pragma endregion
+            #pragma region Floats
+               #pragma region D
+                  { "fDecalLOD1", 1000.0F },
+                  { "fDecalLOD2", 1500.0F },
+                  { sse_only, "fDynamicDOFBlurMultiplier", 0.8F },
+               #pragma endregion
+               #pragma region G
+                  { "fGamma", 1.0F },
+               #pragma endregion
+               #pragma region I
+                  { "fInteriorShadowDistance", 3000.0F },
+               #pragma endregion
+               #pragma region L
+                  { "fLeafAnimDampenDistEnd", 4600.0F },
+                  { "fLeafAnimDampenDistStart", 3600.0F },
+                  { "fLightLODStartFade", 1000.0F },
+               #pragma endregion
+               #pragma region M
+                  { "fMeshLODFadeBoundDefault", 256.0F },
+                  { "fMeshLODFadePercentDefault", 1.2F },
+                  { "fMeshLODLevel1FadeDist", 4096.0F },
+                  { "fMeshLODLevel1FadeTreeDistance", 2844.0F },
+                  { "fMeshLODLevel2FadeDist", 3072.0F },
+                  { "fMeshLODLevel2FadeTreeDistance", 2048.0F },
+               #pragma endregion
+               #pragma region P
+                  { sse_only, "fProjectedUVDiffuseNormalTilingScale", 0.5F },
+                  { sse_only, "fProjectedUVNormalDetailTilingScale", 1.2F },
+               #pragma endregion
+               #pragma region S
+                  { "fShadowBiasScale", 1.0F },
+                  { "fShadowDistance", 2500.0F },
+                  { "fShadowLODStartFade", 200.0F },
+                  { "fSpecularLODStartFade", 500.0F },
+               #pragma endregion
+               #pragma region T
+                  { "fTreesMidLODSwitchDist", 3600.0F },
+               #pragma endregion
+               #pragma region F
+                  { sse_only, "ffocusShadowMapDoubleEveryXUnit", 450.0F },
+               #pragma endregion
+            #pragma endregion
+            #pragma region Integers
+               #pragma region B
+                  { "iBlurDeferredShadowMask", 5 },
+               #pragma endregion
+               #pragma region M
+                  { "iMaxAnisotropy", 8 },
+                  { "iMaxDecalsPerFrame", 10 },
+                  { "iMaxSkinDecalsPerFrame", 3 },
+                  { "iMultiSample", 0 },
+               #pragma endregion
+               #pragma region N
+                  { sse_only, "iNumFocusShadow", 4 },
+                  { sse_only, "iNumSplits", 2 },
+               #pragma endregion
+               #pragma region R
+                  { sse_only, "iReflectionResolutionDivider", 2 },
+               #pragma endregion
+               #pragma region S
+                  { sse_only, "iSaveGameScreenShotHeighWSt", 192 },
+                  { sse_only, "iSaveGameScreenShotHeight", 192 },
+                  { sse_only, "iSaveGameScreenShotWidth", 256 },
+                  { sse_only, "iSaveGameScreenShotWidthWS", 320 },
+                  { "iScreenShotIndex", 0 },
+                  { "iShadowFilter", 3 },
+                  { "iShadowMapResolution", 1024 },
+                  { "iShadowMaskQuarter", 4 },
+                  { "iShadowMode", 3 },
+                  { "iSize H", 480 },
+                  { "iSize W", 640 },
+               #pragma endregion
+               #pragma region T
+                  { "iTexMipMapMinimum", 0 },
+                  { "iTexMipMapSkip", 0 },
+               #pragma endregion
+               #pragma region V
+                  { sse_only, "iVSyncPresentInterval", 1 },
+                  { sse_only, "iVolumetricLightingQuality", 1 },
+               #pragma endregion
+               #pragma region W
+                  { "iWaterMultiSamples", 0 },
+               #pragma endregion
+            #pragma endregion
+         }),
+         section_definition("GamePlay", {
+            { "bShowFloatingQuestMarkers", true },
+            { "bShowQuestMarkers", true },
+            { "iDifficulty", 2 },
+         }),
+         section_definition("General", {
+            { "bEnableStoryManagerLogging", false },
+            { sse_only, "fLightingOutputColourClampPostEnv", 1.0F },
+            { sse_only, "fLightingOutputColourClampPostLit", 1.0F },
+            { sse_only, "fLightingOutputColourClampPostSpec", 1.0F },
+            { "iStoryManagerLoggingEvent", -1 },
+         }),
+         section_definition("Grass", {
+            { "b30GrassVS", false },
+            { "fGrassMaxStartFadeDistance", 7000.0F },
+            { "fGrassMinStartFadeDistance", 400.0F },
+            { "fGrassStartFadeDistance", 3500.0F },
+         }),
+         section_definition("Imagespace", {
+            { "bDoDepthOfField", true },
+            { sse_only, "bLensFlare", true },
+         }),
+         section_definition("Interface", {
+            { "bDialogueSubtitles", false },
+            { "bGeneralSubtitles", false },
+            { "bShowCompass", true },
+            { "fMouseCursorSpeed", 1.0F },
+         }),
+         section_definition("LOD", {
+            { "fLODFadeOutMultActors", 6.0F },
+            { "fLODFadeOutMultItems", 3.0F },
+            { "fLODFadeOutMultObjects", 5.0F },
+            { "fLODFadeOutMultSkyCell", 1.0F },
+         }),
+         section_definition("NavMesh", {
+            { sse_only, "fCoverSideHighAlpha", 0.8F },
+            { sse_only, "fCoverSideLowAlpha", 0.65F },
+            { sse_only, "fEdgeDistFromVert", 10.0F },
+            { sse_only, "fEdgeFullAlpha", 1.0F },
+            { sse_only, "fEdgeHighAlpha", 0.75F },
+            { sse_only, "fEdgeLowAlpha", 0.5F },
+            { sse_only, "fEdgeThickness", 10.0F },
+            { sse_only, "fLedgeBoxHalfHeight", 25.0F },
+            { sse_only, "fObstacleAlpha", 0.5F },
+            { sse_only, "fPointSize", 2.5F },
+            { sse_only, "fTriangleFullAlpha", 0.7F },
+            { sse_only, "fTriangleHighAlpha", 0.35F },
+            { sse_only, "fTriangleLowAlpha", 0.2F },
+         }),
+         section_definition("Particles", {
+            { "iMaxDesired", 750 },
+         }),
+         section_definition("SaveGame", {
+            { "fAutosaveEveryXMins", 15.0F },
+         }),
+         section_definition("TerrainManager", {
+            { "bShowLODInEditor", false },
+            { "fBlockLevel0Distance", 20480.0F },
+            { "fBlockLevel1Distance", 32768.0F },
+            { "fBlockMaximumDistance", 100000.0F },
+            { "fSplitDistanceMult", 0.75F },
+            { "fTreeLoadDistance", 25000.0F },
+         }),
+         section_definition("Trees", {
+            { "bRenderSkinnedTrees", true },
+         }),
+         section_definition("Water", {
+            { "bUseWaterDepth", true },
+            { "bUseWaterDisplacements", true },
+            { "bUseWaterReflections", true },
+            { "bUseWaterRefractions", true },
+            { "iWaterReflectHeight", 512 },
+            { "iWaterReflectWidth", 512 },
          }),
       });
       #pragma endregion

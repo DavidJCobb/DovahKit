@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#include "../../../helpers/endianness.h"
+#include "../../../helpers/endian.h"
 #include "../../../helpers/files.h"
 #include "../../bs_hash.h"
 
