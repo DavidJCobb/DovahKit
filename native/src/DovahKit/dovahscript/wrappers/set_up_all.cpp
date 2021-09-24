@@ -98,6 +98,7 @@ namespace dovahscript {
                define_wrapper_metatable<ui::canvas_layer_group>(L);
                set_up_class_with_singleton<ui::canvas_text_data>(L, index);
             set_up_class_with_singleton<ui::checkbox>(L, index);
+            set_up_class_with_singleton<ui::color_button>(L, index);
             set_up_class_with_singleton<ui::dropdown>(L, index);
                set_up_class_with_singleton<ui::dropdown_item>(L, index);
             set_up_class_with_singleton<ui::formpicker>(L, index);

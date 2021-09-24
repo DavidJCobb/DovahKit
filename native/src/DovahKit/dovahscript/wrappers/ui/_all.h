@@ -5,6 +5,7 @@
 #include "canvas/layer.h"
 #include "canvas/layer_group.h"
 #include "checkbox.h"
+#include "color_button.h"
 #include "dropdown.h"
 #include "dropdown/collection_items.h"
 #include "dropdown/item.h"

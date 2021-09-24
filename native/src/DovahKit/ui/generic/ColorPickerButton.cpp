@@ -39,7 +39,7 @@ ColorPickerButton::ColorPickerButton(QWidget* parent) : QPushButton(parent) {
 void ColorPickerButton::setColor(QColor c) {
    this->_color = c;
    this->_updateColor();
-   emit this->colorChanged();
+   emit this->colorChanged(c);
 }
 void ColorPickerButton::setHasAlpha(bool s) {
    this->_hasAlpha = s;

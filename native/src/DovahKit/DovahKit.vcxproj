@@ -117,6 +117,7 @@
     <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\button.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events\registration\color_button.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\groupbox.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\radio_button.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\registration\radio_group.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="dovahscript\lua_classes\_import_all.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\all_standard.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\dovah.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\dovah_package.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\form_types.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
@@ -238,6 +240,7 @@
     <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\canvas\layer_group\collection_layers.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\checkbox.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\color_button.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\collection_items.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\dropdown\item.cpp" />
@@ -529,9 +532,12 @@
     <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
     <ClInclude Include="dovahscript\api_helpers\load_resource.h" />
     <ClInclude Include="dovahscript\core\subsystems\coordinator\borrow_counter.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events\registration\color_button.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\registration\textarea.h" />
+    <ClInclude Include="dovahscript\lua_libraries\dovah_package.h" />
     <ClInclude Include="dovahscript\wrappers\ini\setting.h" />
     <ClInclude Include="dovahscript\wrappers\resource\binary_view.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\color_button.h" />
     <ClInclude Include="dovahscript\wrappers\ui\textarea.h" />
     <ClInclude Include="dovah\utils\game_list.h" />
     <ClInclude Include="editor\subsystems\game_inis.h" />
@@ -539,6 +545,7 @@
     <ClInclude Include="helpers\endian.h" />
     <ClInclude Include="helpers\enum_bitfields.h" />
     <ClInclude Include="helpers\qt\ini\binding.h" />
+    <ClInclude Include="helpers\class_list.h" />
     <ClInclude Include="incomplete_code_warnings.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_ini_tests.h" />
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />

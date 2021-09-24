@@ -1,6 +1,5 @@
 #include "table_view.h"
 #include <QSortFilterProxyModel>
-#include <QTableView>
 #include <QVariant>
 #include "../../../../../ui/generic/ObservableStandardItemModel.h"
 #include "../../events.h"
@@ -11,7 +10,7 @@
 
 namespace dovahscript::impl::event_registration {
    /*static*/ result table_view::register_event(QObject& object, const char* event_name, const char* listener_name) {
-      auto* casted = qobject_cast<QTableView*>(&object);
+      auto* casted = qobject_cast<target_type*>(&object);
       if (!casted)
          return result::no_match;
       if (_stricmp(event_name, "OnChanged") == 0) {

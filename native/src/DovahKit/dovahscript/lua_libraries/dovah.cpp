@@ -128,6 +128,12 @@ namespace {
          //
          return push_native_object(stub);
       }
+      int deep_stringify(lua_State* L) {
+         lua_settop(L, 1);
+         auto string = cobb::lua::var_to_string(L, 1);
+         lua_pushlstring(L, string.c_str(), string.size());
+         return 1;
+      }
       int dump(lua_State* L) {
          lua_settop(L, 1);
          auto string = cobb::lua::var_to_string(L, 1);
@@ -414,6 +420,7 @@ namespace {
       luaL_Reg{ "benchmark_stop",          &_definitions::benchmark_stop },
       luaL_Reg{ "count_forms_of_type",     &_definitions::count_forms_of_type },
       luaL_Reg{ "create_form",             &_definitions::create_form },
+      luaL_Reg{ "deep_stringify",          &_definitions::deep_stringify },
       luaL_Reg{ "dump",                    &_definitions::dump },
       luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },

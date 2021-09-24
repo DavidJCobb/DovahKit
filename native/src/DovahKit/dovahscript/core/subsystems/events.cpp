@@ -7,6 +7,7 @@
 #include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/qt/combobox.h"
 #include "../../../helpers/qt/get_model_of.h"
+#include "../../../helpers/class_list.h"
 #include "../verify_threading.h"
 #include "../../push_native_object.h"
 #include "../../safe_call.h"
@@ -15,23 +16,11 @@
 #include "events/script_event.h"
 
 #include "../../../editor/form_stub_meta_type.h"
-
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QComboBox>
-#include <QDoubleSpinBox>
-#include <QGroupBox>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QRadioButton>
-#include <QSortFilterProxyModel>
-#include <QTableView>
-#include <QTabWidget>
-#include "../../qt/DovahscriptTextarea.h"
-#include "../../../ui/generic/FormPicker.h"
+#include "../../api_helpers/qt_color.h"
 
 #include "events/registration/button.h"
 #include "events/registration/checkbox.h"
+#include "events/registration/color_button.h"
 #include "events/registration/dropdown.h"
 #include "events/registration/formpicker.h"
 #include "events/registration/groupbox.h"
@@ -54,63 +43,61 @@ namespace dovahscript::impl {
 }
 
 namespace {
-   struct _event_list_for_target_type {
-      const QMetaObject* const meta;
-      std::vector<const char*> events;
-      
-      _event_list_for_target_type(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
-   };
-   std::array _events_by_target_type = {
-      _event_list_for_target_type(&DovahscriptTextarea::staticMetaObject,
-         dovahscript::impl::event_registration::textarea::event_names
-      ),
-      _event_list_for_target_type(&FormPicker::staticMetaObject,
-         dovahscript::impl::event_registration::formpicker::event_names
-      ),
-      _event_list_for_target_type(&QButtonGroup::staticMetaObject,
-         dovahscript::impl::event_registration::radio_group::event_names
-      ),
-      _event_list_for_target_type(&QCheckBox::staticMetaObject,
-         dovahscript::impl::event_registration::checkbox::event_names
-      ),
-      _event_list_for_target_type(&QComboBox::staticMetaObject,
-         dovahscript::impl::event_registration::dropdown::event_names
-      ),
-      _event_list_for_target_type(&QDoubleSpinBox::staticMetaObject,
-         dovahscript::impl::event_registration::spinbox::event_names
-      ),
-      _event_list_for_target_type(&QGroupBox::staticMetaObject,
-         dovahscript::impl::event_registration::groupbox::event_names
-      ),
-      _event_list_for_target_type(&QLineEdit::staticMetaObject,
-         dovahscript::impl::event_registration::textbox::event_names
-      ),
-      _event_list_for_target_type(&QPushButton::staticMetaObject,
-         dovahscript::impl::event_registration::button::event_names
-      ),
-      _event_list_for_target_type(&QRadioButton::staticMetaObject,
-         dovahscript::impl::event_registration::radio_button::event_names
-      ),
-      _event_list_for_target_type(&QTableView::staticMetaObject,
-         dovahscript::impl::event_registration::table_view::event_names
-      ),
-      _event_list_for_target_type(&QTabWidget::staticMetaObject,
-         dovahscript::impl::event_registration::tabbox::event_names
-      ),
-   };
+   using _event_registrar_list = cobb::class_list<
+      dovahscript::impl::event_registration::textarea,
+      dovahscript::impl::event_registration::formpicker,
+      dovahscript::impl::event_registration::radio_group,
+      dovahscript::impl::event_registration::checkbox,
+      dovahscript::impl::event_registration::color_button,
+      dovahscript::impl::event_registration::dropdown,
+      dovahscript::impl::event_registration::spinbox,
+      dovahscript::impl::event_registration::groupbox,
+      dovahscript::impl::event_registration::textbox,
+      dovahscript::impl::event_registration::button,
+      dovahscript::impl::event_registration::radio_button,
+      dovahscript::impl::event_registration::table_view,
+      dovahscript::impl::event_registration::tabbox//,
+   >;
+
+   namespace event_registrar_list_functors {
+      template<typename T> struct event_name_is_valid {
+         static bool execute(const QMetaObject* const m, const char* name, bool& matched) {
+            if (&T::target_type::staticMetaObject != m)
+               return false;
+            for (auto* en : T::event_names) {
+               if (_stricmp(name, en) == 0) {
+                  matched = true;
+                  return true;
+               }
+            }
+            return true;
+         }
+      };
+
+      template<typename T> struct attempt_event_registration {
+         static bool execute(QObject& widget, const char* event_name, const char* listener_name, dovahscript::impl::event_registration::result& result) {
+            using result_t = dovahscript::impl::event_registration::result;
+            //
+            if (&T::target_type::staticMetaObject != widget.metaObject())
+               return false;
+            result = T::register_event(widget, event_name, listener_name);
+            assert(result != result_t::failure);
+            return result != result_t::no_match; // stop iterating if there was a success or a failure
+         }
+      };
+   }
 
    bool event_name_is_valid(const QObject& widget, const char* event_name) {
-      auto* mo = widget.metaObject();
-      for (auto& entry : _events_by_target_type) {
-         if (!mo->inherits(entry.meta))
-            continue;
-         for (auto* name : entry.events) {
-            if (_stricmp(event_name, name) == 0)
-               return true;
-         }
-         return false;
-      }
-      return false;
+      bool matched = false;
+      //
+      const auto* rtti = widget.metaObject();
+      do {
+         _event_registrar_list::for_each_breakable_with_args<event_registrar_list_functors::event_name_is_valid>(rtti, event_name, matched);
+         if (matched)
+            break;
+      } while (rtti = rtti->superClass());
+      //
+      return matched;
    }
 }
 
@@ -163,28 +150,15 @@ namespace dovahscript::core::subsystems {
    void events::_register_event(QObject& widget, const char* event_name, const char* listener_name) {
       require_script_thread();
       //
-      static constexpr std::array registrars = {
-         &impl::event_registration::button::register_event,
-         &impl::event_registration::checkbox::register_event,
-         &impl::event_registration::dropdown::register_event,
-         &impl::event_registration::formpicker::register_event,
-         &impl::event_registration::groupbox::register_event,
-         &impl::event_registration::radio_button::register_event,
-         &impl::event_registration::radio_group::register_event,
-         &impl::event_registration::spinbox::register_event,
-         &impl::event_registration::tabbox::register_event,
-         &impl::event_registration::table_view::register_event,
-         &impl::event_registration::textarea::register_event,
-         &impl::event_registration::textbox::register_event,
-      };
-      for (auto* registrar : registrars) {
-         using result_t = impl::event_registration::result;
-         //
-         auto result = (registrar)(widget, event_name, listener_name);
-         assert(result != result_t::failure);
+      using result_t = impl::event_registration::result;
+      result_t result = result_t::no_match;
+      //
+      const auto* rtti = widget.metaObject();
+      do {
+         _event_registrar_list::for_each_breakable_with_args<event_registrar_list_functors::attempt_event_registration>(widget, event_name, listener_name, result);
          if (result != result_t::no_match)
             return;
-      }
+      } while (rtti = rtti->superClass());
       //
       assert(false && "Unknown event target!");
    }
@@ -357,6 +331,11 @@ namespace dovahscript::core::subsystems {
          int argcount = 0;
          for (auto& p : params) {
             auto ut = p.userType();
+            if (ut == QMetaType::QColor) {
+               api_helpers::push_color(L, p.value<QColor>());
+               ++argcount;
+               continue;
+            }
             if (ut == qMetaTypeId<impl::model_observer_event_argument>()) {
                using namespace dovahscript;
                //
@@ -381,7 +360,7 @@ namespace dovahscript::core::subsystems {
             }
             if (ut == qMetaTypeId<QObject*>()) {
                auto* value = p.value<QObject*>();
-               auto* arg   = qobject_cast<QWidget*>(value);
+               auto* arg   = qobject_cast<QWidget*>(value); // NOTE: This will need to be removed if we allow non-widget QObjects as event arguments.
                if (arg) {
                   argcount += push_native_object(arg);
                   continue;

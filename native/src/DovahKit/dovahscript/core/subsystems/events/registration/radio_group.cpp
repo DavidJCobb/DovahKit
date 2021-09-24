@@ -1,19 +1,18 @@
 #include "radio_group.h"
 #include <QAbstractButton>
-#include <QButtonGroup>
 #include <QVariant>
 #include "../../events.h"
 
 namespace dovahscript::impl::event_registration {
    /*static*/ result radio_group::register_event(QObject& object, const char* event_name, const char* listener_name) {
-      auto* casted = qobject_cast<QButtonGroup*>(&object);
+      auto* casted = qobject_cast<target_type*>(&object);
       if (!casted)
          return result::no_match;
       if (_stricmp(event_name, "OnSelectionChanged") == 0) {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&QButtonGroup::buttonToggled), &impl::get_event_connection_recipient(),
+            QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&target_type::buttonToggled), &impl::get_event_connection_recipient(),
                [casted, ln](QAbstractButton* button, bool checked) {
                   if (!checked)
                      return;

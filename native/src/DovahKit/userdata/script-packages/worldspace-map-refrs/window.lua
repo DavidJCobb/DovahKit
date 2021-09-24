@@ -1,0 +1,396 @@
+local BASE_FORMS = {
+   form_types.sound,
+   form_types.activator,
+   form_types.armor,
+   form_types.book,
+   form_types.container,
+   form_types.door,
+   form_types.ingredient,
+   form_types.light,
+   form_types.misc_item,
+   form_types.apparatus,
+   form_types.static,
+   form_types.movable_static,
+   form_tpyes.tree,
+   form_types.flora,
+   form_types.furniture,
+   form_types.weapon,
+   form_types.ammo,
+   form_types.actor_base,
+   form_types.leveled_character,
+   form_types.key,
+   form_types.potion,
+   form_types.idle_marker,
+   form_types.note,
+   form_types.soul_gem,
+   form_types.leveled_item,
+}
+
+-- List for setting which forms to render
+local FormpickerList = false
+do
+   FormpickerList = {
+      widgets = {
+         outer = false,
+         inner = false,
+      },
+      pickers = {},
+      button  = {},
+   }
+   
+   do
+      local o = ui.widget.new()
+      local i = ui.widget.new()
+      FormpickerList.widgets.outer = o
+      FormpickerList.widgets.inner = i
+      o:set_layout("down")
+      i:set_layout("down")
+      o.layout_margins = 0
+      i.layout_margins = 0
+      o:add_child(i)
+      --
+      local b = ui.button.new("+")
+      o:add_child(b)
+      o:add_spacer()
+      --
+      FormpickerList.button = b
+   end
+   
+   function FormpickerList:append_to_widget(widget, ...)
+      widget:add_child(self.widgets.outer, ...)
+   end
+   function FormpickerList:get_forms()
+      local set  = {}
+      local list = {}
+      for i = 1, #self.pickers do
+         local form = self.pickers[i]:get_form()
+         if form and not set[form] then
+            set[form]       = true
+            list[#list + 1] = form
+         end
+      end
+      return list
+   end
+   function FormpickerList:set_enable_state(state)
+      self.widgets.outer.enabled = state
+   end
+   function FormpickerList:remove(widget)
+      local i = nil
+      for j = 1, #self.pickers do
+         if self.pickers[j] == widget then
+            i = j
+            break
+         end
+      end
+      if not i then
+         return
+      end
+      local list = {}
+      for j = 1, i do
+         list[j] = self.pickers[j]
+      end
+      for j = i + 1, #self.pickers do
+         list[j - 1] = self.pickers[j]
+      end
+      self.pickers = list
+   end
+   
+   local _Row = {}
+   _Row.__index = _Row
+   do
+      function _Row:new()
+         local instance = setmetatable({}, self)
+         local w = ui.widget.new()
+         local f = ui.formpicker.new()
+         local x = ui.button.new("X")
+         --
+         w:set_layout("ltr")
+         w.layout_margins = 0
+         w:add_child(f)
+         w:add_child(x)
+         --
+         f.allow_none = true
+         f.form_types = BASE_FORMS
+         f:on("OnChanged", "", function(form)
+         end)
+         --
+         x:on("OnActivated", "", function()
+            FormpickerList:remove(instance)
+            local p = w.parent
+            if p then
+               p:remove_child(w)
+            end
+         end)
+         --
+         instance.widget = w
+         instance.picker = f
+         instance.button = x
+         --
+         local list = FormpickerList.pickers
+         list[#list + 1] = instance
+         --
+         return instance
+      end
+      function _Row:get_form()
+         return self.picker.form
+      end
+   end
+   
+   FormpickerList.button:on("OnActivated", "add row", function()
+      _Row:new()
+   end)
+end
+
+-- Widget for toggling visibility and setting color on rendered forms
+local FormMapRow = {}
+FormMapRow.__index = FormMapList
+do
+   function FormMapRow:new(refr_group)
+      local instance = setmetatable({}, self)
+      --
+      instance.widget     = ui.widget.new()
+      instance.refr_group = refr_group
+      instance._controls  = {
+         root  = instance.widget,
+         check = nil,
+         color = nil,
+      }
+      do
+         local r = instance.widget
+         r.layout_margins = 0
+         r:set_layout("ltr")
+         --
+         local c = ui.checkbox.new(form:form_id_to_string())
+         c.checked = true
+         c:on("OnToggled", "", function(state) instance:on_toggled(state) end)
+         instance._controls.check = c
+         r:add_child(c)
+         --
+         c = ui.color_button.new()
+         c.color = refr_group.color
+         c:on("OnChanged", "", function(color) instance:on_color_changed(color) end)
+         r:add_child(c)
+      end
+      --
+      return instance
+   end
+   function FormMapRow:on_toggled(checked)
+      self.refr_group:set_visible(checked)
+   end
+   function FormMapRow:on_color_changed(color)
+      self.refr_group:set_color(color)
+   end
+end
+
+--
+
+HeightmapWindow = {
+   controls = {
+      window   = ui.window.new(),
+      scroll   = ui.scrollbox.new(),
+      canvas   = ui.canvas.new(),
+      progress = ui.progress_bar.new(),
+      --
+      config   = ui.widget.new(),
+      bottom   = ui.widget.new(),
+      --
+      options = {
+         world = false,
+         layer_visibility = {}, -- list of checkboxes
+         execute = false,
+         --
+         outline_toggle_holder = false,
+      },
+      outline_toggles = {},
+   },
+   state = {
+      layers = {},
+      layer_visibility = {},
+   },
+}
+do -- HeightmapWindow contents
+   do -- Initial config for HeightmapWindow.
+      for i = 1, #LAYER_SPEC do
+         local spec = LAYER_SPEC[i]
+         local name = spec.name
+         HeightmapWindow.state.layer_visibility[name] = true
+      end
+   end
+   do -- Create widgets and layout for HeightmapWindow.
+      local window = HeightmapWindow.controls.window
+      window.title = "Heightmap"
+      window:set_layout("grid")
+      --
+      local scroll = HeightmapWindow.controls.scroll
+      local config = HeightmapWindow.controls.config
+      window:add_child(scroll, 1, 1)
+      window:add_child(config, 1, 2)
+      window:set_layout_stretch_at("col", 1, 1)
+      window:set_layout_stretch_at("col", 2, 0)
+      do
+         local sb = scroll.body
+         sb:set_layout("grid")
+         sb:add_child(HeightmapWindow.controls.canvas)
+      end
+      --
+      do
+         local bottom = HeightmapWindow.controls.bottom
+         window:add_child(bottom, 2, 1, 1, 2)
+         bottom:set_layout("down")
+         bottom.layout_margins = 0
+         --
+         local progress = HeightmapWindow.controls.progress
+         bottom:add_child(progress)
+         progress.alignment = "center center"
+         --
+         do
+            local tip = ui.text.new("TIP: It's normal for rivers and other water formations to be missing chunks. In order to allow for waterfalls at oblique angles relative to the compass, Bethesda will use placed water objects instead of cell and worldspace water.")
+            tip.word_wrap = true
+            bottom:add_child(tip)
+         end
+      end
+      --
+      do -- Create options
+         config:set_layout("down")
+         config.layout_margins = 0
+         --
+         local oc = HeightmapWindow.controls.options
+         local lv = oc.layer_visibility
+         do
+            local picker = ui.formpicker.new()
+            picker.form_types   = form_types.worldspace
+            picker.default_form = dovah.get_form_by_id(0x3C)
+            picker.allow_none   = false
+            config:add_child(picker)
+            --
+            oc.world = picker
+         end
+         do
+            FormpickerList:append_to_widget(config)
+         end
+         for i = 1, #LAYER_SPEC do
+            local spec = LAYER_SPEC[i]
+            local name = spec.name
+            local text = spec.check_text
+            --
+            lv[name] = ui.checkbox.new(text)
+            lv[name].checked = true
+            lv[name]:on("OnToggled", "", function(checked)
+               HeightmapWindow:set_layer_visibility(name, checked)
+            end)
+            config:add_child(lv[name])
+         end
+         do
+            local button = ui.button.new("Render")
+            config:add_child(button)
+            --
+            oc.execute = button
+         end
+         --
+         config:add_child(ui.line.new("h"))
+         --
+         do
+            local widget = ui.text.new("Base forms:")
+            widget.font.bold = true
+            config:add_child(widget)
+         end
+         do
+            local widget = ui.widget.new()
+            widget:set_layout("down")
+            HeightmapWindow.controls.options.outline_toggle_holder = widget
+            --
+            config:add_child(widget)
+         end
+         --
+         config:add_spacer("v")
+      end
+   end
+   function HeightmapWindow:clear_canvas()
+      local canvas = self.controls.canvas
+      canvas.width  = 1
+      canvas.height = 1
+      local layers = {}
+      do
+         local source = canvas.layers
+         local count  = #source
+         for i = 1, count do
+            layers[i] = source[i]
+         end
+      end
+      for i = 1, #layers do
+         local l = layers[i]
+         if l.delete then
+            l:delete() -- accommodation for old engine; TODO: remove this
+         else
+            canvas:remove_layer(l)
+         end
+      end
+      self.state.layers = {}
+   end
+   function HeightmapWindow:clear_cell_outline_toggles()
+      local list   = self.controls.outline_toggles
+      local parent = self.controls.options.outline_toggle_holder
+      for i = 1, #list do
+         parent:remove_child(list[i].widget)
+         list[i] = nil
+      end
+   end
+   function HeightmapWindow:import_cell_outline_data(all_files_map)
+      local list   = self.controls.outline_toggles
+      local parent = self.controls.options.outline_toggle_holder
+      all_files_map:for_each_map(function(map)
+         if map:has_any_islands() then
+            local cls = FormMapRow:new(map)
+            list[#list + 1] = cls
+            parent:add_child(cls.widget)
+         end
+      end)
+   end
+   function HeightmapWindow:set_is_locked(state)
+      self.controls.config.enabled = not state
+   end
+   function HeightmapWindow:set_layer_visibility(name_to_alter, state)
+      local lowest = nil
+      for i = 1, #LAYER_SPEC do
+         local spec  = LAYER_SPEC[i]
+         local name  = spec.name
+         local layer = HeightmapWindow.state.layers[name]
+         local show  = HeightmapWindow.state.layer_visibility[name]
+         if name == name_to_alter then
+            if layer then -- user can configure settings before rendering i.e. before layers exist
+               layer.visible = state
+            end
+            HeightmapWindow.state.layer_visibility[name] = state
+            show = state
+         end
+         if layer then -- user can configure settings before rendering i.e. before layers exist
+            if show and not lowest then
+               lowest = layer
+               layer.blend_mode = "normal"
+               layer.opacity    = 1
+            else
+               if spec.blend_mode then
+                  layer.blend_mode = spec.blend_mode
+               end
+               if spec.opacity then
+                  layer.opacity = spec.opacity
+               end
+            end
+         end
+      end
+   end
+   function HeightmapWindow:show()
+      self.controls.window:show()
+   end
+end
+
+HeightmapWindow.controls.options.execute:on("OnActivated", "render", function()
+   HeightmapWindow:set_is_locked(true)
+   HeightmapWindow:clear_canvas()
+   HeightmapWindow:clear_cell_outline_toggles()
+   render_refr_locations(
+      self.controls.options.world.form,
+      FormpickerList:get_forms()
+   )
+   HeightmapWindow:set_is_locked(false)
+end)

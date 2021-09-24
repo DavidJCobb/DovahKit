@@ -627,6 +627,23 @@ namespace {
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
+      int parent(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QWidget* result = nullptr;
+         {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [&result, widget = task_reference(self.widget)]() {
+               result = get_widget_forced_parent(widget);
+               if (!result)
+                  result = widget->parentWidget();
+            };
+            send_script_ui_task(*task);
+            delete task;
+         }
+         return push_native_object(result);
+      }
       int tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -950,6 +967,7 @@ namespace dovahscript::wrappers::ui {
       { "max_width",      &_getters::max_width },
       { "min_width",      &_getters::min_width },
       { "name",           &_getters::name },
+      { "parent",         &_getters::parent },
       { "tooltip",        &_getters::tooltip },
       { "whats_this",     &_getters::whats_this },
    };

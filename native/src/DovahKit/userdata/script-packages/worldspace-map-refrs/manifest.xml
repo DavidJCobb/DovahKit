@@ -1,0 +1,18 @@
+<package>
+   <metadata>
+      <name>Worldspace map renderer - references</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>Find all references with the desired base forms in a given worldspace, and render a map of their locations.</description>
+   </metadata>
+   <files>
+config.lua
+texture-cache.lua
+refr-group-island.lua
+refr-group.lua
+refr-map.lua
+window.lua
+main.lua
+   </files>
+</package>

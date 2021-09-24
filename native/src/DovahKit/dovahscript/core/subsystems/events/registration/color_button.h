@@ -1,11 +1,11 @@
 #pragma once
 #include "../registration.h"
-#include "../../../../../ui/generic/FormPicker.h"
+#include "../../../../../ui/generic/ColorPickerButton.h"
 
 namespace dovahscript::impl::event_registration {
-   class formpicker : public base {
+   class color_button : public base {
       public:
-         using target_type = FormPicker;
+         using target_type = ColorPickerButton;
 
          static result register_event(QObject& object, const char* event_name, const char* listener_name);
 

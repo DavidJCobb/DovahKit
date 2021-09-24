@@ -72,7 +72,7 @@ namespace cobb {
       if constexpr (sizeof(T) == 1) {
          return value;
       }
-      if (!std::is_constant_evaluated()) { // the byteswap intrinsics aren't constexpr
+      if (!std::is_constant_evaluated()) { // the byteswap intrinsics aren't constexpr, so only use them outside of constant evaluation
          if constexpr (HasByteswapIntrinsic<T>) {
             return intrinsic_byteswap(value);
          }

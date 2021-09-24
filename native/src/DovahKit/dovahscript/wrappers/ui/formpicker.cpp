@@ -187,6 +187,7 @@ namespace {
          //
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
          task->configure = [](wrapped_type* created) {
+            created->setAllowNone(true);
             created->setAllowedFormTypes(default_form_type_filter);
          };
          send_script_ui_task(*task);
