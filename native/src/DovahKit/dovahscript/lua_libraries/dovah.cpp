@@ -26,13 +26,7 @@
 #include "../../editor/subsystems/game_inis.h"
 #include "../wrappers/ini/setting.h"
 
-// For resources:
-#include <QBuffer>
-#include <QImage>
-#include <QImageReader>
-#include "../../dovah/files/bsa/bsa_archived_file.h"
-#include "../wrappers/resource/dds.h"
-#include "../wrappers/resource/unknown.h"
+#include "../api_helpers/load_resource.h"
 
 namespace {
    static constexpr const char* string_format_registry_key = "dovahscript.internal.dovah.string_format_copy";
@@ -236,83 +230,10 @@ namespace {
          send_script_task(*m);
          return 0;
       }
-      int lookup_game_asset(lua_State* L) {
-         const char* raw = nullptr;
-         if (lua_isstring(L, 1)) {
-            raw = lua_tostring(L, 1);
-         } else if (lua_istable(L, 1) || lua_isuserdata(L, 1)) {
-            int type = luaL_getmetafield(L, 1, "__tostring");
-            lua_pop(L, 1);
-            if (type == LUA_TFUNCTION)
-               raw = luaL_tolstring(L, 1, nullptr);
-         }
-         luaL_argcheck(L, raw != nullptr, 1, "string expected");
-         std::filesystem::path path = raw;
-         //
-         std::unique_ptr<dovah::bsa_archived_file> file = nullptr;
-         {
-            auto* task    = new tasks::s2m::lambda(true);
-            task->handler = [path, &file]() {
-               file.reset(DovahKitCore::get().lookup_game_asset(path, true));
-            };
-            send_script_task(*task);
-            delete task;
-         }
-         if (!file)
-            return 0;
-         {
-            QImageReader reader;
-            {
-               auto p = path.filename().u8string();
-               auto s = QString::fromUtf8((const char*)p.c_str());
-               reader.setFileName(s);
-            }
-            auto buffer = QByteArray::fromRawData((const char*)file->data(), file->size());
-            auto device = QBuffer(&buffer);
-            reader.setDevice(&device);
-            if (!reader.format().isEmpty()) {
-               auto raster = reader.read();
-               if (!raster.isNull()) {
-                  DovahscriptResourceHandle resource;
-                  {
-                     auto* task    = new tasks::s2m::lambda(true);
-                     task->handler = [&raster, &resource]() {
-                        resource = core::subsystems::resources::get().create_resource(raster);
-                     };
-                     send_script_task(*task);
-                     delete task;
-                     assert(resource);
-                  }
-                  return push_native_object(resource);
-               }
-            }
-         }
-         if (_stricmp(path.extension().string().data(), ".dds") == 0) {
-            DovahscriptResourceHandle resource;
-            {
-               auto* task    = new tasks::s2m::lambda(true);
-               task->handler = [&file, &resource]() {
-                  resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()), resource_type::dds);
-               };
-               send_script_task(*task);
-               delete task;
-            }
-            return push_native_object(resource);
-         }
-         //
-         // The resource could not be identified.
-         //
-         DovahscriptResourceHandle resource = nullptr;
-         {
-            auto* task    = new tasks::s2m::lambda(true);
-            task->handler = [&file, &resource]() {
-               resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
-            };
-            send_script_task(*task);
-            delete task;
-            assert(resource);
-         }
-         return push_native_object(resource);
+      int load_game_asset(lua_State* L) {
+         auto params = api_helpers::pull_load_resource_params(L, 1);
+         params.load_from = decltype(params)::source::game_assets;
+         return api_helpers::load_and_push_resource(L, params);
       }
       int lookup_game_ini_setting(lua_State* L) {
          QString filename;
@@ -425,7 +346,7 @@ namespace {
       luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",             &_definitions::log_message },
-      luaL_Reg{ "lookup_game_asset",       &_definitions::lookup_game_asset },
+      luaL_Reg{ "load_game_asset",         &_definitions::load_game_asset },
       luaL_Reg{ "lookup_game_ini_setting", &_definitions::lookup_game_ini_setting},
       luaL_Reg{ "object_is",               &_definitions::object_is },
       luaL_Reg{ "type",                    &_definitions::type },

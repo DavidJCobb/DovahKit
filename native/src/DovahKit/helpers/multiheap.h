@@ -269,9 +269,22 @@ namespace cobb {
          }
 
          struct subheap_handle {
-            subheap* data;
+            subheap* data = nullptr;
             //
-            subheap_handle() {
+            subheap_handle() {}
+            ~subheap_handle() {
+               if (!this->data)
+                  return;
+               #if _DEBUG
+               //this->data->threadID = std::thread::id();
+               #endif
+               multiheap::_get_state().take_over_subheap(*this->data);
+               this->data = nullptr; // Don't free (this->data); the heap state owns it.
+            }
+
+            void initialize() {
+               if (this->data)
+                  return;
                this->data = new subheap;
                #if _DEBUG
                   this->data->threadID = std::this_thread::get_id();
@@ -292,24 +305,17 @@ namespace cobb {
                   }
                }
             }
-            ~subheap_handle() {
-               if (!this->data)
-                  return;
-               #if _DEBUG
-                //  this->data->threadID = std::thread::id();
-               #endif
-               multiheap::_get_state().take_over_subheap(*this->data);
-               this->data = nullptr; // Don't free (this->data); the heap state owns it.
-            }
+
             inline subheap* get() const noexcept { return this->data; }
          };
          //
          inline thread_local static subheap_handle current_thread;
          //
          static subheap* _get_subheap() {
+            current_thread.initialize(); // closest we can get to lazy-initialization
             return current_thread.get();
          }
-         //
+         
       public:
          static void* allocate() noexcept {
             auto t = multiheap::_get_subheap();

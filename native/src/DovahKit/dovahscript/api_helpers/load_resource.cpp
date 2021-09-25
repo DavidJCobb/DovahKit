@@ -330,7 +330,7 @@ namespace dovahscript::api_helpers {
          }
          if (!file)
             return 0;
-         buffer = QByteArray::fromRawData((const char*)file->data(), file->size());
+         buffer = QByteArray((const char*)file->data(), file->size());
       } else if (params.load_from == load_resource_params::source::script_package) {
          if (params.path.startsWith("../"))
             cobb::lua::error(L, "the specified path lies outside the script package folder");

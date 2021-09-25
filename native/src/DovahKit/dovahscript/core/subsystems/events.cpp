@@ -75,10 +75,10 @@ namespace {
       };
 
       template<typename T> struct attempt_event_registration {
-         static bool execute(QObject& widget, const char* event_name, const char* listener_name, dovahscript::impl::event_registration::result& result) {
+         static bool execute(const QMetaObject* rtti, QObject& widget, const char* event_name, const char* listener_name, dovahscript::impl::event_registration::result& result) {
             using result_t = dovahscript::impl::event_registration::result;
             //
-            if (&T::target_type::staticMetaObject != widget.metaObject())
+            if (&T::target_type::staticMetaObject != rtti)
                return false;
             result = T::register_event(widget, event_name, listener_name);
             assert(result != result_t::failure);
@@ -155,7 +155,7 @@ namespace dovahscript::core::subsystems {
       //
       const auto* rtti = widget.metaObject();
       do {
-         _event_registrar_list::for_each_breakable_with_args<event_registrar_list_functors::attempt_event_registration>(widget, event_name, listener_name, result);
+         _event_registrar_list::for_each_breakable_with_args<event_registrar_list_functors::attempt_event_registration>(rtti, widget, event_name, listener_name, result);
          if (result != result_t::no_match)
             return;
       } while (rtti = rtti->superClass());
