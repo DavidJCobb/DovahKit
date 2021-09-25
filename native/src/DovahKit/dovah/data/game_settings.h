@@ -19,6 +19,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstdint>
 #include "../core.h"
 #include "../localized_strings.h"
+#include "../utils/game_list.h"
 
 namespace dovah {
    enum class game_setting_type {
@@ -29,7 +30,7 @@ namespace dovah {
       string,
    };
 
-   extern game_setting_type get_game_setting_type_from_name(const char* name);
+   extern constexpr game_setting_type get_game_setting_type_from_name(const char* name);
 
    struct game_setting_value {
       union {
@@ -43,30 +44,16 @@ namespace dovah {
    class game_setting_definition {
       public:
          const char*        name = "";
-         game_setting_type  type = game_setting_type::none;
          game_setting_value default_value;
-         struct {
-            bool skyrim_classic = true;
-            bool skyrim_special = true;
-         } games;
-         //
-         game_setting_definition(game_setting_type t) : type(t) {}
-         game_setting_definition(const char* n, bool value);
-         game_setting_definition(const char* n, float value);
-         game_setting_definition(const char* n, int32_t value);
-         game_setting_definition(const char* n, const char* value);
-         game_setting_definition(std::initializer_list<game>, const char* n, bool value);
-         game_setting_definition(std::initializer_list<game>, const char* n, float value);
-         game_setting_definition(std::initializer_list<game>, const char* n, int32_t value);
-         game_setting_definition(std::initializer_list<game>, const char* n, const char* value);
-         //
-         static const game_setting_definition& lookup(const char* name) noexcept;
-         //
-         inline bool is_none() const noexcept { return this->type == game_setting_type::none; }
-         bool exists_in_game(game) const noexcept;
-         //
-      protected:
-         void _set_games(std::initializer_list<game>&);
+         game_list games;
+         
+         template<typename T> constexpr game_setting_definition(const char* n, T value) : name(n), default_value(value), games(game_list::from_all()) {}
+         template<typename T> constexpr game_setting_definition(game_list g, const char* n, T value) : name(n), default_value(value), games(g) {}
+
+         static const game_setting_definition* lookup(const char* name) noexcept;
+
+         inline constexpr bool exists_in_game(game g) const noexcept { return this->games.contains(g); }
+         inline constexpr game_setting_type type() const noexcept { return get_game_setting_type_from_name(this->name); }
    };
 
    extern const std::array<game_setting_definition, 3608> game_settings;

@@ -13,7 +13,7 @@ GameSettingListModelItem::GameSettingListModelItem(const dovah::loaded_game_sett
 GameSettingListModelItem::GameSettingListModelItem(const dovah::game_setting_definition& definition) {
    this->name        = QString::fromLatin1(definition.name);
    this->description = get_game_setting_description(definition.name);
-   this->type        = definition.type;
+   this->type        = definition.type();
    switch (this->type) {
       case dovah::game_setting_type::boolean:
          this->value.boolean = definition.default_value.b;

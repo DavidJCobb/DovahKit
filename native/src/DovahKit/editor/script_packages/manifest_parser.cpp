@@ -2,6 +2,13 @@
 #include "../../helpers/qt/minimize_indent.h"
 
 namespace {
+   // The "permissions" feature for Dovahscript is dummied out and will remain so until I 
+   // think of an actual good design for it, in terms of what the user sees and interacts 
+   // with.
+   static constexpr bool parse_package_permissions = false;
+}
+
+namespace {
    QString case_insensitive_attr(QXmlStreamReader& xml, QLatin1String name) {
       for (auto& attr : xml.attributes())
          if (attr.name().compare(name, Qt::CaseInsensitive) == 0)
@@ -121,9 +128,11 @@ namespace script_packages {
             this->_parse_metadata();
             continue;
          }
-         if (name.compare(QLatin1String("permissions"), Qt::CaseInsensitive) == 0) {
-            this->_parse_permissions();
-            continue;
+         if constexpr (parse_package_permissions) {
+            if (name.compare(QLatin1String("permissions"), Qt::CaseInsensitive) == 0) {
+               this->_parse_permissions();
+               continue;
+            }
          }
          if (name.compare(QLatin1String("files"), Qt::CaseInsensitive) == 0) {
             this->_parse_files();

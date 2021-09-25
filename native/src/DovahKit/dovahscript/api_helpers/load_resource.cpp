@@ -78,13 +78,15 @@ namespace {
       text,
    };
 
-   constexpr std::array _formats = {
+   constexpr std::array _categories = {
       std::pair{ _category::audio,  "audio"},
       std::pair{ _category::binary, "binary"},
       std::pair{ _category::image,  "image"},
       std::pair{ _category::raster, "raster"},
       std::pair{ _category::text,   "text"},
-      //
+   };
+
+   constexpr std::array _formats = {
       std::pair{ _category::binary, "bin"},
       //
       std::pair{ _category::raster, "bmp"},
@@ -95,8 +97,6 @@ namespace {
       std::pair{ _category::raster, "png"},
       //
       std::pair{ _category::text, "txt"},
-      std::pair{ _category::text, "utf-8"},
-      std::pair{ _category::text, "utf-16"},
    };
 
    // Quick-and-dirty tests to rapidly check whether a file *is likely to be* valid. These aren't 
@@ -353,16 +353,26 @@ namespace dovahscript::api_helpers {
             extension = params.path.mid(j + 1).toLower();
          filename = params.path.mid(i + 1);
       }
-      QString type = extension;
+      bool    is_bare_category = false;
+      QString type             = extension;
       if (!params.type.isEmpty())
          type = params.type.toLower();
       //
       auto category = _category::binary;
       {
-         for (auto& pair : _formats) {
+         for (auto& pair : _categories) {
             if (type == pair.second) {
-               category = pair.first;
+               category         = pair.first;
+               is_bare_category = true;
                break;
+            }
+         }
+         if (!is_bare_category) {
+            for (auto& pair : _formats) {
+               if (type == pair.second) {
+                  category = pair.first;
+                  break;
+               }
             }
          }
       }
@@ -371,7 +381,9 @@ namespace dovahscript::api_helpers {
             //
             // If we ever add support for audio formats, we'd put handling for them here.
             //
-            return 0;
+            if (!params.type.isEmpty()) // if the user wants a specific type, fail (return nil) instead of defaulting to binary
+               return 0;
+            break;
          case _category::binary:
             //
             // We default to binary, below.
@@ -416,7 +428,7 @@ namespace dovahscript::api_helpers {
                   matched = false;
                }
                if (!matched) {
-                  if (!params.type.isEmpty())
+                  if (!is_bare_category && !params.type.isEmpty()) // if the user wants a specific type, but we don't recognize that type, then fail (return nil)
                      return 0;
                   format.clear();
                }
@@ -441,18 +453,17 @@ namespace dovahscript::api_helpers {
                }
             }
             //
-            // Unknown; break, and read as binary.
+            // Unknown.
             //
+            if (!params.type.isEmpty()) // if the user wants a specific type, fail (return nil) instead of defaulting to binary
+               return 0;
             break;
          case _category::text:
-            if (type == "utf-8") {
-               lua_pushstring(L, QString::fromUtf8(buffer).toUtf8());
-               return 1;
-            }
-            if (type == "utf-16") {
-               lua_pushstring(L, QString::fromUtf16((const char16_t*)buffer.data(), buffer.size()).toUtf8());
-               return 1;
-            }
+            //
+            // TODO: Do we want encoding support? If so, we should offer a separate field on the 
+            // params struct (and a separate argument in Lua) instead of overloading that with 
+            // the format.
+            //
             lua_pushstring(L, QString(buffer).toUtf8());
             return 1;
       }

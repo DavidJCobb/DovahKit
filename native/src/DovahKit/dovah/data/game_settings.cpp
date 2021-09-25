@@ -24,11 +24,7 @@
 #include <cassert>
 
 namespace dovah {
-   namespace {
-      static game_setting_definition _none = game_setting_definition(game_setting_type::none);
-   }
-
-   extern game_setting_type get_game_setting_type_from_name(const char* name) {
+   extern constexpr game_setting_type get_game_setting_type_from_name(const char* name) {
       if (!name)
          return game_setting_type::none;
       switch (name[0]) {
@@ -48,78 +44,15 @@ namespace dovah {
       return game_setting_type::none;
    }
 
-   game_setting_definition::game_setting_definition(const char* n, bool value) : name(n) {
-      this->default_value.b = value;
-      this->type = game_setting_type::boolean;
-   }
-   game_setting_definition::game_setting_definition(const char* n, float value) : name(n) {
-      this->default_value.f = value;
-      this->type = game_setting_type::float32;
-   }
-   game_setting_definition::game_setting_definition(const char* n, int32_t value) : name(n) {
-      this->default_value.i = value;
-      this->type = game_setting_type::integer;
-   }
-   game_setting_definition::game_setting_definition(const char* n, const char* value) : name(n) {
-      this->default_value.s = value;
-      this->type = game_setting_type::string;
+   /*static*/ const game_setting_definition* game_setting_definition::lookup(const char* name) noexcept {
+      for (auto& entry : game_settings)
+         if (_stricmp(entry.name, name) == 0)
+            return &entry;
+      return nullptr;
    }
 
-   void game_setting_definition::_set_games(std::initializer_list<game>& g) {
-      this->games.skyrim_classic = false;
-      this->games.skyrim_special = false;
-      for (auto v : g) {
-         switch (v) {
-            case game::skyrim_classic: this->games.skyrim_classic = true; break;
-            case game::skyrim_special: this->games.skyrim_special = true; break;
-            default:
-               assert(false && "game_setting_definition: Unrecognized game passed to constructor!");
-               //
-               // Add a member to (game_setting_definition::games), and then reset it to (false) at the start of 
-               // this function and add a case for it to this switch. Be sure to update the (exists_in_game) 
-               // member function, too!
-               //
-               __assume(0); // MSVC: unreachable
-         }
-      }
-   }
-
-   game_setting_definition::game_setting_definition(std::initializer_list<game> g, const char* n, bool value) : game_setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   game_setting_definition::game_setting_definition(std::initializer_list<game> g, const char* n, float value) : game_setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   game_setting_definition::game_setting_definition(std::initializer_list<game> g, const char* n, int32_t value) : game_setting_definition(n, value) {
-      this->_set_games(g);
-   }
-   game_setting_definition::game_setting_definition(std::initializer_list<game> g, const char* n, const char* value) : game_setting_definition(n, value) {
-      this->_set_games(g);
-   }
-
-   bool game_setting_definition::exists_in_game(game g) const noexcept {
-      switch (g) {
-         case game::skyrim_classic: return this->games.skyrim_classic; break;
-         case game::skyrim_special: return this->games.skyrim_special; break;
-      }
-      return false;
-   }
-
-   /*static*/ const game_setting_definition& game_setting_definition::lookup(const char* name) noexcept {
-      game_setting_type filter = get_game_setting_type_from_name(name);
-      if (filter == game_setting_type::none) {
-         for (auto& entry : game_settings)
-            if (_stricmp(entry.name, name) == 0)
-               return entry;
-      } else {
-         for (auto& entry : game_settings) {
-            if (entry.type != filter)
-               continue;
-            if (_stricmp(entry.name, name) == 0)
-               return entry;
-         }
-      }
-      return _none;
+   namespace {
+      static constexpr game_list sse_only = game_list::from<game::skyrim_special>();
    }
 
    const std::array<game_setting_definition, 3608> game_settings = {{
@@ -3845,73 +3778,73 @@ namespace dovah {
       #pragma region Skyrim Special
          #pragma region Floats
             #pragma region M
-               { { game::skyrim_special }, "fMinAmmoWeight", 0.1F },
+               { sse_only, "fMinAmmoWeight", 0.1F },
             #pragma endregion
             #pragma region R
-               { { game::skyrim_special }, "fResetTransitSoundRotationSpeed", 0.3F },
+               { sse_only, "fResetTransitSoundRotationSpeed", 0.3F },
             #pragma endregion
             #pragma region S
-               { { game::skyrim_special }, "fSurvArmorScalar", 1.0F },
-               { { game::skyrim_special }, "fSurvColdBodyBonus", 17.0F },
-               { { game::skyrim_special }, "fSurvColdFeetBonus", 7.0F },
-               { { game::skyrim_special }, "fSurvColdHandsBonus", 7.0F },
-               { { game::skyrim_special }, "fSurvColdHeadBonus", 8.0F },
-               { { game::skyrim_special }, "fSurvNormalBodyBonus", 27.0F },
-               { { game::skyrim_special }, "fSurvNormalFeetBonus", 13.0F },
-               { { game::skyrim_special }, "fSurvNormalHandsBonus", 13.0F },
-               { { game::skyrim_special }, "fSurvNormalHeadBonus", 18.0F },
-               { { game::skyrim_special }, "fSurvTorchBonus", 50.0F },
-               { { game::skyrim_special }, "fSurvWarmBodyBonus", 54.0F },
-               { { game::skyrim_special }, "fSurvWarmFeetBonus", 24.0F },
-               { { game::skyrim_special }, "fSurvWarmHandsBonus", 24.0F },
-               { { game::skyrim_special }, "fSurvWarmHeadBonus", 29.0F },
+               { sse_only, "fSurvArmorScalar", 1.0F },
+               { sse_only, "fSurvColdBodyBonus", 17.0F },
+               { sse_only, "fSurvColdFeetBonus", 7.0F },
+               { sse_only, "fSurvColdHandsBonus", 7.0F },
+               { sse_only, "fSurvColdHeadBonus", 8.0F },
+               { sse_only, "fSurvNormalBodyBonus", 27.0F },
+               { sse_only, "fSurvNormalFeetBonus", 13.0F },
+               { sse_only, "fSurvNormalHandsBonus", 13.0F },
+               { sse_only, "fSurvNormalHeadBonus", 18.0F },
+               { sse_only, "fSurvTorchBonus", 50.0F },
+               { sse_only, "fSurvWarmBodyBonus", 54.0F },
+               { sse_only, "fSurvWarmFeetBonus", 24.0F },
+               { sse_only, "fSurvWarmHandsBonus", 24.0F },
+               { sse_only, "fSurvWarmHeadBonus", 29.0F },
             #pragma endregion
          #pragma endregion
          #pragma region Strings
             #pragma region C
-               { { game::skyrim_special }, "sCantInstallModDependency", "This mod cannot be installed since it depends on files that aren't present." },
-               { { game::skyrim_special }, "sCantInstallModInvalid", "This mod cannot be activated and should be deleted." },
-               { { game::skyrim_special }, "sCantLoadControls", "Unable to load controls. Defaults will be used." },
-               { { game::skyrim_special }, "sCantLoadSettings", "Unable to load settings. Defaults will be used." },
-               { { game::skyrim_special }, "sChangedModsResetConfirm", "The mod selection / load order has changed.  The game will now reload your data files." },
-               { { game::skyrim_special }, "sCloseModManager_Confirm", "Downloads still in progress. Are you sure you want to exit?" },
-               { { game::skyrim_special }, "sConfirmNewMods", "Start a new game? Mods are currently loaded. Note: Achievements are disabled." },
-               { { game::skyrim_special }, "sConfirmNewMods_Orbis", "Start a new game? Mods are currently loaded. Note: Trophies are disabled." },
+               { sse_only, "sCantInstallModDependency", "This mod cannot be installed since it depends on files that aren't present." },
+               { sse_only, "sCantInstallModInvalid", "This mod cannot be activated and should be deleted." },
+               { sse_only, "sCantLoadControls", "Unable to load controls. Defaults will be used." },
+               { sse_only, "sCantLoadSettings", "Unable to load settings. Defaults will be used." },
+               { sse_only, "sChangedModsResetConfirm", "The mod selection / load order has changed.  The game will now reload your data files." },
+               { sse_only, "sCloseModManager_Confirm", "Downloads still in progress. Are you sure you want to exit?" },
+               { sse_only, "sConfirmNewMods", "Start a new game? Mods are currently loaded. Note: Achievements are disabled." },
+               { sse_only, "sConfirmNewMods_Orbis", "Start a new game? Mods are currently loaded. Note: Trophies are disabled." },
             #pragma endregion
             #pragma region D
-               { { game::skyrim_special }, "sDeleteAllModsConfirm", "Do you really want to delete all downloaded mods?" },
-               { { game::skyrim_special }, "sDeleteLibraryModConfirm", "Are you sure you want to delete this mod?  If this mod is not registered with Bethesda.net, it will no longer be recoverable." },
-               { { game::skyrim_special }, "sDeleteModConfirm", "Do you want to delete this mod?" },
+               { sse_only, "sDeleteAllModsConfirm", "Do you really want to delete all downloaded mods?" },
+               { sse_only, "sDeleteLibraryModConfirm", "Are you sure you want to delete this mod?  If this mod is not registered with Bethesda.net, it will no longer be recoverable." },
+               { sse_only, "sDeleteModConfirm", "Do you want to delete this mod?" },
             #pragma endregion
             #pragma region G
-               { { game::skyrim_special }, "sGamepadDisconnectedMessage", "Please connect a controller to continue." },
-               { { game::skyrim_special }, "sGamepadDisconnectedTitle", "Controller disconnected." },
+               { sse_only, "sGamepadDisconnectedMessage", "Please connect a controller to continue." },
+               { sse_only, "sGamepadDisconnectedTitle", "Controller disconnected." },
             #pragma endregion
             #pragma region L
-               { { game::skyrim_special }, "sLoadVanillaSaveWithMods", "Mods are currently loaded. Note: Achievements are disabled.  Do you wish to continue loading this save ?" },
-               { { game::skyrim_special }, "sLoadVanillaSaveWithMods_Orbis", "Mods are currently loaded. Note: Trophies are disabled. Do you wish to continue loading this save ?" },
+               { sse_only, "sLoadVanillaSaveWithMods", "Mods are currently loaded. Note: Achievements are disabled.  Do you wish to continue loading this save ?" },
+               { sse_only, "sLoadVanillaSaveWithMods_Orbis", "Mods are currently loaded. Note: Trophies are disabled. Do you wish to continue loading this save ?" },
             #pragma endregion
             #pragma region M
-               { { game::skyrim_special }, "sModdedString", "Modded" },
+               { sse_only, "sModdedString", "Modded" },
             #pragma endregion
             #pragma region P
-               { { game::skyrim_special }, "sPresenceInMenu", "In Menu" },
-               { { game::skyrim_special }, "sPresencePlayingLevel", "Level: %d" },
+               { sse_only, "sPresenceInMenu", "In Menu" },
+               { sse_only, "sPresencePlayingLevel", "Level: %d" },
             #pragma endregion
             #pragma region R
-               { { game::skyrim_special }, "sReportModCat_Explicit", "Explicit Content" },
-               { { game::skyrim_special }, "sReportModCat_General", "Other" },
-               { { game::skyrim_special }, "sReportModCat_Harassment", "Harassment" },
-               { { game::skyrim_special }, "sReportModCat_Impersonation", "Impersonation of User" },
-               { { game::skyrim_special }, "sReportModCat_PrivateInfo", "Use of Private Information" },
-               { { game::skyrim_special }, "sReportModCat_Profanity", "Profanity" },
-               { { game::skyrim_special }, "sReportModCat_Racial", "Racial Discrimination" },
-               { { game::skyrim_special }, "sReportModCat_Religious", "Religious Discrimination" },
-               { { game::skyrim_special }, "sReportModCat_Slander", "Slander" },
-               { { game::skyrim_special }, "sReportModCat_Spam", "Spam" },
-               { { game::skyrim_special }, "sReportModChooseCategory", "What Terms of Service violation is this mod being reported for?" },
-               { { game::skyrim_special }, "sReportModConfirm", "Report mod for explicit content, general abuse or violations of Code of Conduct/Terms of Service?" },
-               { { game::skyrim_special }, "sResultsFor", "Results For '%s'" },
+               { sse_only, "sReportModCat_Explicit", "Explicit Content" },
+               { sse_only, "sReportModCat_General", "Other" },
+               { sse_only, "sReportModCat_Harassment", "Harassment" },
+               { sse_only, "sReportModCat_Impersonation", "Impersonation of User" },
+               { sse_only, "sReportModCat_PrivateInfo", "Use of Private Information" },
+               { sse_only, "sReportModCat_Profanity", "Profanity" },
+               { sse_only, "sReportModCat_Racial", "Racial Discrimination" },
+               { sse_only, "sReportModCat_Religious", "Religious Discrimination" },
+               { sse_only, "sReportModCat_Slander", "Slander" },
+               { sse_only, "sReportModCat_Spam", "Spam" },
+               { sse_only, "sReportModChooseCategory", "What Terms of Service violation is this mod being reported for?" },
+               { sse_only, "sReportModConfirm", "Report mod for explicit content, general abuse or violations of Code of Conduct/Terms of Service?" },
+               { sse_only, "sResultsFor", "Results For '%s'" },
             #pragma endregion
          #pragma endregion
       #pragma endregion

@@ -35,8 +35,6 @@ namespace {
 
 namespace dovah {
    game_setting_type loaded_game_setting::get_type() const noexcept {
-      if (this->definition && !this->definition->is_none())
-         return this->definition->type;
       return get_game_setting_type_from_name(this->name.c_str());
    }
    void loaded_game_setting::set_value(const game_setting_value& v) noexcept {
@@ -910,8 +908,6 @@ namespace dovah {
       auto& entry = list.emplace_back(working);
       entry.source_file = file;
       entry.formID      = formID;
-      if (entry.definition->is_none())
-         entry.definition = nullptr;
       if (!entry.definition) {
          detailed_notice warning;
          warning.code               = notice_code::game_setting_name_is_unrecognized;
@@ -2069,7 +2065,7 @@ namespace dovah {
       for (auto c : request.setting.name)
          lowercase += tolower(c);
       //
-      auto& definition = game_setting_definition::lookup(request.setting.name.c_str());
+      auto* definition = game_setting_definition::lookup(request.setting.name.c_str());
       auto& map  = this->game_settings.by_name;
       auto& list = map[lowercase];
       //
@@ -2082,11 +2078,11 @@ namespace dovah {
       if (!entry) {
          entry = &list.emplace_back();
          entry->source_file = this->active_file;
-         if (definition.is_none()) {
+         if (!definition) {
             entry->name = request.setting.name;
          } else {
-            entry->name       = definition.name;
-            entry->definition = &definition;
+            entry->name       = definition->name;
+            entry->definition = definition;
          }
       }
       entry->set_value(request.setting.value);
@@ -2116,7 +2112,6 @@ namespace dovah {
       for (auto c : request.setting)
          lowercase += tolower(c);
       //
-      auto& definition = game_setting_definition::lookup(request.setting.c_str());
       auto& map  = this->game_settings.by_name;
       auto& list = map[lowercase];
       //

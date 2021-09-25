@@ -342,7 +342,7 @@ do -- TextureManager contents
          return self.map[path]
       end
       --
-      local dds <close> = dovah.lookup_game_asset("textures/" .. path)
+      local dds <close> = dovah.load_game_asset("textures/" .. path)
       if dovah.type(dds) ~= "dds_resource" then
          self.map[path] = TRANSPARENT
          return TRANSPARENT
@@ -363,7 +363,7 @@ do -- TextureManager contents
       end
       local path = DEFAULT_LAND.diffuse
       --
-      local dds <close> = dovah.lookup_game_asset("textures/" .. path)
+      local dds <close> = dovah.load_game_asset("textures/" .. path)
       if dovah.type(dds) ~= "dds_resource" then
          self.default_color = TRANSPARENT
          return TRANSPARENT

@@ -9,7 +9,7 @@ window:add_child(widget)
 widget.width  = 64
 widget.height = 64
 
-local dds = dovah.lookup_game_asset(PATH)
+local dds = dovah.load_game_asset(PATH)
 local layer = widget:append_layer()
 layer.data = dds
 layer.x = 8

@@ -125,7 +125,7 @@ do
       local path = paths[i]
       if not _ends_with(path, "_n.dds") then
          local name = path -- TODO: get filename only
-         local icon <close> = dovah.lookup_game_asset(path)
+         local icon <close> = dovah.load_game_asset(path)
          local i_ty = dovah.type(icon)
          if icon and (i_ty == "raster" or i_ty == "dds_resource") then
             picker:append_item({

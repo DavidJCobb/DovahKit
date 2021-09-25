@@ -460,7 +460,7 @@ namespace dovah::tes_file_reading::threads {
                   std::string name;
                   EDID.to_string(name);
                   working.name = name;
-                  working.definition = &game_setting_definition::lookup(name.c_str());
+                  working.definition = game_setting_definition::lookup(name.c_str());
                } else {
                   found_data = EDID.signature() == 'DATA';
                }

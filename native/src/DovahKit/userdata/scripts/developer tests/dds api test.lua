@@ -55,7 +55,7 @@ do
    panel:add_child(in_load, 1, 2)
    in_load:on("OnActivated", "", function()
       local path  = in_path.text
-      local asset = dovah.lookup_game_asset(path)
+      local asset = dovah.load_game_asset(path)
       if dovah.type(asset) ~= "dds_resource" then
          dovah.log_message("Not a DDS: %s", path)
          return
