@@ -29,9 +29,9 @@ namespace {
          if (!lua_isnoneornil(L, pos)) {
             if (lua_isstring(L, pos)) {
                auto* s = lua_tostring(L, pos);
-               if (_stricmp(s, "big"))
+               if (_stricmp(s, "big") == 0)
                   return std::endian::big;
-               if (_stricmp(s, "little"))
+               if (_stricmp(s, "little") == 0)
                   return std::endian::little;
                cobb::lua::argerror(L, arg, "unrecognized endianness value");
             }
@@ -45,8 +45,8 @@ namespace {
          size_t offset = lua_tointegerx(L, pos, &isnum);
          cobb::lua::argcheck(L, isnum,       arg, "offset (integer) expected");
          cobb::lua::argcheck(L, offset >= 0, arg, "offset cannot be negative");
-         cobb::lua::argcheck(L, offset < buffer_size,             arg, "offset exceeds the bounds of the data view");
-         cobb::lua::argcheck(L, offset + sizeof(T) < buffer_size, arg, "the desired value would extend past the bounds of the data view");
+         cobb::lua::argcheck(L, offset < buffer_size,              arg, "offset exceeds the bounds of the data view");
+         cobb::lua::argcheck(L, offset + sizeof(T) <= buffer_size, arg, "the desired value would extend past the bounds of the data view");
          return offset;
       }
    }
@@ -62,6 +62,7 @@ namespace {
             lua_settop(L, 2);
             lua_getfield(L, 2, "offset");
             lua_getfield(L, 2, "endian");
+            lua_remove(L, 2);
             arg_offset = 2;
             arg_endian = 2;
          }
@@ -97,6 +98,7 @@ namespace {
             lua_getfield(L, 2, "value");
             lua_getfield(L, 2, "offset");
             lua_getfield(L, 2, "endian");
+            lua_remove(L, 2);
             arg_value  = 2;
             arg_offset = 2;
             arg_endian = 2;
@@ -141,6 +143,7 @@ namespace {
             lua_settop(L, 2);
             lua_getfield(L, 2, "value");
             lua_getfield(L, 2, "endian");
+            lua_remove(L, 2);
             arg_value  = 2;
             arg_endian = 2;
          }

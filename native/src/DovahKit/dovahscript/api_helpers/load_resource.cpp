@@ -160,7 +160,7 @@ namespace {
             bool has_entropy = false;
             if (next >= 0xE0 && next <= 0xE9) {
                has_length = true;
-            } else if (next >= 0xD0 && next <= 0xD9) {
+            } else if (next >= 0xD0 && next <= 0xD7) {
                // Restart Marker
             } else {
                switch (next) {
@@ -193,6 +193,8 @@ namespace {
                length -= 2; // length includes itself
                if (length < 0)
                   return false; // invalid
+               //
+               skip += 2; // skip the size of the length
                skip += length;
             } else if (next == 0xDD) { // Define Restart Interval
                skip += 4;
@@ -219,9 +221,14 @@ namespace {
          if (i + 8 >= buffer.size()) // no chunks!
             return false;
          bool found_ihdr = false;
+         bool found_plte = false;
+         bool found_idat = false;
          bool found_iend = false;
          bool allow_idat = false;
          while (i + 8 < buffer.size()) {
+            if (found_iend) {
+               return false; // invalid: chunks after IEND
+            }
             uint32_t length = cobb::endian_cast<std::endian::big>(*(const uint32_t*)(raw + i));
             //
             // Validate chunk name: must be four ASCII letters in sequence:
@@ -231,33 +238,43 @@ namespace {
                if (byte < 'A' || byte > 'z' || (byte > 'Z' && byte < 'a'))
                   return false;
             }
-            if (raw[i + 4] == 'I') { // may be a file format mandatory chunk
+            if (raw[i + 4] == 'I' || raw[i + 4] == 'P') { // may be a critical chunk
                uint32_t signature = cobb::endian_cast<std::endian::big>(*(const uint32_t*)(raw + i + 4));
-               if (!found_ihdr) {
-                  if (signature != 'IHDR')
-                     return false; // invalid: first chunk is not IHDR
-                  found_ihdr = true;
-                  allow_idat = true;
-               } else {
-                  if (signature == 'IHDR')
-                     return false; // invalid: multiple IHDR
-               }
-               if (allow_idat) {
-                  if (signature != 'IDAT')
-                     allow_idat = false;
-               } else {
-                  if (signature == 'IDAT')
-                     return false; // invalid: non-consecutive IDAT
-               }
-               if (!found_iend) {
-                  if (signature == 'IEND')
+               //
+               if (!found_ihdr && signature != 'IHDR')
+                  return false; // invalid: missing or late IHDR
+               //
+               switch (signature) {
+                  case 'IHDR':
+                     if (found_ihdr)
+                        return false; // invalid: multiple IHDR
+                     found_ihdr = true;
+                     allow_idat = true;
+                     break;
+                  case 'PLTE':
+                     if (found_idat)
+                        return false; // invalid: PLTE after IDAT
+                     if (found_plte)
+                        return false; // invalid: multiple PLTE
+                     found_plte = true;
+                     break;
+                  case 'IDAT':
+                     if (!allow_idat)
+                        return false; // invalid: non-consecutive IDAT
+                     found_idat = true;
+                     break;
+                  case 'IEND':
                      found_iend = true;
-               } else {
-                  return false; // invalid: chunks after IEND
+                     break;
                }
+            } else {
+               if (!found_ihdr)
+                  return false; // invalid: missing or late IHDR
+               if (found_idat)
+                  allow_idat = false; // do not allow non-consecutive IDAT
             }
             //
-            i += 8;
+            i += 8; // signature and length
             i += length;
             i += 4; // skip the CRC
          }

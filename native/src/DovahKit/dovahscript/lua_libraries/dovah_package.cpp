@@ -15,6 +15,7 @@ namespace {
    namespace _definitions {
       int load_file(lua_State* L) {
          auto params = api_helpers::pull_load_resource_params(L, 1);
+         params.load_from = decltype(params)::source::script_package;
          return api_helpers::load_and_push_resource(L, params);
       }
    }
