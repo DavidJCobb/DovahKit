@@ -39,6 +39,13 @@ namespace dovah {
          int32_t i = 0;
       };
       localized_string s;
+
+      game_setting_value() {}
+      explicit game_setting_value(bool v) : b(v) {}
+      explicit game_setting_value(float v) : f(v) {}
+      explicit game_setting_value(double v) : f(v) {}
+      game_setting_value(int v) : i(v) {}
+      explicit game_setting_value(const char* v) { s.value = v; }
    };
 
    class game_setting_definition {
