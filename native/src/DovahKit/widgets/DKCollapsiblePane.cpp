@@ -12,6 +12,9 @@ DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(
    auto* toggle  = this->subwidgets.toggle = new QPushButton(title);
    auto* body    = this->subwidgets.body   = new QWidget(this);
    {
+      title->setFrameStyle(QFrame::Raised);
+      title->setFrameShape(QFrame::Shape::WinPanel);
+      //
       auto f = label->font();
       f.setBold(true);
       label->setFont(f);
@@ -39,7 +42,9 @@ DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(
       layout->setStretch(1, 1);
    }
    //
-   QObject::connect(toggle, &QPushButton::clicked, this, &DKCollapsiblePane::toggleCollapsed);
+   #if !defined(QT_DESIGNER_LIB)
+      QObject::connect(toggle, &QPushButton::clicked, this, &DKCollapsiblePane::toggleCollapsed);
+   #endif
    this->setFocusProxy(toolbar);
    QWidget::setTabOrder(label,   toolbar);
    QWidget::setTabOrder(toolbar, toggle);
@@ -53,6 +58,15 @@ void DKCollapsiblePane::setCollapsed(bool state) {
       return;
    this->subwidgets.body->setVisible(!state);
    this->_updateToggle(state);
+   auto policy = this->sizePolicy();
+   if (state) {
+      this->toolbar.container->setVisible(this->state.show_actions_when_collapsed);
+      policy.setVerticalPolicy(QSizePolicy::Policy::Maximum);
+   } else {
+      this->toolbar.container->setVisible(true);
+      policy.setVerticalPolicy(QSizePolicy::Policy::Preferred);
+   }
+   this->setSizePolicy(policy);
    if (state)
       emit this->contentsCollapsed();
    else
@@ -62,6 +76,38 @@ void DKCollapsiblePane::setTitle(const QString& t) {
    this->subwidgets.label->setText(t);
    this->setAccessibleName(t);
 }
+void DKCollapsiblePane::setViewport(QWidget* w) {
+   if (w)
+      w->setParent(this);
+   auto* layout = (QBoxLayout*) this->layout();
+   if (auto* prior = this->subwidgets.body) {
+      if (w) {
+         auto* item = layout->replaceWidget(prior, w, Qt::FindDirectChildrenOnly);
+         assert(item && "There should've been something in the layout already!");
+         delete item;
+      } else {
+         layout->removeWidget(prior);
+      }
+      prior->setParent(nullptr);
+      delete prior;
+   } else {
+      //
+      // No body.
+      //
+      if (w) {
+         layout->addWidget(w);
+         layout->setStretch(1, 1);
+      }
+   }
+   this->subwidgets.body = w;
+}
+void DKCollapsiblePane::setShowActionsWhenCollapsed(bool s) {
+   if (this->state.show_actions_when_collapsed == s)
+      return;
+   this->state.show_actions_when_collapsed = s;
+   if (this->collapsed())
+      this->toolbar.container->setVisible(s);
+}
 
 void DKCollapsiblePane::_updateToggle() {
    this->_updateToggle(this->collapsed());
@@ -70,10 +116,10 @@ void DKCollapsiblePane::_updateToggle(bool state) {
    auto* toggle = this->subwidgets.toggle;
    if (state) {
       toggle->setAccessibleName(tr("expand", "accessible name for toggle button"));
-      toggle->setText((const char*)u8"\u2BEF");
+      toggle->setText((const char*)u8"\u2BED");
    } else {
       toggle->setAccessibleName(tr("collapse", "accessible name for toggle button"));
-      toggle->setText((const char*)u8"\u2BED");
+      toggle->setText((const char*)u8"\u2BEF");
    }
 }
 
@@ -142,12 +188,13 @@ void DKCollapsiblePane::actionEvent(QActionEvent* event) {
    auto* action = event->action();
    switch (event->type()) {
       case QEvent::Type::ActionAdded:
-         if (auto* before = event->before()) {
-         }
+         this->toolbar.insertAction(action, event->before());
          break;
       case QEvent::Type::ActionChanged:
+         this->toolbar.updateAction(action);
          break;
       case QEvent::Type::ActionRemoved:
+         this->toolbar.removeAction(action);
          break;
    }
 }

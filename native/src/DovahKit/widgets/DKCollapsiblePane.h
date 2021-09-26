@@ -6,20 +6,27 @@
 
 class DKCollapsiblePane : public QFrame {
    Q_OBJECT;
+   Q_PROPERTY(bool    collapsed READ collapsed WRITE setCollapsed DESIGNABLE true STORED false);
+   Q_PROPERTY(QString title     READ title     WRITE setTitle     DESIGNABLE true STORED false);
+   Q_PROPERTY(bool    showActionsWhenCollapsed READ showActionsWhenCollapsed WRITE setShowActionsWhenCollapsed DESIGNABLE true STORED true);
    public:
       DKCollapsiblePane(QWidget* parent);
 
       inline bool collapsed() const noexcept { return !this->subwidgets.body->isVisible(); }
       inline QString title() const noexcept { return this->subwidgets.label->text(); }
 
+      // This is the "body" of the widget; you'd set a layout on it, append children to it, et cetera.
+      inline QWidget* viewport() const noexcept { return this->subwidgets.body; }
+      void setViewport(QWidget*);
+
+      inline bool showActionsWhenCollapsed() const noexcept { return this->state.show_actions_when_collapsed; }
+      void setShowActionsWhenCollapsed(bool);
+
    public slots:
       void setCollapsed(bool);
       inline void toggleCollapsed() { this->setCollapsed(!this->collapsed()); }
 
       void setTitle(const QString& t); // also sets the accessibleName
-
-      // This is the "body" of the widget; you'd set a layout on it, append children to it, et cetera.
-      inline QWidget* viewport() const noexcept { return this->subwidgets.body; }
 
    signals:
       void contentsCollapsed();
