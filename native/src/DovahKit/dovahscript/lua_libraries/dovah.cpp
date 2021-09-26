@@ -1,5 +1,8 @@
 #include "dovah.h"
+#include <array>
 #include <cassert>
+#include <QApplication>
+#include <QRegularExpression>
 #include "../../../helpers/lua/dump.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/setfuncs.h"
@@ -335,6 +338,69 @@ namespace {
          return 1;
       }
    }
+
+   namespace _member_constructors {
+      namespace impl::version {
+         int __index(lua_State* L) { // function index(t, k)
+            lua_getmetatable(L, 1);              // [t, k, meta]
+            lua_getfield    (L, 3, "__version"); // [t, k, meta, meta.__version]
+            lua_copy        (L, 4, 1);           // [meta, k, meta, meta.__version]
+            lua_settop      (L, 2);              // [meta, k]
+            lua_rawget(L, 1); // [meta, meta[k]]
+            return 1;
+         }
+         int __tostring(lua_State* L) {
+            auto out = QString("%1.%2.%3.%4");
+            for (int i = 0; i < 4; ++i) {
+               lua_rawgeti(L, 1, i + 1);
+               out = out.arg(lua_tointeger(L, -1));
+               lua_pop(L, 1);
+            }
+            lua_pushstring(L, out.toUtf8());
+            return 1;
+         }
+      }
+      int version(lua_State* L) {
+         static constexpr const std::array field_names = { "major", "minor", "patch", "build" };
+         //
+         lua_createtable(L, 4, 4);
+         auto v     = QApplication::applicationVersion();
+         bool empty = v.isEmpty();
+         if (!empty) {
+            auto m = QRegularExpression(R"(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)").match(v);
+            if (m.hasMatch()) {
+               for (size_t i = 0; i < field_names.size(); ++i) {
+                  auto v = m.capturedRef(i + 1).toInt();
+                  //
+                  lua_pushinteger(L, v);
+                  lua_setfield(L, -2, field_names[i]);
+                  lua_pushinteger(L, v);
+                  lua_rawseti(L, -2, i + 1);
+               }
+            } else {
+               empty = true;
+            }
+         }
+         if (empty) {
+            for (size_t i = 0; i < field_names.size(); ++i) {
+               lua_pushnil(L);
+               lua_setfield(L, -2, field_names[i]);
+               lua_pushnil(L);
+               lua_rawseti(L, -2, i + 1);
+            }
+         }
+         //
+         lua_createtable(L, 0, 2); // metatable
+         //
+         lua_pushcfunction(L, &impl::version::__index);
+         lua_setfield(L, -2, "__index");
+         lua_pushcfunction(L, &impl::version::__tostring);
+         lua_setfield(L, -2, "__tostring");
+         //
+         lua_setmetatable(L, -2);
+         return 1;
+      }
+   }
    
    const std::initializer_list<luaL_Reg> _functions = {
       luaL_Reg{ "benchmark_start",         &_definitions::benchmark_start },
@@ -351,6 +417,9 @@ namespace {
       luaL_Reg{ "object_is",               &_definitions::object_is },
       luaL_Reg{ "type",                    &_definitions::type },
    };
+   const std::initializer_list<luaL_Reg> _members = {
+      luaL_Reg{ "version", &_member_constructors::version },
+   };
 }
 
 namespace dovahscript::lua_libraries {
@@ -361,8 +430,26 @@ namespace dovahscript::lua_libraries {
          lua_setfield (L, LUA_REGISTRYINDEX, string_format_registry_key);
          lua_pop      (L, 1);
          //
-         lua_createtable(L, 0, _functions.size());
+         lua_createtable(L, 0, _functions.size() + _members.size());
+         int tbl = lua_gettop(L);
          cobb::lua::setfuncs(L, _functions);
+         for (auto& pair : _members) {
+            int count = (pair.func)(L);
+            if (count <= 0)
+               continue;
+            if (count == 1) {
+               lua_setfield(L, tbl, pair.name);
+            } else {
+               lua_createtable(L, count, 0);
+               int t = lua_gettop(L);
+               for (int i = 0; i < count; ++i) {
+                  lua_pushvalue(L, i - t);
+                  lua_rawseti(L, -2, i + 1);
+               }
+               lua_setfield(L, tbl, pair.name);
+               lua_pop(L, count);
+            }
+         }
          lua_setglobal(L, "dovah");
       }
    }

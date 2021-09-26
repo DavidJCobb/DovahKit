@@ -1,4 +1,4 @@
-local TRANSPARENT  = "#00000000"
+local TRANSPARENT  = { r = 0, g = 0, b = 0, a = 0, [1] = 0, [2] = 0, [3] = 0, [4] = 0 }
 local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
    diffuse  = nil,
    normal   = nil,

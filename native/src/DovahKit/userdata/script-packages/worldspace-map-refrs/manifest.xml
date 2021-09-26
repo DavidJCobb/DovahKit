@@ -5,7 +5,12 @@
          <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
       </author>
       <description>Find all references with the desired base forms in a given worldspace, and render a map of their locations.</description>
+      <version>1.0.0.0</version>
    </metadata>
+   <environment>
+      <min-version>0.0.0.3</min-version>
+      <latest-version>0.0.0.3</latest-version>
+   </environment>
    <files>
 config.lua
 texture-cache.lua

@@ -11,7 +11,7 @@ local BASE_FORMS = {
    form_types.apparatus,
    form_types.static,
    form_types.movable_static,
-   form_tpyes.tree,
+   form_types.tree,
    form_types.flora,
    form_types.furniture,
    form_types.weapon,

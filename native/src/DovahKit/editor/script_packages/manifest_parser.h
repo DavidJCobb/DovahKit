@@ -8,8 +8,11 @@ namespace script_packages {
          QXmlStreamReader xml;
          manifest out;
 
+         static manifest::version _parse_version(QStringRef);
+
          void _parse_metadata();
             void _parse_author();
+         void _parse_environment();
          void _parse_permissions();
             void _set_bool_permission(const QString& name, bool);
          void _parse_files();

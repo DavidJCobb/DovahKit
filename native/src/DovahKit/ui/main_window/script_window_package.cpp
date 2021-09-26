@@ -23,6 +23,20 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
    //
    QObject::connect(this->ui.packagePicker, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EditorScriptPackageWindow::redrawPackage);
    QObject::connect(this->ui.buttonRefreshPackageList, &QPushButton::clicked, this, &EditorScriptPackageWindow::reloadPackageList);
+
+   {
+      auto& dv = this->dovahkit_version;
+      auto  v  = QApplication::applicationVersion();
+      if (!v.isEmpty()) {
+         auto m = QRegularExpression(R"(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)").match(v);
+         if (m.hasMatch()) {
+            dv.major = m.capturedRef(1).toInt();
+            dv.minor = m.capturedRef(2).toInt();
+            dv.patch = m.capturedRef(3).toInt();
+            dv.build = m.capturedRef(4).toInt();
+         }
+      }
+   }
    
    this->_updateEvalEnableState();
    this->reloadPackageList();
@@ -129,6 +143,8 @@ void EditorScriptPackageWindow::redrawPackage() {
    script_packages::manifest* manifest = this->_getSelectedManifest();
    if (!manifest) {
       this->ui.packageName->setText(tr("No package selected", "script package window"));
+      this->ui.packageVersion->setText(QString());
+      this->ui.packageVersion->setVisible(false);
       this->ui.packageBody->setTabVisible(tab_credits, false);
       this->ui.packageDescription->setText(tr("No description available.", "script package window"));
       return;
@@ -136,6 +152,36 @@ void EditorScriptPackageWindow::redrawPackage() {
    //
    this->ui.packageName->setText(manifest->name);
    this->ui.packageDescription->setText(manifest->description);
+   {
+      QString text;
+      QLabel* widget = this->ui.packageVersion;
+      //
+      auto& vi = manifest->version_info;
+      if (vi.package) {
+         text = tr("version %1.%2.%3.%4", "package version info (package version)");
+         if (vi.dovah_minimum) {
+            text = tr((const char*)u8"version %1.%2.%3.%4 — supports DovahKit versions %5.%6.%7.%8 and up", "package version info (package version and minimum DovahKit version)");
+         }
+      } else if (vi.dovah_minimum) {
+         text = tr("supports DovahKit versions %5.%6.%7.%8 and up", "package version info (minimum DovahKit version)");
+      }
+      if (!text.isEmpty()) {
+         text = text
+            .arg(vi.package.major)
+            .arg(vi.package.minor)
+            .arg(vi.package.patch)
+            .arg(vi.package.build)
+            .arg(vi.dovah_minimum.major)
+            .arg(vi.dovah_minimum.minor)
+            .arg(vi.dovah_minimum.patch)
+            .arg(vi.dovah_minimum.build);
+         widget->setText(text);
+         widget->setVisible(true);
+      } else {
+         widget->setVisible(false);
+         widget->setText(QString());
+      }
+   }
    {  // Authors
       auto* body   = this->ui.packageTabAuthors;
       auto* layout = body->layout();
@@ -171,6 +217,27 @@ void EditorScriptPackageWindow::runCurrentPackage() {
    script_packages::manifest* manifest = this->_getSelectedManifest();
    if (!manifest)
       return;
+   //
+   if (auto& current = this->dovahkit_version) {
+      if (auto& desired = manifest->version_info.dovah_minimum) {
+         if (current < desired) {
+            auto text = tr("This script was designed for DovahKit versions %1.%2.%3.%4 or newer. You are currently running DovahKit version %5.%6.%7.%8, so the script may not function as intended.\n\nRun it anyway?");
+            text = text
+               .arg(desired.major)
+               .arg(desired.minor)
+               .arg(desired.patch)
+               .arg(desired.build)
+               .arg(current.major)
+               .arg(current.minor)
+               .arg(current.patch)
+               .arg(current.build);
+            auto confirm = QMessageBox::question(this, tr("Run potentially unsupported script?"), text, QMessageBox::Yes | QMessageBox::No);
+            if (confirm == QMessageBox::No) {
+               return;
+            }
+         }
+      }
+   }
    //
    dovahscript::script_set request;
    request.package_folder_name = manifest->root_folder.path();
@@ -234,7 +301,7 @@ bool EditorScriptPackageWindow::_checkAllowClose() {
    //
    bool result = false;
    host.setPaused(true);
-   auto confirm = QMessageBox::question(this, "Abort the script?", "A script is currently running. Do you want to force it to stop?", QMessageBox::Yes | QMessageBox::No);
+   auto confirm = QMessageBox::question(this, tr("Abort the script?"), tr("A script is currently running. Do you want to force it to stop?"), QMessageBox::Yes | QMessageBox::No);
    if (confirm == QMessageBox::Yes) {
       host.abort();
       result = true;

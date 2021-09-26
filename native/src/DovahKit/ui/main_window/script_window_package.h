@@ -19,6 +19,8 @@ class EditorScriptPackageWindow : public QDialog {
 
       QVector<script_packages::manifest> script_packages;
 
+      script_packages::manifest::version dovahkit_version;
+
    public slots:
       void reloadPackageList();
       void redrawPackage();

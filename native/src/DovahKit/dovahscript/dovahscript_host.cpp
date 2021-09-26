@@ -6,7 +6,7 @@ namespace {
 }
 
 DovahscriptHost::DovahscriptHost() {
-   auto& coordinator_s = coordinator_t::get();
+   auto& coordinator_s = coordinator_t::get(); // ensure that it exists
 }
 
 bool DovahscriptHost::is_aborted() const noexcept {
