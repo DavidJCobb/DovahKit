@@ -2,7 +2,6 @@
 #include <QFrame>
 #include <QLabel>
 #include <QPushButton>
-#include <QToolButton>
 
 class DKCollapsiblePane : public QFrame {
    Q_OBJECT;
@@ -35,19 +34,24 @@ class DKCollapsiblePane : public QFrame {
    protected:
       struct _ToolbarEntry {
          QAction*     action = nullptr;
-         QToolButton* widget = nullptr;
+         QPushButton* widget = nullptr;
       };
-      struct _Toolbar {
-         QWidget* container = nullptr;
-         QList<_ToolbarEntry> entries;
+      class _Toolbar {
+         public:
+            QWidget* container = nullptr;
+            QList<_ToolbarEntry> entries;
 
-         _Toolbar(DKCollapsiblePane&);
+         protected:
+            void _synchronize(QPushButton*, QAction*);
+            void _updateTabOrder();
+         public:
+            _Toolbar(DKCollapsiblePane&);
 
-         int indexOf(QAction*) const noexcept;
+            int indexOf(QAction*) const noexcept;
 
-         void insertAction(QAction* subject, QAction* before = nullptr);
-         void updateAction(QAction*);
-         void removeAction(QAction*);
+            void insertAction(QAction* subject, QAction* before = nullptr);
+            void updateAction(QAction*);
+            void removeAction(QAction*);
       };
 
       _Toolbar toolbar; // for QAction buttons shown between the panel title and the expand/collapse button

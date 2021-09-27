@@ -43,6 +43,12 @@
     <QtMoc Include="extensions\DKCollapsiblePaneContainerExtension.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="tools\action_editor\ActionEditorWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="extensions\DKCollapsiblePaneTaskMenuExtension.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -51,8 +57,17 @@
     <ClCompile Include="extension_factories\DKCollapsiblePaneExtensionFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tools\action_editor\ActionEditorWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="extensions\README.md" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />
   </ItemGroup>
 </Project>

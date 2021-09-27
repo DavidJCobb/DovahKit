@@ -1,4 +1,5 @@
 #include "DKCollapsiblePane.h"
+#include <QAction>
 #include <QActionEvent>
 #include <QBoxLayout>
 
@@ -46,7 +47,6 @@ DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(
       QObject::connect(toggle, &QPushButton::clicked, this, &DKCollapsiblePane::toggleCollapsed);
    #endif
    this->setFocusProxy(toolbar);
-   QWidget::setTabOrder(label,   toolbar);
    QWidget::setTabOrder(toolbar, toggle);
    QWidget::setTabOrder(toggle,  body);
    //
@@ -127,9 +127,11 @@ void DKCollapsiblePane::_updateToggle(bool state) {
 DKCollapsiblePane::_Toolbar::_Toolbar(DKCollapsiblePane& owner) {
    this->container = new QWidget(&owner);
    //
+   auto* widget = this->container;
    auto* layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
    layout->setContentsMargins({ 0, 0, 0, 0 });
-   this->container->setLayout(layout);
+   widget->setLayout(layout);
+   widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 }
 
 int DKCollapsiblePane::_Toolbar::indexOf(QAction* subject) const noexcept {
@@ -140,6 +142,45 @@ int DKCollapsiblePane::_Toolbar::indexOf(QAction* subject) const noexcept {
    return -1;
 }
 
+void DKCollapsiblePane::_Toolbar::_synchronize(QPushButton* widget, QAction* action) {
+   const auto blocker = QSignalBlocker(widget);
+   //
+   widget->setUpdatesEnabled(false);
+   //
+   widget->setIcon(action->icon());
+   {
+      auto t = action->iconText();
+      if (t.isEmpty())
+         t = action->text();
+      widget->setText(t);
+   }
+   widget->setEnabled(action->isEnabled());
+   //
+   widget->setCheckable(action->isCheckable());
+   widget->setChecked(action->isChecked());
+   widget->setShortcut(action->shortcut());
+   widget->setToolTip(action->toolTip());
+   widget->setWhatsThis(action->whatsThis());
+   //
+   widget->setUpdatesEnabled(true);
+   widget->updateGeometry();
+}
+void DKCollapsiblePane::_Toolbar::_updateTabOrder() {
+   int size = this->entries.size();
+   for (int i = 0; i < size - 1; ++i) {
+      auto* a = this->entries[i].widget;
+      auto* b = this->entries[i + 1].widget;
+      QWidget::setTabOrder(a, b);
+   }
+   if (size) {
+      this->container->setFocusProxy(this->entries[0].widget);
+      this->container->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   } else {
+      this->container->setFocusProxy(nullptr);
+      this->container->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+   }
+}
+
 void DKCollapsiblePane::_Toolbar::insertAction(QAction* subject, QAction* before) {
    int i = this->entries.size();
    if (before) {
@@ -148,21 +189,26 @@ void DKCollapsiblePane::_Toolbar::insertAction(QAction* subject, QAction* before
    }
    _ToolbarEntry entry;
    entry.action = subject;
-   entry.widget = new QToolButton(this->container);
-   entry.widget->setDefaultAction(subject);
+   entry.widget = new QPushButton(this->container);
+   {
+      auto* widget = entry.widget;
+      QObject::connect(widget, &QPushButton::clicked, subject, &QAction::trigger);
+      widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+      this->_synchronize(widget, subject);
+   }
    this->entries.insert(i, entry);
    //
    auto* layout = (QBoxLayout*) this->container->layout();
-   layout->addWidget(entry.widget);
+   layout->insertWidget(i, entry.widget);
    //
-   if (i == 0)
-      this->container->setFocusProxy(entry.widget);
+   this->_updateTabOrder();
 }
 void DKCollapsiblePane::_Toolbar::updateAction(QAction* subject) {
    int i = this->indexOf(subject);
    if (i < 0)
       return;
    auto& entry = this->entries[i];
+   this->_synchronize(entry.widget, subject);
    entry.widget->update();
 }
 void DKCollapsiblePane::_Toolbar::removeAction(QAction* subject) {
@@ -175,12 +221,7 @@ void DKCollapsiblePane::_Toolbar::removeAction(QAction* subject) {
       widget->setParent(nullptr);
       delete widget;
    }
-   if (i == 0) {
-      QWidget* next = nullptr;
-      if (!this->entries.isEmpty())
-         next = this->entries[0].widget;
-      this->container->setFocusProxy(next);
-   }
+   this->_updateTabOrder();
 }
 #pragma endregion
 

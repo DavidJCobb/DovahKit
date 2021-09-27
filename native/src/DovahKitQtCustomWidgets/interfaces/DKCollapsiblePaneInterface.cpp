@@ -7,26 +7,28 @@
 
 #include "DKCollapsiblePaneInterface.h"
 #include "../extensions/DKCollapsiblePaneContainerExtension.h"
+#include "../extensions/DKCollapsiblePaneTaskMenuExtension.h"
 #include "../extension_factories/DKCollapsiblePaneExtensionFactory.h"
 
 DKCollapsiblePaneInterface::DKCollapsiblePaneInterface(QObject* parent) : QObject(parent) {
-   initialized = false;
+   this->initialized = false;
 }
 
 void DKCollapsiblePaneInterface::initialize(QDesignerFormEditorInterface* intfc) {
-   if (initialized)
+   if (this->initialized)
       return;
    //
    QExtensionManager* manager = intfc->extensionManager();
    QExtensionFactory* factory = new DKCollapsiblePaneExtensionFactory(manager);
    assert(manager);
    manager->registerExtensions(factory, Q_TYPEID(QDesignerContainerExtension));
+   manager->registerExtensions(factory, Q_TYPEID(QDesignerTaskMenuExtension));
    //
-   initialized = true;
+   this->initialized = true;
 }
 
 bool DKCollapsiblePaneInterface::isInitialized() const {
-   return initialized;
+   return this->initialized;
 }
 
 QWidget* DKCollapsiblePaneInterface::createWidget(QWidget* parent) {

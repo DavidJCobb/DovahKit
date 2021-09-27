@@ -58,6 +58,16 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -87,10 +97,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="extensions\README.md" />
+    <None Include="README.md" />
     <QtMoc Include="widgets\DKCollapsiblePane.h" />
+    <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />
     <ClCompile Include="extension_factories\DKCollapsiblePaneExtensionFactory.cpp" />
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp" />
+    <ClCompile Include="tools\action_editor\ActionEditorWindow.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <QtMoc Include="DovahKitQtCustomWidgetsPlugin.h" />
     <ClCompile Include="DovahKitQtCustomWidgetsPlugin.cpp" />
@@ -104,6 +116,15 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="extensions\DKCollapsiblePaneContainerExtension.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="tools\action_editor\ActionEditorWindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="extensions\DKCollapsiblePaneTaskMenuExtension.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
