@@ -26,6 +26,7 @@
 
 #include <QFileDialog>
 #include <QInputDialog>
+#include "main_window/_debug_hooks/_setup.h"
 #include "main_window/_debug_hooks/enumerate_bsa_contents.h"
 #include "main_window/_debug_hooks/extract_bsa_file.h"
 #include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
@@ -357,6 +358,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          DovahKitDebug::debug_qt_ini_helpers(this);
       });
    }
+   DovahKitDebug::add_features_to_menu(this->ui.menuDebug);
    #pragma endregion
 }
 

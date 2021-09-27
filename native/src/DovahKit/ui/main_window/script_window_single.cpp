@@ -104,65 +104,58 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
    #pragma endregion
    //
    #pragma region Script and log actions
-   QObject::connect(this->ui.buttonRun, &QPushButton::clicked, this, [this]() {
-      if (!this->isVisible())
-         return;
-      DovahscriptHost::get().runScript(this->ui.script->toPlainText());
-   });
-   QObject::connect(this->ui.buttonForceKill, &QPushButton::clicked, this, [this]() {
-      DovahscriptHost::get().abort();
-   });
-   QObject::connect(this->ui.buttonToggleLog, &QPushButton::clicked, this, [this]() {
-      this->ui.log->setVisible(!this->ui.log->isVisible());
-   });
-   QObject::connect(this->ui.buttonClearLog, &QPushButton::clicked, this, [this]() {
-      this->ui.log->setRowCount(0);
-   });
+      QObject::connect(this->ui.buttonRun, &QPushButton::clicked, this, [this]() {
+         if (!this->isVisible())
+            return;
+         DovahscriptHost::get().runScript(this->ui.script->toPlainText());
+      });
+      QObject::connect(this->ui.buttonForceKill, &QPushButton::clicked, this, [this]() {
+         DovahscriptHost::get().abort();
+      });
+      QObject::connect(this->ui.actionClearLog, &QAction::triggered, this, [this]() {
+         this->ui.log->setRowCount(0);
+      });
+      QObject::connect(this->ui.actionRunEval, &QAction::triggered, this, [this]() {
+         if (this->state.eval_pending || !this->state.script_running)
+            return;
+         if (!this->isVisible())
+            return;
+         QString code = this->ui.eval->toPlainText();
+         if (code.isEmpty())
+            return;
+         if (DovahscriptHost::get().evalScript(code)) {
+            this->state.eval_pending = true;
+            this->_updateEvalEnableState();
+         }
+      });
    #pragma endregion
-   //
-   #pragma region Eval
-   QObject::connect(this->ui.buttonEval, &QPushButton::clicked, this, [this]() {
-      if (this->state.eval_pending || !this->state.script_running)
-         return;
-      if (!this->isVisible())
-         return;
-      QString code = this->ui.eval->toPlainText();
-      if (code.isEmpty())
-         return;
-      if (DovahscriptHost::get().evalScript(code)) {
-         this->state.eval_pending = true;
-         this->_updateEvalEnableState();
-      }
-   });
-   #pragma endregion
-   //
    #pragma region Script execution event handlers
-   auto& host = DovahscriptHost::get();
-   QObject::connect(&host, &DovahscriptHost::scriptStarted, this, [this]() {
-      this->_onScriptStartStop(true);
-      QMessageBox::information(this, tr("Script started!", "script (debug)"), tr("The script has started."));
-   });
-   QObject::connect(&host, &DovahscriptHost::scriptEnded, this, [this]() {
-      if (this->isVisible()) {
-         QMessageBox::information(this, tr("Script stopped", "editor script"), tr("Script execution has ended."));
-      }
+      auto& host = DovahscriptHost::get();
+      QObject::connect(&host, &DovahscriptHost::scriptStarted, this, [this]() {
+         this->_onScriptStartStop(true);
+         QMessageBox::information(this, tr("Script started!", "script (debug)"), tr("The script has started."));
+      });
+      QObject::connect(&host, &DovahscriptHost::scriptEnded, this, [this]() {
+         if (this->isVisible()) {
+            QMessageBox::information(this, tr("Script stopped", "editor script"), tr("Script execution has ended."));
+         }
+         this->_onScriptStartStop(false);
+      });
+      QObject::connect(&host, &DovahscriptHost::messageLogged, this, [this](const QString& text) {
+         auto* widget = this->ui.log;
+         auto  index  = widget->rowCount();
+         widget->insertRow(index);
+         widget->setItem(index, 0, new QTableWidgetItem(text));
+      });
+      QObject::connect(&host, &DovahscriptHost::evalComplete, this, [this]() {
+         this->state.eval_pending = false;
+         this->_updateEvalEnableState();
+      });
+      QObject::connect(&host, &DovahscriptHost::userClickedLink, this, [this](const QString& text, QWidget* opener) {
+         auto* confirm = new ScriptWindowHyperlinkConfirmDialog(text, opener ? opener : this);
+         confirm->open();
+      });
       this->_onScriptStartStop(false);
-   });
-   QObject::connect(&host, &DovahscriptHost::messageLogged, this, [this](const QString& text) {
-      auto* widget = this->ui.log;
-      auto  index  = widget->rowCount();
-      widget->insertRow(index);
-      widget->setItem(index, 0, new QTableWidgetItem(text));
-   });
-   QObject::connect(&host, &DovahscriptHost::evalComplete, this, [this]() {
-      this->state.eval_pending = false;
-      this->_updateEvalEnableState();
-   });
-   QObject::connect(&host, &DovahscriptHost::userClickedLink, this, [this](const QString& text, QWidget* opener) {
-      auto* confirm = new ScriptWindowHyperlinkConfirmDialog(text, opener ? opener : this);
-      confirm->open();
-   });
-   this->_onScriptStartStop(false);
    #pragma endregion
 }
 void EditorSingleScriptWindow::_onScriptStartStop(bool script_running) {
@@ -182,7 +175,7 @@ void EditorSingleScriptWindow::_onScriptStartStop(bool script_running) {
 
 void EditorSingleScriptWindow::_updateEvalEnableState() {
    bool enable = this->state.script_running && !this->state.eval_pending;
-   this->ui.buttonEval->setEnabled(enable);
+   this->ui.actionRunEval->setEnabled(enable);
    this->ui.eval->setReadOnly(!enable);
 }
 

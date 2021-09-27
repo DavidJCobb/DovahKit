@@ -50,12 +50,14 @@
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
@@ -469,6 +471,8 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
     <ClCompile Include="ui\generic\FormPicker.cpp" />
@@ -529,6 +533,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptTextarea.h" />
     <ClInclude Include="dovahscript\api_helpers\load_resource.h" />

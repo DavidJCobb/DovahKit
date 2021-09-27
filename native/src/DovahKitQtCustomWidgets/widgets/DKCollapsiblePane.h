@@ -5,13 +5,13 @@
 
 class DKCollapsiblePane : public QFrame {
    Q_OBJECT;
-   Q_PROPERTY(bool    collapsed READ collapsed WRITE setCollapsed DESIGNABLE true STORED false);
-   Q_PROPERTY(QString title     READ title     WRITE setTitle     DESIGNABLE true STORED false);
-   Q_PROPERTY(bool    showActionsWhenCollapsed READ showActionsWhenCollapsed WRITE setShowActionsWhenCollapsed DESIGNABLE true STORED true);
+   Q_PROPERTY(bool    collapsed READ collapsed WRITE setCollapsed DESIGNABLE true);
+   Q_PROPERTY(QString title     READ title     WRITE setTitle     DESIGNABLE true);
+   Q_PROPERTY(bool    showActionsWhenCollapsed READ showActionsWhenCollapsed WRITE setShowActionsWhenCollapsed DESIGNABLE true);
    public:
       DKCollapsiblePane(QWidget* parent);
 
-      inline bool collapsed() const noexcept { return !this->subwidgets.body->isVisible(); }
+      inline bool collapsed() const noexcept { return this->state.collapsed; }
       inline QString title() const noexcept { return this->subwidgets.label->text(); }
 
       // This is the "body" of the widget; you'd set a layout on it, append children to it, et cetera.
@@ -62,6 +62,7 @@ class DKCollapsiblePane : public QFrame {
          QPushButton* toggle = nullptr; // expand/collapse button
       } subwidgets;
       struct {
+         bool collapsed = false;
          bool show_actions_when_collapsed = false;
       } state;
 

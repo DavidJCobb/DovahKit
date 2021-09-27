@@ -48,7 +48,7 @@ QString DKCollapsiblePaneInterface::name() const {
 }
 
 QString DKCollapsiblePaneInterface::group() const {
-   return "Containers";
+   return "DovahKit";
 }
 
 QIcon DKCollapsiblePaneInterface::icon() const {
@@ -56,7 +56,7 @@ QIcon DKCollapsiblePaneInterface::icon() const {
 }
 
 QString DKCollapsiblePaneInterface::toolTip() const {
-   return QString();
+   return tr("A panel with a button to show or hide the content.");
 }
 
 QString DKCollapsiblePaneInterface::whatsThis() const {
@@ -68,23 +68,39 @@ bool DKCollapsiblePaneInterface::isContainer() const {
 }
 
 QString DKCollapsiblePaneInterface::domXml() const {
-   return "<widget class=\"DKCollapsiblePane\" name=\"collapsiblePane\">\n"
-      " <property name=\"geometry\">\n"
-      "  <rect>\n"
-      "   <x>0</x>\n"
-      "   <y>0</y>\n"
-      "   <width>100</width>\n"
-      "   <height>100</height>\n"
-      "  </rect>\n"
-      " </property>\n"
-      " <property name=\"title\">\n"
-      "  <string>Collapsible panel</string>\n"
-      " </property>\n"
-      " <widget class=\"QWidget\" name=\"collapsiblePaneWidgetContents\">\n" // this is how you supply a default page. we're not allowed to use our own page, but Qt Designer will create this and substitute it in.
-      " </widget>"
-      "</widget>\n";
+   return R"555(
+<ui language="c++">
+   <widget class="DKCollapsiblePane" name="collapsiblePane">
+      <property name="geometry">
+         <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>100</width>
+            <height>100</height>
+         </rect>
+      </property>
+      <property name="title">
+         <string>Collapsible panel</string>
+      </property>
+      <widget class="QWidget" name="collapsiblePaneWidgetContents">
+      </widget>
+   </widget>
+   <customwidgets>
+      <customwidget>
+         <class>DKCollapsiblePane</class>
+         <extends>QFrame</extends>
+         <addpagemethod>setViewport</addpagemethod>
+      </customwidget>
+   </customwidgets>
+</ui>
+)555";
+   //
+   // Define an initial page by specifying a child widget, and use the customwidgets tag 
+   // to ensure that Qt's build system knows how to add it as a page. Because our widget 
+   // uses the "container" extension, Qt Designer will do the rest.
+   //
 }
 
 QString DKCollapsiblePaneInterface::includeFile() const {
-   return "widgets/DKCollapsiblePane.h";
+   return "widgets/DKCollapsiblePane.h"; // NOTE for MSVC: this will require that your project specify $(ProjectDir) as an include path, else UI files in subfolders will resolve this incorrectly
 }

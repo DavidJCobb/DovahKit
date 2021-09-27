@@ -56,7 +56,10 @@ DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(
 void DKCollapsiblePane::setCollapsed(bool state) {
    if (this->collapsed() == state)
       return;
-   this->subwidgets.body->setVisible(!state);
+   this->state.collapsed = state;
+   if (this->subwidgets.body) {
+      this->subwidgets.body->setVisible(!state);
+   }
    this->_updateToggle(state);
    auto policy = this->sizePolicy();
    if (state) {
@@ -77,8 +80,10 @@ void DKCollapsiblePane::setTitle(const QString& t) {
    this->setAccessibleName(t);
 }
 void DKCollapsiblePane::setViewport(QWidget* w) {
-   if (w)
+   if (w) {
       w->setParent(this);
+      w->setVisible(!this->state.collapsed);
+   }
    auto* layout = (QBoxLayout*) this->layout();
    if (auto* prior = this->subwidgets.body) {
       if (w) {

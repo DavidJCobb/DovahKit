@@ -2,6 +2,7 @@
 #include <QCloseEvent>
 #include <QDirIterator>
 #include <QMessageBox>
+#include "../generic/DKLuaSyntaxHighlighter.h"
 #include "../../dovahscript/dovahscript_host.h"
 #include "../../editor/script_packages/manifest_parser.h"
 #include "script_window/hyperlink_confirm.h"
@@ -37,6 +38,13 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
          }
       }
    }
+   {  // Font for script editor
+      QFont font("Lucida Console", 10);
+      font.setStyleHint(QFont::Monospace);
+      this->ui.eval->setFont(font);
+      //
+      new DKLuaSyntaxHighlighter(this->ui.eval->document());
+   }
    
    this->_updateEvalEnableState();
    this->reloadPackageList();
@@ -67,11 +75,21 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
       QObject::connect(this->ui.buttonForceKill, &QPushButton::clicked, this, [this]() {
          DovahscriptHost::get().abort();
       });
-      QObject::connect(this->ui.buttonToggleLog, &QPushButton::clicked, this, [this]() {
-         this->ui.log->setVisible(!this->ui.log->isVisible());
-      });
-      QObject::connect(this->ui.buttonClearLog, &QPushButton::clicked, this, [this]() {
+      QObject::connect(this->ui.actionClearLog, &QAction::triggered, this, [this]() {
          this->ui.log->setRowCount(0);
+      });
+      QObject::connect(this->ui.actionRunEval, &QAction::triggered, this, [this]() {
+         if (this->state.eval_pending || !this->state.script_running)
+            return;
+         if (!this->isVisible())
+            return;
+         QString code = this->ui.eval->toPlainText();
+         if (code.isEmpty())
+            return;
+         if (DovahscriptHost::get().evalScript(code)) {
+            this->state.eval_pending = true;
+            this->_updateEvalEnableState();
+         }
       });
    #pragma endregion
    #pragma region Script execution event handlers
@@ -290,8 +308,8 @@ void EditorScriptPackageWindow::_onScriptStartStop(bool script_running) {
 }
 void EditorScriptPackageWindow::_updateEvalEnableState() {
    bool enable = this->state.script_running && !this->state.eval_pending;
-   //this->ui.buttonEval->setEnabled(enable);
-   //this->ui.eval->setReadOnly(!enable);
+   this->ui.actionRunEval->setEnabled(enable);
+   this->ui.eval->setReadOnly(!enable);
 }
 
 bool EditorScriptPackageWindow::_checkAllowClose() {

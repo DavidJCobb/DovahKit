@@ -12,7 +12,7 @@ DKCollapsiblePaneTaskMenuExtension::DKCollapsiblePaneTaskMenuExtension(DKCollaps
 }
 
 QAction* DKCollapsiblePaneTaskMenuExtension::preferredEditAction() const {
-   return this->actions.editActions;
+   return nullptr;
 }
 QList<QAction*> DKCollapsiblePaneTaskMenuExtension::taskActions() const {
    return QList<QAction*>{
