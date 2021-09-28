@@ -4,9 +4,23 @@
 #include <QDataStream>
 #include <QDebug>
 #include <QFile>
+#include <QFileDialog>
+#include <QInputDialog>
 
-namespace DovahKitDebug {
-   void extract_bsa_file(const std::filesystem::path& bsa, const std::string& target, const std::filesystem::path& extract_to) {
+namespace DovahKitDebug::features {
+   /*static*/ void extract_bsa_file::execute(QWidget* from) {
+      auto name = QFileDialog::getOpenFileName(from, QObject::tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
+      if (name.isEmpty())
+         return;
+      auto entry = QInputDialog::getText(from, QObject::tr("Path of file to extract? Do not specify a Data prefix.", "debug"), QObject::tr("Path:"));
+      if (entry.isEmpty())
+         return;
+      auto to = QFileDialog::getSaveFileName(from, QObject::tr("Select target file", "debug"));
+      if (to.isEmpty())
+         return;
+      //
+      std::filesystem::path bsa = (const char8_t*)name.toUtf8().constData();
+      //
       dovah::bsa_archive archive;
       try {
          archive.open(bsa);
@@ -14,12 +28,12 @@ namespace DovahKitDebug {
          qDebug() << "BSA load exception: " << e.what();
          return;
       }
-      auto* file = archive.lookup_file(target);
+      auto* file = archive.lookup_file(entry.toStdString());
       if (!file) {
          qDebug() << "No such file.";
          return;
       }
-      QFile output(QString::fromStdWString(extract_to.c_str()));
+      QFile output(to);
       if (!output.open(QIODevice::WriteOnly)) {
          qDebug() << "Unable to open file. " << output.errorString();
          return;

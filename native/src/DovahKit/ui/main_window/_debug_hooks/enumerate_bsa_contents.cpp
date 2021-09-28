@@ -1,9 +1,16 @@
 #include "enumerate_bsa_contents.h"
-#include "../../dovah/files/bsa/bsa_archive.h"
+#include <filesystem>
 #include <QDebug>
+#include <QFileDialog>
+#include "../../dovah/files/bsa/bsa_archive.h"
 
-namespace DovahKitDebug {
-   void enumerate_bsa_contents(const std::filesystem::path& path) {
+namespace DovahKitDebug::features {
+   /*static*/ void enumerate_bsa_contents::execute(QWidget* from) {
+      auto name = QFileDialog::getOpenFileName(from, QObject::tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
+      if (name.isEmpty())
+         return;
+      std::filesystem::path path = std::u8string((const char8_t*)name.toUtf8().constData());
+      //
       dovah::bsa_archive archive;
       try {
          archive.open(path);

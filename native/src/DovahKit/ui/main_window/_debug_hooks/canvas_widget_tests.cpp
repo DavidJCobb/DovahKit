@@ -304,8 +304,8 @@ namespace {
    }
 }
 
-namespace DovahKitDebug {
-   void debug_canvas_widget(QWidget* parent) {
+namespace DovahKitDebug::features {
+   /*static*/ void debug_canvas_widget::execute(QWidget* parent) {
       _dialog_1(parent);
       _dialog_2(parent);
    }

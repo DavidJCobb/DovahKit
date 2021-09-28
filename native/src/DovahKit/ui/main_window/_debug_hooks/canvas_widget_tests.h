@@ -1,6 +1,9 @@
 #pragma once
-#include <QWidget>
+#include "_base.h"
 
-namespace DovahKitDebug {
-   extern void debug_canvas_widget(QWidget* parent);
+namespace DovahKitDebug::features {
+   struct debug_canvas_widget : debug_feature {
+      static constexpr const char* name = "Debug CanvasWidget";
+      static void execute(QWidget* from);
+   };
 }

@@ -1,4 +1,13 @@
 #pragma once
+#include "_base.h"
+
+namespace DovahKitDebug::features {
+   struct run_lua_resource_manager_tests : debug_feature {
+      static constexpr const char* name = "Run Lua resource manager R&D tests";
+      static void execute(QWidget* from);
+   };
+}
+
 #include <QMetaType>
 #include <QStyledItemDelegate>
 #include <QWidget>
@@ -209,8 +218,6 @@ namespace DovahKitDebug {
 
          virtual bool eventFilter(QObject* target, QEvent*) override;
    };
-
-   extern void run_lua_resource_manager_tests(QWidget* parent);
 }
 
 // These macros don't work from within a namespace. Ignore IntelliSense errors on them, too; those may be false-positives.

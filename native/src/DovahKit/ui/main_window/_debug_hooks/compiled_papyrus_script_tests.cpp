@@ -7,20 +7,17 @@
 #include "../../../dovah/files/papyrus/compiled_script.h"
 #include "../../../editor/core.h"
 
-namespace DovahKitDebug {
-   void compiled_papyrus_script_tests(QWidget* window) {
-      auto path = QInputDialog::getText(window, QObject::tr("Path of PEX file to test? Do not specify a Data prefix.", "debug"), QObject::tr("Path:"));
+namespace DovahKitDebug::features {
+   /*static*/ void compiled_papyrus_script_tests::execute(QWidget* window) {
+      auto path = QInputDialog::getText(window, QObject::tr("Path of PEX file to test? Do not specify a Data prefix.", "debug"), QObject::tr("Path:", "debug"));
       if (path.isEmpty())
          return;
       auto& editor = DovahKitCore::get();
-      auto* file   = editor.lookup_game_asset(path.toStdString());
+      auto* file   = editor.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
       if (!file) {
-         //
-         // TODO: try getting a loose file
-         //
          QMessageBox::information(window,
-            QObject::tr("Report"),
-            QObject::tr("File not found."),
+            QObject::tr("Report", "debug"),
+            QObject::tr("File not found.", "debug"),
             QMessageBox::Ok
          );
          return;
@@ -44,8 +41,8 @@ namespace DovahKitDebug {
       delete file;
       if (!failure.isEmpty()) {
          QMessageBox::information(window,
-            QObject::tr("Report"),
-            QObject::tr("Failed to load the script file. %1").arg(failure),
+            QObject::tr("Report", "debug"),
+            QObject::tr("Failed to load the script file. %1", "debug").arg(failure),
             QMessageBox::Ok
          );
          return;
@@ -65,9 +62,14 @@ namespace DovahKitDebug {
       if (properties.isEmpty())
          properties = "<none>";
       QMessageBox::information(window,
-         QObject::tr("Report"),
-         QObject::tr("Properties:\n\n%1").arg(properties),
+         QObject::tr("Report", "debug"),
+         QObject::tr("Properties:\n\n%1", "debug").arg(properties),
          QMessageBox::Ok
       );
+   }
+}
+
+namespace DovahKitDebug {
+   void compiled_papyrus_script_tests(QWidget* window) {
    }
 }

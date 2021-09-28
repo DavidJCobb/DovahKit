@@ -1,7 +1,9 @@
 #pragma once
-#include <filesystem>
-#include <string>
+#include "_base.h"
 
-namespace DovahKitDebug {
-   extern void extract_bsa_file(const std::filesystem::path& bsa, const std::string& target, const std::filesystem::path& extract_to);
+namespace DovahKitDebug::features {
+   struct extract_bsa_file : debug_feature {
+      static constexpr const char* name = "Extract single file from BSA";
+      static void execute(QWidget* from);
+   };
 }

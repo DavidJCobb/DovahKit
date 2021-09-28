@@ -4,8 +4,8 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../editor/core.h"
 
-namespace DovahKitDebug {
-   extern void list_none_stubs(QWidget* window) {
+namespace DovahKitDebug::features {
+   /*static*/ void list_none_stubs::execute(QWidget* window) {
       QString text;
       DovahKitCore::get().for_each_form_of_type(dovah::form_type::none, [&text](dovah::form_stub* stub) {
          if (!stub->is_none_stub())

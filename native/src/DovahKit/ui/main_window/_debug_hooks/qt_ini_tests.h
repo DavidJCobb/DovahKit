@@ -1,4 +1,13 @@
 #pragma once
+#include "_base.h"
+
+namespace DovahKitDebug::features {
+   struct qt_ini_tests : debug_feature {
+      static constexpr const char* name = "Test Qt INI helpers";
+      static void execute(QWidget* from);
+   };
+}
+
 #include <QString>
 #include <QWidget>
 
@@ -10,7 +19,5 @@ namespace DovahKitDebug {
       static INIValueTestStruct fromString(const QString&);
       QString toString() const noexcept;
    };
-
-   extern void debug_qt_ini_helpers(QWidget* parent);
 }
 Q_DECLARE_METATYPE(DovahKitDebug::INIValueTestStruct);

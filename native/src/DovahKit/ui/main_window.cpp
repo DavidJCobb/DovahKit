@@ -24,26 +24,13 @@
 #include "form_windows/_base.h"
 #include "main_window/form_use_info.h"
 
-#include <QFileDialog>
-#include <QInputDialog>
 #include "main_window/_debug_hooks/_setup.h"
-#include "main_window/_debug_hooks/enumerate_bsa_contents.h"
-#include "main_window/_debug_hooks/extract_bsa_file.h"
-#include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
-#include "main_window/_debug_hooks/list_none_stubs.h"
-#include "main_window/_debug_hooks/compiled_papyrus_script_tests.h"
-#include "main_window/_debug_hooks/debug_target_form.h"
-#include "main_window/_debug_hooks/debug_target_form_papyrus.h"
-#include "main_window/_debug_hooks/form_picker_debug.h"
-#include "main_window/_debug_hooks/canvas_widget_tests.h"
-#include "main_window/_debug_hooks/lua_resource_manager_tests.h"
-#include "main_window/_debug_hooks/qt_ini_tests.h"
 
 namespace {
    MainWindow* _window = nullptr;
 }
 /*static*/ MainWindow& MainWindow::get() {
-   assert(_window && "You shouldn't be calling ReachVariantTool::get before the main window is actually created!");
+   assert(_window && "You shouldn't be calling MainWindow::get before the main window is actually created!");
    return *_window;
 }
 
@@ -267,99 +254,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       modal->deleteLater();
    });
 
-   #pragma region Debugging
-   QObject::connect(this->ui.actionDebugGetRecordSizeStats, &QAction::triggered, this, [this]() {
-      struct deets {
-         uint32_t smallest = std::numeric_limits<uint32_t>::max();
-         uint32_t largest  = 0;
-         uint32_t total    = 0;
-         uint32_t count    = 0;
-         inline float average() const noexcept { return (float)total / (float)count; }
-         void consume(uint32_t size) noexcept {
-            total += size;
-            ++count;
-            if (size < smallest)
-               smallest = size;
-            if (size > largest)
-               largest = size;
-         }
-         QString report() const noexcept {
-            return QString("Range: [%1, %2]; average %3 over %4 records.").arg(smallest).arg(largest).arg(average()).arg(count);
-         }
-      };
-      //
-      deets compressed;
-      deets uncompressed;
-      auto& editor = DovahKitCore::get();
-      editor.for_each_form([&compressed, &uncompressed](const dovah::form_stub* stub) {
-         dovah::tes_file_record_header header;
-         uint32_t decompressed_size;
-         if (stub->fetch_record_header(header, decompressed_size)) {
-            if (header.body_is_compressed()) {
-               compressed.consume(decompressed_size);
-            } else {
-               uncompressed.consume(header.size);
-            }
-         }
-         return false;
-      });
-      QMessageBox::question(this,
-         tr("Report"),
-         tr("Compressed records:<br/>%1<br/><br/>Uncompressed records:<br/>%2").arg(compressed.report()).arg(uncompressed.report()),
-         QMessageBox::Ok
-      );
-   });
-   QObject::connect(this->ui.actionDebugLogBSAContents, &QAction::triggered, this, [this]() {
-      auto name = QFileDialog::getOpenFileName(this, tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
-      if (name.isEmpty())
-         return;
-      DovahKitDebug::enumerate_bsa_contents(name.toStdString());
-   });
-   QObject::connect(this->ui.actionDebugExtractBSAFile, &QAction::triggered, this, [this]() {
-      auto name = QFileDialog::getOpenFileName(this, tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
-      if (name.isEmpty())
-         return;
-      auto entry = QInputDialog::getText(this, tr("Path of file to extract? Do not specify a Data prefix.", "debug"), tr("Path:"));
-      if (entry.isEmpty())
-         return;
-      auto to = QFileDialog::getSaveFileName(this, tr("Select target file", "debug"));
-      if (to.isEmpty())
-         return;
-      DovahKitDebug::extract_bsa_file(name.toStdString(), entry.toStdString(), to.toStdString());
-   });
-   QObject::connect(this->ui.actionDebugLookupBSAFile, &QAction::triggered, this, [this]() {
-      DovahKitDebug::lookup_bsa_file_from_bsa_load_order(this);
-   });
-   QObject::connect(this->ui.actionDebugListNoneStubs, &QAction::triggered, this, [this]() {
-      DovahKitDebug::list_none_stubs(this);
-   });
-   QObject::connect(this->ui.actionDebugCompiledPapyrusScriptTests, &QAction::triggered, this, [this]() {
-      DovahKitDebug::compiled_papyrus_script_tests(this);
-   });
-   QObject::connect(this->ui.actionDebugBreakOnForm, &QAction::triggered, this, [this]() {
-      DovahKitDebug::debug_target_form(this);
-   });
-   QObject::connect(this->ui.actionDebugBreakOnFormPapyrus, &QAction::triggered, this, [this]() {
-      DovahKitDebug::debug_target_form_papyrus(this);
-   });
-   QObject::connect(this->ui.actionDebugFormPicker, &QAction::triggered, this, [this]() {
-      DovahKitDebug::debug_form_picker(this);
-   });
-   QObject::connect(this->ui.actionDebugCanvasWidget, &QAction::triggered, this, [this]() {
-      DovahKitDebug::debug_canvas_widget(this);
-   });
-   QObject::connect(this->ui.actionDebugTestLuaRMResearch, & QAction::triggered, this, [this]() {
-      DovahKitDebug::run_lua_resource_manager_tests(this);
-   });
-   {
-      auto* action = new QAction("Debug: test Qt INI helper", this);
-      this->ui.menuDebug->addAction(action);
-      QObject::connect(action, &QAction::triggered, this, [this]() {
-         DovahKitDebug::debug_qt_ini_helpers(this);
-      });
-   }
    DovahKitDebug::add_features_to_menu(this->ui.menuDebug);
-   #pragma endregion
 }
 
 void MainWindow::setProgressBounds(int min, int max) {

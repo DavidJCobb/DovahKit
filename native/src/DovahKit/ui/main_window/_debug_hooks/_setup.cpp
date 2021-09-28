@@ -2,10 +2,34 @@
 #include <QAction>
 #include "../../../helpers/class_list.h"
 
+#include "get_record_size_stats.h"
+#include "list_none_stubs.h"
+#include "compiled_papyrus_script_tests.h"
+#include "debug_target_form.h"
+#include "debug_target_form_papyrus.h"
+#include "extract_bsa_file.h"
+#include "enumerate_bsa_contents.h"
+#include "lookup_bsa_file_from_bsa_load_order.h"
+#include "lua_resource_manager_tests.h"
+#include "qt_ini_tests.h"
+#include "form_picker_debug.h"
+#include "canvas_widget_tests.h"
 #include "ui_collapsible_pane.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
+      features::get_record_size_stats,
+      features::list_none_stubs,
+      features::compiled_papyrus_script_tests,
+      features::debug_target_form,
+      features::debug_target_form_papyrus,
+      features::extract_bsa_file,
+      features::enumerate_bsa_contents,
+      features::lookup_bsa_file_from_bsa_load_order,
+      features::run_lua_resource_manager_tests,
+      features::qt_ini_tests,
+      features::debug_form_picker,
+      features::debug_canvas_widget,
       features::ui_collapsible_pane//,
    >;
 
@@ -19,6 +43,13 @@ namespace DovahKitDebug {
    };
 
    extern void add_features_to_menu(QMenu* menu) {
+      #if !_DEBUG
+         menu->setVisible(false);
+         menu->setEnabled(false);
+         return;
+      #endif
+      menu->setVisible(true);
+      menu->setEnabled(true);
       auto* p = menu->parentWidget();
       if (p)
          p = p->window();

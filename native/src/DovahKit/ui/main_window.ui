@@ -60,17 +60,6 @@
     <property name="title">
      <string>Debug</string>
     </property>
-    <addaction name="actionDebugGetRecordSizeStats"/>
-    <addaction name="actionDebugLogBSAContents"/>
-    <addaction name="actionDebugExtractBSAFile"/>
-    <addaction name="actionDebugLookupBSAFile"/>
-    <addaction name="actionDebugListNoneStubs"/>
-    <addaction name="actionDebugCompiledPapyrusScriptTests"/>
-    <addaction name="actionDebugBreakOnForm"/>
-    <addaction name="actionDebugBreakOnFormPapyrus"/>
-    <addaction name="actionDebugFormPicker"/>
-    <addaction name="actionDebugCanvasWidget"/>
-    <addaction name="actionDebugTestLuaRMResearch"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -106,16 +95,6 @@
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionDebugLoadDawnguard">
-   <property name="text">
-    <string>Load Dawnguard.esm</string>
-   </property>
-  </action>
-  <action name="actionDebugLoadSkyrim">
-   <property name="text">
-    <string>Load Skyrim.esm</string>
-   </property>
-  </action>
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
@@ -124,26 +103,6 @@
   <action name="actionEditFileMetadata">
    <property name="text">
     <string>Edit File Metadata</string>
-   </property>
-  </action>
-  <action name="actionDebugGetRecordSizeStats">
-   <property name="text">
-    <string>Get record size stats</string>
-   </property>
-  </action>
-  <action name="actionDebugLogBSAContents">
-   <property name="text">
-    <string>Log BSA contents</string>
-   </property>
-  </action>
-  <action name="actionDebugExtractBSAFile">
-   <property name="text">
-    <string>Extract single file from BSA</string>
-   </property>
-  </action>
-  <action name="actionDebugLookupBSAFile">
-   <property name="text">
-    <string>Lookup single file from loaded BSAs</string>
    </property>
   </action>
   <action name="actionSetEncodingWin1250">
@@ -199,46 +158,6 @@
   <action name="actionDefaultObjects">
    <property name="text">
     <string>Default Objects...</string>
-   </property>
-  </action>
-  <action name="actionDebugListNoneStubs">
-   <property name="text">
-    <string>List all dangling references</string>
-   </property>
-  </action>
-  <action name="actionRunEditorScript">
-   <property name="text">
-    <string>Run editor script (deprecated)...</string>
-   </property>
-  </action>
-  <action name="actionDebugCompiledPapyrusScriptTests">
-   <property name="text">
-    <string>Compiled Papyrus script tests</string>
-   </property>
-  </action>
-  <action name="actionDebugBreakOnForm">
-   <property name="text">
-    <string>Debugbreak on form</string>
-   </property>
-  </action>
-  <action name="actionDebugBreakOnFormPapyrus">
-   <property name="text">
-    <string>Debugbreak on form Papyrus data</string>
-   </property>
-  </action>
-  <action name="actionDebugFormPicker">
-   <property name="text">
-    <string>Debug FormPicker</string>
-   </property>
-  </action>
-  <action name="actionDebugCanvasWidget">
-   <property name="text">
-    <string>Debug CanvasWidget</string>
-   </property>
-  </action>
-  <action name="actionDebugTestLuaRMResearch">
-   <property name="text">
-    <string>Run Lua resource manager R&amp;&amp;D tests</string>
    </property>
   </action>
   <action name="actionRunScriptSingle">

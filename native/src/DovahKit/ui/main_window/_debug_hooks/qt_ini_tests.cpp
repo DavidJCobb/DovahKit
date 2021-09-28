@@ -41,7 +41,7 @@ namespace {
 namespace DovahKitDebug {
    /*static*/ INIValueTestStruct INIValueTestStruct::fromString(const QString& text) {
       auto view = QStringRef(&text).trimmed();
-      auto i    = view.indexOf(':');
+      auto i = view.indexOf(':');
       if (i <= 0)
          return INIValueTestStruct{};
       bool ok;
@@ -51,15 +51,16 @@ namespace DovahKitDebug {
       //
       INIValueTestStruct out;
       out.number = value;
-      out.text   = view.mid(i + 1).toString();
+      out.text = view.mid(i + 1).toString();
       return out;
    }
    QString INIValueTestStruct::toString() const noexcept {
       return QString("%1:%2").arg(this->number).arg(this->text);
    }
+}
 
-
-   extern void debug_qt_ini_helpers(QWidget* parent) {
+namespace DovahKitDebug::features {
+   /*static*/ void qt_ini_tests::execute(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);
       dialog->setLayout(layout);

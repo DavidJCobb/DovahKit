@@ -13,6 +13,7 @@
 
 #include "../../helpers/qt/repaint.h"
 
+#pragma region Setup
 namespace {
    using namespace DovahKitDebug;
    using referent_t      = DovahKitTESTQVariantWrappedSmartPointerReferent;
@@ -90,8 +91,11 @@ namespace DovahKitDebug {
                viewport->update();
       return false;
    }
+}
+#pragma endregion
 
-   extern void run_lua_resource_manager_tests(QWidget* parent) {
+namespace DovahKitDebug::features {
+   /*static*/ void run_lua_resource_manager_tests::execute(QWidget* parent) {
       qRegisterMetaType<smart_pointer_t>(); // ensure the metatype is registered at run-time
       //
       auto* dialog = new QDialog(parent);

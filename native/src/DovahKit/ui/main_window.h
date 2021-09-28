@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow {
    public:
       MainWindow(QWidget* parent = Q_NULLPTR);
       //
-      static MainWindow& get(); // done differently because the usual "static singleton getter" approach apparently causes Qt to crash on exit if applied to the main window
+      static MainWindow& get();
       //
    public slots:
       void setProgressBounds(int, int);

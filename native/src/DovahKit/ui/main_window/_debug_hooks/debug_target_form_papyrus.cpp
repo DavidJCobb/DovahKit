@@ -4,12 +4,12 @@
 #include "../../../dovah/forms/Form.h"
 #include "../../../editor/core.h"
 
-namespace DovahKitDebug {
-   extern void debug_target_form_papyrus(QWidget* window) {
-      auto path = QInputDialog::getText(window, QObject::tr("Form ID?", "debug"), QObject::tr("ID:"));
-      if (path.isEmpty())
+namespace DovahKitDebug::features {
+   /*static*/ void debug_target_form_papyrus::execute(QWidget* window) {
+      auto text = QInputDialog::getText(window, QObject::tr("Form ID?", "debug"), QObject::tr("ID:", "debug"));
+      if (text.isEmpty())
          return;
-      auto id = path.toInt(nullptr, 16);
+      auto id = text.toInt(nullptr, 16);
       if (!id)
          return;
       auto* stub = DovahKitCore::get().get_form(id);

@@ -4,11 +4,12 @@
 #include <QDialog>
 #include <QGridLayout>
 
-namespace DovahKitDebug {
-   extern void debug_form_picker(QWidget* parent) {
+namespace DovahKitDebug::features {
+   /*static*/ void debug_form_picker::execute(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);
       dialog->setLayout(layout);
+      QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       {
          auto* picker = new FormPicker(dialog);
          picker->setAllowedFormTypes({ // GetIsID types

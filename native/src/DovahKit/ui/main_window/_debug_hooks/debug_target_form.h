@@ -1,6 +1,9 @@
 #pragma once
-#include <QWidget>
+#include "_base.h"
 
-namespace DovahKitDebug {
-   extern void debug_target_form(QWidget* parent);
+namespace DovahKitDebug::features {
+   struct debug_target_form : debug_feature {
+      static constexpr const char* name = "Debugbreak on form";
+      static void execute(QWidget* from);
+   };
 }

@@ -1,6 +1,9 @@
 #pragma once
-#include <QWidget>
+#include "_base.h"
 
-namespace DovahKitDebug {
-   extern void debug_form_picker(QWidget* parent);
+namespace DovahKitDebug::features {
+   struct debug_form_picker : debug_feature {
+      static constexpr const char* name = "Debug Formpicker";
+      static void execute(QWidget* from);
+   };
 }

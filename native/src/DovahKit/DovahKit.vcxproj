@@ -471,6 +471,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
@@ -533,6 +534,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
