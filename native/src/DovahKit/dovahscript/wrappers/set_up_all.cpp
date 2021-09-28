@@ -86,9 +86,14 @@ namespace dovahscript {
       #pragma endregion
       #pragma region UI
       {
-         lua_createtable(L, 0, 12);
-         lua_pushvalue  (L, -1);
-         lua_setglobal  (L, "ui");
+         auto t = lua_getglobal(L, "ui");
+         if (t == LUA_TNONE || t == LUA_TNIL) {
+            lua_createtable(L, 0, 20);
+            lua_pushvalue(L, -1);
+            lua_setglobal(L, "ui");
+         } else {
+            assert(t == LUA_TTABLE && "How is the `ui` global not a table?!");
+         }
          auto index = lua_gettop(L);
          //
          set_up_class_with_singleton<ui::widget>(L, index);

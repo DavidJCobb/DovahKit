@@ -1,4 +1,5 @@
 #include "coordinator.h"
+#include <QEvent>
 #include <QLabel>
 #include <QSortFilterProxyModel>
 #include "../../../helpers/lua/dump.h"
@@ -400,6 +401,95 @@ namespace dovahscript::core::subsystems {
       }
    }
 
+   bool coordinator::eventFilter(QObject* object, QEvent* event) {
+      //
+      // Return true to intercept an event; return false to let it process normally.
+      //
+      bool is_repaint = false;
+      switch (event->type()) { // events that we don't want to ever block (and we can get away with that because we also don't send these to Lua)
+         //
+         // Blocking some of these events can cause the UI to fail to react to them properly; 
+         // for example, if the script sets a widget's enable state while we're blocking the 
+         // EnabledChange event, then the widget won't visually update until the user does 
+         // something to update it (e.g. mouseover). We don't want that.
+         //
+         // Not sure which of these events actually cause things like that to happen, versus 
+         // which are just bare notifications. Not sure I need to care, either.
+         //
+         case QEvent::ActionAdded:           // a widget was given a new QAction (e.g. QToolButton)
+         case QEvent::ActionChanged:         // one of a widget's QActions was modified in some way
+         case QEvent::ActionRemoved:         // a widget had a QAction removed (e.g. QToolButton)
+         case QEvent::ChildAdded:
+         case QEvent::ChildRemoved:
+         case QEvent::Clipboard:
+         case QEvent::Close:
+         case QEvent::DeferredDelete:        // QObject::deleteLater was called
+         case QEvent::DynamicPropertyChange: // a dynamic property was added, modified, or removed
+         case QEvent::EnabledChange:         // a widget's enable state has changed
+         case QEvent::Enter:                 // widget mouseover
+         case QEvent::EnterWhatsThisMode:    // the widget is top-level and the user has entered "What's This?" mode
+         case QEvent::Expose:
+         case QEvent::Hide:                  // a widget was hidden
+         case QEvent::HideToParent:          // a widget's child was hidden
+         case QEvent::KeyboardLayoutChange:  // the user's keyboard layout has changed
+         case QEvent::LanguageChange:        // the program's translation has changed
+         case QEvent::LayoutDirectionChange: // layout update
+         case QEvent::LayoutRequest:         // layout update
+         case QEvent::Leave:                 // widget mouseout
+         case QEvent::LeaveWhatsThisMode:    // the widget is top-level and the user has left "What's This?" mode
+         case QEvent::LocaleChange:          // the system locale has changed
+         case QEvent::MacSizeChange:         // the user changed their widget sizes (Mac only)
+         case QEvent::ModifiedChange:        // the widget's "modified" flag has changed
+         case QEvent::MouseButtonRelease:    // the mouse was released
+         case QEvent::OrientationChange:     // the screen orientation has changed
+         case QEvent::ParentAboutToChange:   // a widget is about to be reparented
+         case QEvent::ParentChange:          // a widget has been reparented
+         case QEvent::Polish:                // the widget has been polished
+         case QEvent::PolishRequest:         // the widget wants to be polished
+         case QEvent::QueryWhatsThis:        // the widget is being asked if it has "What's This?" content
+         case QEvent::ReadOnlyChange:        // a widget's read-only state has changed
+         case QEvent::Resize:                // a widget has been resized
+         case QEvent::ScrollPrepare:
+         case QEvent::Scroll:
+         case QEvent::Show:                  // a widget was shown
+         case QEvent::ShowToParent:          // a child widget was shown
+         case QEvent::StatusTip:             // a status bar tip was shown
+         case QEvent::ThreadChange:          // a widget is about to be moved across threads
+         case QEvent::ToolTip:               // a widget's tooltip was shown
+         case QEvent::ToolTipChange:         // a widget's tooltip changed
+         case QEvent::UpdateLater:
+         case QEvent::UpdateRequest:         // a widget needs to be repainted
+         case QEvent::WhatsThis:             // a widget is being asked to show its "What's This?" content
+         case QEvent::WhatsThisClicked:      // a hyperlink in the widget's "What's This?" content has been clicked
+         case QEvent::WindowDeactivate:      // a window was deactivated
+         case QEvent::WindowStateChange:     // a window was minimized or maximized
+         case QEvent::WindowTitleChange:     // a window's title changed
+         case QEvent::WinIdChange:
+         case QEvent::ZOrderChange:
+            return false;
+         case QEvent::CursorChange:          // a widget's desired cursor graphic has changed
+         case QEvent::FontChange:            // a widget's font has changed
+         case QEvent::Paint:                 // screen repaint needed
+         case QEvent::PaletteChange:         // a widget's palette has changed
+         case QEvent::StyleChange:           // a widget's style has changed
+            is_repaint = true;
+            break;
+      }
+      if (this->ui_lock_override != ui_lock_override_state::unchanged) {
+         bool is_locked = (this->ui_lock_override == ui_lock_override_state::locked);
+         if (is_locked && is_repaint)
+            this->repaint_requested_while_ui_locked = true;
+         return is_locked;
+      }
+      if (!events::get().get_pending_event_count())
+         return false;
+      if (is_repaint) {
+         this->repaint_requested_while_ui_locked = true;
+         return false;
+      }
+      return true;
+   }
+
    QWidget* coordinator::get_ui_parent() const noexcept {
       return this->ui_parent;
    }
@@ -461,6 +551,22 @@ namespace dovahscript::core::subsystems {
          return;
       }
       this->task_queues.ui.write.push_back(&task);
+   }
+   void coordinator::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
+      require_script_thread();
+      auto* L   = this->lua_state;
+      auto* key = lock_ui_for_function ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
+      //
+      stack_pos = lua_absindex(L, stack_pos);
+      lua_getfield(L, LUA_REGISTRYINDEX, key);
+      auto storage = lua_gettop(L);
+      assert(lua_type(L, -1) == LUA_TTABLE);
+      //
+      lua_pushinteger(L, lua_rawlen(L, storage) + 1); // key to write to
+      lua_pushvalue(L, stack_pos);
+      lua_rawset(L, storage); // pops value and key
+      //
+      lua_pop(L, 1); // pop storage
    }
 
 

@@ -374,10 +374,9 @@ namespace {
       int remove_event_listener(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
-         luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
          lua_settop(L, 3);
          if (!lua_isnoneornil(L, 3))
-            luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+            luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string or nil) expected");
          if (!self.widget)
             return 0;
          core::subsystems::events::get().remove_listener(*self.widget, lua_tostring(L, 2), lua_tostring(L, 3));

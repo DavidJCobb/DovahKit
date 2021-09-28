@@ -1,0 +1,178 @@
+
+The Dovahscript engine allows Lua scripts to register event listeners on native 
+objects,  most notably UI controls. How  does this work, and how should  script 
+authors use it?
+
+Scripts can register listener via the following code:
+
+   my_button:on("OnActivated", "ListenerName", function()
+      dovah.log_message("button clicked (or hit with a keyboard, etc.)")
+   end)
+
+Listeners can then be removed by specifying the event and listener names:
+
+   my_button:remove_event_listener("OnActivated", "ListenerName")
+
+   -- or remove all listeners for a given event:
+   my_button:remove_event_listener("OnActivated")
+
+
+== UI LOCKING =================================================================
+
+Here's a nasty  edge-case that we want to avoid. Suppose a  script has a button 
+that, when pressed, triggers  some long-running  operation. The script wants to 
+disable  the button the instant it's pressed in order to prevent the  user from 
+double-clicking  and queuing this long-running operation to run  multiple times 
+in a row. The code for that, then, might look like this:
+
+   button:on("OnActivated", "", function()
+      button.enabled = false
+      
+      -- some long operation ...
+
+      button.enabled = true
+   end)
+
+However,  if the Dovahscript engine doesn't  lock the UI down while  events are 
+processing, then the script will be vulnerable to a race condition: if the user 
+mashes the button quickly  enough, they may be able to  sneak in a second click 
+before the script has time to disable the button. For this reason, we must lock 
+all scripted UI  controls while events are pending -- that is,  from the moment 
+an event  is received by script and queued  to be passed to Lua, to the  moment 
+all Lua event listeners for all queued events have finished running.
+
+(Scripts cannot guard against that race condition on their own because Lua is a 
+single-threaded language:  it can't run script code  concurrently, which is why 
+Dovahscript has to queue events and fire them one by one in the first place. If 
+the button receives multiple click events, they'll be dispatched consecutively;
+this is decided well before the script gains any control.)
+
+The facility we use for locking the UI is QObject::eventFilter. Any QObject can 
+register itself to serve as an "event filter" for any other QObjects, with this 
+allowing the  "filter" object to screen  every QEvents inbound  to those target 
+objects. QEvents are used  internally to trigger large  swaths of Qt's built-in 
+UI behaviors, so blocking them allows us to effectively lock down individual UI 
+windows and  controls from all input, without having to fully  disable them and 
+have them display as greyed out.
+
+To be clear:  we only lock the UI when we receive an event that  we're going to 
+dispatch into Lua. Scripts can listen for when the user types into any one-line 
+textbox, for example, but if the user does type into a textbox and no script is 
+listening for that event on that textbox, then the UI will not be locked.
+
+There is one minor flaw,  however, with this system.  Think back to our example 
+above:
+
+   button:on("OnActivated", "", function()
+      button.enabled = false
+      
+      -- some long operation ...
+
+      button.enabled = true
+   end)
+
+When that event is triggered, the scripted UI will remain locked down until the 
+Lua event  listener finishes. Certain "read-only" behaviors, like  checking the 
+"What's This?" information on widgets, will remain functional; however, widgets 
+will not be able  to gain focus, and input widgets will not  be alterable. This 
+is often desirable; however, there may be cases where a script wants to disable 
+specific controls while leaving others generally operable.
+
+As a contrived  example, consider  the case  of a scripted dialog  containing a 
+multi-line textbox.  The script registers an event listener  on the textbox for 
+when the user is typing. When the user enters a space character, the last whole 
+word that the user typed is copied and  used to run some long search operation. 
+The user  is meant to be able to keep typing  even while searches are  running; 
+these searches  should be tasks which run more-or-less in the  background. This 
+script idea won't work if implemented  in a manner similar to the above, as the 
+UI will become  inoperable and the  textbox will stop responding  to keypresses 
+while Lua code is running.
+
+For these cases, a set of APIs are provided.
+
+
+   ui.run_when_locked(my_function)
+   
+      The passed-in  function will  be queued to  run on the next  script tick, 
+      with the UI locked while it runs.
+
+
+   ui.run_when_unlocked(my_function)
+   
+      The passed-in  function will  be queued to  run on the next  script tick, 
+      with the UI unlocked while it runs. If events occur while the function is 
+      running, they will all be queued, potentially "stacking up."
+
+
+Multiple functions can be queued at once, and will run in batches. If functions 
+are queued and events are received at roughly the same time, the functions that 
+were queued to run  with the UI unlocked will run first,  followed by any event 
+listeners, followed by functions queued to run with the UI locked.
+
+All this allows for the following pattern:
+
+   button:on("OnActivated", "", function()
+      button.enabled = false
+      ui.run_when_unlocked(function()
+
+         -- some long operation ...
+
+         ui.run_when_locked(function()
+            button.enabled = true
+         end)
+      end)
+   end)
+
+In the code example  above, clicking the  button will  disable just the button, 
+before running  a long operation in a queued function. The rest  of the UI will 
+remain operable while that function runs, and any events received will pile up, 
+with Lua event listeners being called one after another when the long operation 
+finishes.  When the long operation finishes, the button will be enabled  again. 
+Moreover, the execution  order described above means that  any events generated 
+during the long  operation will have  their listeners run before  the button is 
+re-enabled;  and the script  can be certain that any  event listeners  received 
+after the button  has been re-enabled  are the  result of events  that actually 
+occurred after the button was re-enabled.
+
+
+== UNDER THE HOOD =============================================================
+
+We need to use individual signal/slot  connections for each Lua event listener, 
+in order to prevent event listeners from receiving events that were sent to Lua 
+prior to the  listeners being added. If we had all Lua event  listeners for the 
+same  event on the same widget share a  single connection, then a script  might 
+add an event listener  after an event has been received but  before it has been 
+processed,  and the new listener may react to that event when it  shouldn't. (A 
+similar concern exists when considering the idea of one listener adding another 
+listener for the same event.)
+
+Each signal/slot  connection uses a custom  struct, akin to  a lambda, to store 
+the event and listener names, which are used to dispatch the received event and 
+its arguments to  the event subsystem, to be queued for Lua.  However, we can't 
+attach data directly to a Qt connection,  so in order to disconnect signal/slot 
+connections by listener name, we must maintain a map of QMetaObject::Connection 
+handles.
+
+As mentioned above,  QObject::eventFilter is used to  keep scripted UI controls 
+locked by blocking QEvents used for internal processing. However, it isn't safe 
+to block events  indiscriminately, especially because we have  no mechanism for 
+holding onto an event and re-firing it  later. We need to avoid blocking events 
+that Qt relies on for maintaining state,  while blocking events that can result 
+in Lua event listeners being triggered.
+
+As an example, if we block the QEvent::EnabledChanged event type, then enabling 
+a disabled UI control while the UI is  locked will produce no visual change, at 
+least until the user takes some action that causes a visual update (e.g. moving 
+the mouse cursor over the widget). Blocking QEvent::ActionAdded and the related 
+event types would prevent widgets like QToolButton from properly managing their 
+added QActions.
+
+
+== SUMMARY ====================================================================
+
+Lua code  cannot run concurrently, so if  several events are received  close in 
+time, they will be processed sequentially, one after another. Typically, the UI 
+is fully locked while events are pending  processing. If a script wishes to run 
+code from an event listener without keeping the UI locked, there is an API that 
+allows this;  however, this will allow  events to be received  and queued to be 
+processed while the code runs, potentially allowing events to pile up.

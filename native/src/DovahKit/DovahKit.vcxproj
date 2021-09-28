@@ -155,6 +155,7 @@
     <ClCompile Include="dovahscript\lua_libraries\dovah.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\dovah_package.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\form_types.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\ui.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
     <ClCompile Include="dovahscript\pull_native_object.cpp" />
@@ -534,6 +535,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\lua_libraries\ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />

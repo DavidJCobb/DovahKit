@@ -180,10 +180,10 @@ namespace {
       }
       int value(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         int value = lua_tointeger(L, 2);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected (integer preferred)");
+         int value = lua_tonumber(L, 2);
          api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setValue, value);
          return 0;
 

@@ -128,11 +128,13 @@ namespace dovahscript::core::subsystems {
       auto descendants = target.findChildren<QObject*>();
       bool had_any_connections;
       //
+      this->remove_all_listeners(target);
       had_any_connections = QObject::disconnect(&target, nullptr, &impl::get_event_connection_recipient(), nullptr);
       if (had_any_connections)
          this->pending_events.forget_about(target);
       //
       for (auto* d : descendants) {
+         this->remove_all_listeners(*d);
          had_any_connections = QObject::disconnect(d, nullptr, &impl::get_event_connection_recipient(), nullptr);
          if (had_any_connections)
             this->pending_events.forget_about(*d);
@@ -240,12 +242,18 @@ namespace dovahscript::core::subsystems {
          //
          // Disconnect the signal:
          //
-         auto& events = this->connections[&widget][event_name];
-         #pragma warning(suppress: 6387) // listener_name should never be nullptr, so don't bother me about it
-         auto  it     = events.find(listener_name);
-         if (it != events.end()) {
-            QObject::disconnect(it->second);
-            events.erase(it);
+         auto& all_ev = this->connections[&widget];
+         auto& events = all_ev[event_name];
+         if (listener_name) {
+            auto it = events.find(listener_name);
+            if (it != events.end()) {
+               QObject::disconnect(it->second);
+               events.erase(it);
+            }
+         } else {
+            for (auto& pair : events)
+               QObject::disconnect(pair.second);
+            all_ev.erase(event_name);
          }
       }
       //
@@ -263,6 +271,9 @@ namespace dovahscript::core::subsystems {
       lua_rawset(L, start + 1);
       //
       widget.disconnect();
+      auto it = this->connections.find(&widget);
+      if (it != this->connections.end())
+         this->connections.erase(it);
       //
       lua_settop(L, start);
    }

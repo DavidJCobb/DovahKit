@@ -3,6 +3,7 @@
 #include "dovah.h"
 #include "dovah_package.h"
 #include "form_types.h"
+#include "ui.h"
 #include "unscoped.h"
 
 namespace dovahscript::lua_libraries {
@@ -11,6 +12,7 @@ namespace dovahscript::lua_libraries {
       dovah::import(L);
       dovah_package::import(L);
       form_types::import(L);
+      ui::import(L);
       unscoped::import(L);
    }
 }

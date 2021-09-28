@@ -141,6 +141,8 @@ namespace dovahscript::core::subsystems {
          void _clear_all_task_queues();
          void _send_blocking_task(task_queue::task_t&);
 
+         virtual bool eventFilter(QObject* watched, QEvent* event) override;
+
       public:
          lua_State*      lua_state = nullptr;
          std::thread     worker_thread;
@@ -161,6 +163,7 @@ namespace dovahscript::core::subsystems {
          void send_script_task(task_queue::task_t&);
          void send_ui_read_task(tasks::_ui_read_base&);
          void send_ui_write_task(tasks::_ui_write_base&);
+         void queue_lua_function(int function_stack_pos, bool lock_ui_for_function);
 
          // Client thread functions:
 

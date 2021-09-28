@@ -93,8 +93,10 @@ void DKCollapsiblePane::setViewport(QWidget* w) {
       } else {
          layout->removeWidget(prior);
       }
-      prior->setParent(nullptr);
-      delete prior;
+      if (prior->parent() == this) {
+         prior->setParent(nullptr);
+         delete prior;
+      }
    } else {
       //
       // No body.
