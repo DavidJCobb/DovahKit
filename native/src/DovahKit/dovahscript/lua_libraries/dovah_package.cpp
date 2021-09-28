@@ -33,7 +33,7 @@ namespace dovahscript::lua_libraries {
             return;
          //
          int type = lua_getglobal(L, "dovah");
-         assert(type == LUA_TTABLE, "the 'dovah' library needs to be imported before the 'dovah.package' library!");
+         assert(type == LUA_TTABLE && "the 'dovah' library needs to be imported before the 'dovah.package' library!");
          //
          lua_createtable(L, 0, _functions.size());
          cobb::lua::setfuncs(L, _functions);

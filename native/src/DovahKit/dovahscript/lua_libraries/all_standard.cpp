@@ -62,9 +62,9 @@ namespace {
             lua_pushnil(L); // STACK: [library, nil key]
             while (lua_next(L, base) != 0) {
                lua_pop(L, 1); // pop the value; keep the key for the next iteration
-               if (lua_type(L, -2) != LUA_TSTRING) // skip the key if it isn't a string. apparently (lua_tostring) can modify the key, which confuses (lua_next)
+               if (lua_type(L, -1) != LUA_TSTRING) // skip the key if it isn't a string. apparently (lua_tostring) can modify the key, which confuses (lua_next)
                   continue;
-               auto* key = lua_tostring(L, -2);
+               auto* key = lua_tostring(L, -1);
                bool  any = false;
                for (auto* allowed_key : library.allowed_keys) {
                   if (stricmp(key, allowed_key) == 0) {
@@ -73,7 +73,7 @@ namespace {
                   }
                }
                if (!any) { // this is not an allowed key
-                  lua_pushvalue(L, -2); // lua_settable pops its key, so we need to push a second copy
+                  lua_pushvalue(L, -1); // lua_settable pops its key, so we need to push a second copy
                   lua_pushnil(L);
                   lua_rawset(L, base);
                }
