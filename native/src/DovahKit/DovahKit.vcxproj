@@ -473,7 +473,12 @@
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
@@ -1125,6 +1130,7 @@
     <Text Include="dovahscript\_docs\cross-thread tasks.txt" />
     <Text Include="dovahscript\_docs\dovahscript resources.txt" />
     <Text Include="dovahscript\_docs\eval scripts.txt" />
+    <Text Include="dovahscript\_docs\event listeners.txt" />
     <Text Include="dovahscript\_docs\lifetime management.txt" />
     <Text Include="dovahscript\_docs\classes in Lua.txt" />
     <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />

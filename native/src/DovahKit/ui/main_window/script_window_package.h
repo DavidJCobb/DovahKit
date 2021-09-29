@@ -18,10 +18,12 @@ class EditorScriptPackageWindow : public QDialog {
       } state;
 
       QVector<script_packages::manifest> script_packages;
+      QVector<script_packages::manifest> user_loaded_packages;
 
       script_packages::manifest::version dovahkit_version;
 
    public slots:
+      void browseForPackage();
       void reloadPackageList();
       void redrawPackage();
       //

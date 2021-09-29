@@ -1,6 +1,7 @@
 #include "script_window_package.h"
 #include <QCloseEvent>
 #include <QDirIterator>
+#include <QFileDialog>
 #include <QMessageBox>
 #include "../generic/DKLuaSyntaxHighlighter.h"
 #include "../../dovahscript/dovahscript_host.h"
@@ -24,6 +25,7 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
    //
    QObject::connect(this->ui.packagePicker, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EditorScriptPackageWindow::redrawPackage);
    QObject::connect(this->ui.buttonRefreshPackageList, &QPushButton::clicked, this, &EditorScriptPackageWindow::reloadPackageList);
+   QObject::connect(this->ui.buttonBrowseForPackage, &QPushButton::clicked, this, &EditorScriptPackageWindow::browseForPackage);
 
    {
       auto& dv = this->dovahkit_version;
@@ -117,6 +119,41 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
    #pragma endregion
 }
 
+void EditorScriptPackageWindow::browseForPackage() {
+   auto path = QFileDialog::getExistingDirectory(this, tr("Select script package folder"), _get_script_path().path());
+   if (path.isEmpty())
+      return;
+   auto load = QFile(QDir(path).absoluteFilePath("manifest.xml"));
+   if (!load.open(QIODevice::ReadOnly)) {
+      QMessageBox::critical(this, tr("Failed to load script package"), tr("Unable to open the manifest.xml file. %1").arg(load.errorString()));
+      return;
+   }
+   script_packages::manifest_parser parser;
+   if (!parser.parse(load.readAll())) {
+      QMessageBox::critical(this, tr("Failed to load script package"), tr("This folder's manifest.xml file is not a valid script package manifest:\n\n%1").arg(parser.error_text()));
+      return;
+   }
+   auto  folder = path;
+   auto* widget = this->ui.packagePicker;
+   for (auto& prior : this->user_loaded_packages) {
+      if (prior.root_folder == folder) {
+         prior = parser.result();
+         prior.root_folder = folder;
+         //
+         int i = widget->findData(prior.root_folder.path(), Qt::UserRole);
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+         //
+         return;
+      }
+   }
+   this->user_loaded_packages.push_back(parser.result());
+   auto& added = this->user_loaded_packages.back();
+   added.root_folder = folder;
+   widget->addItem(added.name, added.root_folder.path());
+   widget->setCurrentIndex(widget->count() - 1);
+}
+
 void EditorScriptPackageWindow::reloadPackageList() {
    auto* widget = this->ui.packagePicker;
    const QSignalBlocker blocker(widget);
@@ -140,10 +177,64 @@ void EditorScriptPackageWindow::reloadPackageList() {
          }
       }
    }
+   {  // Update user-loaded packages
+      QVector<int> to_remove;
+      auto& list = this->user_loaded_packages;
+      int   size = list.size();
+      for (int i = 0; i < size; ++i) {
+         auto& pack = list[i];
+         //
+         // If (pack) is a package in the normal script package folder, then the above link will 
+         // have grabbed it. Remove it from the user-loaded package list.
+         //
+         auto  rel  = base.relativeFilePath(pack.root_folder.path());
+         if (!rel.startsWith("../")) {
+            if (rel.endsWith('/'))
+               rel.chop(1);
+            int seen = 0;
+            for (int j = 0; j < rel.size(); ++j)
+               if (rel[j] == '/')
+                  if (++seen > 1)
+                     break;
+            if (seen <= 1) {
+               to_remove.push_back(i);
+               continue;
+            }
+         }
+         //
+         // Else, verify that the package still exists, and remove it from the user-loaded package 
+         // list if it doesn't.
+         //
+         auto folder = pack.root_folder;
+         auto path   = folder.absoluteFilePath("manifest.xml");
+         //
+         auto load = QFile(path);
+         if (load.open(QIODevice::ReadOnly)) {
+            script_packages::manifest_parser parser;
+            if (parser.parse(load.readAll())) {
+               pack = parser.result();
+               pack.root_folder = folder;
+               continue;
+            }
+            qDebug("Failed to refresh user-loaded manifest: %s\n - %s", parser.error_text(), path);
+         } else {
+            qDebug("Failed to refresh user-loaded manifest: could not open the file: %s\n -  %s", load.errorString(), path);
+         }
+         to_remove.push_back(i);
+      }
+      if (!to_remove.empty()) {
+         size = to_remove.size();
+         for (int i = 0; i < size; ++i)
+            list.removeAt(to_remove[i] - i);
+      }
+   }
    //
    auto selection = widget->currentData().toString();
    widget->clear();
    for (auto& m : this->script_packages) {
+      widget->addItem(m.name, m.root_folder.path());
+   }
+   for (auto& m : this->user_loaded_packages) {
       widget->addItem(m.name, m.root_folder.path());
    }
    if (!selection.isEmpty()) {
@@ -289,10 +380,14 @@ void EditorScriptPackageWindow::logMessage(const QString& text) {
 
 script_packages::manifest* EditorScriptPackageWindow::_getSelectedManifest() noexcept {
    auto selection = this->ui.packagePicker->currentData().toString();
-   if (!selection.isEmpty())
+   if (!selection.isEmpty()) {
       for (auto& m : this->script_packages)
          if (m.root_folder == selection)
             return &m;
+      for (auto& m : this->user_loaded_packages)
+         if (m.root_folder == selection)
+            return &m;
+   }
    return nullptr;
 }
 

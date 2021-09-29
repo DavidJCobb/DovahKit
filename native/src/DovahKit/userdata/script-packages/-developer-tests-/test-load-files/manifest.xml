@@ -4,7 +4,11 @@
       <author name="DavidJCobb">
          <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
       </author>
-      <description>A package created by DovahKit's developers to test the script engine's functionality.</description>
+      <description>
+         A package created by DovahKit's developers to test the script engine's functionality.
+         
+         This package tests the code for loading basic image files from a script package's folder.
+      </description>
    </metadata>
    <files>
 jpeg-skim.lua

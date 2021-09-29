@@ -115,6 +115,7 @@ namespace dovahscript::core::subsystems {
    void events::on_script_teardown() {
       this->pending_events.clear();
       this->pending_event_count = 0;
+      this->connections.clear();
    }
 
    size_t events::process_pending_events() {
@@ -124,6 +125,7 @@ namespace dovahscript::core::subsystems {
 
    void events::abandon_object(QObject& target) {
       require_client_thread();
+      require_script_thread();
       //
       auto descendants = target.findChildren<QObject*>();
       bool had_any_connections;
@@ -262,7 +264,10 @@ namespace dovahscript::core::subsystems {
    void events::remove_all_listeners(QObject& widget) {
       require_script_thread();
       //
-      auto* L     = coordinator::get().lua_state;
+      auto& coordinator_s = coordinator::get();
+      if (coordinator_s.teardown_in_progress())
+         return;
+      auto* L     = coordinator_s.lua_state;
       auto  start = lua_gettop(L);
       //
       lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key);
@@ -270,12 +275,12 @@ namespace dovahscript::core::subsystems {
       lua_pushnil(L);
       lua_rawset(L, start + 1);
       //
+      lua_settop(L, start);
+      //
       widget.disconnect();
       auto it = this->connections.find(&widget);
       if (it != this->connections.end())
          this->connections.erase(it);
-      //
-      lua_settop(L, start);
    }
    void events::fire_event(QObject& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
       require_script_thread();
