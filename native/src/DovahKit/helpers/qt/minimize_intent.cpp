@@ -70,6 +70,31 @@ namespace cobb::qt {
          if (current > lowest)
             out += c;
       }
+      //
+      // Removing leading and trailing line breaks:
+      //
+      uint size  = text.size();
+      uint start = 0;
+      uint end   = size;
+      for (uint i = 0; i < size; ++i) {
+         QChar c = out[i];
+         if (c == '\r' || c == '\n')
+            ++start;
+         else
+            break;
+      }
+      for (uint i = size - 1; i >= start; ++i) {
+         QChar c = out[i];
+         if (c == '\r' || c == '\n')
+            --end;
+         else
+            break;
+      }
+      if (end < size)
+         out.chop(size - end);
+      if (start > 0)
+         out = out.mid(start);
+      //
       return out;
    }
 }

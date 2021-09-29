@@ -1,11 +1,13 @@
 #pragma once
 #include <QXmlStreamReader>
+#include "../../helpers/qt/xml_html_entity_resolver.h"
 #include "manifest.h"
 
 namespace script_packages {
    class manifest_parser {
       protected:
          QXmlStreamReader xml;
+         cobb::qt::xml::XmlHtmlEntityResolver entity_resolver;
          manifest out;
 
          static manifest::version _parse_version(QStringRef);
@@ -18,6 +20,8 @@ namespace script_packages {
          void _parse_files();
 
       public:
+         manifest_parser();
+
          bool parse(const QString& code);
 
          inline manifest result() const noexcept { return this->out; }

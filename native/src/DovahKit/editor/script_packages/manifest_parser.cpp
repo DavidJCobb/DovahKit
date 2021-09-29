@@ -18,6 +18,10 @@ namespace {
 }
 
 namespace script_packages {
+   manifest_parser::manifest_parser() {
+      this->xml.setEntityResolver(&this->entity_resolver);
+   }
+
    /*static*/ manifest::version manifest_parser::_parse_version(QStringRef text) {
       manifest::version out;
       //

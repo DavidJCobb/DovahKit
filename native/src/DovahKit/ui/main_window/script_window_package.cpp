@@ -26,12 +26,13 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
    QObject::connect(this->ui.packagePicker, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EditorScriptPackageWindow::redrawPackage);
    QObject::connect(this->ui.buttonRefreshPackageList, &QPushButton::clicked, this, &EditorScriptPackageWindow::reloadPackageList);
    QObject::connect(this->ui.buttonBrowseForPackage, &QPushButton::clicked, this, &EditorScriptPackageWindow::browseForPackage);
+   this->ui.packageBody->setCurrentIndex(0);
 
    {
       auto& dv = this->dovahkit_version;
       auto  v  = QApplication::applicationVersion();
       if (!v.isEmpty()) {
-         auto m = QRegularExpression(R"(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)").match(v);
+         auto m = QRegularExpression(R"--(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)--").match(v);
          if (m.hasMatch()) {
             dv.major = m.capturedRef(1).toInt();
             dv.minor = m.capturedRef(2).toInt();
