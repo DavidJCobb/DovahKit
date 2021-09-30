@@ -32,4 +32,10 @@ namespace cobb {
 
    template<typename T, bool = std::is_same_v<decltype(T::size), size_t(T::*)() const noexcept>> constexpr const bool has_standard_size_getter = false;
    template<typename T> constexpr const bool has_standard_size_getter<T, true> = true;
+
+   template<typename T> concept is_std_array = requires(T x) {
+      typename T::value_type;
+      requires !std::is_array_v<T>;
+      requires std::is_same_v<T, std::array<typename std::tuple_element<0, T>::type, std::tuple_size<T>::value>>;
+   };
 }

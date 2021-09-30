@@ -4,6 +4,7 @@
 #include <string>
 #include "../../helpers/memory.h"
 #include "../../helpers/miscellaneous.h"
+#include "../../helpers/type_traits.h"
 #include "../../core.h"
 #include "../common.h"
 
@@ -16,6 +17,11 @@ namespace dovah {
       class file_loader;
       class subrecord;
       class record;
+
+      template<typename T> concept IsLiteral = requires {
+         requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
+      };
+      template<typename T> concept IsLiteralIsh = IsLiteral<T> || (std::is_bounded_array_v<T> && IsLiteral<std::remove_extent_t<T>>);
 
       #pragma region Classes used to read specific elements of an ESP file (e.g. records, subrecords)
       class group {
@@ -191,11 +197,17 @@ namespace dovah {
             }
             inline bool read(char* buffer, uint32_t size) { return this->read((void*)buffer, size); }
             //
-            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
-            inline bool read(T& field) const {
-               if (!this->is_in_bounds(sizeof(field)))
-                  return false;
-               return this->get_containing_record().read(field);
+            template<typename T> requires (IsLiteralIsh<T> || cobb::is_std_array<T>) inline bool read(T& field) const {
+               if constexpr (cobb::is_std_array<T>) {
+                  if (!this->is_in_bounds(sizeof(T::value_type) * field.size()))
+                     return false;
+                  for (const auto& e : field)
+                     this->unchecked_read(e);
+               } else {
+                  if (!this->is_in_bounds(sizeof(field)))
+                     return false;
+                  return this->get_containing_record().read(field);
+               }
             }
             //
             bool read(std::string& field) const noexcept;
@@ -221,9 +233,13 @@ namespace dovah {
             // worth a few milliseconds per form, over thousands of forms? Sounds like it to me, but I can 
             // always redesign if it turns out to cause too many problems to be worth it.
             //
-            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
-            inline void unchecked_read(T& field) const {
-               this->get_containing_record().unchecked_read(field);
+            template<typename T> requires (IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) const {
+               if constexpr (cobb::is_std_array<T>) {
+                  for (const auto& e : field)
+                     this->unchecked_read(e);
+               } else {
+                  this->get_containing_record().unchecked_read(field);
+               }
             }
             inline void unchecked_read(form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
             inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }

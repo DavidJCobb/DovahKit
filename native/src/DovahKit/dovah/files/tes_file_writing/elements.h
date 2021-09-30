@@ -3,6 +3,7 @@
 #include <string>
 #include "../../helpers/memory.h"
 #include "../../helpers/miscellaneous.h"
+#include "../../helpers/type_traits.h"
 #include "../../core.h"
 #include "../common.h"
 
@@ -14,6 +15,11 @@ namespace dovah {
       class file_writer;
       class record;
       class subrecord;
+
+      template<typename T> concept IsLiteral = requires {
+         requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
+      };
+      template<typename T> concept IsLiteralIsh = IsLiteral<T> || (std::is_bounded_array_v<T> && IsLiteral<std::remove_extent_t<T>>);
 
       class group {
          friend class file_writer;
@@ -129,9 +135,14 @@ namespace dovah {
             // entirely of strings. Always use it for const char*.
             //
             void write(const void* source, uint32_t size);
-            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
-            inline void write(const T& v) {
-               this->write(&v, sizeof(T));
+            template<typename T> requires (IsLiteralIsh<T> || cobb::is_std_array<T>) inline void write(const T& v) {
+               if constexpr (cobb::is_std_array<T>) {
+                  for (const auto& e : v)
+                     this->write(e);
+                  return;
+               } else {
+                  this->write(&v, sizeof(T));
+               }
             }
             //
             inline void write(const std::string& v) {

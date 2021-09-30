@@ -23,7 +23,7 @@ namespace dovah::loaded_forms::components {
          }
          virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
-            subrecord.write(this->bytes.data());
+            subrecord.write(this->bytes);
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state&) {}
