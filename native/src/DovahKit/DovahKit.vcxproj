@@ -107,6 +107,7 @@
     <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\pull_rotation.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_color.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_alignment.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_variant.cpp" />
@@ -545,6 +546,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\rotation.h" />
@@ -1142,6 +1144,7 @@
     <Text Include="dovahscript\_docs\dovahscript resources.txt" />
     <Text Include="dovahscript\_docs\eval scripts.txt" />
     <Text Include="dovahscript\_docs\event listeners.txt" />
+    <Text Include="dovahscript\_docs\form APIs and thread-safety.txt" />
     <Text Include="dovahscript\_docs\lifetime management.txt" />
     <Text Include="dovahscript\_docs\classes in Lua.txt" />
     <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />

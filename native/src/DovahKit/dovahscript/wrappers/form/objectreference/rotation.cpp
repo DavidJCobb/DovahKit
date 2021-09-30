@@ -1,5 +1,6 @@
 #include "rotation.h"
 #include "../../../../helpers/lua/error.h"
+#include "../../../../helpers/rotation.h"
 #include "../../../core/subsystems/permissions.h"
 #include "../../../core/classes.h"
 #include "../../../wrapper.h"
@@ -17,7 +18,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         lua_pushnumber(L, form->rotation.x);
+         lua_pushnumber(L, cobb::radians_to_degrees(form->rotation.x));
          return 1;
       }
       int y(lua_State* L) {
@@ -25,7 +26,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         lua_pushnumber(L, form->rotation.y);
+         lua_pushnumber(L, cobb::radians_to_degrees(form->rotation.y));
          return 1;
       }
       int z(lua_State* L) {
@@ -33,7 +34,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         lua_pushnumber(L, form->rotation.z);
+         lua_pushnumber(L, cobb::radians_to_degrees(form->rotation.z));
          return 1;
       }
    }
@@ -47,7 +48,7 @@ namespace {
          if (!form)
             return 0;
          self.before_edit();
-         form->rotation.x = lua_tonumber(L, 2);
+         form->rotation.x = cobb::degrees_to_radians(lua_tonumber(L, 2));
          self.after_edit();
          return 0;
       }
@@ -60,7 +61,7 @@ namespace {
          if (!form)
             return 0;
          self.before_edit();
-         form->rotation.y = lua_tonumber(L, 2);
+         form->rotation.y = cobb::degrees_to_radians(lua_tonumber(L, 2));
          self.after_edit();
          return 0;
       }
@@ -73,7 +74,7 @@ namespace {
          if (!form)
             return 0;
          self.before_edit();
-         form->rotation.z = lua_tonumber(L, 2);
+         form->rotation.z = cobb::degrees_to_radians(lua_tonumber(L, 2));
          self.after_edit();
          return 0;
       }

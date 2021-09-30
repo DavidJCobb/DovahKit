@@ -1,0 +1,27 @@
+
+The DovahKit  backend -- the core code for  working with form stubs  and loaded 
+form data -- is  not thread-safe. There are no thread-locks  around the various 
+data properties on form stubs, nor are there thread-locks on loaded forms or on 
+the act of loading a form. As such, all form access must be single-threaded.
+
+DovahKit ensures thread-safety indirectly: Dovahscript is always launched via a 
+modal dialog,  blocking the user from interacting with the rest  of the program 
+and potentially altering or deleting forms out from under the script thread.
+
+There is one case where  Dovahscript must  make an  effort to coordinate across 
+threads, however:  the rest of DovahKit's frontend needs to  be notified when a 
+form is  about to be modified, and when that modification is complete;  and the 
+frontend needs time to fully respond to  these notifications. Accordingly, APIs 
+which modify forms must call two functions on the "wrapper" struct:
+
+   void wrapper::before_edit();
+
+   void wrapper::after_edit();
+
+These functions fire blocking cross-thread tasks, which in turn fire signals on 
+the core editor singleton and wait for  those signals to be responded to. There 
+is also some special machinery within the  coordinator subsystem which accounts 
+for  the possibility of the user  aborting the script between the "before"  and 
+"after" call (which would prevent the "after" task from executing), in order to 
+ensure that forms aren't left waiting forever for an edit whose completion will 
+never be signalled.

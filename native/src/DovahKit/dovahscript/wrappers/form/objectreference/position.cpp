@@ -28,6 +28,8 @@ namespace {
                   cobb::lua::error(L, "the desired position lies outside of any existing cells, and DovahKit was unable to create a new cell");
                case _::cannot_reparent_hardcoded_reference:
                   cobb::lua::error(L, "hardcoded references cannot safely be reparented");
+               case _::operation_not_allowed_on_form_working_copy: // shouldn't happen, as Lua should never be operating on working copies
+                  break;
             }
             cobb::lua::error(L, "an internal error occurred while trying to set the form's position");
          }
@@ -36,6 +38,8 @@ namespace {
 
    namespace _methods {
       int set_xyz(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+         //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)

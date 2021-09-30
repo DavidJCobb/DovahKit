@@ -8,6 +8,8 @@
 
 namespace dovah::loaded_forms {
    notice_code_t ObjectReference::set_position(cobb::vector3<float> position) {
+      if (this->is_working_copy)
+         return notice_code::operation_not_allowed_on_form_working_copy;
       auto* cell = this->stub.get_parent_form();
       if (!cell) // technically possible with PlayerRef
          return notice_code::cannot_set_position_of_orphaned_reference;
@@ -22,6 +24,8 @@ namespace dovah::loaded_forms {
       return this->set_position_and_world(position, *world);
    }
    notice_code_t ObjectReference::set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell) {
+      if (this->is_working_copy)
+         return notice_code::operation_not_allowed_on_form_working_copy;
       assert(world_or_cell.formType == form_type::cell || world_or_cell.formType == form_type::worldspace);
       if (world_or_cell.formType == dovah::form_type::worldspace) {
          return this->set_position_and_world(position, world_or_cell);
@@ -34,6 +38,8 @@ namespace dovah::loaded_forms {
       return this->set_position_and_cell(position, world_or_cell);
    }
    notice_code_t ObjectReference::set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell) {
+      if (this->is_working_copy)
+         return notice_code::operation_not_allowed_on_form_working_copy;
       if (this->stub.is_hardcoded())
          return notice_code::cannot_reparent_hardcoded_reference;
       auto* world = parent_cell.get_parent_form();
@@ -48,13 +54,14 @@ namespace dovah::loaded_forms {
          if (cx != gx || cy != gy)
             return notice_code::desired_position_is_outside_of_desired_cell;
       }
-      if (!this->is_working_copy)
-         this->stub.set_edited(true);
+      this->stub.set_edited(true);
       this->stub.set_parent_form(&parent_cell);
       this->position = position;
       return notice_code::none;
    }
    notice_code_t ObjectReference::set_position_and_world(cobb::vector3<float> position, form_stub& world) {
+      if (this->is_working_copy)
+         return notice_code::operation_not_allowed_on_form_working_copy;
       if (this->stub.is_hardcoded())
          return notice_code::cannot_reparent_hardcoded_reference;
       assert(world.formType == form_type::worldspace);
@@ -62,8 +69,7 @@ namespace dovah::loaded_forms {
       int32_t gy = position.y / 4096;
       auto* move_to_cell = form_stub_helpers::get_worldspace_cell_by_grid(&world, gx, gy);
       if (move_to_cell) {
-         if (!this->is_working_copy)
-            this->stub.set_edited(true);
+         this->stub.set_edited(true);
          this->stub.set_parent_form(move_to_cell);
          this->position = position;
          return notice_code::none;
@@ -83,8 +89,7 @@ namespace dovah::loaded_forms {
       move_to_cell = request.commit();
       if (!move_to_cell)
          return notice_code::failed_to_create_cell_to_move_reference_to;
-      if (!this->is_working_copy)
-         this->stub.set_edited(true);
+      this->stub.set_edited(true);
       this->stub.set_parent_form(move_to_cell);
       this->position = position;
       return notice_code::none;

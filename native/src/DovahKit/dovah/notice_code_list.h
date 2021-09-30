@@ -114,6 +114,7 @@ namespace dovah {
          desired_position_is_outside_of_desired_cell = 0x00000069, // You asked to move this REFR to an exterior cell, but the position you wanted to use is outside of that cell's bounds.
          failed_to_create_cell_to_move_reference_to  = 0x0000006A, // The coordinates you wanted to move this REFR to lie outside of any existing cells, and attempting to create a new cell failed (e.g. no form ID available).
          cannot_reparent_hardcoded_reference         = 0x0000006B, // Hardcoded references typically don't exist in a parent cell, and cannot be reparented.
+         operation_not_allowed_on_form_working_copy  = 0x0000006C,
       };
    };
 }

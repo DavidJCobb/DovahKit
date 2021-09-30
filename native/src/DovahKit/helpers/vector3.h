@@ -36,7 +36,11 @@ namespace cobb {
 
          constexpr vector3() {}
          constexpr vector3(T x, T y, T z) : x(x), y(y), z(z) {}
-         template<typename U> constexpr vector3(const std::array<U, axis_count>& a) {
+
+         template<typename U> requires std::is_arithmetic_v<U>
+         constexpr vector3(U x, U y, U z) : x(x), y(y), z(z) {}
+
+         template<typename U> explicit constexpr vector3(const std::array<U, axis_count>& a) {
             static_assert(std::is_arithmetic_v<U>, "cobb::vector3 can only be constructed with an array if it's an array of a numeric type.");
             this->x = a[0];
             this->y = a[1];

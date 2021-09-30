@@ -55,6 +55,9 @@ namespace dovahscript {
                define_wrapper_metatable<landscape_quad>(L);
                define_wrapper_metatable<landscape_quad_alpha_layer>(L);
                define_wrapper_metatable<landscape_quad_list>(L);
+            define_wrapper_metatable<objectreference>(L);
+               define_wrapper_metatable<objectreference_position>(L);
+               define_wrapper_metatable<objectreference_rotation>(L);
             define_wrapper_metatable<quest>(L);
                define_wrapper_metatable<quest_alias>(L);
                   define_wrapper_metatable<quest_loc_alias>(L);

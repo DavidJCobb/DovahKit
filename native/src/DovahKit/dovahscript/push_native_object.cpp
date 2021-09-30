@@ -21,6 +21,7 @@ namespace {
       std::pair{ dovah::form_type::formlist,      dovahscript::wrappers::formlist::metatable_key },
       std::pair{ dovah::form_type::land,          dovahscript::wrappers::landscape::metatable_key },
       std::pair{ dovah::form_type::land_texture,  dovahscript::wrappers::land_texture::metatable_key },
+      std::pair{ dovah::form_type::reference,     dovahscript::wrappers::objectreference::metatable_key },
       std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
       std::pair{ dovah::form_type::shout,         dovahscript::wrappers::shout::metatable_key },
       std::pair{ dovah::form_type::texture_set,   dovahscript::wrappers::texture_set::metatable_key },
