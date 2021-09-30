@@ -440,12 +440,12 @@ namespace dovah::tes_file_reading {
                subrecord.unchecked_read(this->header.nextFormID);
                break;
             case 'CNAM': // author/creator
-               if (!subrecord.to_string(this->header.author)) {
+               if (!subrecord.read(this->header.author)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;
             case 'SNAM': // description
-               if (!subrecord.to_string(this->header.description)) {
+               if (!subrecord.read(this->header.description)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;
@@ -456,7 +456,7 @@ namespace dovah::tes_file_reading {
                {
                   this->header.masters.emplace_back();
                   auto& last = *this->header.masters.rbegin();
-                  if (!subrecord.to_string(last.master)) {
+                  if (!subrecord.read(last.master)) {
                      return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                   }
                   if (this->header.masters.size() > 254) {

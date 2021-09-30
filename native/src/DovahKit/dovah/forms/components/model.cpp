@@ -7,7 +7,7 @@ namespace dovah::loaded_forms::components {
          case 'MODL':
          case 'MOD2':
          case 'DMDL': // for model path
-            subrecord.to_string(this->model_path);
+            subrecord.read(this->model_path);
             return true;
          case 'MODT':
          case 'MO2T':

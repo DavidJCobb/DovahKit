@@ -12,7 +12,7 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'CNAM':
                this->color.load(subrecord);

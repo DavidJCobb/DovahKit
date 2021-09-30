@@ -156,13 +156,13 @@ namespace dovah::loaded_forms::components {
                return true;
             if (next == 'CIS1') {
                auto& sub = record.next_subrecord();
-               sub.to_string(this->parameters[0].string);
+               sub.read(this->parameters[0].string);
                //
                next = record.peek_next_subrecord_type();
             }
             if (next == 'CIS2') {
                auto& sub = record.next_subrecord();
-               sub.to_string(this->parameters[1].string);
+               sub.read(this->parameters[1].string);
             }
             return true;
          }

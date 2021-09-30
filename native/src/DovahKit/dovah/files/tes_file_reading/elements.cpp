@@ -171,6 +171,37 @@ namespace dovah {
       record& subrecord::get_containing_record() const {
          return this->owner._record;
       }
+
+      bool subrecord::read(std::string& field) const noexcept {
+         field.clear();
+         auto length = this->size();
+         field.resize(length);
+         if (!this->read(const_cast<char*>(field.data()), length))
+            return false;
+         if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
+            field.resize(length - 1);
+         return true;
+      }
+      bool subrecord::read(localized_string& field) const noexcept {
+         field.value.clear();
+         if (this->owner.uses_string_table()) {
+            field.localized = localization_language::unknown;
+            bool result = this->read(field.index);
+            //
+            field.value = "<LOAD FAILED>";
+            if (auto* base = this->owner.loader) {
+               if (auto* store = base->localization_data) {
+                  field.value     = store->lookup(field.type, field.index);
+                  field.localized = store->get_default_language_enum();
+               }
+            }
+            //
+            field.exists = true;
+            return result;
+         }
+         return this->read(field.value);
+      }
+
       bool subrecord::read_signature(uint32_t& out) const noexcept {
          if (!this->read(out))
             return false;
@@ -196,35 +227,6 @@ namespace dovah {
             return this->read(buffer, length);
          }
          return false;
-      }
-      bool subrecord::to_string(std::string& field) {
-         field.clear();
-         auto length = this->size();
-         field.resize(length);
-         if (!this->read(const_cast<char*>(field.data()), length))
-            return false;
-         if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
-            field.resize(length - 1);
-         return true;
-      }
-      bool subrecord::to_string(localized_string& field) {
-         field.value.clear();
-         if (this->owner.uses_string_table()) {
-            field.localized = localization_language::unknown;
-            bool result = this->read(field.index);
-            //
-            field.value = "<LOAD FAILED>";
-            if (auto* base = this->owner.loader) {
-               if (auto* store = base->localization_data) {
-                  field.value     = store->lookup(field.type, field.index);
-                  field.localized = store->get_default_language_enum();
-               }
-            }
-            //
-            field.exists = true;
-            return result;
-         }
-         return this->to_string(field.value);
       }
       
       form_stub* subrecord::lookup_form_by_id(bare_form_id_t id) const noexcept {

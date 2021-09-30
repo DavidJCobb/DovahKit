@@ -30,7 +30,7 @@ namespace dovah::loaded_forms {
             case 'FULL':
                if (!intfc.is_winning_record)
                   break;
-               subrecord.to_string(this->text);
+               subrecord.read(this->text);
                break;
             case 'PNAM':
                if (subrecord.read(this->priority)) {

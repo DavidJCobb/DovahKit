@@ -186,7 +186,7 @@ namespace dovah::tes_file_reading {
          switch (subrecord.signature()) {
             case 'EDID':
                if (!(form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)) {
-                  subrecord.to_string(stub.editorID);
+                  subrecord.read(stub.editorID);
                }
                break;
             case 'PNAM':

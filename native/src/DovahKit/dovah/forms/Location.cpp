@@ -173,7 +173,7 @@ namespace dovah::loaded_forms {
             case 'FULL':
                if (!intfc.is_winning_record)
                   break;
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'KSIZ':
             case 'KWDA':

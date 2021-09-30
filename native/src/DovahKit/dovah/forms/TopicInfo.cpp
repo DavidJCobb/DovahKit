@@ -159,7 +159,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'RNAM':
-               if (subrecord.to_string(this->override_topic_text)) {
+               if (subrecord.read(this->override_topic_text)) {
                   this->load_flags |= load_flag::has_topic_text_override;
                }
                break;
@@ -213,7 +213,7 @@ namespace dovah::loaded_forms {
                   break;
                }
                if (!partial) {
-                  subrecord.to_string(this->responses.back().text);
+                  subrecord.read(this->responses.back().text);
                }
                break;
             case 'NAM2':
@@ -222,7 +222,7 @@ namespace dovah::loaded_forms {
                   break;
                }
                if (!partial) {
-                  subrecord.to_string(this->responses.back().script_notes);
+                  subrecord.read(this->responses.back().script_notes);
                }
                break;
             case 'NAM3':
@@ -231,7 +231,7 @@ namespace dovah::loaded_forms {
                   break;
                }
                if (!partial) {
-                  subrecord.to_string(this->responses.back().edits);
+                  subrecord.read(this->responses.back().edits);
                }
                break;
             case 'LNAM':

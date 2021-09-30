@@ -21,28 +21,28 @@ namespace dovah::loaded_forms {
                this->bounds.load(subrecord, intfc);
                break;
             case 'TX00':
-               subrecord.to_string(this->textures.diffuse);
+               subrecord.read(this->textures.diffuse);
                break;
             case 'TX01':
-               subrecord.to_string(this->textures.normal);
+               subrecord.read(this->textures.normal);
                break;
             case 'TX02':
-               subrecord.to_string(this->textures.environment_mask);
+               subrecord.read(this->textures.environment_mask);
                break;
             case 'TX03':
-               subrecord.to_string(this->textures.glow_map);
+               subrecord.read(this->textures.glow_map);
                break;
             case 'TX04':
-               subrecord.to_string(this->textures.height);
+               subrecord.read(this->textures.height);
                break;
             case 'TX05':
-               subrecord.to_string(this->textures.cubemap);
+               subrecord.read(this->textures.cubemap);
                break;
             case 'TX06':
-               subrecord.to_string(this->textures.multilayer);
+               subrecord.read(this->textures.multilayer);
                break;
             case 'TX07':
-               subrecord.to_string(this->textures.backlight);
+               subrecord.read(this->textures.backlight);
                break;
             case 'DNAM':
                subrecord.read(this->texture_flags);

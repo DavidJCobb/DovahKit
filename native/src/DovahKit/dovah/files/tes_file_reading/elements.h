@@ -181,9 +181,6 @@ namespace dovah {
             
             inline uint32_t containing_record_signature() const { return this->get_containing_record().signature(); }
             
-            bool to_string(std::string& field);
-            bool to_string(localized_string& field); // TODO: implement string table support
-            
             inline bool skip_bytes(uint32_t count) const { return this->get_containing_record().skip(count); }
             
             #pragma region read
@@ -193,13 +190,18 @@ namespace dovah {
                return this->get_containing_record().read(buffer, size);
             }
             inline bool read(char* buffer, uint32_t size) { return this->read((void*)buffer, size); }
-            template<typename T> inline bool read(T& field) const {
+            //
+            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
+            inline bool read(T& field) const {
                if (!this->is_in_bounds(sizeof(field)))
                   return false;
                return this->get_containing_record().read(field);
             }
-            template<> inline bool read(form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
-            template<> inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
+            //
+            bool read(std::string& field) const noexcept;
+            bool read(localized_string& field) const noexcept;
+            inline bool read(form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
+            inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
             #pragma endregion
             
             #pragma region unchecked_read
@@ -219,11 +221,12 @@ namespace dovah {
             // worth a few milliseconds per form, over thousands of forms? Sounds like it to me, but I can 
             // always redesign if it turns out to cause too many problems to be worth it.
             //
-            template<typename T> inline void unchecked_read(T& field) const {
+            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
+            inline void unchecked_read(T& field) const {
                this->get_containing_record().unchecked_read(field);
             }
-            template<> inline void unchecked_read(form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
-            template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
+            inline void unchecked_read(form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
+            inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
             #pragma endregion
             
             bool read_signature(uint32_t& out) const noexcept;

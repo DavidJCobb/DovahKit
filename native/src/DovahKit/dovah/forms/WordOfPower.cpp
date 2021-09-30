@@ -12,10 +12,10 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'FULL':
-               subrecord.to_string(this->dragon_name);
+               subrecord.read(this->dragon_name);
                break;
             case 'TNAM':
-               subrecord.to_string(this->human_name);
+               subrecord.read(this->human_name);
                break;
             default:
                intfc.log_load_warning(

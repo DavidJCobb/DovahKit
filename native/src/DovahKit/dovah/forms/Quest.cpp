@@ -34,7 +34,7 @@ namespace dovah::loaded_forms {
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'ALID':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'FNAM':
                subrecord.read(this->flags);
@@ -677,7 +677,7 @@ namespace dovah::loaded_forms {
          }
          void Quest::LogEntry::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
             assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
-            subrecord.to_string(this->journal_text);
+            subrecord.read(this->journal_text);
          }
          bool Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
             auto& QSDT = record.open_next_subrecord('QSDT');
@@ -815,7 +815,7 @@ namespace dovah::loaded_forms {
                   subrecord.read(this->flags);
                   break;
                case 'NNAM':
-                  subrecord.to_string(this->text);
+                  subrecord.read(this->text);
                   return;
                default:
                   {
@@ -896,7 +896,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
@@ -987,7 +987,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'FLTR':
-               subrecord.to_string(this->filter);
+               subrecord.read(this->filter);
                break;
             case 'NEXT':
                isInEventConditions = true;

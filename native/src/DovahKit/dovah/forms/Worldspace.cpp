@@ -161,7 +161,7 @@ namespace dovah::loaded_forms {
                this->object_bounds.load(subrecord, intfc);
                break;
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'WCTR':
                subrecord.read(this->center_cell_coordinates.x);
@@ -229,7 +229,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->parent.flags);
                break;
             case 'ICON':
-               subrecord.to_string(this->map_icon);
+               subrecord.read(this->map_icon);
                break;
             case 'MODL':
             case 'MODT':
@@ -271,19 +271,19 @@ namespace dovah::loaded_forms {
                );
                break;
             case 'NNAM':
-               subrecord.to_string(this->tree_canopy_shadow);
+               subrecord.read(this->tree_canopy_shadow);
                break;
             case 'XNAM':
-               subrecord.to_string(this->water_environment_map);
+               subrecord.read(this->water_environment_map);
                break;
             case 'TNAM':
-               subrecord.to_string(this->hd_lod_diffuse_texture);
+               subrecord.read(this->hd_lod_diffuse_texture);
                break;
             case 'UNAM':
-               subrecord.to_string(this->hd_lod_normal_texture);
+               subrecord.read(this->hd_lod_normal_texture);
                break;
             case 'XWEM':
-               subrecord.to_string(this->water_environment_map);
+               subrecord.read(this->water_environment_map);
                break;
             case 'OFST':
                //

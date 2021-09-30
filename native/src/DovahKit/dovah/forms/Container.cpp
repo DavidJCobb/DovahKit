@@ -21,7 +21,7 @@ namespace dovah::loaded_forms {
                this->bounds.load(subrecord, intfc);
                break;
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'MODL':
             case 'MODT':

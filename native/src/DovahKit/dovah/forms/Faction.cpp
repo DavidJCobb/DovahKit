@@ -44,7 +44,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'XNAM':
                {
@@ -116,11 +116,11 @@ namespace dovah::loaded_forms {
                break;
             case 'FNAM':
                if (!this->ranks.empty())
-                  subrecord.to_string(this->ranks.back().title_fem);
+                  subrecord.read(this->ranks.back().title_fem);
                break;
             case 'MNAM':
                if (!this->ranks.empty())
-                  subrecord.to_string(this->ranks.back().title_masc);
+                  subrecord.read(this->ranks.back().title_masc);
                break;
             case 'VEND':
                subrecord.read(this->vendor_list);

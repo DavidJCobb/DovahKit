@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'MDOB':
                subrecord.read(this->menu_display_object);
@@ -40,7 +40,7 @@ namespace dovah::loaded_forms {
                );
                break;
             case 'DESC':
-               subrecord.to_string(this->description);
+               subrecord.read(this->description);
                break;
             case 'SNAM':
                if (current_word < this->words.size()) {

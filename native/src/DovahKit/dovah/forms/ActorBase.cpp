@@ -157,10 +157,10 @@ namespace dovah::loaded_forms {
                //
                break;
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'SHRT':
-               subrecord.to_string(this->short_name);
+               subrecord.read(this->short_name);
                break;
             case 'ACBS':
                if (record.version() < 0x1D) {

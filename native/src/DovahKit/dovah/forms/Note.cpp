@@ -18,7 +18,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'MODL':
             case 'MODT':
@@ -61,7 +61,7 @@ namespace dovah::loaded_forms {
                   intfc.log_load_warning(warning);
                   break;
                }
-               subrecord.to_string(this->content.image);
+               subrecord.read(this->content.image);
                break;
             case 'YNAM':
                if (subrecord.read(this->take_sound)) {
@@ -89,7 +89,7 @@ namespace dovah::loaded_forms {
                         switch (subrecord.signature()) {
                            case 'ICON': // this handler should never actually run
                               handled = true;
-                              subrecord.to_string(this->content.image);
+                              subrecord.read(this->content.image);
                               break;
                         }
                         break;
@@ -109,7 +109,7 @@ namespace dovah::loaded_forms {
                         switch (subrecord.signature()) {
                            case 'TNAM':
                               handled = true;
-                              subrecord.to_string(this->content.text);
+                              subrecord.read(this->content.text);
                               break;
                         }
                         break;

@@ -14,7 +14,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       if (record.peek_next_subrecord_type() == 'FULL') {
          auto& subrecord = record.next_subrecord();
-         subrecord.to_string(this->name);
+         subrecord.read(this->name);
          if (record.peek_next_subrecord_type() == 'TNAM') { // the game only checks for TNAM after FULL
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->type);

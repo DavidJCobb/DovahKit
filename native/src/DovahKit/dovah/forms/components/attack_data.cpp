@@ -59,11 +59,11 @@ namespace dovah::loaded_forms::components {
             warning.set_cause_subrecord(next.signature());
             intfc.log_load_warning(warning);
          }
-         subrecord.to_string(this->event);
+         subrecord.read(this->event);
          return;
       }
       if (signature == 'ATKE') {
-         subrecord.to_string(this->event);
+         subrecord.read(this->event);
          return;
       }
    }

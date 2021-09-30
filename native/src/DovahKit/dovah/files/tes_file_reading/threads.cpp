@@ -458,7 +458,7 @@ namespace dovah::tes_file_reading::threads {
                auto& EDID = record.next_subrecord();
                if (EDID.signature() == 'EDID') {
                   std::string name;
-                  EDID.to_string(name);
+                  EDID.read(name);
                   working.name = name;
                   working.definition = game_setting_definition::lookup(name.c_str());
                } else {
@@ -510,7 +510,7 @@ namespace dovah::tes_file_reading::threads {
                         no_read_error = subrecord.read(working.value.i);
                         break;
                      case game_setting_type::string:
-                        no_read_error = subrecord.to_string(working.value.s);
+                        no_read_error = subrecord.read(working.value.s);
                         break;
                      default:
                         {

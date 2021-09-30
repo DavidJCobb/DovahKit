@@ -92,7 +92,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
          continue;
       auto& store = DovahKitFormDataCache::get();
       std::string raw;
-      subrecord.to_string(raw);
+      subrecord.read(raw);
       //
       auto& set   = store._data.quest_filters;
       auto  guard = std::lock_guard(set.lock);
@@ -108,7 +108,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
          continue;
       auto& store = DovahKitFormDataCache::get();
       std::string raw;
-      subrecord.to_string(raw);
+      subrecord.read(raw);
       //
       auto& set   = store._data.static_models;
       auto  guard = std::lock_guard(set.lock);

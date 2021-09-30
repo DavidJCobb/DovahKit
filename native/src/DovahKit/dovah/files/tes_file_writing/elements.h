@@ -129,7 +129,7 @@ namespace dovah {
             // entirely of strings. Always use it for const char*.
             //
             void write(const void* source, uint32_t size);
-            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
             inline void write(const T& v) {
                this->write(&v, sizeof(T));
             }

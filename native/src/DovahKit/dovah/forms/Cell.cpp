@@ -21,7 +21,7 @@ namespace dovah::loaded_forms {
                loaded_cell_flags = true;
                break;
             case 'FULL':
-               subrecord.to_string(this->name);
+               subrecord.read(this->name);
                break;
             case 'XCLC':
                if (!loaded_cell_flags) {
@@ -102,7 +102,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'XNAM':
-               subrecord.to_string(this->water.noise_texture);
+               subrecord.read(this->water.noise_texture);
                break;
             case 'OBND':
                this->has_object_bounds = true;

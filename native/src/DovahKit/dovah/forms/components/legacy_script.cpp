@@ -41,7 +41,7 @@ namespace dovah::loaded_forms::components {
             }
             break;
          case 'SCTX':
-            subrecord.to_string(this->source_code);
+            subrecord.read(this->source_code);
             break;
          case 'QNAM':
             subrecord.read(this->quest);
