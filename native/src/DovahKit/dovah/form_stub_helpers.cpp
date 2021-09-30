@@ -9,7 +9,7 @@ namespace dovah::form_stub_helpers {
          return;
       for (auto& pair : parent->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+         if (entry.flags & use_info_entry::flag::parent_child) {
             auto* child = entry.other;
             if (!child)
                continue;
@@ -51,7 +51,7 @@ namespace dovah::form_stub_helpers {
       const form_stub* persistent_cell = get_worldspace_persistent_cell(world);
       for (auto& pair : world->inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+         if (!(entry.flags & use_info_entry::flag::parent_child))
             continue;
          auto* cell = entry.other;
          if (!cell || cell->formType != form_type::cell)
@@ -75,7 +75,7 @@ namespace dovah::form_stub_helpers {
             return land;
       for (auto& pair : cell->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+         if (entry.flags & use_info_entry::flag::parent_child) {
             auto* child = entry.other;
             if (!child)
                continue;

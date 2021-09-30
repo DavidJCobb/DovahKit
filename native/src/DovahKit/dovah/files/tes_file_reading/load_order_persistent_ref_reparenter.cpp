@@ -105,7 +105,7 @@ namespace dovah::tes_file_reading {
             use_info_list entries_to_keep;
             for (auto& pair : p_cell->inbound) {
                auto& entry = pair.second;
-               if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+               if (entry.flags & use_info_entry::flag::parent_child) {
                   auto* child = entry.other;
                   if (child && form_type_info::form_type_is_reference(child->formType)) {
                      this->threads[index].add_to_queue(*child);
@@ -140,7 +140,7 @@ namespace dovah::tes_file_reading {
             for (auto* stub : queue) {
                auto* cell = stub->get_parent_form();
                assert(cell);
-               cell->receive_inbound_ref(stub, 1, use_info_entry::flag::i_am_parent_of);
+               cell->receive_inbound_ref(stub, 1, use_info_entry::flag::parent_child);
             }
          }
          return false;

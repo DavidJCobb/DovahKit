@@ -1,11 +1,95 @@
 #include "ObjectReference.h"
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
+#include "../form_stub_helpers.h"
 #include "factories/hardcoded.h"
 #include "components/extra_data/enable_state_parent.h"
 #include "components/extra_data/_use_info.h"
 
 namespace dovah::loaded_forms {
+   notice_code_t ObjectReference::set_position(cobb::vector3<float> position) {
+      auto* cell = this->stub.get_parent_form();
+      if (!cell) // technically possible with PlayerRef
+         return notice_code::cannot_set_position_of_orphaned_reference;
+      if (!cell->is_exterior_cell()) {
+         if (!this->is_working_copy)
+            this->stub.set_edited(true);
+         this->position = position;
+         return notice_code::none;
+      }
+      auto* world = cell->get_parent_form();
+      assert(world && "How is an exterior cell not in a worldspace?");
+      return this->set_position_and_world(position, *world);
+   }
+   notice_code_t ObjectReference::set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell) {
+      assert(world_or_cell.formType == form_type::cell || world_or_cell.formType == form_type::worldspace);
+      if (world_or_cell.formType == dovah::form_type::worldspace) {
+         return this->set_position_and_world(position, world_or_cell);
+      }
+      if (world_or_cell.is_exterior_cell()) {
+         auto* world = world_or_cell.get_parent_form();
+         assert(world != nullptr);
+         return this->set_position_and_world(position, *world);
+      }
+      return this->set_position_and_cell(position, world_or_cell);
+   }
+   notice_code_t ObjectReference::set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell) {
+      if (this->stub.is_hardcoded())
+         return notice_code::cannot_reparent_hardcoded_reference;
+      auto* world = parent_cell.get_parent_form();
+      if (world) {
+         assert(world->formType == form_type::worldspace && "How is a cell a child of a non-worldspace form?");
+         assert(parent_cell.is_exterior_cell() && "How is an interior cell a child of a worldspace?");
+         int32_t cx;
+         int32_t cy;
+         parent_cell.get_grid_coordinates(cx, cy);
+         int32_t gx = position.x / 4096;
+         int32_t gy = position.y / 4096;
+         if (cx != gx || cy != gy)
+            return notice_code::desired_position_is_outside_of_desired_cell;
+      }
+      if (!this->is_working_copy)
+         this->stub.set_edited(true);
+      this->stub.set_parent_form(&parent_cell);
+      this->position = position;
+      return notice_code::none;
+   }
+   notice_code_t ObjectReference::set_position_and_world(cobb::vector3<float> position, form_stub& world) {
+      if (this->stub.is_hardcoded())
+         return notice_code::cannot_reparent_hardcoded_reference;
+      assert(world.formType == form_type::worldspace);
+      int32_t gx = position.x / 4096;
+      int32_t gy = position.y / 4096;
+      auto* move_to_cell = form_stub_helpers::get_worldspace_cell_by_grid(&world, gx, gy);
+      if (move_to_cell) {
+         if (!this->is_working_copy)
+            this->stub.set_edited(true);
+         this->stub.set_parent_form(move_to_cell);
+         this->position = position;
+         return notice_code::none;
+      }
+      //
+      // There's no existing cell bounding the desired REFR coordinates, so we'll 
+      // have to try and create a new cell.
+      //
+      auto& lo      = this->stub.get_owning_load_order();
+      auto  request = lo.request_form_creation(dovah::form_type::cell);
+      if (!request.is_valid())
+         return notice_code::failed_to_create_cell_to_move_reference_to;
+      request.set_parent_form(&world);
+      request.cell_grid_coordinates.x = gx;
+      request.cell_grid_coordinates.y = gy;
+      request.cell_grid_coordinates.present = true;
+      move_to_cell = request.commit();
+      if (!move_to_cell)
+         return notice_code::failed_to_create_cell_to_move_reference_to;
+      if (!this->is_working_copy)
+         this->stub.set_edited(true);
+      this->stub.set_parent_form(move_to_cell);
+      this->position = position;
+      return notice_code::none;
+   }
+
    void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //

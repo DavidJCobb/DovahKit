@@ -105,7 +105,7 @@ namespace dovah {
       auto& stub = this->_stub;
       for (auto& pair : stub.outbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_child_of)
+         if (entry.flags & use_info_entry::flag::parent_child)
             parent_entry = entry;
       }
       stub.outbound.clear();

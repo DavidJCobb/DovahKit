@@ -204,7 +204,7 @@ do
             local refs = cell:get_all_refs()
             for i = 1, #refs do
                local form = refs[i]
-               if form.enabled then
+               if not form.disabled then
                   local base = form.base_form
                   if false then -- if the base form is of interest
                      local p = form.position

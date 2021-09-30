@@ -2994,7 +2994,7 @@ namespace dovah {
             return;
          }
          //
-         if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+         if (entry.flags & use_info_entry::flag::parent_child) {
             assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and in fact is currently being deleted)?");
             if (_form_should_be_flagged(*entry.other)) {
                this->forms_needing_flag.insert(entry.other);

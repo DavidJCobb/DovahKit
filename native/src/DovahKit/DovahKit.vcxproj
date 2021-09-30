@@ -199,6 +199,9 @@
     <ClCompile Include="dovahscript\wrappers\form\land_texture.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\land_texture\collection_grasses.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\land_texture\havok.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\objectreference.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\objectreference\position.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\objectreference\rotation.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\root.cpp" />
@@ -415,6 +418,7 @@
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
+    <ClCompile Include="helpers\all_html_entities.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
@@ -447,6 +451,7 @@
     <ClCompile Include="helpers\qt\traversal.cpp" />
     <ClCompile Include="helpers\qt\url.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
+    <ClCompile Include="helpers\qt\xml_html_entity_resolver.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
     <ClCompile Include="helpers\set_current_thread_name.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
@@ -541,6 +546,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
+    <ClInclude Include="dovahscript\wrappers\form\objectreference.h" />
+    <ClInclude Include="dovahscript\wrappers\form\objectreference\rotation.h" />
+    <ClInclude Include="dovahscript\wrappers\form\objectreference\position.h" />
+    <ClInclude Include="helpers\all_html_entities.h" />
+    <ClInclude Include="helpers\lua\is_invocable.h" />
+    <ClInclude Include="helpers\qt\xml_html_entity_resolver.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />

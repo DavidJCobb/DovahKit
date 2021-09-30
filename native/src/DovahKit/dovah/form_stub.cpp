@@ -12,20 +12,6 @@
 #include "logging.h"
 
 namespace dovah {
-   /*static*/ use_info_entry::flags_t use_info_entry::invert_flags(use_info_entry::flags_t f) {
-      using flag = use_info_entry::flag;
-      //
-      flags_t flags = f;
-      //
-      flags &= ~(flag::i_am_child_of | flag::i_am_parent_of);
-      if (f & use_info_entry::flag::i_am_child_of)
-         flags |= use_info_entry::flag::i_am_parent_of;
-      else if (f & use_info_entry::flag::i_am_parent_of)
-         flags |= use_info_entry::flag::i_am_child_of;
-      //
-      return flags;
-   }
-
    form_stub::form_stub() {
       this->file = file_data();
    }
@@ -395,6 +381,9 @@ namespace dovah {
          return false;
       return true;
    }
+   file_load_order& form_stub::get_owning_load_order() const noexcept {
+      return this->_get_load_order();
+   }
    bool form_stub::is_edited_or_in_active_file() const noexcept {
       if (this->is_edited())
          return true;
@@ -554,10 +543,8 @@ namespace dovah {
       // as already-sent outbound connections would be sent again.
       //
       for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it) {
-         use_info_entry::flags_t flags = use_info_entry::invert_flags(it->second.flags);
-         //
          if (it->second.other)
-            it->second.other->receive_inbound_ref(this, it->second.refcount, flags);
+            it->second.other->receive_inbound_ref(this, it->second.refcount, it->second.flags);
       }
    }
    void form_stub::receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
@@ -624,10 +611,10 @@ namespace dovah {
       for (auto it = list.begin(); it != list.end(); ++it) {
          auto& pair  = *it;
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_child_of) {
+         if (entry.flags & use_info_entry::flag::parent_child) {
             if (entry.other == parent)
                return;
-            entry.flags &= ~use_info_entry::flag::i_am_child_of;
+            entry.flags &= ~use_info_entry::flag::parent_child;
             if (--entry.refcount == 0)
                list.erase(it);
             break;
@@ -636,7 +623,7 @@ namespace dovah {
       //
       // Set the new parent form.
       //
-      this->_add_one_way_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
+      this->_add_one_way_outbound_reference(parent, use_info_entry::flag::parent_child);
    }
    #pragma endregion
 
@@ -779,7 +766,7 @@ namespace dovah {
    bool form_stub::has_child_forms() const noexcept {
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_parent_of)
+         if (entry.flags & use_info_entry::flag::parent_child)
             return true;
       }
       return false;
@@ -789,7 +776,7 @@ namespace dovah {
          auto& entry = pair.second;
          if (!entry.other)
             continue;
-         if (!(entry.flags & use_info_entry::flag::i_am_child_of))
+         if (!(entry.flags & use_info_entry::flag::parent_child))
             continue;
          return entry.other;
       }
@@ -801,7 +788,7 @@ namespace dovah {
          auto& pair = *it;
          if (pair.first != child.formID)
             continue;
-         if (pair.second.flags & use_info_entry::flag::i_am_parent_of)
+         if (pair.second.flags & use_info_entry::flag::parent_child)
             return true;
       }
       return false;
@@ -810,7 +797,7 @@ namespace dovah {
       auto* parent = this->get_parent_form();
       if (!parent)
          return;
-      this->revoke_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
+      this->revoke_outbound_reference(parent, use_info_entry::flag::parent_child);
       if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
          parent->_remove_child_topic_info(*this, false);
    }
@@ -821,7 +808,7 @@ namespace dovah {
       this->orphan();
       if (!target)
          return;
-      this->replace_outbound_reference(0, target, use_info_entry::flag::i_am_child_of);
+      this->replace_outbound_reference(0, target, use_info_entry::flag::parent_child);
       if (target->formType == form_type::topic && this->formType == form_type::topic_info)
          target->_insert_child_topic_info(*this);
    }
@@ -833,7 +820,7 @@ namespace dovah {
       }
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+         if (!(entry.flags & use_info_entry::flag::parent_child))
             continue;
          auto stub = entry.other;
          if (stub->is_edited() || stub->is_any_descendant_form_edited())
@@ -848,7 +835,7 @@ namespace dovah {
       auto& owner = this->_get_load_order();
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+         if (!(entry.flags & use_info_entry::flag::parent_child))
             continue;
          auto stub = entry.other;
          if (owner.is_defined_or_overridden_in_active_file(*stub))
@@ -930,7 +917,7 @@ namespace dovah {
          auto& pair  = *it;
          auto& entry = pair.second;
          if (pair.first == this->formID) {
-            entry.flags &= ~use_info_entry::invert_flags(flags);
+            entry.flags &= ~flags;
             if (--entry.refcount == 0)
                target_list.erase(it);
             break;
@@ -994,7 +981,7 @@ namespace dovah {
          return;
       //
       this->_add_one_way_outbound_reference(new_stub, flags);
-      new_stub->receive_inbound_ref(this, 1, use_info_entry::invert_flags(flags));
+      new_stub->receive_inbound_ref(this, 1, flags);
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
       auto& lo       = this->_get_load_order();

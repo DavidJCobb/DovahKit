@@ -174,7 +174,7 @@ void RefPickerWindow::_populateRefList() {
    if (this->_cell) {
       for (auto& pair : this->_cell->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & dovah::use_info_entry::flag::i_am_parent_of) {
+         if (entry.flags & dovah::use_info_entry::flag::parent_child) {
             QString text;
             this->_stringifyRef(*entry.other, text);
             widget->addItem(text, QVariant::fromValue<void*>(entry.other));

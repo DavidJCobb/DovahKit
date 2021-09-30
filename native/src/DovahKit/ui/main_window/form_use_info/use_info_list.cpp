@@ -116,9 +116,10 @@ FormUseInfoListModel::FormUseInfoListModel(QObject* parent) : QAbstractTableMode
 void FormUseInfoListModel::addUser(const use_info_entry& entry, bool queued) {
    using _ue_flag = dovah::use_info_entry::flag;
    //
-   // Do not list child forms as "using" their parents, in the UI:
+   // Do not list child forms as "using" their parents, in the UI. The entry 
+   // we process here will always be an inbound entry.
    //
-   if (entry.flags & (_ue_flag::i_am_parent_of)) {
+   if (entry.flags & (_ue_flag::parent_child)) {
       if (entry.refcount <= 1)
          return;
    }

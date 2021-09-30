@@ -1,7 +1,7 @@
 #pragma once
 #include "../core.h"
 #include "impl/component_templates.h"
-#include "components/papyrus.h" // include needed because MSVC is too stupid to properly recognize (papyrus_attachment_data) as a virtual function's return type if merely forward-declared, apparently
+#include "components/papyrus.h" // include needed because MSVC can't recognize a using-declaration as a virtual function's return type if merely forward-declared, apparently
 
 namespace dovah {
    class file_load_order;

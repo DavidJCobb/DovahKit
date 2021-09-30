@@ -68,8 +68,7 @@ namespace dovah {
       struct flag {
          flag() = delete;
          enum type : uint8_t {
-            i_am_child_of    = 0x01, // (this) is the child of (other)
-            i_am_parent_of   = 0x02, // (other) is the child of (this)
+            parent_child    = 0x01, // the user-form is a child of the used-form
             //
             // The next flags are useful for unique and high-importance relationships between 
             // specific forms. These must be relationships that can only exist once; for example, 
@@ -84,9 +83,9 @@ namespace dovah {
             // flag for both subrecords could in that situation cause use info mismanagement should 
             // either subrecord be altered after load.
             //
-            object_reference = 0x04, // REFR/NAME: the user-form is a reference and the used-form is its base form
-            dialogue_branch  = 0x08, // DIAL/BNAM
-            dialogue_quest   = 0x10, // DIAL/QNAM and DLBR/QNAM
+            object_reference = 0x02, // REFR/NAME: the user-form is a reference and the used-form is its base form
+            dialogue_branch  = 0x04, // DIAL/BNAM
+            dialogue_quest   = 0x08, // DIAL/QNAM and DLBR/QNAM
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -94,8 +93,6 @@ namespace dovah {
       form_stub* other    = nullptr;
       uint32_t   refcount = 0;
       flags_t    flags    = 0;
-      //
-      static flags_t invert_flags(flags_t);
    };
    using use_info_list = std::map<bare_form_id_t, use_info_entry>;
    #pragma endregion
@@ -234,8 +231,9 @@ namespace dovah {
          //
          uint32_t get_file_offset(int16_t file_index = -1) const noexcept;
          #pragma endregion
-         //
+         
          bool can_unload_form() const noexcept;
+         file_load_order& get_owning_load_order() const noexcept;
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }

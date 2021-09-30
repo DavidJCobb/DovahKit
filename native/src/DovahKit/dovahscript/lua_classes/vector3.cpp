@@ -1,17 +1,22 @@
 #include "vector3.h"
+#include <array>
 #include <cmath>
 #include "../../helpers/lua/error.h"
+#include "../../helpers/lua/is_invocable.h"
 
 namespace {
    using namespace dovahscript;
    using cls = lua_classes::vector3;
 
+   constexpr const std::array axis_names = { "x", "y", "z" };
+
    int _simple_vector_operator_overload(lua_State* L, int op) { // returns new vector
       cls::require_self_type(L);
       auto rawtype = lua_type(L, 2);
       if (rawtype != LUA_TTABLE && rawtype != LUA_TUSERDATA) {
-         cobb::lua::error(L, "bad argument #%i (expected table or userdata)", 2);
+         cobb::lua::argerror(L, 2, "expected table or userdata");
       }
+      lua_settop(L, 2);
       //
       lua_getfield(L, 1, "x");
       lua_getfield(L, 2, "x");
@@ -32,26 +37,32 @@ namespace {
       cls::require_self_type(L);
       auto rawtype = lua_type(L, 2);
       if (rawtype != LUA_TTABLE && rawtype != LUA_TUSERDATA) {
-         cobb::lua::error(L, "bad argument #%i (expected table or userdata)", 2);
+         cobb::lua::argerror(L, 2, "expected table or userdata");
       }
-      //
-      lua_getfield(L, 1, "x");
-      lua_getfield(L, 2, "x");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "x");
-      //
-      lua_getfield(L, 1, "y");
-      lua_getfield(L, 2, "y");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "y");
-      //
-      lua_getfield(L, 1, "z");
-      lua_getfield(L, 2, "z");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "z");
-      //
-      lua_settop(L, 1); // return (self) to allow chaining
-      return 1;
+      lua_settop(L, 2);
+      lua_getfield(L, 1, "set_xyz");
+      if (cobb::lua::is_invocable(L, -1)) {
+         for (const auto* name : axis_names) {
+            lua_getfield(L, 1, name);
+            lua_getfield(L, 2, name);
+            lua_arith(L, op);
+         }
+         lua_call(L, 4, 0);
+         return 0;
+      } else {
+         //
+         // A subclass overrode (set_xyz) with an unusable value. Fall back to 
+         // setting fields one by one.
+         //
+         lua_pop(L, 1);
+         for (const auto* name : axis_names) {
+            lua_getfield(L, 1, name);
+            lua_getfield(L, 2, name);
+            lua_arith(L, op);
+            lua_setfield(L, 1, name);
+         }
+      }
+      return 0;
    }
 
    namespace _methods {
@@ -62,20 +73,16 @@ namespace {
          cls::require_self_type(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "expected non-zero number");
          auto scalar = lua_tonumber(L, 2);
-         if (scalar == 0.0)
-            cobb::lua::error(L, "bad argument #%i (expected non-zero number; got zero)", 2);
+         cobb::lua::argcheck(L, scalar != 0.0, 2, "expected non-zero divisor; got zero");
+         lua_settop(L, 1);
          //
-         lua_getfield  (L, 1, "x");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 3
-         lua_getfield  (L, 1, "y");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 4
-         lua_getfield  (L, 1, "z");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 5
+         for (const auto* name : axis_names) {
+            lua_getfield  (L, 1, name);   // 3...
+            lua_pushnumber(L, scalar);    // 4...
+            lua_arith     (L, LUA_OPDIV); // 3...
+         }
          //
-         cls::push_new_instance(L, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+         cls::push_new_instance(L, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
          return 1;
       }
       int __sub(lua_State* L) { // creates and returns new vector
@@ -96,26 +103,32 @@ namespace {
          cls::require_self_type(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "expected non-zero number");
          auto scalar = lua_tonumber(L, 2);
-         if (scalar == 0.0)
-            cobb::lua::error(L, "bad argument #%i (expected non-zero number; got zero)", 2);
+         cobb::lua::argcheck(L, scalar != 0.0, 2, "expected non-zero divisor; got zero");
          //
-         lua_getfield  (L, 1, "x");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 3
-         lua_setfield  (L, 1, "x");
-         //
-         lua_getfield  (L, 1, "y");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 4
-         lua_setfield  (L, 1, "y");
-         //
-         lua_getfield  (L, 1, "z");
-         lua_pushnumber(L, scalar);
-         lua_arith     (L, LUA_OPDIV); // 5
-         lua_setfield  (L, 1, "z");
-         //
-         lua_settop(L, 1); // return (self) to allow chaining
-         return 1;
+         lua_settop(L, 1);
+         lua_getfield(L, 1, "set_xyz");
+         if (cobb::lua::is_invocable(L, -1)) {
+            for (const auto* name : axis_names) {
+               lua_getfield  (L, 1, name);
+               lua_pushnumber(L, scalar);
+               lua_arith     (L, LUA_OPDIV);
+            }
+            lua_call(L, 4, 0);
+            return 0;
+         } else {
+            //
+            // A subclass overrode (set_xyz) with an unusable value. Fall back to 
+            // setting fields one by one.
+            //
+            lua_pop(L, 1);
+            for (const auto* name : axis_names) {
+               lua_getfield  (L, 1, name);
+               lua_pushnumber(L, scalar);
+               lua_arith     (L, LUA_OPDIV);
+               lua_setfield  (L, 1, name);
+            }
+         }
+         return 0;
       }
       int copy(lua_State* L) {
          cls::require_self_type(L);
@@ -169,9 +182,9 @@ namespace {
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
          lua_getfield(L, 1, "z");
-         x = lua_tonumber(L, 3);
-         y = lua_tonumber(L, 4);
-         z = lua_tonumber(L, 5);
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
+         z = lua_tonumber(L, 4);
          //
          lua_Number length = sqrt(x*x + y*y + z*z);
          lua_pushnumber(L, length);
@@ -186,13 +199,83 @@ namespace {
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
          lua_getfield(L, 1, "z");
-         x = lua_tonumber(L, 3);
-         y = lua_tonumber(L, 4);
-         z = lua_tonumber(L, 5);
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
+         z = lua_tonumber(L, 4);
          //
          lua_Number length = x*x + y*y + z*z;
          lua_pushnumber(L, length);
          return 1;
+      }
+      int normalize(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         lua_checkstack(L, 4);
+         //
+         lua_Number x, y, z;
+         lua_getfield(L, 1, "x");
+         lua_getfield(L, 1, "y");
+         lua_getfield(L, 1, "z");
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
+         z = lua_tonumber(L, 4);
+         lua_Number length = sqrt(x * x + y * y + z * z);
+         //
+         lua_settop(L, 2);
+         lua_getfield(L, 1, "set_xyz");
+         if (cobb::lua::is_invocable(L, -1)) {
+            lua_pushnumber(L, x / length);
+            lua_pushnumber(L, y / length);
+            lua_pushnumber(L, z / length);
+            lua_call(L, 4, 0);
+            return 0;
+         } else {
+            //
+            // A subclass overrode (set_xyz) with an unusable value. Fall back to 
+            // setting fields one by one.
+            //
+            lua_pop(L, 1);
+            lua_pushnumber(L, x / length);
+            lua_setfield(L, 1, "x");
+            lua_pushnumber(L, y / length);
+            lua_setfield(L, 1, "y");
+            lua_pushnumber(L, z / length);
+            lua_setfield(L, 1, "z");
+         }
+         return 0;
+      }
+      int normalized(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         lua_checkstack(L, 4);
+         //
+         lua_Number x, y, z;
+         lua_getfield(L, 1, "x");
+         lua_getfield(L, 1, "y");
+         lua_getfield(L, 1, "z");
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
+         z = lua_tonumber(L, 4);
+         //
+         lua_Number length = sqrt(x * x + y * y + z * z);
+         cls::push_new_instance(L, x / length, y / length, z / length);
+         return 1;
+      }
+      int set_xyz(lua_State* L) {
+         //
+         // Default implementation. Subclasses, particularly native code, could replace 
+         // this function in order to more efficiently handle overwriting an entire 
+         // vector3 instance.
+         //
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number (x) expected");
+         cobb::lua::argcheck(L, lua_isnumber(L, 3), 3, "number (y) expected");
+         cobb::lua::argcheck(L, lua_isnumber(L, 4), 4, "number (z) expected");
+         lua_settop(L, 4);
+         lua_setfield(L, 1, "z");
+         lua_setfield(L, 1, "y");
+         lua_setfield(L, 1, "x");
+         return 0;
       }
       int sub(lua_State* L) { // modifies (self)
          return _simple_vector_assign_operator_overload(L, LUA_OPSUB);
@@ -250,6 +333,9 @@ namespace dovahscript::lua_classes {
       { "cross",          &_methods::cross },
       { "length",         &_methods::length },
       { "length_squared", &_methods::length_squared },
+      { "normalize",      &_methods::normalize },  // modify the vector in-place
+      { "normalized",     &_methods::normalized }, // return a normalized copy
+      { "set_xyz",        &_methods::set_xyz },
       { "sub",            &_methods::sub },   // operator-=
    };
 

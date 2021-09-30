@@ -110,6 +110,10 @@ namespace dovah {
          landscape_quads_can_only_have_six_layers    = 0x00000065, // LAND full load: a landscape quad can only have six layers; higher layers overwrite the sixth at run-time.
          havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
          landscape_heights_are_too_steep             = 0x00000067, // This landscape cannot be saved, because there is too steep a slope somewhere in its heightmap.
+         cannot_set_position_of_orphaned_reference   = 0x00000068, // This REFR has no parent (e.g. PlayerRef) and so cannot be moved.
+         desired_position_is_outside_of_desired_cell = 0x00000069, // You asked to move this REFR to an exterior cell, but the position you wanted to use is outside of that cell's bounds.
+         failed_to_create_cell_to_move_reference_to  = 0x0000006A, // The coordinates you wanted to move this REFR to lie outside of any existing cells, and attempting to create a new cell failed (e.g. no form ID available).
+         cannot_reparent_hardcoded_reference         = 0x0000006B, // Hardcoded references typically don't exist in a parent cell, and cannot be reparented.
       };
    };
 }
