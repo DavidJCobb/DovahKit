@@ -36,20 +36,19 @@ namespace {
          auto* stub = self.stub;
          if (!stub)
             return 0;
-         lua_settop(L, 2);
+         lua_settop(L, 1);
          lua_createtable(L, 0, 0);
          int i = 1;
-         for (auto& pair : stub->inbound) {
-            auto& entry = pair.second;
-            auto* form  = entry.other;
-            if (!form || !dovah::form_type_info::form_type_is_reference(form->formType))
-               continue;
-            if (!form->test_record_flags(dovah::tes_file_record_header::flag::persistent))
-               continue;
-            int argcount = push_native_object(form);
+         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
+            if (!child || !dovah::form_type_info::form_type_is_reference(child->formType))
+               return false;
+            if (!child->test_record_flags(dovah::tes_file_record_header::flag::persistent))
+               return false;
+            int argcount = push_native_object(child);
             while (argcount--)
                lua_rawseti(L, 2, i++);
-         }
+            return false;
+         });
          return 1;
       }
       int get_all_refs(lua_State* L) {
@@ -57,18 +56,17 @@ namespace {
          auto* stub = self.stub;
          if (!stub)
             return 0;
-         lua_settop(L, 2);
+         lua_settop(L, 1);
          lua_createtable(L, stub->inbound.size() / 2, 0);
          int i = 1;
-         for (auto& pair : stub->inbound) {
-            auto& entry = pair.second;
-            auto* form  = entry.other;
-            if (!form || !dovah::form_type_info::form_type_is_reference(form->formType))
-               continue;
-            int argcount = push_native_object(form);
+         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
+            if (!child || !dovah::form_type_info::form_type_is_reference(child->formType))
+               return false;
+            int argcount = push_native_object(child);
             while (argcount--)
                lua_rawseti(L, 2, i++);
-         }
+            return false;
+         });
          return 1;
       }
    }

@@ -37,7 +37,6 @@ namespace cobb {
          explicit inline operator std::ptrdiff_t() const { return (std::ptrdiff_t)this->_data; }
 
          generic_buffer() {};
-         generic_buffer(uint32_t bytes) { this->resize(bytes); }
          ~generic_buffer() {
             this->clear();
          }

@@ -238,7 +238,14 @@ namespace {
          //
          cobb::euler value;
          if (!api_helpers::pull_rotation(L, 2, value)) {
-            cobb::lua::argerror(L, 2, "the argument was not recognizable as an euler, matrix3x3, or a quaternion, nor a list of 3, 9, or 4 numbers");
+            if (lua_type(L, 2) == LUA_TTABLE) {
+               lua_len(L, 2);
+               bool faux_euler = (lua_tonumber(L, -1) == 3);
+               lua_pop(L, 1);
+               if (faux_euler)
+                  cobb::lua::argerror(L, 2, "you must construct and pass an euler object; a table of three numbers is not sufficient, because we can't tell whether those are degrees or radians");
+            }
+            cobb::lua::argerror(L, 2, "the argument was not recognizable as an euler, matrix3x3, or a quaternion, nor a list of 9 (matrix) or 4 (quaternion) numbers");
          }
          if (!form)
             return 0;
@@ -272,11 +279,11 @@ namespace dovahscript::wrappers {
       //
       for (auto& def : _helpers::refr_flags) {
          lua_pushinteger(L, def.value);
-         lua_pushcclosure(L, &_getters::_flag, 3);
+         lua_pushcclosure(L, &_getters::_flag, 1);
          lua_setfield(L, index_getter_list, def.name);
          //
          lua_pushinteger(L, def.value);
-         lua_pushcclosure(L, &_setters::_flag, 3);
+         lua_pushcclosure(L, &_setters::_flag, 1);
          lua_setfield(L, index_setter_list, def.name);
       }
    }

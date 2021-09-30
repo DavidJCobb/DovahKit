@@ -42,12 +42,13 @@ namespace {
       lua_settop(L, 2);
       lua_getfield(L, 1, "set_xyz");
       if (cobb::lua::is_invocable(L, -1)) {
+         lua_pushvalue(L, 1);
          for (const auto* name : axis_names) {
             lua_getfield(L, 1, name);
             lua_getfield(L, 2, name);
             lua_arith(L, op);
          }
-         lua_call(L, 4, 0);
+         lua_call(L, axis_names.size() + 1, 0);
          return 0;
       } else {
          //
@@ -108,12 +109,13 @@ namespace {
          lua_settop(L, 1);
          lua_getfield(L, 1, "set_xyz");
          if (cobb::lua::is_invocable(L, -1)) {
+            lua_pushvalue(L, 1);
             for (const auto* name : axis_names) {
                lua_getfield  (L, 1, name);
                lua_pushnumber(L, scalar);
                lua_arith     (L, LUA_OPDIV);
             }
-            lua_call(L, 4, 0);
+            lua_call(L, axis_names.size() + 1, 0);
             return 0;
          } else {
             //
@@ -138,9 +140,9 @@ namespace {
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
          lua_getfield(L, 1, "z");
-         x = lua_tonumber(L, 3);
-         y = lua_tonumber(L, 4);
-         z = lua_tonumber(L, 5);
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
+         z = lua_tonumber(L, 4);
          //
          cls::push_new_instance(L, x, y, z);
          return 1;
@@ -227,7 +229,7 @@ namespace {
             lua_pushnumber(L, x / length);
             lua_pushnumber(L, y / length);
             lua_pushnumber(L, z / length);
-            lua_call(L, 4, 0);
+            lua_call(L, 3, 0);
             return 0;
          } else {
             //

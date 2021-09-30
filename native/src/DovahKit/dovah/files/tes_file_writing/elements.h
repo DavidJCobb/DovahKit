@@ -129,21 +129,19 @@ namespace dovah {
             // entirely of strings. Always use it for const char*.
             //
             void write(const void* source, uint32_t size);
-            template<typename T> inline void write(const T& v) {
+            template<typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+            inline void write(const T& v) {
                this->write(&v, sizeof(T));
             }
-            template<> inline void write(const std::string& v) {
+            //
+            inline void write(const std::string& v) {
                this->write(v.c_str(), v.size() + 1);
             }
-            template<> inline void write(const cobb::generic_buffer& v) {
+            inline void write(const cobb::generic_buffer& v) {
                this->write(v.data(), v.size());
             }
-            template<> inline void write(const form_reference_t& field) { return this->_write_impl(field); }
-            template<> inline void write(const localized_string& field) { return this->_write_impl(field); }
-            template<> inline void write(const tes_file_group_header& v) = delete;
-            template<> inline void write(const tes_file_record_header& v) = delete;
-            template<> inline void write(const tes_file_subrecord_header& v) = delete;
-            template<> inline void write(const form_id_t& v) = delete;
+            inline void write(const form_reference_t& field) { return this->_write_impl(field); } // a form_id_t overload is intentionally not provided; we need a stub pointer to do this safely
+            inline void write(const localized_string& field) { return this->_write_impl(field); }
             //
             void write_signature(uint32_t);
             //

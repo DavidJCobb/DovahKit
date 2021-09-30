@@ -176,7 +176,7 @@ void EditorSingleScriptWindow::_onScriptStartStop(bool script_running) {
 void EditorSingleScriptWindow::_updateEvalEnableState() {
    bool enable = this->state.script_running && !this->state.eval_pending;
    this->ui.actionRunEval->setEnabled(enable);
-   this->ui.eval->setReadOnly(!enable);
+   this->ui.eval->setReadOnly(this->state.eval_pending);
 }
 
 bool EditorSingleScriptWindow::_checkAllowClose() {

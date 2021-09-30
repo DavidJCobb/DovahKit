@@ -317,8 +317,8 @@ namespace dovah {
          form_stub* stub           = nullptr;
          uint8_t    use_info_flags = 0;
          //
-         form_reference_t(uint8_t f) : use_info_flags(f) {}
-         form_reference_t(uint8_t f, form_stub* s) : use_info_flags(f), stub(s) {}
+         explicit form_reference_t(uint8_t f) : use_info_flags(f) {}
+         explicit form_reference_t(uint8_t f, form_stub* s) : use_info_flags(f), stub(s) {}
          //
       public:
          form_reference_t() {}

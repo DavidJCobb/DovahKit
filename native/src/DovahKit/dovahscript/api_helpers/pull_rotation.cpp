@@ -30,8 +30,8 @@ namespace {
             return _type::matrix;
          if (len == 4)
             return _type::quaternion;
-         if (len == 3)
-            return _type::euler;
+         //if (len == 3)
+         //   return _type::euler; // NO! If the user passes { 1, 2, 3 } we have no way of knowing whether those are radians or degrees!
       }
       return _type::unknown;
    }
@@ -57,16 +57,12 @@ namespace dovahscript::api_helpers {
                   lua_getfield(L, index, list[i]);
                   if (!lua_isnumber(L, -1)) {
                      lua_pop(L, 1);
-                     lua_geti(L, 2, i + 1);
-                     if (!lua_isnumber(L, -1)) {
-                        lua_pop(L, 1);
-                        return false;
-                     }
+                     return false;
                   }
                }
-               result.x = cobb::degrees_to_radians(lua_tonumber(L, -3));
-               result.y = cobb::degrees_to_radians(lua_tonumber(L, -2));
-               result.z = cobb::degrees_to_radians(lua_tonumber(L, -1));
+               result.x = lua_tonumber(L, -3);
+               result.y = lua_tonumber(L, -2);
+               result.z = lua_tonumber(L, -1);
                lua_pop(L, 3);
                return true;
             }

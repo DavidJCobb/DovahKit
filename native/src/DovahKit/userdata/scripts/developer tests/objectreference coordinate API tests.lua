@@ -2,9 +2,23 @@ cell = dovah.get_form_by_id(0x1000D62)
 assert(cell ~= nil)
 assert(cell.editor_id == "DovahKitRotateTest")
 
+do
+   local w = ui.window.new()
+   w.title = "opening this to allow debugging"
+   w:show()
+end
+
 Group = {}
 do
    local CACHED_MASK_OFFSET = false
+   
+   local round = math.round -- Dovahscript-provided extension; uses C++ std::round internally
+   if not round then
+      -- Polyfill: FPU hack from Stack Overflow
+      round = function(n)
+         return n + (2^52 + 2^51) + (2^52 + 2^51)
+      end
+   end
 
    Group.__index = Group
    function Group:new(statue, mask)
@@ -18,15 +32,15 @@ do
          instance.position = statue.position:copy()
       else
          local p = mask.position:copy()
-         p.x = math.floor(x / 128) * 128
-         p.y = math.floor(x / 128) * 128
+         p.x = round(p.x / 128) * 128
+         p.y = round(p.y / 128) * 128
          p.z = 0
          instance.position = p
       end
       return instance
    end
-   function Group:distance_sq(ref)
-      return (self.position - ref):length_squared()
+   function Group:distance_sq(pos)
+      return (self.position - pos):length_squared()
    end
    function Group:is_whole()
       if self.statue then
@@ -40,7 +54,10 @@ do
       if statue then
          pos = statue.position
       else
-         pos = mask.position
+         pos = mask.position:copy()
+         pos.x = round(pos.x / 128) * 128
+         pos.y = round(pos.y / 128) * 128
+         pos.z = 0
       end
       local a = self.position - pos
       if a:length_squared() < 64 then
@@ -57,12 +74,12 @@ do
          CACHED_MASK_OFFSET = {}
          --
          local br = basis.rotation
-         do
+         do -- extract relative rotation
             local parent = br:to_quaternion()
             local offset = child.rotation:to_quaternion()
-            CACHED_MASK_OFFSET.rotation = (parent:transpose_in_place() * offset):to_euler()
+            CACHED_MASK_OFFSET.rotation = (parent:inverse() * offset):to_euler()
          end
-         do
+         do -- extract relative position
             local p_world = false
             local p_local = false
             local r_world = br:to_matrix()
@@ -109,16 +126,19 @@ do
       local mask   = nil
       if base == XMarker then
          marker = ref
+         goto continue
       elseif base == Krosis then
          mask = ref
       elseif base == StatueDibella then
          statue = ref
+      else
+         goto continue -- could be architecture, etc.
       end
       --
       local found = false
       for j = 1, #groups do
          if groups[j] then
-            local r = groups[j]:receive(statue, ref)
+            local r = groups[j]:receive(statue, mask)
             if r then
                found = true
                break
@@ -129,6 +149,7 @@ do
          local g = Group:new(statue, mask)
          groups[#groups + 1] = g
       end
+      ::continue::
    end
    dovah.log_message("Found all groups.")
    --
@@ -141,7 +162,7 @@ do
       local MAX <const> = 64 * 64
       for i = 1, #groups do
          local group = groups[i]
-         if group:distance_sq(mp) < MAX then
+         if group:is_whole() and group:distance_sq(mp) < MAX then
             dovah.log_message("Found control group.")
             group.control = true
             break
@@ -155,15 +176,20 @@ if #groups == 0 then
 end
 
 dovah.log_message("Rotating groups...")
+do -- seed RNG
+   local a = math.floor(os.clock() * 1000)
+   local b = math.floor(os.clock() * 1000) >> 2
+   math.randomseed(a, b)
+end
 for i = 1, #groups do
    local group = groups[i]
-   if not group.control then
+   if group:is_whole() and not group.control then
       local angle = euler.from_degrees(
          math.random(0, 359),
          math.random(0, 359),
          math.random(0, 359)
       )
-      dovah.log_message("(%s, %s, %s)", angle.x, angle.y, angle.z)
+      dovah.log_message("%s", angle)
       group:rotate(angle)
    end
 end

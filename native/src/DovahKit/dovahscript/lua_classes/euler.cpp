@@ -10,7 +10,7 @@ namespace {
    using cls = lua_classes::euler;
 
    namespace _methods {
-      int __tostring(lua_State* L) { // creates and returns new vector
+      int __tostring(lua_State* L) {
          lua_settop(L, 1);
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
@@ -61,6 +61,73 @@ namespace {
          //
          lua_classes::quaternion::push_new_instance(L, converted);
          return 1;
+      }
+   }
+   namespace _getters {
+      int x_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         lua_getfield(L, 1, "x");
+         auto value = cobb::radians_to_degrees(lua_tonumber(L, 2));
+         lua_settop(L, 0);
+         lua_pushnumber(L, value);
+         return 1;
+      }
+      int y_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         lua_getfield(L, 1, "y");
+         auto value = cobb::radians_to_degrees(lua_tonumber(L, 2));
+         lua_settop(L, 0);
+         lua_pushnumber(L, value);
+         return 1;
+      }
+      int z_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         lua_getfield(L, 1, "z");
+         auto value = cobb::radians_to_degrees(lua_tonumber(L, 2));
+         lua_settop(L, 0);
+         lua_pushnumber(L, value);
+         return 1;
+      }
+   }
+   namespace _setters {
+      int x_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         lua_settop(L, 2);
+         //
+         auto value = std::fmod(lua_tonumber(L, 2), 360.0);
+         value = cobb::degrees_to_radians(value);
+         lua_pop(L, 1);
+         lua_pushnumber(L, value);
+         lua_setfield(L, 1, "x");
+         return 0;
+      }
+      int y_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         lua_settop(L, 2);
+         //
+         auto value = std::fmod(lua_tonumber(L, 2), 360.0);
+         value = cobb::degrees_to_radians(value);
+         lua_pop(L, 1);
+         lua_pushnumber(L, value);
+         lua_setfield(L, 1, "y");
+         return 0;
+      }
+      int z_degrees(lua_State* L) {
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         lua_settop(L, 2);
+         //
+         auto value = std::fmod(lua_tonumber(L, 2), 360.0);
+         value = cobb::degrees_to_radians(value);
+         lua_pop(L, 1);
+         lua_pushnumber(L, value);
+         lua_setfield(L, 1, "z");
+         return 0;
       }
    }
 
@@ -156,6 +223,16 @@ namespace dovahscript::lua_classes {
       { "to_matrix",     &_methods::to_matrix },
       { "to_quaternion", &_methods::to_quaternion },
    };
+   /*static*/ std::initializer_list<luaL_Reg> cls::metatable_getters = {
+      { "x_degrees", &_getters::x_degrees },
+      { "y_degrees", &_getters::y_degrees },
+      { "z_degrees", &_getters::z_degrees },
+   };
+   /*static*/ std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "x_degrees", &_setters::x_degrees },
+      { "y_degrees", &_setters::y_degrees },
+      { "z_degrees", &_setters::z_degrees },
+   };
 
    /*static*/ void cls::push_new_instance(lua_State* L, const cobb::euler& raw) {
       lua_createtable  (L, 0, 3);
@@ -174,7 +251,7 @@ namespace dovahscript::lua_classes {
    }
 
    /*static*/ void cls::setup(lua_State* L) {
-      classes::define_class(L, metatable_key, nullptr, metatable_methods);
+      classes::define_class(L, metatable_key, nullptr, metatable_methods, metatable_getters, metatable_setters);
       //
       // Create singleton:
       //

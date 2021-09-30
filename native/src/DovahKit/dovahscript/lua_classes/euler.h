@@ -10,6 +10,8 @@ namespace dovahscript::lua_classes {
          static constexpr const char* global_name   = "euler";
          static constexpr const char* metatable_key = "dovah.classes.euler";
          static std::initializer_list<luaL_Reg> metatable_methods;
+         static std::initializer_list<luaL_Reg> metatable_getters;
+         static std::initializer_list<luaL_Reg> metatable_setters;
 
          inline static bool check_arg_type(lua_State* L, int i) {
             return classes::check_for_class(L, i, metatable_key);

@@ -12,10 +12,10 @@ namespace {
          const char* name;
          std::vector<const char*> allowed_keys;
          //
-         _lib(const char* n, std::initializer_list<const char*> l) : name(n), allowed_keys(l) {}
+         _lib(const char* n, const std::initializer_list<const char*> l) : name(n), allowed_keys(l) {}
       };
 
-      std::array _libraries = {
+      static const std::array _libraries = {
          //
          // This array should contain only libraries that we want to whitelist functions for. If we 
          // want to include a library and not bother pruning its functions at all, then we shouldn't 
@@ -52,7 +52,6 @@ namespace {
             "clock",
          }),
       };
-
       
       void _prune_standard_library(lua_State* L, const char* libname) {
          for (auto& library : _libraries) {
@@ -83,6 +82,17 @@ namespace {
       }
    #pragma endregion
 
+   namespace _extensions {
+      namespace math {
+         int round(lua_State* L) {
+            cobb::lua::argcheck(L, lua_isnumber(L, 1), 1, "number expected");
+            auto v = lua_tonumber(L, 1);
+            lua_pop(L, 1);
+            lua_pushnumber(L, std::round(v));
+            return 1;
+         }
+      }
+   }
    namespace _shims {
       int collectgarbage(lua_State* L) {
          luaL_argcheck(L, lua_isstring(L, 1), 1, "The argument must be a string.");
@@ -165,10 +175,19 @@ namespace dovahscript::lua_libraries {
             lua_rawset(L, ti);
          }
          _prune_standard_library(L, "basic"); // also pops the library from the Lua stack
+         //
          luaL_requiref(L, "debug", luaopen_debug, 1);
          _prune_standard_library(L, "debug");
+         //
          luaL_requiref(L, "math", luaopen_math, 1);
+         {  // math extensions
+            lua_pushcfunction(L, &_extensions::math::round);
+            lua_setfield(L, -2, "round");
+         }
          _prune_standard_library(L, "math");
+         //
+         luaL_requiref(L, "os", luaopen_os, 1);
+         _prune_standard_library(L, "os");
          luaL_requiref(L, "string", luaopen_string, 1);
          _prune_standard_library(L, "string");
          luaL_requiref(L, "table", luaopen_table, 1);

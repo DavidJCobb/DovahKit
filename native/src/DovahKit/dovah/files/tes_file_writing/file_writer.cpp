@@ -313,10 +313,12 @@ namespace dovah::tes_file_writing {
       //
       form_stub* worldspace      = stub->get_parent_form();
       form_stub* persistent_cell = nullptr;
-      if (worldspace->formType == dovah::form_type::worldspace) {
-         persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(worldspace);
-      } else {
-         worldspace = nullptr;
+      if (worldspace) {
+         if (worldspace->formType == dovah::form_type::worldspace) {
+            persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(worldspace);
+         } else {
+            worldspace = nullptr;
+         }
       }
       //
       std::vector<form_stub*> persistent;
