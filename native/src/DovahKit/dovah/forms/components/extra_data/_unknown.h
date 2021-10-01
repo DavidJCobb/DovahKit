@@ -33,9 +33,6 @@ namespace dovah::loaded_forms::components::extra::unknown {
    class XNVP : public empty_extra_data<'XNVP', extra_data_type::unknown_xnvp> {
       // The game skips loading this subrecord, and no one's ever seen it before.
    };
-   class XPSL : public empty_extra_data<'XPSL', extra_data_type::unknown_xpsl> {
-      // The game skips loading this subrecord, and no one's ever seen it before.
-   };
    class XROO : public empty_extra_data<'XROO', extra_data_type::unknown_xroo> {
       // The game skips loading this subrecord, and no one's ever seen it before.
    };

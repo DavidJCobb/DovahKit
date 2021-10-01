@@ -554,6 +554,7 @@
     <ClInclude Include="helpers\all_html_entities.h" />
     <ClInclude Include="helpers\lua\is_invocable.h" />
     <ClInclude Include="helpers\qt\xml_html_entity_resolver.h" />
+    <ClInclude Include="helpers\static_string.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
