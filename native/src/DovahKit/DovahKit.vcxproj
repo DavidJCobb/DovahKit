@@ -544,6 +544,8 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
+    <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
+    <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
@@ -556,7 +558,9 @@
     <ClInclude Include="helpers\qt\xml_html_entity_resolver.h" />
     <ClInclude Include="helpers\static_string.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
+    <QtMoc Include="widgets\DKUnreadCountBadgePaneHeader.h" />
+    <QtMoc Include="widgets\DKUnreadCountBadge.h" />
+    <QtMoc Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />

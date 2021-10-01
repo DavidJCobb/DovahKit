@@ -39,6 +39,30 @@ do
       end
       return instance
    end
+   function Group:cache_rotation_offsets()
+      local child = self.mask
+      local basis = self.statue
+      --
+      CACHED_MASK_OFFSET = {}
+      --
+      local br = basis.rotation
+      do -- extract relative rotation
+         local parent = br:to_quaternion()
+         local offset = child.rotation:to_quaternion()
+         CACHED_MASK_OFFSET.rotation = (parent:inverse() * offset)
+      end
+      do -- extract relative position
+         local p_world = false
+         local p_local = false
+         local r_world = br:to_matrix()
+         r_world:transpose_in_place()
+         p_world = r_world * child.position
+         p_local = r_world * basis.position
+         --
+         p_world:sub(p_local)
+         CACHED_MASK_OFFSET.position = p_world
+      end
+   end
    function Group:distance_sq(pos)
       return (self.position - pos):length_squared()
    end
@@ -68,45 +92,27 @@ do
       return false
    end
    function Group:rotate(rot) -- euler
-      local child = self.mask
       local basis = self.statue
-      if not CACHED_MASK_OFFSET then
-         CACHED_MASK_OFFSET = {}
-         --
-         local br = basis.rotation
-         do -- extract relative rotation
-            local parent = br:to_quaternion()
-            local offset = child.rotation:to_quaternion()
-            CACHED_MASK_OFFSET.rotation = (parent:inverse() * offset):to_euler()
-         end
-         do -- extract relative position
-            local p_world = false
-            local p_local = false
-            local r_world = br:to_matrix()
-            r_world:transpose_in_place()
-            p_world = r_world * child.position
-            p_local = r_world * basis.position
-            --
-            p_world:sub(p_local)
-            CACHED_MASK_OFFSET.position = p_world
-         end
-      end
+      local child = self.mask
+      assert(CACHED_MASK_OFFSET)
+      assert(euler.is(rot))
       --
-      self.statue.rotation = rot
+      basis.rotation = rot
       --
       do -- construct position
-         local position = self.statue.position
+         local position = basis.position
          local distance = rot:to_matrix() * CACHED_MASK_OFFSET.position
-         self.mask.position = position + distance
+         child.position = position + distance
       end
       do -- construct rotation
          local q_parent = rot:to_quaternion()
-         local q_offset = CACHED_MASK_OFFSET.rotation:to_quaternion()
-         self.mask.rotation = q_parent * q_offset
+         local q_offset = CACHED_MASK_OFFSET.rotation
+         child.rotation = q_parent * q_offset
       end
    end
 end
 
+control_group = nil
 groups = {}
 
 dovah.log_message("Finding groups...")
@@ -159,12 +165,13 @@ do
       local x  = nil
       local mp = marker.position:copy()
       --
-      local MAX <const> = 64 * 64
+      local MAX <const> = 80 * 80
       for i = 1, #groups do
          local group = groups[i]
-         if group:is_whole() and group:distance_sq(mp) < MAX then
+         if group:is_whole() and group:distance_sq(mp) <= MAX then
             dovah.log_message("Found control group.")
             group.control = true
+            control_group = group
             break
          end
       end
@@ -174,6 +181,9 @@ end
 if #groups == 0 then
    error("No groups found!")
 end
+if not control_group then
+   error("Failed to find the control group!")
+end
 
 dovah.log_message("Rotating groups...")
 do -- seed RNG
@@ -181,6 +191,7 @@ do -- seed RNG
    local b = math.floor(os.clock() * 1000) >> 2
    math.randomseed(a, b)
 end
+control_group:cache_rotation_offsets()
 for i = 1, #groups do
    local group = groups[i]
    if group:is_whole() and not group.control then

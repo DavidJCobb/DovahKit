@@ -75,9 +75,13 @@ namespace dovah {
          delete f;
       this->files.clear();
       this->active_file = nullptr;
-      if (auto file = this->hardcoded_forms_file) {
+      if (auto* file = this->hardcoded_forms_file) {
          delete file;
          this->hardcoded_forms_file = nullptr;
+      }
+      if (auto* file = this->none_stubs_file) {
+         delete file;
+         this->none_stubs_file = nullptr;
       }
       //
       if (this->archives) {
@@ -369,7 +373,7 @@ namespace dovah {
          auto lambda = [this, &file_load_interface, &results](list_t& list) {
             for (auto* header : list) {
                std::string path = this->base_path + header->name;
-               auto file = new tes_file_reading::file_loader(file_load_interface);
+               auto* file = new tes_file_reading::file_loader(file_load_interface);
                this->save_load_state.loading_index = this->files.size();
                this->files.push_back(file);
                if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
@@ -419,7 +423,7 @@ namespace dovah {
       }
       //
       if (!this->active_file && this->files.size() < (this->is_light_plugin_support_enabled() ? 253 : 254)) {
-         auto file = new tes_file_reading::file_loader(file_load_interface);
+         auto* file = new tes_file_reading::file_loader(file_load_interface);
          this->active_file = file;
          this->files.push_back(file);
       }

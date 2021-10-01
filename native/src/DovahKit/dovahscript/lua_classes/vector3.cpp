@@ -49,7 +49,6 @@ namespace {
             lua_arith(L, op);
          }
          lua_call(L, axis_names.size() + 1, 0);
-         return 0;
       } else {
          //
          // A subclass overrode (set_xyz) with an unusable value. Fall back to 
@@ -63,7 +62,8 @@ namespace {
             lua_setfield(L, 1, name);
          }
       }
-      return 0;
+      lua_settop(L, 1); // return self, for chaining
+      return 1;
    }
 
    namespace _methods {
@@ -116,7 +116,6 @@ namespace {
                lua_arith     (L, LUA_OPDIV);
             }
             lua_call(L, axis_names.size() + 1, 0);
-            return 0;
          } else {
             //
             // A subclass overrode (set_xyz) with an unusable value. Fall back to 
@@ -130,7 +129,8 @@ namespace {
                lua_setfield  (L, 1, name);
             }
          }
-         return 0;
+         lua_settop(L, 1);
+         return 1;
       }
       int copy(lua_State* L) {
          cls::require_self_type(L);

@@ -268,8 +268,8 @@ namespace dovahscript::wrappers {
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "base_form", &_setters::base_form },
-      { "position",  &_getters::position },
-      { "rotation",  &_getters::rotation },
+      { "position",  &_setters::position },
+      { "rotation",  &_setters::rotation },
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) {

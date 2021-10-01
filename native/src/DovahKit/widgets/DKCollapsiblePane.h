@@ -12,11 +12,14 @@ class DKCollapsiblePane : public QFrame {
       DKCollapsiblePane(QWidget* parent);
 
       inline bool collapsed() const noexcept { return this->state.collapsed; }
-      inline QString title() const noexcept { return this->subwidgets.label->text(); }
+      inline QString title() const noexcept { return this->state.title; }
 
       // This is the "body" of the widget; you'd set a layout on it, append children to it, et cetera.
       inline QWidget* viewport() const noexcept { return this->subwidgets.body; }
       void setViewport(QWidget*);
+
+      inline QWidget* titleWidget() const noexcept { return this->subwidgets.label; }
+      void setTitleWidget(QWidget*);
 
       inline bool showActionsWhenCollapsed() const noexcept { return this->state.show_actions_when_collapsed; }
       void setShowActionsWhenCollapsed(bool);
@@ -57,13 +60,14 @@ class DKCollapsiblePane : public QFrame {
       _Toolbar toolbar; // for QAction buttons shown between the panel title and the expand/collapse button
       struct {
          QFrame*      title  = nullptr; // panel header bar
-         QLabel*      label  = nullptr; // panel title text
+         QWidget*     label  = nullptr; // panel title text
          QWidget*     body   = nullptr; // panel body
          QPushButton* toggle = nullptr; // expand/collapse button
       } subwidgets;
       struct {
          bool collapsed = false;
          bool show_actions_when_collapsed = false;
+         QString title;
       } state;
 
       void _updateToggle();

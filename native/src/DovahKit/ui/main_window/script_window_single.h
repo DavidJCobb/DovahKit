@@ -1,5 +1,6 @@
 #pragma once
 #include <QMainWindow>
+#include "../../widgets/DKUnreadCountBadgePaneHeader.h"
 #include "ui_script_window_single.h"
 
 class EditorSingleScriptWindow : public QMainWindow {
@@ -14,6 +15,9 @@ class EditorSingleScriptWindow : public QMainWindow {
          bool eval_pending   = false;
          bool script_running = false;
       } state;
+      struct {
+         DKUnreadCountBadgePaneHeader* log_header = nullptr;
+      } subwidgets;
       
       void _onScriptStartStop(bool script_running);
 

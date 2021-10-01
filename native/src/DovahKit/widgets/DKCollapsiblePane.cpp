@@ -76,8 +76,38 @@ void DKCollapsiblePane::setCollapsed(bool state) {
       emit this->contentsExpanded();
 }
 void DKCollapsiblePane::setTitle(const QString& t) {
-   this->subwidgets.label->setText(t);
+   this->state.title = t;
+   if (auto* widget = this->subwidgets.label) {
+      QMetaObject::invokeMethod(widget, "setText", Qt::AutoConnection, Q_ARG(QString, t));
+   }
    this->setAccessibleName(t);
+}
+void DKCollapsiblePane::setTitleWidget(QWidget* w) {
+   auto* header = this->subwidgets.title;
+   if (w) {
+      w->setParent(header);
+   }
+   auto* layout = (QBoxLayout*) header->layout();
+   if (auto* prior = this->subwidgets.label) {
+      if (w) {
+         auto* item = layout->replaceWidget(prior, w, Qt::FindDirectChildrenOnly);
+         assert(item && "There should've been something in the layout already!");
+         delete item;
+      } else {
+         layout->removeWidget(prior);
+      }
+      if (prior->parent() == header) {
+         prior->setParent(nullptr);
+         delete prior;
+      }
+   } else {
+      if (w) {
+         layout->insertWidget(0, w, 1);
+      }
+   }
+   this->subwidgets.label = w;
+   if (w)
+      QMetaObject::invokeMethod(w, "setText", Qt::AutoConnection, Q_ARG(QString, this->state.title));
 }
 void DKCollapsiblePane::setViewport(QWidget* w) {
    if (w) {

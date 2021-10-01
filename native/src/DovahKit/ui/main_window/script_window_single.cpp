@@ -53,6 +53,18 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
       // for QTableView::setWordWrap, at least as of this writing.
       //
       widget->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for proper word-wrapping in table cells
+      //
+      // Header:
+      //
+      {
+         auto* header = this->subwidgets.log_header = new DKUnreadCountBadgePaneHeader(this);
+         header->setBadgeFormat(tr("%1 unread", "script log pane"));
+         this->ui.paneLog->setTitleWidget(header);
+         //
+         QObject::connect(this->ui.paneLog, &DKCollapsiblePane::contentsExpanded, this, [header]() {
+            header->setBadgeCount(0);
+         });
+      }
    }
    #pragma endregion
    //
@@ -146,6 +158,12 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
          auto  index  = widget->rowCount();
          widget->insertRow(index);
          widget->setItem(index, 0, new QTableWidgetItem(text));
+         //
+         auto* pane = this->ui.paneLog;
+         if (pane->collapsed()) {
+            auto* header = this->subwidgets.log_header;
+            header->setBadgeCount(header->badgeCount() + 1);
+         }
       });
       QObject::connect(&host, &DovahscriptHost::evalComplete, this, [this]() {
          this->state.eval_pending = false;

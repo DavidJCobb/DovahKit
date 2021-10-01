@@ -69,7 +69,7 @@ namespace dovahscript::api_helpers {
             break;
          case _type::quaternion:
             {
-               auto& list = euler_axis_names;
+               auto& list = quaternion_axis_names;
                for (size_t i = 0; i < list.size(); ++i) {
                   lua_getfield(L, index, list[i]);
                   if (!lua_isnumber(L, -1)) {

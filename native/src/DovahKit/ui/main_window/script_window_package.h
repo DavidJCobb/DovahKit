@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <QDialog>
+#include "../../widgets/DKUnreadCountBadgePaneHeader.h"
 #include "ui_script_window_package.h"
 #include "../../editor/script_packages/manifest.h"
 
@@ -16,6 +17,9 @@ class EditorScriptPackageWindow : public QDialog {
          bool eval_pending   = false;
          bool script_running = false;
       } state;
+      struct {
+         DKUnreadCountBadgePaneHeader* log_header = nullptr;
+      } subwidgets;
 
       QVector<script_packages::manifest> script_packages;
       QVector<script_packages::manifest> user_loaded_packages;

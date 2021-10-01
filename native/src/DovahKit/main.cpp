@@ -14,9 +14,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
-//    template specialization of subrecord::read.
-//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -299,9 +296,6 @@
 //       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
 //       using refhandles ourselves!)
 //
-//        - We don't have a warnings dialog at present, and that's something that 
-//          would be valuable to have just in general.
-//
 //  - Form deletion: some form types skip saving some subrecords if the form is flagged as 
 //    deleted. Should we replicate this behavior? We'll want to continue testing in the 
 //    Creation Kit to find all of these, if we care that much.
@@ -309,8 +303,6 @@
 //     - REFR/DATA
 //
 //  - Lua scripting
-//
-//     = START MOVING A LOT OF THE EXPLANATIONS HERE TO A DOCUMENTATION TEXT FILE.
 //
 //     = DEVELOPMENT ROADMAP
 //
@@ -331,15 +323,6 @@
 //          is created (or an existing form is renumbered). Additionally, variables that 
 //          point to parts of a form (e.g. a particular property on a particular script 
 //          attached to a particular form) need to be properly managed.
-//
-//           = Wrapper implementation
-//
-//              = Lua utility classes
-//
-//                 = Note: it is theoretically possible to create a vector3 instance and 
-//                   then set its x/y/z values to tables with operator-overload metamethods. 
-//                   Native code will not *consistently* invoke these metamethods. Sometimes 
-//                   they'll work; sometimes they won't. Consider this UB.
 //
 //           = Collection implementation
 //
@@ -518,44 +501,6 @@
 //       versus "vector3 userdata"), as userdata do not support expandos in our particular 
 //       implementation.
 //
-//     - Script execution window: save/load buttons; button to toggle the log; add a 
-//       button to clear the log. Basically the only parts of the UI that are functional 
-//       right now are the buttons to start and stop script execution, so we need to 
-//       finish the rest.
-//
-//     - Scripts should be able to include Greasemonkey-style comments at the top of 
-//       the file as a way of specifying extended configuration options. Options that 
-//       we could support can include:
-//
-//        - [[readonly]]: The script will not be allowed to modify any loaded forms. 
-//          This will affect the editor's messaging surrounding the script; for example, 
-//          the user will not need to be warned about terminating the script early, 
-//          because doing so cannot leave the active file in an inconsistent state 
-//          (since the script isn't doing anything). This attribute is advised for 
-//          scripts that are just examining, searching, or otherwise analyzing data.
-//
-//        - [[fileaccess]]: The script will be able to create new files in a sandboxed 
-//          directory on the user's system.
-//
-//        - [[shellexec]]: The script will be able to ask for permission to run programs 
-//          on the user's system. This could be useful for some niche tasks, but also 
-//          [insert link to TheZZAZZGlitch's "TECHNO" demonstration here]. Ideally we'd 
-//          still require the script to actually get the user's permission to run any 
-//          particular program by way of a hardcoded confirmation prompt, but I don't 
-//          know for sure how practical that'd be.
-//
-//        - [[clipboard]]: The script will be able to access the user's keyboard, to 
-//          copy and paste data.
-//
-//           - QLineEdit::copy
-//           - QLineEdit::cut
-//           - QLineEdit::paste
-//       
-//       Options that grant access to advanced or dangerous functionality should result 
-//       in the user being shown a confirmation message in the script selection window, 
-//       i.e. the user is shown a list of permissions that the script is requesting and 
-//       must explicitly grant those permissions before the script can run.
-//
 //  - Extra data: room ref data: this is another multi-subrecord structure where the 
 //    game will blindly "eat" subrecords without even checking their signature. We 
 //    don't emulate that behavior here even though we emulate it (with warnings) in 
@@ -570,14 +515,6 @@
 //
 //        - Perhaps, for unattached scripts, clicking the icon could attach the 
 //          script to the form -- after a confirmation prompt, of course.
-//
-//  - The (write_length_prefixed_string) function for saving has no way to handle 
-//    the error of a string being too long. Should the form save functions handle 
-//    that, so as to be able to report the error more intelligently?
-//
-//     - The backend should generate a save error identifying the current form, 
-//       subrecord, and if possible, offset into the subrecord. Currently, we'd 
-//       just produce corrupt data.
 //
 //  - QUST/VMAD alias-script transplant handling
 //

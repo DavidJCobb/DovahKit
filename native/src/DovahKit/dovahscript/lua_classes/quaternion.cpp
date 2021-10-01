@@ -11,35 +11,24 @@ namespace {
    using namespace dovahscript;
    using cls = lua_classes::quaternion;
 
+   constexpr const std::array axis_names = { "w", "x", "y", "z" };
+
    void _require_similar_argument(lua_State* L, int stack_pos) {
       auto rawtype = lua_type(L, stack_pos);
       if (rawtype != LUA_TTABLE && rawtype != LUA_TUSERDATA)
-         cobb::lua::error(L, "bad argument #%i (expected quaternion-like table or userdata)", stack_pos);
+         cobb::lua::argerror(L, stack_pos, "expected quaternion-like table or userdata");
       if (cls::check_arg_type(L, stack_pos))
          return;
       //
-      auto prior = lua_gettop(L);
-      auto guard = cobb::lua::set_top_on_exit(L, prior);
       constexpr const char* warning_text = "quaternion operator overload given a non-quaternion-like table operand";
-      //
-      lua_getfield(L, stack_pos, "w");
-      if (!lua_isnumber(L, -1)) {
-         cobb::lua::warning(L, warning_text);
-         return;
-      }
-      lua_getfield(L, stack_pos, "x");
-      if (!lua_isnumber(L, -1)) {
-         cobb::lua::warning(L, warning_text);
-         return;
-      }
-      lua_getfield(L, stack_pos, "y");
-      if (!lua_isnumber(L, -1)) {
-         cobb::lua::warning(L, warning_text);
-         return;
-      }
-      lua_getfield(L, stack_pos, "z");
-      if (!lua_isnumber(L, -1)) {
-         cobb::lua::warning(L, warning_text);
+      for (const auto* name : axis_names) {
+         lua_getfield(L, stack_pos, name);
+         bool is = lua_isnumber(L, -1);
+         lua_pop(L, 1);
+         if (!is) {
+            cobb::lua::warning(L, warning_text);
+            return;
+         }
       }
    }
 
@@ -48,21 +37,11 @@ namespace {
       luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
       lua_settop(L, 2);
       //
-      lua_getfield (L, 1, "w");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      //
-      lua_getfield (L, 1, "x");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      //
-      lua_getfield (L, 1, "y");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      //
-      lua_getfield (L, 1, "z");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
+      for (const auto* name : axis_names) {
+         lua_getfield (L, 1, name);
+         lua_pushvalue(L, 2);
+         lua_arith    (L, op);
+      }
       //
       cls::push_new_instance(L, { lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6) });
       return 1;
@@ -72,25 +51,12 @@ namespace {
       luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
       lua_settop(L, 2);
       //
-      lua_getfield(L, 1, "w");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      lua_setfield(L, 1, "w");
-      //
-      lua_getfield(L, 1, "x");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      lua_setfield(L, 1, "x");
-      //
-      lua_getfield(L, 1, "y");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      lua_setfield(L, 1, "y");
-      //
-      lua_getfield(L, 1, "z");
-      lua_pushvalue(L, 2);
-      lua_arith(L, op);
-      lua_setfield(L, 1, "z");
+      for (const auto* name : axis_names) {
+         lua_getfield (L, 1, name);
+         lua_pushvalue(L, 2);
+         lua_arith    (L, op);
+         lua_setfield (L, 1, name);
+      }
       //
       lua_settop(L, 1); // return (self) to allow chaining
       return 1;
@@ -101,21 +67,11 @@ namespace {
       _require_similar_argument(L, 2);
       lua_settop(L, 2);
       //
-      lua_getfield(L, 1, "w");
-      lua_getfield(L, 2, "w");
-      lua_arith(L, op);
-      //
-      lua_getfield(L, 1, "x");
-      lua_getfield(L, 2, "x");
-      lua_arith(L, op);
-      //
-      lua_getfield(L, 1, "y");
-      lua_getfield(L, 2, "y");
-      lua_arith(L, op);
-      //
-      lua_getfield(L, 1, "z");
-      lua_getfield(L, 2, "z");
-      lua_arith(L, op);
+      for (const auto* name : axis_names) {
+         lua_getfield(L, 1, name);
+         lua_getfield(L, 2, name);
+         lua_arith   (L, op);
+      }
       //
       cls::push_new_instance(L, { lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6) });
       return 1;
@@ -125,25 +81,12 @@ namespace {
       _require_similar_argument(L, 2);
       lua_settop(L, 2);
       //
-      lua_getfield(L, 1, "w");
-      lua_getfield(L, 2, "w");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "w");
-      //
-      lua_getfield(L, 1, "x");
-      lua_getfield(L, 2, "x");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "x");
-      //
-      lua_getfield(L, 1, "y");
-      lua_getfield(L, 2, "y");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "y");
-      //
-      lua_getfield(L, 1, "z");
-      lua_getfield(L, 2, "z");
-      lua_arith(L, op);
-      lua_setfield(L, 1, "z");
+      for (const auto* name : axis_names) {
+         lua_getfield(L, 1, name);
+         lua_getfield(L, 2, name);
+         lua_arith(L, op);
+         lua_setfield(L, 1, name);
+      }
       //
       lua_settop(L, 1); // return (self) to allow chaining
       return 1;
@@ -159,7 +102,7 @@ namespace {
       int __mul(lua_State* L) { // creates and returns new vector
          cls::require_self_type(L);
          if (lua_isnumber(L, 2))
-            return _simple_operator_overload(L, LUA_OPMUL);
+            return _scalar_operator_overload(L, LUA_OPMUL);
          //
          _require_similar_argument(L, 2);
          auto a = cls::extract_from_stack(L, 1);
@@ -258,27 +201,28 @@ namespace {
    namespace _singleton_functions {
       int new_obj(lua_State* L) {
          //
-         // function euler:new(a, b, c)
+         // function quaternion:new(a, b, c, d)
          //    if tonumber(a) then
-         //       return _make_instance(a, b, c)
+         //       return _make_instance(a, b, c, d)
          //    end
          //    if type(a) == "table" or type(a) == "userdata" then
-         //       return _make_instance(a.x or 0, a.y or 0, a.z or 0)
+         //       return _make_instance(a.w or 0, a.x or 0, a.y or 0, a.z or 0)
          //    end
-         //    return _make_instance(0, 0, 0)
+         //    return _make_instance(0, 0, 0, 0)
          // end
          //
          if (lua_isnumber(L, 1)) {
-            cls::push_new_instance(L, { lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3) });
+            cls::push_new_instance(L, { lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4) });
             return 1;
          }
          auto rawtype = lua_type(L, 1);
          if (rawtype == LUA_TTABLE || rawtype == LUA_TUSERDATA) {
             lua_settop(L, 1);
+            lua_getfield(L, 1, "w");
             lua_getfield(L, 1, "x");
             lua_getfield(L, 1, "y");
             lua_getfield(L, 1, "z");
-            cls::push_new_instance(L, { lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4) });
+            cls::push_new_instance(L, { lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5) });
             return 1;
          }
          cls::push_new_instance(L, {});
@@ -328,7 +272,7 @@ namespace dovahscript::lua_classes {
       return raw;
    }
    /*static*/ void cls::push_new_instance(lua_State* L, const cobb::quaternion& raw) {
-      lua_createtable  (L, 0, 3);
+      lua_createtable  (L, 0, 4);
       auto index = lua_gettop(L);
       luaL_getmetatable(L, cls::metatable_key);
       lua_setmetatable (L, index);
