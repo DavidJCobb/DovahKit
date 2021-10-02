@@ -47,15 +47,26 @@ do
       i:set_layout("down")
       o.layout_margins = 0
       i.layout_margins = 0
+      do
+         local widget = ui.text.new("Base forms to find:")
+         widget.font.bold = true
+         o:add_child(widget)
+      end
       o:add_child(i)
       --
       local b = ui.button.new("+")
       o:add_child(b)
-      o:add_spacer()
+      o:add_spacer("v")
       --
       FormpickerList.button = b
    end
    
+   function FormpickerList:add_picker(row_object)
+      self.widgets.inner:add_child(row_object.widget)
+      --
+      local list = self.pickers
+      list[#list + 1] = row_object
+   end
    function FormpickerList:append_to_widget(widget, ...)
       widget:add_child(self.widgets.outer, ...)
    end
@@ -113,7 +124,9 @@ do
          f.form_types = BASE_FORMS
          f:on("OnChanged", "", function(form)
          end)
+         f.min_width = 250
          --
+         x.max_width = 32
          x:on("OnActivated", "", function()
             FormpickerList:remove(instance)
             local p = w.parent
@@ -126,9 +139,7 @@ do
          instance.picker = f
          instance.button = x
          --
-         local list = FormpickerList.pickers
-         list[#list + 1] = instance
-         --
+         FormpickerList:add_picker(instance)
          return instance
       end
       function _Row:get_form()
@@ -225,8 +236,8 @@ do -- HeightmapWindow contents
       local config = HeightmapWindow.controls.config
       window:add_child(scroll, 1, 1)
       window:add_child(config, 1, 2)
-      window:set_layout_stretch_at("col", 1, 1)
-      window:set_layout_stretch_at("col", 2, 0)
+      window:set_layout_stretch_at("col", 1, 3)
+      window:set_layout_stretch_at("col", 2, 1)
       do
          local sb = scroll.body
          sb:set_layout("grid")
@@ -265,21 +276,7 @@ do -- HeightmapWindow contents
             --
             oc.world = picker
          end
-         do
-            FormpickerList:append_to_widget(config)
-         end
-         for i = 1, #LAYER_SPEC do
-            local spec = LAYER_SPEC[i]
-            local name = spec.name
-            local text = spec.check_text
-            --
-            lv[name] = ui.checkbox.new(text)
-            lv[name].checked = true
-            lv[name]:on("OnToggled", "", function(checked)
-               HeightmapWindow:set_layer_visibility(name, checked)
-            end)
-            config:add_child(lv[name])
-         end
+         FormpickerList:append_to_widget(config)
          do
             local button = ui.button.new("Render")
             config:add_child(button)
@@ -290,7 +287,7 @@ do -- HeightmapWindow contents
          config:add_child(ui.line.new("h"))
          --
          do
-            local widget = ui.text.new("Base forms:")
+            local widget = ui.text.new("Base form layers:")
             widget.font.bold = true
             config:add_child(widget)
          end
@@ -318,12 +315,7 @@ do -- HeightmapWindow contents
          end
       end
       for i = 1, #layers do
-         local l = layers[i]
-         if l.delete then
-            l:delete() -- accommodation for old engine; TODO: remove this
-         else
-            canvas:remove_layer(l)
-         end
+         canvas:remove_layer(layers[i])
       end
       self.state.layers = {}
    end
@@ -349,36 +341,6 @@ do -- HeightmapWindow contents
    function HeightmapWindow:set_is_locked(state)
       self.controls.config.enabled = not state
    end
-   function HeightmapWindow:set_layer_visibility(name_to_alter, state)
-      local lowest = nil
-      for i = 1, #LAYER_SPEC do
-         local spec  = LAYER_SPEC[i]
-         local name  = spec.name
-         local layer = HeightmapWindow.state.layers[name]
-         local show  = HeightmapWindow.state.layer_visibility[name]
-         if name == name_to_alter then
-            if layer then -- user can configure settings before rendering i.e. before layers exist
-               layer.visible = state
-            end
-            HeightmapWindow.state.layer_visibility[name] = state
-            show = state
-         end
-         if layer then -- user can configure settings before rendering i.e. before layers exist
-            if show and not lowest then
-               lowest = layer
-               layer.blend_mode = "normal"
-               layer.opacity    = 1
-            else
-               if spec.blend_mode then
-                  layer.blend_mode = spec.blend_mode
-               end
-               if spec.opacity then
-                  layer.opacity = spec.opacity
-               end
-            end
-         end
-      end
-   end
    function HeightmapWindow:show()
       self.controls.window:show()
    end
@@ -389,7 +351,7 @@ HeightmapWindow.controls.options.execute:on("OnActivated", "render", function()
    HeightmapWindow:clear_canvas()
    HeightmapWindow:clear_cell_outline_toggles()
    render_refr_locations(
-      self.controls.options.world.form,
+      HeightmapWindow.controls.options.world.form,
       FormpickerList:get_forms()
    )
    HeightmapWindow:set_is_locked(false)

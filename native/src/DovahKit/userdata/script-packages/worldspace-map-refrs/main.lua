@@ -45,10 +45,14 @@ do
          }
       end
       
-      local world_first_file = nil -- we shouldn't outline cells defined in the same file as the worldspace, because that'll be nearly all of them
-      local all_maps = CellOutlineMapAllFiles:new()
+      local all_maps      = RefrMap:new()
+      local base_form_set = {}
       for i = 1, #base_forms do
-         all_maps:get_or_create_map(base_forms[i])
+         local form = base_forms[i]
+         if form then
+            base_form_set[form] = true
+            all_maps:get_or_create_map(form)
+         end
       end
       
       local cells   = world:get_all_cells()
@@ -89,41 +93,30 @@ do
             width  = nil,
             height = nil,
          }
-         --
-         local z_min = nil
-         local z_max = nil
          for i = 1, count do
             local cell = cells[i]
-            local land = cell.landscape
-            if land then
-               local min = land:get_minimum_height()
-               local max = land:get_maximum_height()
-               _update(extents.z, min, max)
-            end
-            local gc = cell.grid_coords
-            local gx = gc.x
-            local gy = -gc.y
+            local gc   = cell.grid_coords
+            local gx   = gc.x
+            local gy   = -gc.y
             _update(extents.x, gx)
             _update(extents.y, gy)
             --
             progress.value = i
          end
-         --
          if not extents.x.min then
             dovah.log_message("Unable to find any cells in this worldspace!")
-            return
-         end
-         if not extents.z.min then
-            dovah.log_message("Unable to find any landscape data in this worldspace!")
             return
          end
          --
          extents.width  = (extents.x.max - extents.x.min) + 1
          extents.height = (extents.y.max - extents.y.min) + 1
-         --
-         extents.z.span = extents.z.max - extents.z.min
-         if extents.z.span == 0 then
-            extents.z.span = 1
+         if extents.z.max then
+            extents.z.span = extents.z.max - extents.z.min
+            if extents.z.span == 0 then
+               extents.z.span = 1
+            end
+         else
+            extents.z.span = nil
          end
       end
       
@@ -140,73 +133,49 @@ do
          canvas.height = IMAGE_H
          dovah.log_message("Canvas size: %dx%dpx", IMAGE_W, IMAGE_H)
          do
-            local lowest = nil
-            for i = 1, #LAYER_SPEC do
-               local spec = LAYER_SPEC[i]
-               local name = spec.name
-               local show = HeightmapWindow.state.layer_visibility[name]
-               --
-               rasters.working[name] = raster.new({
-                  width  = 32,
-                  height = 32,
-                  background_color = TRANSPARENT,
-               })
-               --
-               rasters.render[name] = raster.new({
-                  width  = IMAGE_W,
-                  height = IMAGE_H,
-                  background_color = TRANSPARENT,
-               })
+            local prior = HeightmapWindow.state.layers["terrain"]
+            if prior then
+               HeightmapWindow.state.layers["terrain"] = nil
+               canvas:remove_layer(prior)
+            end
+            local world_first_file = nil
+            do
+               local list = world:get_source_file_list()
+               local file = list[1]
+               if file then
+                  world_first_file = file.filename
+               end
+            end
+            --
+            local name  = string.format("pre-rendered/%s-%s.png", world.editor_id, world_first_file or "nil")
+            local image = dovah.package.load_file({ path = name, type = "png" })
+            if image then
                local layer = canvas:append_layer()
-               layer.data = rasters.render[name]
-               layer.name = name
-               HeightmapWindow.state.layers[name] = layer
-               if lowest then
-                  if spec.blend_mode then
-                     layer.blend_mode = spec.blend_mode
-                  end
-                  if spec.opacity then
-                     layer.opacity = spec.opacity
-                  end
-               elseif show then
-                  lowest = layer
+               layer.data = image
+               layer.name = "Pre-rendered terrain"
+               HeightmapWindow.state.layers["terrain"] = layer
+               --
+               if image.width ~= IMAGE_W or image.height ~= IMAGE_H then
+                  warn("World size doesn't match the prerendered terrain image!")
                end
-               if not show then
-                  layer.visible = false
-               end
+            else
+               dovah.log_message("Failed to load prerendered terrain for this worldspace from file:\n%s", name)
             end
          end
       end
-      
-      _update_progress("Drawing cells...", 0, count, 0)
-      do
-         local rw = rasters.working
-         local rr = rasters.render
-         
-         function _do_grid_flip(x, y)
-            return x, (33 - y + 1)
-         end
-         
+      --
+      _update_progress("Finding references...", 0, count, 0)
+      if #base_forms > 0 then
          local benchmark = dovah.benchmark_start()
          for i = 1, count do
             local cell = cells[i]
-            --
-            local x = nil
-            local y = nil
-            do
-               local gc = cell.grid_coords
-               x  =  gc.x - extents.x.min
-               y  = -gc.y - extents.y.min -- invert Y so that north is up
-               x = x * 32
-               y = y * 32
-            end
             --
             local refs = cell:get_all_refs()
             for i = 1, #refs do
                local form = refs[i]
                if not form.disabled then
                   local base = form.base_form
-                  if false then -- if the base form is of interest
+                  if base_form_set[base] then
                      local p = form.position
                      local y = -p.y - (extents.y.min * 4096)
                      all_maps:accept(base, p.x, y)
@@ -217,7 +186,7 @@ do
             progress.value = i
          end
          dovah.benchmark_stop(benchmark)
-         dovah.log_message("Time taken for draw: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         dovah.log_message("Time taken for search: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
          
          benchmark = dovah.benchmark_start()
          do -- Cell outlines
@@ -225,13 +194,10 @@ do
             local count = #files
             _update_progress("Drawing outlines...", 0, count, 0)
             --
-            local HUE_PER_FILE = math.ceil(360 / count)
-            --
             local root_group = false
             for i = 1, count do
                local name = files[i]
                local map  = all_maps.maps[name]
-               map:set_color(string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i))
                map:generate_islands()
                --
                local islands = map.islands
@@ -250,6 +216,7 @@ do
                progress.value = i
             end
          end
+last_rendered_maps = all_maps
          dovah.benchmark_stop(benchmark)
          dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
          HeightmapWindow:import_cell_outline_data(all_maps)

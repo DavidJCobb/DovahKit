@@ -405,7 +405,6 @@ namespace dovahscript::core::subsystems {
       //
       // Return true to intercept an event; return false to let it process normally.
       //
-      bool is_repaint = false;
       switch (event->type()) { // events that we don't want to ever block (and we can get away with that because we also don't send these to Lua)
          //
          // Blocking some of these events can cause the UI to fail to react to them properly; 
@@ -472,21 +471,13 @@ namespace dovahscript::core::subsystems {
          case QEvent::Paint:                 // screen repaint needed
          case QEvent::PaletteChange:         // a widget's palette has changed
          case QEvent::StyleChange:           // a widget's style has changed
-            is_repaint = true;
-            break;
-      }
-      if (this->ui_lock_override != ui_lock_override_state::unchanged) {
-         bool is_locked = (this->ui_lock_override == ui_lock_override_state::locked);
-         if (is_locked && is_repaint)
             this->repaint_requested_while_ui_locked = true;
-         return is_locked;
+            return false;
       }
+      if (this->ui_lock_override != ui_lock_override_state::unchanged)
+         return (this->ui_lock_override == ui_lock_override_state::locked);
       if (!events::get().get_pending_event_count())
          return false;
-      if (is_repaint) {
-         this->repaint_requested_while_ui_locked = true;
-         return false;
-      }
       return true;
    }
 

@@ -166,12 +166,7 @@ do -- HeightmapWindow contents
          end
       end
       for i = 1, #layers do
-         local l = layers[i]
-         if l.delete then
-            l:delete() -- accommodation for old engine; TODO: remove this
-         else
-            canvas:remove_layer(l)
-         end
+         canvas:remove_layer(layers[i])
       end
       self.state.layers = {}
    end

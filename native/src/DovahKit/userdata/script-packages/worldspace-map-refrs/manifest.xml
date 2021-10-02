@@ -8,12 +8,13 @@
       <version>1.0.0.0</version>
    </metadata>
    <environment>
-      <min-version>0.0.0.3</min-version>
-      <latest-version>0.0.0.3</latest-version>
+      <min-version>0.0.0.1</min-version>
+      <latest-version>0.0.0.1</latest-version>
    </environment>
    <files>
 config.lua
 texture-cache.lua
+refr-cell.lua
 refr-group-island.lua
 refr-group.lua
 refr-map.lua

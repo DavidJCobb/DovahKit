@@ -24,7 +24,7 @@ do
          self.cells[x] = col
       end
       if not col[y] then
-         col[y] = {}
+         col[y] = RefrCell:new()
          --
          do
             local span = self.bounds.x
@@ -45,7 +45,7 @@ do
             end
          end
       end
-      col[y][#col[y] + 1] = { wx, wy }
+      col[y]:accept_ref(wx, wy)
    end
    function RefrGroup:create_canvas_data(root_group)
       if self.layers then
@@ -75,8 +75,8 @@ do
                   -- We want to find out what island the cell belongs to (or create an island), 
                   -- and store that island's index in place of the cell's boolean "true" value.
                   --
-                  local a = tonumber(x_prev[y])
-                  local b = tonumber(col[y - 1])
+                  local a = tonumber(x_prev[y])  -- left
+                  local b = tonumber(col[y - 1]) -- above
                   local island = nil
                   do
                      --
@@ -112,24 +112,20 @@ do
                   --
                   if island then
                      if not tonumber(cell) then
-                        for i = 1, #cell do
-                           island:accept_ref(cell[i][0], cell[i][1])
-                        end
+                        island:accept_cell(cell)
                      end
                      col[y] = a or b
                   else
                      count = count + 1
                      col[y] = count
                      --
-                     island = CellOutlineIsland:new(self)
+                     island = RefrGroupIsland:new(self)
                      self.islands[count] = island
                      if not tonumber(cell) then
-                        for i = 1, #cell do
-                           island:accept_ref(cell[i][0], cell[i][1])
-                        end
+                        island:accept_cell(cell)
                      end
                   end
-                  island:accept_cell(x, y)
+                  island:accept_ref(x, y)
                end
             end
          end

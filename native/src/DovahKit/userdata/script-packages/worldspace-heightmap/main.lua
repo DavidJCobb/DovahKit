@@ -122,8 +122,6 @@ do
             height = nil,
          }
          --
-         local z_min = nil
-         local z_max = nil
          for i = 1, count do
             local cell = cells[i]
             local land = cell.landscape

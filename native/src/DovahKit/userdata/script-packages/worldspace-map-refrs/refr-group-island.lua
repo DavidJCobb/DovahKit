@@ -20,6 +20,48 @@ do
       instances.refrs = {} -- list of world-relative coordinate tuples
       return instance
    end
+   function RefrGroupIsland:accept_cell(cell)
+      if #cell.refs < 1 then
+         return
+      end
+      --
+      local min_x = cell.refs[i].x
+      local max_x = cell.refs[i].x
+      local min_y = cell.refs[i].y
+      local max_y = cell.refs[i].y
+      --
+      local count = #self.refrs
+      for i = 1, #cell.refs do
+         local entry = cell.refs[i]
+         count = count + 1
+         self.refrs[count] = entry
+         --
+         min_x = math.min(entry.x, min_x)
+         max_x = math.max(entry.x, max_x)
+         min_y = math.min(entry.y, min_y)
+         max_y = math.max(entry.y, max_y)
+      end
+      cell.refs = {}
+      --
+      do
+         local span = self.bounds.x
+         if not span[1] or min_x < span[1] then
+            span[1] = min_x
+         end
+         if not span[2] or max_x > span[2] then
+            span[2] = max_x
+         end
+      end
+      do
+         local span = self.bounds.y
+         if not span[1] or min_y < span[1] then
+            span[1] = min_y
+         end
+         if not span[2] or max_y > span[2] then
+            span[2] = max_y
+         end
+      end
+   end
    function RefrGroupIsland:accept_ref(world_x, world_y)
       do
          local x = math.floor(world_x / 4096)
@@ -149,6 +191,12 @@ do
             end
          end
       end
+      local at = #self.refrs
+      for i = 1, #other.refrs do
+         at = at + 1
+         self.refrs[at] = other.refs[i]
+      end
+      other.refrs = {}
    end
    function RefrGroupIsland:set_visible(state)
       self.layer.visible = state

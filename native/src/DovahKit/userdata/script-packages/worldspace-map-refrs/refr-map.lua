@@ -35,7 +35,7 @@ do
    function RefrMap:get_or_create_map(base_form)
       local map = self.maps[base_form]
       if not map then
-         map = CellOutlineMap:new(base_form)
+         map = RefrGroup:new(base_form)
          self.maps[base_form] = map
       end
       return map
