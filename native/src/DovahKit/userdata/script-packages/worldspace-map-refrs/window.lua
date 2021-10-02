@@ -47,6 +47,7 @@ do
       i:set_layout("down")
       o.layout_margins = 0
       i.layout_margins = 0
+      o.min_width = 275
       do
          local widget = ui.text.new("Base forms to find:")
          widget.font.bold = true
@@ -124,7 +125,6 @@ do
          f.form_types = BASE_FORMS
          f:on("OnChanged", "", function(form)
          end)
-         f.min_width = 250
          --
          x.max_width = 32
          x:on("OnActivated", "", function()
@@ -154,7 +154,7 @@ end
 
 -- Widget for toggling visibility and setting color on rendered forms
 local FormMapRow = {}
-FormMapRow.__index = FormMapList
+FormMapRow.__index = FormMapRow
 do
    function FormMapRow:new(refr_group)
       local instance = setmetatable({}, self)
@@ -167,20 +167,31 @@ do
          color = nil,
       }
       do
-         local r = instance.widget
-         r.layout_margins = 0
-         r:set_layout("ltr")
+         local root = instance.widget
+         root.layout_margins = 0
+         root:set_layout("ltr")
          --
-         local c = ui.checkbox.new(form:form_id_to_string())
+         local text = ""
+         do
+            local form = refr_group.form
+            local id   = form:form_id_to_string()
+            local ed   = form.editor_id or "<unnamed>"
+            text = string.format("%s (%s)", ed, id)
+         end
+         local c = ui.checkbox.new(text)
          c.checked = true
          c:on("OnToggled", "", function(state) instance:on_toggled(state) end)
          instance._controls.check = c
-         r:add_child(c)
+         root:add_child(c)
          --
          c = ui.color_button.new()
          c.color = refr_group.color
          c:on("OnChanged", "", function(color) instance:on_color_changed(color) end)
-         r:add_child(c)
+         instance._controls.color = c
+         root:add_child(c)
+         --
+         root:set_layout_stretch_at(1, 1)
+         root:set_layout_stretch_at(2, 0)
       end
       --
       return instance

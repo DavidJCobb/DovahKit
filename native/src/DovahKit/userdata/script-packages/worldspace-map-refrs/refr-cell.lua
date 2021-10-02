@@ -8,6 +8,6 @@ do
    end
    function RefrCell:accept_ref(wx, wy)
       local list = self.refs
-      list[#list] = { x = wx, y = wy }
+      list[#list + 1] = { x = wx, y = wy }
    end
 end

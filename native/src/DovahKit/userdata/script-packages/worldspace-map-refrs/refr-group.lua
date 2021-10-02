@@ -9,14 +9,14 @@ do
       instance.form    = base_form
       instance.color   = "#888"
       instance.cells   = {} -- cleared after islands are generated
-      instance.bounds  = { x = { false, false }, y = { false, false } }
+      instance.bounds  = { x = Range:new(), y = Range:new() }
       instance.islands = {}
       instance.layers  = false
       return instance
    end
    function RefrGroup:accept_ref(wx, wy)
-      local x = wx / 32
-      local y = wy / 32
+      local x = math.floor(wx / 4096) -- cell grid coords
+      local y = math.floor(wy / 4096)
       --
       local col = self.cells[x]
       if not col then
@@ -25,25 +25,8 @@ do
       end
       if not col[y] then
          col[y] = RefrCell:new()
-         --
-         do
-            local span = self.bounds.x
-            if not span[1] or x < span[1] then
-               span[1] = x
-            end
-            if not span[2] or x > span[2] then
-               span[2] = x
-            end
-         end
-         do
-            local span = self.bounds.y
-            if not span[1] or y < span[1] then
-               span[1] = y
-            end
-            if not span[2] or y > span[2] then
-               span[2] = y
-            end
-         end
+         self.bounds.x:accept(x)
+         self.bounds.y:accept(y)
       end
       col[y]:accept_ref(wx, wy)
    end
@@ -56,24 +39,40 @@ do
       self.layers = group
    end
    function RefrGroup:generate_islands()
-      if not self.bounds.x[1] or not self.bounds.y[1] then -- skip island generation if this map is empty
+      if self.bounds.x:empty() or self.bounds.y:empty() then -- skip island generation if this map is empty
          self.cells = nil
          return
       end
+      local function bind(context, f)
+         return function(...) return f(context, ...) end
+      end
+      local resolve_island = bind(self, function(self, i)
+         while tonumber(i) do
+            i = self.islands[i]
+         end
+         if i then
+            for j = 1, #self.islands do
+               if self.islands[j] == i then
+                  return i, j
+               end
+            end
+         end
+         return i
+      end)
       local count = 0
       local dummy = {}
-      for x = self.bounds.x[1], self.bounds.x[2] do
+      for x = self.bounds.x.min, self.bounds.x.max do
          self.cells[x - 2] = nil -- free past columns as soon as possible, so they can be GC'd sooner
          --
          local col = self.cells[x]
          if col then
             local x_prev = self.cells[x - 1] or dummy
-            for y = self.bounds.y[1], self.bounds.y[2] do
+            for y = self.bounds.y.min, self.bounds.y.max do
                local cell = col[y]
                if cell then
                   --
                   -- We want to find out what island the cell belongs to (or create an island), 
-                  -- and store that island's index in place of the cell's boolean "true" value.
+                  -- and store that island's index in place of the cell object.
                   --
                   local a = tonumber(x_prev[y])  -- left
                   local b = tonumber(col[y - 1]) -- above
@@ -93,16 +92,17 @@ do
                      -- This, of course, means that self.islands[n] can be an island object or 
                      -- the numeric index of some other island object in the same list.
                      --
-                     local ia = self.islands[a or dummy]
-                     local ib = self.islands[b or dummy]
+                     local na = self.islands[a or dummy]
+                     local nb = self.islands[b or dummy]
+                     local ia
+                     local ib
+                     ia, a = resolve_island(na)
+                     ib, b = resolve_island(nb)
                      island = ia or ib
-                     while tonumber(island) do -- a loop is needed because a "chain" of merged islands can come to exist
-                        a = island -- for below, when we overwrite the "true" value with an island index: we want to use the "most recent" index of this island
-                        island = self.islands[island]
-                     end
-                     if ia and ib and ia ~= ib and not tonumber(ia) and not tonumber(ib) then
+                     if ia and ib and ia ~= ib then
                         ia:merge(ib)
                         self.islands[b] = a
+                        b = a
                      end
                   end
                   --
@@ -111,21 +111,16 @@ do
                   -- already-existing island, which means we must create one.
                   --
                   if island then
-                     if not tonumber(cell) then
-                        island:accept_cell(cell)
-                     end
+                     island:accept_cell(cell)
                      col[y] = a or b
                   else
                      count = count + 1
                      col[y] = count
                      --
                      island = RefrGroupIsland:new(self)
+                     island:accept_cell(cell)
                      self.islands[count] = island
-                     if not tonumber(cell) then
-                        island:accept_cell(cell)
-                     end
                   end
-                  island:accept_ref(x, y)
                end
             end
          end

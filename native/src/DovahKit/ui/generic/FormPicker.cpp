@@ -63,6 +63,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
    layout->addWidget(this->subwidgets.type, 0);
    layout->addWidget(this->subwidgets.form, 1);
    layout->setMargin(0);
+   layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
    this->setFocusProxy(this->subwidgets.type);
    this->setTabOrder(this->subwidgets.type, this->subwidgets.form);
 

@@ -58,38 +58,13 @@ do
       local cells   = world:get_all_cells()
       local count   = #cells
       local extents = nil
-      local rasters = nil
       
       _update_progress("Checking world height range...", 0, count, 0)
       do
-         function _update(t, v, b) -- call _update(tbl, v) or _update(tbl, min, max)
-            if not t.min or v < t.min then
-               t.min = v
-            end
-            if b then
-               if not t.max or b > t.max then
-                  t.max = b
-               end
-            else
-               if not t.max or v > t.max then
-                  t.max = v
-               end
-            end
-         end
-         --
          extents = {
-            x = {
-               min = nil,
-               max = nil,
-            },
-            y = {
-               min = nil,
-               max = nil,
-            },
-            z = {
-               min = nil,
-               max = nil,
-            },
+            x = Range:new(),
+            y = Range:new(),
+            z = Range:new(),
             width  = nil,
             height = nil,
          }
@@ -98,8 +73,8 @@ do
             local gc   = cell.grid_coords
             local gx   = gc.x
             local gy   = -gc.y
-            _update(extents.x, gx)
-            _update(extents.y, gy)
+            extents.x:accept(gx)
+            extents.y:accept(gy)
             --
             progress.value = i
          end
@@ -177,8 +152,9 @@ do
                   local base = form.base_form
                   if base_form_set[base] then
                      local p = form.position
+                     local x = p.x - (extents.x.min * 4096)
                      local y = -p.y - (extents.y.min * 4096)
-                     all_maps:accept(base, p.x, y)
+                     all_maps:accept(base, x, y)
                   end
                end
             end

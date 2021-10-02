@@ -12,6 +12,7 @@
       <latest-version>0.0.0.1</latest-version>
    </environment>
    <files>
+range.lua
 config.lua
 texture-cache.lua
 refr-cell.lua

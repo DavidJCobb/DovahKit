@@ -1,5 +1,6 @@
 #include "objectreference.h"
 #include <array>
+#include <span>
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/istablelike.h"
 #include "../../core/subsystems/permissions.h"
@@ -39,14 +40,83 @@ namespace {
    using cls          = wrappers::objectreference;
    using wrapped_type = dovah::loaded_forms::ObjectReference;
 
+   // Helpers for form flags
    namespace _helpers {
-      struct _flag_definition {
-         const char* name;
-         uint32_t value;
-         std::initializer_list<uint8_t> base_form_types; // empty = matches all base form types
+      using ft = dovah::form_type;
+
+      template<typename T> concept IsFormTypeValue = std::is_same_v<T, dovah::form_type::type> || std::is_same_v<T, dovah::form_type_t>;
+
+      //
+      // Constexpr-friendly list of form types, initializable from std::array.
+      //
+      struct form_type_list {
+         public:
+            using value_type = dovah::form_type_t;
+            static constexpr size_t value_count = 25;
+
+            using list_type = std::array<value_type, value_count>;
+            using iterator       = list_type::iterator;
+            using const_iterator = list_type::const_iterator;
+
+         private:
+            list_type list  = {};
+            size_t    count = 0;
+         public:
+            constexpr form_type_list() {}
+            constexpr form_type_list(std::initializer_list<value_type> values) {
+               for (auto v : values)
+                  this->list[this->count++] = v;
+            }
+            template<size_t S> constexpr form_type_list(const std::array<value_type, S> arr) {
+               static_assert(S < value_count, "The form_type_list::list member needs to be larger in order to hold all possible lists.");
+               for (auto v : arr)
+                  this->list[this->count++] = v;
+            }
+
+            constexpr bool empty() const noexcept { return this->count != 0; }
+            constexpr size_t size() const noexcept { return this->count; }
+
+            constexpr value_type& operator[](size_t i) noexcept { return this->list[i]; }
+            constexpr const value_type& operator[](size_t i) const noexcept { return this->list[i]; }
+
+            iterator begin() noexcept { return this->list.begin(); }
+            iterator end() noexcept { return this->list.begin(); }
+            const_iterator begin() const noexcept { return this->list.cbegin(); }
+            const_iterator end() const noexcept { return this->list.cbegin(); }
+            const_iterator cbegin() const noexcept { return this->list.cbegin() + this->count; }
+            const_iterator cend() const noexcept { return this->list.cbegin() + this->count; }
+
+            inline constexpr bool contains(value_type t) const noexcept {
+               for (auto v : list)
+                  if (v == t)
+                     return true;
+               return false;
+            }
       };
 
-      using ft = dovah::form_type;
+      template<dovah::form_type_t... Types> static constexpr auto form_types = std::array{ Types... };
+
+      template<typename Ta, typename Tb, size_t Sa, size_t Sb> requires IsFormTypeValue<Ta> && IsFormTypeValue<Tb>
+      static constexpr const std::array<dovah::form_type_t, Sa + Sb> concatenate_form_type_lists(const std::array<Ta, Sa> a, const std::array<Tb, Sb> b) {
+         std::array<dovah::form_type_t, Sa + Sb> out = {};
+         size_t i = 0;
+         for (auto v : a)
+            out[i++] = (dovah::form_type_t)v;
+         for (auto v : b)
+            out[i++] = (dovah::form_type_t)v;
+         return out;
+      }
+
+      static constexpr auto all_item_types = form_types<ft::ammo, ft::apparatus, ft::armor, ft::book, ft::ingredient, ft::key, ft::leveled_item, ft::light, ft::misc_item, ft::note, ft::potion, ft::scroll, ft::soul_gem, ft::weapon>;
+
+      struct _flag_definition {
+         const char*    name  = nullptr;
+         uint32_t       value = 0;
+         form_type_list base_form_types; // empty = matches all base form types
+      };
+
+      // Master list of all REFR flags. Not used by code; rather, used to generate 
+      // sub-lists at compile-time.
       constexpr std::array refr_flags = {
          _flag_definition{ "persistent",              wrapped_type::form_flag::persistent },
          _flag_definition{ "disabled",                wrapped_type::form_flag::disabled },
@@ -62,27 +132,79 @@ namespace {
          _flag_definition{ "is_full_lod",             wrapped_type::form_flag::is_full_lod },
          _flag_definition{ "never_fades",             wrapped_type::form_flag::never_fades,              { ft::light } },
          _flag_definition{ "doesnt_light_landscape",  wrapped_type::form_flag::doesnt_light_landscape,   { ft::light } },
-         _flag_definition{ "no_ai_acquire",           wrapped_type::form_flag::no_ai_acquire,            { ft::actor, ft::container, ft::light, ft::ammo, ft::apparatus, ft::armor, ft::book, ft::ingredient, ft::key, ft::leveled_item, ft::misc_item, ft::note, ft::potion, ft::scroll, ft::soul_gem, ft::weapon } },
+         _flag_definition{ "no_ai_acquire",           wrapped_type::form_flag::no_ai_acquire,            concatenate_form_type_lists(all_item_types, std::array{ ft::actor, ft::container }) },
          //_flag_definition{ "filter",                 wrapped_type::form_flag::filter },       // expose this only once we're sure what it even friggin' does
          //_flag_definition{ "bounding_box",           wrapped_type::form_flag::bounding_box }, // expose this only once we're sure what it even friggin' does
          _flag_definition{ "reflected_by_cell_water", wrapped_type::form_flag::reflected_by_auto_water },
-         _flag_definition{ "dont_havok_settle",       wrapped_type::form_flag::dont_havok_settle,        { ft::actor, ft::activator, ft::addon_node, ft::door, ft::light, ft::movable_static, ft::statik, ft::tree, ft::ammo, ft::apparatus, ft::armor, ft::book, ft::ingredient, ft::key, ft::leveled_item, ft::misc_item, ft::note, ft::potion, ft::scroll, ft::soul_gem, ft::weapon } },
+         _flag_definition{ "dont_havok_settle",       wrapped_type::form_flag::dont_havok_settle,        concatenate_form_type_lists(all_item_types, std::array{ ft::actor, ft::activator, ft::addon_node, ft::door, ft::movable_static, ft::statik, ft::tree }) },
+         _flag_definition{ "no_respawn",              wrapped_type::form_flag::no_respawn,               concatenate_form_type_lists(all_item_types, std::array{ ft::activator, ft::addon_node, ft::door, ft::movable_static, ft::statik, ft::tree }) },
+         _flag_definition{ "ground",                  wrapped_type::form_flag::ground },
          //_flag_definition{ "multibound",              wrapped_type::form_flag::multibound },  // expose this only once we're sure what it even friggin' does
       };
+      static constexpr size_t type_specific_flag_count = ([]() {
+         size_t i = 0;
+         for (auto& e : refr_flags)
+            if (!e.base_form_types.empty())
+               ++i;
+         return i;
+      })();
 
-      const _flag_definition* get_definition_by_flag(uint32_t flag, dovah::form_type_t type) noexcept {
-         for (auto& def : refr_flags) {
-            if (def.value != flag)
-               continue;
-            auto& list = def.base_form_types;
-            if (list.size()) {
-               auto it = std::find(list.begin(), list.end(), type);
-               if (it == list.end())
-                  continue;
+      // Auto-generated sub-list of just the non-form-type-specific flags.
+      constexpr auto global_flags = ([]() {
+         constexpr size_t size = refr_flags.size();
+         std::array<_flag_definition, size - type_specific_flag_count> out = {};
+         //
+         size_t j = 0;
+         for (size_t i = 0; i < size; ++i) {
+            if (refr_flags[i].base_form_types.empty()) {
+               out[j] = refr_flags[i];
+               ++j;
             }
-            return &def;
          }
-         return nullptr;
+         return out;
+      })();
+      // Auto-generated sub-list of just the form-type-specific flags.
+      constexpr auto type_specific_flags = ([]() {
+         constexpr size_t size = refr_flags.size();
+         std::array<_flag_definition, type_specific_flag_count> out = {};
+         //
+         size_t j = 0;
+         for (size_t i = 0; i < size; ++i) {
+            if (!refr_flags[i].base_form_types.empty()) {
+               out[j] = refr_flags[i];
+               ++j;
+            }
+         }
+         return out;
+      })();
+      static_assert(global_flags.size()        < refr_flags.size()); // basic correctness checks
+      static_assert(type_specific_flags.size() < refr_flags.size());
+
+      // Flags-mask consisting of all flags that can be type-specific. Used to quickly 
+      // decide which of the above two sub-lists to search.
+      static constexpr uint32_t all_type_specific_flags = ([]() {
+         uint32_t x = 0;
+         for (auto& e : type_specific_flags)
+            x |= e.value;
+         return x;
+      })();
+
+      bool flag_is_valid_for_form(uint32_t flag, const dovah::form_stub* refr) noexcept {
+         if (_helpers::all_type_specific_flags & flag) {
+            auto* base = dovah::form_stub_helpers::get_base_form(refr);
+            auto  type = base->formType;
+            for (auto& def : _helpers::type_specific_flags) {
+               if (def.value != flag)
+                  continue;
+               if (def.base_form_types.contains(type))
+                  return true;
+            }
+            // Fall through. There is at least one flag, 0x40000000, whose meaning is "no respawn" for lots of dynamic objects but "ground" for everything else
+         }
+         for (auto& def : _helpers::global_flags)
+            if (def.value == flag)
+               return true;
+         return false;
       }
    }
 
@@ -91,18 +213,16 @@ namespace {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         auto* base  = dovah::form_stub_helpers::get_base_form(self.stub);
-         //
-         constexpr int index_flag  = lua_upvalueindex(1);
-         assert(lua_type(L, index_flag) == LUA_TNUMBER);
-         uint32_t flag = lua_tointeger(L, index_flag);
-         assert(flag && "The flag should not be zero. Storage/conversion error?");
-         //
-         const auto* definition = _helpers::get_definition_by_flag(flag, base ? base->formType : dovah::form_type::none);
-         if (!definition) {
-            return 0;
+         uint32_t flag;
+         {
+            constexpr int index_flag = lua_upvalueindex(1);
+            assert(lua_type(L, index_flag) == LUA_TNUMBER);
+            flag = lua_tointeger(L, index_flag);
+            assert(flag && "The flag should not be zero. Storage/conversion error?");
          }
-         auto  flags = self.stub->get_record_flags();
+         if (!_helpers::flag_is_valid_for_form(flag, self.stub))
+            return 0;
+         auto flags = self.stub->get_record_flags();
          lua_pushboolean(L, (flags & flag) != 0);
          return 1;
       }
@@ -144,26 +264,21 @@ namespace {
       int _flag(lua_State* L) { // generic setter for any form flag; relies on an upvalue to indicate the flag; references a list near the top of this file
          core::subsystems::permissions::verify_form_write_permissions();
          //
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
-         cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-         bool  value = lua_toboolean(L, 2);
-         auto* base  = dovah::form_stub_helpers::get_base_form(self.stub);
-         //
-         constexpr int index_flag  = lua_upvalueindex(1);
-         assert(lua_type(L, index_flag) == LUA_TNUMBER);
-         uint32_t flag = lua_tointeger(L, index_flag);
-         assert(flag && "The flag should not be zero. Storage/conversion error?");
-         //
-         const auto* definition = _helpers::get_definition_by_flag(flag, base ? base->formType : dovah::form_type::none);
-         if (!definition) {
-            if (base)
-               cobb::lua::error(L, "this flag is not available for references whose base forms are of this type");
-            cobb::lua::error(L, "this flag is not available for references with no base form");
+         uint32_t flag;
+         {
+            constexpr int index_flag = lua_upvalueindex(1);
+            assert(lua_type(L, index_flag) == LUA_TNUMBER);
+            flag = lua_tointeger(L, index_flag);
+            assert(flag && "The flag should not be zero. Storage/conversion error?");
          }
+         if (!_helpers::flag_is_valid_for_form(flag, self.stub))
+            cobb::lua::error(L, "this flag is not available for references whose base forms are of this type");
          self.before_edit();
-         self.stub->edit_record_flags(definition->value, value);
+         self.stub->edit_record_flags(flag, lua_toboolean(L, 2));
          self.after_edit();
          return 0;
       }
