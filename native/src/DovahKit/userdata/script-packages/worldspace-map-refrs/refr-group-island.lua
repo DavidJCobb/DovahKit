@@ -25,6 +25,10 @@ do
          fill = false,
          line = false,
       }
+      instance.paths = {
+         fill = false,
+         line = false,
+      }
       instance.refs = {} -- list of world-relative coordinate tuples
       return instance
    end
@@ -92,8 +96,8 @@ do
          width  = (x_max - x_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
          height = (y_max - y_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
       })
-      local layer_line = self.owner.layers:append_layer()
-      local layer_fill = self.owner.layers:append_layer()
+      local layer_line = self.owner.layer_groups.line:append_layer()
+      local layer_fill = self.owner.layer_groups.fill:append_layer()
       self.layers.line = layer_line
       self.layers.fill = layer_fill
       do
@@ -106,7 +110,7 @@ do
          layer_fill.data = self.images.fill
       end
    end
-   function RefrGroupIsland:draw()
+   function RefrGroupIsland:draw(force_rebuild)
       local x_min = self.bounds.x.min - 1
       local x_max = self.bounds.x.max + 1
       local y_min = self.bounds.y.min - 1
@@ -115,34 +119,44 @@ do
       local img_line = self.images.line
       local img_fill = self.images.fill
       if not (img_line and img_fill) then
-         error("RefrGroupIsland:draw must be called only after RefrGroupIsland:crete_canvas_data")
+         error("RefrGroupIsland:draw must be called only after RefrGroupIsland:create_canvas_data")
       end
       local color = self.owner.color
       self:set_visible(false)
       --
       local ox = x_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
       local oy = (y_min - 1) * LAND_VERTICES_PER_CELL - LINE_RADIUS
-      for i = 1, #self.refs do
-         local pair = self.refs[i]
-         --
-         local x = pair.x / WORLD_UNITS_PER_LAND_VERTEX -- world coordinates -> heightmap coordinates
-         local y = pair.y / WORLD_UNITS_PER_LAND_VERTEX -- world coordinates -> heightmap coordinates
-         x = x - ox
-         y = y - oy
-         x = math.round(x)
-         y = math.round(y)
-         --
-         img_fill:draw_ellipse({
-            center     = { x, y },
-            radius     = FILL_RADIUS,
-            fill_color = color,
-         })
-         img_line:draw_ellipse({
-            center     = { x, y },
-            radius     = LINE_RADIUS,
-            fill_color = "#000",
-         })
+      local path_fill = self.paths.fill
+      local path_line = self.paths.line
+      if force_rebuild or not (path_fill and path_line) then
+         path_fill = raster_draw_path.new()
+         path_line = raster_draw_path.new()
+         self.paths.fill = path_fill
+         self.paths.line = path_line
+         for i = 1, #self.refs do
+            local pair = self.refs[i]
+            --
+            local x = pair.x / WORLD_UNITS_PER_LAND_VERTEX -- world coordinates -> heightmap coordinates
+            local y = pair.y / WORLD_UNITS_PER_LAND_VERTEX -- world coordinates -> heightmap coordinates
+            x = x - ox
+            y = y - oy
+            x = math.round(x)
+            y = math.round(y)
+            --
+            path_fill:add_ellipse({
+               center = { x, y },
+               radius = FILL_RADIUS,
+            })
+            path_line:add_ellipse({
+               center = { x, y },
+               radius = LINE_RADIUS,
+            })
+         end
       end
+      img_fill:fill("#00000000") -- clear
+      img_line:fill("#00000000") -- clear
+      img_fill:draw_path({ path = path_fill, fill_color = color })
+      img_line:draw_path({ path = path_line, fill_color = "#000" })
       --
       self:set_visible(true)
    end

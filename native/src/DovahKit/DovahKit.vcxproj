@@ -421,6 +421,7 @@
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
+    <ClCompile Include="helpers\cpuinfo.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
@@ -452,6 +453,7 @@
     <ClCompile Include="helpers\qt\traversal.cpp" />
     <ClCompile Include="helpers\qt\url.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
+    <ClCompile Include="helpers\qt\widget_utils.cpp" />
     <ClCompile Include="helpers\qt\xml_html_entity_resolver.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
     <ClCompile Include="helpers\set_current_thread_name.cpp" />
@@ -554,7 +556,10 @@
     <ClInclude Include="dovahscript\wrappers\form\objectreference\rotation.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\position.h" />
     <ClInclude Include="helpers\all_html_entities.h" />
+    <ClInclude Include="helpers\cpuinfo.h" />
     <ClInclude Include="helpers\lua\is_invocable.h" />
+    <ClInclude Include="helpers\masking.h" />
+    <ClInclude Include="helpers\qt\widget_utils.h" />
     <ClInclude Include="helpers\qt\xml_html_entity_resolver.h" />
     <ClInclude Include="helpers\static_string.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />

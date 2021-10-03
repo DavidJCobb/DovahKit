@@ -58,6 +58,53 @@ namespace {
    };
 
    namespace _methods {
+      int add_ellipse(lua_State* L) {
+         auto* path = cls::pull_self(L);
+         luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
+         lua_settop(L, 2);
+         //
+         QPointF center;
+         QSizeF  radii;
+         //
+         lua_getfield(L, 2, "center"); // 3
+         if (cobb::lua::pull_qpoint_float(L, 3, center) != 0) {
+            lua_getfield(L, 2, "x"); // 4
+            lua_getfield(L, 2, "y"); // 5
+            if (!lua_isnumber(L, 3))
+               cobb::lua::error(L, "options.center was unspecified or invalid, and options.x was not a number");
+            if (!lua_isnumber(L, 4))
+               cobb::lua::error(L, "options.center was unspecified or invalid, and options.y was not a number");
+            center.setX(lua_tonumber(L, 3));
+            center.setY(lua_tonumber(L, 4));
+            lua_pop(L, 2);
+         }
+         lua_pop(L, 1);
+         //
+         lua_getfield(L, 2, "radius"); // 3
+         if (!lua_isnoneornil(L, 3)) {
+            if (!lua_isnumber(L, 3))
+               cobb::lua::error(L, "options.radius was neither nil nor a number");
+            auto n = lua_tonumber(L, 3);
+            radii.setWidth(n);
+            radii.setHeight(n);
+         } else {
+            QPointF working;
+            lua_getfield(L, 2, "radii"); // 4
+            if (!cobb::lua::pull_qpoint_float(L, 4, working))
+               cobb::lua::error(L, "options.radius was unspecified, and options.radii was unspecified or invalid");
+            lua_pop(L, 1);
+            radii.setWidth(working.x());
+            radii.setHeight(working.y());
+         }
+         lua_pop(L, 1);
+         //
+         center += { -1, -1 }; // Lua values should start from (1, 1)
+         //
+         path->closeSubpath();
+         path->addEllipse(center, radii.width(), radii.height());
+         path->closeSubpath();
+         return 0;
+      }
       int arc_to(lua_State* L) {
          auto* path = cls::pull_self(L);
          QPointF from;
@@ -331,9 +378,10 @@ namespace dovahscript::wrappers {
       { "__close", &_wrapped_path::__close }, // This userdata doesn't derive from (wrapper), so it needs its own GC code
       { "__gc",    &_wrapped_path::__gc },    //
       //
-      { "arc_to",  &_methods::arc_to },
-      { "line_to", &_methods::line_to },
-      { "move_to", &_methods::move_to },
+      { "add_ellipse", &_methods::add_ellipse },
+      { "arc_to",      &_methods::arc_to },
+      { "line_to",     &_methods::line_to },
+      { "move_to",     &_methods::move_to },
    };
    /*static*/ cls::method_list_t cls::metatable_getters = {
    };

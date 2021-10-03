@@ -11,7 +11,12 @@ do
       instance.cells   = {} -- cleared after islands are generated
       instance.bounds  = { x = Range:new(), y = Range:new() }
       instance.islands = {}
-      instance.layers  = false
+      instance.layer_groups = { line = false, fill = false }
+      do
+         local id     = base_form:form_id_to_string()
+         local editor = base_form.editor_id or "<unnamed>"
+         instance.name = string.format("[%s] %s", id, editor)
+      end
       return instance
    end
    function RefrGroup:accept_ref(wx, wy)
@@ -30,13 +35,17 @@ do
       end
       col[y]:accept_ref(wx, wy)
    end
-   function RefrGroup:create_canvas_data(root_group)
-      if self.layers then
+   function RefrGroup:create_canvas_data(root_line_group, root_fill_group)
+      local lg = self.layer_groups
+      if lg.line or lg.fill then
          error("This RefrGroup already has canvas data.")
       end
-      local group = root_group:append_layer_group()
-      group.name = "References with base form: " .. self.form:form_id_to_string()
-      self.layers = group
+      local group_line = root_line_group:append_layer_group()
+      local group_fill = root_fill_group:append_layer_group()
+      group_line.name = "Form " .. self.name .. " (outlines)"
+      group_fill.name = "Form " .. self.name .. " (fill)"
+      lg.line = group_line
+      lg.fill = group_fill
    end
    function RefrGroup:generate_islands()
       if self.bounds.x:empty() or self.bounds.y:empty() then -- skip island generation if this map is empty
@@ -158,6 +167,10 @@ do
       end
    end
    function RefrGroup:set_visible(state)
-      self.layers.visible = state
+      if not self.layer_groups.line then
+         return
+      end
+      self.layer_groups.line.visible = state
+      self.layer_groups.fill.visible = state
    end
 end

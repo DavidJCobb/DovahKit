@@ -171,6 +171,8 @@ do
             _update_progress("Drawing outlines...", 0, count, 0)
             --
             local root_group = false
+            local line_group = false
+            local fill_group = false
             for i = 1, count do
                local name = files[i]
                local map  = all_maps.maps[name]
@@ -180,9 +182,13 @@ do
                if #islands > 0 then
                   if not root_group then -- lazy-create these layer groups
                      root_group = canvas:append_layer_group()
-                     root_group.name = "Ref locations"
+                     root_group.name = "Base forms"
+                     fill_group = root_group:append_layer_group()
+                     fill_group.name = "Fill"
+                     line_group = root_group:append_layer_group()
+                     line_group.name = "Outlines"
                   end
-                  map:create_canvas_data(root_group)
+                  map:create_canvas_data(line_group, fill_group)
                   for j = 1, #islands do
                      local island = islands[j]
                      island:create_canvas_data()
@@ -192,7 +198,6 @@ do
                progress.value = i
             end
          end
-last_rendered_maps = all_maps
          dovah.benchmark_stop(benchmark)
          dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
          HeightmapWindow:import_cell_outline_data(all_maps)

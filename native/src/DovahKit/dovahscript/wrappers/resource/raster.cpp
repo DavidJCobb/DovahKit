@@ -1,4 +1,5 @@
 #include "raster.h"
+#include <array>
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/for_each_in_array.h"
 #include "../../../helpers/lua/istablelike.h"
@@ -7,6 +8,7 @@
 #include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/lua/tostringex.h"
 #include "../../../helpers/lua/warning.h"
+#include "../../../helpers/masking.h"
 #include "../../../helpers/rotation.h"
 #include "../../constants/qt_graphics.h"
 #include "../../core/subsystems/permissions.h"
@@ -644,9 +646,9 @@ namespace {
                case -3:
                   cobb::lua::argerror(L, 2, "options.offset was specified but there was no y-coordinate (options.offset.y or options.offset[2])");
             }
+            offset -= { 1.0, 1.0 }; // Lua coords to normal
          }
          lua_pop(L, 1);
-         offset -= { 1.0, 1.0 }; // Lua coords to normal
          //
          QPen   pen;
          QBrush brush      = QBrush(Qt::SolidPattern);
@@ -788,6 +790,25 @@ namespace {
          //
          self.managed_resource->modify_raster_script_side([color](QImage& image) {
             image.fill(color);
+         });
+         //
+         return 0;
+      }
+      int fill_rgb(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         //
+         QColor color = api_helpers::pull_color(L, 2);
+         //
+         self.managed_resource->modify_raster_script_side([color](QImage& image) {
+            assert(image.format() == desired_qt_pixel_format);
+            auto w   = image.width();
+            auto h   = image.height();
+            auto len = (size_t)w * h;
+            //
+            uint32_t write = color.rgb();
+            cobb::mask_operations::overwrite_values_with_mask<uint32_t, (std::array{ false,true,true,true })>((uint32_t*)image.scanLine(0), write, len);
          });
          //
          return 0;
@@ -1068,6 +1089,7 @@ namespace dovahscript::wrappers::resource {
       { "draw_raster",  &_methods::draw_raster },
       { "draw_rect",    &_methods::draw_rect },
       { "fill",         &_methods::fill },
+      { "fill_rgb",     &_methods::fill_rgb },
       { "flip",         &_methods::flip },      // `raster:flip("horizontal")` or `raster:flip("h")` or `raster:flip("vertical")` or `raster:flip("v")` or `raster:flip("both")`
       { "get_pixel",    &_methods::get_pixel },
       { "resize",       &_methods::resize },
