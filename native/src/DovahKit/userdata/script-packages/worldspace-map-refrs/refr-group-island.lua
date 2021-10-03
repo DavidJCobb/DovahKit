@@ -4,6 +4,10 @@ do
    local LAND_VERTICES_PER_CELL      <const> = 32
    local WORLD_UNITS_PER_CELL_SIDE   <const> = 4096
    local WORLD_UNITS_PER_LAND_VERTEX <const> = (WORLD_UNITS_PER_CELL_SIDE / LAND_VERTICES_PER_CELL)
+   
+   local FILL_RADIUS   <const> = 5
+   local LINE_RADIUS   <const> = FILL_RADIUS + 2
+   local LAYER_PADDING <const> = LINE_RADIUS * 2
 
    function RefrGroupIsland:new(owner)
       if not owner then
@@ -81,24 +85,24 @@ do
       local y_max = self.bounds.y.max + 1
       --
       self.images.line = raster.new({
-         width  = (x_max - x_min + 1) * LAND_VERTICES_PER_CELL,
-         height = (y_max - y_min + 1) * LAND_VERTICES_PER_CELL,
+         width  = (x_max - x_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
+         height = (y_max - y_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
       })
       self.images.fill = raster.new({
-         width  = (x_max - x_min + 1) * LAND_VERTICES_PER_CELL,
-         height = (y_max - y_min + 1) * LAND_VERTICES_PER_CELL,
+         width  = (x_max - x_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
+         height = (y_max - y_min + 1) * LAND_VERTICES_PER_CELL + LAYER_PADDING,
       })
       local layer_line = self.owner.layers:append_layer()
       local layer_fill = self.owner.layers:append_layer()
       self.layers.line = layer_line
       self.layers.fill = layer_fill
       do
-         layer_line.x = x_min * LAND_VERTICES_PER_CELL
-         layer_line.y = y_min * LAND_VERTICES_PER_CELL
+         layer_line.x = x_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
+         layer_line.y = y_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
          layer_line.data = self.images.line
          --
-         layer_fill.x = x_min * LAND_VERTICES_PER_CELL
-         layer_fill.y = y_min * LAND_VERTICES_PER_CELL
+         layer_fill.x = x_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
+         layer_fill.y = y_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
          layer_fill.data = self.images.fill
       end
    end
@@ -116,8 +120,8 @@ do
       local color = self.owner.color
       self:set_visible(false)
       --
-      local ox = x_min * LAND_VERTICES_PER_CELL
-      local oy = (y_min + 1) * LAND_VERTICES_PER_CELL
+      local ox = x_min * LAND_VERTICES_PER_CELL - LINE_RADIUS
+      local oy = (y_min - 1) * LAND_VERTICES_PER_CELL - LINE_RADIUS
       for i = 1, #self.refs do
          local pair = self.refs[i]
          --
@@ -128,15 +132,14 @@ do
          x = math.round(x)
          y = math.round(y)
          --
-         local radius = 5
          img_fill:draw_ellipse({
             center     = { x, y },
-            radius     = radius,
+            radius     = FILL_RADIUS,
             fill_color = color,
          })
          img_line:draw_ellipse({
             center     = { x, y },
-            radius     = radius + 2,
+            radius     = LINE_RADIUS,
             fill_color = "#000",
          })
       end

@@ -168,8 +168,8 @@ do
       }
       do
          local root = instance.widget
-         root.layout_margins = 0
          root:set_layout("ltr")
+         root.layout_margins = 0
          --
          local text = ""
          do
@@ -305,6 +305,7 @@ do -- HeightmapWindow contents
          do
             local widget = ui.widget.new()
             widget:set_layout("down")
+            widget.layout_margins = 0
             HeightmapWindow.controls.options.outline_toggle_holder = widget
             --
             config:add_child(widget)

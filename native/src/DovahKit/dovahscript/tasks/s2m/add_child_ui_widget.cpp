@@ -2,6 +2,7 @@
 #include <QBoxLayout>
 #include <QGridLayout>
 #include "../../../helpers/qt/traversal.h"
+#include "../../../helpers/qt/widget_utils.h"
 #include "../../core/subsystems/lifetime.h"
 #include "../../widget_overrides.h"
 
@@ -40,6 +41,16 @@ namespace dovahscript::tasks::s2m {
       } else {
          this->error = error_code::unknown_layout_type;
          return;
+      }
+      if (this->parent->isVisible() && !cobb::qt::is_explicitly_hidden(this->child)) {
+         //
+         // There is some unknown edge-case buried within Qt that can cause the child widget to not 
+         // automatically be shown when the parent is already visible. Qt documentation mentions 
+         // this only in the context of the QWidget constructor (i.e. creating and adding a child 
+         // widget as a single operation), and not otherwise. It doesn't consistently happen in 
+         // other situations, however.
+         //
+         this->child->show();
       }
       core::subsystems::lifetime::get().on_hierarchy_item_parent_changed(this->child, prior_parent);
    }
