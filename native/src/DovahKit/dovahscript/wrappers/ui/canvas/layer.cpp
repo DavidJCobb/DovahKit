@@ -47,6 +47,48 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      int move_backward(lua_State* L) {
+         auto& self   = get_wrapper_for_thiscall<cls>(L);
+         auto* entity = self.canvas_entity;
+         if (!entity)
+            return 0;
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [entity = task_reference(entity)]() {
+            auto* parent = entity->parent();
+            if (!parent)
+               return;
+            if (auto* casted = qobject_cast<CanvasWidget*>(parent)) {
+               casted->moveLayerBackward(entity);
+               return;
+            }
+            if (auto* casted = qobject_cast<CanvasWidgetLayerGroup*>(parent)) {
+               casted->moveLayerBackward(entity);
+               return;
+            }
+         });
+         send_script_ui_task(*task);
+         return 0;
+      }
+      int move_forward(lua_State* L) {
+         auto& self   = get_wrapper_for_thiscall<cls>(L);
+         auto* entity = self.canvas_entity;
+         if (!entity)
+            return 0;
+         auto* task = new tasks::s2m::ui_write_lambda_ex(false, [entity = task_reference(entity)]() {
+            auto* parent = entity->parent();
+            if (!parent)
+               return;
+            if (auto* casted = qobject_cast<CanvasWidget*>(parent)) {
+               casted->moveLayerForward(entity);
+               return;
+            }
+            if (auto* casted = qobject_cast<CanvasWidgetLayerGroup*>(parent)) {
+               casted->moveLayerForward(entity);
+               return;
+            }
+         });
+         send_script_ui_task(*task);
+         return 0;
+      }
    }
    namespace _getters {
       int blend_mode(lua_State* L) {
@@ -293,6 +335,8 @@ namespace {
 
 namespace dovahscript::wrappers::ui {
    /*static*/ cls::method_list_t cls::metatable_methods = {
+      { "move_backward", &_methods::move_backward },
+      { "move_forward",  &_methods::move_forward },
    };
    /*static*/ cls::method_list_t cls::metatable_getters = {
       { "blend_mode", &_getters::blend_mode },

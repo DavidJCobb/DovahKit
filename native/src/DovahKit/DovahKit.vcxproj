@@ -481,6 +481,7 @@
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -566,6 +567,7 @@
     <QtMoc Include="widgets\DKUnreadCountBadgePaneHeader.h" />
     <QtMoc Include="widgets\DKUnreadCountBadge.h" />
     <QtMoc Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />

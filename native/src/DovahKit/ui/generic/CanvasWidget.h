@@ -49,6 +49,8 @@ class CanvasWidget : public QWidget {
 
       void moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
       void moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
+      void moveLayerBackward(CanvasWidgetEntity*);
+      void moveLayerForward(CanvasWidgetEntity*);
 
       // Traverses all child and descendant layers, returning a list of those and any data 
       // objects that those may have. Useful if, say, you plan on using this widget in Lua 
@@ -138,6 +140,8 @@ class CanvasWidgetLayerGroup : public CanvasWidgetEntity {
 
       void moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
       void moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
+      void moveLayerBackward(CanvasWidgetEntity*);
+      void moveLayerForward(CanvasWidgetEntity*);
 
       QImage render(QRect canvas, QPoint effective_position);
 };

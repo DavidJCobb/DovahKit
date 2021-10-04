@@ -97,11 +97,6 @@ do
       
       _update_progress("Preparing canvas...", 0, 0, 0)
       do
-         rasters = {
-            render  = {},
-            working = {},
-         }
-         --
          local IMAGE_W = 32 * extents.width
          local IMAGE_H = 32 * extents.height
          canvas.width  = IMAGE_W
@@ -183,10 +178,10 @@ do
                   if not root_group then -- lazy-create these layer groups
                      root_group = canvas:append_layer_group()
                      root_group.name = "Base forms"
-                     fill_group = root_group:append_layer_group()
-                     fill_group.name = "Fill"
                      line_group = root_group:append_layer_group()
                      line_group.name = "Outlines"
+                     fill_group = root_group:append_layer_group()
+                     fill_group.name = "Fill"
                   end
                   map:create_canvas_data(line_group, fill_group)
                   for j = 1, #islands do
@@ -200,7 +195,7 @@ do
          end
          dovah.benchmark_stop(benchmark)
          dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
-         HeightmapWindow:import_cell_outline_data(all_maps)
+         HeightmapWindow:generate_map_toggles(all_maps)
          _update_progress("Done!", 0, count, count)
       end
    end

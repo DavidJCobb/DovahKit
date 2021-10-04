@@ -26,8 +26,10 @@ namespace cobb::qt {
    // you have a custom widget with QObject children, where the child order 
    // determines Z-order or something similar.
    extern void move_object_before(QObject* parent, QObject* subject, QObject* target);
-
    extern void move_object_after(QObject* parent, QObject* subject, QObject* target);
+
+   extern void move_object_backward(QObject* parent, QObject* subject);
+   extern void move_object_forward(QObject* parent, QObject* subject);
 
    extern bool a_is_ancestor_of_b(const QObject* a, const QObject* b);
 }

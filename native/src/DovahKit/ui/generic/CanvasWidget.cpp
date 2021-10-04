@@ -179,9 +179,19 @@ void CanvasWidget::setImageHeight(int h) noexcept {
 
 void CanvasWidget::moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_before(this, subject, target);
+   this->update();
 }
 void CanvasWidget::moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_after(this, subject, target);
+   this->update();
+}
+void CanvasWidget::moveLayerBackward(CanvasWidgetEntity* subject) {
+   cobb::qt::move_object_backward(this, subject);
+   this->update();
+}
+void CanvasWidget::moveLayerForward(CanvasWidgetEntity* subject) {
+   cobb::qt::move_object_forward(this, subject);
+   this->update();
 }
 
 QList<QObject*> CanvasWidget::allAssociatedObjects(bool includeWidgets) const noexcept {
@@ -375,9 +385,23 @@ QRegion CanvasWidgetLayerGroup::region() const noexcept {
 
 void CanvasWidgetLayerGroup::moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_before(this, subject, target);
+   if (auto* widget = this->canvas())
+      widget->update();
 }
 void CanvasWidgetLayerGroup::moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_after(this, subject, target);
+   if (auto* widget = this->canvas())
+      widget->update();
+}
+void CanvasWidgetLayerGroup::moveLayerBackward(CanvasWidgetEntity* subject) {
+   cobb::qt::move_object_backward(this, subject);
+   if (auto* widget = this->canvas())
+      widget->update();
+}
+void CanvasWidgetLayerGroup::moveLayerForward(CanvasWidgetEntity* subject) {
+   cobb::qt::move_object_forward(this, subject);
+   if (auto* widget = this->canvas())
+      widget->update();
 }
 
 #pragma endregion

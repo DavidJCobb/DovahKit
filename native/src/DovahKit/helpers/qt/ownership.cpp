@@ -63,6 +63,34 @@ namespace cobb::qt {
       assert(list.indexOf(subject) == to); // If this fails, then perhaps Qt changed in some way, e.g. having the children() getter copy the list to prevent tampering.
    }
 
+   extern void move_object_backward(QObject* parent, QObject* subject) {
+      assert(subject != parent);
+      assert(subject->parent() == parent);
+      assert(!subject->isWidgetType() && "What are you doing, dear programmer? Widgets need special handling. Don't use this on them! (Consider QWidget::raise and friends.)");
+      //
+      auto& list = const_cast<QObjectList&>(parent->children());
+      auto  i    = list.indexOf(subject);
+      assert(i >= 0);
+      if (i == 0)
+         return;
+      list.move(i, i - 1);
+      assert(list.indexOf(subject) == i - 1); // If this fails, then perhaps Qt changed in some way, e.g. having the children() getter copy the list to prevent tampering.
+   }
+
+   extern void move_object_forward(QObject* parent, QObject* subject) {
+      assert(subject != parent);
+      assert(subject->parent() == parent);
+      assert(!subject->isWidgetType() && "What are you doing, dear programmer? Widgets need special handling. Don't use this on them! (Consider QWidget::raise and friends.)");
+      //
+      auto& list = const_cast<QObjectList&>(parent->children());
+      auto  i    = list.indexOf(subject);
+      assert(i >= 0);
+      if (i == list.size() - 1)
+         return;
+      list.move(i, i + 1);
+      assert(list.indexOf(subject) == i + 1); // If this fails, then perhaps Qt changed in some way, e.g. having the children() getter copy the list to prevent tampering.
+   }
+
    extern bool a_is_ancestor_of_b(const QObject* a, const QObject* b) {
       if (b == a)
          return false;

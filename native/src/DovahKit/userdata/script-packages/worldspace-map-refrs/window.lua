@@ -217,8 +217,8 @@ HeightmapWindow = {
       bottom   = ui.widget.new(),
       --
       options = {
-         world = false,
-         layer_visibility = {}, -- list of checkboxes
+         world   = false,
+         cache   = false,
          execute = false,
          --
          outline_toggle_holder = false,
@@ -240,7 +240,7 @@ do -- HeightmapWindow contents
    end
    do -- Create widgets and layout for HeightmapWindow.
       local window = HeightmapWindow.controls.window
-      window.title = "Heightmap"
+      window.title = "Map renderer"
       window:set_layout("grid")
       --
       local scroll = HeightmapWindow.controls.scroll
@@ -277,7 +277,6 @@ do -- HeightmapWindow contents
          config.layout_margins = 0
          --
          local oc = HeightmapWindow.controls.options
-         local lv = oc.layer_visibility
          do
             local picker = ui.formpicker.new()
             picker.form_types   = form_types.worldspace
@@ -287,6 +286,22 @@ do -- HeightmapWindow contents
             --
             oc.world = picker
          end
+         do -- cache references of type
+            local checkbox = ui.checkbox.new("Cache forms during search")
+            config:add_child(checkbox)
+            checkbox:on("OnToggled", "", function(checked)
+               if not checked then
+                  local world = oc.world.form
+                  if not world then
+                     return
+                  end
+                  WorldMapper:forget_world(world)
+               end
+            end)
+            --
+            oc.cache = checkbox
+         end
+         config:add_child(ui.line.new("h"))
          FormpickerList:append_to_widget(config)
          do
             local button = ui.button.new("Render")
@@ -331,7 +346,7 @@ do -- HeightmapWindow contents
       end
       self.state.layers = {}
    end
-   function HeightmapWindow:clear_cell_outline_toggles()
+   function HeightmapWindow:clear_generated_map_toggles()
       local list   = self.controls.outline_toggles
       local parent = self.controls.options.outline_toggle_holder
       for i = 1, #list do
@@ -339,14 +354,15 @@ do -- HeightmapWindow contents
          list[i] = nil
       end
    end
-   function HeightmapWindow:import_cell_outline_data(all_files_map)
+   function HeightmapWindow:generate_map_toggles(all_files_map)
       local list   = self.controls.outline_toggles
       local parent = self.controls.options.outline_toggle_holder
       all_files_map:for_each_map(function(map)
-         if map:has_any_islands() then
-            local cls = FormMapRow:new(map)
-            list[#list + 1] = cls
-            parent:add_child(cls.widget)
+         local cls = FormMapRow:new(map)
+         list[#list + 1] = cls
+         parent:add_child(cls.widget)
+         if not map:has_any_islands() then
+            cls.widget.enabled = false
          end
       end)
    end
@@ -361,10 +377,20 @@ end
 HeightmapWindow.controls.options.execute:on("OnActivated", "render", function()
    HeightmapWindow:set_is_locked(true)
    HeightmapWindow:clear_canvas()
-   HeightmapWindow:clear_cell_outline_toggles()
+   HeightmapWindow:clear_generated_map_toggles()
+   local maps = WorldMapper:find_all_in(
+      HeightmapWindow.controls.options.world.form,
+      FormpickerList:get_forms(),
+      HeightmapWindow.controls.canvas,
+      HeightmapWindow.controls.progress,
+      HeightmapWindow.controls.options.cache.checked
+   )
+   HeightmapWindow:generate_map_toggles(maps)
+   --[[
    render_refr_locations(
       HeightmapWindow.controls.options.world.form,
       FormpickerList:get_forms()
    )
+   ]]--
    HeightmapWindow:set_is_locked(false)
 end)

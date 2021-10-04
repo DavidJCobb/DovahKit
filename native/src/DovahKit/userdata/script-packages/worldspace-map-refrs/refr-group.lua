@@ -1,6 +1,8 @@
 RefrGroup = {}
 RefrGroup.__index = RefrGroup
 do
+   local FORCE_SINGLE_ISLAND <const> = true
+
    function RefrGroup:new(base_form)
       if not base_form then
          error("RefrGroup:new must be passed a base form")
@@ -50,6 +52,32 @@ do
    function RefrGroup:generate_islands()
       if self.bounds.x:empty() or self.bounds.y:empty() then -- skip island generation if this map is empty
          self.cells = nil
+         return
+      end
+      if not self.cells then
+         return
+      end
+      if FORCE_SINGLE_ISLAND then
+         local island = false
+         for x = self.bounds.x.min, self.bounds.x.max do
+            self.cells[x - 1] = nil
+            local col = self.cells[x]
+            if col then
+               for y = self.bounds.y.min, self.bounds.y.max do
+                  local cell = col[y]
+                  if cell then
+                     if not island then
+                        island = RefrGroupIsland:new(self)
+                     end
+                     island:accept_cell(cell)
+                  end
+               end
+            end
+         end
+         self.cells = nil
+         if island then
+            self.islands[1] = island
+         end
          return
       end
       local function bind(context, f)

@@ -218,6 +218,13 @@ namespace {
          lua_pushinteger(L, self.stub->formID);
          return 1;
       }
+      int form_type(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.stub)
+            return 0;
+         lua_libraries::form_types::push(L, self.stub->formType);
+         return 1;
+      }
       int papyrus(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
@@ -294,6 +301,7 @@ namespace dovahscript::wrappers {
       { "editor_id", &_getters::editor_id },
       { "flags",     &_getters::flags },
       { "form_id",   &_getters::form_id },
+      { "form_type", &_getters::form_type },
       { "papyrus",   &_getters::papyrus },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {

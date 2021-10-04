@@ -70,12 +70,12 @@ namespace {
          if (cobb::lua::pull_qpoint_float(L, 3, center) != 0) {
             lua_getfield(L, 2, "x"); // 4
             lua_getfield(L, 2, "y"); // 5
-            if (!lua_isnumber(L, 3))
-               cobb::lua::error(L, "options.center was unspecified or invalid, and options.x was not a number");
             if (!lua_isnumber(L, 4))
+               cobb::lua::error(L, "options.center was unspecified or invalid, and options.x was not a number");
+            if (!lua_isnumber(L, 5))
                cobb::lua::error(L, "options.center was unspecified or invalid, and options.y was not a number");
-            center.setX(lua_tonumber(L, 3));
-            center.setY(lua_tonumber(L, 4));
+            center.setX(lua_tonumber(L, 4));
+            center.setY(lua_tonumber(L, 5));
             lua_pop(L, 2);
          }
          lua_pop(L, 1);
@@ -101,7 +101,7 @@ namespace {
          center += { -1, -1 }; // Lua values should start from (1, 1)
          //
          path->closeSubpath();
-         path->addEllipse(center, radii.width(), radii.height());
+         path->addEllipse(center, radii.width(), radii.height()); // broken for small circle sizes
          path->closeSubpath();
          return 0;
       }
@@ -359,6 +359,7 @@ namespace {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [instance]() {
                instance->path = new QPainterPath;
+               instance->path->setFillRule(Qt::WindingFill); // overlaps between closed subpaths should not produce holes
             };
             send_script_task(*task);
             delete task;

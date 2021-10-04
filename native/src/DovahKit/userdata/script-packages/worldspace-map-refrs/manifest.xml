@@ -19,6 +19,7 @@ refr-cell.lua
 refr-group-island.lua
 refr-group.lua
 refr-map.lua
+world-and-caching.lua
 window.lua
 main.lua
    </files>
