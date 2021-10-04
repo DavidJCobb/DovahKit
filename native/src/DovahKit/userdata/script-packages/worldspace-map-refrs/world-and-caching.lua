@@ -53,10 +53,15 @@ do
             local ft   = base.form_type
             want_types[ft] = true
          end
+         progress.minimum = 0
+         local benchmark = dovah.benchmark_start()
          local k, v = next(want_types)
          while k do
             local list = cache_root[k]
             if list then
+               progress.maximum = #list
+               progress.value   = 0
+               progress.format  = "Searching cached forms of type: " .. k.signature .. "..."
                for i = 1, #list do
                   local form = list[i]
                   local base = form.base_form
@@ -66,10 +71,19 @@ do
                      local y = -p.y - (extents.y.min * 4096)
                      all_maps:accept(base, x, y)
                   end
+                  progress.value = i
                end
             end
             k, v = next(want_types, k)
          end
+         dovah.benchmark_stop(benchmark)
+         progress.maximum = 1
+         progress.value   = 1
+         return {
+            used_cache = true,
+            maps       = all_maps,
+            benchmark  = benchmark,
+         }
       end
       progress.minimum = 0
       progress.maximum = count

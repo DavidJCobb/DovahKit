@@ -27,7 +27,7 @@ local BASE_FORMS = {
 }
 
 -- List for setting which forms to render
-local FormpickerList = false
+FormpickerList = false
 do
    FormpickerList = {
       widgets = {
@@ -86,23 +86,15 @@ do
    function FormpickerList:set_enable_state(state)
       self.widgets.outer.enabled = state
    end
-   function FormpickerList:remove(widget)
-      local i = nil
-      for j = 1, #self.pickers do
-         if self.pickers[j] == widget then
-            i = j
-            break
-         end
-      end
-      if not i then
-         return
-      end
+   function FormpickerList:remove(row_object)
       local list = {}
-      for j = 1, i do
-         list[j] = self.pickers[j]
-      end
-      for j = i + 1, #self.pickers do
-         list[j - 1] = self.pickers[j]
+      local j    = 0
+      for i = 1, #self.pickers do
+         local item = self.pickers[i]
+         if item ~= row_object then
+            j = j + 1
+            list[j] = item
+         end
       end
       self.pickers = list
    end
