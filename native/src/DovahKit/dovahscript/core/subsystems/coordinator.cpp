@@ -19,6 +19,7 @@
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
 #include "../../safe_call.h"
+#include "../specialized_traceback.h"
 
 #include "../../lua_libraries/_import_all.h"
 #include "../../lua_classes/_import_all.h"
@@ -161,8 +162,9 @@ namespace dovahscript::core::subsystems {
       // Run all outstanding script files:
       //
       for (auto& script : this->scripts_to_run.files) {
+         auto c_name = QChar('=') + script.filename;
          auto buffer = script.contents.toUtf8();
-         auto result = luaL_loadbufferx(this->lua_state, buffer.data(), buffer.size(), script.filename.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
+         auto result = luaL_loadbufferx(this->lua_state, buffer.data(), buffer.size(), c_name.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
          script.contents.clear();
          //
          switch (result) {
@@ -391,7 +393,8 @@ namespace dovahscript::core::subsystems {
       text += msg;
       if (!tocont) {
          auto* L = coordinator::get().lua_state;
-         luaL_traceback(L, L, text.toUtf8(), 0);
+         //luaL_traceback(L, L, text.toUtf8(), 0);
+         specialized_traceback(L, (const char*)text.toUtf8(), 0);
          if (lua_isstring(L, -1))
             text = lua_tostring(L, -1);
          lua_pop(L, 1);

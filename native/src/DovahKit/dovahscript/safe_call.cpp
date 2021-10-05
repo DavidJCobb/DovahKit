@@ -1,6 +1,7 @@
 #include "safe_call.h"
 #include <QString>
 #include "core/subsystems/coordinator.h"
+#include "core/specialized_traceback.h"
 #include "dovahscript_host.h"
 
 namespace {
@@ -16,7 +17,8 @@ namespace {
          }
       }
       auto original = lua_tostring(L, -1);
-      luaL_traceback(L, L, original, 1);
+      //luaL_traceback(L, L, original, 1);
+      dovahscript::core::specialized_traceback(L, original, 1);
       //
       auto message = QString::fromUtf8(lua_tostring(L, -1));
       emit host.messageLogged(message);

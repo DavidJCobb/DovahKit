@@ -1,6 +1,7 @@
 #pragma once
 
 namespace dovahscript {
+   // Currently unused. May be redesigned and implemented in the future, or may be wholly removed.
    struct permission_set {
       struct {
          bool modify = false; // Can the script modify form data?

@@ -115,6 +115,7 @@
     <ClCompile Include="dovahscript\core\classes.cpp" />
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\collections.cpp" />
+    <ClCompile Include="dovahscript\core\specialized_traceback.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator\borrow_counter.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
@@ -426,6 +427,8 @@
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
+    <ClCompile Include="helpers\lua\find_key_of.cpp" />
+    <ClCompile Include="helpers\lua\find_path_of.cpp" />
     <ClCompile Include="helpers\lua\for_each_in_array.cpp" />
     <ClCompile Include="helpers\lua\isempty.cpp" />
     <ClCompile Include="helpers\lua\metamethod_names.cpp" />
@@ -552,12 +555,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
+    <ClInclude Include="dovahscript\core\specialized_traceback.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\rotation.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\position.h" />
     <ClInclude Include="helpers\all_html_entities.h" />
     <ClInclude Include="helpers\cpuinfo.h" />
+    <ClInclude Include="helpers\lua\find_key_of.h" />
+    <ClInclude Include="helpers\lua\find_path_of.h" />
     <ClInclude Include="helpers\lua\is_invocable.h" />
     <ClInclude Include="helpers\masking.h" />
     <ClInclude Include="helpers\qt\widget_utils.h" />

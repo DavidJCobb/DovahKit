@@ -794,12 +794,15 @@ namespace {
             return 0;
          if (!_can_have_layout(*self.widget))
             cobb::lua::error(L, "this widget cannot have a layout");
-         task_reference widget = self.widget;
-         auto* task = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, top, right, bottom, left, unchanged_count, unchanged]() mutable {
+         //
+         bool  fail = false;
+         auto* task = new tasks::s2m::ui_write_lambda(true);
+         task->handler = [widget = task_reference(self.widget), &fail, top, right, bottom, left, unchanged_count, unchanged]() mutable {
             auto* layout = widget->layout();
-            if (!layout)
+            if (!layout) {
+               fail = true;
                return;
+            }
             if (unchanged_count) {
                auto old = layout->contentsMargins();
                if (top == unchanged)
@@ -814,6 +817,10 @@ namespace {
             layout->setContentsMargins(left, top, right, bottom);
          };
          send_script_ui_task(*task);
+         delete task;
+         if (fail) {
+            lua_warning(L, "this widget has no layout, so setting layout_margins will have no effect", 0);
+         }
          return 0;
       }
       int max_height(lua_State* L) {

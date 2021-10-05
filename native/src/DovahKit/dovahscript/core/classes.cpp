@@ -308,14 +308,16 @@ namespace {
                   //    -7 | 1: t
                   //
                   // Desired stack for getter-function call:
-                  //    -1 | 2: t
-                  //    -2 | 1: list[i].__getters[k]
+                  //    -1 | 3: t
+                  //    -2 | 2: list[i].__getters[k]
+                  //    -3 | 1: t // intentional leftover, queryable through Lua debug APIs while the function runs
                   //
                   // STACK: - [ t, k, meta, list, list[i], list[i].__getters[k] ] +
-                  lua_copy(L, -1, 2);  // STACK: - [ t, list[i].__getters[k], meta, list, list[i], list[i].__getters[k] ] +
-                  lua_settop(L, 2);    // STACK: - [ t, list[i].__getters[k] ] +
-                  lua_rotate(L, 1, 1); // STACK: - [ list[i].__getters[k], t ] +
-                  lua_call(L, 1, 1);   // STACK: - [ list[i].__getters[k](t) ] +
+                  lua_copy(L,  1, 2);  // STACK: - [ t, t, meta,                 list, list[i], list[i].__getters[k] ]+
+                  lua_copy(L, -1, 3);  // STACK: - [ t, t, list[i].__getters[k], list, list[i], list[i].__getters[k] ] +
+                  lua_settop(L, 3);    // STACK: - [ t, t, list[i].__getters[k] ] +
+                  lua_rotate(L, 2, 1); // STACK: - [ t, list[i].__getters[k], t ] +
+                  lua_call(L, 1, 1);   // STACK: - [ t, list[i].__getters[k](t) ] +
                   //
                   // Quick explanation for my own reference, since basically only one page on the entire Internet 
                   // has documented this and it's not the Lua manual: given the stack
@@ -409,13 +411,15 @@ namespace {
                   //    -8 | 1: t
                   // 
                   // Desired stack for call:
-                  //    -1 | 3: v
-                  //    -2 | 2: t
-                  //    -3 | 1: list[i].__setters[k]
+                  //    -1 | 4: v
+                  //    -2 | 3: t
+                  //    -3 | 2: list[i].__setters[k]
+                  //    -4 | 1: t // intentional leftover, queryable through Lua debug APIs while the function runs
                   //
-                  lua_copy(L,  1, 2);
-                  lua_copy(L, -1, 1);
-                  lua_settop(L, 3);
+                  lua_copy(L,  3, 4);
+                  lua_copy(L,  1, 3);
+                  lua_copy(L, -1, 2);
+                  lua_settop(L, 4);
                   lua_call(L, 2, 0);
                   return 0;
                }
