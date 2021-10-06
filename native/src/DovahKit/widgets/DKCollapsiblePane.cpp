@@ -3,6 +3,24 @@
 #include <QActionEvent>
 #include <QBoxLayout>
 
+namespace {
+   static struct {
+      QIcon collapse;
+      QIcon expand;
+      bool initialized = false;
+
+      void setup() {
+         if (this->initialized)
+            return;
+         this->initialized = true;
+         this->collapse = QIcon(":/widget-assets/collapse.png");
+         this->collapse.addFile(":/widget-assets/collapse-16.png", { 16, 16 });
+         this->expand = QIcon(":/widget-assets/expand.png");
+         this->expand.addFile(":/widget-assets/expand-16.png", { 16, 16 });
+      }
+   } icons;
+}
+
 DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(*this) {
    this->setFrameStyle(QFrame::Sunken);
    this->setFrameShape(QFrame::Shape::WinPanel);
@@ -109,6 +127,18 @@ void DKCollapsiblePane::setTitleWidget(QWidget* w) {
    if (w)
       QMetaObject::invokeMethod(w, "setText", Qt::AutoConnection, Q_ARG(QString, this->state.title));
 }
+QWidget* DKCollapsiblePane::takeTitleWidget() {
+   auto* widget = this->subwidgets.label;
+   if (widget) {
+      this->subwidgets.label = nullptr;
+      {
+         auto* layout = (QBoxLayout*) this->subwidgets.title->layout();
+         layout->removeWidget(widget);
+      }
+      widget->setParent(nullptr);
+   }
+   return widget;
+}
 void DKCollapsiblePane::setViewport(QWidget* w) {
    if (w) {
       w->setParent(this);
@@ -138,6 +168,18 @@ void DKCollapsiblePane::setViewport(QWidget* w) {
    }
    this->subwidgets.body = w;
 }
+QWidget* DKCollapsiblePane::takeViewport() {
+   auto* widget = this->subwidgets.body;
+   if (widget) {
+      this->subwidgets.body = nullptr;
+      {
+         auto* layout = (QBoxLayout*) this->layout();
+         layout->removeWidget(widget);
+      }
+      widget->setParent(nullptr);
+   }
+   return widget;
+}
 void DKCollapsiblePane::setShowActionsWhenCollapsed(bool s) {
    if (this->state.show_actions_when_collapsed == s)
       return;
@@ -150,13 +192,26 @@ void DKCollapsiblePane::_updateToggle() {
    this->_updateToggle(this->collapsed());
 }
 void DKCollapsiblePane::_updateToggle(bool state) {
-   auto* toggle = this->subwidgets.toggle;
+   icons.setup();
+   //
+   auto*   toggle = this->subwidgets.toggle;
+   QIcon   icon;
+   QString fallback;
    if (state) {
       toggle->setAccessibleName(tr("expand", "accessible name for toggle button"));
-      toggle->setText((const char*)u8"\u2BED");
+      icon     = icons.expand;
+      fallback = (const char*)u8"\u2BED";
    } else {
       toggle->setAccessibleName(tr("collapse", "accessible name for toggle button"));
-      toggle->setText((const char*)u8"\u2BEF");
+      icon     = icons.collapse;
+      fallback = (const char*)u8"\u2BEF";
+   }
+   if (icon.isNull()) {
+      toggle->setIcon(QIcon());
+      toggle->setText(fallback);
+   } else {
+      toggle->setIcon(icon);
+      toggle->setText(QString());
    }
 }
 

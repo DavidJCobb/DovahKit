@@ -1133,6 +1133,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="ui\resources\resources.qrc" />
+    <QtRcc Include="widgets\widget-assets.qrc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2019.vcxproj">

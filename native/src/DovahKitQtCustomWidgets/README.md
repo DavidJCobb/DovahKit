@@ -36,6 +36,8 @@ QActions; the QAction editing on QMenu, QMenuBar, and friends is entirely hardco
 As such, while DKCollapsiblePane supports QActions, you must either create or assign 
 the actions to it programmatically.)
 
+![](readme-assets/DKCollapsiblePane.png)
+
 ## Notes
 
 We include the full code for each custom widget in both DovahKit and this project in 

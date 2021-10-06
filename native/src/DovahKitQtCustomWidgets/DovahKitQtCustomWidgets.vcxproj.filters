@@ -70,4 +70,9 @@
   <ItemGroup>
     <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />
   </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="widgets\widget-assets.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
 </Project>

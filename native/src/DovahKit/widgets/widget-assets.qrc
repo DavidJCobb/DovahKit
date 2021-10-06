@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>widget-assets/collapse.png</file>
+        <file>widget-assets/expand.png</file>
+        <file>widget-assets/collapse-16.png</file>
+        <file>widget-assets/expand-16.png</file>
+    </qresource>
+</RCC>

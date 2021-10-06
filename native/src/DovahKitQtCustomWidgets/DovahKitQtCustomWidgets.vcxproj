@@ -126,6 +126,9 @@
   <ItemGroup>
     <QtMoc Include="extensions\DKCollapsiblePaneTaskMenuExtension.h" />
   </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="widgets\widget-assets.qrc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
     <Import Project="$(QtMsBuild)\qt.targets" />

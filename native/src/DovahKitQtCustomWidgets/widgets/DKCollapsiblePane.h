@@ -17,9 +17,11 @@ class DKCollapsiblePane : public QFrame {
       // This is the "body" of the widget; you'd set a layout on it, append children to it, et cetera.
       inline QWidget* viewport() const noexcept { return this->subwidgets.body; }
       void setViewport(QWidget*);
+      QWidget* takeViewport(); // abandons ownership of the viewport, and returns it
 
       inline QWidget* titleWidget() const noexcept { return this->subwidgets.label; }
       void setTitleWidget(QWidget*);
+      QWidget* takeTitleWidget(); // abandons ownership of the widget, and returns it
 
       inline bool showActionsWhenCollapsed() const noexcept { return this->state.show_actions_when_collapsed; }
       void setShowActionsWhenCollapsed(bool);
