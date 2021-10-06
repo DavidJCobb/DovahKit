@@ -34,4 +34,6 @@ class ColorPickerButton : public QPushButton {
       QColor _color;
       //
       void _updateColor();
+
+      virtual void paintEvent(QPaintEvent*) override;
 };

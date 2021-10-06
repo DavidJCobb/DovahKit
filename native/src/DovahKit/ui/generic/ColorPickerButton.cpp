@@ -16,8 +16,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "ColorPickerButton.h"
 #include <QColorDialog>
+#include <QPaintEvent>
+#include <QStyleOptionFocusRect>
+#include <QStyleOptionButton>
+#include <QStylePainter>
 
 namespace {
+   constexpr bool use_qss = false;
+
    const QString _style("QPushButton { background-color: %1; color: %2; }");
 
    int _perceived_brightness(const QColor& color) {
@@ -47,11 +53,50 @@ void ColorPickerButton::setHasAlpha(bool s) {
 void ColorPickerButton::_updateColor() {
    constexpr int text_cutoff = 125;
    //
-   QColor text = QColor{ 0, 0, 0, 255 };
+   QString code = this->_color.name();
+   QColor  text = QColor{ 0, 0, 0, 255 };
    if (_perceived_brightness(this->_color) < text_cutoff)
       text = QColor{ 255, 255, 255, 255 };
-   //
-   auto code = this->_color.name();
-   this->setStyleSheet(_style.arg(code).arg(text.name()));
+   if (use_qss) {
+      this->setStyleSheet(_style.arg(code).arg(text.name()));
+   } else {
+      auto p = this->palette();
+      p.setColor(QPalette::ColorRole::ButtonText, text);
+      this->setPalette(p);
+   }
    this->setText(code);
+}
+
+void ColorPickerButton::paintEvent(QPaintEvent* event) {
+   if (use_qss) {
+      QPushButton::paintEvent(event);
+      return;
+   }
+   QStyle* style = this->style();
+   //
+   QStylePainter      painter(this);
+   QStyleOptionButton option;
+   this->initStyleOption(&option);
+   //
+   painter.drawControl(QStyle::CE_PushButtonBevel, option);
+   //
+   QRect content_rect = style->subElementRect(QStyle::SE_PushButtonContents, &option, this);
+   {
+      painter.save();
+      painter.setPen(Qt::NoPen);
+      painter.setBrush(this->color());
+      painter.drawRect(content_rect);
+      painter.restore();
+   }
+   {
+      auto sub = option;
+      sub.rect = content_rect;
+      painter.drawControl(QStyle::CE_PushButtonLabel, sub);
+   }
+   if (option.state & QStyle::State_HasFocus) {
+      QStyleOptionFocusRect sub;
+      sub.QStyleOption::operator=(option);
+      sub.rect = style->subElementRect(QStyle::SE_PushButtonFocusRect, &option, this);
+      painter.drawPrimitive(QStyle::PE_FrameFocusRect, sub);
+   }
 }

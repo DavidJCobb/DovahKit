@@ -367,7 +367,8 @@ void EditorScriptPackageWindow::runCurrentPackage() {
       if (!file.endsWith(".lua", Qt::CaseInsensitive))
          continue;
       auto path = manifest->root_folder.absoluteFilePath(file);
-      if (manifest->root_folder.relativeFilePath(path).startsWith("../")) {
+      auto rel  = manifest->root_folder.relativeFilePath(path);
+      if (rel.startsWith("../")) {
          this->logMessage(tr("Blocked package from loading file outside of its folder: %1").arg(file));
          continue;
       }
@@ -375,7 +376,7 @@ void EditorScriptPackageWindow::runCurrentPackage() {
       if (code.open(QIODevice::ReadOnly)) {
          dovahscript::pending_script f;
          f.contents = code.readAll();
-         f.filename = QFileInfo(code).fileName();
+         f.filename = rel;
          request.files.push_back(std::move(f));
       } else {
          this->logMessage(tr("Failed to open file requested by package: %1").arg(file));
