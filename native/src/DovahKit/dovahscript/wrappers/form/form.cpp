@@ -132,13 +132,6 @@ namespace {
          lua_pushstring(L, str);
          return 1;
       }
-      int get_form_type(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.stub)
-            return 0;
-         lua_libraries::form_types::push(L, self.stub->formType);
-         return 1;
-      }
       int get_last_source_file(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub) {
@@ -292,7 +285,6 @@ namespace dovahscript::wrappers {
       { "delete",               &_methods::delete_ },
       { "duplicate",            &_methods::duplicate },
       { "form_id_to_string",    &_methods::form_id_to_string },
-      { "get_form_type",        &_methods::get_form_type },
       { "get_last_source_file", &_methods::get_last_source_file },
       { "get_source_file_list", &_methods::get_source_file_list },
       { "get_user_forms",       &_methods::get_user_forms },

@@ -8,7 +8,7 @@ do
       local instance = setmetatable({}, self)
       instance.cells  = {}
       instance.owner  = owner
-      instance.bounds = { x = { false, false }, y = { false, false } }
+      instance.bounds = { x = Range:new(), y = Range:new() }
       instance.layers = {
          fill = false,
          line = false,
@@ -26,30 +26,14 @@ do
          self.cells[x] = col
       end
       col[y] = true
-      do
-         local span = self.bounds.x
-         if not span[1] or x < span[1] then
-            span[1] = x
-         end
-         if not span[2] or x > span[2] then
-            span[2] = x
-         end
-      end
-      do
-         local span = self.bounds.y
-         if not span[1] or y < span[1] then
-            span[1] = y
-         end
-         if not span[2] or y > span[2] then
-            span[2] = y
-         end
-      end
+      self.bounds.x:accept(x)
+      self.bounds.y:accept(y)
    end
    function CellOutlineIsland:create_canvas_data()
-      local x_min = self.bounds.x[1] - 1
-      local x_max = self.bounds.x[2] + 1
-      local y_min = self.bounds.y[1] - 1
-      local y_max = self.bounds.y[2] + 1
+      local x_min = self.bounds.x.min - 1
+      local x_max = self.bounds.x.max + 1
+      local y_min = self.bounds.y.min - 1
+      local y_max = self.bounds.y.max + 1
       --
       self.images.line = raster.new({
          width  = (x_max - x_min + 1) * 32,
@@ -74,10 +58,10 @@ do
       end
    end
    function CellOutlineIsland:draw()
-      local x_min = self.bounds.x[1] - 1
-      local x_max = self.bounds.x[2] + 1
-      local y_min = self.bounds.y[1] - 1
-      local y_max = self.bounds.y[2] + 1
+      local x_min = self.bounds.x.min - 1
+      local x_max = self.bounds.x.max + 1
+      local y_min = self.bounds.y.min - 1
+      local y_max = self.bounds.y.max + 1
       --
       local img_line = self.images.line
       local img_fill = self.images.fill
@@ -186,18 +170,11 @@ do
       end
       local ab = self.bounds
       local bb = other.bounds
-      do
-         local ab = ab.x
-         local bb = bb.x
-         ab[1] = math.min(ab[1], bb[1])
-         ab[2] = math.max(ab[2], bb[2])
+      if bb.x:empty() or bb.y:empty() then -- nothing to merge in
+         return
       end
-      do
-         local ab = ab.y
-         local bb = bb.y
-         ab[1] = math.min(ab[1], bb[1])
-         ab[2] = math.max(ab[2], bb[2])
-      end
+      ab.x:merge(bb.x)
+      ab.y:merge(bb.y)
       for x = bb.x[1], bb.x[2] do
          local col_a = self.cells[x]
          local col_b = other.cells[x]

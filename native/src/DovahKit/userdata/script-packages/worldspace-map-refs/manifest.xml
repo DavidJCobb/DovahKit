@@ -1,0 +1,30 @@
+<package>
+   <metadata>
+      <name>Worldspace map renderer - references</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>
+         Find all references with the desired base forms in a given worldspace, and render a map of their locations. References are displayed as colored dots on an image of the worldspace's terrain, and you can change the color on a per-base-form basis post-render.
+         
+         This script does not render worldspace terrain; you must pre-render it, and place the render in the script package's "pre-rendered" subfolder. Expected filename format is "A-B.png", where "A" is the worldspace's editor ID, and "B" is the name (including extension) of the file that creates the worldspace (e.g. "Tamriel-Skyrim.esm.png").
+      </description>
+      <version>1.0.0.0</version>
+   </metadata>
+   <environment>
+      <min-version>0.0.0.1</min-version>
+      <latest-version>0.0.0.1</latest-version>
+   </environment>
+   <files>
+range.lua
+config.lua
+texture-cache.lua
+refr-cell.lua
+refr-group-island.lua
+refr-group.lua
+refr-map.lua
+world-and-caching.lua
+window.lua
+main.lua
+   </files>
+</package>

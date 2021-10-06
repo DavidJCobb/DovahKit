@@ -1,6 +1,8 @@
 CellOutlineMap = {}
 CellOutlineMap.__index = CellOutlineMap
 do
+   local FORCE_SINGLE_ISLAND <const> = false
+
    function CellOutlineMap:new(filename)
       if not filename then
          error("CellOutlineMap:new must be passed a filename")
@@ -9,7 +11,7 @@ do
       instance.filename = filename
       instance.color    = "#888"
       instance.cells    = {} -- cleared after islands are generated
-      instance.bounds   = { x = { false, false }, y = { false, false } }
+      instance.bounds   = { x = Range:new(), y = Range:new() }
       instance.islands  = {}
       instance.layer_groups = {
          line = false,
@@ -24,24 +26,8 @@ do
          self.cells[x] = col
       end
       col[y] = true
-      do
-         local span = self.bounds.x
-         if not span[1] or x < span[1] then
-            span[1] = x
-         end
-         if not span[2] or x > span[2] then
-            span[2] = x
-         end
-      end
-      do
-         local span = self.bounds.y
-         if not span[1] or y < span[1] then
-            span[1] = y
-         end
-         if not span[2] or y > span[2] then
-            span[2] = y
-         end
-      end
+      self.bounds.x:accept(x)
+      self.bounds.y:accept(y)
    end
    function CellOutlineMap:create_canvas_data(root_line_group, root_fill_group)
       local lg = self.layer_groups
@@ -56,27 +42,69 @@ do
       lg.fill = group_fill
    end
    function CellOutlineMap:generate_islands()
-      if not self.bounds.x[1] or not self.bounds.y[1] then -- skip island generation if this map is empty
+      if self.bounds.x:empty() then
          self.cells = nil
          return
       end
+      if not self.cells then
+         return
+      end
+      if FORCE_SINGLE_ISLAND then
+         local island = false
+         for x = self.bounds.x.min, self.bounds.x.max do
+            self.cells[x - 1] = nil
+            local col = self.cells[x]
+            if col then
+               for y = self.bounds.y.min, self.bounds.y.max do
+                  local cell = col[y]
+                  if cell then
+                     if not island then
+                        island = RefrGroupIsland:new(self)
+                     end
+                     island:accept_cell(x, y)
+                  end
+               end
+            end
+         end
+         self.cells = nil
+         if island then
+            self.islands[1] = island
+         end
+         return
+      end
+      local function bind(context, f)
+         return function(...) return f(context, ...) end
+      end
+      local resolve_island = bind(self, function(self, i)
+         while tonumber(i) do
+            i = self.islands[i]
+         end
+         if i then
+            for j = 1, #self.islands do
+               if self.islands[j] == i then
+                  return i, j
+               end
+            end
+         end
+         return i
+      end)
       local count = 0
       local dummy = {}
-      for x = self.bounds.x[1], self.bounds.x[2] do
+      for x = self.bounds.x.min, self.bounds.x.max do
          self.cells[x - 2] = nil -- free past columns as soon as possible, so they can be GC'd sooner
          --
          local col = self.cells[x]
          if col then
             local x_prev = self.cells[x - 1] or dummy
-            for y = self.bounds.y[1], self.bounds.y[2] do
+            for y = self.bounds.y.min, self.bounds.y.max do
                local cell = col[y]
                if cell then
                   --
                   -- We want to find out what island the cell belongs to (or create an island), 
                   -- and store that island's index in place of the cell's boolean "true" value.
                   --
-                  local a = tonumber(x_prev[y])
-                  local b = tonumber(col[y - 1])
+                  local a = tonumber(x_prev[y])  -- left
+                  local b = tonumber(col[y - 1]) -- above
                   local island = nil
                   do
                      --
@@ -93,16 +121,17 @@ do
                      -- This, of course, means that self.islands[n] can be an island object or 
                      -- the numeric index of some other island object in the same list.
                      --
-                     local ia = self.islands[a or dummy]
-                     local ib = self.islands[b or dummy]
+                     local na = self.islands[a or dummy]
+                     local nb = self.islands[b or dummy]
+                     local ia
+                     local ib
+                     ia, a = resolve_island(na)
+                     ib, b = resolve_island(nb)
                      island = ia or ib
-                     while tonumber(island) do -- a loop is needed because a "chain" of merged islands can come to exist
-                        a = island -- for below, when we overwrite the "true" value with an island index: we want to use the "most recent" index of this island
-                        island = self.islands[island]
-                     end
-                     if ia and ib and ia ~= ib and not tonumber(ia) and not tonumber(ib) then
+                     if ia and ib and ia ~= ib then
                         ia:merge(ib)
                         self.islands[b] = a
+                        b = a
                      end
                   end
                   --
@@ -157,6 +186,9 @@ do
       end
    end
    function CellOutlineMap:set_visible(state)
+      if not self.layer_groups.line then
+         return
+      end
       self.layer_groups.line.visible = state
       self.layer_groups.fill.visible = state
    end

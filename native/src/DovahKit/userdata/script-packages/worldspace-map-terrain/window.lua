@@ -46,9 +46,10 @@ HeightmapWindow = {
       bottom   = ui.widget.new(),
       --
       options = {
-         world = false,
+         world            = false,
          layer_visibility = {}, -- list of checkboxes
-         execute = false,
+         water_color      = false,
+         execute          = false,
          --
          outline_toggle_holder = false,
       },
@@ -127,6 +128,28 @@ do -- HeightmapWindow contents
                HeightmapWindow:set_layer_visibility(name, checked)
             end)
             config:add_child(lv[name])
+         end
+         do
+            local wrap = ui.widget.new()
+            wrap:set_layout("grid")
+            wrap.layout_margins = 0
+            wrap:add_child(ui.text.new("Water color:"), 1, 1)
+            --
+            local picker = ui.color_button.new()
+            picker.color = "#43618B"
+            picker:on("OnChanged", "", function(color)
+               local layer = HeightmapWindow.state.layers["water"]
+               if layer then
+                  local data = layer.data
+                  if data and dovah.type(data) == "raster" then
+                     data:fill_rgb(color)
+                  end
+               end
+            end)
+            wrap:add_child(picker, 1, 2)
+            config:add_child(wrap)
+            --
+            oc.water_color = picker
          end
          do
             local button = ui.button.new("Render")
@@ -231,6 +254,9 @@ HeightmapWindow.controls.options.execute:on("OnActivated", "render", function()
    HeightmapWindow:set_is_locked(true)
    HeightmapWindow:clear_canvas()
    HeightmapWindow:clear_cell_outline_toggles()
-   render_worldspace_height()
+   render_worldspace_height(
+      HeightmapWindow.controls.options.world.form,
+      HeightmapWindow.controls.options.water_color.color
+   )
    HeightmapWindow:set_is_locked(false)
 end)

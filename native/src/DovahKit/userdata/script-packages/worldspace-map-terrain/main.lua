@@ -49,22 +49,57 @@ do
       },
    }
 
-   render_worldspace_height = function()
-      local world = nil
-      local world_info = nil
-      do
-         world = HeightmapWindow.controls.options.world.form
-         if not world then
-            dovah.log_message("No worldspace to work with!")
-            return
+   Color = {}
+   do
+      Color.__index = Color
+      function Color:new(s)
+         local instance = setmetatable({}, self)
+         if type(s) == "string" then
+            if s[1] == "#" then
+               s = s:sub(2)
+               --
+               local list = {}
+               if #s < 6 then
+                  for i = 1, 4 do
+                     if s[i] then
+                        list[i] = s[i] .. s[i]
+                     end
+                  end
+               else
+                  for i = 1, 4 do
+                     list[i] = s:sub(2 * i, 2 * i + 2)
+                  end
+               end
+               instance.r = tonumber(list[1]) or 0
+               instance.g = tonumber(list[2]) or 0
+               instance.b = tonumber(list[3]) or 0
+               instance.a = tonumber(list[4]) or 255
+            end
+         elseif type(s) == "table" then
+            instance.r = s.r or 0
+            instance.g = s.g or 0
+            instance.b = s.b or 0
+            instance.a = s.a or 255
          end
-         world_info = {
-            heights = {
-               land  = world.default_land_height,
-               water = world.default_water_height,
-            },
-         }
+         return instance
       end
+   end
+
+   render_worldspace_height = function(world, water_color)
+      if not water_color then
+         water_color = "#43618B"
+      end
+      water_color = Color:new(water_color)
+      if not world then
+         dovah.log_message("No worldspace to work with!")
+         return
+      end
+      local world_info = {
+         heights = {
+            land  = world.default_land_height,
+            water = world.default_water_height,
+         },
+      }
       
       local world_first_file = nil -- we shouldn't outline cells defined in the same file as the worldspace, because that'll be nearly all of them
       local world_filenames  = {}
@@ -90,34 +125,10 @@ do
       
       _update_progress("Checking world height range...", 0, count, 0)
       do
-         function _update(t, v, b) -- call _update(tbl, v) or _update(tbl, min, max)
-            if not t.min or v < t.min then
-               t.min = v
-            end
-            if b then
-               if not t.max or b > t.max then
-                  t.max = b
-               end
-            else
-               if not t.max or v > t.max then
-                  t.max = v
-               end
-            end
-         end
-         --
          extents = {
-            x = {
-               min = nil,
-               max = nil,
-            },
-            y = {
-               min = nil,
-               max = nil,
-            },
-            z = {
-               min = nil,
-               max = nil,
-            },
+            x = Range:new(),
+            y = Range:new(),
+            z = Range:new(),
             width  = nil,
             height = nil,
          }
@@ -128,22 +139,22 @@ do
             if land then
                local min = land:get_minimum_height()
                local max = land:get_maximum_height()
-               _update(extents.z, min, max)
+               extents.z:accept(min, max)
             end
             local gc = cell.grid_coords
             local gx = gc.x
             local gy = -gc.y
-            _update(extents.x, gx)
-            _update(extents.y, gy)
+            extents.x:accept(gx)
+            extents.y:accept(gy)
             --
             progress.value = i
          end
          --
-         if not extents.x.min then
+         if extents.x:empty() then
             dovah.log_message("Unable to find any cells in this worldspace!")
             return
          end
-         if not extents.z.min then
+         if extents.z:empty() then
             dovah.log_message("Unable to find any landscape data in this worldspace!")
             return
          end
@@ -326,9 +337,9 @@ do
                         rw.color:set_pixel(a, b, vcolor)
                         --
                         if cell.has_water then -- water
-                           local alpha = _alpha_from_height(height, water_height)
-                           if alpha > 0 then
-                              rw.water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
+                           water_color.a = _alpha_from_height(height, water_height)
+                           if water_color.a > 0 then
+                              rw.water:set_pixel(a, b, water_color)
                            end
                         end
                      end
@@ -418,10 +429,10 @@ do
                rr.paint:draw_raster(rw.paint, x + 1, y + 1)
                --
                if cell.has_water and height < water_height then -- water
-                  local alpha = _alpha_from_height(height, water_height)
-                  if alpha > 0 then
-                     rw.water:fill({ r = 80, g = 160, b = 255, a = alpha })
-                     rr.water:draw_raster(rw.water,  x + 1, y + 1)
+                  water_color.a = _alpha_from_height(height, water_height)
+                  if water_color.a > 0 then
+                     rw.water:fill(water_color)
+                     rr.water:draw_raster(rw.water, x + 1, y + 1)
                   end
                end
             end

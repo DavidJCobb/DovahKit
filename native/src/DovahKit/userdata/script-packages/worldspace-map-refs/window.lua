@@ -234,6 +234,8 @@ do -- HeightmapWindow contents
       local window = HeightmapWindow.controls.window
       window.title = "Map renderer"
       window:set_layout("grid")
+      window.width  = 640
+      window.height = 400
       --
       local scroll = HeightmapWindow.controls.scroll
       local config = HeightmapWindow.controls.config
@@ -290,6 +292,7 @@ do -- HeightmapWindow contents
                   WorldMapper:forget_world(world)
                end
             end)
+            checkbox.whats_this = "The first map drawn for a worldspace will create a cache, indexing all placed objects by their base form type. Subsequent maps will draw much more quickly, but the cache may take a lot of memory. Once a placed object's data is loaded (to get its position, if it's relevant to a map), the cache will prevent it from unloading until this window is closed."
             --
             oc.cache = checkbox
          end
@@ -354,7 +357,8 @@ do -- HeightmapWindow contents
          list[#list + 1] = cls
          parent:add_child(cls.widget)
          if not map:has_any_islands() then
-            cls.widget.enabled = false
+            cls.widget.enabled    = false
+            cls.widget.whats_this = "No objects of this type were found in this worldspace."
          end
       end)
    end

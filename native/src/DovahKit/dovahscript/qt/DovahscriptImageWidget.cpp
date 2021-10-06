@@ -90,14 +90,16 @@ QSize DovahscriptImageWidget::sizeHint() const {
 }
 
 void DovahscriptImageWidget::paintEvent(QPaintEvent* event) {
-   auto pm = this->_getContent();
-   if (pm.isNull())
+   auto image = this->_getContent();
+   if (image.isNull())
       return;
    QSize space = this->size();
-   QSize size  = (pm.size() / pm.devicePixelRatio()).scaled(space.width(), space.height(), Qt::AspectRatioMode::KeepAspectRatio);
-   int x = (space.width() - size.width()) / 2;
+   QSize size  = (image.size() / image.devicePixelRatio()).scaled(space.width(), space.height(), Qt::AspectRatioMode::KeepAspectRatio);
+   int x = (space.width()  - size.width())  / 2;
    int y = (space.height() - size.height()) / 2;
    //
    QPainter painter(this);
-   painter.drawImage(x, y, pm, size.width(), size.height());
+   QRectF target = QRectF({ (qreal)x, (qreal)y }, size);
+   QRectF source = QRectF({ (qreal)0, (qreal)0 }, image.size());
+   painter.drawImage(target, image, source);
 }
