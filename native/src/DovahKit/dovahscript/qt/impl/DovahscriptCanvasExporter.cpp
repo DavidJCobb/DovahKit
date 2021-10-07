@@ -13,7 +13,7 @@ void DovahscriptCanvasExporter::process(CanvasWidget* canvas) {
       this->index_file += QObject::tr("== Groups ==\n\n", "script canvas layer export");
       auto size = groups.size();
       for (int i = 0; i < size; ++i)
-         this->index_file += entity_as_text(i + 1, groups[i]);
+         this->index_file += entity_as_text(i + 1, *groups[i]);
       if (size == 0)
          this->index_file += QObject::tr("(None.)", "script canvas layer export");
    }
@@ -21,7 +21,7 @@ void DovahscriptCanvasExporter::process(CanvasWidget* canvas) {
       this->index_file += QObject::tr("== Layers ==\n\n", "script canvas layer export");
       auto size = layers.size();
       for (int i = 0; i < size; ++i)
-         this->index_file += entity_as_text(i + 1, layers[i]);
+         this->index_file += entity_as_text(i + 1, *layers[i]);
       if (size == 0)
          this->index_file += QObject::tr("(None.)", "script canvas layer export");
    }

@@ -122,7 +122,7 @@ namespace {
                auto cd = comment.toUtf8();
                mz_bool status = mz_zip_writer_add_mem(
                   &zip,
-                  QString("layer %1.png").arg(i).toUtf8(),
+                  QString("layer %1.png").arg(i + 1).toUtf8(),
                   bytes.constData(),
                   bytes.size(),
                   5
