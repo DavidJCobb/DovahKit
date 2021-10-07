@@ -11,8 +11,8 @@ namespace {
    // This should be a DXGI format suitable for reading by script. In practice, this needs to be 
    // whatever DXGI format matches whatever QImage format our script code expects. There isn't 
    // really any other constraint on what this can be.
-   static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-   static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_RGBA8888; // the Qt equivalent of desired_dds_pixel_format
+   static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+   static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_ARGB32; // the Qt equivalent of desired_dds_pixel_format
 }
 
 namespace dovahscript {
@@ -166,7 +166,9 @@ namespace dovahscript {
       if (layer->rowPitch > std::numeric_limits<int>::max())
          return QImage();
       QImage qt_image = QImage((const uchar*)layer->pixels, layer->width, layer->height, layer->rowPitch, desired_dds_pixel_qt_fmt);
-      qt_image.convertTo(desired_qt_pixel_format);
+      if constexpr (desired_dds_pixel_qt_fmt != desired_qt_pixel_format) {
+         qt_image.convertTo(desired_qt_pixel_format);
+      }
       assert(!qt_image.isNull());
       qt_image.detach();
       assert(qt_image.isDetached());
