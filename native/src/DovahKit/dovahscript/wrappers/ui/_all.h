@@ -9,6 +9,7 @@
 #include "dropdown.h"
 #include "dropdown/collection_items.h"
 #include "dropdown/item.h"
+#include "file_save_button.h"
 #include "formpicker.h"
 #include "groupbox.h"
 #include "image_widget.h"

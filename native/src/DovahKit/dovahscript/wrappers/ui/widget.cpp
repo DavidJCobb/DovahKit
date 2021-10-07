@@ -63,6 +63,20 @@ namespace {
       _layout_type{ "up",   true,  false, QBoxLayout::Direction::BottomToTop },
    };
 
+   std::array _cursor_names = {
+      std::pair{ Qt::CursorShape::ArrowCursor,        "normal" },
+      std::pair{ Qt::CursorShape::CrossCursor,        "crosshair" },
+      std::pair{ Qt::CursorShape::WaitCursor,         "wait" },
+      std::pair{ Qt::CursorShape::SizeVerCursor,      "resize, v" },
+      std::pair{ Qt::CursorShape::SizeHorCursor,      "resize, h" },
+      std::pair{ Qt::CursorShape::PointingHandCursor, "pointer" },
+      std::pair{ Qt::CursorShape::ForbiddenCursor,    "forbidden" },
+      std::pair{ Qt::CursorShape::OpenHandCursor,     "hand, open" },
+      std::pair{ Qt::CursorShape::ClosedHandCursor,   "hand, closed" },
+      std::pair{ Qt::CursorShape::WhatsThisCursor,    "what's this?" },
+      std::pair{ Qt::CursorShape::BusyCursor,         "busy in background" },
+   };
+
    namespace _methods {
       int add_child(lua_State* L) {
          int   argcount = lua_gettop(L);
@@ -513,6 +527,33 @@ namespace {
       }
    }
    namespace _getters {
+      int cursor(lua_State* L) {
+         lua_settop(L, 1);
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto result     = Qt::CursorShape::ArrowCursor;
+         bool has_result = false;
+         {
+            auto  widget = task_reference((wrapped_type*)self.widget);
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget = task_reference(self.widget), &result, &has_result]() {
+               result     = widget->cursor().shape();
+               has_result = widget->testAttribute(Qt::WidgetAttribute::WA_SetCursor);
+            };
+            send_script_ui_task(*task);
+            delete task;
+         }
+         if (!has_result)
+            return 0;
+         for (const auto& pair : _cursor_names) {
+            if (pair.first == result) {
+               lua_pushstring(L, pair.second);
+               return 1;
+            }
+         }
+         return 0;
+      }
       int enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -661,6 +702,36 @@ namespace {
       }
    }
    namespace _setters {
+      int cursor(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         bool  write = false;
+         auto  shape = Qt::CursorShape::ArrowCursor;
+         if (!lua_isnoneornil(L, 2)) {
+            cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string or nil expected");
+            QString s = lua_tostring(L, 2);
+            for (const auto& pair : _cursor_names) {
+               if (s.compare(pair.second, Qt::CaseInsensitive) == 0) {
+                  write = true;
+                  shape = pair.first;
+                  break;
+               }
+            }
+            if (!write)
+               cobb::lua::error(L, "`%s` is not a recognized cursor name", lua_tostring(L, 2));
+         }
+         if (!self.widget)
+            return 0;
+         auto* task = new tasks::s2m::ui_write_lambda(false);
+         task->handler = [widget = task_reference(self.widget), write, shape]() mutable {
+            if (!write) {
+               widget->unsetCursor();
+               return;
+            }
+            widget->setCursor(shape);
+         };
+         send_script_ui_task(*task);
+         return 0;
+      }
       int enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
@@ -966,6 +1037,7 @@ namespace dovahscript::wrappers::ui {
       //
    };
    /*static*/ cls::method_list_t cls::metatable_getters = {
+      { "cursor",         &_getters::cursor },
       { "enabled",        &_getters::enabled },
       { "layout_margins", &_getters::layout_margins },
       { "max_height",     &_getters::max_height },
@@ -978,6 +1050,7 @@ namespace dovahscript::wrappers::ui {
       { "whats_this",     &_getters::whats_this },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
+      { "cursor",         &_setters::cursor },
       { "enabled",        &_setters::enabled },
       { "layout_margins", &_setters::layout_margins },
       { "max_height",     &_setters::max_height },

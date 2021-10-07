@@ -66,9 +66,9 @@ namespace {
             arg_offset = 2;
             arg_endian = 2;
          }
-         const auto buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto       offset = _helpers::get_offset<T>(L, 2, arg_offset, buffer.size());
-         auto       endian = _helpers::get_endianness<T>(L, 3, arg_endian);
+         const auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
+         auto        offset = _helpers::get_offset<T>(L, 2, arg_offset, buffer.size());
+         auto        endian = _helpers::get_endianness<T>(L, 3, arg_endian);
          //
          // Read:
          //
@@ -120,9 +120,9 @@ namespace {
             value = lua_tonumber(L, 2);
          }
          //
-         auto buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto offset = _helpers::get_offset<T>(L, 3, arg_offset, buffer.size());
-         auto endian = _helpers::get_endianness<T>(L, 4, arg_endian);
+         auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
+         auto  offset = _helpers::get_offset<T>(L, 3, arg_offset, buffer.size());
+         auto  endian = _helpers::get_endianness<T>(L, 4, arg_endian);
          //
          // Write:
          //
@@ -164,8 +164,8 @@ namespace {
             value = lua_tonumber(L, 2);
          }
          //
-         auto buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto endian = _helpers::get_endianness<T>(L, 3, arg_endian);
+         auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
+         auto  endian = _helpers::get_endianness<T>(L, 3, arg_endian);
          //
          // Write:
          //

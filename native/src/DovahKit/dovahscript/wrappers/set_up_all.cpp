@@ -109,6 +109,7 @@ namespace dovahscript {
             set_up_class_with_singleton<ui::color_button>(L, index);
             set_up_class_with_singleton<ui::dropdown>(L, index);
                set_up_class_with_singleton<ui::dropdown_item>(L, index);
+            set_up_class_with_singleton<ui::file_save_button>(L, index);
             set_up_class_with_singleton<ui::formpicker>(L, index);
             set_up_class_with_singleton<ui::groupbox>(L, index);
             set_up_class_with_singleton<ui::image_widget>(L, index);

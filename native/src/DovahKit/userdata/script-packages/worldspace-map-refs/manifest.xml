@@ -18,7 +18,6 @@
    <files>
 range.lua
 config.lua
-texture-cache.lua
 refr-cell.lua
 refr-group-island.lua
 refr-group.lua
