@@ -101,6 +101,7 @@ namespace {
          if (!self.widget)
             return 0;
          api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setDesiredFilename, value);
+         return 0;
       }
       int label(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -112,6 +113,7 @@ namespace {
          if (!self.widget)
             return 0;
          api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setText, value);
+         return 0;
       }
    }
 
