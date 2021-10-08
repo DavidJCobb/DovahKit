@@ -32,18 +32,21 @@ namespace dovahscript::core::subsystems {
          // Force any widgets using these resources within model items to repaint. (Widgets 
          // using these resources in and of themselves can hook the "resynchronized" signal.)
          // 
-         auto& base = this->stored_resources.desynched;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
          bool update = false;
-         for (auto* resource : list) {
-            assert(resource);
-            resource->resynchronize();
-            if (!update && resource->refcount) // check (update) first to avoid delay on checking the atomic refcount
-               update = true;
+         {
+            auto& base = this->stored_resources.desynched;
+            auto& list = base.list;
+            std::unique_lock guard(base.lock);
+            //
+            for (auto* resource : list) {
+               assert(resource);
+               resource->resynchronize();
+               resource->desynchronized = false;
+               if (!update && resource->ui_refcount) // check (update) first to avoid delay on checking the atomic refcount
+                  update = true;
+            }
+            list.clear();
          }
-         list.clear();
          if (update)
             coordinator::get().force_ui_repaint();
       }
@@ -127,17 +130,12 @@ namespace dovahscript::core::subsystems {
       resource->type = resource_type::raster;
       if constexpr (debug_log_resource_management)
          qDebug("Creating Lua-managed resource: %p", resource);
-      {
-         auto& base = this->stored_resources.extant;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
-         list.push_back(resource);
-      }
       if (!source.isNull()) {
          resource->content.raster.script = source;
-         //
-         auto& base = this->stored_resources.desynched;
+         resource->desynchronized = true;
+      }
+      {
+         auto& base = this->stored_resources.extant;
          auto& list = base.list;
          std::unique_lock guard(base.lock);
          //
@@ -154,8 +152,8 @@ namespace dovahscript::core::subsystems {
       if (type == lmrt::binary) {
          resource = new resource_t;
          resource->type = type;
-         resource->content.binary = source;
-         resource->content.binary.detach();
+         resource->content.binary.script = source;
+         resource->content.binary.script.detach();
       } else if (type == lmrt::dds) {
          resource = resource_t::make_dds(source.constData(), source.size());
          if (!resource)
@@ -166,15 +164,11 @@ namespace dovahscript::core::subsystems {
       assert(resource);
       if constexpr (debug_log_resource_management)
          qDebug("Creating Lua-managed resource: %p", resource);
+      if (type == lmrt::dds) {
+         resource->desynchronized = true;
+      }
       {
          auto& base = this->stored_resources.extant;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
-         list.push_back(resource);
-      }
-      if (type == lmrt::dds) { // TODO: only add to the list when it actually becomes used in the UI
-         auto& base = this->stored_resources.desynched;
          auto& list = base.list;
          std::unique_lock guard(base.lock);
          //
@@ -191,17 +185,69 @@ namespace dovahscript::core::subsystems {
       auto& base = this->stored_resources.desynched;
       auto& list = base.list;
       std::unique_lock guard(base.lock);
-      //
       (task)(r.content.raster.script);
-      if (!list.contains(&r))
-         list.push_back(&r);
+      //
+      if (!r.desynchronized) {
+         r.desynchronized = true;
+         if (r.ui_refcount > 0)
+            if (!list.contains(&r))
+               list.push_back(&r);
+      }
+   }
+   void resources::modify_binary_script_side(resource_t& r, std::function<void(QByteArray&)> task) {
+      require_script_thread();
+      //
+      if (r.type != resource_type::binary)
+         return;
+      auto& base = this->stored_resources.desynched;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      (task)(r.content.binary.script);
+      //
+      if (!r.desynchronized) {
+         r.desynchronized = true;
+         if (r.ui_refcount > 0)
+            if (!list.contains(&r))
+               list.push_back(&r);
+      }
+   }
+   void resources::reserve_binary_script_side(resource_t& r, size_t size) {
+      require_script_thread();
+      //
+      if (r.type != resource_type::binary)
+         return;
+      auto& base = this->stored_resources.desynched;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      r.content.binary.script.reserve(size);
    }
 
-   void resources::on_resource_ui_referenced_changed(resource_t& resource, bool became_referenced) {
+   void resources::on_resource_c_referenced_changed(resource_t& resource, bool became_referenced) {
       if (became_referenced) {
          // ...
       } else {
          this->on_resource_unreferenced(resource);
+      }
+   }
+   void resources::on_resource_ui_referenced_changed(resource_t& resource, bool became_referenced) {
+      auto& base = this->stored_resources.desynched;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      if (became_referenced) {
+         if constexpr (debug_log_resource_management)
+            qDebug("Lua-managed resource has become UI-referenced: %p", &resource);
+         if (!resource.desynchronized)
+            return;
+         if (!list.contains(&resource))
+            list.push_back(&resource);
+      } else {
+         if constexpr (debug_log_resource_management)
+            qDebug("Lua-managed resource has become UI-unreferenced (not necessarily C-unreferenced): %p", &resource);
+         if (resource.desynchronized) {
+            resource.desynchronized = false;
+            list.removeOne(&resource);
+         }
+         resource.abandon_client_thread_content();
       }
    }
    void resources::on_resource_unreferenced(resource_t& resource) {

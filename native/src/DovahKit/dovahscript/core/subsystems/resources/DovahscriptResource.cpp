@@ -102,6 +102,12 @@ namespace dovahscript {
       return out;
    }
 
+   void DovahscriptResource::reserve_binary_script_side(size_t size) {
+      core::subsystems::resources::get().reserve_binary_script_side(*this, size);
+   }
+   void DovahscriptResource::modify_binary_script_side(std::function<void(QByteArray&)> task) {
+      core::subsystems::resources::get().modify_binary_script_side(*this, task);
+   }
    void DovahscriptResource::modify_raster_script_side(std::function<void(QImage&)> task) {
       core::subsystems::resources::get().modify_raster_script_side(*this, task);
    }
@@ -176,49 +182,83 @@ namespace dovahscript {
       return qt_image;
    }
 
-   void DovahscriptResource::on_referenced() {
-      if (++this->refcount == 1)
+   void DovahscriptResource::on_referenced(bool ui) {
+      if (++this->refcount == 1) {
+         core::subsystems::resources::get().on_resource_c_referenced_changed(*this, true);
+      }
+      if (++this->ui_refcount == 1) {
          core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, true);
+      }
    }
-   void DovahscriptResource::on_severed() {
+   void DovahscriptResource::on_severed(bool ui) {
       --this->refcount;
       //
       assert(this->refcount >= 0);
       if (this->refcount == 0) {
-         core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, false);
+         core::subsystems::resources::get().on_resource_c_referenced_changed(*this, false);
+         return;
+      }
+      if (ui) {
+         if (--this->ui_refcount == 0) {
+            core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, false);
+         }
       }
    }
 
    void DovahscriptResource::resynchronize() {
       switch (this->type) {
-         case decltype(this->type)::dds:
+         using _ = decltype(this->type);
+         case _::binary:
             {
-               auto data = this->get_dds_layer(0, 0);
-               if (!data.isNull())
-                  this->content.raster.client = data;
-            }
-            break;
-         case decltype(this->type)::raster:
-            {
-               auto& raster = this->content.raster;
-               if (raster.script.isNull()) {
-                  if (!raster.client.isNull()) {
-                     raster.client = QImage();
+               auto& binary = this->content.binary;
+               auto& src = binary.script;
+               auto& dst = binary.client;
+               if (src.isNull()) {
+                  if (!dst.isNull()) {
+                     dst = QByteArray();
                      break;
                   }
                   return;
                }
+               if (!dst.isNull() && dst.size() == src.size()) {
+                  memcpy(dst.data(), src.constData(), src.size());
+               } else {
+                  dst = src;
+                  dst.detach();
+               }
+            }
+            break;
+         case _::dds:
+            {
+               auto data = this->get_dds_layer(0, 0);
+               if (!data.isNull())
+                  this->content.raster.client = data;
+               //
+               // No further logic needed (e.g. to determine whether we emit resynchronized), 
+               // as editing DDSes at run-time is not supported.
+               //
+            }
+            break;
+         case _::raster:
+            {
+               auto& raster = this->content.raster;
                auto& src = raster.script;
                auto& dst = raster.client;
+               if (src.isNull()) {
+                  if (!dst.isNull()) {
+                     dst = QImage();
+                     break;
+                  }
+                  return;
+               }
                if (!dst.isNull() && src.size() == dst.size() && src.format() == dst.format()) {
                   //
                   // If the image size or format have not changed, then updating it this way should 
                   // hopefully avoid having to free and allocate entirely new data for the client-
                   // thread QImage.
                   //
-                  QPainter p(&dst);
-                  p.setCompositionMode(QPainter::CompositionMode_Source); // "replace"
-                  p.drawImage(0, 0, src);
+                  assert(dst.sizeInBytes() == src.sizeInBytes());
+                  memcpy(dst.bits(), src.constBits(), src.sizeInBytes());
                } else {
                   //
                   // If the image size or format has changed, replace the old client-thread data with 
@@ -233,5 +273,8 @@ namespace dovahscript {
             return;
       }
       emit resynchronized();
+   }
+   void DovahscriptResource::abandon_client_thread_content() {
+      this->content.raster.client = QImage();
    }
 }

@@ -282,7 +282,7 @@ namespace dovahscript::api_helpers::moph {
             api_helpers::push_color(L, v.value<QColor>());
             return 1;
       }
-      if (v.type() == qMetaTypeId<DovahscriptResourceHandle>()) {
+      if (v.type() == qMetaTypeId<DovahscriptResourceHandle>() || v.type() == qMetaTypeId<DovahscriptResourceUIHandle>()) {
          auto* resource = DovahscriptResourceHandle::extract_from_variant(v);
          return push_native_object(resource);
       }
@@ -295,12 +295,12 @@ namespace dovahscript::api_helpers::moph {
       if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, stack_pos)) {
          if (!wrap->managed_resource)
             return QVariant();
-         return QVariant::fromValue<DovahscriptResourceHandle>(wrap->managed_resource);
+         return QVariant::fromValue<DovahscriptResourceUIHandle>(wrap->managed_resource);
       }
       if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, stack_pos)) {
          if (!wrap->managed_resource)
             return QVariant();
-         return QVariant::fromValue<DovahscriptResourceHandle>(wrap->managed_resource);
+         return QVariant::fromValue<DovahscriptResourceUIHandle>(wrap->managed_resource);
       }
       return api_helpers::pull_color(L, stack_pos);
    }

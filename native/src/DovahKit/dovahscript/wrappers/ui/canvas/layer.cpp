@@ -239,8 +239,7 @@ namespace {
          assert(self.canvas_entity->isLayer());
          //
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         auto  layer   = task_reference((CanvasWidgetLayer*) self.canvas_entity);
-         task->handler = [layer, pointer, resource]() {
+         task->handler = [pointer, resource, layer = task_reference((wrapped_type*)self.canvas_entity)]() {
             if (!pointer && !resource) {
                layer->setData(nullptr);
                return;

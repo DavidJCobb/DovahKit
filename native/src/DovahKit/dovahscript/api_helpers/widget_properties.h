@@ -26,7 +26,7 @@ namespace dovahscript::api_helpers {
    // Helper function for setting a widget property via a fire-and-forget task. Use this for when 
    // the argument should be passed by reference.
    //
-   template<class W, class Wx, class T> requires (std::is_base_of_v<Wx, W>) void set_widget_property(W* widget_bare, void (Wx::* func)(const T&), const T& value) {
+   template<class W, class Wx, class T, class U> requires (std::is_base_of_v<Wx, W>&& std::is_convertible_v<T, U>) void set_widget_property(W* widget_bare, void (Wx::* func)(const T&), const U& value) {
       auto* task = new tasks::s2m::ui_write_lambda_ex(false, [func, value, widget = task_reference(widget_bare)]() {
          (widget->*func)(value);
       });

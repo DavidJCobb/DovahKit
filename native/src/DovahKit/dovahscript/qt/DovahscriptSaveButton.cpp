@@ -112,7 +112,7 @@ void DovahscriptSaveButton::requestSave() {
          case _::binary:
          case _::undefined:
             {
-               const auto data = res->get_binary_script_side();
+               const auto data = res->get_binary_widget_side();
                file.write(data);
             }
             break;

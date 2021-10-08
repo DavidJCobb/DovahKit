@@ -66,9 +66,9 @@ namespace {
             arg_offset = 2;
             arg_endian = 2;
          }
-         const auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto        offset = _helpers::get_offset<T>(L, 2, arg_offset, buffer.size());
-         auto        endian = _helpers::get_endianness<T>(L, 3, arg_endian);
+         const auto buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
+         auto       offset = _helpers::get_offset<T>(L, 2, arg_offset, buffer.size());
+         auto       endian = _helpers::get_endianness<T>(L, 3, arg_endian);
          //
          // Read:
          //
@@ -120,17 +120,19 @@ namespace {
             value = lua_tonumber(L, 2);
          }
          //
-         auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto  offset = _helpers::get_offset<T>(L, 3, arg_offset, buffer.size());
-         auto  endian = _helpers::get_endianness<T>(L, 4, arg_endian);
+         const auto buffer = self.managed_resource->get_binary_script_side();
+         auto offset = _helpers::get_offset<T>(L, 3, arg_offset, buffer.size());
+         auto endian = _helpers::get_endianness<T>(L, 4, arg_endian);
          //
          // Write:
          //
          if constexpr (sizeof(T) > 1) {
             value = cobb::endian_cast(endian, value);
          }
-         auto* raw   = (uint8_t*)buffer.constData();
-         *(T*)(raw + offset) = value;
+         self.managed_resource->modify_binary_script_side([value, offset](QByteArray& buffer) {
+            auto* raw = (uint8_t*)buffer.data();
+            *(T*)(raw + offset) = value;
+         });
          return 0;
       }
       template<typename T> int _append(lua_State* L) {
@@ -164,17 +166,18 @@ namespace {
             value = lua_tonumber(L, 2);
          }
          //
-         auto& buffer = self.managed_resource->get_binary_script_side(); // implicitly shared, so no worry about copying
-         auto  endian = _helpers::get_endianness<T>(L, 3, arg_endian);
+         auto endian = _helpers::get_endianness<T>(L, 3, arg_endian);
          //
          // Write:
          //
          if constexpr (sizeof(T) > 1) {
             value = cobb::endian_cast(endian, value);
          }
-         buffer.resize(buffer.size() + sizeof(T));
-         auto* raw = (uint8_t*)buffer.data();
-         *(T*)(raw + buffer.size() - sizeof(T)) = value;
+         self.managed_resource->modify_binary_script_side([value](QByteArray& buffer) {
+            buffer.resize(buffer.size() + sizeof(T));
+            auto* raw = (uint8_t*)buffer.data();
+            *(T*)(raw + buffer.size() - sizeof(T)) = value;
+         });
          return 0;
       }
       //
@@ -191,7 +194,7 @@ namespace {
             return 0;
          if (size > max_synthetic_size)
             size = max_synthetic_size;
-         buffer.reserve(size);
+         self.managed_resource->reserve_binary_script_side(size);
          return 0;
       }
       int resize(lua_State* L) {
@@ -208,7 +211,9 @@ namespace {
          }
          if (size == buffer.size())
             return 0;
-         buffer.resize(size);
+         self.managed_resource->modify_binary_script_side([size](QByteArray& buffer) {
+            buffer.resize(size);
+         });
          return 0;
       }
    }
