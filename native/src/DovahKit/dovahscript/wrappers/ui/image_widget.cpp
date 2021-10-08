@@ -27,7 +27,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         DovahscriptResourceHandle result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::resource);
+         task_reference<DovahscriptResource> result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::resource);
          return push_native_object(result);
       }
    }
@@ -35,7 +35,7 @@ namespace {
       int image(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          //
-         DovahscriptResourceHandle handle;
+         task_reference<DovahscriptResource> handle;
          if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, 2)) {
             handle = wrap->managed_resource;
          } else if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, 2)) {

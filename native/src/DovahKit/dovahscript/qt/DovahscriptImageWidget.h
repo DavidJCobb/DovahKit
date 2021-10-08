@@ -4,8 +4,7 @@
 
 class DovahscriptImageWidget : public QWidget {
    Q_OBJECT;
-   using DSR  = dovahscript::DovahscriptResource;
-   using DSRH = dovahscript::DovahscriptResourceUIHandle;
+   using DSRH = dovahscript::DovahscriptResourceHandle;
    public:
       DovahscriptImageWidget(QWidget* parent = nullptr);
 

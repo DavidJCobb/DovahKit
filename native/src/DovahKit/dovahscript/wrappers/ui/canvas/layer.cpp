@@ -126,7 +126,7 @@ namespace {
             // data" object should be invisible to the script; as far as the script is concerned, the 
             // layer data is the wrapped Lua-managed resource and not the CWLDLMR wrapping it.
             //
-            DovahscriptResourceHandle handle = res_layer->resource();
+            task_reference<DovahscriptResource> handle = res_layer->resource();
             return push_native_object(handle);
          }
          if (auto* text_layer = qobject_cast<DovahscriptCanvasWidgetLayerDataText*>(result)) {
@@ -218,7 +218,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          //
          auto pointer  = task_reference<DovahscriptCanvasWidgetLayerData>(nullptr);
-         auto resource = DovahscriptResourceHandle();
+         auto resource = task_reference<DovahscriptResource>();
          //
          if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, 2)) {
             if (wrap->managed_resource)

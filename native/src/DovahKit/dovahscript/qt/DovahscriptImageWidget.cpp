@@ -38,7 +38,7 @@ void DovahscriptImageWidget::setResource(const DSRH& input) {
    this->_resource = input;
    this->updateGeometry();
    this->update();
-   QObject::connect(this->_resource, &DSR::resynchronized, this, [this]() {
+   QObject::connect(this->_resource, &DSRH::value_type::resynchronized, this, [this]() {
       this->updateGeometry();
       this->update();
    });

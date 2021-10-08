@@ -42,7 +42,7 @@ namespace dovahscript::core::subsystems {
                assert(resource);
                resource->resynchronize();
                resource->desynchronized = false;
-               if (!update && resource->ui_refcount) // check (update) first to avoid delay on checking the atomic refcount
+               if (!update && resource->refcounts.ui) // check (update) first to avoid delay on checking the atomic refcount
                   update = true;
             }
             list.clear();
@@ -189,7 +189,7 @@ namespace dovahscript::core::subsystems {
       //
       if (!r.desynchronized) {
          r.desynchronized = true;
-         if (r.ui_refcount > 0)
+         if (r.refcounts.ui > 0)
             if (!list.contains(&r))
                list.push_back(&r);
       }
@@ -206,7 +206,7 @@ namespace dovahscript::core::subsystems {
       //
       if (!r.desynchronized) {
          r.desynchronized = true;
-         if (r.ui_refcount > 0)
+         if (r.refcounts.ui > 0)
             if (!list.contains(&r))
                list.push_back(&r);
       }
@@ -222,9 +222,11 @@ namespace dovahscript::core::subsystems {
       r.content.binary.script.reserve(size);
    }
 
-   void resources::on_resource_c_referenced_changed(resource_t& resource, bool became_referenced) {
+   void resources::on_resource_task_referenced_changed(resource_t& resource, bool became_referenced) {
       if (became_referenced) {
-         // ...
+         //
+         // ... if we ever need to react to the resource becoming referenced, do it here ...
+         //
       } else {
          this->on_resource_unreferenced(resource);
       }
@@ -240,6 +242,9 @@ namespace dovahscript::core::subsystems {
             return;
          if (!list.contains(&resource))
             list.push_back(&resource);
+         //
+         // ... if we ever need to react to the resource becoming referenced, do it here ...
+         //
       } else {
          if constexpr (debug_log_resource_management)
             qDebug("Lua-managed resource has become UI-unreferenced (not necessarily C-unreferenced): %p", &resource);
@@ -248,6 +253,7 @@ namespace dovahscript::core::subsystems {
             list.removeOne(&resource);
          }
          resource.abandon_client_thread_content();
+         this->on_resource_unreferenced(resource);
       }
    }
    void resources::on_resource_unreferenced(resource_t& resource) {
@@ -255,7 +261,7 @@ namespace dovahscript::core::subsystems {
          qDebug("Lua-managed resource has become unreferenced either within Lua or Qt: %p", &resource);
       if (resource.is_lua_referenced)
          return;
-      if (resource.refcount)
+      if (resource.refcounts.ui || resource.refcounts.task)
          return;
       if constexpr (debug_log_resource_management)
          qDebug("Marking Lua-managed resource for delete: %p", &resource);

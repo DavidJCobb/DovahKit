@@ -4,7 +4,7 @@
 
 class DovahscriptSaveButton : public QPushButton {
    Q_OBJECT;
-   using DSRH = dovahscript::DovahscriptResourceUIHandle;
+   using DSRH = dovahscript::DovahscriptResourceHandle;
    public:
       DovahscriptSaveButton(QWidget* parent = nullptr);
 

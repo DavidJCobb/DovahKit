@@ -23,18 +23,29 @@ namespace dovahscript {
       raster,
    };
 
-   template<typename T, bool ui> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceBaseHandleImpl;
+   // Forward-declarations
+   class DovahscriptResource;
+   class DovahscriptResourceHandle;
+   template<typename T> class task_reference;
+   namespace impl::task_reference {
+      extern void inc(DovahscriptResource*);
+      extern void dec(DovahscriptResource*);
+   }
 
    class DovahscriptResource : public QObject {
       Q_OBJECT;
 
       friend class core::subsystems::resources;
-      template<typename T, bool ui> requires (std::is_base_of_v<QObject, T>) friend class DovahscriptResourceBaseHandleImpl;
+      friend void  impl::task_reference::inc(DovahscriptResource*);
+      friend void  impl::task_reference::dec(DovahscriptResource*);
+      friend class DovahscriptResourceHandle;
       
       protected:
          resource_type type = resource_type::undefined;
-         std::atomic<int> refcount    = 0;
-         std::atomic<int> ui_refcount = 0;
+         struct {
+            std::atomic<int> task = 0;
+            std::atomic<int> ui   = 0;
+         } refcounts;
          bool desynchronized = false;
          struct {
             struct {
@@ -50,6 +61,9 @@ namespace dovahscript {
                QImage client; // also used for DDS
             } raster;
          } content;
+
+         void _on_task_referenced();
+         void _on_task_unreferenced();
          
       public:
          ~DovahscriptResource();
@@ -80,8 +94,8 @@ namespace dovahscript {
          inline const DirectX::ScratchImage* get_dds_raw_data() const noexcept { return this->content.dds.data; }
 
       protected:
-         void on_referenced(bool ui);
-         void on_severed(bool ui);
+         void on_handle_made();
+         void on_handle_lost();
 
          void resynchronize();
          void abandon_client_thread_content();
@@ -90,21 +104,11 @@ namespace dovahscript {
          void resynchronized();
    };
 
-   #pragma region Handle setup
-   //
-   // Unfortunately, Qt's meta-type system only supports smart pointers that are templated on their 
-   // pointed-to type; I'm guessing they built it to make QPointer and friends work under the hood, 
-   // and then exposed it for users. This means that we have to do some annoying indirection in 
-   // order to get things working the way we want.
-   //
-
-   template<typename T, bool ui> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceBaseHandleImpl { // Qt needs it to be templated :(
+   class DovahscriptResourceHandle {
+      public:
+         using value_type = DovahscriptResource;
       protected:
-         using value_t = T;
-         using self_t = DovahscriptResourceBaseHandleImpl<T, ui>;
-         friend class DovahscriptResourceBaseHandleImpl<T, !ui>;
-      protected:
-         value_t* resource = nullptr;
+         DovahscriptResource* resource = nullptr;
 
          // It seems we can't reliably control the order in which widgets are deleted during VM teardown. 
          // Several sub-widgets are managed by Qt directly; Qt decides when and how to delete those; Qt 
@@ -114,7 +118,7 @@ namespace dovahscript {
 
          void _inc() {
             if (resource) {
-               resource->on_referenced(ui);
+               resource->on_handle_made();
                connection = QObject::connect(resource, &QObject::destroyed, [this]() {
                   this->resource = nullptr;
                });
@@ -124,86 +128,34 @@ namespace dovahscript {
             if (connection)
                QObject::disconnect(connection);
             if (resource)
-               resource->on_severed(ui);
+               resource->on_handle_lost();
          }
 
       public:
-         DovahscriptResourceBaseHandleImpl() {}
-         DovahscriptResourceBaseHandleImpl(value_t* v) : resource(v) {
-            this->_inc();
-         }
-         DovahscriptResourceBaseHandleImpl(const DovahscriptResourceBaseHandleImpl& other) { *this = other; }
-         DovahscriptResourceBaseHandleImpl(DovahscriptResourceBaseHandleImpl&& other) { *this = std::move(other); }
-         DovahscriptResourceBaseHandleImpl(const DovahscriptResourceBaseHandleImpl<T, !ui>& other) {
-            this->_dec();
-            this->resource = other.resource;
-            this->_inc();
-         }
-         DovahscriptResourceBaseHandleImpl(DovahscriptResourceBaseHandleImpl<T, !ui>&& other) {
-            this->_dec();
-            this->resource = other.resource;
-            other.resource = nullptr;
-            this->resource->on_referenced(ui);
-            this->resource->on_severed(!ui);
-         }
-         ~DovahscriptResourceBaseHandleImpl() {
-            this->_dec();
-            this->resource = nullptr;
-         }
+         DovahscriptResourceHandle() {}
+         DovahscriptResourceHandle(DovahscriptResource* v);
+         DovahscriptResourceHandle(const DovahscriptResourceHandle& other);
+         DovahscriptResourceHandle(DovahscriptResourceHandle&& other);
+         DovahscriptResourceHandle(const task_reference<DovahscriptResource>&);
+         ~DovahscriptResourceHandle();
 
          operator bool() { return this->resource != nullptr; };
-         operator value_t*() const noexcept { return this->resource; };
-         value_t* operator->() const noexcept { return this->resource; };
+         operator DovahscriptResource*() const noexcept { return this->resource; };
+         DovahscriptResource* operator->() const noexcept { return this->resource; };
 
-         DovahscriptResourceBaseHandleImpl& operator=(const DovahscriptResourceBaseHandleImpl& other) noexcept {
-            this->_dec();
-            this->resource = other.resource;
-            this->_inc();
-            return *this;
-         }
-         DovahscriptResourceBaseHandleImpl& operator=(DovahscriptResourceBaseHandleImpl&& other) noexcept {
-            this->_dec();
-            this->resource = other.resource;
-            other.resource = nullptr;
-            return *this;
-         }
-         DovahscriptResourceBaseHandleImpl& operator=(DovahscriptResourceBaseHandleImpl<T, !ui>&& other) noexcept {
-            this->_dec();
-            this->resource = other.resource;
-            other.resource = nullptr;
-            this->resource->on_referenced(ui);
-            this->resource->on_severed(!ui);
-            return *this;
-         }
+         DovahscriptResourceHandle& operator=(const DovahscriptResourceHandle& other) noexcept;
+         DovahscriptResourceHandle& operator=(DovahscriptResourceHandle&& other) noexcept;
 
-         inline value_t* bare() const noexcept { return this->resource; }
+         inline DovahscriptResource* bare() const noexcept { return this->resource; }
 
-         static value_t* extract_from_variant(const QVariant& data) noexcept {
-            if (data.isValid() && data.canConvert<QObject*>()) {
-               if (auto* object = data.value<QObject*>())
-                  return qobject_cast<value_t*>(object);
-            }
-            return nullptr;
-         }
+         static DovahscriptResource* extract_from_variant(const QVariant& data) noexcept;
    };
-
-   template<typename T> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceHandleImpl;
-   template<typename T> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceUIHandleImpl;
-
-   template<typename T> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceHandleImpl : public DovahscriptResourceBaseHandleImpl<T, false> {
-      using DovahscriptResourceBaseHandleImpl<T, false>::DovahscriptResourceBaseHandleImpl;
-   };
-   template<typename T> requires (std::is_base_of_v<QObject, T>) class DovahscriptResourceUIHandleImpl : public DovahscriptResourceBaseHandleImpl<T, true> {
-      using DovahscriptResourceBaseHandleImpl<T, true>::DovahscriptResourceBaseHandleImpl;
-   };
-   #pragma endregion
-
-   using DovahscriptResourceUIHandle = DovahscriptResourceUIHandleImpl<DovahscriptResource>;
-   using DovahscriptResourceHandle   = DovahscriptResourceHandleImpl<DovahscriptResource>;
 }
 
 // These macros don't work from within a namespace. Ignore IntelliSense errors on them, too; those may be false-positives.
-Q_DECLARE_SMART_POINTER_METATYPE(dovahscript::DovahscriptResourceUIHandleImpl);
-Q_DECLARE_METATYPE(dovahscript::DovahscriptResourceUIHandle);
-Q_DECLARE_SMART_POINTER_METATYPE(dovahscript::DovahscriptResourceHandleImpl);
 Q_DECLARE_METATYPE(dovahscript::DovahscriptResourceHandle);
+
+// The Q_DECLARE_SMART_POINTER_METATYPE macro is only needed if we're declaring a smart pointer 
+// meant to be templated on a QObject type. It exists so that a QVariant holding that smart 
+// pointer can be directly converted to the pointed-to type, and so that QVariant::canConvert 
+// can be queried for the pointed-to type directly.

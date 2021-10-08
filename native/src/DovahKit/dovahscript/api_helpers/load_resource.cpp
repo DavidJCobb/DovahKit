@@ -17,6 +17,7 @@
 #include "../tasks/s2m/lambda.h"
 #include "../push_native_object.h"
 #include "../send_script_task.h"
+#include "../task_reference.h"
 
 //
 // Planned type filters:
@@ -396,7 +397,7 @@ namespace dovahscript::api_helpers {
             [[fallthrough]];
          case _category::raster:
             if (type == "dds") {
-               DovahscriptResourceHandle resource;
+               task_reference<DovahscriptResource> resource;
                {
                   auto* task    = new tasks::s2m::lambda(true);
                   task->handler = [&buffer, &resource]() {
@@ -440,7 +441,7 @@ namespace dovahscript::api_helpers {
                   reader.setFormat(format.toLatin1());
                QImage raster = reader.read();
                if (!raster.isNull()) {
-                  DovahscriptResourceHandle resource;
+                  task_reference<DovahscriptResource> resource;
                   {
                      auto* task    = new tasks::s2m::lambda(true);
                      task->handler = [&raster, &resource]() {
@@ -470,7 +471,7 @@ namespace dovahscript::api_helpers {
       //
       // Default to binary:
       //
-      DovahscriptResourceHandle resource;
+      task_reference<DovahscriptResource> resource;
       {
          auto* task    = new tasks::s2m::lambda(true);
          task->handler = [&buffer, &resource]() {

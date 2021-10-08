@@ -61,14 +61,7 @@ above, the "a" image would free its existing data, and then allocate memory for
 new data -- the  copy of "b." However, if  the two images are  of the same size 
 and format, then this is a bit wasteful.  Accordingly, when we resynchronize an 
 image, we check whether the size and  format are unchanged and if so, we simply 
-use QPainter to replace the content of the old image with the new image:
-
-   QPainter p(&a);
-   p.setCompositionMode(QPainter::CompositionMode_Source);
-   p.drawImage(0, 0, b);
-
-The "composition mode" we use here essentially tells QPainter to wholly replace 
-the pixels it's drawing over, instead of performing any blending.
+use memcpy to replace the content of the old image with the new image.
 
 
 === USING RESOURCES WITHIN THE UI =============================================
@@ -148,28 +141,28 @@ anymore.
 (From here on out, we may abbreviate DovahscriptResourceHandle as "DSRH.")
 
 Of course, we need to have DSRHs actually function within QVariants. We can use 
-two macros for this purpose: the usual  Q_DECLARE_METATYPE macro used to enable 
-the use of any type in a QVariant, as well as Q_DECLARE_SMART_POINTER_METATYPE, 
-to ensure  that smart pointer  behavior works  properly. The latter  macro only 
-works on a class templated on some typename  T, which must subclass QObject. We 
-need to use both macros: the former on  the template specialization; the latter 
-on the template.
+the macro Q_DECLARE_METATYPE for this purpose. When registering a smart pointer 
+one might expect to need Q_DECLARE_SMART_POINTER_METATYPE, but in reality, that 
+macro is only needed if the smart pointer is meant to be a template; it enables 
+direct conversions to the pointed-to type:
 
-   Q_DECLARE_SMART_POINTER_METATYPE(Foo);
-   Q_DECLARE_METATYPE(Foo<Bar>);
+   template<typename T> class ptr;
+   Q_DECLARE_SMART_POINTER_METATYPE(ptr);
 
-This of course means that DovahscriptResource needs to subclass QObject, but we 
-get a few conveniences  from that. Firstly,  DSRH can hook  QObject::destroyed, 
-allowing us to delete DSRs even if there  are still extant DSRHs which refer to 
-them, which makes  VM teardown simpler (we just wipe all resources  immediately 
-as part of a central process). Secondly, we can offer a "resynchronized" signal 
-on DSR, which  can be used by  custom widgets. I said  earlier that  I'd circle 
-back to use cases like QToolButton, so  here we are: there's no way to take any 
-arbitrary widget that relies on QPixmap and  get it to use an DSRH instead, but 
-we can create custom widget (sub)classes  that use DSRH, and have them hook the 
-DSR's "resynchronized"  signal to know  when to repaint  (although this may not 
-even be strictly  necessary since we force all scripted windows  and widgets to 
-repaint anyway).
+   // now you can do QVariant::fromValue(ptr(nullptr)).canConvert<ptr>();
+
+Finally, we have DovahscriptResource subclass QObject, and we get some benefits 
+from that. Firstly, a handle can hook QObject::destroyed, allowing us to delete 
+its target even if there are still extant DSRHs which refer to them; this makes 
+VM teardown simpler (we can mass-delete  all resources immediately as part of a 
+central process). Secondly, we can offer a "resynchronized" signal on resources 
+and use this  from custom widgets. I said  earlier that I'd circle  back to use 
+cases like  QToolButton, so here we  are: there's no way to take  any arbitrary 
+widget that relies  on QPixmap and get it to use an DSRH  instead, but instead, 
+we create  custom widget (sub)classes  that use DSRH, and have them  listen for 
+the "resynchronized" signal to know when to repaint (although this may not even 
+be strictly necessary, as we force all  scripted windows and widgets to repaint 
+anyway).
 
 
 === SUBRESOURCES ==============================================================
@@ -378,12 +371,13 @@ the raster -- immediately  goes out of  scope. It's  possible for the DSR to go
 out of scope and be deleted before the task runs and wraps it in an DSRH, which 
 will result in our DSRH wrapping a dangling pointer.
 
-Consider this alternative:
+Consider  this alternative,  wherein a task reference  is used to keep  the DSR 
+available:
 
    int icon(lua_State* L) {
       auto& self = get_wrapper_for_thiscall<cls>(L);
       //
-      DovahscriptResourceHandle value = nullptr;
+      task_reference<DovahscriptResource> value = nullptr;
       if (!lua_isnoneornil(L, 2)) {
          auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
          luaL_argcheck(L, arg != nullptr, 2, "raster expected");
@@ -403,14 +397,24 @@ Consider this alternative:
    }
 
 Incidentally, this is also why DSRs' intrusive refcounts need to be atomic: the 
-DSRHs can be created and destroyed on multiple threads, sometimes at around the 
-same time. We create  DSRH #1 in the API body and copy it  into the lambda (the 
-capture-by-value) to create  DSRH #2. The lambda  copies DSRH #2 into the model 
-item's  Qt::DecorationRole to create DSRH  #3 on the main thread,  and then the 
-lambda and DSRH #2  are destroyed on the  main thread;  meanwhile, the API body 
-returns to  Lua, taking  DSRH #1 out of scope and destroying  it. All  of these 
-operations after the creation of DSRH #2  are essentially unordered, and so the 
-refcount must  be atomic to allow  thread-safe usage.
+DSRHs  and task references  can be created and  destroyed on multiple  threads, 
+sometimes at around the same time. The following events occur in the API above:
+
+   a) A task reference is created in the API body.
+
+   b) The task reference is copied into the lambda.
+
+   c) The lambda copies the task reference into the model item's data, creating 
+      a DovahscriptResourceHandle on the main thread.
+
+   d) The lambda  goes out of scope, destroying the task reference  from (b) on 
+      the main thread.
+
+   e) The API  body returns to Lua, taking  the task reference from  (a) out of 
+      scope and destroying it.
+
+All of the operations after (b) are  essentially unordered, and so the refcount 
+must be atomic to allow thread-safe usage.
 
 Incidentally, the model observer property handler system behaves as needed here 
 because its  setter stuffs the  to-be-stored value  into a QVariant  within the 

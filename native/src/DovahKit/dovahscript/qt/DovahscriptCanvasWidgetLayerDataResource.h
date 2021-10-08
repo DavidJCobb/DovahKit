@@ -11,7 +11,7 @@
 //
 class DovahscriptCanvasWidgetLayerDataResource final : public DovahscriptCanvasWidgetLayerData {
    Q_OBJECT;
-   using DSRH = dovahscript::DovahscriptResourceUIHandle;
+   using DSRH = dovahscript::DovahscriptResourceHandle;
    protected:
       DSRH _handle;
 

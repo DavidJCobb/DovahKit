@@ -9,6 +9,7 @@
 #include "../../core/subsystems/resources.h"
 #include "../../push_native_object.h"
 #include "../../send_script_task.h"
+#include "../../task_reference.h"
 
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
@@ -243,7 +244,7 @@ namespace {
                initial = 0;
             cobb::lua::argcheck(L, initial <= max_synthetic_size, 2, "max size limit: you cannot create a buffer larger than 1GB");
          }
-         DovahscriptResourceHandle resource = nullptr;
+         task_reference<DovahscriptResource> resource;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [&resource, initial]() {

@@ -2,7 +2,7 @@
 #include <QPainter>
 
 namespace {
-   using DSRH = dovahscript::DovahscriptResourceUIHandle;
+   using DSRH = dovahscript::DovahscriptResourceHandle;
 }
 
 void DovahscriptCanvasWidgetLayerDataResource::paint(QPainter& painter, const QPoint pos, const QSize crop_to) noexcept {

@@ -54,7 +54,7 @@ namespace dovahscript::core::subsystems {
 
          void reserve_binary_script_side(resource_t&, size_t);
 
-         void on_resource_c_referenced_changed(resource_t&, bool became_referenced); // call when the resource becomes (un)referenced within C++
+         void on_resource_task_referenced_changed(resource_t&, bool became_referenced); // call when the resource becomes (un)referenced within C++
          void on_resource_ui_referenced_changed(resource_t&, bool became_referenced); // call when the resource becomes (un)referenced within the UI
          void on_resource_unreferenced(resource_t&); // call when the resource becomes Lua-unreferenced
    };

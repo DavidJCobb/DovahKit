@@ -6,6 +6,7 @@
 
 #include "../resources.h"
 #include "../../verify_threading.h"
+#include "../../../task_reference.h"
 
 namespace {
    // This should be a DXGI format suitable for reading by script. In practice, this needs to be 
@@ -24,6 +25,21 @@ namespace dovahscript {
       if (auto*& p = this->content.dds.info) {
          delete p;
          p = nullptr;
+      }
+   }
+
+   void DovahscriptResource::_on_task_referenced() {
+      if (++this->refcounts.task == 1) {
+         core::subsystems::resources::get().on_resource_task_referenced_changed(*this, true);
+      }
+   }
+   void DovahscriptResource::_on_task_unreferenced() {
+      auto v = --this->refcounts.task;
+      //
+      assert(v >= 0);
+      if (v == 0) {
+         core::subsystems::resources::get().on_resource_task_referenced_changed(*this, false);
+         return;
       }
    }
 
@@ -182,26 +198,18 @@ namespace dovahscript {
       return qt_image;
    }
 
-   void DovahscriptResource::on_referenced(bool ui) {
-      if (++this->refcount == 1) {
-         core::subsystems::resources::get().on_resource_c_referenced_changed(*this, true);
-      }
-      if (++this->ui_refcount == 1) {
+   void DovahscriptResource::on_handle_made() {
+      if (++this->refcounts.ui == 1) {
          core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, true);
       }
    }
-   void DovahscriptResource::on_severed(bool ui) {
-      --this->refcount;
+   void DovahscriptResource::on_handle_lost() {
+      auto v = --this->refcounts.ui;
       //
-      assert(this->refcount >= 0);
-      if (this->refcount == 0) {
-         core::subsystems::resources::get().on_resource_c_referenced_changed(*this, false);
+      assert(v >= 0);
+      if (v == 0) {
+         core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, false);
          return;
-      }
-      if (ui) {
-         if (--this->ui_refcount == 0) {
-            core::subsystems::resources::get().on_resource_ui_referenced_changed(*this, false);
-         }
       }
    }
 
@@ -277,4 +285,49 @@ namespace dovahscript {
    void DovahscriptResource::abandon_client_thread_content() {
       this->content.raster.client = QImage();
    }
+
+   #pragma region DovahscriptResourceHandle
+   DovahscriptResourceHandle::DovahscriptResourceHandle(DovahscriptResource* v) : resource(v) {
+      this->_inc();
+   }
+   DovahscriptResourceHandle::DovahscriptResourceHandle(const DovahscriptResourceHandle& other) {
+      //this->_dec();
+      this->resource = other.resource;
+      this->_inc();
+   }
+   DovahscriptResourceHandle::DovahscriptResourceHandle(DovahscriptResourceHandle&& other) {
+      //this->_dec();
+      this->resource = other.resource;
+      other.resource = nullptr;
+   }
+   DovahscriptResourceHandle::DovahscriptResourceHandle(const task_reference<DovahscriptResource>& ref) {
+      this->resource = (DovahscriptResource*)ref;
+      this->_inc();
+   }
+   DovahscriptResourceHandle::~DovahscriptResourceHandle() {
+      this->_dec();
+      this->resource = nullptr;
+   }
+
+   DovahscriptResourceHandle& DovahscriptResourceHandle::operator=(const DovahscriptResourceHandle& other) noexcept {
+      this->_dec();
+      this->resource = other.resource;
+      this->_inc();
+      return *this;
+   }
+   DovahscriptResourceHandle& DovahscriptResourceHandle::operator=(DovahscriptResourceHandle&& other) noexcept {
+      this->_dec();
+      this->resource = other.resource;
+      other.resource = nullptr;
+      return *this;
+   }
+
+   /*static*/ DovahscriptResource* DovahscriptResourceHandle::extract_from_variant(const QVariant& data) noexcept {
+      if (data.isValid() && data.canConvert<QObject*>()) {
+         if (auto* object = data.value<QObject*>())
+            return qobject_cast<DovahscriptResource*>(object);
+      }
+      return nullptr;
+   }
+   #pragma endregion
 }

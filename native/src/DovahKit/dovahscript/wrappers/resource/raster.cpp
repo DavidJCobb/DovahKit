@@ -15,6 +15,7 @@
 #include "../../core/subsystems/resources.h"
 #include "../../push_native_object.h"
 #include "../../send_script_task.h"
+#include "../../task_reference.h"
 
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
@@ -1054,7 +1055,7 @@ namespace {
             lua_pop(L, 1);
          }
          //
-         DovahscriptResourceHandle resource = nullptr;
+         task_reference<DovahscriptResource> resource;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [width, height, background, &resource]() {
