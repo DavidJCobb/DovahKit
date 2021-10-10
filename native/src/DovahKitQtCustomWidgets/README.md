@@ -38,6 +38,12 @@ the actions to it programmatically.)
 
 ![](readme-assets/DKCollapsiblePane.png)
 
+### DKFormListPane
+A table widget useful for editing lists of forms, e.g. the list of grasses used by a 
+LandTexture. The widget can optionally display buttons to manipulate its contents 
+(e.g. "Move Up" and "Move Down"), and can arrange its buttons in a column on the side 
+or in a row below the list.
+
 ## Notes
 
 We include the full code for each custom widget in both DovahKit and this project in 

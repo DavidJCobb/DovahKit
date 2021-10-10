@@ -72,6 +72,8 @@ do -- HeightmapWindow contents
       local window = HeightmapWindow.controls.window
       window.title = "Heightmap"
       window:set_layout("grid")
+      window.width  = 640
+      window.height = 400
       --
       local scroll = HeightmapWindow.controls.scroll
       local config = HeightmapWindow.controls.config

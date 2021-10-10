@@ -1,0 +1,271 @@
+#include "DKFormListPane.h"
+#include <QBoxLayout>
+#include <QFontMetrics>
+#include <QHeaderView>
+#include <QKeyEvent>
+#if !defined(QT_DESIGNER_LIB)
+   #include "../editor/open_window_for_form.h"
+#endif
+
+namespace {
+   constexpr QSize no_maximum_size = { QWIDGETSIZE_MAX, QWIDGETSIZE_MAX };
+}
+
+#if defined(QT_DESIGNER_LIB)
+#include <QAbstractItemModel>
+class DKFormListPaneModel : public QAbstractItemModel {
+   public:
+      using QAbstractItemModel::QAbstractItemModel;
+
+      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override { return QModelIndex(); }
+      virtual QModelIndex parent(const QModelIndex& index) const { return QModelIndex(); }
+      virtual int rowCount(const QModelIndex& parent) const override { return 0; }
+      virtual int columnCount(const QModelIndex& item) const override { return 3; }
+      virtual Qt::ItemFlags flags(const QModelIndex& index) const override { return 0; }
+      virtual QVariant data(const QModelIndex& index, int role) const override { return QVariant(); }
+      virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+         if (orientation != Qt::Orientation::Horizontal) {
+            return QVariant();
+         }
+         switch (role) {
+            case Qt::DisplayRole:
+               switch (section) {
+                  case DKFormListPane::ColumnType:   return DKFormListPane::tr("Type", "FormList listview");
+                  case DKFormListPane::ColumnName:   return DKFormListPane::tr("Name", "FormList listview");
+                  case DKFormListPane::ColumnFormID: return DKFormListPane::tr("Form ID", "FormList listview");
+               }
+               break;
+         }
+         return QVariant();
+      }
+};
+#endif
+
+DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
+   auto* view = this->subwidgets.view = new QTableView(this);
+   auto* wrap = this->subwidgets.buttons.wrapper = new QWidget(this);
+   this->subwidgets.buttons.move_down = new QPushButton(wrap);
+   this->subwidgets.buttons.move_up   = new QPushButton(wrap);
+   this->subwidgets.buttons.remove    = new QPushButton(wrap);
+   this->subwidgets.buttons.remove->setText(tr("Remove"));
+   //
+   {
+      auto* layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight, this);
+      auto* nested = new QBoxLayout(QBoxLayout::Direction::TopToBottom, wrap);
+      layout->addWidget(view, 1);
+      layout->addWidget(wrap, 0);
+      nested->addStretch(1);
+      nested->addWidget(this->subwidgets.buttons.move_up);
+      nested->addWidget(this->subwidgets.buttons.move_down);
+      nested->addWidget(this->subwidgets.buttons.remove);
+      nested->addStretch(1);
+      //
+      layout->setContentsMargins({ 0, 0, 0, 0 });
+      nested->setContentsMargins({ 0, 0, 0, 0 });
+      layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
+      nested->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
+   }
+   //
+   view->setModel(new DKFormListPaneModel(this));
+   #if !defined(QT_DESIGNER_LIB)
+      QObject::connect(view, &QTableView::doubleClicked, [this, view](const QModelIndex& index) {
+         if (!index.isValid())
+            return;
+         auto* model = (DKFormListPaneModel*)view->model();
+         auto  data  = (DKFormListPaneModel::Item*)index.internalPointer();
+         if (data && data->stub)
+            open_edit_dialog_for_form(data->stub, this);
+      });
+   #endif
+   view->setSelectionBehavior(QAbstractItemView::SelectRows);
+   view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+   view->setAcceptDrops(true);
+   view->setDragDropOverwriteMode(false);
+   {
+      auto header  = view->horizontalHeader();
+      auto metrics = QFontMetrics(view->font());
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+      header->setMinimumSectionSize(2);
+      header->resizeSection(ColumnType,   metrics.boundingRect("XMMX").width() * 1.5F + 4);
+      header->resizeSection(ColumnFormID, 4);
+      header->setSectionResizeMode(ColumnType,   QHeaderView::Interactive);
+      header->setSectionResizeMode(ColumnName,   QHeaderView::Stretch);
+      header->setSectionResizeMode(ColumnFormID, QHeaderView::Interactive);
+      header->setStretchLastSection(false);
+      view->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+      #if !defined(QT_DESIGNER_LIB)
+         this->_model()->setShowIndices(this->state.show_indices);
+      #endif
+   }
+   //
+   #if !defined(QT_DESIGNER_LIB)
+      QObject::connect(this->subwidgets.buttons.move_up,   &QPushButton::clicked, this, [this]() { this->_moveSelected(-1); });
+      QObject::connect(this->subwidgets.buttons.move_down, &QPushButton::clicked, this, [this]() { this->_moveSelected(1); });
+      QObject::connect(this->subwidgets.buttons.remove,    &QPushButton::clicked, this, [this]() { this->_removeSelected(); });
+   #endif
+   //
+   this->_updateOrientation();
+}
+
+DKFormListPaneModel* DKFormListPane::_model() const noexcept {
+   return (DKFormListPaneModel*) this->subwidgets.view->model();
+}
+
+#if !defined(QT_DESIGNER_LIB)
+   void DKFormListPane::_moveSelected(int down) {
+      auto* sm = this->subwidgets.view->selectionModel();
+      if (!sm)
+         return;
+      this->_model()->moveStubs(sm->selectedRows(), down);
+   }
+   void DKFormListPane::_removeSelected() {
+      auto* sm = this->subwidgets.view->selectionModel();
+      if (!sm)
+         return;
+      this->_model()->removeStubs(sm->selectedRows());
+   }
+#endif
+void DKFormListPane::_updateButtonVisibility() {
+   auto* prev   = this->subwidgets.buttons.move_up;
+   auto* next   = this->subwidgets.buttons.move_down;
+   auto* remove = this->subwidgets.buttons.remove;
+   bool mv = this->state.show_move_buttons;
+   bool rv = this->state.show_remove_button;
+   prev->setVisible(mv);
+   next->setVisible(mv);
+   remove->setVisible(rv);
+   this->subwidgets.buttons.wrapper->setVisible(mv || rv);
+}
+void DKFormListPane::_updateOrientation() {
+   auto* prev   = this->subwidgets.buttons.move_up;
+   auto* next   = this->subwidgets.buttons.move_down;
+   auto* layout = (QBoxLayout*)this->layout();
+   auto* nested = (QBoxLayout*)this->subwidgets.buttons.wrapper->layout();
+   assert(layout && nested);
+   auto  count  = nested->count();
+   assert(count > 0);
+   if (this->orientation() == Qt::Orientation::Vertical) { // orientation of the "main axis;" buttons are laid out along the "cross axis"
+      prev->setText(tr("<<"));
+      next->setText(tr(">>"));
+      {
+         prev->ensurePolished();
+         if (auto* style = prev->style()) {
+            auto fm    = QFontMetrics(prev->font());
+            auto width = fm.boundingRect("<<").width();
+            //
+            QStyleOptionButton opt;
+            opt.initFrom(prev);
+            opt.text = "<<";
+            auto frame = style->pixelMetric(QStyle::PM_DefaultFrameWidth, &opt, prev);
+            frame += style->pixelMetric(QStyle::PM_ButtonMargin, &opt, prev);
+            frame *= 2;
+            //
+            prev->setMaximumSize({ frame + width, QWIDGETSIZE_MAX });
+            next->setMaximumSize({ frame + width, QWIDGETSIZE_MAX });
+         }
+      }
+      nested->setDirection(QBoxLayout::Direction::LeftToRight);
+      layout->setDirection(QBoxLayout::Direction::TopToBottom);
+      nested->setStretch(0,         1); // stretch on both sides; center buttons
+      nested->setStretch(count - 1, 1); // stretch on both sides; center buttons
+   } else {
+      prev->setText(tr("Move Up"));
+      next->setText(tr("Move Down"));
+      prev->setMaximumSize(no_maximum_size);
+      next->setMaximumSize(no_maximum_size);
+      nested->setDirection(QBoxLayout::Direction::TopToBottom);
+      layout->setDirection(QBoxLayout::Direction::LeftToRight);
+      nested->setStretch(0, 0);         // no stretch at start
+      nested->setStretch(count - 1, 1); // stretch at end; push buttons to top
+   }
+}
+
+#if !defined(QT_DESIGNER_LIB)
+   QVector<dovah::form_stub*> DKFormListPane::stubs() const noexcept {
+      return this->_model()->stubs();
+   }
+   void DKFormListPane::pullStubs(const std::vector<dovah::form_reference_t>& list) {
+      this->clear();
+      this->reserve(list.size());
+      for (auto& ref : list)
+         this->addStub(ref.get_form_stub());
+   }
+   void DKFormListPane::commitStubs(std::vector<dovah::form_reference_t>& list, dovah::loaded_forms::Form& owner) {
+      auto   stubs = this->stubs();
+      size_t i     = 0;
+      size_t size  = stubs.size();
+      if (list.size() < size)
+         list.resize(size);
+      for (; i < size; ++i)
+         list[i].set(owner, stubs[i]);
+      //
+      // Delete excess elements, if any were removed:
+      //
+      auto s = list.size();
+      if (s != size) {
+         for (; i < s; ++i)
+            list[i].set(owner, nullptr);
+         list.resize(size);
+      }
+   }
+#endif
+
+#if !defined(QT_DESIGNER_LIB)
+   void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type_t> list) {
+      this->_model()->setAllowedFormTypes(list);
+   }
+#endif
+void DKFormListPane::setShowFormTypes(bool v) {
+   if (v == this->state.show_form_types)
+      return;
+   this->state.show_form_types = v;
+   //
+   auto* header = this->subwidgets.view->horizontalHeader();
+   header->setSectionHidden(ColumnType, !v);
+}
+void DKFormListPane::setShowIndices(bool v) {
+   if (v == this->state.show_indices)
+      return;
+   this->state.show_indices = v;
+   #if !defined(QT_DESIGNER_LIB)
+      this->_model()->setShowIndices(v);
+   #endif
+}
+void DKFormListPane::setOrientation(Qt::Orientation o) {
+   if (this->orientation() == o)
+      return;
+   this->state.orientation = o;
+   this->_updateOrientation();
+}
+void DKFormListPane::setShowMoveButtons(bool v) {
+   if (v == this->state.show_move_buttons)
+      return;
+   this->state.show_move_buttons = v;
+   this->_updateButtonVisibility();
+}
+void DKFormListPane::setShowRemoveButton(bool v) {
+   if (v == this->state.show_remove_button)
+      return;
+   this->state.show_remove_button = v;
+   this->_updateButtonVisibility();
+}
+
+#if !defined(QT_DESIGNER_LIB)
+   void DKFormListPane::addStub(dovah::form_stub* stub) {
+      this->_model()->addStub(stub);
+   }
+   void DKFormListPane::clear() {
+      this->_model()->clear();
+   }
+   void DKFormListPane::reserve(size_t i) {
+      this->_model()->reserve(i);
+   }
+#endif
+
+void DKFormListPane::keyPressEvent(QKeyEvent* event) {
+   #if !defined(QT_DESIGNER_LIB)
+      if (event->matches(QKeySequence::Delete)) {
+         this->_removeSelected();
+      }
+   #endif
+}

@@ -449,7 +449,7 @@ function LayerToggles:switch_to_listeners()
    end)
 end
 
-local benchmark = dovah.benchmark_start()
+local bench = benchmark.new()
 for i = 1, count do
    LayerToggles:refresh()
    local cell = cells[i]
@@ -615,7 +615,7 @@ for i = 1, count do
    progress.value = i
 end
 
-dovah.benchmark_stop(benchmark)
-dovah.log_message("Time taken: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+bench:stop()
+dovah.log_message("Time taken: %s", bench:time_to_string())
 
 LayerToggles:switch_to_listeners()

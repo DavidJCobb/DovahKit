@@ -1058,7 +1058,7 @@ do
             functor("top_right",    quads.top_right)
          end
          
-         local benchmark = dovah.benchmark_start()
+         local bench = benchmark.new()
          for i = 1, count do
             local cell = cells[i]
             --
@@ -1251,10 +1251,10 @@ do
             end
             progress.value = i
          end
-         dovah.benchmark_stop(benchmark)
-         dovah.log_message("Time taken for draw: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         bench:stop()
+         dovah.log_message("Time taken for draw: %s", bench:time_to_string())
          
-         benchmark = dovah.benchmark_start()
+         bench:restart()
          do -- Cell outlines
             local files = all_maps:get_filename_list()
             local count = #files
@@ -1293,8 +1293,8 @@ do
                progress.value = i
             end
          end
-         dovah.benchmark_stop(benchmark)
-         dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         bench:stop()
+         dovah.log_message("Time taken for islands: %s", bench:time_to_string())
          HeightmapWindow:import_cell_outline_data(all_maps)
          _update_progress("Done!", 0, count, count)
       end

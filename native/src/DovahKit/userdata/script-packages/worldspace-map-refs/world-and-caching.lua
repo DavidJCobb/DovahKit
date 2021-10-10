@@ -54,7 +54,7 @@ do
             want_types[ft] = true
          end
          progress.minimum = 0
-         local benchmark = dovah.benchmark_start()
+         local bench = benchmark.new()
          local k, v = next(want_types)
          while k do
             local list = cache_root[k]
@@ -76,23 +76,23 @@ do
             end
             k, v = next(want_types, k)
          end
-         dovah.benchmark_stop(benchmark)
+         bench:stop()
          progress.maximum = 1
          progress.value   = 1
          return {
             used_cache = true,
             maps       = all_maps,
-            benchmark  = benchmark,
+            benchmark  = bench,
          }
       end
       progress.minimum = 0
       progress.maximum = count
       progress.value   = 0
-      local benchmark = false
+      local bench = false
       if allow_caching then
          local cache_root = {}
          self.reference_by_form_type_cache = cache_root
-         benchmark = dovah.benchmark_start()
+         bench = benchmark.new()
          for i = 1, count do
             local cell = cells[i]
             local refs = cell:get_all_refs()
@@ -121,9 +121,9 @@ do
             end
             progress.value = i
          end
-         dovah.benchmark_stop(benchmark)
+         bench:stop()
       else
-         benchmark = dovah.benchmark_start()
+         bench = benchmark.new()
          for i = 1, count do
             local cell = cells[i]
             local refs = cell:get_all_refs()
@@ -141,13 +141,13 @@ do
             end
             progress.value = i
          end
-         dovah.benchmark_stop(benchmark)
+         bench:stop()
       end
       progress.value = count
       return {
          used_cache = false,
          maps       = all_maps,
-         benchmark  = benchmark,
+         benchmark  = bench,
       }
    end
    function World:get_cells()
@@ -260,9 +260,8 @@ do
       progress.minimum = 0
       progress.format  = "Finding references..."
       local results = wrapped:map_base_form_refs(base_forms, progress, allow_caching)
-      dovah.log_message("Time taken for search: %s milliseconds (%u microseconds)\n - Search %s cached data.",
-         results.benchmark:milliseconds(),
-         results.benchmark:microseconds(),
+      dovah.log_message("Time taken for search: %s\n - Search %s cached data.",
+         results.benchmark:time_to_string(),
          results.used_cache and "used" or "did not use"
       )
       --
@@ -272,7 +271,7 @@ do
       progress.maximum = #base_forms
       progress.value   = 0
       progress.format  = "Drawing results..."
-      local benchmark = dovah.benchmark_start()
+      local bench = benchmark.new()
       do
          local root_group = false
          local line_group = false
@@ -303,10 +302,10 @@ do
             progress.value = i
          end
       end
-      dovah.benchmark_stop(benchmark)
+      bench:stop()
       progress.value  = #base_forms
       progress.format = "Done!"
-      dovah.log_message("Time taken for drawing results: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+      dovah.log_message("Time taken for drawing results: %s", bench:time_to_string())
       --
       return results.maps
    end

@@ -470,6 +470,7 @@
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
+    <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
@@ -552,18 +553,23 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
+    <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\core\specialized_traceback.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
+    <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
+    <QtMoc Include="widgets\DKFormListPane.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptSaveButton.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\rotation.h" />
     <ClInclude Include="dovahscript\wrappers\form\objectreference\position.h" />
     <ClInclude Include="dovahscript\wrappers\ui\file_save_button.h" />
+    <ClInclude Include="dovah\form_types.h" />
     <ClInclude Include="helpers\all_html_entities.h" />
     <ClInclude Include="helpers\cpuinfo.h" />
     <ClInclude Include="helpers\lua\find_key_of.h" />
@@ -573,6 +579,7 @@
     <ClInclude Include="helpers\qt\widget_utils.h" />
     <ClInclude Include="helpers\qt\xml_html_entity_resolver.h" />
     <ClInclude Include="helpers\static_string.h" />
+    <QtMoc Include="ui\form_windows\landtexture.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <QtMoc Include="widgets\DKUnreadCountBadgePaneHeader.h" />
     <QtMoc Include="widgets\DKUnreadCountBadge.h" />
@@ -1105,6 +1112,7 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />

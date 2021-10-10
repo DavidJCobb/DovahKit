@@ -6,10 +6,63 @@
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/formlist.h"
+#include "../ui/form_windows/landtexture.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
+
+namespace {
+   template<typename T> QDialog* _make(dovah::form_stub* f, QWidget* p) {
+      return new T(f, p);
+   }
+
+   constexpr std::array factory = {
+      std::pair{ dovah::form_type::cell,          _make<FormDialogCell> },
+      std::pair{ dovah::form_type::color,         _make<FormDialogColor> },
+      std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
+      std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::quest,         _make<FormDialogQuest> },
+      std::pair{ dovah::form_type::shout,         _make<FormDialogShout> },
+      std::pair{ dovah::form_type::voicetype,     _make<FormDialogVoicetype> },
+      std::pair{ dovah::form_type::word_of_power, _make<FormDialogWordOfPower> },
+   };
+
+   #pragma region Compile-time sanity checks
+   static_assert(
+      ([]() {
+         constexpr auto size = factory.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto ft = factory[i].first;
+            for (size_t j = 0; j < i; ++j) {
+               if (factory[j].first == ft)
+                  return false;
+            }
+         }
+         return true;
+      })(),
+      "The factory is misconfigured: a form type is specified multiple times."
+   );
+   static_assert(
+      ([]() {
+         constexpr auto size = factory.size();
+         for (size_t i = 0; i < size; ++i) {
+            bool is_ref = dovah::form_type_info::form_type_is_reference(factory[i].first); // make an exception for refs, because REFR subclasses will generally share the same UI as REFR
+            auto func   = factory[i].second;
+            for (size_t j = 0; j < i; ++j) {
+               if (factory[j].second == func) {
+                  bool also_ref = dovah::form_type_info::form_type_is_reference(factory[j].first);
+                  if (!(is_ref && also_ref))
+                     return false;
+               }
+            }
+         }
+         return true;
+      })(),
+      "The factory is misconfigured: multiple form types share the same dialog."
+   );
+   #pragma endregion
+}
 
 void open_use_info_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    //
@@ -65,28 +118,11 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    // open one.
    //
    QDialog* opened = nullptr;
-   switch (stub->formType) {
-      case dovah::form_type::cell:
-         opened = new FormDialogCell(stub, parent);
+   for (auto& pair : factory) {
+      if (pair.first == stub->formType) {
+         opened = (pair.second)(stub, parent);
          break;
-      case dovah::form_type::color:
-         opened = new FormDialogColor(stub, parent);
-         break;
-      case dovah::form_type::formlist:
-         opened = new FormDialogFormList(stub, parent);
-         break;
-      case dovah::form_type::quest:
-         opened = new FormDialogQuest(stub, parent);
-         break;
-      case dovah::form_type::shout:
-         opened = new FormDialogShout(stub, parent);
-         break;
-      case dovah::form_type::voicetype:
-         opened = new FormDialogVoicetype(stub, parent);
-         break;
-      case dovah::form_type::word_of_power:
-         opened = new FormDialogWordOfPower(stub, parent);
-         break;
+      }
    }
    if (opened) {
       editor.extant_form_edit_dialogs[stub->formID] = opened;

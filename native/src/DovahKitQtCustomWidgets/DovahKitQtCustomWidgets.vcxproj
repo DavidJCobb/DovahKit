@@ -97,6 +97,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
+    <ClCompile Include="widgets\DKFormListPane.cpp" />
     <None Include="README.md" />
     <QtMoc Include="widgets\DKCollapsiblePane.h" />
     <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />
@@ -128,6 +130,12 @@
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="widgets\widget-assets.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="interfaces\DKFormListPaneInterface.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="widgets\DKFormListPane.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

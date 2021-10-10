@@ -39,16 +39,6 @@ namespace {
    using namespace dovahscript;
    
    namespace _definitions {
-      int benchmark_start(lua_State* L) {
-         lua_classes::benchmark::push_new_instance(L);
-         return 1;
-      }
-      int benchmark_stop(lua_State* L) {
-         auto* self = (lua_classes::benchmark*) classes::cast_to_exact_class(L, 1, lua_classes::benchmark::metatable_key);
-         cobb::lua::argcheck(L, self != nullptr, 1, "expected benchmark object");
-         self->finish();
-         return 0;
-      }
       int count_forms_of_type(lua_State* L) {
          auto& editor = DovahKitCore::get();
          if (!editor.has_data()) {
@@ -403,8 +393,6 @@ namespace {
    }
    
    const std::initializer_list<luaL_Reg> _functions = {
-      luaL_Reg{ "benchmark_start",         &_definitions::benchmark_start },
-      luaL_Reg{ "benchmark_stop",          &_definitions::benchmark_stop },
       luaL_Reg{ "count_forms_of_type",     &_definitions::count_forms_of_type },
       luaL_Reg{ "create_form",             &_definitions::create_form },
       luaL_Reg{ "deep_stringify",          &_definitions::deep_stringify },

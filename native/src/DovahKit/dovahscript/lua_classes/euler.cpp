@@ -255,7 +255,7 @@ namespace dovahscript::lua_classes {
       //
       // Create singleton:
       //
-      lua_createtable(L, 0, 2);
+      lua_createtable(L, 0, 4);
       lua_pushcfunction(L, &_singleton_functions::from_degrees);
       lua_setfield     (L, -2, "from_degrees");
       lua_pushcfunction(L, &_singleton_functions::from_radians);
