@@ -6,17 +6,13 @@
 #include "odds_and_ends/quest_tab_stages.h"
 #include "odds_and_ends/quest_tab_objectives.h"
 
+#include "../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Quests is incomplete.");
+
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
    //
-   {
-      auto* widget = this->ui.textDisplayGlobals;
-      auto* model  = widget->fullModel();
-      widget->setAcceptDrops(true);
-      model->setAllowGaps(false);
-      model->setAllowedFormTypes({ dovah::form_type::global });
-      model->setShowIndices(false);
-   }
+   this->ui.textDisplayGlobals->setAllowedFormTypes({ dovah::form_type::global });
    {
       using _e = form_t::quest_type::type;
       this->ui.questType->addItem(tr("None",                  "Quest Type"), _e::none);
@@ -108,7 +104,7 @@ void FormDialogQuest::_load_impl() {
       cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, form_t::quest_flag::start_game_enabled);
       cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, form_t::quest_flag::warn_on_alias_fill_failure);
       cobb::qt::bind(this->ui.eventType, working.event);
-      this->ui.textDisplayGlobals->import(working.text_display_globals);
+      this->ui.textDisplayGlobals->pullStubs(working.text_display_globals);
       //
       cobb::qt::bind(this->ui.priority, working.priority);
       this->ui.dialogueConditions->model()->setTarget(*this->stub, working.conditions.dialogue);
@@ -140,7 +136,7 @@ void FormDialogQuest::_save_impl() {
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());
-   this->ui.textDisplayGlobals->commit(working.text_display_globals, working);
+   this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }

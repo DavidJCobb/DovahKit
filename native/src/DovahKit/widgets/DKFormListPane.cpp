@@ -3,6 +3,7 @@
 #include <QFontMetrics>
 #include <QHeaderView>
 #include <QKeyEvent>
+#include "DKHeaderView.h"
 #if !defined(QT_DESIGNER_LIB)
    #include "../editor/open_window_for_form.h"
 #endif
@@ -65,6 +66,16 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
       nested->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
    }
+   #pragma region Tab order
+      this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+      this->setFocusProxy(this->subwidgets.view);
+      this->setTabOrder(this->subwidgets.view, this->subwidgets.buttons.wrapper);
+      //
+      this->subwidgets.buttons.wrapper->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+      this->subwidgets.buttons.wrapper->setFocusProxy(this->subwidgets.buttons.move_up);
+      this->setTabOrder(this->subwidgets.buttons.move_up,   this->subwidgets.buttons.move_down);
+      this->setTabOrder(this->subwidgets.buttons.move_down, this->subwidgets.buttons.remove);
+   #pragma endregion
    //
    view->setModel(new DKFormListPaneModel(this));
    #if !defined(QT_DESIGNER_LIB)
@@ -79,20 +90,28 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
    #endif
    view->setSelectionBehavior(QAbstractItemView::SelectRows);
    view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+   view->setCornerButtonEnabled(false);
    view->setAcceptDrops(true);
    view->setDragDropOverwriteMode(false);
    {
-      auto header  = view->horizontalHeader();
+      auto* header = new DKHeaderView(Qt::Horizontal, view);
+      header->setFlexResizeEnabled(true);
+      view->setHorizontalHeader(header);
+      //
       auto metrics = QFontMetrics(view->font());
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
-      header->resizeSection(ColumnType,   metrics.boundingRect("XMMX").width() * 1.5F + 4);
-      header->resizeSection(ColumnFormID, 4);
+      header->setColumnFlex(ColumnType,   0, 0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
+      header->setColumnFlex(ColumnName,   1, 0);
+      header->setColumnFlex(ColumnFormID, 0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4); // sets minimum size
+      header->modSectionSizeTo(ColumnFormID, 4); // mimics a user resize and shrinks the column
       header->setSectionResizeMode(ColumnType,   QHeaderView::Interactive);
-      header->setSectionResizeMode(ColumnName,   QHeaderView::Stretch);
+      header->setSectionResizeMode(ColumnName,   QHeaderView::Interactive);
       header->setSectionResizeMode(ColumnFormID, QHeaderView::Interactive);
       header->setStretchLastSection(false);
+      //
       view->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+      view->verticalHeader()->setVisible(this->state.show_indices);
       #if !defined(QT_DESIGNER_LIB)
          this->_model()->setShowIndices(this->state.show_indices);
       #endif
@@ -219,14 +238,13 @@ void DKFormListPane::setShowFormTypes(bool v) {
    if (v == this->state.show_form_types)
       return;
    this->state.show_form_types = v;
-   //
-   auto* header = this->subwidgets.view->horizontalHeader();
-   header->setSectionHidden(ColumnType, !v);
+   this->subwidgets.view->setColumnHidden(ColumnType, !v);
 }
 void DKFormListPane::setShowIndices(bool v) {
    if (v == this->state.show_indices)
       return;
    this->state.show_indices = v;
+   this->subwidgets.view->verticalHeader()->setVisible(v);
    #if !defined(QT_DESIGNER_LIB)
       this->_model()->setShowIndices(v);
    #endif

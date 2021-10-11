@@ -395,11 +395,13 @@ Qt::DropActions DKFormListPaneModel::supportedDropActions() const {
 #pragma endregion
 
 void DKFormListPaneModel::clear() {
-   this->beginResetModel();
+   if (this->children.empty())
+      return;
+   this->beginRemoveRows(QModelIndex(), 0, this->children.size() - 1); // don't use beginResetModel; Qt documentation doesn't seem to mention this anywhere but it breaks hidden columns in table views
    for (auto* item : this->children)
       delete item;
    this->children.clear();
-   this->endResetModel();
+   this->endRemoveRows();
 }
 void DKFormListPaneModel::moveStubs(QModelIndexList indices, int down) {
    if (indices.isEmpty())

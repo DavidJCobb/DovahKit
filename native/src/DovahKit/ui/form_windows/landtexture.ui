@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>LandTexture</string>
   </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="1,1">
    <item row="0" column="1">
@@ -29,7 +29,7 @@
         </widget>
        </item>
        <item>
-        <widget class="FormPicker" name="textureset"/>
+        <widget class="FormPicker" name="textureset" native="true"/>
        </item>
       </layout>
      </item>
@@ -170,7 +170,7 @@
          </widget>
         </item>
         <item row="0" column="1" colspan="3">
-         <widget class="FormPicker" name="havokMaterialType"/>
+         <widget class="FormPicker" name="havokMaterialType" native="true"/>
         </item>
        </layout>
       </widget>
@@ -245,18 +245,17 @@
   </customwidget>
   <customwidget>
    <class>FormPicker</class>
-   <extends>QComboBox</extends>
+   <extends>QWidget</extends>
    <header>ui/generic/FormPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
-  <tabstop>textureset</tabstop>
-  <tabstop>havokMaterialType</tabstop>
   <tabstop>havokFriction</tabstop>
   <tabstop>havokRestitution</tabstop>
   <tabstop>specularExponent</tabstop>
   <tabstop>isSnow</tabstop>
+  <tabstop>grasses</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

@@ -212,7 +212,17 @@
             </widget>
            </item>
            <item>
-            <widget class="FormListListview" name="textDisplayGlobals"/>
+            <widget class="DKFormListPane" name="textDisplayGlobals">
+             <property name="showFormTypes">
+              <bool>false</bool>
+             </property>
+             <property name="showMoveButtons">
+              <bool>false</bool>
+             </property>
+             <property name="showRemoveButton">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -348,9 +358,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FormListListview</class>
-   <extends>QTableView</extends>
-   <header>odds_and_ends/formlist_listview.h</header>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
   </customwidget>
   <customwidget>
    <class>ConditionList</class>

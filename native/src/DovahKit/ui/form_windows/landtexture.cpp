@@ -2,6 +2,9 @@
 #include "_base_cpp.h"
 #include "../../helpers/bitwise.h"
 
+#include "../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for LandTextures is incomplete: the preview pane is not yet functional.");
+
 FormDialogLandTexture::FormDialogLandTexture(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
    form_dialog_helpers::initialize<FormDialogLandTexture, dovah::loaded_forms::LandTexture>(*this, stub);
    //
