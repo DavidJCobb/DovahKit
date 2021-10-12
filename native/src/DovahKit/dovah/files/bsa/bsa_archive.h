@@ -201,8 +201,8 @@ namespace dovah {
          void _read_non_null_terminated_string(std::string&, size_t length);
 
          // Intended for use post-load only.
-         void _read_at(void* target, size_t size, uint64_t offset);
-         template<typename T> void _read_at(T& out, uint64_t offset) {
+         void _read_at(void* target, size_t size, uint64_t offset) const;
+         template<typename T> void _read_at(T& out, uint64_t offset) const {
             this->_read_at(&out, sizeof(T), offset);
             if (this->needs_endianness_flip)
                out = cobb::byteswap(out);
@@ -216,7 +216,7 @@ namespace dovah {
          }
          
          const file_entry* find_file(const bs_hash& folder_hash, const bs_hash& file_hash, const std::string& folder_name, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
-         bsa_archived_file* retrieve_entry(const file_entry&);
+         bsa_archived_file* retrieve_entry(const file_entry&) const;
          
       public:
          void set_path(const std::filesystem::path&); // only works if a file is not open
@@ -228,11 +228,11 @@ namespace dovah {
          bool is_open() const noexcept;
          inline bool did_loading_fail() const noexcept { return this->loading_failed; }
          //
-         bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
-         bsa_archived_file* lookup_file(const std::string& path_and_name);
+         bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file) const;
+         bsa_archived_file* lookup_file(const std::string& path_and_name) const;
          //
-         bool for_each_folder(std::function<bool(const folder_entry&)> functor);
-         bool for_each_file_in_folder(const folder_entry&, std::function<bool(const folder_entry&, const file_entry&)> functor);
+         bool for_each_folder(std::function<bool(const folder_entry&)> functor) const;
+         bool for_each_file_in_folder(const folder_entry&, std::function<bool(const folder_entry&, const file_entry&)> functor) const;
          //
          bool file_is_compressed(const file_entry&) const noexcept;
    };

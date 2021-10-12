@@ -19,7 +19,7 @@ namespace dovah {
          this->_throw_load_exception<bsa_unexpected_eof_exception>();
       this->_unchecked_read(target, size);
    }
-   void bsa_archive::_read_at(void* target, size_t size, uint64_t offset) {
+   void bsa_archive::_read_at(void* target, size_t size, uint64_t offset) const {
       assert(this->mapping);
       if (offset + size >= this->mapping.size()) {
          bsa_unexpected_eof_exception e;
@@ -203,7 +203,7 @@ namespace dovah {
       }
       return nullptr;
    }
-   bsa_archived_file* bsa_archive::retrieve_entry(const bsa_archive::file_entry& entry) {
+   bsa_archived_file* bsa_archive::retrieve_entry(const bsa_archive::file_entry& entry) const {
       assert(this->mapping);
       if (entry.corrupt)
          return nullptr;
@@ -224,14 +224,17 @@ namespace dovah {
       //
       auto out = new bsa_archived_file;
       if (compressed) {
-         auto prior = this->stream_position;
+         auto*  data = this->mapping.data();
+         size_t size = this->mapping.size();
+         size_t at   = offset;
          //
-         this->stream_position = offset;
          uint32_t length;
-         this->_read(length);
+         if (at + sizeof(length) >= size)
+            return nullptr;
+         length = *(uint32_t*)((std::intptr_t)data + at);
          //
          uint64_t    input_pos  = offset + sizeof(length);
-         const void* input      = (const uint8_t*)this->mapping.data() + input_pos;
+         const void* input      = (const uint8_t*)data + input_pos;
          uint32_t    input_size = size - 4;
          if (length) {
             out->owned.resize(length);
@@ -271,8 +274,6 @@ namespace dovah {
                LZ4F_freeDecompressionContext(context);
             }
          }
-         //
-         this->stream_position = prior;
       } else {
          out->shared.data = this->mapping.data_at(offset);
          out->shared.size = size;
@@ -280,14 +281,14 @@ namespace dovah {
       return out;
    }
 
-   bsa_archived_file* bsa_archive::lookup_file(const bs_hash& folder, const bs_hash& file) {
+   bsa_archived_file* bsa_archive::lookup_file(const bs_hash& folder, const bs_hash& file) const {
       std::string empty;
       auto* entry = this->find_file(folder, file, empty, empty);
       if (!entry)
          return nullptr;
       return this->retrieve_entry(*entry);
    }
-   bsa_archived_file* bsa_archive::lookup_file(const std::string& path_and_name) {
+   bsa_archived_file* bsa_archive::lookup_file(const std::string& path_and_name) const {
       if (path_and_name.empty())
          return nullptr;
       //
@@ -331,13 +332,13 @@ namespace dovah {
    }
    #pragma endregion
 
-   bool bsa_archive::for_each_folder(std::function<bool(const folder_entry&)> functor) {
+   bool bsa_archive::for_each_folder(std::function<bool(const folder_entry&)> functor) const {
       for (auto& folder : this->folders)
          if (functor(folder))
             return true;
       return false;
    }
-   bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, std::function<bool(const folder_entry&, const file_entry&)> functor) {
+   bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, std::function<bool(const folder_entry&, const file_entry&)> functor) const {
       for (auto& file : folder.files)
          if (functor(folder, file))
             return true;
