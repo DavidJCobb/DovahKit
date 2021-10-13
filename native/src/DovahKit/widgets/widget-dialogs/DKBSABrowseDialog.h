@@ -39,11 +39,13 @@ class DKBSABrowseDialog : public QDialog {
       void openSelectedNode(); // if the selected node is a folder, navigate into it; if it's a file, pick it and accept
       void selectFileByName(QString);
       void selectPath(const QString&);
+      void setViewMode(QListView::ViewMode);
       void upOneLevel();
 
    protected:
       struct {
          QToolButton* upOneLevel = nullptr;
+         QToolButton* viewMode   = nullptr;
          QLineEdit*   path       = nullptr;
          QListView*   view       = nullptr;
          QLineEdit*   filename   = nullptr;

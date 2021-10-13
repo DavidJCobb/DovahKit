@@ -56,6 +56,7 @@ class DKBSACollectionModelBackend : public QObject {
             void appendFile(File*);
             void clear();
             File* file(const QString& name) const noexcept;
+            File* file(const QString& name, int stop_at) const noexcept;
             int indexOf(const Node*) const noexcept;
             Folder* subfolder(const QStringView& name) const noexcept;
 

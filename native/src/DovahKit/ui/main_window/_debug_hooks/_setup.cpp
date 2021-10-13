@@ -16,6 +16,7 @@
 #include "canvas_widget_tests.h"
 #include "ui_collapsible_pane.h"
 #include "qt_paint_ellipse_tests.h"
+#include "ui_bsa_picker.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -32,7 +33,8 @@ namespace DovahKitDebug {
       features::debug_form_picker,
       features::debug_canvas_widget,
       features::ui_collapsible_pane,
-      features::qt_paint_ellipse_tests//,
+      features::qt_paint_ellipse_tests,
+      features::ui_bsa_picker//,
    >;
 
    template<typename T> struct _add_functor {

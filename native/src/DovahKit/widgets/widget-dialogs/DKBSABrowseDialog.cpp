@@ -3,6 +3,7 @@
 #include <QBoxLayout>
 #include <QDir>
 #include <QFileDialog>
+#include <QMenu>
 #include <QPushButton>
 #include <QToolBar>
 #include "../widget-models/DKBSACollectionModel.h"
@@ -41,8 +42,27 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
             path->setSizePolicy(sp);
          }
          //
+         auto* vc = this->subwidgets.viewMode = new QToolButton(this);
+         {
+            auto* menu = new QMenu(vc);
+            auto* action_list = new QAction(tr("List view"), menu);
+            auto* action_grid = new QAction(tr("Icon view"), menu);
+            action_list->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
+            action_grid->setIcon(style->standardIcon(QStyle::SP_FileDialogContentsView));
+            QObject::connect(action_list, &QAction::triggered, this, [this]() { this->setViewMode(QListView::ViewMode::ListMode); });
+            QObject::connect(action_grid, &QAction::triggered, this, [this]() { this->setViewMode(QListView::ViewMode::IconMode); });
+            menu->addAction(action_list);
+            menu->addAction(action_grid);
+            vc->setMenu(menu);
+            //
+            vc->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
+            //
+            vc->setPopupMode(QToolButton::ToolButtonPopupMode::MenuButtonPopup);
+         }
+         //
          toolbar->addWidget(up);
          toolbar->addWidget(path);
+         toolbar->addWidget(vc);
       }
       layout->addWidget(view);
       layout->addWidget(name);
@@ -69,6 +89,9 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    }
    //
    auto* model = new DKBSACollectionModel(this);
+   view->setUniformItemSizes(true);
+   view->setBatchSize(200);
+   view->setLayoutMode(QListView::LayoutMode::Batched);
    view->setModel(model);
    QObject::connect(model, &QAbstractItemModel::modelReset, this, [this, view, model]() {
       if (this->state.pathStem.isEmpty())
@@ -226,6 +249,43 @@ void DKBSABrowseDialog::selectPath(const QString& path) {
          return;
    }
    view->setRootIndex(index);
+}
+void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
+   auto* view = this->subwidgets.view;
+   if (vm == view->viewMode())
+      return;
+   view->setUpdatesEnabled(false);
+   //
+   auto* style  = QApplication::style();
+   auto* button = this->subwidgets.viewMode;
+   //
+   view->setViewMode(vm);
+   switch (vm) {
+      using _ = decltype(vm);
+      case _::ListMode:
+         view->setUniformItemSizes(true);
+         view->setBatchSize(200);
+         view->setResizeMode(QListView::ResizeMode::Fixed);
+         view->setFlow(QListView::Flow::TopToBottom);
+         view->setGridSize({ 0, 0 }); // this actually applies to List Mode, and so must be cleared when switching back from Icon Mode
+         view->setSpacing(0);
+         view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
+         view->setWordWrap(false);
+         button->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
+         break;
+      case _::IconMode:
+         view->setUniformItemSizes(false);
+         view->setBatchSize(100);
+         view->setResizeMode(QListView::ResizeMode::Adjust);
+         view->setFlow(QListView::Flow::LeftToRight);
+         view->setGridSize({ 64, 64 });
+         view->setSpacing(2);
+         view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel); // necessary to fix Qt-side scroll speed issues in icon view
+         view->setWordWrap(true); // TODO: not enough, on its own, to allow variable-height rows
+         button->setIcon(style->standardIcon(QStyle::SP_FileDialogContentsView));
+         break;
+   }
+   view->setUpdatesEnabled(true);
 }
 void DKBSABrowseDialog::upOneLevel() {
    auto* view  = this->subwidgets.view;

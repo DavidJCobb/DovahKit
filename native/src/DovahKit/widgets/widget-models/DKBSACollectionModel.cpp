@@ -6,11 +6,53 @@
 #include "../../dovah/files/bsa/bsa_archive.h"
 #include "../../dovah/files/bsa/bsa_load_order.h"
 
+#ifdef _WIN32
+   #include <windows.h>
+   #include "../../helpers/intrusive_windows_defines.h"
+   #include <QtWin>
+#endif
+
 namespace {
    using Node   = DKBSACollectionModelBackend::Node;
    using File   = DKBSACollectionModelBackend::File;
    using Folder = DKBSACollectionModelBackend::Folder;
    using node_type = Node::node_type;
+
+   #ifdef _WIN32
+   QIcon _get_icon_from_windows(const QString& extension) {
+      constexpr std::array sizes      = { 0, SHGFI_SMALLICON, SHGFI_LARGEICON, SHGFI_SHELLICONSIZE };
+      constexpr std::array win_states = { 0,             SHGFI_SELECTED };
+      constexpr std::array qt_states  = { QIcon::Normal, QIcon::Selected };
+      static_assert(win_states.size() == qt_states.size());
+      //
+      QIcon icon;
+      //
+      #ifdef UNICODE
+         auto extension_win = extension.toStdWString();
+      #else
+         auto extension_win = extension.toStdString();
+      #endif
+      extension_win.insert(extension_win.begin(), decltype(extension_win)::value_type('.'));
+      //
+      SHFILEINFO info = {};
+      for (auto s : sizes) {
+         for (size_t i = 0; i < win_states.size(); ++i) {
+            HRESULT hr = SHGetFileInfo(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i] );
+            if (!SUCCEEDED(hr))
+               continue;
+            if (info.hIcon == NULL)
+               continue;
+            auto pm = QtWin::fromHICON(info.hIcon);
+            DestroyIcon(info.hIcon);
+            if (pm.isNull())
+               continue;
+            icon.addPixmap(pm, qt_states[i]);
+         }
+      }
+      //
+      return icon;
+   }
+   #endif
 
    class _Icons {
       private:
@@ -18,6 +60,15 @@ namespace {
             auto* style = QApplication::style();
             this->generic_icons.file   = style->standardIcon(QStyle::SP_FileIcon);
             this->generic_icons.folder = style->standardIcon(QStyle::SP_DirIcon);
+            //
+            // Preload common extensions:
+            //
+            this->iconForExtension("dds");
+            this->iconForExtension("hkx");
+            this->iconForExtension("nif");
+            this->iconForExtension("pex");
+            this->iconForExtension("psc");
+            this->iconForExtension("txt");
          }
 
          QMimeDatabase database;
@@ -50,6 +101,11 @@ namespace {
                if (!icon.isNull())
                   break;
             }
+            #ifdef _WIN32
+               if (icon.isNull()) {
+                  icon = _get_icon_from_windows(extension);
+               }
+            #endif
             map[extension] = icon;
             return icon;
          }
@@ -121,6 +177,13 @@ File* Folder::file(const QString& name) const noexcept {
    for (auto* node : this->files)
       if (name == node->name)
          return node;
+   return nullptr;
+}
+File* Folder::file(const QString& name, int stop_at) const noexcept {
+   size_t size = std::min(std::max(0, stop_at), this->files.size());
+   for (size_t i = 0; i < size; ++i)
+      if (name == this->files[i]->name)
+         return this->files[i];
    return nullptr;
 }
 int Folder::indexOf(const Node* n) const noexcept {
@@ -227,9 +290,13 @@ void DKBSACollectionModelBackend::importFromArchive(const dovah::bsa_archive* bs
    for (auto& raw_folder : folders) {
       auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
       auto* our_folder  = this->_folderByPath(folder_path);
+      //
+      auto prior_count = our_folder->files.size();
+      our_folder->files.reserve(raw_folder.files.size());
+      //
       for (const auto& raw_file : raw_folder.files) {
          auto  fn = QString::fromLatin1(raw_file.name.c_str());
-         auto* mf = our_folder->file(fn);
+         auto* mf = our_folder->file(fn, prior_count);
          if (mf) {
             mf->source = bsa;
             emit this->fileSourceChanged(mf);
@@ -307,10 +374,13 @@ void DKBSACollectionModelBackend::_importFromArchiveInList(const dovah::bsa_arch
    for (auto& raw_folder : folders) {
       auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
       auto* our_folder  = this->_folderByPath(folder_path);
+      //
+      auto prior_count = our_folder->files.size();
       our_folder->files.reserve(raw_folder.files.size());
+      //
       for (const auto& raw_file : raw_folder.files) {
          auto  fn = QString::fromLatin1(raw_file.name.c_str());
-         auto* mf = our_folder->file(fn);
+         auto* mf = our_folder->file(fn, prior_count);
          if (!mf) {
             mf = new File;
             mf->setName(fn);
@@ -535,6 +605,7 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       if (col == 0) {
          switch (role) {
             case Qt::ItemDataRole::DisplayRole:
+            case Qt::ItemDataRole::ToolTipRole:
                return node->name;
             case Qt::ItemDataRole::DecorationRole:
                if (node->type == node_type::folder) {

@@ -48,6 +48,22 @@ namespace {
             //
             _mm_storeu_si128((__m128i*)(data + i), ma);
          }
+         if (i + 8 < size) {
+            auto ma = _mm_loadl_epi64((const __m128i*)(data + i));
+            //
+            auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
+            auto mask_z = _mm_cmplt_epi8(ma, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
+            mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
+            mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
+            ma = _mm_or_si128(ma, mask_a); // bitwise-OR
+            //
+            mask_a = _mm_cmpeq_epi8(ma, mb_s);
+            ma = _mm_blendv_epi8(ma, fill, mask_a); // per byte: dst = (mask & 0x80) ? b : a
+            //
+            _mm_storel_epi64((__m128i*)(data + i), ma);
+            //
+            i += 8;
+         }
       }
       for (; i < size; ++i) {
          auto c = data[i];
