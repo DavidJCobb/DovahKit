@@ -147,6 +147,8 @@ namespace dovah {
             //
             const file_entry* find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
          };
+
+         static constexpr const char path_separator = '\\';
          
       protected:
          std::filesystem::path path;
@@ -227,13 +229,19 @@ namespace dovah {
          inline const std::filesystem::path& get_path() const noexcept { return this->path; }
          bool is_open() const noexcept;
          inline bool did_loading_fail() const noexcept { return this->loading_failed; }
-         //
+         
          bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file) const;
          bsa_archived_file* lookup_file(const std::string& path_and_name) const;
-         //
+         
+         inline size_t folder_count() const noexcept { return this->folders.size(); }
+         inline const decltype(folders)& folder_list() const noexcept {
+            static_assert(!std::is_pointer_v<decltype(folders)::value_type>, "If we change the list to hold pointers, we must return a const std::vector<const T*>&, not merely a const std::vector<T*>&, to prevent outside modification.");
+            return this->folders;
+         }
+
          bool for_each_folder(std::function<bool(const folder_entry&)> functor) const;
          bool for_each_file_in_folder(const folder_entry&, std::function<bool(const folder_entry&, const file_entry&)> functor) const;
-         //
+         
          bool file_is_compressed(const file_entry&) const noexcept;
    };
 }

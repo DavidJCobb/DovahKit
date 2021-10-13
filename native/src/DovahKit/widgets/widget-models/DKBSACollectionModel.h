@@ -1,10 +1,10 @@
 #pragma once
 #include <QAbstractItemModel>
 #include <string>
+#include "../../dovah/files/bsa/bsa_archive.h"
 
 namespace dovah {
    class bsa_load_order;
-   class bsa_archive;
    class bsa_archived_file;
 }
 
@@ -38,7 +38,7 @@ class DKBSACollectionModelBackend : public QObject {
             File() : Node(node_type::file) {}
 
             const dovah::bsa_archive* source = nullptr; // last-imported archive to provide this file
-            QString path;
+            const dovah::bsa_archive::folder_entry* raw_folder = nullptr;
             QString extension;
 
             dovah::bsa_archived_file* load() const noexcept;
@@ -57,7 +57,11 @@ class DKBSACollectionModelBackend : public QObject {
             void clear();
             File* file(const QString& name) const noexcept;
             int indexOf(const Node*) const noexcept;
-            Folder* subfolder(const QString& name) const noexcept;
+            Folder* subfolder(const QStringView& name) const noexcept;
+
+            void absorb(Folder&); // assumes both folders are already sorted; exists in case we wanna try multithreading
+            void recursiveSort();
+            void sort();
       };
 
       inline const Folder* root() const noexcept { return &this->_root; }
@@ -83,7 +87,7 @@ class DKBSACollectionModelBackend : public QObject {
       void _importFromArchiveInList(const dovah::bsa_archive*);
 
       // get or create folder; used when importing an archive's contents
-      Folder* _folderByPath(const std::string&);
+      Folder* _folderByPath(const QString&);
 };
 
 //
@@ -112,7 +116,9 @@ class DKBSACollectionModel : public QAbstractItemModel {
 
       inline DKBSACollectionModelBackend* backend() const noexcept { return this->_backend; }
       QModelIndex index(const Node*, int col = 0) const noexcept;
-      QModelIndex indexOfFolder(const QString&) const noexcept;
+      QModelIndex indexOfFile(const QString&, const QModelIndex& inFolder) const noexcept;
+      QModelIndex indexOfFolder(const QString&) const noexcept; // if path starts with "../", fails
+      QModelIndex indexOfFolder(const QString&, const QModelIndex& relativeTo) const noexcept;
 
       bool isFile(const QModelIndex&) const noexcept;
       bool isFolder(const QModelIndex&) const noexcept;

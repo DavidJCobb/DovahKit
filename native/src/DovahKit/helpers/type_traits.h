@@ -15,6 +15,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <array>
 #include <type_traits>
 
 namespace cobb {

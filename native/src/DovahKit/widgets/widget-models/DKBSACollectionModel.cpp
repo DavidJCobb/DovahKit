@@ -77,10 +77,12 @@ int Node::indexInParent() const noexcept {
 }
 
 dovah::bsa_archived_file* File::load() const noexcept {
-   if (!this->source)
+   if (!this->source || !this->raw_folder)
       return nullptr;
-   auto full = this->path + '/'  + this->name;
-   return this->source->lookup_file(full.toLatin1().constData());
+   auto full = this->raw_folder->name;
+   full += '/';
+   full += (const char*)this->name.toLatin1();
+   return this->source->lookup_file(full);
 }
 void File::setName(const QString& n) {
    this->name = n;
@@ -117,7 +119,7 @@ void Folder::clear() {
 }
 File* Folder::file(const QString& name) const noexcept {
    for (auto* node : this->files)
-      if (node->name.compare(name, Qt::CaseInsensitive) == 0)
+      if (name == node->name)
          return node;
    return nullptr;
 }
@@ -133,11 +135,80 @@ int Folder::indexOf(const Node* n) const noexcept {
    }
    return -1;
 }
-Folder* Folder::subfolder(const QString& name) const noexcept {
+Folder* Folder::subfolder(const QStringView& name) const noexcept {
    for (auto* node : this->subfolders)
-      if (node->name.compare(name, Qt::CaseInsensitive) == 0)
+      if (name == node->name)
          return node;
    return nullptr;
+}
+
+void Folder::absorb(Folder& other) {
+   if (this->subfolders.empty()) {
+      std::swap(this->subfolders, other.subfolders);
+      for (auto* f : this->subfolders)
+         f->parent = this;
+   } else if (!other.subfolders.empty()) {
+      QVector<Folder*> sorted;
+      //
+      size_t i  = 0;
+      size_t as = this->subfolders.size();
+      for (auto* folder : other.subfolders) {
+         if (i < as) {
+            auto* a = this->subfolders[i];
+            auto* b = folder;
+            while (a->name < b->name && i < as) {
+               sorted.push_back(a);
+               if (++i >= as)
+                  break;
+               a = this->subfolders[i];
+            }
+         }
+         sorted.push_back(folder);
+      }
+      for (auto* f : sorted)
+         f->parent = this;
+      other.subfolders.clear();
+      std::swap(this->subfolders, sorted);
+   }
+   //
+   if (this->files.empty()) {
+      std::swap(this->files, other.files);
+      for (auto* f : this->files)
+         f->parent = this;
+   } else if (!other.files.empty()) {
+      QVector<File*> sorted;
+      //
+      size_t i  = 0;
+      size_t as = this->files.size();
+      for (auto* file : other.files) {
+         if (i < as) {
+            auto* a = this->files[i];
+            auto* b = file;
+            while (a->name < b->name && i < as) {
+               sorted.push_back(a);
+               if (++i >= as)
+                  break;
+               a = this->files[i];
+            }
+         }
+         sorted.push_back(file);
+      }
+      for (auto* f : sorted)
+         f->parent = this;
+      other.files.clear();
+      std::swap(this->files, sorted);
+   }
+}
+void Folder::recursiveSort() {
+   qSort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
+   qSort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
+   //
+   for (auto* sf : this->subfolders)
+      sf->recursiveSort();
+}
+void Folder::sort() {
+   qSort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
+   qSort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
 }
 #pragma endregion
 
@@ -152,26 +223,25 @@ void DKBSACollectionModelBackend::clear() {
    emit this->cleared();
 }
 void DKBSACollectionModelBackend::importFromArchive(const dovah::bsa_archive* bsa) {
-   bsa->for_each_folder([this, bsa](const dovah::bsa_archive::folder_entry& folder) {
-      auto& name         = folder.name;
-      auto* known_folder = this->_folderByPath(name);
-      bsa->for_each_file_in_folder(folder, [this, known_folder, bsa](const dovah::bsa_archive::folder_entry& folder, const dovah::bsa_archive::file_entry& file) {
-         auto  fn = QString::fromLatin1(file.name.c_str());
-         auto* mf = known_folder->file(fn);
+   const auto& folders = bsa->folder_list();
+   for (auto& raw_folder : folders) {
+      auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
+      auto* our_folder  = this->_folderByPath(folder_path);
+      for (const auto& raw_file : raw_folder.files) {
+         auto  fn = QString::fromLatin1(raw_file.name.c_str());
+         auto* mf = our_folder->file(fn);
          if (mf) {
             mf->source = bsa;
             emit this->fileSourceChanged(mf);
          } else {
             mf = new File;
             mf->setName(fn);
-            mf->path   = QString::fromLatin1(folder.name.c_str());
-            mf->source = bsa;
-            known_folder->appendFile(mf);
+            our_folder->appendFile(mf);
          }
-         return false;
-      });
-      return false;
-   });
+         mf->source     = bsa;
+         mf->raw_folder = &raw_folder;
+      }
+   }
    emit this->archiveImported();
 }
 void DKBSACollectionModelBackend::setArchives(const dovah::bsa_load_order& lo) {
@@ -186,54 +256,70 @@ void DKBSACollectionModelBackend::setArchives(const dovah::bsa_load_order& lo) {
          this->_importFromArchiveInList(file);
       }
    }
+   this->_root.recursiveSort();
    emit this->replaced();
 }
 
-Folder* DKBSACollectionModelBackend::_folderByPath(const std::string& path) {
-   Folder* target = &this->_root;
-   QString name;
-   for (const char c : path) {
-      if (c == '/' || c == '\\') {
-         if (name.isEmpty())
+namespace {
+   int _indexOfSlash(const QString& path, int from = 0) {
+      return path.indexOf(dovah::bsa_archive::path_separator, from);
+   }
+}
+Folder* DKBSACollectionModelBackend::_folderByPath(const QString& path) {
+   Folder* basis = &this->_root;
+   bool    prior = true;
+   int     last  = 0;
+   int     next  = _indexOfSlash(path);
+   for (; next >= 0; last = next + 1, next = _indexOfSlash(path, last)) {
+      auto name = QStringView(path.data() + last, next - last);
+      if (!name.size())
+         continue;
+      if (prior) {
+         if (auto* sub = basis->subfolder(name)) {
+            basis = sub;
             continue;
-         auto* sub = target->subfolder(name);
+         }
+         prior = false;
+      }
+      auto* sub = new Folder;
+      sub->name = name.toString();
+      basis->appendSubfolder(sub);
+      basis = sub;
+   }
+   if (last >= 0 && last < path.size()) {
+      auto name = QStringView(path.data() + last, path.size() - last);
+      if (name.size()) {
+         Folder* sub = nullptr;
+         if (prior)
+            sub = basis->subfolder(name);
          if (!sub) {
             sub = new Folder;
-            sub->name = name;
-            target->appendSubfolder(sub);
+            sub->name = name.toString();
+            basis->appendSubfolder(sub);
          }
-         target = sub;
+         basis = sub;
       }
    }
-   if (!name.isEmpty()) {
-      auto* sub = target->subfolder(name);
-      if (!sub) {
-         sub = new Folder;
-         sub->name = name;
-         target->appendSubfolder(sub);
-      }
-      target = sub;
-   }
-   return target;
+   return basis;
 }
 void DKBSACollectionModelBackend::_importFromArchiveInList(const dovah::bsa_archive* bsa) {
-   bsa->for_each_folder([this, bsa](const dovah::bsa_archive::folder_entry& folder) {
-      const auto& name = folder.name;
-      auto* modeled = this->_folderByPath(name);
-      bsa->for_each_file_in_folder(folder, [modeled, bsa](const dovah::bsa_archive::folder_entry& folder, const dovah::bsa_archive::file_entry& file) {
-         auto  fn = QString::fromLatin1(file.name.c_str());
-         auto* mf = modeled->file(fn);
+   const auto& folders = bsa->folder_list();
+   for (auto& raw_folder : folders) {
+      auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
+      auto* our_folder  = this->_folderByPath(folder_path);
+      our_folder->files.reserve(raw_folder.files.size());
+      for (const auto& raw_file : raw_folder.files) {
+         auto  fn = QString::fromLatin1(raw_file.name.c_str());
+         auto* mf = our_folder->file(fn);
          if (!mf) {
             mf = new File;
             mf->setName(fn);
-            mf->path = QString::fromLatin1(folder.name.c_str());
-            modeled->appendFile(mf);
+            our_folder->appendFile(mf);
          }
-         mf->source = bsa;
-         return false;
-      });
-      return false;
-   });
+         mf->source     = bsa;
+         mf->raw_folder = &raw_folder;
+      }
+   }
 }
 #pragma endregion
 
@@ -281,6 +367,28 @@ QModelIndex DKBSACollectionModel::index(const Node* node, int col) const noexcep
       return this->createIndex(0, col, parent);
    return this->createIndex(j, col, parent);
 }
+QModelIndex DKBSACollectionModel::indexOfFile(const QString& name, const QModelIndex& inFolder) const noexcept {
+   if (!this->_backend)
+      return QModelIndex();
+   const Folder* folder = nullptr;
+   {
+      int i = name.lastIndexOf('/');
+      int j = name.lastIndexOf('\\');
+      i = std::max(i, j);
+      if (i >= 0) {
+         auto instead = this->indexOfFolder(name.mid(0, i), inFolder);
+         folder = this->_folderFromIndex(instead);
+      } else {
+         folder = this->_folderFromIndex(inFolder);
+      }
+   }
+   if (!folder)
+      return QModelIndex();
+   auto* file = folder->file(name);
+   if (file)
+      return this->index(file, inFolder.column());
+   return QModelIndex();
+}
 QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path) const noexcept {
    if (!this->_backend)
       return QModelIndex();
@@ -291,6 +399,7 @@ QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path) const noexc
          if (name.isEmpty())
             continue;
          parent = parent->subfolder(name);
+         name.clear();
          if (!parent)
             return QModelIndex();
          continue;
@@ -302,6 +411,51 @@ QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path) const noexc
    if (!parent || parent == this->_backend->root())
       return QModelIndex();
    return this->index(parent);
+}
+QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path, const QModelIndex& relativeTo) const noexcept {
+   if (!this->_backend)
+      return QModelIndex();
+   const Folder* basis = this->_backend->root();
+   if (!path.startsWith('/')) {
+      if (auto* node = this->_nodeFromIndex(relativeTo)) {
+         while (node && node->type != node_type::folder)
+            node = node->parent;
+         basis = (Folder*)node;
+      }
+   }
+   if (!basis)
+      basis = this->_backend->root();
+   //
+   const Folder* target = basis;
+   QString name;
+   for (QChar c : path) {
+      if (c == '/' || c == '\\') {
+         if (name.isEmpty())
+            continue;
+         if (name == '.')
+            continue;
+         if (name == "..") {
+            target = (Folder*)target->parent;
+         } else {
+            target = target->subfolder(name);
+         }
+         name.clear();
+         if (!target)
+            return QModelIndex();
+         continue;
+      }
+      name += c;
+   }
+   if (!name.isEmpty() && name != '.') {
+      if (name == "..") {
+         target = (Folder*)target->parent;
+      } else {
+         target = target->subfolder(name);
+      }
+   }
+   if (!target || target == this->_backend->root())
+      return QModelIndex();
+   return this->index(target);
 }
 
 bool DKBSACollectionModel::isFile(const QModelIndex& index) const noexcept {
@@ -391,7 +545,10 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
                break;
             case FullPathRole:
                if (node->type == node_type::file) {
-                  return ((File*)node)->path + '/' + node->name;
+                  auto* file = (File*)node;
+                  if (!file->raw_folder)
+                     break;
+                  return QString::fromLatin1(file->raw_folder->name.c_str()).replace('\\', '/') + '/' + node->name;
                } else {
                   auto*   root = this->_backend->root();
                   QString path = node->name;
@@ -425,10 +582,10 @@ void DKBSACollectionModel::setBackend(DKBSACollectionModelBackend* backend) {
    }
    this->_backend = backend;
    if (backend) {
-      QObject::connect(backend, &DKBSACollectionModelBackend::aboutToClear, this, &QAbstractItemModel::beginResetModel);
-      QObject::connect(backend, &DKBSACollectionModelBackend::aboutToReplace, this, &QAbstractItemModel::beginResetModel);
-      QObject::connect(backend, &DKBSACollectionModelBackend::cleared, this, &QAbstractItemModel::endResetModel);
-      QObject::connect(backend, &DKBSACollectionModelBackend::replaced, this, &QAbstractItemModel::endResetModel);
+      QObject::connect(backend, &DKBSACollectionModelBackend::aboutToClear, this, [this]() { this->beginResetModel(); });
+      QObject::connect(backend, &DKBSACollectionModelBackend::aboutToReplace, this, [this]() { this->beginResetModel(); });
+      QObject::connect(backend, &DKBSACollectionModelBackend::cleared, this, [this]() { this->endResetModel(); });
+      QObject::connect(backend, &DKBSACollectionModelBackend::replaced, this, [this]() { this->endResetModel(); });
       QObject::connect(backend, &DKBSACollectionModelBackend::fileSourceChanged, this, [this](File* file) {
          auto index = this->index(file);
          if (index.isValid())

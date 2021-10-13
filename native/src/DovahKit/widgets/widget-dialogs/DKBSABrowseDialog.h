@@ -4,6 +4,8 @@
 #include <QListView>
 #include <QToolButton>
 
+class DKBSACollectionModelBackend;
+
 class DKBSABrowseDialog : public QDialog {
    Q_OBJECT;
    public:
@@ -13,16 +15,31 @@ class DKBSABrowseDialog : public QDialog {
       // engine-level limits, e.g. texture paths always being relative to "data/textures".
       inline QString pathStem() const noexcept { return this->state.pathStem; }
 
-      static_assert(false, "add a static member function for selecting a file, compared to the static functions on QFileDialog");
-         //  - need a stem, as indicated above
-         //  - allow an already-selected file, for when the user clicks "browse" on an already-filled DKGameFilePicker
-         //  - file extension(s) would be nice, but would require model-side changes
+      static QString getOpenFileName(
+         QWidget* parent = nullptr,
+         const QString& caption  = QString(),
+         const QString& pathStem = QString(),
+         const QString& initial  = QString(),
+         const QString& filter   = QString(),
+         QString* selectedFilter = nullptr,
+         DKBSACollectionModelBackend* backend = nullptr
+      );
 
    signals:
       void fileSelected(const QString& file);
 
    public slots:
+      void setDirectory(const QString&);
       void setPathStem(const QString&);
+
+   protected slots:
+      void acceptWithFile(const QString&);
+      void offerLooseFile(); // open a QFileDialog and limit it to the proper directory, if that directory exists
+      void openNode(const QModelIndex&);
+      void openSelectedNode(); // if the selected node is a folder, navigate into it; if it's a file, pick it and accept
+      void selectFileByName(QString);
+      void selectPath(const QString&);
+      void upOneLevel();
 
    protected:
       struct {
@@ -34,5 +51,7 @@ class DKBSABrowseDialog : public QDialog {
       struct {
          QString     pathStem;
          QModelIndex pathStemIndex;
+         QString     _looseFilePath;
+         QString     _finalResult;
       } state;
 };
