@@ -1124,6 +1124,7 @@
     <QtUic Include="ui\form_windows\quest.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
+    <QtUic Include="ui\form_windows\textureset.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\generic\PapyrusFragmentEditor.ui" />
