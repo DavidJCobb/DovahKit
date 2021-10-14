@@ -11,6 +11,8 @@ class DKBSABrowseDialog : public QDialog {
    public:
       DKBSABrowseDialog(QWidget* parent = nullptr);
 
+      QString directory() const noexcept;
+
       // The "minimum" file path; users can't select anything outside of this folder. Useful for 
       // engine-level limits, e.g. texture paths always being relative to "data/textures".
       inline QString pathStem() const noexcept { return this->state.pathStem; }
@@ -26,10 +28,13 @@ class DKBSABrowseDialog : public QDialog {
       );
 
    signals:
+      void directoryEntered(const QString& path);
       void fileSelected(const QString& file);
 
    public slots:
-      void setDirectory(const QString&);
+      void setBackend(DKBSACollectionModelBackend*);
+      bool setDirectory(QString);
+      void setDirectoryAndFile(const QString& filePath);
       void setPathStem(const QString&);
 
    protected slots:
@@ -41,6 +46,8 @@ class DKBSABrowseDialog : public QDialog {
       void selectPath(const QString&);
       void setViewMode(QListView::ViewMode);
       void upOneLevel();
+
+      void _updateFilenameTextFromSelection();
 
    protected:
       struct {

@@ -128,8 +128,7 @@ namespace {
 int Node::indexInParent() const noexcept {
    if (!this->parent)
       return -1;
-   assert(this->parent->type == node_type::folder);
-   return ((Folder*)this->parent)->indexOf(this);
+   return this->parent->indexOf(this);
 }
 
 dovah::bsa_archived_file* File::load() const noexcept {
@@ -197,6 +196,18 @@ int Folder::indexOf(const Node* n) const noexcept {
       return this->subfolders.indexOf((Folder*)n);
    }
    return -1;
+}
+Node* Folder::node(int i) const noexcept {
+   if (i < 0)
+      return nullptr;
+   auto s = this->subfolders.size();
+   if (i >= s) {
+      i -= s;
+      if (i >= this->files.size())
+         return nullptr;
+      return this->files[i];
+   }
+   return this->subfolders[i];
 }
 Folder* Folder::subfolder(const QStringView& name) const noexcept {
    for (auto* node : this->subfolders)
@@ -308,6 +319,7 @@ void DKBSACollectionModelBackend::importFromArchive(const dovah::bsa_archive* bs
          mf->source     = bsa;
          mf->raw_folder = &raw_folder;
       }
+      our_folder->sort();
    }
    emit this->archiveImported();
 }
@@ -411,10 +423,17 @@ DKBSACollectionModel::DKBSACollectionModel(QObject* parent) : QAbstractItemModel
 }
 
 const Node* DKBSACollectionModel::_nodeFromIndex(const QModelIndex& index) const noexcept {
-   if (!index.isValid())
+   auto i = index.row();
+   if (!index.isValid()) {
       if (this->_backend)
          return this->_backend->root();
-   return (const Node*)index.internalPointer();
+      return nullptr;
+   }
+   const Folder* folder = (const Folder*)index.internalPointer();
+   if (!folder)
+      return nullptr;
+   assert(folder->type == node_type::folder);
+   return folder->node(i);
 }
 const Folder* DKBSACollectionModel::_folderFromIndex(const QModelIndex& index) const noexcept {
    if (auto* node = this->_nodeFromIndex(index)) {
@@ -428,14 +447,10 @@ const Folder* DKBSACollectionModel::_folderFromIndex(const QModelIndex& index) c
 QModelIndex DKBSACollectionModel::index(const Node* node, int col) const noexcept {
    if (!node || !this->_backend || node == this->_backend->root())
       return QModelIndex();
-   auto* parent = (Folder*)node->parent;
+   auto* parent = node->parent;
    if (!parent)
       return QModelIndex();
-   assert(parent->type == Node::node_type::folder);
-   auto j = parent->indexInParent();
-   if (j < 0)
-      return this->createIndex(0, col, parent);
-   return this->createIndex(j, col, parent);
+   return this->createIndex(parent->indexOf(node), col, parent);
 }
 QModelIndex DKBSACollectionModel::indexOfFile(const QString& name, const QModelIndex& inFolder) const noexcept {
    if (!this->_backend)
@@ -488,9 +503,10 @@ QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path, const QMode
    const Folder* basis = this->_backend->root();
    if (!path.startsWith('/')) {
       if (auto* node = this->_nodeFromIndex(relativeTo)) {
-         while (node && node->type != node_type::folder)
-            node = node->parent;
-         basis = (Folder*)node;
+         if (node->type != node_type::folder)
+            basis = node->parent;
+         else
+            basis = (Folder*)node;
       }
    }
    if (!basis)
@@ -505,7 +521,7 @@ QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path, const QMode
          if (name == '.')
             continue;
          if (name == "..") {
-            target = (Folder*)target->parent;
+            target = target->parent;
          } else {
             target = target->subfolder(name);
          }
@@ -518,7 +534,7 @@ QModelIndex DKBSACollectionModel::indexOfFolder(const QString& path, const QMode
    }
    if (!name.isEmpty() && name != '.') {
       if (name == "..") {
-         target = (Folder*)target->parent;
+         target = target->parent;
       } else {
          target = target->subfolder(name);
       }
@@ -541,8 +557,6 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
    QModelIndex DKBSACollectionModel::index(int row, int column, const QModelIndex& parent) const {
       if (!this->_backend)
          return QModelIndex();
-      if (row < 0)
-         return QModelIndex();
       const Folder* folder = nullptr;
       if (!parent.isValid()) {
          folder = this->_backend->root();
@@ -554,14 +568,11 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       auto& subs = folder->subfolders;
       int   sfc  = subs.size();
       if (row < sfc) {
-         return this->createIndex(row, column, subs[row]);
+         return this->createIndex(row, column, (void*)folder);
       }
       if (!this->_properties.foldersOnly) {
-         auto& files = folder->files;
-         int   fr    = row - sfc;
-         if (fr < files.size()) {
-            return this->createIndex(row, column, files[fr]);
-         }
+         if (row - sfc < folder->files.size())
+            return this->createIndex(row, column, (void*)folder);
       }
       return QModelIndex();
    }
@@ -569,7 +580,7 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       if (!index.isValid())
          return QModelIndex();
       auto* node = this->_nodeFromIndex(index);
-      return this->index(node, index.column());
+      return this->index(node->parent, index.column());
    }
    int DKBSACollectionModel::rowCount(const QModelIndex& parent) const {
       auto* folder = this->_folderFromIndex(parent);

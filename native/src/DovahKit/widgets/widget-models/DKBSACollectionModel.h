@@ -18,6 +18,8 @@ class DKBSACollectionModelBackend : public QObject {
    public:
       DKBSACollectionModelBackend(QObject* parent = nullptr);
       
+      class Folder;
+
       class Node {
          public:
             enum class node_type {
@@ -28,7 +30,7 @@ class DKBSACollectionModelBackend : public QObject {
             Node(node_type t) : type(t) {}
 
             const node_type type;
-            Node*   parent = nullptr;
+            Folder* parent = nullptr;
             QString name;
 
             int indexInParent() const noexcept;
@@ -58,6 +60,7 @@ class DKBSACollectionModelBackend : public QObject {
             File* file(const QString& name) const noexcept;
             File* file(const QString& name, int stop_at) const noexcept;
             int indexOf(const Node*) const noexcept;
+            Node* node(int i) const noexcept;
             Folder* subfolder(const QStringView& name) const noexcept;
 
             void absorb(Folder&); // assumes both folders are already sorted; exists in case we wanna try multithreading
@@ -123,6 +126,8 @@ class DKBSACollectionModel : public QAbstractItemModel {
 
       bool isFile(const QModelIndex&) const noexcept;
       bool isFolder(const QModelIndex&) const noexcept;
+
+      inline QString fullPathTo(const QModelIndex& index) const noexcept { return this->data(index, FullPathRole).toString(); }
       
       #pragma region QAbstractItemModel overrides
          QModelIndex index(int row, int column, const QModelIndex& parent) const override;

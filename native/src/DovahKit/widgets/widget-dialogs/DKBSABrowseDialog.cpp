@@ -111,6 +111,31 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    QObject::connect(name, &QLineEdit::returnPressed, this, [this, name]() {
       this->selectFileByName(name->text());
    });
+   //
+   //
+   //
+   QObject::connect(this, &DKBSABrowseDialog::directoryEntered, this, [this](const QString& path) {
+      this->subwidgets.path->setText(path);
+      //
+      if (auto* sm = this->subwidgets.view->selectionModel()) {
+         sm->clear(); // this doesn't occur automatically when changing the root index, unfortunately
+      }
+      this->subwidgets.filename->setText(QString());
+   });
+   if (auto* sm = view->selectionModel()) {
+      QObject::connect(sm, &QItemSelectionModel::selectionChanged, this, &DKBSABrowseDialog::_updateFilenameTextFromSelection);
+   }
+}
+
+QString DKBSABrowseDialog::directory() const noexcept {
+   auto* view = this->subwidgets.view;
+   auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
+   if (!model)
+      return QString();
+   auto qmi = view->rootIndex();
+   if (qmi.isValid())
+      return model->data(view->rootIndex(), DKBSACollectionModel::FullPathRole).toString();
+   return QString();
 }
 
 /*static*/ QString DKBSABrowseDialog::getOpenFileName(
@@ -125,35 +150,10 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    auto* dialog = new DKBSABrowseDialog(parent);
    dialog->setWindowTitle(caption);
    dialog->setPathStem(pathStem);
-   if (backend) {
-      auto* view  = dialog->subwidgets.view;
-      auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
-      if (model) {
-         model->setBackend(backend);
-      }
-   }
-   if (!initial.isEmpty()) {
-      auto ip = QDir::cleanPath(initial);
-      auto i  = ip.lastIndexOf('/');
-      auto j  = ip.lastIndexOf('.');
-      if (j > i) {
-         if (i > 0)
-            ip = ip.mid(0, i);
-         else
-            ip.clear();
-      }
-      dialog->setDirectory(ip);
-      if (j > 0 && j > i) {
-         auto* view  = dialog->subwidgets.view;
-         auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
-         auto* sm    = view->selectionModel();
-         if (model && sm) {
-            auto index = model->indexOfFile(initial.mid(i + 1), view->rootIndex());
-            if (index.isValid())
-               sm->setCurrentIndex(index, QItemSelectionModel::SelectionFlag::ClearAndSelect | QItemSelectionModel::SelectionFlag::Current);
-         }
-      }
-   }
+   if (backend)
+      dialog->setBackend(backend);
+   if (!initial.isEmpty())
+      dialog->setDirectoryAndFile(initial);
    dialog->setWindowModality(Qt::WindowModality::WindowModal);
    dialog->exec();
    auto result = dialog->state._finalResult;
@@ -194,12 +194,15 @@ void DKBSABrowseDialog::offerLooseFile() {
    dialog->show();
 }
 void DKBSABrowseDialog::openNode(const QModelIndex& index) {
+   if (!index.isValid())
+      return;
    auto* view  = this->subwidgets.view;
    auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
    if (!model)
       return;
    if (model->isFolder(index)) {
       view->setRootIndex(index);
+      emit this->directoryEntered(model->fullPathTo(index));
    } else if (model->isFile(index)) {
       auto data = model->data(index, DKBSACollectionModel::FullPathRole);
       if (data.isValid() && data.type() == QMetaType::QString) {
@@ -249,6 +252,7 @@ void DKBSABrowseDialog::selectPath(const QString& path) {
          return;
    }
    view->setRootIndex(index);
+   emit this->directoryEntered(cleaned);
 }
 void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
    auto* view = this->subwidgets.view;
@@ -297,17 +301,88 @@ void DKBSABrowseDialog::upOneLevel() {
       return;
    if (index == this->state.pathStemIndex) // don't allow navigating up above the stem
       return;
-   view->setRootIndex(model->parent(index));
+   auto parent = model->parent(index);
+   view->setRootIndex(parent);
+   emit this->directoryEntered(model->fullPathTo(parent));
 }
 
-void DKBSABrowseDialog::setDirectory(const QString& path) {
+void DKBSABrowseDialog::setBackend(DKBSACollectionModelBackend* backend) {
+   auto* view  = this->subwidgets.view;
+   auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
+   if (model) {
+      QString prior = this->directory();
+      //
+      model->setBackend(backend);
+      //
+      // Setting the backend resets the model and root index, pulling us back to the root. 
+      // We need to reacquire the path stem index and, if we were viewing a subfolder, 
+      // navigate back into that subfolder.
+      //
+      this->state.pathStemIndex = model->indexOfFolder(this->state.pathStem);
+      if (!prior.isEmpty()) {
+         this->setDirectory(prior);
+         return;
+      }
+      if (this->state.pathStemIndex.isValid()) {
+         view->setRootIndex(this->state.pathStemIndex);
+         emit this->directoryEntered(model->fullPathTo(this->state.pathStemIndex));
+      }
+   }
+}
+bool DKBSABrowseDialog::setDirectory(QString path) {
+   auto* view  = this->subwidgets.view;
+   auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
+   if (!model)
+      return false;
+   path = QDir::cleanPath(path);
+   {
+      const auto& stem = this->state.pathStem;
+      if (!stem.isEmpty())
+         if (!stem.startsWith(path))
+            return false;
+   }
+   auto index = model->indexOfFolder(path);
+   if (!index.isValid())
+      return false;
+   view->setRootIndex(index);
+   emit this->directoryEntered(path);
+   return true;
+}
+void DKBSABrowseDialog::setDirectoryAndFile(const QString& path) {
+   auto ip = QDir::cleanPath(path);
+   //
+   if (!this->state.pathStem.isEmpty())
+      if (!ip.startsWith(this->state.pathStem))
+         return;
    auto* view  = this->subwidgets.view;
    auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
    if (!model)
       return;
-   auto index = model->indexOfFolder(path);
-   if (index.isValid())
-      view->setRootIndex(index);
+   //
+   QString filename;
+   auto i = ip.lastIndexOf('/');
+   auto j = ip.lastIndexOf('.');
+   if (j > i) {
+      if (i > 0) {
+         filename = ip.mid(i + 1);
+         ip = ip.mid(0, i);
+      } else {
+         filename = ip;
+         ip.clear();
+      }
+   }
+   if (!this->setDirectory(ip))
+      return;
+   emit this->directoryEntered(ip);
+   if (j > 0 && j > i) {
+      auto* sm = view->selectionModel();
+      if (!sm)
+         return;
+      auto index = model->indexOfFile(filename, view->rootIndex());
+      if (!index.isValid())
+         return;
+      sm->setCurrentIndex(index, QItemSelectionModel::SelectionFlag::ClearAndSelect | QItemSelectionModel::SelectionFlag::Current);
+   }
 }
 void DKBSABrowseDialog::setPathStem(const QString& stem) {
    if (stem == this->state.pathStem)
@@ -325,4 +400,27 @@ void DKBSABrowseDialog::setPathStem(const QString& stem) {
    } else {
       this->state.pathStemIndex = QModelIndex();
    }
+}
+
+void DKBSABrowseDialog::_updateFilenameTextFromSelection() {
+   auto* view = this->subwidgets.view;
+   auto* model = qobject_cast<DKBSACollectionModel*>(view->model());
+   auto* sm = view->selectionModel();
+   if (!model || !sm)
+      return;
+   QString names;
+   auto    rows = sm->selectedRows(0);
+   for (const auto& qmi : rows) {
+      if (!model->isFile(qmi))
+         continue;
+      auto name = model->data(qmi, Qt::DisplayRole).toString();
+      if (name.isEmpty())
+         continue;
+      if (rows.size() > 1) {
+         names += QString("\"%1\"").arg(name);
+      } else {
+         names = name;
+      }
+   }
+   this->subwidgets.filename->setText(names);
 }
