@@ -26,6 +26,7 @@
 #include "../ui/main_window/delete_form_dialog.h"
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/_base.h"
+#include "widgets/widget-models/DKBSACollectionModel.h"
 #include <QDebug>
 #include "subsystems/game_inis.h"
 
@@ -119,6 +120,8 @@ DovahKitCore::DovahKitCore() {
          qDebug("Time to generate INIs: %u ms", bench.milliseconds());
       }
    }
+   this->bsa_browse_backend = new DKBSACollectionModelBackend(this);
+   DKBSACollectionModel::setDefaultBackend(this->bsa_browse_backend);
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {
@@ -146,6 +149,7 @@ void DovahKitCore::_configure_load_order() {
 }
 void DovahKitCore::abandon_data() {
    emit dataAbandonImminent();
+   this->bsa_browse_backend->clear();
    delete this->load_order;
    this->loaded     = false;
    this->load_order = new dovah::file_load_order;
@@ -171,6 +175,7 @@ void DovahKitCore::set_queued_active_file(const std::filesystem::path& p) {
 bool DovahKitCore::acquire_load_order_data(bool async) {
    if (this->loading || this->async_loader)
       return false;
+   assert(!this->has_data() && "The editor must be made to abandon old data before attempting to acquire new data.");
    this->loading = true;
    if (async) {
       auto* worker = new DovahKitEditorInternals::load_task(*this);
@@ -200,6 +205,8 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       // as of this writing. It's far from the only thing missing, either.
       //
       QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, worker](file_load_stats stats) {
+         if (auto* bsa_list = this->load_order->get_archive_list())
+            this->bsa_browse_backend->setArchives(*bsa_list);
          emit dataAcquireComplete(worker->results);
          emit fileLoadStatisticsAvailable(stats);
          {
@@ -231,6 +238,8 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    auto task = DovahKitEditorInternals::load_task(*this);
    task.exec();
    if (task.result) {
+      if (auto* bsa_list = this->load_order->get_archive_list())
+         this->bsa_browse_backend->setArchives(*bsa_list);
       emit dataAcquireComplete(task.results);
       emit fileLoadStatisticsAvailable(task.stats);
       {

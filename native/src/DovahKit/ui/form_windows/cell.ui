@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -1022,22 +1022,12 @@
          <property name="text">
           <string>Water Environment Map</string>
          </property>
-         <property name="buddy">
-          <cstring>waterEnvironmentMap</cstring>
-         </property>
         </widget>
        </item>
        <item row="5" column="0" colspan="2">
         <widget class="QCheckBox" name="flagOffLimits">
          <property name="text">
           <string>Off Limits</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="TESFilePicker" name="waterEnvironmentMap" native="true">
-         <property name="focusPolicy">
-          <enum>Qt::TabFocus</enum>
          </property>
         </widget>
        </item>
@@ -1144,6 +1134,16 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="1">
+        <widget class="DKGameFilePicker" name="waterEnvironmentMap">
+         <property name="pathFormat">
+          <enum>DKGameFilePicker::ShowDataDirectory</enum>
+         </property>
+         <property name="standardConfiguration">
+          <enum>DKGameFilePicker::Textures</enum>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
@@ -1183,15 +1183,14 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>ColorPickerButton</class>
    <extends>QPushButton</extends>
    <header>../generic/ColorPickerButton.h</header>
-  </customwidget>
-  <customwidget>
-   <class>TESFilePicker</class>
-   <extends>QWidget</extends>
-   <header>../generic/TESFilePicker.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>FormPicker</class>

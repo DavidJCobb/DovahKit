@@ -86,9 +86,15 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="editPath">
+         <widget class="DKGameFilePicker" name="editPath">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="pathFormat">
+           <enum>DKGameFilePicker::OmitPathStem</enum>
+          </property>
+          <property name="standardConfiguration">
+           <enum>DKGameFilePicker::Textures</enum>
           </property>
          </widget>
         </item>
@@ -376,11 +382,17 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>flagSkinTexture</tabstop>
   <tabstop>paths</tabstop>
-  <tabstop>editPath</tabstop>
   <tabstop>flagSpecular</tabstop>
   <tabstop>flagModelSpaceNormals</tabstop>
   <tabstop>decalData</tabstop>

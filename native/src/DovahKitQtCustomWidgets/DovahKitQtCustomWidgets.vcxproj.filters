@@ -55,6 +55,12 @@
     <QtMoc Include="widgets\DKFormListPane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="interfaces\DKGameFilePickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKGameFilePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -76,6 +82,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKHeaderView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKGameFilePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

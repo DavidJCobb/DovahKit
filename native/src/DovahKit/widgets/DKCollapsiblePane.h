@@ -6,7 +6,7 @@
 class DKCollapsiblePane : public QFrame {
    Q_OBJECT;
    Q_PROPERTY(bool    collapsed READ collapsed WRITE setCollapsed DESIGNABLE true);
-   Q_PROPERTY(QString title     READ title     WRITE setTitle     DESIGNABLE true);
+   Q_PROPERTY(QString title     READ title     WRITE setTitle     DESIGNABLE true USER true);
    Q_PROPERTY(bool    showActionsWhenCollapsed READ showActionsWhenCollapsed WRITE setShowActionsWhenCollapsed DESIGNABLE true);
    public:
       DKCollapsiblePane(QWidget* parent);

@@ -27,6 +27,7 @@ namespace DovahKitEditorInternals {
    class load_task;
 }
 
+class DKBSACollectionModelBackend;
 class FormDialogBaseTemplate;
 class FormUseInfoDialog;
 
@@ -64,6 +65,7 @@ class DovahKitCore : public QObject {
       std::string encoding;
       std::string language_name;
       bool com_is_ready = false; // is COM set up for the main thread?
+      DKBSACollectionModelBackend* bsa_browse_backend = nullptr;
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;

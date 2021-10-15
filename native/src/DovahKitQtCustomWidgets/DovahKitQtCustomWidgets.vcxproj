@@ -98,7 +98,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
+    <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
+    <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <None Include="README.md" />
     <QtMoc Include="widgets\DKCollapsiblePane.h" />
@@ -139,6 +141,8 @@
     <QtMoc Include="widgets\DKFormListPane.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="interfaces\DKGameFilePickerInterface.h" />
+    <QtMoc Include="widgets\DKGameFilePicker.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

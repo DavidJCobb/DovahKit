@@ -80,3 +80,17 @@ behind a check for the relevant macro:
 
 That macro is automatically defined by Qt whenever Qt's `designer` module is loaded, and 
 that module is only useful when writing plug-ins for Qt Designer.
+
+### DKGameFilePicker
+A textbox and browse button usable for inputting the path to a game asset file. The browse 
+button allows users to view the contents of all loaded BSAs and pick a file from inside.
+
+Different forms seem to encode asset paths differently; for example, CELL/XWEM (water 
+environment map texture for Cells) includes the `Data\Textures\` prefix, but the various 
+paths in TXST (TextureSet) don't include the Data directory or the root Textures folder. 
+As such, DKGameFilePicker offers a `PathFormat` enum which can be used to influence both 
+how the path is displayed and how its value is retrieved when calling `rawPath()`.
+
+Internally, DKGameFilePicker stores its path with the top-level folder but without the 
+Data folder. If you pass in a path, DKGameFilePicker will attempt to strip off any 
+top-level Data folder.
