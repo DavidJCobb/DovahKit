@@ -2,9 +2,17 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QListView>
+#include <QStyledItemDelegate>
 #include <QToolButton>
 
 class DKBSACollectionModelBackend;
+
+class DKBSABrowseDialogItemDelegate : public QStyledItemDelegate {
+   public:
+      using QStyledItemDelegate::QStyledItemDelegate;
+   
+      virtual void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override;
+};
 
 class DKBSABrowseDialog : public QDialog {
    Q_OBJECT;
@@ -48,6 +56,7 @@ class DKBSABrowseDialog : public QDialog {
       void upOneLevel();
 
       void _updateFilenameTextFromSelection();
+      void _updateIconColumnSpacing(QSize old, QSize now);
 
    protected:
       struct {
@@ -62,5 +71,8 @@ class DKBSABrowseDialog : public QDialog {
          QModelIndex pathStemIndex;
          QString     _looseFilePath;
          QString     _finalResult;
+         DKBSABrowseDialogItemDelegate* _delegate = nullptr;
       } state;
+
+      virtual bool eventFilter(QObject* watched, QEvent* event);
 };

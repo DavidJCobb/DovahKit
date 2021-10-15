@@ -3,11 +3,55 @@
 #include <QBoxLayout>
 #include <QDir>
 #include <QFileDialog>
+#include <QLabel>
 #include <QMenu>
 #include <QPushButton>
+#include <QResizeEvent>
 #include <QToolBar>
 #include "../widget-models/DKBSACollectionModel.h"
 #include "../../editor/core.h"
+
+namespace {
+   //
+   // In the Windows 10 shell, if there are enough icons in an icon-view listing to wrap 
+   // onto multiple rows, then Windows inserts padding between columns in order to ensure 
+   // that there isn't empty space on the righthand side of the window. This constexpr 
+   // bool controls whether we mimic that behavior.
+   // 
+   // We do this by expanding our QListView's gridSize in order to fill the empty space, 
+   // counting on the fact that items will be centered horizontally within their grid 
+   // spaces. This does introduce an issue: if we're making items wider, then text will 
+   // wrap and elide differently. We mitigate that with a QStyledItemDelegate subclass, 
+   // which forcibly constrains items' rects, counting on the fact that the gridSize 
+   // height is always the desired square dimensions.
+   // 
+   // We of course change the gridSize when the list view is resized; we listen for that 
+   // using an eventFilter.
+   // 
+   // The effect is slightly jerky due to the fact that we're stuck using integer sizes; 
+   // there may be small bits of extra space on the righthand side for the same reason. 
+   // If we were using a custom QAbstractItemView subclass, we could use floating-point 
+   // positions and simply "carry" subpixels over from item to item until we come up 
+   // with a whole pixel, thereby ensuring that integer division doesn't cause us to 
+   // "lose" pixels. Alas, that's not possible here.
+   //
+   constexpr bool padding_between_icon_columns = true;
+}
+
+void DKBSABrowseDialogItemDelegate::initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const {
+   QStyledItemDelegate::initStyleOption(option, index);
+   //
+   if constexpr (padding_between_icon_columns) {
+      auto& rect = option->rect;
+      auto  h    = rect.height();
+      auto  w    = rect.width();
+      if (h && h < w) {
+         auto d = (w - h) / 2;
+         rect.setWidth(h);
+         rect.moveLeft(rect.x() + d);
+      }
+   }
+}
 
 DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    auto* style = QApplication::style();
@@ -18,19 +62,25 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
       editor.get_game_path(path, editor.get_current_game());
       //
       this->state._looseFilePath = QDir::cleanPath(QString::fromUtf8((const char*)path.u8string().c_str()) + "/Data");
-      if (QDir(this->state._looseFilePath).exists()) {
+      if (QDir(this->state._looseFilePath).exists() == false) {
          this->state._looseFilePath.clear();
       }
    }
+   //
+   this->setSizeGripEnabled(true);
+   this->resize(600, 250);
+   this->setMinimumSize(400, 150);
    //
    auto* path = this->subwidgets.path     = new QLineEdit(this);
    auto* view = this->subwidgets.view     = new QListView(this);
    auto* name = this->subwidgets.filename = new QLineEdit(this);
    {
       auto* layout = new QVBoxLayout(this);
+      layout->setContentsMargins({ 0, 0, 0, 0 });
+      layout->setSpacing(0);
       {
          auto* toolbar = new QToolBar(this);
-         layout->addWidget(toolbar);
+         layout->setMenuBar(toolbar);
          //
          auto* up = this->subwidgets.upOneLevel = new QToolButton(this);
          up->setIcon(style->standardIcon(QStyle::SP_FileDialogToParent));
@@ -64,35 +114,58 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
          toolbar->addWidget(path);
          toolbar->addWidget(vc);
       }
-      layout->addWidget(view);
-      layout->addWidget(name);
-      layout->setStretch(0, 0);
-      layout->setStretch(1, 1);
-      layout->setStretch(0, 0);
-      //
-      auto* nested = new QHBoxLayout(this);
-      auto* loose  = new QPushButton(tr("Loose file..."), this);
-      auto* ok     = new QPushButton(tr("Open"), this);
-      auto* cancel = new QPushButton(tr("Cancel"), this);
-      nested->addStretch(0);
-      nested->addWidget(loose);
-      nested->addWidget(ok);
-      nested->addWidget(cancel);
-      layout->addLayout(nested, 0);
-      if (this->state._looseFilePath.isEmpty()) {
-         loose->setEnabled(false);
-      } else {
-         QObject::connect(loose, &QPushButton::clicked, this, &DKBSABrowseDialog::offerLooseFile);
+      layout->addWidget(view, 1);
+      {
+         auto* bottom = new QVBoxLayout(this);
+         bottom->setContentsMargins({
+            style->pixelMetric(QStyle::PM_LayoutLeftMargin),
+            style->pixelMetric(QStyle::PM_LayoutTopMargin),
+            std::max(style->pixelMetric(QStyle::PM_LayoutRightMargin), style->pixelMetric(QStyle::PM_SizeGripSize)),
+            style->pixelMetric(QStyle::PM_LayoutBottomMargin),
+         });
+         bottom->setSpacing(style->pixelMetric(QStyle::PM_LayoutVerticalSpacing));
+         layout->addLayout(bottom, 0);
+         //
+         {  // Filename row
+            auto* label  = new QLabel(tr("File &name:"), this);
+            label->setBuddy(name);
+            //
+            auto* nested = new QHBoxLayout(this);
+            nested->addSpacing(100);
+            nested->addWidget(label);
+            nested->addWidget(name);
+            bottom->addLayout(nested, 0);
+         }
+         {  // Buttons row
+            auto* nested = new QHBoxLayout(this);
+            auto* loose  = new QPushButton(tr("Loose file..."), this);
+            auto* ok     = new QPushButton(tr("&Open"), this);
+            auto* cancel = new QPushButton(tr("Cancel"), this);
+            nested->addStretch(0);
+            nested->addWidget(loose);
+            nested->addWidget(ok);
+            nested->addWidget(cancel);
+            bottom->addLayout(nested, 0);
+            //
+            if (this->state._looseFilePath.isEmpty()) {
+               loose->setEnabled(false);
+            } else {
+               QObject::connect(loose, &QPushButton::clicked, this, &DKBSABrowseDialog::offerLooseFile);
+            }
+            QObject::connect(ok, &QPushButton::clicked, this, &DKBSABrowseDialog::openSelectedNode);
+            QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+         }
       }
-      QObject::connect(ok,     &QPushButton::clicked, this, &DKBSABrowseDialog::openSelectedNode);
-      QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
    }
    //
    auto* model = new DKBSACollectionModel(this);
+   view->setSpacing(0);
    view->setUniformItemSizes(true);
    view->setBatchSize(200);
    view->setLayoutMode(QListView::LayoutMode::Batched);
    view->setModel(model);
+   view->installEventFilter(this);
+   this->state._delegate = new DKBSABrowseDialogItemDelegate(view);
    QObject::connect(model, &QAbstractItemModel::modelReset, this, [this, view, model]() {
       if (this->state.pathStem.isEmpty())
          return;
@@ -275,6 +348,7 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setSpacing(0);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setWordWrap(false);
+         view->setItemDelegate(nullptr);
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
          break;
       case _::IconMode:
@@ -286,6 +360,8 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setSpacing(2);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel); // necessary to fix Qt-side scroll speed issues in icon view
          view->setWordWrap(true); // TODO: not enough, on its own, to allow variable-height rows
+         view->setItemDelegate(this->state._delegate);
+         this->_updateIconColumnSpacing(QSize(), QSize());
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogContentsView));
          break;
    }
@@ -423,4 +499,54 @@ void DKBSABrowseDialog::_updateFilenameTextFromSelection() {
       }
    }
    this->subwidgets.filename->setText(names);
+}
+void DKBSABrowseDialog::_updateIconColumnSpacing(QSize old, QSize now) {
+   auto* view = this->subwidgets.view;
+   if (view->viewMode() != QListView::ViewMode::IconMode)
+      return;
+   auto* model = view->model();
+   if (!model)
+      return;
+   auto  grid     = view->gridSize();
+   auto  per_item = grid.height();
+   auto  index    = view->rootIndex();
+   auto  count    = model->rowCount(index);
+   if (count <= 1) {
+      view->setGridSize({ per_item, per_item });
+      return;
+   }
+   //
+   QSize size = now - old;
+   if (auto* port = view->viewport()) {
+      size += port->size();
+   } else {
+      size += view->contentsRect().size();
+   }
+   auto space = view->spacing();
+   if (count * per_item + (count + 1 * space) <= size.width()) {
+      view->setGridSize({ per_item, per_item });
+      return;
+   }
+   //
+   auto per_row = size.width() / per_item;
+   if (per_row <= 1) {
+      view->setGridSize({ per_item, per_item });
+      return;
+   }
+   auto extra = size.width() - (per_row * per_item);
+   extra -= (per_row + 1) * space;
+   extra /= (per_row);
+   view->setGridSize({ per_item + extra, per_item });
+}
+
+bool DKBSABrowseDialog::eventFilter(QObject* watched, QEvent* event) {
+   if constexpr (padding_between_icon_columns) {
+      if (event->type() == QEvent::Type::Resize && watched == this->subwidgets.view) {
+         auto* casted = (QResizeEvent*)event;
+         //
+         this->_updateIconColumnSpacing(casted->oldSize(), casted->size());
+         return false;
+      }
+   }
+   return false;
 }
