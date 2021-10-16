@@ -1,0 +1,150 @@
+
+Skyrim Classic's  handling of asset paths is inconsistent and  complicated. The 
+game has several functions that normalize paths in different and often mutually 
+incompatible ways. The ones I've found as of this writing are:
+
+
+   const char* NormalizeAssetPath(char* path, uint32_t start_from = 0);
+   Subroutine at 0x00687F60
+
+      Converts all  ASCII letters to uppercase  and slashes to  backslashes, by 
+      modifying  the argument  string in place and  returning a pointer  to the 
+      "start from" char.
+
+      Examples:
+
+         "data/abc/def.ghi" -> "DATA\\ABC\\DEF.GHI"
+
+
+   void NormalizeAssetPath(
+      char* out,
+      const char* original_path,
+      const char* suffix,
+      bool prepend_data_if_absent
+   );
+   Subroutine at 0x00C70F80
+
+      Returns immediately if the path doesn't  contain a '.' symbol. Otherwise, 
+      treats all content at and past the last '.' as a file extension, and then 
+      truncates the extension to ten chars.
+
+      Copies  MAX_PATH bytes' worth of  (original_path) into a working  buffer. 
+      Prepends  "Data\\" if the  arguments so specify  and if the  path doesn't 
+      already start with "data" (case-insensitive). The final path (besides the 
+      Data folder)  consists of  the path up to the  last '.',  followed by the 
+      suffix argument and the truncated extension.
+
+      The Data directory is never prepended if the path is absolute or relative 
+      to a drive (i.e. first character is a backslash or second is a colon).
+
+      Examples (prepending data, with suffix "ABC"):
+
+         "textures/fooaBC.dds"      -> "Data\\textures/foo.dds"
+
+         "folder.name\\test123.dds" -> "Data\\folderABC.name\\test"
+
+         "a.b.c.d.dds"              -> "Data\\a.b.c.dABC.dds"
+
+         "a.b.c\\d.dds"             -> "Data\\aABC.b.c\\d.dds"
+
+         "C:foo.dds"                -> "C:fooABC.dds"
+
+         "/foo.dds"                 -> "/fooABC.dds"
+
+         "DataStarTrek\\foo.dds"    -> "DataStarTrek\\fooABC.dds"
+
+
+   void NormalizeArmorAssetPath(
+      char* out,
+      const char* original_path,
+      const char* filename_suffix
+   );
+   Subroutine at 0x00AFDE00
+
+      Comparable to the NormalizeAssetPath  overload above, but specialized for 
+      armor mesh paths.  If the path contains an underscore,  and either has no 
+      backslashes  or has the  underscore  after the  last backslash,  then the 
+      filename will be truncated there. This truncation happens after capturing 
+      the file extension,  which, as with the above function,  involves blindly 
+      cutting at the last-seen period.
+
+      This fits  with what I've dug up when reverse-engineering the  code which 
+      applies ArmorAddons to actors' 3D models. The game assumes that the model 
+      filenames  will end with "_0" or "_1" (not including the extension);  the 
+      "suffix" argument here  likely exists in order  to be able to choose from 
+      one of those as desired, regardless of which of the two possible names is 
+      specified in a form's paths.
+
+      Examples (with suffix "ABC"):
+
+         "textures\\foo.dds"       -> "DATA\\textures\\fooABC.dds"
+
+         "archmagebootssm_0.nif"   -> "DATA\\archmagebootssmABC.nif"
+
+         "abc_def\\ghi.nif"        -> "DATA\\abc_def\\ghiABC.nif"
+
+         "abc_def/ghi.nif"         -> "DATA\\abcABC.nif"
+
+         "abc_def_0.nif"           -> "abc_defABC.nif"
+
+         "folder.name\\test_0.nif" -> "DATA\\folderABC.name\\test_"
+
+         "C:foo.dds"               -> "C:fooABC.dds"
+
+         "/foo.dds"                -> "/fooABC.dds"
+
+         "DataStarTrek\\foo.dds"   -> "DataStarTrek\\fooABC.dds"
+
+
+   const char* MakePathRelativeToDataDirectory(const char* path);
+   Subroutine at 0x00A5A7F0
+
+      Conditionally advances the input  pointer and returns it. Skips a leading 
+      slash,  if there  is one, and then runs case-insensitive  checks  for the 
+      data directory including the slash. It only matches "Data\\" and "data\\" 
+      while failing to catch any other cases.
+
+      Examples:
+
+         "\\abc.dds"       -> "abc.dds"
+
+         "Data\\abc.dds"   -> "abc.dds"
+
+         "data\\abc.dds"   -> "abc.dds"
+
+         "\\Data\\abc.dds" -> "abc.dds"
+
+         "dATA\\abc.dds"   -> "dATA\\abc.dds"
+
+         "datA\\abc.dds"   -> "datA\\abc.dds"
+
+         "/abc.dds"        -> "/abc.dds"
+
+         "data/abc.dds"    -> "data/abc.dds"
+
+         "\\data/abc.dds"  -> "data/abc.dds"
+
+
+The behavior is quite uneven. In practice,  the specifics of path normalization 
+will depend on what game system is even  performing the lookup. However, we can 
+come up with a few rules:
+
+ - Use backslashes as path separators when loading and saving paths.
+
+ - Don't allow periods inside of folder names.
+
+ - If a path contains the Data directory,  it must always be rendered as "Data" 
+   or "data", and never with any other letter case.
+
+ - The first folder in a path should never  be allowed to start with "data", as 
+   a case-insensitive  prefix; for example,  "dataaaa/" is unsafe,  as the game 
+   may fail to properly prefix it with "Data/" when necessary.
+
+ - The Data  directory is optional in some cases, and may be added  if missing. 
+   This implies that the path "Data/Data/foo.dds"  may in some cases be encoded 
+   as "Data/foo.dds" and may in turn end up resolving to "Data/foo.dds"; double 
+   Data directories, then, are unsafe.
+
+ - NIF filenames  for ArmorAddon meshes  should only be allowed  to contain any 
+   underscores if they end in "_0" or "_1"; underscores without that suffix can 
+   be truncated and will produce improper results.

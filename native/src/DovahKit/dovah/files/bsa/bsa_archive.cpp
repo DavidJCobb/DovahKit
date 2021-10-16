@@ -10,8 +10,8 @@ extern "C" {
 #include <immintrin.h>
 #include "../../../helpers/cpuinfo.h"
 
-namespace {
-   void _normalize_string(std::string& out) {
+namespace dovah {
+   /*static*/ void bsa_archive::normalize_path_or_path_component(std::string& out) {
       static_assert(sizeof(char) == 1);
       if (out.empty())
          return;
@@ -28,7 +28,7 @@ namespace {
          auto mb_a = _mm_set1_epi8('A' - 1);
          auto mb_z = _mm_set1_epi8('Z' + 1);
          auto mb_s = _mm_set1_epi8('/');
-         auto fill = _mm_set1_epi8(dovah::bsa_archive::path_separator);
+         auto fill = _mm_set1_epi8(path_separator);
          for (; i + 16 < size; i += 16) {
             auto ma = _mm_loadu_si128((const __m128i*)(data + i));
             //
@@ -73,9 +73,7 @@ namespace {
             c = '\\';
       }
    }
-}
 
-namespace dovah {
    #pragma region File reading and loading
    void bsa_archive::_unchecked_read(void* target, size_t size) noexcept {
       memcpy(target, (const uint8_t*)this->mapping.data() + this->stream_position, size);
@@ -135,7 +133,7 @@ namespace dovah {
          folder.name.reserve(length);
          this->_read(folder.name);
          //
-         _normalize_string(folder.name);
+         normalize_path_or_path_component(folder.name);
          //for (auto& c : folder.name)
          //   c = tolower(c, std::locale());
       }
@@ -179,7 +177,7 @@ namespace dovah {
          this->last_filename_offset += (this->stream_position - start);
       }
       {
-         _normalize_string(file.name);
+         normalize_path_or_path_component(file.name);
          //for (auto& c : file.name)
          //   c = tolower(c, std::locale());
       }

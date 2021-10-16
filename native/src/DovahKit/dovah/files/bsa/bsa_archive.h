@@ -149,6 +149,8 @@ namespace dovah {
          };
 
          static constexpr const char path_separator = '\\';
+
+         static void normalize_path_or_path_component(std::string&);
          
       protected:
          std::filesystem::path path;

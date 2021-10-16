@@ -402,6 +402,7 @@
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
+    <ClCompile Include="dovah\utils\game_asset_path_validation.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
     <ClCompile Include="editor\core.cpp" />
@@ -570,6 +571,7 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
@@ -1196,6 +1198,7 @@
     <Text Include="dovahscript\_docs\userdata wrappers.txt" />
     <Text Include="dovahscript\_docs\zombie wrappers.txt" />
     <Text Include="dovah\form stub addenda.txt" />
+    <Text Include="dovah\_docs\asset paths.txt" />
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
