@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QStyledItemDelegate>
 #include <QToolButton>
+#include "../DKGameFilePicker.h"
 
 class DKBSACollectionModelBackend;
 
@@ -21,7 +22,33 @@ class DKBSABrowseDialogItemDelegate : public QStyledItemDelegate {
 class DKBSABrowseDialog : public QDialog {
    Q_OBJECT;
    public:
+      enum PathWarning {
+           ArmorAddonSuffixMissing      = 0x01, // This path is for an ArmorAddon mesh, but the filename doesn't end in _0 or _1.
+           ArmorAddonSuffixConfusable   = 0x02, // This path is for an ArmorAddon mesh, but the filename doesn't end in _0 or _1, and contains other underscores.
+           DoubleDataDirectory          = 0x04, // This path begins with "data/data" when including the base Data folder.
+           FileExtensionTooLong         = 0x08, // This file's extension is longer than 9 bytes.
+           FirstFolderIsDataSuperstring = 0x10, // This path begins with a folder whose name starts with "data", e.g. "data/dataaaa" including the base Data folder.
+           NoFileExtension              = 0x20, // This file has no extension, and may not reliably be recognized by the game as a file.
+           NonASCIIPathComponent        = 0x40, // This path contains non-ASCII characters. Lookups from inside of a BSA will not work reliably.
+           PeriodInFolderName           = 0x80, // Folders in this path contain periods in their names.
+       };
+      Q_DECLARE_FLAGS(PathWarnings, PathWarning);
+      Q_FLAG(PathWarnings);
+
+      using ValidationOption  = DKGameFilePicker::ValidationOption;
+      using ValidationOptions = DKGameFilePicker::ValidationOptions;
+
+      // Options struct for passing BSA-specific dialog options to the static member functions.
+      struct DialogOptions {
+         DKBSACollectionModelBackend* backend = nullptr;
+         ValidationOptions validationOptions;
+      };
+
+   public:
       DKBSABrowseDialog(QWidget* parent = nullptr);
+
+      // Path SHOULD NOT include the Data directory.
+      static PathWarnings checkPath(const QString&, ValidationOptions);
 
       QString directory() const noexcept;
 
@@ -36,7 +63,7 @@ class DKBSABrowseDialog : public QDialog {
          const QString& initial  = QString(),
          const QString& filter   = QString(),
          QString* selectedFilter = nullptr,
-         DKBSACollectionModelBackend* backend = nullptr
+         DialogOptions extra = DialogOptions()
       );
 
    signals:
@@ -48,6 +75,7 @@ class DKBSABrowseDialog : public QDialog {
       bool setDirectory(QString);
       void setDirectoryAndFile(const QString& filePath);
       void setPathStem(const QString&);
+      void setValidationOptions(ValidationOptions);
 
    protected slots:
       void acceptWithFile(const QString&);
@@ -76,6 +104,7 @@ class DKBSABrowseDialog : public QDialog {
       struct {
          QString     pathStem;
          QModelIndex pathStemIndex;
+         ValidationOptions validationOptions = 0;
          QString     _looseFilePath;
          QString     _finalResult;
          DKBSABrowseDialogItemDelegate* _delegate = nullptr;

@@ -39,9 +39,13 @@ incompatible ways. The ones I've found as of this writing are:
 
       Examples (prepending data, with suffix "ABC"):
 
+         "textures\\"               -> "" (no output if no extension)
+
          "textures/fooaBC.dds"      -> "Data\\textures/foo.dds"
 
-         "folder.name\\test123.dds" -> "Data\\folderABC.name\\test"
+         "folder.name\\test123.dds" -> "Data\\folder.name\\test123ABC.dds"
+
+         "folder.name\\subfolder"   -> "Data\\folderABC.name\\subf"
 
          "a.b.c.d.dds"              -> "Data\\a.b.c.dABC.dds"
 
@@ -77,6 +81,8 @@ incompatible ways. The ones I've found as of this writing are:
 
       Examples (with suffix "ABC"):
 
+         "textures\\"               -> "" (no output if no extension)
+
          "textures\\foo.dds"       -> "DATA\\textures\\fooABC.dds"
 
          "archmagebootssm_0.nif"   -> "DATA\\archmagebootssmABC.nif"
@@ -87,7 +93,9 @@ incompatible ways. The ones I've found as of this writing are:
 
          "abc_def_0.nif"           -> "abc_defABC.nif"
 
-         "folder.name\\test_0.nif" -> "DATA\\folderABC.name\\test_"
+         "folder.name\\test_0.nif" -> "DATA\\folder.name\\testABC.nif"
+
+         "folder.name\\subfolder"  -> "DATA\\folderABC.name\\subf"
 
          "C:foo.dds"               -> "C:fooABC.dds"
 
@@ -123,6 +131,8 @@ incompatible ways. The ones I've found as of this writing are:
          "data/abc.dds"    -> "data/abc.dds"
 
          "\\data/abc.dds"  -> "data/abc.dds"
+
+         "C:\\abc.dds"     -> "C:\\abc.dds"
 
 
 The behavior is quite uneven. In practice,  the specifics of path normalization 

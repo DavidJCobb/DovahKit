@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QToolBar>
+#include "../../helpers/cpuinfo.h"
 #include "../widget-models/DKBSACollectionModel.h"
 #include "../../editor/core.h"
 
@@ -45,6 +46,168 @@ namespace {
    // "lose" pixels. Alas, that's not possible here.
    //
    constexpr bool padding_between_icon_columns = true;
+}
+
+/*static*/ DKBSABrowseDialog::PathWarnings DKBSABrowseDialog::checkPath(const QString& path, ValidationOptions options) {
+   using _  = DKBSABrowseDialog::PathWarning;
+   using PW = DKBSABrowseDialog::PathWarnings;
+   //
+   // This function should receive paths WITHOUT the Data directory prefix. However, explanatory 
+   // comments describing issues in Bethesda's path handling will use examples which include the 
+   // Data directory prefix, for clarity.
+   //
+   PW out = 0;
+   //
+   auto pathname       = QStringView(path);
+   auto last_separator = std::max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+   if (last_separator >= 0) {
+      pathname = pathname.left(last_separator);
+      if (pathname.contains('.'))
+         //
+         // Some file-handling functions in the game engine blindly find the file extension 
+         // by searching for the last period in the path, without checking whether that 
+         // period comes after the last path separator. Theoretically this would only 
+         // break things when looking up a file that has no extension (which would break 
+         // for other reasons), by leading the game to regard the period and all following 
+         // content as the extension (and likely truncating it; see below). That shouldn't 
+         // happen given that files without an extension are broken for other reasons anyway, 
+         // but periods in folder names still seem like something to avoid.
+         //
+         out |= _::PeriodInFolderName;
+   }
+   if (pathname.startsWith(QLatin1String("data"), Qt::CaseInsensitive)) {
+      if (pathname.size() > 4 && (pathname[4] == '/' || pathname[4] == '\\')) {
+         //
+         // Paths like "Data/Data/foo.dds" may be supplied as "Data/foo.dds", but in that case, 
+         // the game will think it's already prefixed and fail to add the prefix as required.
+         //
+         out |= _::DoubleDataDirectory;
+      } else {
+         //
+         // Paths like "Data/Dataaaaa/foo.dds" may be encoded as "Dataaaaa/foo.dds", and if so, 
+         // the game may think it's already prefixed and fail to add the prefix as required. 
+         // This is because some functions only test whether the first four letters are "data" 
+         // without testing for a path separator.
+         //
+         out |= _::FirstFolderIsDataSuperstring;
+      }
+   }
+   //
+   // Check filename for correctness:
+   //
+   {
+      auto filename  = QStringView(path);
+      auto extension = QStringView();
+      if (last_separator >= 0)
+         filename = filename.mid(last_separator + 1);
+      auto period = filename.lastIndexOf('.');
+      if (period < 0) {
+         //
+         // Some path-handling functions in the game engine consider a file path invalid if there 
+         // is no file extension.
+         //
+         out |= _::NoFileExtension;
+      } else {
+         extension = filename.mid(period + 1);
+         filename  = filename.left(period);
+         if (extension.size() > 9)
+            //
+            // Some path-handling functions in the game engine truncate file extensions to ten bytes 
+            // including the period.
+            //
+            out |= _::FileExtensionTooLong;
+      }
+      if (options & ValidationOption::ArmorAddonModel) {
+         auto underscore = filename.lastIndexOf('_');
+         if (underscore < 0 || underscore != filename.size() - 2) {
+            //
+            // The filename has no underscore, or the last underscore is not the penultimate 
+            // character.
+            //
+            out |= _::ArmorAddonSuffixMissing;
+            if (underscore >= 0)
+               //
+               // When the game loads an ArmorAddon mesh, it clips the filename at its last underscore, 
+               // if any, and then appends the desired weight suffix ("_0" or "_1"). If the filename 
+               // doesn't contain the right suffix, but does contain underscores, then it will be 
+               // mishandled.
+               //
+               out |= _::ArmorAddonSuffixConfusable;
+         } else {
+            //
+            // The penultimate character is an underscore, but does the filename end in _0 or _1?
+            //
+            QChar c = filename.last();
+            if (c != '0' && c != '1') {
+               out |= _::ArmorAddonSuffixMissing;
+               out |= _::ArmorAddonSuffixConfusable;
+            }
+         }
+      }
+   }
+   //
+   // BSA files (and any ESP-side strings in general) have no defined encoding, so in practice, 
+   // only ASCII is safe to use. The game may mishandle file paths with non-ASCII glyphs, either 
+   // failing to find any file at all or finding the wrong file (essentially due to mojibake).
+   // 
+   // Check for any non-ASCII characters:
+   //
+   if (cobb::cpuinfo::get().extension_support.sse_2) {
+      auto view = QStringView(path);
+      auto base = _mm_set1_epi8(0x7F);
+      auto size = view.size();
+      auto data = view.utf16();
+      //
+      constexpr size_t chars_per_byte   = sizeof(*data);
+      constexpr size_t chars_per_dqword = 16 / chars_per_byte;
+      //
+      // String data is UTF-16. That's a two-byte encoding, but non-ASCII characters 
+      // will always consist of at least one byte above 0x7F, so we can blindly test 
+      // it as bytes using SSE intrinsics.
+      //
+      decltype(size) i = 0;
+      for (; i + (chars_per_dqword - 1) < size; i += chars_per_dqword) {
+         //
+         // The byte-comparison intrinsics assume signed bytes, which we don't want, so 
+         // let's instead try an alternate approach:
+         // 
+         // for (std::byte c : data) {
+         //    auto d = std::max(c, 0x7F);
+         //    d = (d == 0x7F) ? 0xFF : 0x00;
+         //    if (d != 0xFF) {
+         //       fail = true;
+         //       break;
+         //    }
+         // }
+         //
+         auto c = _mm_loadu_si128((const __m128i*)(data + i));
+         auto d = _mm_max_epu8(c, base);
+         d = _mm_cmpeq_epi8(d, base);
+         if (!_mm_test_all_ones(d)) {
+            out |= _::NonASCIIPathComponent;
+            break;
+         }
+      }
+      if (!(out & _::NonASCIIPathComponent)) {
+         for (; i < size; ++i) {
+            if (data[i] > 0x7F) {
+               out |= _::NonASCIIPathComponent;
+               break;
+            }
+         }
+      }
+   } else {
+      for (const auto c : path) {
+         if (c.unicode() > 0x7F) {
+            out |= _::NonASCIIPathComponent;
+            break;
+         }
+      }
+   }
+   //
+   // All checks run.
+   //
+   return out;
 }
 
 void DKBSABrowseDialogItemDelegate::initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const {
@@ -234,13 +397,15 @@ QString DKBSABrowseDialog::directory() const noexcept {
    const QString& initial,
    const QString& filter,
    QString* selectedFilter,
-   DKBSACollectionModelBackend* backend
+   DialogOptions extra
 ) {
    auto* dialog = new DKBSABrowseDialog(parent);
    dialog->setWindowTitle(caption);
    dialog->setPathStem(pathStem);
-   if (backend)
-      dialog->setBackend(backend);
+   if (extra.backend)
+      dialog->setBackend(extra.backend);
+   if (extra.validationOptions)
+      dialog->setValidationOptions(extra.validationOptions);
    if (!initial.isEmpty())
       dialog->setDirectoryAndFile(initial);
    dialog->setWindowModality(Qt::WindowModality::WindowModal);
@@ -251,11 +416,51 @@ QString DKBSABrowseDialog::directory() const noexcept {
 }
 
 void DKBSABrowseDialog::acceptWithFile(const QString& path) {
+   auto warnings = checkPath(path, this->state.validationOptions);
+   if (warnings != 0) {
+      using _ = PathWarning;
+      //
+      QString message = tr("There are issues with the selected filename or file path, which may cause the game to mishandle this file. Are you sure you wish to use it? Potential problems include:%1");
+      QString list;
+      if (warnings & _::ArmorAddonSuffixConfusable)
+         list += tr("\n\nThis path is for an ArmorAddon file and contains underscores, but does not end in \"_0\" or \"_1\". The game may truncate the filename at the last underscore and then append either of those suffixes, and look for the wrong file.");
+      else if (warnings & _::ArmorAddonSuffixMissing)
+         list += tr("\n\nThis path is for an ArmorAddon file but does not end in \"_0\" or \"_1\". The game will append one of those suffixes and use whatever file matches.");
+      if (warnings & _::DoubleDataDirectory)
+         list += tr("\n\nThis path includes a doubled Data directory (e.g. \"data/data/foo.dds\"), so the game may mishandle it when trying to ensure or remove the Data prefix.");
+      if (warnings & _::FileExtensionTooLong)
+         list += tr("\n\nThe file extension is longer than nine bytes, and may be truncated.");
+      if (warnings & _::FirstFolderIsDataSuperstring)
+         list += tr("\n\nThe first folder in the path has a name that begins with \"data\", so the game may fail to prepend a Data directory prefix when needed.");
+      if (warnings & _::NoFileExtension)
+         list += tr("\n\nThis file has no extension, so the game may mistake it for a folder or refuse to load the file.");
+      if (warnings & _::NonASCIIPathComponent)
+         list += tr("\n\nThe path contains non-ASCII characters. The game uses single-byte paths with no defined encoding, so lookups from a BSA are likely to fail or may load a different file than intended.");
+      if (warnings & _::PeriodInFolderName)
+         list += tr("\n\nFolders in this path contain periods in their names. The game does not handle this situation sensibly; it's unclear whether problems may result.");
+      //
+      if (list.isEmpty())
+         list = tr("\n\nUnknown problem. DovahKit's developer forgot to program this dialog box to display the issue properly.");
+      auto choice = QMessageBox::question(this, tr("Are you sure?"), message.arg(list));
+      if (choice == QMessageBox::StandardButton::No)
+         return;
+   }
+   //
    this->state._finalResult = path;
    emit this->fileSelected(path);
    this->accept();
 }
 void DKBSABrowseDialog::offerLooseFile() {
+   //
+   // We need to use QStrings for these paths because QDir is inconsistent. A QDir instance 
+   // only refers to a path that exists (bubbling upward to the nearest existing folder if 
+   // it doesn't), except when it's first created. It's... not a terribly consistent or 
+   // clear API, really.
+   // 
+   // If we want to test whether a file exists in a given folder, without that test being 
+   // thrown off by the folder's existence or nonexistence, then we need to keep the paths 
+   // as QStrings until it's time to actually run that test.
+   //
    QString loose_base = this->state._looseFilePath;
    QString loose_stem = QDir::cleanPath(loose_base + '/' + this->state.pathStem);
    if (!QDir(loose_base).exists()) {
@@ -319,7 +524,10 @@ void DKBSABrowseDialog::offerLooseFile() {
          QMessageBox::critical(this, tr("Error"), tr("You cannot select a file outside of Data/%1.").arg(this->state.pathStem));
          return;
       }
-      this->acceptWithFile(this->state.pathStem + '/' + rel);
+      if (!this->state.pathStem.isEmpty()) {
+         rel = this->state.pathStem + '/' + rel;
+      }
+      this->acceptWithFile(rel);
    });
    QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
    dialog->show();
@@ -537,6 +745,9 @@ void DKBSABrowseDialog::setPathStem(const QString& stem) {
    } else {
       this->state.pathStemIndex = QModelIndex();
    }
+}
+void DKBSABrowseDialog::setValidationOptions(ValidationOptions o) {
+   this->state.validationOptions = o;
 }
 
 void DKBSABrowseDialog::_updateFilenameTextFromSelection() {

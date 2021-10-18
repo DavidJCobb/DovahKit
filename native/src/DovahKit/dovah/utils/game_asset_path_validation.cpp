@@ -1,5 +1,7 @@
 #include "game_asset_path_validation.h"
+#include <immintrin.h>
 #include <string_view>
+#include "../../helpers/cpuinfo.h"
 #include "../files/bsa/bsa_archive.h"
 
 namespace dovah::utils {
@@ -15,6 +17,56 @@ namespace dovah::utils {
       }
       const auto& path = this->path;
       size_t      size = path.size();
+      //
+      // Check for non-ASCII characters:
+      //
+      if (cobb::cpuinfo::get().extension_support.sse_2) {
+         bool   fail = false;
+         size_t i    = 0;
+         auto   base = _mm_set1_epi8(0x7F);
+         auto*  data = path.data();
+         for (; i + 15 < size; i += 16) {
+            //
+            // The byte-comparison intrinsics assume signed bytes, which we don't want, so 
+            // let's instead try an alternate approach:
+            // 
+            // for (std::byte c : data) {
+            //    auto d = std::max(c, 0x7F);
+            //    d = (d == 0x7F) ? 0xFF : 0x00;
+            //    if (d != 0xFF) {
+            //       fail = true;
+            //       break;
+            //    }
+            // }
+            //
+            auto c = _mm_loadu_si128((const __m128i*)(data + i));
+            auto d = _mm_max_epu8(c, base);
+            d = _mm_cmpeq_epi8(d, base);
+            if (!_mm_test_all_ones(d)) {
+               fail = true;
+               break;
+            }
+         }
+         if (!fail) {
+            for (; i < size; ++i) {
+               if (data[i] > 0x7F) {
+                  fail = true;
+                  break;
+               }
+            }
+         }
+         if (fail)
+            this->errors |= error_flag::has_non_ascii_characters;
+      } else {
+         for (size_t i = 0; i < size; ++i) {
+            if (path[i] > 0x7F) {
+               this->errors |= error_flag::has_non_ascii_characters;
+               break;
+            }
+         }
+      }
+      //
+      // Check for path structure issues:
       //
       last_period    = path.find_last_of('.');
       last_separator = path.find_last_of('\\');
@@ -37,7 +89,7 @@ namespace dovah::utils {
                this->errors |= error_flag::extension_too_long;
          }
       }
-      if (!this->normalize_first) {
+      if (!this->normalize_first) { // if we normalized, then all path separators should be correct
          if (path.find('/') != std::string::npos)
             this->errors |= error_flag::wrong_path_separators;
       }

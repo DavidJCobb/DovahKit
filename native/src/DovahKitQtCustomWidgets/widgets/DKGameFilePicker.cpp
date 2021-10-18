@@ -120,7 +120,9 @@ void DKGameFilePicker::browse() {
          this->state.value,
          QString(),
          nullptr,
-         nullptr
+         {
+            .validationOptions = this->validationOptions(),
+         }
       );
       result = QDir::cleanPath(result);
       if (result.isEmpty())
@@ -167,6 +169,9 @@ void DKGameFilePicker::setStandardConfiguration(StandardConfiguration sc) {
    if (this->state.config == sc)
       return;
    this->state.config = sc;
+}
+void DKGameFilePicker::setValidationOptions(ValidationOptions v) {
+   this->state.validationOptions = v;
 }
 
 bool DKGameFilePicker::eventFilter(QObject* watched, QEvent* event) {
