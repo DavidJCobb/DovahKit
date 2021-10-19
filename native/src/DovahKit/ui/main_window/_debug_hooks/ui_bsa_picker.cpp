@@ -35,14 +35,18 @@ namespace DovahKitDebug::features {
       backend->setArchives(blo);
       qDebug("Backend ready.");
       //
+      //auto stem = "textures/";
+      auto stem = "";
       auto path = DKBSABrowseDialog::getOpenFileName(
          from,
          QObject::tr("Test", "debug"),
-         "textures/",
+         stem,
          "",
          QString(), // filter
          nullptr,   // selected filter
-         backend
+         {
+            .backend = backend,
+         }
       );
       qDebug("Selection: %s", path.toUtf8().constData());
       //

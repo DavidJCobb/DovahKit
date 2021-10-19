@@ -152,11 +152,9 @@ namespace {
          }
          //
          auto* arg = (wrapper*) classes::cast_to_class(L, 2, wrappers::collections::papyrus_script_list.registry_key);
-         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus script collection or nil");
-         __assume(arg != nullptr);
+         cobb::lua::argcheck(L, arg  != nullptr, 2, "expected another Papyrus script collection or nil");
          auto* coll = wrappers::papyrus_root::unwrap(*arg, false);
-         luaL_argcheck(L, coll != nullptr, 2, "provided Papyrus script collection wrapper has no underlying object (deleted?)");
-         __assume(coll != nullptr);
+         cobb::lua::argcheck(L, coll != nullptr, 2, "provided Papyrus script collection wrapper has no underlying object (deleted?)");
          auto& other = *coll;
          if (&root == &other) // self-assignment
             return 0;

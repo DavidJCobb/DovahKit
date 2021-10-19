@@ -17,6 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <array>
 #include "matrix.h"
+#include "unreachable.h"
 
 namespace cobb {
    class axis_angle;
@@ -220,7 +221,7 @@ namespace cobb {
                case 2: return this->y;
                case 3: return this->z;
             }
-            __assume(0); // tell MSVC this is unreachable
+            cobb::unreachable();
          }
          inline const double& operator[](int i) const noexcept {
             switch (i) {
@@ -229,7 +230,7 @@ namespace cobb {
                case 2: return this->y;
                case 3: return this->z;
             }
-            __assume(0); // tell MSVC this is unreachable
+            cobb::unreachable();
          }
 
          quaternion operator+(const quaternion& other) const noexcept;

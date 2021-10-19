@@ -1,6 +1,7 @@
 #include "localized_string_store.h"
 #include "../files/bsa/bsa_load_order.h"
 #include "../../helpers/unordered_map.h"
+#include "../../helpers/unreachable.h"
 
 namespace {
    static dovah::localized_string_store::content_t _missing_string = "<MISSING STRING>";
@@ -35,7 +36,7 @@ namespace dovah {
          case file_type::description: bare += ".dlstrings"; break;
          case file_type::info:        bare += ".ilstrings"; break;
          default:
-            assert(false);
+            cobb::unreachable();
       }
       filename.replace_filename(bare);
       filename = std::filesystem::path(L"strings") / filename;

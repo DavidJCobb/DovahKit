@@ -176,7 +176,17 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="decalScale"/>
+          <widget class="QDoubleSpinBox" name="decalScale">
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_10">
@@ -195,6 +205,9 @@
            </property>
            <property name="maximum">
             <number>30</number>
+           </property>
+           <property name="value">
+            <number>4</number>
            </property>
           </widget>
          </item>
@@ -237,7 +250,20 @@
          </widget>
         </item>
         <item row="2" column="4">
-         <widget class="QDoubleSpinBox" name="decalMaxWidth"/>
+         <widget class="QDoubleSpinBox" name="decalMaxWidth">
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>32.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="0" column="1">
          <widget class="QPushButton" name="decalColor">
@@ -247,10 +273,36 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="decalMinWidth"/>
+         <widget class="QDoubleSpinBox" name="decalMinWidth">
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>8.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="3" column="4">
-         <widget class="QDoubleSpinBox" name="decalMaxHeight"/>
+         <widget class="QDoubleSpinBox" name="decalMaxHeight">
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>32.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_2">
@@ -273,7 +325,20 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="decalMinHeight"/>
+         <widget class="QDoubleSpinBox" name="decalMinHeight">
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>8.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">
@@ -316,10 +381,21 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="decalShininess"/>
+         <widget class="QDoubleSpinBox" name="decalShininess">
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>4.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="1" column="4">
-         <widget class="QDoubleSpinBox" name="decalDepth"/>
+         <widget class="QDoubleSpinBox" name="decalDepth">
+          <property name="value">
+           <double>32.000000000000000</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

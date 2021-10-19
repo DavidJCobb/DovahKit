@@ -99,7 +99,6 @@ namespace {
             auto* alias = cls::unwrap(self);
             if (alias == nullptr)
                cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
-            __assume(alias != nullptr);
             //
             int  isnum;
             auto id = lua_tointegerx(L, 2, &isnum);

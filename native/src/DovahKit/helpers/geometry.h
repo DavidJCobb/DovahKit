@@ -19,6 +19,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <limits>
 #include "math.h"
 #include "rotation.h"
+#include "unreachable.h"
 #include "vector3.h"
 
 namespace cobb {
@@ -204,7 +205,7 @@ namespace cobb {
             } else if (delta > epsilon) {
                return 2;
             }
-            __assume(0); // unreachable
+            cobb::unreachable();
          }
 
          //
@@ -241,7 +242,7 @@ namespace cobb {
                   --result;
                return result;
             }
-            __assume(0); // unreachable
+            cobb::unreachable();
          }
 
          //
@@ -297,7 +298,7 @@ namespace cobb {
                intersection_two = line_start + (line_direction * distance_two);
                return 2;
             }
-            __assume(0); // unreachable
+            cobb::unreachable();
          }
          #pragma endregion
    };

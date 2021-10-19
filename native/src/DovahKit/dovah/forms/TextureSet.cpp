@@ -3,6 +3,13 @@
 #include "../notice_code_list.h"
 
 namespace dovah::loaded_forms {
+   TextureSet::~TextureSet() {
+      if (auto*& p = this->decal_data) {
+         delete p;
+         p = nullptr;
+      }
+   }
+
    void TextureSet::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -48,7 +55,9 @@ namespace dovah::loaded_forms {
                subrecord.read(this->texture_flags);
                break;
             case 'DODT':
-               this->decal_data.load(subrecord, intfc);
+               if (!this->decal_data)
+                  this->decal_data = new components::decal_data;
+               this->decal_data->load(subrecord, intfc);
                break;
             default:
                intfc.log_load_warning(
@@ -113,9 +122,16 @@ namespace dovah::loaded_forms {
       copy->textures.cubemap     = this->textures.cubemap;
       copy->textures.multilayer  = this->textures.multilayer;
       copy->textures.backlight   = this->textures.backlight;
-      copy->texture_flags    = this->texture_flags;
+      copy->texture_flags = this->texture_flags;
       //
-      copy->decal_data = this->decal_data;
+      if (auto* p = this->decal_data) {
+         copy->decal_data = new components::decal_data;
+         *copy->decal_data = *p;
+      } else {
+         if (auto* q = copy->decal_data)
+            delete q;
+         copy->decal_data = nullptr;
+      }
       copy->bounds = this->bounds;
       //
       return true;
@@ -148,9 +164,11 @@ namespace dovah::loaded_forms {
       DNAM.write(this->texture_flags);
       DNAM.close();
       //
-      auto& DODT = record.open_next_subrecord('DODT');
-      this->decal_data.save(DODT, intfc);
-      DODT.close();
+      if (auto* data = this->decal_data) {
+         auto& DODT = record.open_next_subrecord('DODT');
+         data->save(DODT, intfc);
+         DODT.close();
+      }
       //
       return true;
    }
@@ -165,8 +183,11 @@ namespace dovah::loaded_forms {
       this->textures.backlight.clear(); // or backlight mask
       this->texture_flags = 0;
       //
-      this->decal_data = components::decal_data();
-      this->bounds     = components::object_bounds();
+      if (auto*& p = this->decal_data) {
+         delete p;
+         p = nullptr;
+      }
+      this->bounds = components::object_bounds();
       this->script_data.clear(*this);
    }
    void TextureSet::_sever_outbound_references_impl(form_stub& other) noexcept {
