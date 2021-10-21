@@ -141,6 +141,10 @@ void FormDialogTextureSet::refreshTextureList() {
    if (row >= 0 && widget->isRowHidden(row)) { // deselect the selected row, if we just hid it. (doesn't happen automatically.)
       widget->setCurrentCell(-1, -1);
    }
+   //
+   if (auto* view = widget->viewport()) {
+      view->update(); // Needed when hide_inapplicable_paths is false. Unsure why, but I guess changing text and colors isn't enough, if we're not altering row visibility.
+   }
 }
 
 void FormDialogTextureSet::_load_impl() {

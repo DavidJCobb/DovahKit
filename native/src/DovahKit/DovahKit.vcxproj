@@ -486,7 +486,6 @@
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
-    <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
@@ -1101,7 +1100,6 @@
     <ClInclude Include="resource.h" />
     <QtMoc Include="ui\main_window\load_window\file_list.h" />
     <QtMoc Include="ui\main_window\load_window.h" />
-    <QtMoc Include="ui\generic\ColorPickerButton.h" />
     <QtMoc Include="ui\form_windows\color.h" />
     <QtMoc Include="ui\form_windows\word_of_power.h" />
     <QtMoc Include="ui\form_windows\voicetype.h" />
