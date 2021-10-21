@@ -97,8 +97,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
@@ -142,7 +144,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h" />
+    <QtMoc Include="interfaces\DKColorPickerButtonInterface.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

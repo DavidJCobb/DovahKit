@@ -42,6 +42,7 @@ class DKGameFilePicker : public QWidget {
       inline StandardConfiguration standardConfiguration() const noexcept { return this->state.config; }
       inline ValidationOptions validationOptions() const noexcept { return this->state.validationOptions; }
 
+      QString effectiveStem() const noexcept; // pathStem, or the stem provided as part of a StandardConfiguration
       QString path(PathFormat v) const noexcept;
       QString rawPath() const noexcept; // applies the current PathFormat, and uses backslashes for directory separators
 
@@ -53,11 +54,13 @@ class DKGameFilePicker : public QWidget {
       void setPath(const QString&);
       void setPathFormat(PathFormat);
       void setPathStem(const QString&); // does not retroactively update the current path
+      void setRawPath(const QString&);
       void setStandardConfiguration(StandardConfiguration); // overwrites the path stem, etc., as appropriate
       void setValidationOptions(ValidationOptions);
 
    signals:
       void pathChanged(const QString&);
+      void rawPathChanged(const QString&);
 
    protected:
       struct {
@@ -74,5 +77,7 @@ class DKGameFilePicker : public QWidget {
 
       virtual bool eventFilter(QObject* watched, QEvent* event) override;
 
+      void _emitPathChangeSignals();
+      void _setPath(const QString& path, bool isRawPath, bool updateTextbox);
       void _updateBrowseButtonSize();
 };

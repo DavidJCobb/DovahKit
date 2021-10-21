@@ -481,6 +481,7 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
+    <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
@@ -555,6 +556,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
+    <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
@@ -573,7 +575,10 @@
     <QtMoc Include="widgets\DKGameFilePicker.h" />
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <ClInclude Include="helpers\generic_reader.h" />
+    <QtMoc Include="ui\form_windows\textureset.h" />
+    <ClInclude Include="helpers\unreachable.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
+    <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />

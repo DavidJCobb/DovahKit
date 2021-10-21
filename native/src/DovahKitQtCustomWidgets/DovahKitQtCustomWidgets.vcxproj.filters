@@ -58,7 +58,13 @@
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="interfaces\DKColorPickerButtonInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <QtMoc Include="widgets\DKGameFilePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKColorPickerButton.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -87,7 +93,13 @@
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="widgets\DKGameFilePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKColorPickerButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

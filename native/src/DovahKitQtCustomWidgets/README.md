@@ -38,6 +38,11 @@ the actions to it programmatically.)
 
 ![](readme-assets/DKCollapsiblePane.png)
 
+### DKColorPickerButton
+A widget that can be used to select a single RGB(A) color. It displays as a button 
+with the color drawn on it, and with the hex code for the color rendered as text 
+atop the drawn color.
+
 ### DKFormListPane
 A table widget useful for editing lists of forms, e.g. the list of grasses used by a 
 LandTexture. The widget can optionally display buttons to manipulate its contents 

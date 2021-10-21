@@ -27,26 +27,52 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* pare
       this->refreshTextureList();
    });
    //
+   {
+      constexpr auto item_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren;
+      //
+      auto* widget = this->ui.paths;
+      widget->setRowCount(8);
+      widget->setColumnCount(2);
+      for (int i = 0; i < 8; ++i) { // apparently this is not automatic... a cell can "exist" but have no item.
+         auto* head = new QTableWidgetItem;
+         auto* body = new QTableWidgetItem;
+         head->setFlags(item_flags);
+         body->setFlags(item_flags);
+         widget->setItem(i, 0, head);
+         widget->setItem(i, 1, body);
+      }
+      //
+      auto* hh = widget->horizontalHeader();
+      auto* vh = widget->verticalHeader();
+      //
+      hh->setStretchLastSection(true);
+      //
+      vh->setSectionResizeMode(QHeaderView::ResizeToContents);
+      vh->setVisible(false);
+   }
    QObject::connect(this->ui.paths, &QTableWidget::currentCellChanged, this, [this](int currentRow, int currentColumn, int previousRow, int previousColumn) {
+      auto* widget  = this->ui.editPath;
+      auto  blocker = QSignalBlocker(widget);
       if (currentRow >= 0 && currentRow <= 7) {
          if (auto* s = this->form->texture_by_index(currentRow)) {
-            this->ui.editPath->setEnabled(true);
-            this->ui.editPath->setPath(QString::fromStdString(*s));
+            widget->setEnabled(true);
+            widget->setRawPath(QString::fromStdString(*s));
             return;
          }
       }
-      this->ui.editPath->setEnabled(false);
-      this->ui.editPath->setPath(QString());
+      widget->setEnabled(false);
+      widget->setPath(QString());
    });
-
-
-   //
-   this->ui.havokMaterialType->setAllowedFormType(dovah::form_type::material_type);
-   this->ui.textureset->setAllowedFormType(dovah::form_type::texture_set);
-   QObject::connect(this->ui.textureset, &FormPicker::formChanged, this, [this]() {
+   QObject::connect(this->ui.editPath, &DKGameFilePicker::rawPathChanged, this, [this](const QString& path) {
+      auto  row    = this->ui.paths->currentRow();
+      auto* target = this->form->texture_by_index(row);
+      if (!target)
+         return;
+      *target = path.toStdString();
       //
-      // TODO: Display a preview image of the selected textureset.
-      //
+      auto* item = this->ui.paths->item(row, 1);
+      if (item)
+         item->setText(path);
    });
    //
    this->load();
@@ -110,6 +136,11 @@ void FormDialogTextureSet::refreshTextureList() {
       head->setForeground(brush);
       body->setForeground(brush);
    }
+   //
+   auto row = widget->currentRow();
+   if (row >= 0 && widget->isRowHidden(row)) { // deselect the selected row, if we just hid it. (doesn't happen automatically.)
+      widget->setCurrentCell(-1, -1);
+   }
 }
 
 void FormDialogTextureSet::_load_impl() {
@@ -121,6 +152,7 @@ void FormDialogTextureSet::_load_impl() {
    this->ui.flagSkinTexture->setChecked(this->form->texture_flags & form_type::texture_set_flag::is_skin_textures);
    this->ui.flagSpecular->setChecked(!(this->form->texture_flags & form_type::texture_set_flag::no_specular_map));
    //
+   this->ui.decalData->setChecked(this->form->decal_data != nullptr);
    if (this->form->decal_data) {
       auto& decal = *this->form->decal_data;
       this->ui.decalAlphaBlend->setChecked(decal.flags & decal_type::flag::alpha_blending);
@@ -135,7 +167,7 @@ void FormDialogTextureSet::_load_impl() {
       this->ui.decalMinHeight->setValue(decal.height.min);
       this->ui.decalMaxHeight->setValue(decal.height.max);
       this->ui.decalParallaxPasses->setValue(decal.parallax.passes);
-      this->ui.decalScale->setValue(decal.parallax.scale);
+      this->ui.decalParallaxScale->setValue(decal.parallax.scale);
    }
    //
    this->refreshTextureList();
@@ -182,7 +214,7 @@ void FormDialogTextureSet::_save_impl() {
       decal.depth      = this->ui.decalDepth->value();
       decal.shininess  = this->ui.decalShininess->value();
       decal.parallax.passes = this->ui.decalParallaxPasses->value();
-      decal.parallax.scale  = this->ui.decalScale->value();
+      decal.parallax.scale  = this->ui.decalParallaxScale->value();
    } else {
       if (auto*& p = this->form->decal_data) {
          delete p;
