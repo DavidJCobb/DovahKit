@@ -56,10 +56,14 @@ QString DKColorPickerButton::colorName() const noexcept {
 void DKColorPickerButton::setColor(QColor c) {
    this->_color = c;
    this->_updateColor();
+   this->update();
    emit this->colorChanged(c);
 }
 void DKColorPickerButton::setHasAlpha(bool s) {
+   if (this->_hasAlpha == s)
+      return;
    this->_hasAlpha = s;
+   this->setText(this->colorName());
 }
 void DKColorPickerButton::_updateColor() {
    constexpr int text_cutoff = 125;
@@ -117,9 +121,13 @@ void DKColorPickerButton::paintEvent(QPaintEvent* event) {
    //
    QRect content_rect = style->subElementRect(QStyle::SE_PushButtonContents, &option, this);
    {
+      auto c = this->color();
+      if (!this->_hasAlpha)
+         c.setAlpha(255);
+      //
       painter.save();
       painter.setPen(Qt::NoPen);
-      painter.setBrush(this->color());
+      painter.setBrush(c);
       painter.drawRect(content_rect);
       painter.restore();
    }

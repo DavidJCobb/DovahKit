@@ -653,7 +653,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="ColorPickerButton" name="lightingColorAmbient">
+             <widget class="DKColorPickerButton" name="lightingColorAmbient">
               <property name="text">
                <string/>
               </property>
@@ -670,7 +670,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="ColorPickerButton" name="lightingColorDirectional">
+             <widget class="DKColorPickerButton" name="lightingColorDirectional">
               <property name="text">
                <string/>
               </property>
@@ -686,7 +686,7 @@
            </property>
            <layout class="QGridLayout" name="gridLayout_12" columnstretch="1,1">
             <item row="1" column="1">
-             <widget class="ColorPickerButton" name="lightingFogColorFar">
+             <widget class="DKColorPickerButton" name="lightingFogColorFar">
               <property name="text">
                <string/>
               </property>
@@ -723,7 +723,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="ColorPickerButton" name="lightingFogColorNear">
+             <widget class="DKColorPickerButton" name="lightingFogColorNear">
               <property name="text">
                <string/>
               </property>
@@ -863,11 +863,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="ColorPickerButton" name="directionalAmbColorXPos">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorXPos"/>
        </item>
        <item row="0" column="2" rowspan="2">
         <spacer name="horizontalSpacer_4">
@@ -896,25 +892,13 @@
         </widget>
        </item>
        <item row="1" column="4">
-        <widget class="ColorPickerButton" name="directionalAmbColorYNeg">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorYNeg"/>
        </item>
        <item row="0" column="4">
-        <widget class="ColorPickerButton" name="directionalAmbColorXNeg">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorXNeg"/>
        </item>
        <item row="2" column="1">
-        <widget class="ColorPickerButton" name="directionalAmbColorZPos">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorZPos"/>
        </item>
        <item row="4" column="0" colspan="5">
         <spacer name="verticalSpacer_6">
@@ -950,11 +934,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="ColorPickerButton" name="directionalAmbColorYPos">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorYPos"/>
        </item>
        <item row="0" column="3">
         <widget class="QLabel" name="label_36">
@@ -967,11 +947,7 @@
         </widget>
        </item>
        <item row="2" column="4">
-        <widget class="ColorPickerButton" name="directionalAmbColorZNeg">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="DKColorPickerButton" name="directionalAmbColorZNeg"/>
        </item>
        <item row="3" column="2">
         <widget class="QPushButton" name="directionalAmbientSetFromAmbient">
@@ -1188,9 +1164,9 @@
    <header>widgets/DKGameFilePicker.h</header>
   </customwidget>
   <customwidget>
-   <class>ColorPickerButton</class>
-   <extends>QPushButton</extends>
-   <header>../generic/ColorPickerButton.h</header>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
    <class>FormPicker</class>
