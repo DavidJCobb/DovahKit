@@ -27,6 +27,14 @@ namespace {
          api_helpers::push_color(L, result);
          return 1;
       }
+      int has_alpha(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::hasAlpha);
+         lua_pushboolean(L, result);
+         return 1;
+      }
    }
    namespace _setters {
       int color(lua_State* L) {
@@ -35,6 +43,15 @@ namespace {
          if (!self.widget)
             return 0;
          api_helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &wrapped_type::setColor, value);
+         return 0;
+      }
+      int has_alpha(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         bool  value = lua_toboolean(L, 2);
+         if (!self.widget)
+            return 0;
+         api_helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &wrapped_type::setHasAlpha, value);
          return 0;
       }
    }
@@ -73,10 +90,12 @@ namespace dovahscript::wrappers::ui {
    /*static*/ cls::method_list_t cls::metatable_methods = {
    };
    /*static*/ cls::method_list_t cls::metatable_getters = {
-      { "color", &_getters::color },
+      { "color",     &_getters::color },
+      { "has_alpha", &_getters::has_alpha },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
-      { "color", &_setters::color },
+      { "color",     &_setters::color },
+      { "has_alpha", &_setters::has_alpha },
    };
 
    /*static*/ void cls::import_singleton(lua_State* L) {
