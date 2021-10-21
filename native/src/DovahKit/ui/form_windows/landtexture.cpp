@@ -25,6 +25,7 @@ void FormDialogLandTexture::_load_impl() {
    this->ui.havokMaterialType->setFormStub(this->form->havok.material.get_form_stub());
    this->ui.havokFriction->setValue(this->form->havok.friction);
    this->ui.havokRestitution->setValue(this->form->havok.restitution);
+   this->ui.specularExponent->setValue(this->form->specular_exponent);
    this->ui.textureset->setFormStub(this->form->texture_set.get_form_stub());
    this->ui.grasses->pullStubs(this->form->grasses);
    //
@@ -44,6 +45,7 @@ void FormDialogLandTexture::_save_impl() {
    this->save_form_id(this->form->havok.material, this->ui.havokMaterialType->formStub());
    this->form->havok.friction    = this->ui.havokFriction->value();
    this->form->havok.restitution = this->ui.havokRestitution->value();
+   this->form->specular_exponent = this->ui.specularExponent->value();
    this->save_form_id(this->form->texture_set, this->ui.textureset->formStub());
    this->ui.grasses->commitStubs(this->form->grasses, *this->form);
    //

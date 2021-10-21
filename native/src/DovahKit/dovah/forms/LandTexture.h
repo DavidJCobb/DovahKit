@@ -26,10 +26,10 @@ namespace dovah::loaded_forms {
          form_reference_t texture_set; // TNAM; should be a TXST
          struct {
             form_reference_t material; // MNAM; should be a MATT
-            uint8_t friction    = 0;
-            uint8_t restitution = 0;
+            uint8_t friction    = 0; // CK clamps this to [0, 100]
+            uint8_t restitution = 0; // CK clamps this to [0, 200]
          } havok;
-         uint8_t specular_exponent = 1;
+         uint8_t specular_exponent = 1; // CK clamps this to [0, 100]
          std::vector<form_reference_t> grasses;
          remaster_flags_t remaster_flags = 0;
          //

@@ -71,21 +71,21 @@ namespace dovah::loaded_forms {
 
          inline std::string* texture_by_index(size_t s) noexcept {
             auto& list = this->textures;
-            if constexpr (s == 0)
+            if (s == 0)
                return &list.diffuse;
-            if constexpr (s == 1)
+            if (s == 1)
                return &list.normal;
-            if constexpr (s == 2)
+            if (s == 2)
                return &list.environment_mask;
-            if constexpr (s == 3)
+            if (s == 3)
                return &list.glow_map;
-            if constexpr (s == 4)
+            if (s == 4)
                return &list.height;
-            if constexpr (s == 5)
+            if (s == 5)
                return &list.cubemap;
-            if constexpr (s == 6)
+            if (s == 6)
                return &list.multilayer;
-            if constexpr (s == 7)
+            if (s == 7)
                return &list.backlight;
             return nullptr;
          };

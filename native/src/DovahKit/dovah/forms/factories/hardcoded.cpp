@@ -12,6 +12,7 @@
 #include "../DefaultObjectManager.h"
 #include "../Form.h"
 #include "../FormList.h"
+#include "../TextureSet.h"
 #include "../Voicetype.h"
 #include "../Worldspace.h"
 
@@ -54,22 +55,24 @@ namespace dovah {
       }
       auto& lo = file->get_load_order();
       switch (stub.formID) {
-         case 0x14:
+         case 0x014:
             {
                auto* form = new loaded_forms::Actor(fcp);
                form->base_form.unmanaged_set(lo.get_form(form_type::actor_base, 0x007));
                return form;
             }
             break;
-         case 0x1B: // DefaultAshPile1
+         case 0x01B: // DefaultAshPile1
             return new loaded_forms::Activator(fcp);
-         case 0x22: // DefaultAshPile2
+         case 0x022: // DefaultAshPile2
             return new loaded_forms::Activator(fcp);
-         case 0x2D:
+         case 0x028: // NullTextureSet
+            return new loaded_forms::TextureSet(fcp);
+         case 0x02D:
             return new loaded_forms::Voicetype(fcp);
-         case 0x2E:
+         case 0x02E:
             return new loaded_forms::Voicetype(fcp);
-         case 0x3C:
+         case 0x03C:
             return new loaded_forms::Worldspace(fcp);
          case 0x163:
             return new loaded_forms::FormList(fcp);

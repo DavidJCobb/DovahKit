@@ -124,6 +124,9 @@
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
          </widget>
         </item>
         <item row="1" column="2">
@@ -167,6 +170,9 @@
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
+          <property name="maximum">
+           <number>200</number>
+          </property>
          </widget>
         </item>
         <item row="0" column="1" colspan="3">
@@ -191,6 +197,9 @@
         <widget class="QSpinBox" name="specularExponent">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>100</number>
          </property>
          <property name="value">
           <number>30</number>
