@@ -29,7 +29,7 @@ namespace dovah {
          auto mb_z = _mm_set1_epi8('Z' + 1);
          auto mb_s = _mm_set1_epi8('/');
          auto fill = _mm_set1_epi8(path_separator);
-         for (; i + 16 < size; i += 16) {
+         for (; i + 15 < size; i += 16) {
             auto ma = _mm_loadu_si128((const __m128i*)(data + i));
             //
             //
@@ -48,7 +48,7 @@ namespace dovah {
             //
             _mm_storeu_si128((__m128i*)(data + i), ma);
          }
-         if (i + 8 < size) {
+         if (i + 7 < size) {
             auto ma = _mm_loadl_epi64((const __m128i*)(data + i));
             //
             auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0

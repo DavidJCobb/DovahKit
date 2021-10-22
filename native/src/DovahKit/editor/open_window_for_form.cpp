@@ -9,6 +9,7 @@
 #include "../ui/form_windows/landtexture.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/shout.h"
+#include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
 
@@ -24,6 +25,7 @@ namespace {
       std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
       std::pair{ dovah::form_type::quest,         _make<FormDialogQuest> },
       std::pair{ dovah::form_type::shout,         _make<FormDialogShout> },
+      std::pair{ dovah::form_type::texture_set,   _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::voicetype,     _make<FormDialogVoicetype> },
       std::pair{ dovah::form_type::word_of_power, _make<FormDialogWordOfPower> },
    };
