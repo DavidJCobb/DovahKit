@@ -1,100 +1,166 @@
 #include "asset_manager.h"
+#include <QDir>
 #include <QRegularExpression>
 #include <QStringView>
 #include "../../helpers/cpuinfo.h"
+#include "../../dovahscript/dovahscript_host.h"
+#include "../../editor/core.h"
+
+#pragma region DovahKitAssetManager::Worker
+void DovahKitAssetManager::Worker::_handler() {
+   while (true) {
+      if (this->termination_requested)
+         return;
+      //
+      auto guard = std::unique_lock(this->queue.mutex);
+      for (auto* asset : this->queue.to_load) {
+         asset->load();
+         if (this->termination_requested)
+            return;
+      }
+      this->queue.to_load.clear();
+      for (auto* asset : this->queue.to_unload) {
+         asset->unload();
+         if (this->termination_requested)
+            return;
+      }
+      this->queue.to_unload.clear();
+      //
+      if (this->termination_requested)
+         return;
+      this->signal.wait(false);
+      this->signal = false;
+   }
+}
+
+void DovahKitAssetManager::Worker::queueToLoad(DovahKitAsset& asset) {
+   auto guard = std::unique_lock(this->queue.mutex);
+   //
+   auto& list    = this->queue.to_load;
+   auto& inverse = this->queue.to_unload;
+   if (list.contains(&asset))
+      return;
+   inverse.removeOne(&asset);
+   list.push_back(&asset);
+   //
+   this->signal = true;
+   this->signal.notify_one();
+}
+void DovahKitAssetManager::Worker::queueToUnload(DovahKitAsset& asset) {
+   auto guard = std::unique_lock(this->queue.mutex);
+   //
+   auto& list    = this->queue.to_unload;
+   auto& inverse = this->queue.to_load;
+   if (list.contains(&asset))
+      return;
+   inverse.removeOne(&asset);
+   list.push_back(&asset);
+   //
+   this->signal = true;
+   this->signal.notify_one();
+}
+
+void DovahKitAssetManager::Worker::start() {
+   this->thread = std::thread(&Worker::_handler, this);
+}
+void DovahKitAssetManager::Worker::stop() {
+   if (!this->thread.joinable())
+      return;
+   this->termination_requested = true;
+   this->signal = true;
+   this->signal.notify_one();
+   this->thread.join();
+   this->termination_requested = false;
+}
+#pragma endregion
 
 DovahKitAssetManager::DovahKitAssetManager() {
+   auto& dovahscript_host = DovahscriptHost::get();
+   QObject::connect(&dovahscript_host, &DovahscriptHost::scriptStartImminent, this, &DovahKitAssetManager::pauseFormManagement);
+   QObject::connect(&dovahscript_host, &DovahscriptHost::scriptEnded,         this, &DovahKitAssetManager::unpauseFormManagement);
 }
 
-namespace {
-   QString _normalizePathComponent(const QStringView& view) {
-      uint    size = view.size();
-      QString text;
-      text.resize(size);
-      //
-      uint i = 0;
-      if (size >= 8) {
-         static bool can_intrin = ([]() {
-            auto& cpu = cobb::cpuinfo::get();
-            return cpu.extension_support.sse_2 && cpu.extension_support.sse_3;
-         })();
-         if (can_intrin) {
-            auto* src = view.data();
-            auto* dst = text.data();
-            //
-            auto mb_a = _mm_set1_epi8('A' - 1);
-            auto mb_z = _mm_set1_epi8('Z' + 1);
-            for (; i + 15 < size; i += 16) {
-               auto ma = _mm_loadu_si128((const __m128i*)(src + i));
-               //
-               // Goal: for each active byte in (mask_a), OR the byte in (ma) by 0x20
-               //
-               auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
-               auto mask_z = _mm_cmplt_epi8(ma, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
-               mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
-               mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
-               ma = _mm_or_si128(ma, mask_a); // bitwise-OR
-               //
-               _mm_storeu_si128((__m128i*)(dst + i), ma);
-            }
-            if (i + 7 < size) {
-               auto ma = _mm_loadl_epi64((const __m128i*)(src + i));
-               //
-               auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
-               auto mask_z = _mm_cmplt_epi8(ma, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
-               mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
-               mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
-               ma = _mm_or_si128(ma, mask_a); // bitwise-OR
-               //
-               _mm_storel_epi64((__m128i*)(dst + i), ma);
-               //
-               i += 8;
-            }
-         }
-      }
-      for (; i < size; ++i) {
-         auto c = view[i];
-         auto u = c.unicode();
-         if (u >= 'A' && u <= 'Z') {
-            c = QChar::fromLatin1(u + 0x20);
-         }
-         text[i] = c;
-      }
-      return text;
-   }
-}
 /*static*/ QString DovahKitAssetManager::normalizeAssetPath(const QString& base) {
-   QString path;
-   if (base.isEmpty())
+   auto path = QDir::cleanPath(base);
+   if (path.isEmpty() || path.startsWith("../"))
       return path;
-   int i    = 0;
-   int size = base.size();
-   if (base[0] == '/' || base[0] == '\\')
-      ++i;
-   //
-   auto sep_ex = QRegularExpression("/\\");
-   //
-   int prev = -1;
-   for (int j = path.indexOf(sep_ex, i); j >= 0; i = j + 1, j = path.indexOf(sep_ex, i)) {
-      auto component = QStringView(base).mid(i, j - i);
-      if (component.isEmpty()) {
-         prev = i;
-         continue;
-      }
-      if (component == '.') {
-         continue;
-      }
-      if (component == QLatin1Literal("..")) {
-         if (prev < 0)
-            return QString();
-         path = path.left(prev);
-         prev = path.lastIndexOf('/');
-         continue;
-      }
-      if (!path.isEmpty())
-         path += '/';
-      path += _normalizePathComponent(component);
-      prev  = i;
-   }
+   if (path.startsWith('/'))
+      path = path.mid(1);
+   path = path.toLower();
    return path;
+}
+
+DovahKitAsset* DovahKitAssetManager::requestModel(const QString& path) {
+   auto norm = this->normalizeAssetPath(path);
+   auto it   = this->assets.find(norm);
+   if (it != this->assets.end()) {
+      return *it;
+   }
+   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::NIF);
+   this->assets[norm] = asset;
+   this->load(*asset);
+   return asset;
+}
+DovahKitAsset* DovahKitAssetManager::requestTexture(const QString& path) {
+   auto norm = this->normalizeAssetPath(path);
+   auto it   = this->assets.find(norm);
+   if (it != this->assets.end()) {
+      return *it;
+   }
+   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::DDS);
+   this->assets[norm] = asset;
+   this->load(*asset);
+   return asset;
+}
+
+void DovahKitAssetManager::load(DovahKitAsset& asset) {
+   /*// Disabled for now, for simplicity
+   //
+   size_t lowest = std::numeric_limits<size_t>::max();
+   size_t index  = 0;
+   //
+   {
+      std::array<std::unique_lock<std::mutex>, worker_thread_count> guards;
+      for (size_t i = 0; i < worker_thread_count; ++i) {
+         auto& worker = this->workers[i];
+         guards[i] = std::unique_lock(worker.queue.mutex);
+         //
+         auto s = worker.queue.to_load.size();
+         if (s < lowest) {
+            lowest = s;
+            index  = i;
+         }
+      }
+   }
+   //
+   this->workers[index].queueToLoad(asset);
+   //
+   //*/
+   asset.load(); // single-threaded load, for testing
+}
+
+void DovahKitAssetManager::onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset& asset) {
+   auto i = this->assets.remove(asset._path);
+   assert(i && "Was this asset not tracked?!");
+   delete &asset;
+}
+
+void DovahKitAssetManager::pauseFormManagement() {
+   // TODO: when we add support for managing whole forms, do not allow the asset manager 
+   // to load or unload forms while "form management" is paused, EXCEPT for one thing: we 
+   // MUST always unload forms when their deletion is imminent.
+}
+void DovahKitAssetManager::unpauseFormManagement() {
+   // TODO
+}
+
+void DovahKitAssetManager::unloadAll() {
+   // TODO
+}
+
+void DovahKitAssetManager::killThreads() {
+   // TODO
+}
+void DovahKitAssetManager::spawnThreads() {
+   // TODO
 }

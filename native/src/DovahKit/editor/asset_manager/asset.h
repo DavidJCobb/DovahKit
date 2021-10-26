@@ -1,5 +1,7 @@
 #pragma once
+#include <mutex>
 #include <QObject>
+#include <QPointer>
 
 #include <QImage>
 namespace DirectX {
@@ -23,7 +25,11 @@ class DovahKitAsset : public QObject {
       Q_ENUM(Type);
 
    protected:
-      Type _type = Type::Undefined;
+      Type    _type = Type::Undefined;
+      QString _path;
+      struct {
+         std::mutex load_state;
+      } _locks;
       struct {
          struct {
             uint32_t all           = 0;
@@ -42,13 +48,14 @@ class DovahKitAsset : public QObject {
          QImage image;
       } _data;
 
-      void on_handle_made();
-      void on_handle_lost();
+      void on_handle_made(DovahKitAssetHandle&);
+      void on_handle_lost(DovahKitAssetHandle&);
 
    public:
-      DovahKitAsset(Type, QObject* parent = nullptr);
+      DovahKitAsset(QString path, Type, QObject* parent = nullptr);
       ~DovahKitAsset();
 
+      inline QString path() const noexcept { return this->_path; }
       inline Type type() const noexcept { return this->_type; }
 
       inline bool areDependenciesLoaded() const noexcept { return this->_state.dependencies_loaded; }
@@ -62,7 +69,8 @@ class DovahKitAsset : public QObject {
       inline QImage image() const noexcept { return this->_data.image; }
 
    protected slots:
-      void load(const QString& path);
+      void load();
+      void unload();
 
    signals:
       void contentLoaded();        // The asset's own content has loaded.
@@ -71,37 +79,30 @@ class DovahKitAsset : public QObject {
       void ready();                // The asset is ready for use: its own content and the content of any dependencies is all loaded.
 };
 
-class DovahKitAssetHandle {
+class DovahKitAssetHandle : public QObject {
+   Q_OBJECT;
    public:
-      using value_type = DovahKitAsset;
+      using value_type     = DovahKitAsset;
+      using construct_type = value_type*; // for now; eventually we will only allow assigning something directly received from the asset manager
       enum Flag {
          IsRenderWindow = 0x00000001, // This handle is being used by the Render Window's 3D view.
       };
       Q_DECLARE_FLAGS(Flags, Flag);
+      Q_FLAG(Flags);
+      
+   protected slots:
+      void _forwardReady();
 
    protected:
-      value_type* asset = nullptr;
+      QPointer<value_type> asset;
 
-      QMetaObject::Connection connection;
-
-      void _inc() {
-         if (asset) {
-            asset->on_handle_made();
-            connection = QObject::connect(asset, &QObject::destroyed, [this]() {
-               this->asset = nullptr;
-            });
-         }
-      }
-      void _dec() {
-         if (connection)
-            QObject::disconnect(connection);
-         if (asset)
-            asset->on_handle_lost();
-      }
+      void _acquire(value_type* asset);
+      void _clear();
 
    public:
       DovahKitAssetHandle() {}
-      DovahKitAssetHandle(value_type* v);
+      DovahKitAssetHandle(Flags f) : flags(f) {}
+      DovahKitAssetHandle(construct_type v);
       DovahKitAssetHandle(const DovahKitAssetHandle& other);
       DovahKitAssetHandle(DovahKitAssetHandle&& other);
       ~DovahKitAssetHandle();
@@ -109,12 +110,17 @@ class DovahKitAssetHandle {
       Flags flags = 0;
 
       operator bool() { return this->asset != nullptr; };
-      operator value_type*() const noexcept { return this->asset; };
-      value_type* operator->() const noexcept { return this->asset; };
+      operator value_type*() const noexcept { return this->asset.data(); };
+      value_type* operator->() const noexcept { return this->asset.data(); };
 
+      DovahKitAssetHandle& operator=(construct_type target) noexcept;
       DovahKitAssetHandle& operator=(const DovahKitAssetHandle& other) noexcept;
       DovahKitAssetHandle& operator=(DovahKitAssetHandle&& other) noexcept;
 
-      inline value_type* bare() const noexcept { return this->asset; }
+      inline value_type* bare() const noexcept { return this->asset.data(); }
+
+      bool isReady() const noexcept;
+
+   signals:
+      void ready();
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(DovahKitAssetHandle::Flags);

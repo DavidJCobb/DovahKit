@@ -23,19 +23,6 @@ DKGameFilePicker::DKGameFilePicker(QWidget* parent) : QWidget(parent) {
    #endif
    this->_updateBrowseButtonSize();
    //
-   #if !defined(QT_DESIGNER_LIB)
-      {  // Hook the "clear" button
-         w_path->setClearButtonEnabled(false);
-         assert(w_path->actions().isEmpty());
-         w_path->setClearButtonEnabled(true);
-         auto actions = w_path->actions();
-         if (actions.size() == 1) {
-            auto* action = actions[0];
-            QObject::connect(action, &QAction::triggered, this, &DKGameFilePicker::clear);
-         }
-      }
-   #endif
-   //
    w_browse->setAccessibleName(tr("Browse..."));
    w_browse->setAccessibleDescription(tr("Open a dialog to select a game asset file from the currently loaded BSA archives."));
    //

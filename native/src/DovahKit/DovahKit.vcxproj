@@ -405,6 +405,8 @@
     <ClCompile Include="dovah\utils\game_asset_path_validation.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
+    <ClCompile Include="editor\asset_manager\asset.cpp" />
+    <ClCompile Include="editor\asset_manager\asset_manager.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
@@ -496,6 +498,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
@@ -559,6 +562,7 @@
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
@@ -569,15 +573,19 @@
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\core\specialized_traceback.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
+    <QtMoc Include="widgets\DKTextureAssetPane.h" />
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
+    <QtMoc Include="editor\asset_manager\asset_manager.h" />
+    <QtMoc Include="editor\asset_manager\asset.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />
