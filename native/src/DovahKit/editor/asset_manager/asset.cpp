@@ -6,7 +6,12 @@
 #include "asset_manager.h"
 
 namespace {
-   static constexpr bool debug_asset_lifetime = true;
+   // see also: the same constexpr value in asset_manager.cpp
+   static constexpr bool debug_asset_lifetime = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
 }
 
 namespace {
@@ -39,14 +44,14 @@ DovahKitAsset::~DovahKitAsset() {
    this->unload();
 }
 
-void DovahKitAsset::on_handle_made(DovahKitAssetHandle& handle) {
+void DovahKitAsset::on_handle_made(DovahKitAssetReceptor& handle) {
    ++this->_state.refcounts.all;
-   if (handle.flags & DovahKitAssetHandle::Flag::IsRenderWindow)
+   if (handle.flags & DovahKitAssetReceptor::Flag::IsRenderWindow)
       ++this->_state.refcounts.render_window;
 }
-void DovahKitAsset::on_handle_lost(DovahKitAssetHandle& handle) {
+void DovahKitAsset::on_handle_lost(DovahKitAssetReceptor& handle) {
    auto to = --this->_state.refcounts.all;
-   if (handle.flags & DovahKitAssetHandle::Flag::IsRenderWindow)
+   if (handle.flags & DovahKitAssetReceptor::Flag::IsRenderWindow)
       --this->_state.refcounts.render_window;
    //
    if (to == 0)
@@ -191,86 +196,114 @@ void DovahKitAsset::unload() {
 }
 #pragma endregion
 
-#pragma region DovahKitAssetHandle
-void DovahKitAssetHandle::_acquire(value_type* value) {
+#pragma region DovahKitAssetTransport
+DovahKitAssetTransport::~DovahKitAssetTransport() {
+   assert(this->value == nullptr && "a DovahKitAssetTransport failed to make it into a receptor");
+}
+
+DovahKitAssetTransport::DovahKitAssetTransport(DovahKitAssetTransport&& other) noexcept {
+   this->value = other.value;
+   other.value = nullptr;
+}
+DovahKitAssetTransport& DovahKitAssetTransport::operator=(DovahKitAssetTransport&& other) noexcept {
+   this->value = other.value;
+   other.value = nullptr;
+   return *this;
+}
+#pragma endregion
+
+#pragma region DovahKitAssetReceptor
+void DovahKitAssetReceptor::_acquire(value_type* value) {
    bool fire = false;
+   this->state &= ~state_flag::ready;
    if (value) {
       {
          auto guard = std::unique_lock(value->_locks.load_state);
          this->asset = value;
          if (value->isReady()) {
+            this->state |= state_flag::ready;
             fire = true;
          } else {
             if constexpr (debug_asset_lifetime) {
-               qDebug("DovahKitAssetHandle is listening for \"ready\" signal: %p (%s)", this, qUtf8Printable(this->asset->_path));
+               qDebug("DovahKitAssetReceptor is listening for \"ready\" signal: %p (%s)", this, qUtf8Printable(this->asset->_path));
             }
-            QObject::connect(asset, &value_type::ready, this, &DovahKitAssetHandle::_forwardReady);
+            QObject::connect(asset, &value_type::ready, this, &DovahKitAssetReceptor::_forwardReady, Qt::QueuedConnection);
          }
       }
       this->asset->on_handle_made(*this);
    }
    if (fire) {
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAssetHandle is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
       }
       emit this->ready();
    }
 }
-void DovahKitAssetHandle::_clear() {
+void DovahKitAssetReceptor::_clear() {
    if (auto* p = this->asset.data()) {
       QObject::disconnect(p, nullptr, this, nullptr);
       p->on_handle_lost(*this);
       this->asset = nullptr;
    }
+   this->state &= ~state_flag::ready;
 }
-void DovahKitAssetHandle::_forwardReady() {
+void DovahKitAssetReceptor::_forwardReady() {
    if (this->asset) {
       QObject::disconnect(this->asset, &value_type::ready, this, nullptr);
+      this->state |= state_flag::ready;
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAssetHandle is forwarding \"ready\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
       }
    }
    emit this->ready();
 }
 
-bool DovahKitAssetHandle::isReady() const noexcept {
+bool DovahKitAssetReceptor::isReady() const noexcept {
    if (this->asset) {
+      /*//
       auto guard = std::unique_lock(this->asset->_locks.load_state);
       return this->asset->isReady();
+      //*/
+      return (this->state & state_flag::ready) != 0;
    }
    return false;
 }
 
-DovahKitAssetHandle::DovahKitAssetHandle(construct_type target) {
-   this->_acquire(target);
+DovahKitAssetReceptor::DovahKitAssetReceptor(DovahKitAssetTransport&& target) {
+   auto* p = target.value;
+   target.value = nullptr;
+   this->_acquire(p);
 }
-DovahKitAssetHandle::DovahKitAssetHandle(const DovahKitAssetHandle& other) {
+DovahKitAssetReceptor::DovahKitAssetReceptor(const DovahKitAssetReceptor& other) {
    this->flags = other.flags;
    this->_acquire(other.asset);
 }
-DovahKitAssetHandle::DovahKitAssetHandle(DovahKitAssetHandle&& other) {
+DovahKitAssetReceptor::DovahKitAssetReceptor(DovahKitAssetReceptor&& other) noexcept {
    this->flags = other.flags;
    this->_acquire(other.asset);
    other._clear();
 }
-DovahKitAssetHandle::~DovahKitAssetHandle() {
+DovahKitAssetReceptor::~DovahKitAssetReceptor() {
 }
 
-DovahKitAssetHandle& DovahKitAssetHandle::operator=(construct_type target) noexcept {
-   if (this->asset == target)
+DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(DovahKitAssetTransport&& target) noexcept {
+   if (this->asset == target.value)
       return *this;
+   auto* p = target.value;
+   target.value = nullptr;
+   //
    this->_clear();
-   this->_acquire(target);
+   this->_acquire(p);
    return *this;
 }
-DovahKitAssetHandle& DovahKitAssetHandle::operator=(const DovahKitAssetHandle& other) noexcept {
+DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(const DovahKitAssetReceptor& other) noexcept {
    this->flags = other.flags;
    this->_clear();
    if (this->asset != other.asset)
       this->_acquire(other.asset);
    return *this;
 }
-DovahKitAssetHandle& DovahKitAssetHandle::operator=(DovahKitAssetHandle&& other) noexcept {
+DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(DovahKitAssetReceptor&& other) noexcept {
    this->flags = other.flags;
    this->_clear();
    if (this->asset != other.asset)

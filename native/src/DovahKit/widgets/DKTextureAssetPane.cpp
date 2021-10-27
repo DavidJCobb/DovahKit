@@ -24,7 +24,7 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
    this->setMinimumSize(minimum_length, minimum_length);
    //
    #if !defined(QT_DESIGNER_LIB)
-      QObject::connect(&this->_handle, &DovahKitAssetHandle::ready, this, &DKTextureAssetPane::_onAssetReady);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready, this, &DKTextureAssetPane::_onAssetReady);
    #endif
 }
 
@@ -46,19 +46,32 @@ void DKTextureAssetPane::setAsset(const QString& path) {
    }
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
-   auto& am = DovahKitAssetManager::get();
-   this->_handle = am.requestTexture(path);
-   this->update();
+      auto& am = DovahKitAssetManager::get();
+      this->_handle = am.requestTexture(path);
+      this->update();
    #endif
 }
-void DKTextureAssetPane::setAsset(DovahKitAssetHandle::construct_type asset) {
-   if (!asset) {
-      this->_render = Render::Null;
-   } else {
-      this->_render = Render::Loading;
-   }
-   this->_handle = asset;
-   this->update();
+void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
+   #if !defined(QT_DESIGNER_LIB)
+      this->_handle = std::move(asset);
+      if (this->_handle == nullptr) {
+         this->_render = Render::Null;
+      } else {
+         this->_render = Render::Loading;
+      }
+      this->update();
+   #endif
+}
+void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
+   #if !defined(QT_DESIGNER_LIB)
+      this->_handle = (DovahKitAsset*)other; // don't do direct assign, as that would bulldoze our receptor's flags
+      if (this->_handle == nullptr) {
+         this->_render = Render::Null;
+      } else {
+         this->_render = Render::Loading;
+      }
+      this->update();
+   #endif
 }
 
 void DKTextureAssetPane::_onAssetReady() {

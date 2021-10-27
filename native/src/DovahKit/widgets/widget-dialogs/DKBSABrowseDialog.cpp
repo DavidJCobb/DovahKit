@@ -288,7 +288,7 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
       }
       layout->addWidget(view, 1);
       {
-         auto* bottom = new QVBoxLayout(this);
+         auto* bottom = new QVBoxLayout();
          bottom->setContentsMargins({
             style->pixelMetric(QStyle::PM_LayoutLeftMargin),
             style->pixelMetric(QStyle::PM_LayoutTopMargin),
@@ -302,14 +302,14 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
             auto* label  = new QLabel(tr("File &name:"), this);
             label->setBuddy(name);
             //
-            auto* nested = new QHBoxLayout(this);
+            auto* nested = new QHBoxLayout();
             nested->addSpacing(100);
             nested->addWidget(label);
             nested->addWidget(name);
             bottom->addLayout(nested, 0);
          }
          {  // Buttons row
-            auto* nested = new QHBoxLayout(this);
+            auto* nested = new QHBoxLayout();
             auto* loose  = this->subwidgets.pickLoose  = new QPushButton(tr("Loose file..."), this);
             auto* ok     = this->subwidgets.buttonOK   = new QPushButton(tr("&Open"), this);
             auto* cancel = this->subwidgets.buttonQuit = new QPushButton(tr("Cancel"), this);

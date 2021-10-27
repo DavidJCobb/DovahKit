@@ -1,0 +1,55 @@
+
+DovahKit's frontend has a system called  the "asset manager." The asset manager 
+is responsible for coordinating the loading  and unloading of game assets, such 
+that multiple parts of the program using the same assets (e.g. UI windows) will 
+not need to each load their own private,  redundant copy, but rather can share 
+the same data.
+
+An "asset," then, is the base data for a game asset: the 3D model content for a 
+NIF, or the image content for a DDS. The classname is DovahKitAsset.
+
+In order to use a DovahKitAsset, you must first create a DovahKitAssetReceptor. 
+The receptor should generally be a member  of whatever system (UI widget, etc.) 
+will be using the asset. You should preconfigure the receptor by establishing a 
+connection  to its "ready" signal before  making an attempt to load  the asset; 
+commonly you'd do this within the constructor of whatever class the receptor is 
+a member of.
+
+Once your  receptor is ready, you can ask  the asset manager singleton  for the 
+asset with a given  path. Paths should  be relative to the Data  directory, and 
+will have path separators normalized and text converted to lowercase. The asset 
+manager will  return a DovahKitAssetTransport: this is an opaque  wrapper for a 
+bare DovahKitAsset pointer, which must be  move-assigned into a receptor; if an 
+asset transport is destroyed without having been move-assigned, it will fail an 
+assertion.
+
+
+=== WHY NOT SMART POINTERS? ===================================================
+
+The naive approach to designing all of  this would've been to have each outside 
+actor (UI widget, etc.)  carry a simple smart pointer.  The outside actor would 
+request an  asset from the asset manager and receive a DovahKitAsset,  which it 
+would store in its smart pointer. The  outside actor would then establish a new 
+connection to the asset's "ready" signal,  through the smart pointer. The issue 
+with this  approach is that it's vulnerable to a race condition: it's  possible 
+for the asset to finish loading before that connection is established.
+
+DovahKitAssetReceptors mitigate this by offering their own "ready" signal. When 
+the receptor  is given a new asset to point to, it locks the asset's  load flag 
+state and then checks whether the asset is ready. If so, the receptor will fire 
+its own signal; if not, it will  establish a  connection to the asset's "ready" 
+signal, and use that  to fire its own (the receptor's  own) "ready" signal when 
+appropriate. This ensures that systems wishing to access an asset can always be 
+made aware of when the asset is ready.
+
+Of course,  this means that DovahKitAssetReceptor is a bit bulkier than a smart 
+pointer, and more specialized.  For that  reason,  treating it like an ordinary 
+smart pointer  feels inappropriate; it feels more appropriate to  treat it as a 
+component of a larger structure -- something you embed into the thing using it, 
+as a member. It feels similarly inappropriate  to have the DovahKitAssetManager 
+return DovahKitAssetReceptors as values when an asset is requested. That is why 
+DovahKitAssetTransport exists: functionally, it's a bare pointer, but you can't 
+use or (usefully) store it on your own; its  only value is as a means to convey 
+an asset to a receptor, and it will assert that you have used it appropriately. 
+Specifically, asset transports can only be moved, not copied, and when they are 
+destroyed, they assert that they no longer hold an asset pointer.

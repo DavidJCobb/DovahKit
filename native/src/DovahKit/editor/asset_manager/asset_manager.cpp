@@ -6,6 +6,15 @@
 #include "../../dovahscript/dovahscript_host.h"
 #include "../../editor/core.h"
 
+namespace {
+   // see also: the same constexpr value in asset.cpp
+   static constexpr bool debug_asset_lifetime = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
+}
+
 #pragma region DovahKitAssetManager::Worker
 void DovahKitAssetManager::Worker::_handler() {
    while (true) {
@@ -90,30 +99,10 @@ DovahKitAssetManager::DovahKitAssetManager() {
    return path;
 }
 
-DovahKitAsset* DovahKitAssetManager::requestModel(const QString& path) {
-   auto norm = this->normalizeAssetPath(path);
-   auto it   = this->assets.find(norm);
-   if (it != this->assets.end()) {
-      return *it;
+void DovahKitAssetManager::_load(DovahKitAsset& asset) {
+   if constexpr (debug_asset_lifetime) {
+      qDebug("DovahKitAsset asset load requested from manager: %p (%s)", asset, qUtf8Printable(asset._path));
    }
-   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::NIF);
-   this->assets[norm] = asset;
-   this->load(*asset);
-   return asset;
-}
-DovahKitAsset* DovahKitAssetManager::requestTexture(const QString& path) {
-   auto norm = this->normalizeAssetPath(path);
-   auto it   = this->assets.find(norm);
-   if (it != this->assets.end()) {
-      return *it;
-   }
-   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::DDS);
-   this->assets[norm] = asset;
-   this->load(*asset);
-   return asset;
-}
-
-void DovahKitAssetManager::load(DovahKitAsset& asset) {
    /*// Disabled for now, for simplicity
    //
    size_t lowest = std::numeric_limits<size_t>::max();
@@ -139,7 +128,39 @@ void DovahKitAssetManager::load(DovahKitAsset& asset) {
    asset.load(); // single-threaded load, for testing
 }
 
+DovahKitAssetTransport DovahKitAssetManager::requestModel(const QString& path) {
+   auto norm = this->normalizeAssetPath(path);
+   auto it   = this->assets.find(norm);
+   if (it != this->assets.end()) {
+      return *it;
+   }
+   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::NIF);
+   this->assets[norm] = asset;
+   if constexpr (debug_asset_lifetime) {
+      qDebug("Created DovahKitAsset (model): %p (%s)", asset, qUtf8Printable(path));
+   }
+   this->_load(*asset);
+   return asset;
+}
+DovahKitAssetTransport DovahKitAssetManager::requestTexture(const QString& path) {
+   auto norm = this->normalizeAssetPath(path);
+   auto it   = this->assets.find(norm);
+   if (it != this->assets.end()) {
+      return *it;
+   }
+   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::DDS);
+   this->assets[norm] = asset;
+   if constexpr (debug_asset_lifetime) {
+      qDebug("Created DovahKitAsset (texture): %p (%s)", asset, qUtf8Printable(path));
+   }
+   this->_load(*asset);
+   return asset;
+}
+
 void DovahKitAssetManager::onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset& asset) {
+   if constexpr (debug_asset_lifetime) {
+      qDebug("DovahKitAsset is unreferenced: %p (%s)", asset, qUtf8Printable(asset._path));
+   }
    auto i = this->assets.remove(asset._path);
    assert(i && "Was this asset not tracked?!");
    delete &asset;

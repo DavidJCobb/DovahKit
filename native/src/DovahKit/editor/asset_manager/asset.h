@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <mutex>
 #include <QObject>
 #include <QPointer>
@@ -9,12 +10,12 @@ namespace DirectX {
    struct TexMetadata;
 }
 
-class DovahKitAssetHandle;
+class DovahKitAssetReceptor;
 class DovahKitAssetManager;
 
 class DovahKitAsset : public QObject {
    Q_OBJECT;
-   friend class DovahKitAssetHandle;
+   friend class DovahKitAssetReceptor;
    friend class DovahKitAssetManager;
    public:
       enum Type {
@@ -48,8 +49,8 @@ class DovahKitAsset : public QObject {
          QImage image;
       } _data;
 
-      void on_handle_made(DovahKitAssetHandle&);
-      void on_handle_lost(DovahKitAssetHandle&);
+      void on_handle_made(DovahKitAssetReceptor&);
+      void on_handle_lost(DovahKitAssetReceptor&);
 
    public:
       DovahKitAsset(QString path, Type, QObject* parent = nullptr);
@@ -79,33 +80,57 @@ class DovahKitAsset : public QObject {
       void ready();                // The asset is ready for use: its own content and the content of any dependencies is all loaded.
 };
 
-class DovahKitAssetHandle : public QObject {
+class DovahKitAssetTransport {
+   friend class DovahKitAssetReceptor;
+   protected:
+      DovahKitAsset* value = nullptr;
+   public:
+      DovahKitAssetTransport() {}
+      DovahKitAssetTransport(DovahKitAsset* v) : value(v) {}
+      ~DovahKitAssetTransport();
+
+      DovahKitAssetTransport(const DovahKitAssetTransport&) = delete;
+      DovahKitAssetTransport& operator=(const DovahKitAssetTransport&) = delete;
+
+      DovahKitAssetTransport(DovahKitAssetTransport&&) noexcept;
+      DovahKitAssetTransport& operator=(DovahKitAssetTransport&&) noexcept;
+};
+
+class DovahKitAssetReceptor : public QObject {
    Q_OBJECT;
    public:
-      using value_type     = DovahKitAsset;
-      using construct_type = value_type*; // for now; eventually we will only allow assigning something directly received from the asset manager
+      using value_type = DovahKitAsset;
       enum Flag {
          IsRenderWindow = 0x00000001, // This handle is being used by the Render Window's 3D view.
       };
       Q_DECLARE_FLAGS(Flags, Flag);
       Q_FLAG(Flags);
+   protected:
+      struct state_flag {
+         state_flag() = delete;
+         enum type : uint8_t {
+            ready = 0x01,
+         };
+      };
+      using state_flags_t = std::underlying_type_t<state_flag::type>;
       
    protected slots:
       void _forwardReady();
 
    protected:
       QPointer<value_type> asset;
+      state_flags_t state = 0;
 
       void _acquire(value_type* asset);
       void _clear();
 
    public:
-      DovahKitAssetHandle() {}
-      DovahKitAssetHandle(Flags f) : flags(f) {}
-      DovahKitAssetHandle(construct_type v);
-      DovahKitAssetHandle(const DovahKitAssetHandle& other);
-      DovahKitAssetHandle(DovahKitAssetHandle&& other);
-      ~DovahKitAssetHandle();
+      DovahKitAssetReceptor() {}
+      DovahKitAssetReceptor(Flags f) : flags(f) {}
+      DovahKitAssetReceptor(DovahKitAssetTransport&& v);
+      DovahKitAssetReceptor(const DovahKitAssetReceptor& other);
+      DovahKitAssetReceptor(DovahKitAssetReceptor&& other) noexcept;
+      ~DovahKitAssetReceptor();
 
       Flags flags = 0;
 
@@ -113,9 +138,9 @@ class DovahKitAssetHandle : public QObject {
       operator value_type*() const noexcept { return this->asset.data(); };
       value_type* operator->() const noexcept { return this->asset.data(); };
 
-      DovahKitAssetHandle& operator=(construct_type target) noexcept;
-      DovahKitAssetHandle& operator=(const DovahKitAssetHandle& other) noexcept;
-      DovahKitAssetHandle& operator=(DovahKitAssetHandle&& other) noexcept;
+      DovahKitAssetReceptor& operator=(DovahKitAssetTransport&& target) noexcept;
+      DovahKitAssetReceptor& operator=(const DovahKitAssetReceptor& other) noexcept;
+      DovahKitAssetReceptor& operator=(DovahKitAssetReceptor&& other) noexcept;
 
       inline value_type* bare() const noexcept { return this->asset.data(); }
 

@@ -11,9 +11,8 @@ class DKTextureAssetPane : public QFrame {
    Q_OBJECT;
    private:
       #if defined(QT_DESIGNER_LIB)
-      struct DovahKitAssetHandle {
-         using construct_type = void*;
-      };
+      struct DovahKitAssetReceptor {};
+      struct DovahKitAssetTransport {};
       #endif
 
    public:
@@ -21,7 +20,8 @@ class DKTextureAssetPane : public QFrame {
 
       bool hasAsset() const noexcept;
       void setAsset(const QString& path);
-      void setAsset(DovahKitAssetHandle::construct_type);
+      void setAsset(DovahKitAssetTransport&&);
+      void setAsset(const DovahKitAssetReceptor&);
 
    protected slots:
       void _onAssetReady();
@@ -33,7 +33,7 @@ class DKTextureAssetPane : public QFrame {
          Asset,
       };
 
-      DovahKitAssetHandle _handle;
+      DovahKitAssetReceptor _handle;
       Render _render = Render::Null;
       struct {
          QElapsedTimer elapsed;

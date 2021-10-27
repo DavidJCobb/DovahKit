@@ -45,6 +45,8 @@ class DovahKitAssetManager : public QObject {
       QHash<QString, DovahKitAsset*> assets;
       std::array<Worker, worker_thread_count> workers;
 
+      void _load(DovahKitAsset&);
+
    public:
       inline static DovahKitAssetManager& get() {
          static DovahKitAssetManager instance;
@@ -55,10 +57,8 @@ class DovahKitAssetManager : public QObject {
       // relative to the Data directory, and will remain so.
       static QString normalizeAssetPath(const QString&);
 
-      DovahKitAsset* requestModel(const QString& path);
-      DovahKitAsset* requestTexture(const QString& path);
-
-      void load(DovahKitAsset&);
+      DovahKitAssetTransport requestModel(const QString& path);
+      DovahKitAssetTransport requestTexture(const QString& path);
 
       void onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset&);
 
