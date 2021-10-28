@@ -64,6 +64,7 @@ void DovahKitAsset::load() {
          qDebug("DovahKitAsset failed to load: %p (%s)", this, qUtf8Printable(this->_path));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
+      this->_state.load_requested = false;
       this->_state.content_failed = true;
       emit contentLoadingFailed();
    };
@@ -72,6 +73,7 @@ void DovahKitAsset::load() {
          qDebug("DovahKitAsset loaded: %p (%s)", this, qUtf8Printable(this->_path));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
+      this->_state.load_requested      = false;
       this->_state.content_loaded      = true;
       this->_state.dependencies_loaded = true; // DDS files have no external dependencies
       emit this->contentLoaded();
@@ -239,6 +241,7 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
             QObject::connect(asset, &value_type::ready, this, &DovahKitAssetReceptor::_forwardReady, Qt::QueuedConnection);
             QObject::connect(asset, &value_type::contentLoadingFailed, this, &DovahKitAssetReceptor::_forwardFailed, Qt::QueuedConnection);
          }
+         QObject::connect(asset, &QObject::destroyed, this, &DovahKitAssetReceptor::_forwardUnloaded, Qt::DirectConnection);
       }
       this->asset->on_handle_made(*this);
    }
@@ -266,9 +269,14 @@ void DovahKitAssetReceptor::_clear() {
    this->state &= ~(state_flag::ready | state_flag::failed);
 }
 
+void DovahKitAssetReceptor::_severLoadSignals() {
+   QObject::disconnect(this->asset, &value_type::ready,                this, nullptr);
+   QObject::disconnect(this->asset, &value_type::contentLoadingFailed, this, nullptr);
+}
+
 void DovahKitAssetReceptor::_forwardFailed() {
    if (this->asset) {
-      QObject::disconnect(this->asset, nullptr, this, nullptr);
+      this->_severLoadSignals();
       this->state |= state_flag::failed;
       if constexpr (debug_asset_lifetime) {
          qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
@@ -278,13 +286,16 @@ void DovahKitAssetReceptor::_forwardFailed() {
 }
 void DovahKitAssetReceptor::_forwardReady() {
    if (this->asset) {
-      QObject::disconnect(this->asset, nullptr, this, nullptr);
+      this->_severLoadSignals();
       this->state |= state_flag::ready;
       if constexpr (debug_asset_lifetime) {
          qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
       }
    }
    emit this->ready();
+}
+void DovahKitAssetReceptor::_forwardUnloaded(QObject* target) {
+   emit this->unloaded();
 }
 
 bool DovahKitAssetReceptor::isReady() const noexcept {

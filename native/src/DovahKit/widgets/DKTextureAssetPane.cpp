@@ -24,8 +24,9 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
    this->setMinimumSize(minimum_length, minimum_length);
    //
    #if !defined(QT_DESIGNER_LIB)
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready,  this, &DKTextureAssetPane::_onAssetHandled);
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::failed, this, &DKTextureAssetPane::_onAssetHandled);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready,    this, &DKTextureAssetPane::_onAssetHandled);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onAssetHandled);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
    #endif
 }
 
@@ -83,6 +84,11 @@ void DKTextureAssetPane::_onAssetHandled() {
       return;
    }
    this->_render = Render::Asset;
+   this->_stopAnimation();
+   this->update();
+}
+void DKTextureAssetPane::_onAssetUnloaded() {
+   this->_render = Render::Null;
    this->_stopAnimation();
    this->update();
 }

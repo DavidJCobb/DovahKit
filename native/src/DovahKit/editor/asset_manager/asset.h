@@ -37,6 +37,7 @@ class DovahKitAsset : public QObject {
             uint32_t other_assets  = 0;
             uint32_t render_window = 0;
          } refcounts;
+         bool load_requested      = false; // prevents the asset manager from queuing multiple threads to load the same asset
          bool content_loaded      = false;
          bool content_failed      = false;
          bool dependencies_loaded = false;
@@ -54,7 +55,7 @@ class DovahKitAsset : public QObject {
 
    public:
       DovahKitAsset(QString path, Type, QObject* parent = nullptr);
-      ~DovahKitAsset();
+      virtual ~DovahKitAsset();
 
       inline QString path() const noexcept { return this->_path; }
       inline Type type() const noexcept { return this->_type; }
@@ -114,10 +115,13 @@ class DovahKitAssetReceptor : public QObject {
          };
       };
       using state_flags_t = std::underlying_type_t<state_flag::type>;
+
+      void _severLoadSignals();
       
    protected slots:
       void _forwardFailed();
       void _forwardReady();
+      void _forwardUnloaded(QObject* target);
 
    protected:
       QPointer<value_type> asset;
@@ -152,4 +156,5 @@ class DovahKitAssetReceptor : public QObject {
    signals:
       void failed();
       void ready();
+      void unloaded();
 };

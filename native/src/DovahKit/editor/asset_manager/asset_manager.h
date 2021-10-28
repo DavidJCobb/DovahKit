@@ -25,15 +25,15 @@ class DovahKitAssetManager : public QObject {
             std::atomic<bool> signal = false; // set to (true) to wake the worker when queuing new items, or to terminate it
             struct {
                std::mutex mutex;
-               QVector<DovahKitAsset*> to_load;
-               QVector<DovahKitAsset*> to_unload;
+               QVector<DovahKitAsset*> list;
             } queue;
+            //
+            bool com_is_ready = false; // needed for DirectXTex
 
             void _handler();
             
          public:
             void queueToLoad(DovahKitAsset&);
-            void queueToUnload(DovahKitAsset&);
 
             void start();
             void stop();

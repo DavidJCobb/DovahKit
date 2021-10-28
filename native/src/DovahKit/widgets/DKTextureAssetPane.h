@@ -25,6 +25,7 @@ class DKTextureAssetPane : public QFrame {
 
    protected slots:
       void _onAssetHandled();
+      void _onAssetUnloaded();
 
    protected:
       enum class Render {
