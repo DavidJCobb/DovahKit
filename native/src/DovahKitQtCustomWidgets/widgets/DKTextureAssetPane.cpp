@@ -49,7 +49,7 @@ void DKTextureAssetPane::setAsset(const QString& path) {
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
-      this->_handle = std::move(am.requestAsset(path));
+      this->_handle = am.requestAsset(path);
       this->update();
    #endif
 }

@@ -53,3 +53,37 @@ use or (usefully) store it on your own; its  only value is as a means to convey
 an asset to a receptor, and it will assert that you have used it appropriately. 
 Specifically, asset transports can only be moved, not copied, and when they are 
 destroyed, they assert that they no longer hold an asset pointer.
+
+
+=== HOW ARE FORMS HANDLED? ====================================================
+
+Commonly, the asset manager will be used  to load specific assets, like texture 
+or model files. In some cases, however, we'll want to load all files associated 
+with a particular form;  in particular this would be  convenient for the Render 
+Window. To that  end, there is an asset  type called "Form."  DovahKitAssets of 
+this type consist only of a form stub  and a loaded form pointer, and force the 
+loading of the form's data. If the form has associated assets, such as model or 
+texture files, then those are listed as dependencies and will be queued to load 
+as their own DovahKitAssets. (And of course, many forms that have 3D model data 
+can also  specify TextureSets for overriding textures, so "form-assets"  can be 
+interdependent as well.)
+
+DovahKit's backend -- the code for handling  forms -- is usually re-entrant but 
+rarely thread-safe.  As such, form-assets must be loaded on  the main thread -- 
+which is to say, their loaded form  pointers must be filled on the main thread. 
+Additionally,  considerations  must be made for  Dovahscript,  so that we don't 
+tamper with forms in a thread-unsafe manner while it's running:
+
+ - The asset manager must not load any forms while Dovahscript is running. They 
+   must be queued to load after Dovahscript finishes running, if they are still 
+   referenced at that time.
+
+ - The asset manager must immediately unload  forms when their deletion becomes 
+   imminent, in order to interfere with any attempts by Dovahscript to delete a 
+   form.
+
+ - The asset manager must  otherwise not unload any forms  while Dovahscript is 
+   running; as with loading, these operations must be queued.  This implies the 
+   need to  keep unreferenced Form-type DovahKitAssets "alive" somewhere  until 
+   the current Dovahscript session terminates.
+

@@ -22,6 +22,7 @@ class DovahKitAsset : public QObject {
          Undefined,
          DDS,
          NIF,
+         Form,
       };
       Q_ENUM(Type);
 

@@ -238,6 +238,16 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
             if constexpr (debug_asset_lifetime) {
                qDebug("DovahKitAssetReceptor is listening for \"ready\" and \"failed\" signals: %p (%s)", this, qUtf8Printable(this->asset->_path));
             }
+            //
+            // The asset is neither already loaded nor already failed, so let's hook signals to it so 
+            // that when it loads or fails, we can forward  those signals to whatever owns this asset 
+            // receptor. We'll use QueuedConnections here. Technically, we don't need to specify that 
+            // at all, because assets (typically) load on  a worker thread and so would automatically 
+            // fall back to queued signals. However, form-assets load on the main thread by necessity 
+            // and I would prefer that those behave  consistently with other assets. (Plus, requiring 
+            // a QueuedConnection saves Qt the trouble of having to check what thread we're on in the 
+            // other cases.)
+            //
             QObject::connect(asset, &value_type::ready, this, &DovahKitAssetReceptor::_forwardReady, Qt::QueuedConnection);
             QObject::connect(asset, &value_type::contentLoadingFailed, this, &DovahKitAssetReceptor::_forwardFailed, Qt::QueuedConnection);
          }
@@ -246,17 +256,24 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
       this->asset->on_handle_made(*this);
    }
    switch (fire) {
+      //
+      // If the asset is already loaded or failed, we want to re-fire the appropriate signals on this 
+      // receptor. The straightforward way would just be to emit the signals normally, but this leads 
+      // to inconsistent  behavior with the above (i.e. DirectConnection behavior),  and so can cause 
+      // confusing mistakes and issues within outside code which uses asset receptors. Instead, we'll 
+      // use Qt's QMetaObject system to emit the signals as a QueuedConnection call.
+      //
       case which::ready:
          if constexpr (debug_asset_lifetime) {
             qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
          }
-         emit this->ready();
+         QMetaObject::invokeMethod(this, &DovahKitAssetReceptor::ready, Qt::QueuedConnection); // emit the signal, but force it to behave as queued, for uniformity with the above case
          break;
       case which::failed:
          if constexpr (debug_asset_lifetime) {
             qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
          }
-         emit this->failed();
+         QMetaObject::invokeMethod(this, &DovahKitAssetReceptor::failed, Qt::QueuedConnection); // emit the signal, but force it to behave as queued, for uniformity with the above case
          break;
    }
 }

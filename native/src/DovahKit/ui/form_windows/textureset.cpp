@@ -1,6 +1,7 @@
 #include "textureset.h"
 #include "_base_cpp.h"
 #include "../../helpers/bitwise.h"
+#include "../../editor/asset_manager/asset_manager.h"
 
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for TextureSets is incomplete: the preview pane is not yet functional.");
@@ -55,13 +56,20 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* pare
       auto  blocker = QSignalBlocker(widget);
       if (currentRow >= 0 && currentRow <= 7) {
          if (auto* s = this->form->texture_by_index(currentRow)) {
+            auto path = QString::fromStdString(*s);
+            //
             widget->setEnabled(true);
-            widget->setRawPath(QString::fromStdString(*s));
+            widget->setRawPath(path);
+            if (path.isEmpty())
+               this->ui.preview->setAsset(nullptr);
+            else
+               this->ui.preview->setAsset(QLatin1String("textures/") + path);
             return;
          }
       }
       widget->setEnabled(false);
       widget->setPath(QString());
+      this->_resetTexturePreview();
    });
    QObject::connect(this->ui.editPath, &DKGameFilePicker::rawPathChanged, this, [this](const QString& path) {
       auto  row    = this->ui.paths->currentRow();
@@ -74,8 +82,14 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* pare
       if (item)
          item->setText(path);
    });
+   QObject::connect(this->ui.editPath, &DKGameFilePicker::pathChanged, this, [this](const QString& path) {
+      auto row = this->ui.paths->currentRow();
+      if (row < this->loaded_textures.size())
+         this->loaded_textures[row] = DovahKitAssetManager::get().requestAsset(path); // TODO: this would result in a fetch with every keystroke if the user types a path; implement editingFinished or throttle it
+   });
    //
    this->load();
+   this->_resetTexturePreview();
 }
 
 namespace {
@@ -147,6 +161,17 @@ void FormDialogTextureSet::refreshTextureList() {
    }
 }
 
+void FormDialogTextureSet::_resetTexturePreview() {
+   for (size_t i = 0; i < this->loaded_textures.size(); ++i) {
+      auto& receptor = this->loaded_textures[i];
+      if (receptor != nullptr) {
+         this->ui.preview->setAsset(receptor);
+         return;
+      }
+   }
+   this->ui.preview->setAsset(nullptr);
+}
+
 void FormDialogTextureSet::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
@@ -172,6 +197,16 @@ void FormDialogTextureSet::_load_impl() {
       this->ui.decalMaxHeight->setValue(decal.height.max);
       this->ui.decalParallaxPasses->setValue(decal.parallax.passes);
       this->ui.decalParallaxScale->setValue(decal.parallax.scale);
+   }
+   //
+   {  // Preload the TXST texture files for previewing.
+      auto& am = DovahKitAssetManager::get();
+      for (size_t i = 0; i < this->loaded_textures.size(); ++i) {
+         auto& receptor = this->loaded_textures[i];
+         const auto* path = this->form->texture_by_index(i);
+         if (path && !path->empty())
+            receptor = am.requestAsset(QLatin1String("textures/") + QString::fromStdString(*path));
+      }
    }
    //
    this->refreshTextureList();

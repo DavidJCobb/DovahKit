@@ -61,10 +61,16 @@
     <QtMoc Include="interfaces\DKColorPickerButtonInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKColorPickerButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <QtMoc Include="widgets\DKGameFilePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKColorPickerButton.h">
+    <QtMoc Include="widgets\DKTextureAssetPane.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -96,10 +102,16 @@
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKColorPickerButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="widgets\DKGameFilePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKColorPickerButton.cpp">
+    <ClCompile Include="widgets\DKTextureAssetPane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

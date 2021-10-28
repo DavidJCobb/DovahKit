@@ -100,10 +100,12 @@
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <None Include="README.md" />
     <QtMoc Include="widgets\DKCollapsiblePane.h" />
     <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />
@@ -143,10 +145,12 @@
     <QtMoc Include="widgets\DKFormListPane.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\DKTextureAssetPane.h" />
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h" />
     <QtMoc Include="interfaces\DKColorPickerButtonInterface.h" />
-    <QtMoc Include="widgets\DKGameFilePicker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
+    <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
