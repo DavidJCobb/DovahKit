@@ -24,12 +24,13 @@ class DKTextureAssetPane : public QFrame {
       void setAsset(const DovahKitAssetReceptor&);
 
    protected slots:
-      void _onAssetReady();
+      void _onAssetHandled();
 
    protected:
       enum class Render {
          Null,
          Loading,
+         Failed,
          Asset,
       };
 
@@ -42,6 +43,7 @@ class DKTextureAssetPane : public QFrame {
 
       void _drawLoadingSpinner(QPainter&, QRect);
       void _drawNullSymbol(QPainter&, QRect);
+      void _drawFailSymbol(QPainter&, QRect);
 
       void _startAnimation();
       void _stopAnimation();

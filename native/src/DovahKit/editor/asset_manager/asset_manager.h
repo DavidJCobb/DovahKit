@@ -57,8 +57,7 @@ class DovahKitAssetManager : public QObject {
       // relative to the Data directory, and will remain so.
       static QString normalizeAssetPath(const QString&);
 
-      DovahKitAssetTransport requestModel(const QString& path);
-      DovahKitAssetTransport requestTexture(const QString& path);
+      DovahKitAssetTransport requestAsset(const QString& path);
 
       void onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset&);
 

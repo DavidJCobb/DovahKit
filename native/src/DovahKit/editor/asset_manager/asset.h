@@ -109,12 +109,14 @@ class DovahKitAssetReceptor : public QObject {
       struct state_flag {
          state_flag() = delete;
          enum type : uint8_t {
-            ready = 0x01,
+            ready  = 0x01,
+            failed = 0x02,
          };
       };
       using state_flags_t = std::underlying_type_t<state_flag::type>;
       
    protected slots:
+      void _forwardFailed();
       void _forwardReady();
 
    protected:
@@ -144,8 +146,10 @@ class DovahKitAssetReceptor : public QObject {
 
       inline value_type* bare() const noexcept { return this->asset.data(); }
 
+      bool isFailed() const noexcept;
       bool isReady() const noexcept;
 
    signals:
+      void failed();
       void ready();
 };

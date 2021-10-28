@@ -101,7 +101,7 @@ DovahKitAssetManager::DovahKitAssetManager() {
 
 void DovahKitAssetManager::_load(DovahKitAsset& asset) {
    if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAsset asset load requested from manager: %p (%s)", asset, qUtf8Printable(asset._path));
+      qDebug("DovahKitAsset asset load requested from manager: %p (%s)", &asset, qUtf8Printable(asset._path));
    }
    /*// Disabled for now, for simplicity
    //
@@ -128,30 +128,23 @@ void DovahKitAssetManager::_load(DovahKitAsset& asset) {
    asset.load(); // single-threaded load, for testing
 }
 
-DovahKitAssetTransport DovahKitAssetManager::requestModel(const QString& path) {
+DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
    auto norm = this->normalizeAssetPath(path);
    auto it   = this->assets.find(norm);
    if (it != this->assets.end()) {
       return *it;
    }
-   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::NIF);
+   //
+   auto type = DovahKitAsset::Type::Undefined;
+   if (path.endsWith(".dds"))
+      type = DovahKitAsset::Type::DDS;
+   else if (path.endsWith(".dds"))
+      type = DovahKitAsset::Type::NIF;
+   //
+   auto* asset = new DovahKitAsset(norm, type);
    this->assets[norm] = asset;
    if constexpr (debug_asset_lifetime) {
-      qDebug("Created DovahKitAsset (model): %p (%s)", asset, qUtf8Printable(path));
-   }
-   this->_load(*asset);
-   return asset;
-}
-DovahKitAssetTransport DovahKitAssetManager::requestTexture(const QString& path) {
-   auto norm = this->normalizeAssetPath(path);
-   auto it   = this->assets.find(norm);
-   if (it != this->assets.end()) {
-      return *it;
-   }
-   auto* asset = new DovahKitAsset(norm, DovahKitAsset::Type::DDS);
-   this->assets[norm] = asset;
-   if constexpr (debug_asset_lifetime) {
-      qDebug("Created DovahKitAsset (texture): %p (%s)", asset, qUtf8Printable(path));
+      qDebug("Created DovahKitAsset: %p (%s)", asset, qUtf8Printable(path));
    }
    this->_load(*asset);
    return asset;
@@ -159,7 +152,7 @@ DovahKitAssetTransport DovahKitAssetManager::requestTexture(const QString& path)
 
 void DovahKitAssetManager::onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset& asset) {
    if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAsset is unreferenced: %p (%s)", asset, qUtf8Printable(asset._path));
+      qDebug("DovahKitAsset is unreferenced: %p (%s)", &asset, qUtf8Printable(asset._path));
    }
    auto i = this->assets.remove(asset._path);
    assert(i && "Was this asset not tracked?!");

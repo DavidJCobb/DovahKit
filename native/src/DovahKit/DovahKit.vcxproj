@@ -1238,6 +1238,7 @@
     <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
+    <Text Include="editor\_docs\asset manager.txt" />
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />

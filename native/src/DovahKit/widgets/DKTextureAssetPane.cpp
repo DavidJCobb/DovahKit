@@ -24,7 +24,8 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
    this->setMinimumSize(minimum_length, minimum_length);
    //
    #if !defined(QT_DESIGNER_LIB)
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready, this, &DKTextureAssetPane::_onAssetReady);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready,  this, &DKTextureAssetPane::_onAssetHandled);
+      QObject::connect(&this->_handle, &DovahKitAssetReceptor::failed, this, &DKTextureAssetPane::_onAssetHandled);
    #endif
 }
 
@@ -47,7 +48,7 @@ void DKTextureAssetPane::setAsset(const QString& path) {
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
-      this->_handle = am.requestTexture(path);
+      this->_handle = am.requestAsset(path);
       this->update();
    #endif
 }
@@ -74,7 +75,13 @@ void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
    #endif
 }
 
-void DKTextureAssetPane::_onAssetReady() {
+void DKTextureAssetPane::_onAssetHandled() {
+   if (this->_handle == nullptr || this->_handle->type() != DovahKitAsset::Type::DDS || this->_handle.isFailed()) {
+      this->_render = Render::Failed;
+      this->_stopAnimation();
+      this->update();
+      return;
+   }
    this->_render = Render::Asset;
    this->_stopAnimation();
    this->update();
@@ -150,6 +157,31 @@ void DKTextureAssetPane::_drawNullSymbol(QPainter& p, QRect rect) {
    p.drawEllipse({ 0, 0 }, null_icon_render_size / 2, null_icon_render_size / 2);
    p.drawLine(halfwidth, -halfwidth, -halfwidth, halfwidth);
 }
+void DKTextureAssetPane::_drawFailSymbol(QPainter& p, QRect rect) {
+   constexpr int  margin    = null_icon_line_width  + 2;
+   constexpr auto halfwidth = null_icon_render_size / 2;
+   //
+   QPointF center = rect.center();
+   auto    length = std::min(rect.width(), rect.height()) - margin;
+   //
+   QColor color = this->palette().color(QPalette::ColorRole::Dark);
+   QPen   pen;
+   pen.setWidth(null_icon_line_width);
+   pen.setColor(color);
+   pen.setCapStyle(Qt::PenCapStyle::FlatCap);
+   //
+   p.save();
+   p.setBrush(Qt::NoBrush);
+   p.setPen(pen);
+   p.setRenderHints(QPainter::RenderHint::Antialiasing | QPainter::RenderHint::SmoothPixmapTransform, true);
+   p.translate(center);
+   if (length < null_icon_render_bounds) {
+      auto scale = qreal(length) / null_icon_render_bounds;
+      p.scale(scale, scale);
+   }
+   p.drawLine( halfwidth, -halfwidth, -halfwidth,  halfwidth);
+   p.drawLine(-halfwidth, -halfwidth,  halfwidth,  halfwidth);
+}
 
 void DKTextureAssetPane::_startAnimation() {
    if (!this->_animation.updateID) {
@@ -172,6 +204,9 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
    switch (this->_render) {
       case Render::Null:
          _drawNullSymbol(painter, this->contentsRect());
+         break;
+      case Render::Failed:
+         _drawFailSymbol(painter, this->contentsRect());
          break;
       case Render::Loading:
          _drawLoadingSpinner(painter, this->contentsRect());

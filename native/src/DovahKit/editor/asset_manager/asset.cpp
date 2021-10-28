@@ -214,7 +214,13 @@ DovahKitAssetTransport& DovahKitAssetTransport::operator=(DovahKitAssetTransport
 
 #pragma region DovahKitAssetReceptor
 void DovahKitAssetReceptor::_acquire(value_type* value) {
-   bool fire = false;
+   enum class which {
+      none,
+      ready,
+      failed,
+   };
+   //
+   which fire = which::none;
    this->state &= ~state_flag::ready;
    if (value) {
       {
@@ -222,21 +228,33 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
          this->asset = value;
          if (value->isReady()) {
             this->state |= state_flag::ready;
-            fire = true;
+            fire = which::ready;
+         } else if (value->didContentLoadingFail()) {
+            this->state |= state_flag::failed;
+            fire = which::failed;
          } else {
             if constexpr (debug_asset_lifetime) {
-               qDebug("DovahKitAssetReceptor is listening for \"ready\" signal: %p (%s)", this, qUtf8Printable(this->asset->_path));
+               qDebug("DovahKitAssetReceptor is listening for \"ready\" and \"failed\" signals: %p (%s)", this, qUtf8Printable(this->asset->_path));
             }
             QObject::connect(asset, &value_type::ready, this, &DovahKitAssetReceptor::_forwardReady, Qt::QueuedConnection);
+            QObject::connect(asset, &value_type::contentLoadingFailed, this, &DovahKitAssetReceptor::_forwardFailed, Qt::QueuedConnection);
          }
       }
       this->asset->on_handle_made(*this);
    }
-   if (fire) {
-      if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
-      }
-      emit this->ready();
+   switch (fire) {
+      case which::ready:
+         if constexpr (debug_asset_lifetime) {
+            qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         }
+         emit this->ready();
+         break;
+      case which::failed:
+         if constexpr (debug_asset_lifetime) {
+            qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         }
+         emit this->failed();
+         break;
    }
 }
 void DovahKitAssetReceptor::_clear() {
@@ -245,11 +263,22 @@ void DovahKitAssetReceptor::_clear() {
       p->on_handle_lost(*this);
       this->asset = nullptr;
    }
-   this->state &= ~state_flag::ready;
+   this->state &= ~(state_flag::ready | state_flag::failed);
+}
+
+void DovahKitAssetReceptor::_forwardFailed() {
+   if (this->asset) {
+      QObject::disconnect(this->asset, nullptr, this, nullptr);
+      this->state |= state_flag::failed;
+      if constexpr (debug_asset_lifetime) {
+         qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
+      }
+   }
+   emit this->failed();
 }
 void DovahKitAssetReceptor::_forwardReady() {
    if (this->asset) {
-      QObject::disconnect(this->asset, &value_type::ready, this, nullptr);
+      QObject::disconnect(this->asset, nullptr, this, nullptr);
       this->state |= state_flag::ready;
       if constexpr (debug_asset_lifetime) {
          qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
@@ -265,6 +294,12 @@ bool DovahKitAssetReceptor::isReady() const noexcept {
       return this->asset->isReady();
       //*/
       return (this->state & state_flag::ready) != 0;
+   }
+   return false;
+}
+bool DovahKitAssetReceptor::isFailed() const noexcept {
+   if (this->asset) {
+      return (this->state & state_flag::failed) != 0;
    }
    return false;
 }
