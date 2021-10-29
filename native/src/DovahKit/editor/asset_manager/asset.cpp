@@ -326,11 +326,10 @@ DovahKitAssetReceptor::~DovahKitAssetReceptor() {
 }
 
 DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(DovahKitAssetTransport&& target) noexcept {
-   if (this->asset == target.value)
-      return *this;
    auto* p = target.value;
    target.value = nullptr;
-   //
+   if (this->asset == p)
+      return *this;
    this->_clear();
    this->_acquire(p);
    return *this;

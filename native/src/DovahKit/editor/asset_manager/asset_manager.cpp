@@ -249,12 +249,13 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
 }
 
 void DovahKitAssetManager::pauseFormManagement() {
-   // TODO: when we add support for managing whole forms, do not allow the asset manager 
-   // to load or unload forms while "form management" is paused, EXCEPT for one thing: we 
-   // MUST always unload forms when their deletion is imminent.
+   assert(QThread::currentThread() == this->thread());
+   //
    this->form_management_paused = true;
 }
 void DovahKitAssetManager::unpauseFormManagement() {
+   assert(QThread::currentThread() == this->thread());
+   //
    decltype(this->form_queues.load)    lq;
    decltype(this->form_queues.discard) dq;
    {
@@ -270,6 +271,8 @@ void DovahKitAssetManager::unpauseFormManagement() {
 }
 
 void DovahKitAssetManager::unloadAll() {
+   assert(QThread::currentThread() == this->thread());
+   //
    if constexpr (debug_asset_lifetime || debug_worker_threads) {
       qDebug("Asset manager is unloading all content and killing all worker threads...");
    }
@@ -278,13 +281,28 @@ void DovahKitAssetManager::unloadAll() {
    auto guard_a = std::unique_lock(this->asset_lock);
    auto guard_b = std::unique_lock(this->asset_dependency_handling.lock);
    {
-      for (auto* asset : this->assets)
+      for (auto* asset : this->assets) {
+         //
+         // See below.
+         //
+         asset->unload();
          asset->deleteLater();
+      }
       this->assets.clear();
    }
    {
-      for (auto* asset : this->form_assets)
+      for (auto* asset : this->form_assets) {
+         //
+         // The asset destructor unloads the asset content, but because we're calling deleteLater, 
+         // that  may not happen soon enough. Commonly,  we would want to mass-unload assets  when 
+         // DovahKit is about to discard all loaded data... and for form-assets, we need to unload 
+         // data IMMEDIATELY or we'll cause issues with deleting the form stubs.
+         // 
+         // We'll unload now, and also call deleteLater.
+         //
+         asset->unload();
          asset->deleteLater();
+      }
       this->form_assets.clear();
    }
    this->asset_dependency_handling.list.clear();
@@ -293,6 +311,8 @@ void DovahKitAssetManager::unloadAll() {
 }
 
 void DovahKitAssetManager::killThreads() {
+   assert(QThread::currentThread() == this->thread());
+   //
    if constexpr (debug_worker_threads) {
       qDebug("Asset manager is killing all worker threads...");
    }
@@ -300,6 +320,8 @@ void DovahKitAssetManager::killThreads() {
       worker.stop();
 }
 void DovahKitAssetManager::spawnThreads() {
+   assert(QThread::currentThread() == this->thread());
+   //
    if constexpr (debug_worker_threads) {
       qDebug("Asset manager is spawning all worker threads...");
    }
@@ -309,6 +331,8 @@ void DovahKitAssetManager::spawnThreads() {
 }
 
 void DovahKitAssetManager::queueDependencyLoad() {
+   assert(QThread::currentThread() == this->thread());
+   //
    if constexpr (debug_asset_lifetime) {
       qDebug("DovahKitAssetManager is executing a queued asset dependency load...");
    }
