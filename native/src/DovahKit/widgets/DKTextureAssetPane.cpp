@@ -29,12 +29,33 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
       QObject::connect(&this->_handle, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onAssetHandled);
       QObject::connect(&this->_handle, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
    #endif
+   //
+   this->_throttle.timer.setSingleShot(true);
+   QObject::connect(&this->_throttle.timer, &QTimer::timeout, this, [this]() {
+      auto* s = this->_throttle.stub;
+      auto  p = this->_throttle.path;
+      this->_clearThrottleData();
+      //
+      this->_throttle.enabled = false; // HACK so we can use setAsset
+      if (s) {
+         this->setAsset(s);
+      } else if (!p.isEmpty()) {
+         this->setAsset(p);
+      }
+      this->_throttle.enabled = true;
+   });
 }
 
 bool DKTextureAssetPane::hasAsset() const noexcept {
    #if defined(QT_DESIGNER_LIB)
       return false;
    #else
+      if (this->_throttle.enabled) {
+         if (this->_throttle.stub)
+            return true;
+         if (!this->_throttle.path.isEmpty())
+            return true;
+      }
       return this->_handle != nullptr;
    #endif
 }
@@ -44,6 +65,25 @@ void DKTextureAssetPane::setAsset(const QString& path) {
       #if !defined(QT_DESIGNER_LIB)
          this->_handle = nullptr;
       #endif
+      this->update();
+      return;
+   }
+   if (this->_handle != nullptr) {
+      if (this->_handle->samePathAs(path))
+         //
+         // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
+         // signal if the asset is already ready or failed, so if we don't catch that case here, 
+         // then we'll be stuck with a loading spinner that never ends.
+         //
+         return;
+   }
+   if (this->_throttle.enabled) {
+      if (this->_throttle.path == path)
+         return;
+      this->_throttle.timer.start(this->_throttle.ms);
+      this->_throttle.path = path;
+      this->_throttle.stub = nullptr;
+      this->_handle = nullptr;
       this->update();
       return;
    }
@@ -60,6 +100,25 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
       #if !defined(QT_DESIGNER_LIB)
          this->_handle = nullptr;
       #endif
+      this->update();
+      return;
+   }
+   if (this->_handle != nullptr) {
+      if (this->_handle->formStub() == stub)
+         //
+         // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
+         // signal if the asset is already ready or failed, so if we don't catch that case here, 
+         // then we'll be stuck with a loading spinner that never ends.
+         //
+         return;
+   }
+   if (this->_throttle.enabled) {
+      if (this->_throttle.stub == stub)
+         return;
+      this->_throttle.timer.start(this->_throttle.ms);
+      this->_throttle.stub = stub;
+      this->_throttle.path.clear();
+      this->_handle = nullptr;
       this->update();
       return;
    }
@@ -93,6 +152,40 @@ void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
    #endif
 }
 
+void DKTextureAssetPane::setThrottleEnabled(bool e) {
+   auto& t = this->_throttle;
+   //
+   t.enabled = e;
+   if (!e) {
+      t.timer.stop();
+      //
+      QString p;
+      auto*   s = t.stub;
+      std::swap(p, t.path);
+      if (s) {
+         this->setAsset(s);
+      } else if (!p.isEmpty()) {
+         this->setAsset(p);
+      }
+   }
+}
+void DKTextureAssetPane::setThrottleTime(uint ms) {
+   auto& t = this->_throttle;
+   //
+   if (t.enabled && t.timer.isActive()) {
+      auto rem    = t.timer.remainingTime();
+      auto passed = t.ms - rem;
+      t.ms = ms;
+      if (passed > ms) {
+         t.timer.start(passed - ms);
+      } else {
+         t.timer.start(0);
+      }
+   } else {
+      t.ms = ms;
+   }
+}
+
 void DKTextureAssetPane::_onAssetHandled() {
    #if !defined(QT_DESIGNER_LIB)
       DovahKitAssetReceptor* use = &this->_handle;
@@ -121,6 +214,19 @@ void DKTextureAssetPane::_onAssetUnloaded() {
    this->_render = Render::Null;
    this->_stopAnimation();
    this->update();
+}
+
+void DKTextureAssetPane::_clearThrottleData() {
+   this->_throttle.stub = nullptr;
+   this->_throttle.path.clear();
+}
+bool DKTextureAssetPane::_hasThrottleData() const noexcept {
+   auto& t = this->_throttle;
+   if (t.stub)
+      return true;
+   if (!t.path.isEmpty())
+      return true;
+   return false;
 }
 
 void DKTextureAssetPane::_drawLoadingSpinner(QPainter& p, QRect rect) {
@@ -236,6 +342,10 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
    QFrame::paintEvent(event);
    //
    QPainter painter(this);
+   if (this->_hasThrottleData()) {
+      _drawLoadingSpinner(painter, this->contentsRect());
+      return;
+   }
    if (this->_render != Render::Loading) {
       this->_stopAnimation();
    }

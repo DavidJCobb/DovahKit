@@ -59,6 +59,14 @@ void DovahKitAsset::on_handle_lost(DovahKitAssetReceptor& handle) {
       DovahKitAssetManager::get().onUnreferenced(passkey_to_manager(), *this);
 }
 
+bool DovahKitAsset::samePathAs(const QString& p) const noexcept {
+   if (this->type() == Type::Form) {
+      return false;
+   }
+   auto np = DovahKitAssetManager::normalizeAssetPath(p);
+   return np == this->_path;
+}
+
 QString DovahKitAsset::description() const noexcept {
    if (this->type() != Type::Form)
       return QString("(%1)").arg(this->_path);

@@ -70,6 +70,8 @@ class DovahKitAsset : public QObject {
       inline bool isContentLoaded() const noexcept { return this->_state.content_loaded; }
       inline bool isReady() const noexcept { return this->isContentLoaded() && this->areDependenciesLoaded(); }
 
+      bool samePathAs(const QString& p) const noexcept; // normalizes (p) before comparing
+
       QString description() const noexcept;
 
       const DovahKitAssetDataDDS* asDDS() const noexcept;

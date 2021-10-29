@@ -152,23 +152,20 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
    auto norm = this->normalizeAssetPath(path);
    if (norm.isEmpty())
       return nullptr;
+   DovahKitAsset* asset = nullptr;
    {
       auto guard = std::shared_lock(this->asset_lock);
       auto it    = this->assets.find(norm);
       if (it != this->assets.end()) {
          return *it;
       }
-   }
-   //
-   auto type = DovahKitAsset::Type::Undefined;
-   if (path.endsWith(".dds"))
-      type = DovahKitAsset::Type::DDS;
-   else if (path.endsWith(".dds"))
-      type = DovahKitAsset::Type::NIF;
-   //
-   auto* asset = new DovahKitAsset(norm, type);
-   {
-      auto guard = std::unique_lock(this->asset_lock);
+      auto type = DovahKitAsset::Type::Undefined;
+      if (path.endsWith(".dds"))
+         type = DovahKitAsset::Type::DDS;
+      else if (path.endsWith(".dds"))
+         type = DovahKitAsset::Type::NIF;
+      //
+      asset = new DovahKitAsset(norm, type);
       this->assets[norm] = asset;
    }
    if constexpr (debug_asset_lifetime) {
@@ -180,16 +177,14 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
 DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub) {
    assert(QThread::currentThread() == this->thread() && "We don't currently account for requesting a form-asset from off the main thread. We'll need some adjustments.");
    //
+   DovahKitAsset* asset = nullptr;
    {
       auto guard = std::shared_lock(this->asset_lock);
       auto it = this->form_assets.find(&stub);
       if (it != this->form_assets.end()) {
          return *it;
       }
-   }
-   auto* asset = new DovahKitAsset(&stub);
-   {
-      auto guard = std::unique_lock(this->asset_lock);
+      asset = new DovahKitAsset(&stub);
       this->form_assets[&stub] = asset;
    }
    if constexpr (debug_asset_lifetime) {
