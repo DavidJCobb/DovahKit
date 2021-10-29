@@ -10,8 +10,15 @@ namespace DirectX {
    struct TexMetadata;
 }
 
+namespace dovah {
+   class form_stub;
+}
 class DovahKitAssetReceptor;
 class DovahKitAssetManager;
+
+class DovahKitAssetData;
+class DovahKitAssetDataDDS;
+class DovahKitAssetDataTextureSet;
 
 class DovahKitAsset : public QObject {
    Q_OBJECT;
@@ -29,6 +36,7 @@ class DovahKitAsset : public QObject {
    protected:
       Type    _type = Type::Undefined;
       QString _path;
+      dovah::form_stub* _stub = nullptr;
       struct {
          std::mutex load_state;
       } _locks;
@@ -43,37 +51,36 @@ class DovahKitAsset : public QObject {
          bool content_failed      = false;
          bool dependencies_loaded = false;
       } _state;
-      struct {
-         struct {
-            DirectX::ScratchImage* data = nullptr;
-            DirectX::TexMetadata*  info = nullptr;
-         } dds;
-         QImage image;
-      } _data;
+      DovahKitAssetData* data = nullptr;
 
       void on_handle_made(DovahKitAssetReceptor&);
       void on_handle_lost(DovahKitAssetReceptor&);
 
    public:
       DovahKitAsset(QString path, Type, QObject* parent = nullptr);
+      DovahKitAsset(dovah::form_stub*, QObject* parent = nullptr);
       virtual ~DovahKitAsset();
 
       inline QString path() const noexcept { return this->_path; }
       inline Type type() const noexcept { return this->_type; }
+      inline dovah::form_stub* formStub() const noexcept { return this->_stub; }
 
       inline bool areDependenciesLoaded() const noexcept { return this->_state.dependencies_loaded; }
       inline bool didContentLoadingFail() const noexcept { return this->_state.content_failed; }
       inline bool isContentLoaded() const noexcept { return this->_state.content_loaded; }
       inline bool isReady() const noexcept { return this->isContentLoaded() && this->areDependenciesLoaded(); }
 
-      inline const DirectX::ScratchImage* ddsImage()    const noexcept { return this->_data.dds.data; }
-      inline const DirectX::TexMetadata*  ddsMetadata() const noexcept { return this->_data.dds.info; }
+      QString description() const noexcept;
 
-      inline QImage image() const noexcept { return this->_data.image; }
+      const DovahKitAssetDataDDS* asDDS() const noexcept;
+      const DovahKitAssetDataTextureSet* asTextureSet() const noexcept;
+      //
+      QImage asQImage() const noexcept;
 
    protected slots:
       void load();
       void unload();
+      void requestDependencies();
 
    signals:
       void contentLoaded();        // The asset's own content has loaded.

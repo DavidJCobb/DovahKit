@@ -5,6 +5,9 @@
 #include "../core.h"
 #include "asset_manager.h"
 
+#include "data/dds.h"
+#include "data/form_textureset.h"
+
 namespace {
    // see also: the same constexpr value in asset_manager.cpp
    static constexpr bool debug_asset_lifetime = false
@@ -15,27 +18,25 @@ namespace {
 }
 
 namespace {
-   static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_B8G8R8A8_UNORM;
-   static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_ARGB32; // the Qt equivalent of desired_dds_pixel_format
-
-   QImage _qt_image_from_dds(DirectX::ScratchImage* image) {
-      auto* layer = image->GetImage(0, 0, 0);
-      if (!layer)
-         return QImage();
-      if (layer->width > std::numeric_limits<int>::max())
-         return QImage();
-      if (layer->height > std::numeric_limits<int>::max())
-         return QImage();
-      if (layer->rowPitch > std::numeric_limits<int>::max())
-         return QImage();
-      return QImage((const uchar*)layer->pixels, layer->width, layer->height, layer->rowPitch, desired_dds_pixel_qt_fmt);
-   }
-
-   using passkey_to_manager = cobb::passkey<DovahKitAsset, DovahKitAssetManager>;
+   using passkey_to_manager = DovahKitAssetManager::asset_passkey;
 }
 
 #pragma region DovahKitAsset
 DovahKitAsset::DovahKitAsset(QString p, Type t, QObject* parent) : QObject(parent), _type(t), _path(p) {
+   switch (t) {
+      case Type::DDS:
+         this->data = new DovahKitAssetDataDDS(*this);
+         break;
+   }
+}
+DovahKitAsset::DovahKitAsset(dovah::form_stub* s, QObject* parent) : QObject(parent), _type(Type::Form), _stub(s) {
+   if (s) {
+      switch (s->formType) {
+         case dovah::form_type::texture_set:
+            this->data = new DovahKitAssetDataTextureSet(*this);
+            break;
+      }
+   }
 }
 DovahKitAsset::~DovahKitAsset() {
    if constexpr (debug_asset_lifetime) {
@@ -58,10 +59,39 @@ void DovahKitAsset::on_handle_lost(DovahKitAssetReceptor& handle) {
       DovahKitAssetManager::get().onUnreferenced(passkey_to_manager(), *this);
 }
 
+QString DovahKitAsset::description() const noexcept {
+   if (this->type() != Type::Form)
+      return QString("(%1)").arg(this->_path);
+   if (this->_stub) {
+      return QString("[FORM:%1]%2").arg(QString("%1").arg(this->_stub->formID, 8, 16, QChar('0'))).arg(this->_stub->editorID.c_str());
+   }
+   return QString("(?)");
+}
+
+const DovahKitAssetDataDDS* DovahKitAsset::asDDS() const noexcept {
+   if (this->type() != Type::DDS)
+      return nullptr;
+   return (DovahKitAssetDataDDS*)this->data;
+}
+const DovahKitAssetDataTextureSet* DovahKitAsset::asTextureSet() const noexcept {
+   if (this->type() != Type::Form)
+      return nullptr;
+   if (!this->_stub || this->_stub->formType != dovah::form_type::texture_set)
+      return nullptr;
+   return (DovahKitAssetDataTextureSet*)this->data;
+}
+//
+QImage DovahKitAsset::asQImage() const noexcept {
+   if (auto* data = this->asDDS()) {
+      return data->image;
+   }
+   return QImage();
+}
+
 void DovahKitAsset::load() {
    auto _fail = [this]() {
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAsset failed to load: %p (%s)", this, qUtf8Printable(this->_path));
+         qDebug("DovahKitAsset failed to load: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
       this->_state.load_requested = false;
@@ -70,14 +100,18 @@ void DovahKitAsset::load() {
    };
    auto _done = [this]() {
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAsset loaded: %p (%s)", this, qUtf8Printable(this->_path));
+         qDebug("DovahKitAsset loaded: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
       this->_state.load_requested      = false;
       this->_state.content_loaded      = true;
-      this->_state.dependencies_loaded = true; // DDS files have no external dependencies
+      this->_state.dependencies_loaded = !this->data->hasPendingDependencies();
       emit this->contentLoaded();
-      emit this->ready();
+      if (this->_state.dependencies_loaded) {
+         emit this->ready();
+      } else {
+         DovahKitAssetManager::get().requestDependencies(passkey_to_manager(), *this);
+      }
    };
    
    using file_type = dovah::bsa_archived_file;
@@ -90,111 +124,53 @@ void DovahKitAsset::load() {
    //
    if (this->_type == Type::Undefined)
       return _fail();
-   file_type* file = nullptr;
+   if (!this->data)
+      return _fail();
+   //
+   if (this->_type == Type::Form) {
+      if (!this->_stub)
+         return _fail();
+      bool result = this->data->load(*this->_stub);
+      if (!result)
+         return _fail();
+      return _done();
+   }
+   //
+   if (this->_path.isEmpty())
+      return _fail();
+   std::unique_ptr<file_type> file;
    {
       std::filesystem::path std_path = this->_path.toStdWString();
-      file = DovahKitCore::get().lookup_game_asset(std_path, true);
+      file.reset(DovahKitCore::get().lookup_game_asset(std_path, true));
    }
    if (!file)
       return _fail();
    //
    // Type-specific loading code:
    //
-   if (this->_type == Type::DDS) {
-      using namespace DirectX;
-      using image_ptr_t = std::unique_ptr<ScratchImage>;
-      //
-      TexMetadata metadata;
-      image_ptr_t raw(new (std::nothrow) ScratchImage);
-      HRESULT     hr = LoadFromDDSMemory(file->data(), file->size(), DDS_FLAGS_NONE, &metadata, *raw);
-      if (FAILED(hr))
-         return _fail();
-      //
-      if (IsTypeless(metadata.format)) {
-         metadata.format = MakeTypelessUNORM(metadata.format);
-         if (IsTypeless(metadata.format))
-            return _fail();
-         raw->OverrideFormat(metadata.format);
-      }
-      if (IsPlanar(metadata.format)) {
-         //
-         // Some DDS files split the image into multiple "planes:" instead of having the R, G, B, and A 
-         // values interleaved together, the file effectively stores four single-channel images. We want 
-         // to merge those into RGBA.
-         //
-         image_ptr_t merged(new (std::nothrow) ScratchImage);
-         if (!merged) // out of memory
-            return _fail();
-         hr = ConvertToSinglePlane(raw->GetImages(), raw->GetImageCount(), metadata, *merged);
-         if (FAILED(hr))
-            return _fail();
-         metadata = merged->GetMetadata();
-         raw.swap(merged);
-      }
-      //
-      if (IsCompressed(metadata.format)) {
-         image_ptr_t decompressed(new (std::nothrow) ScratchImage);
-         if (!decompressed) // out of memory
-            return _fail();
-         Decompress(raw->GetImages(), raw->GetImageCount(), metadata, DXGI_FORMAT_UNKNOWN, *decompressed);
-         std::swap(decompressed, raw);
-         metadata = raw->GetMetadata();
-      }
-      if (metadata.format != desired_dds_pixel_format) {
-         image_ptr_t converted(new (std::nothrow) ScratchImage);
-         if (!converted) // out of memory
-            return _fail();
-         hr = Convert(raw->GetImages(), raw->GetImageCount(), metadata, desired_dds_pixel_format, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, *converted);
-         if (FAILED(hr))
-            return _fail();
-         std::swap(converted, raw);
-         metadata = raw->GetMetadata();
-      }
-      //
-      if (HasAlpha(metadata.format) && metadata.IsPMAlpha()) {
-         //
-         // If alpha needs to be premultiplied, handle it. Note that PremultiplyAlpha returns an 
-         // error code on images that don't need PMA, so we actually do have to check that.
-         //
-         image_ptr_t mod(new (std::nothrow) ScratchImage);
-         if (!mod) // out of memory
-            return _fail();
-         hr = PremultiplyAlpha(raw->GetImages(), raw->GetImageCount(), metadata, TEX_PMALPHA_REVERSE, *mod);
-         if (FAILED(hr))
-            return _fail();
-         metadata = mod->GetMetadata();
-         raw.swap(mod);
-      }
-      //
-      this->_data.dds.data = raw.release();
-      this->_data.dds.info = new TexMetadata(metadata);
-      this->_data.image    = _qt_image_from_dds(this->_data.dds.data);
-      //
-      return _done();
-   }
-   //
-   // Unrecognized type value:
-   //
-   return _fail();
+   bool result = this->data->load(*file);
+   if (!result)
+      return _fail();
+   return _done();
 }
 void DovahKitAsset::unload() {
    if constexpr (debug_asset_lifetime) {
-      qDebug("Unloading DovahKitAsset: %p (%s)", this, qUtf8Printable(this->_path));
+      qDebug("Unloading DovahKitAsset: %p %s", this, qUtf8Printable(this->description()));
    }
    auto guard = std::unique_lock(this->_locks.load_state);
    this->_state.content_failed      = false;
    this->_state.content_loaded      = false;
    this->_state.dependencies_loaded = false;
    //
-   if (auto*& p = this->_data.dds.data) {
+   if (auto*& p = this->data) {
       delete p;
       p = nullptr;
    }
-   if (auto*& p = this->_data.dds.info) {
-      delete p;
-      p = nullptr;
-   }
-   this->_data.image = QImage();
+}
+void DovahKitAsset::requestDependencies() {
+   if (!this->data)
+      return;
+   this->data->requestDependencies();
 }
 #pragma endregion
 
@@ -236,7 +212,7 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
             fire = which::failed;
          } else {
             if constexpr (debug_asset_lifetime) {
-               qDebug("DovahKitAssetReceptor is listening for \"ready\" and \"failed\" signals: %p (%s)", this, qUtf8Printable(this->asset->_path));
+               qDebug("DovahKitAssetReceptor is listening for \"ready\" and \"failed\" signals: %p %s", this, qUtf8Printable(this->asset->description()));
             }
             //
             // The asset is neither already loaded nor already failed, so let's hook signals to it so 
@@ -265,13 +241,13 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
       //
       case which::ready:
          if constexpr (debug_asset_lifetime) {
-            qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
+            qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (on acquire): %p %s", this, qUtf8Printable(this->asset->description()));
          }
          QMetaObject::invokeMethod(this, &DovahKitAssetReceptor::ready, Qt::QueuedConnection); // emit the signal, but force it to behave as queued, for uniformity with the above case
          break;
       case which::failed:
          if constexpr (debug_asset_lifetime) {
-            qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (on acquire): %p (%s)", this, qUtf8Printable(this->asset->_path));
+            qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (on acquire): %p %s", this, qUtf8Printable(this->asset->description()));
          }
          QMetaObject::invokeMethod(this, &DovahKitAssetReceptor::failed, Qt::QueuedConnection); // emit the signal, but force it to behave as queued, for uniformity with the above case
          break;
@@ -296,7 +272,7 @@ void DovahKitAssetReceptor::_forwardFailed() {
       this->_severLoadSignals();
       this->state |= state_flag::failed;
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         qDebug("DovahKitAssetReceptor is forwarding \"failed\" signal (after listening): %p %s", this, qUtf8Printable(this->asset->description()));
       }
    }
    emit this->failed();
@@ -306,7 +282,7 @@ void DovahKitAssetReceptor::_forwardReady() {
       this->_severLoadSignals();
       this->state |= state_flag::ready;
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (after listening): %p (%s)", this, qUtf8Printable(this->asset->_path));
+         qDebug("DovahKitAssetReceptor is forwarding \"ready\" signal (after listening): %p %s", this, qUtf8Printable(this->asset->description()));
       }
    }
    emit this->ready();

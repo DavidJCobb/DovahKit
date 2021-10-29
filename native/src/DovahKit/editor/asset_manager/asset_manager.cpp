@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QRegularExpression>
 #include <QStringView>
+#include <QThread>
 #include "../../helpers/cpuinfo.h"
 #include "../../dovahscript/dovahscript_host.h"
 #include "../../editor/core.h"
@@ -111,8 +112,9 @@ DovahKitAssetManager::DovahKitAssetManager() {
    QObject::connect(&dovahscript_host, &DovahscriptHost::scriptEnded,         this, &DovahKitAssetManager::unpauseFormManagement);
    //
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &DovahKitAssetManager::spawnThreads);
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DovahKitAssetManager::unloadAll);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,  this, &DovahKitAssetManager::spawnThreads);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &DovahKitAssetManager::unloadAll);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &DovahKitAssetManager::onFormDeleted);
 }
 
 /*static*/ QString DovahKitAssetManager::normalizeAssetPath(const QString& base) {
@@ -133,37 +135,29 @@ void DovahKitAssetManager::_load(DovahKitAsset& asset) {
       asset._state.load_requested = true;
    }
    if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAsset asset load requested from manager: %p (%s)", &asset, qUtf8Printable(asset._path));
+      qDebug("DovahKitAsset asset load requested from manager: %p %s", &asset, qUtf8Printable(asset.description()));
    }
    if constexpr (force_loading_on_main_thread) {
       asset.load();
    } else {
-      size_t lowest = std::numeric_limits<size_t>::max();
-      size_t index  = 0;
-      //
-      {
-         std::array<std::unique_lock<std::mutex>, worker_thread_count> guards = {};
-         for (size_t i = 0; i < worker_thread_count; ++i) {
-            auto& worker = this->workers[i];
-            guards[i] = std::unique_lock(worker.queue.mutex);
-            //
-            auto s = worker.queue.list.size();
-            if (s < lowest) {
-               lowest = s;
-               index  = i;
-            }
-         }
-      }
-      //
-      this->workers[index].queueToLoad(asset);
+      auto& which = this->last_worker;
+      which = (which + 1) % worker_thread_count;
+      this->workers[which].queueToLoad(asset);
    }
 }
 
 DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
+   assert(QThread::currentThread() == this->thread() && "We don't currently account for requesting an asset from off the main thread. We'll need some adjustments.");
+   //
    auto norm = this->normalizeAssetPath(path);
-   auto it   = this->assets.find(norm);
-   if (it != this->assets.end()) {
-      return *it;
+   if (norm.isEmpty())
+      return nullptr;
+   {
+      auto guard = std::shared_lock(this->asset_lock);
+      auto it    = this->assets.find(norm);
+      if (it != this->assets.end()) {
+         return *it;
+      }
    }
    //
    auto type = DovahKitAsset::Type::Undefined;
@@ -173,20 +167,84 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
       type = DovahKitAsset::Type::NIF;
    //
    auto* asset = new DovahKitAsset(norm, type);
-   this->assets[norm] = asset;
+   {
+      auto guard = std::unique_lock(this->asset_lock);
+      this->assets[norm] = asset;
+   }
    if constexpr (debug_asset_lifetime) {
-      qDebug("Created DovahKitAsset: %p (%s)", asset, qUtf8Printable(path));
+      qDebug("Created DovahKitAsset: %p %s", asset, qUtf8Printable(asset->description()));
    }
    this->_load(*asset);
    return asset;
 }
-
-void DovahKitAssetManager::onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset& asset) {
-   if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAsset is unreferenced: %p (%s)", &asset, qUtf8Printable(asset._path));
+DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub) {
+   assert(QThread::currentThread() == this->thread() && "We don't currently account for requesting a form-asset from off the main thread. We'll need some adjustments.");
+   //
+   {
+      auto guard = std::shared_lock(this->asset_lock);
+      auto it = this->form_assets.find(&stub);
+      if (it != this->form_assets.end()) {
+         return *it;
+      }
    }
-   auto i = this->assets.remove(asset._path);
-   assert(i && "Was this asset not tracked?!");
+   auto* asset = new DovahKitAsset(&stub);
+   {
+      auto guard = std::unique_lock(this->asset_lock);
+      this->form_assets[&stub] = asset;
+   }
+   if constexpr (debug_asset_lifetime) {
+      qDebug("Created DovahKitAsset: %p %s", asset, qUtf8Printable(asset->description()));
+   }
+   if (this->isFormManagementPaused()) {
+      auto guard = std::unique_lock(this->asset_lock);
+      this->form_queues.load.push_back(asset);
+   } else {
+      asset->load(); // MUST occur on this thread
+   }
+   return asset;
+}
+
+void DovahKitAssetManager::requestDependencies(asset_passkey, DovahKitAsset& asset) {
+   if constexpr (debug_asset_lifetime) {
+      qDebug("DovahKitAsset is requesting dependencies: %p %s", &asset, qUtf8Printable(asset.description()));
+   }
+   auto& adh = this->asset_dependency_handling;
+   //
+   auto guard = std::unique_lock(adh.lock);
+   assert(!adh.list.contains(&asset));
+   adh.list.push_back(&asset);
+   //
+   if (!adh.requested) {
+      adh.requested = true;
+      QMetaObject::invokeMethod(this, &DovahKitAssetManager::queueDependencyLoad, Qt::QueuedConnection);
+   }
+}
+void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
+   if constexpr (debug_asset_lifetime) {
+      qDebug("DovahKitAsset is unreferenced: %p %s", &asset, qUtf8Printable(asset.description()));
+   }
+   if (asset.type() == DovahKitAsset::Type::Form && this->isFormManagementPaused()) {
+      auto  guard = std::unique_lock(this->asset_lock);
+      auto& list  = this->form_queues.discard;
+      this->form_queues.load.removeOne(&asset);
+      if (!list.contains(&asset))
+         list.push_back(&asset);
+      return;
+   }
+   {
+      auto guard_a = std::unique_lock(this->asset_lock);
+      if (asset.type() == DovahKitAsset::Type::Form) {
+         auto i = this->form_assets.remove(asset._stub);
+         assert(i && "Was this asset not tracked?!");
+      } else {
+         auto i = this->assets.remove(asset._path);
+         assert(i && "Was this asset not tracked?!");
+      }
+      //
+      auto& adh = this->asset_dependency_handling;
+      auto guard_b = std::unique_lock(adh.lock);
+      adh.list.removeOne(&asset);
+   }
    asset.deleteLater();
 }
 
@@ -194,9 +252,21 @@ void DovahKitAssetManager::pauseFormManagement() {
    // TODO: when we add support for managing whole forms, do not allow the asset manager 
    // to load or unload forms while "form management" is paused, EXCEPT for one thing: we 
    // MUST always unload forms when their deletion is imminent.
+   this->form_management_paused = true;
 }
 void DovahKitAssetManager::unpauseFormManagement() {
-   // TODO
+   decltype(this->form_queues.load)    lq;
+   decltype(this->form_queues.discard) dq;
+   {
+      auto guard = std::unique_lock(this->asset_lock);
+      this->form_management_paused = false;
+      std::swap(lq, this->form_queues.load);
+      std::swap(dq, this->form_queues.discard);
+   }
+   for (auto* asset : lq)
+      asset->load();
+   for (auto* asset : dq)
+      asset->deleteLater();
 }
 
 void DovahKitAssetManager::unloadAll() {
@@ -204,12 +274,22 @@ void DovahKitAssetManager::unloadAll() {
       qDebug("Asset manager is unloading all content and killing all worker threads...");
    }
    this->killThreads();
+   //
+   auto guard_a = std::unique_lock(this->asset_lock);
+   auto guard_b = std::unique_lock(this->asset_dependency_handling.lock);
    {
-      decltype(this->assets) list;
-      std::swap(list, this->assets);
-      for (auto* asset : list)
+      for (auto* asset : this->assets)
          asset->deleteLater();
+      this->assets.clear();
    }
+   {
+      for (auto* asset : this->form_assets)
+         asset->deleteLater();
+      this->form_assets.clear();
+   }
+   this->asset_dependency_handling.list.clear();
+   this->form_queues.load.clear();
+   this->form_queues.discard.clear();
 }
 
 void DovahKitAssetManager::killThreads() {
@@ -226,4 +306,54 @@ void DovahKitAssetManager::spawnThreads() {
    assert(!this->workers[0].isRunning());
    for (auto& worker : this->workers)
       worker.start();
+}
+
+void DovahKitAssetManager::queueDependencyLoad() {
+   if constexpr (debug_asset_lifetime) {
+      qDebug("DovahKitAssetManager is executing a queued asset dependency load...");
+   }
+   auto& adh = this->asset_dependency_handling;
+   //
+   auto guard = std::unique_lock(adh.lock);
+   for (auto* asset : adh.list)
+      if (asset)
+         asset->requestDependencies();
+   //
+   adh.requested = false;
+}
+void DovahKitAssetManager::onFormDeleted(dovah::form_stub* stub, bool will_be_flagged) {
+   auto guard = std::unique_lock(this->asset_lock);
+   auto it    = this->form_assets.find(stub);
+   if (it != this->form_assets.end()) {
+      this->asset_dependency_handling.list.removeOne(*it);
+      (*it)->unload();
+      (*it)->deleteLater();
+      this->form_assets.erase(it);
+   }
+   //
+   if (this->isFormManagementPaused()) {
+      int i = -1;
+      for (int j = 0; j < this->form_queues.load.size(); ++j) {
+         auto* asset = this->form_queues.load[j];
+         if (asset->_stub == stub) {
+            // don't call deleteLater here; assets in this queue are also in this->form_assets, so it will have been called above
+            i = j;
+            break;
+         }
+      }
+      if (i >= 0)
+         this->form_queues.load.removeAt(i);
+      //
+      i = -1;
+      for (int j = 0; j < this->form_queues.discard.size(); ++j) {
+         auto* asset = this->form_queues.discard[j];
+         if (asset->_stub == stub) {
+            // don't call deleteLater here; assets in this queue are also in this->form_assets, so it will have been called above
+            i = j;
+            break;
+         }
+      }
+      if (i >= 0)
+         this->form_queues.load.removeAt(i);
+   }
 }

@@ -3,6 +3,7 @@
 #include <QTimerEvent>
 #if !defined(QT_DESIGNER_LIB)
    #include "../editor/asset_manager/asset_manager.h"
+   #include "../editor/asset_manager/data/form_textureset.h"
 #endif
 
 namespace {
@@ -53,6 +54,22 @@ void DKTextureAssetPane::setAsset(const QString& path) {
       this->update();
    #endif
 }
+void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
+   if (!stub) {
+      this->_render = Render::Null;
+      #if !defined(QT_DESIGNER_LIB)
+         this->_handle = nullptr;
+      #endif
+      this->update();
+      return;
+   }
+   this->_render = Render::Loading;
+   #if !defined(QT_DESIGNER_LIB)
+      auto& am = DovahKitAssetManager::get();
+      this->_handle = std::move(am.requestAsset(*stub));
+      this->update();
+   #endif
+}
 void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
    #if !defined(QT_DESIGNER_LIB)
       this->_handle = std::move(asset);
@@ -78,7 +95,14 @@ void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
 
 void DKTextureAssetPane::_onAssetHandled() {
    #if !defined(QT_DESIGNER_LIB)
-      if (this->_handle == nullptr || this->_handle->type() != DovahKitAsset::Type::DDS || this->_handle.isFailed()) {
+      DovahKitAssetReceptor* use = &this->_handle;
+      if (this->_handle == nullptr || this->_handle.isFailed()) {
+         this->_render = Render::Failed;
+         this->_stopAnimation();
+         this->update();
+         return;
+      }
+      if (this->_handle->type() != DovahKitAsset::Type::DDS && !this->_handle->asTextureSet()) {
          this->_render = Render::Failed;
          this->_stopAnimation();
          this->update();
@@ -168,6 +192,7 @@ void DKTextureAssetPane::_drawNullSymbol(QPainter& p, QRect rect) {
    }
    p.drawEllipse({ 0, 0 }, null_icon_render_size / 2, null_icon_render_size / 2);
    p.drawLine(halfwidth, -halfwidth, -halfwidth, halfwidth);
+   p.restore();
 }
 void DKTextureAssetPane::_drawFailSymbol(QPainter& p, QRect rect) {
    constexpr int  margin    = null_icon_line_width  + 2;
@@ -193,6 +218,7 @@ void DKTextureAssetPane::_drawFailSymbol(QPainter& p, QRect rect) {
    }
    p.drawLine( halfwidth, -halfwidth, -halfwidth,  halfwidth);
    p.drawLine(-halfwidth, -halfwidth,  halfwidth,  halfwidth);
+   p.restore();
 }
 
 void DKTextureAssetPane::_startAnimation() {
@@ -226,13 +252,23 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
       case Render::Asset:
          #if !defined(QT_DESIGNER_LIB)
          {
-            auto image = this->_handle->image();
+            auto image = this->_handle->asQImage();
+            if (image.isNull()) {
+               if (auto* ts = this->_handle->asTextureSet()) {
+                  auto& diffuse = ts->textures[0];
+                  if (diffuse != nullptr)
+                     image = diffuse->asQImage();
+               }
+               if (image.isNull()) {
+                  break;
+               }
+            }
             auto cr    = this->contentsRect();
             auto ir    = image.rect();
             auto scale = std::min((qreal)cr.width() / ir.width(), (qreal)cr.height() / ir.height());
             ir.setSize(ir.size() * scale);
             ir.moveCenter(cr.center());
-            painter.drawImage(ir, this->_handle->image());
+            painter.drawImage(ir, image);
          }
          #endif
          break;

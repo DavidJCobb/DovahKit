@@ -407,6 +407,9 @@
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
     <ClCompile Include="editor\asset_manager\asset.cpp" />
     <ClCompile Include="editor\asset_manager\asset_manager.cpp" />
+    <ClCompile Include="editor\asset_manager\data\dds.cpp" />
+    <ClCompile Include="editor\asset_manager\data\form_textureset.cpp" />
+    <ClCompile Include="editor\asset_manager\data\_base.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
@@ -580,6 +583,9 @@
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <QtMoc Include="editor\asset_manager\asset_manager.h" />
     <QtMoc Include="editor\asset_manager\asset.h" />
+    <ClInclude Include="editor\asset_manager\data\dds.h" />
+    <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
+    <ClInclude Include="editor\asset_manager\data\_base.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\unreachable.h" />

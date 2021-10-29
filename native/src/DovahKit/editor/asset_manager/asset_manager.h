@@ -1,5 +1,7 @@
 #pragma once
 #include <array>
+#include <atomic>
+#include <shared_mutex>
 #include <thread>
 #include <QHash>
 #include <QObject>
@@ -7,12 +9,18 @@
 #include "../../helpers/passkey.h"
 #include "asset.h"
 
+namespace dovah {
+   class form_stub;
+}
 class DovahKitAsset;
 
 class DovahKitAssetManager : public QObject {
    Q_OBJECT;
    public:
       static constexpr size_t worker_thread_count = 4;
+
+      using asset_passkey = cobb::passkey<DovahKitAsset, DovahKitAssetManager>;
+
    protected:
       DovahKitAssetManager();
 
@@ -42,8 +50,24 @@ class DovahKitAssetManager : public QObject {
             inline bool isRunning() const noexcept { return this->thread.joinable(); }
       };
 
+      std::shared_mutex asset_lock;
       QHash<QString, DovahKitAsset*> assets;
+      QHash<dovah::form_stub*, DovahKitAsset*> form_assets;
+      struct {
+         QVector<DovahKitAsset*> load;
+         QVector<DovahKitAsset*> discard;
+      } form_queues;
+      std::atomic<bool> form_management_paused = false;
+      //
+      struct {
+         std::mutex lock;
+         QVector<DovahKitAsset*> list;
+         //
+         bool requested = false;
+      } asset_dependency_handling;
+      //
       std::array<Worker, worker_thread_count> workers;
+      size_t last_worker = worker_thread_count - 1;
 
       void _load(DovahKitAsset&);
 
@@ -58,8 +82,12 @@ class DovahKitAssetManager : public QObject {
       static QString normalizeAssetPath(const QString&);
 
       DovahKitAssetTransport requestAsset(const QString& path);
+      DovahKitAssetTransport requestAsset(dovah::form_stub& stub);
 
-      void onUnreferenced(cobb::passkey<DovahKitAsset, DovahKitAssetManager>, DovahKitAsset&);
+      void requestDependencies(asset_passkey, DovahKitAsset&);
+      void onUnreferenced(asset_passkey, DovahKitAsset&);
+
+      inline bool isFormManagementPaused() const noexcept { return this->form_management_paused; }
 
    public slots:
       void pauseFormManagement(); // the asset manager won't (un)load forms while this is paused (except when a form deletion is imminent); any such operations will be queued. necessary to avoid thread-safety issues while Dovahscript is active.
@@ -69,4 +97,8 @@ class DovahKitAssetManager : public QObject {
 
       void killThreads();  // shuts down all worker threads
       void spawnThreads(); // starts all worker threads back up
+
+   protected slots:
+      void queueDependencyLoad();
+      void onFormDeleted(dovah::form_stub*, bool will_be_flagged);
 };

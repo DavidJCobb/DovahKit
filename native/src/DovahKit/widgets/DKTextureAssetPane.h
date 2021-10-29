@@ -7,6 +7,10 @@
    class DovahKitAsset;
 #endif
 
+namespace dovah {
+   class form_stub;
+}
+
 class DKTextureAssetPane : public QFrame {
    Q_OBJECT;
    private:
@@ -20,6 +24,7 @@ class DKTextureAssetPane : public QFrame {
 
       bool hasAsset() const noexcept;
       void setAsset(const QString& path);
+      void setAsset(dovah::form_stub*);
       void setAsset(DovahKitAssetTransport&&);
       void setAsset(const DovahKitAssetReceptor&);
 
