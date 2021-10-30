@@ -41,11 +41,15 @@ DovahKitAsset::DovahKitAsset(dovah::form_stub* s, QObject* parent) : QObject(par
             this->data = new DovahKitAssetDataTextureSet(*this);
             break;
       }
+      if (this->data) {
+         auto& editor = DovahKitCore::get();
+         QObject::connect(&editor, &DovahKitCore::formModified, this, &DovahKitAsset::onFormModified);
+      }
    }
 }
 DovahKitAsset::~DovahKitAsset() {
    if constexpr (debug_asset_lifetime) {
-      qDebug("Running DovahKitAsset destructor: %p (%s)", this, qUtf8Printable(this->_path));
+      qDebug("Running DovahKitAsset destructor: %p %s", this, qUtf8Printable(this->description()));
    }
    this->unload();
 }
@@ -104,7 +108,7 @@ QImage DovahKitAsset::asQImage() const noexcept {
 void DovahKitAsset::load() {
    auto _fail = [this]() {
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAsset failed to load: %p %s", this, qUtf8Printable(this->description()));
+         qDebug("DovahKitAsset: Failed: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
       this->_state.load_requested = false;
@@ -114,7 +118,7 @@ void DovahKitAsset::load() {
    };
    auto _done = [this]() {
       if constexpr (debug_asset_lifetime) {
-         qDebug("DovahKitAsset loaded: %p %s", this, qUtf8Printable(this->description()));
+         qDebug("DovahKitAsset: Loaded: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
       this->_state.load_requested      = false;
@@ -167,7 +171,7 @@ void DovahKitAsset::load() {
 }
 void DovahKitAsset::unload() {
    if constexpr (debug_asset_lifetime) {
-      qDebug("Unloading DovahKitAsset: %p %s", this, qUtf8Printable(this->description()));
+      qDebug("DovahKitAsset: Unloading: %p %s", this, qUtf8Printable(this->description()));
    }
    auto guard = std::unique_lock(this->_locks.load_state);
    this->_state.content_failed      = false;
@@ -185,8 +189,23 @@ void DovahKitAsset::onDependenciesLoaded() {
    if (state.dependencies_loaded)
       return;
    state.dependencies_loaded = false;
-   if (state.content_loaded)
+   if (state.content_loaded) {
+      if constexpr (debug_asset_lifetime) {
+         qDebug("DovahKitAsset: Dependencies loaded; now ready: %p %s", this, qUtf8Printable(this->description()));
+      }
       emit this->ready();
+   }
+}
+void DovahKitAsset::onFormModified() {
+   if (this->data) {
+      bool changed = this->data->onFormModified();
+      if (changed) {
+         if constexpr (debug_asset_lifetime) {
+            qDebug("DovahKitAsset: Detected form modification: %p %s", this, qUtf8Printable(this->description()));
+         }
+         emit this->dependenciesChanged();
+      }
+   }
 }
 #pragma endregion
 
@@ -243,7 +262,8 @@ void DovahKitAssetReceptor::_acquire(value_type* value) {
             QObject::connect(asset, &value_type::ready, this, &DovahKitAssetReceptor::_forwardReady, Qt::QueuedConnection);
             QObject::connect(asset, &value_type::contentLoadingFailed, this, &DovahKitAssetReceptor::_forwardFailed, Qt::QueuedConnection);
          }
-         QObject::connect(asset, &QObject::destroyed, this, &DovahKitAssetReceptor::_forwardUnloaded, Qt::DirectConnection);
+         QObject::connect(asset, &value_type::dependenciesChanged, this, &DovahKitAssetReceptor::_forwardDependenciesChanged, Qt::DirectConnection);
+         QObject::connect(asset, &QObject::destroyed,              this, &DovahKitAssetReceptor::_forwardUnloaded,            Qt::DirectConnection);
       }
       this->asset->on_handle_made(*this);
    }
@@ -305,6 +325,9 @@ void DovahKitAssetReceptor::_forwardReady() {
 }
 void DovahKitAssetReceptor::_forwardUnloaded(QObject* target) {
    emit this->unloaded();
+}
+void DovahKitAssetReceptor::_forwardDependenciesChanged() {
+   emit this->dependenciesChanged();
 }
 
 bool DovahKitAssetReceptor::isReady() const noexcept {

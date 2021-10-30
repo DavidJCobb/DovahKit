@@ -44,8 +44,9 @@ class DKTextureAssetPane : public QFrame {
       void setThrottleTime(uint ms);
 
    protected slots:
-      void _onAssetHandled();
       void _onAssetUnloaded();
+      void _onTargetAssetHandled();
+      void _onRenderAssetHandled();
 
    protected:
       enum class Render {
@@ -55,8 +56,11 @@ class DKTextureAssetPane : public QFrame {
          Asset,
       };
 
-      DovahKitAssetReceptor _handle;
       Render _render = Render::Null;
+      struct {
+         DovahKitAssetReceptor target;
+         DovahKitAssetReceptor render;
+      } _receptors;
       struct {
          QElapsedTimer elapsed;
          int updateID = 0;

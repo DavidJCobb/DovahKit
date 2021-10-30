@@ -22,5 +22,11 @@ class DovahKitAssetDataTextureSet: public DovahKitAssetData {
       virtual bool load(const dovah::bsa_archived_file&) override { return false; }
       virtual bool load(dovah::form_stub&) override;
 
+      virtual bool onFormModified() override;
+
+      virtual bool hasPendingDependencies() const override;
       virtual void abandonDependencies() override;
+
+   protected:
+      void dependencyResolved();
 };

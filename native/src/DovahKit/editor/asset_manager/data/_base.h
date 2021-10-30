@@ -17,14 +17,13 @@ class DovahKitAssetData {
       virtual ~DovahKitAssetData() {}
 
       DovahKitAsset& owner;
-      std::atomic<size_t> pending_count = 0;
 
       virtual bool load(const dovah::bsa_archived_file&) = 0;
       virtual bool load(dovah::form_stub&) = 0;
 
-      virtual bool hasPendingDependencies() const { return this->pending_count > 0; }
-      virtual void abandonDependencies() {}
+      // Return true if any changes to dependencies were detected.
+      virtual bool onFormModified() { return false; }
 
-   protected:
-      void dependencyResolved();
+      virtual bool hasPendingDependencies() const { return false; }
+      virtual void abandonDependencies() {}
 };

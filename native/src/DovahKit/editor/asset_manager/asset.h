@@ -85,11 +85,13 @@ class DovahKitAsset : public QObject {
       void load();
       void unload();
       void onDependenciesLoaded();
+      void onFormModified();
 
    signals:
       void contentLoaded();        // The asset's own content has loaded.
       void contentLoadingFailed(); // The asset's own content has failed to load.
       void dependenciesLoaded();   // The asset depends on other assets, and they have all finished loading.
+      void dependenciesChanged();  // The asset was modified, such that it now depends on different assets than it used to.
       void ready();                // The asset is ready for use: its own content and the content of any dependencies is all loaded.
 };
 
@@ -134,6 +136,7 @@ class DovahKitAssetReceptor : public QObject {
       void _forwardFailed();
       void _forwardReady();
       void _forwardUnloaded(QObject* target);
+      void _forwardDependenciesChanged();
 
    protected:
       QPointer<value_type> asset;
@@ -169,4 +172,5 @@ class DovahKitAssetReceptor : public QObject {
       void failed();
       void ready();
       void unloaded();
+      void dependenciesChanged();
 };

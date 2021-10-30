@@ -25,9 +25,14 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
    this->setMinimumSize(minimum_length, minimum_length);
    //
    #if !defined(QT_DESIGNER_LIB)
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::ready,    this, &DKTextureAssetPane::_onAssetHandled);
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onAssetHandled);
-      QObject::connect(&this->_handle, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
+      QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::ready,    this, &DKTextureAssetPane::_onTargetAssetHandled);
+      QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onTargetAssetHandled);
+      QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
+      QObject::connect(&this->_receptors.render, &DovahKitAssetReceptor::ready,    this, &DKTextureAssetPane::_onRenderAssetHandled);
+      QObject::connect(&this->_receptors.render, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onRenderAssetHandled);
+      QObject::connect(&this->_receptors.render, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
+      //
+      QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::dependenciesChanged, this, &DKTextureAssetPane::_onTargetAssetHandled);
    #endif
    //
    this->_throttle.timer.setSingleShot(true);
@@ -56,20 +61,21 @@ bool DKTextureAssetPane::hasAsset() const noexcept {
          if (!this->_throttle.path.isEmpty())
             return true;
       }
-      return this->_handle != nullptr;
+      return this->_receptors.target != nullptr;
    #endif
 }
 void DKTextureAssetPane::setAsset(const QString& path) {
    if (path.isEmpty()) {
       this->_render = Render::Null;
       #if !defined(QT_DESIGNER_LIB)
-         this->_handle = nullptr;
+         this->_receptors.render = nullptr;
+         this->_receptors.target = nullptr;
       #endif
       this->update();
       return;
    }
-   if (this->_handle != nullptr) {
-      if (this->_handle->samePathAs(path))
+   if (this->_receptors.target != nullptr) {
+      if (this->_receptors.target->samePathAs(path))
          //
          // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
          // signal if the asset is already ready or failed, so if we don't catch that case here, 
@@ -83,14 +89,16 @@ void DKTextureAssetPane::setAsset(const QString& path) {
       this->_throttle.timer.start(this->_throttle.ms);
       this->_throttle.path = path;
       this->_throttle.stub = nullptr;
-      this->_handle = nullptr;
+      this->_receptors.render = nullptr;
+      this->_receptors.target = nullptr;
       this->update();
       return;
    }
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
-      this->_handle = std::move(am.requestAsset(path));
+      this->_receptors.render = nullptr;
+      this->_receptors.target = std::move(am.requestAsset(path));
       this->update();
    #endif
 }
@@ -98,13 +106,14 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
    if (!stub) {
       this->_render = Render::Null;
       #if !defined(QT_DESIGNER_LIB)
-         this->_handle = nullptr;
+         this->_receptors.render = nullptr;
+         this->_receptors.target = nullptr;
       #endif
       this->update();
       return;
    }
-   if (this->_handle != nullptr) {
-      if (this->_handle->formStub() == stub)
+   if (this->_receptors.target != nullptr) {
+      if (this->_receptors.target->formStub() == stub)
          //
          // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
          // signal if the asset is already ready or failed, so if we don't catch that case here, 
@@ -118,21 +127,24 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
       this->_throttle.timer.start(this->_throttle.ms);
       this->_throttle.stub = stub;
       this->_throttle.path.clear();
-      this->_handle = nullptr;
+      this->_receptors.render = nullptr;
+      this->_receptors.target = nullptr;
       this->update();
       return;
    }
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
-      this->_handle = std::move(am.requestAsset(*stub));
+      this->_receptors.render = nullptr;
+      this->_receptors.target = std::move(am.requestAsset(*stub));
       this->update();
    #endif
 }
 void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
    #if !defined(QT_DESIGNER_LIB)
-      this->_handle = std::move(asset);
-      if (this->_handle == nullptr) {
+      this->_receptors.render = nullptr;
+      this->_receptors.target = std::move(asset);
+      if (this->_receptors.target == nullptr) {
          this->_render = Render::Null;
       } else {
          this->_render = Render::Loading;
@@ -142,8 +154,9 @@ void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
 }
 void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
    #if !defined(QT_DESIGNER_LIB)
-      this->_handle = (DovahKitAsset*)other; // don't do direct assign, as that would bulldoze our receptor's flags
-      if (this->_handle == nullptr) {
+      this->_receptors.render = nullptr;
+      this->_receptors.target = (DovahKitAsset*)other; // don't do direct assign, as that would bulldoze our receptor's flags
+      if (this->_receptors.target == nullptr) {
          this->_render = Render::Null;
       } else {
          this->_render = Render::Loading;
@@ -186,16 +199,50 @@ void DKTextureAssetPane::setThrottleTime(uint ms) {
    }
 }
 
-void DKTextureAssetPane::_onAssetHandled() {
+void DKTextureAssetPane::_onAssetUnloaded() {
    #if !defined(QT_DESIGNER_LIB)
-      DovahKitAssetReceptor* use = &this->_handle;
-      if (this->_handle == nullptr || this->_handle.isFailed()) {
+      this->_receptors.render = nullptr;
+      this->_receptors.target = nullptr;
+   #endif
+   this->_render = Render::Null;
+   this->_stopAnimation();
+   this->update();
+}
+void DKTextureAssetPane::_onTargetAssetHandled() {
+   #if !defined(QT_DESIGNER_LIB)
+      auto& target = this->_receptors.target;
+      auto& render = this->_receptors.render;
+      if (target == nullptr || target.isFailed()) {
          this->_render = Render::Failed;
          this->_stopAnimation();
          this->update();
          return;
       }
-      if (this->_handle->type() != DovahKitAsset::Type::DDS && !this->_handle->asTextureSet()) {
+      if (target->type() == DovahKitAsset::Type::DDS) {
+         render = target;
+      } else {
+         if (auto* data = target->asTextureSet()) {
+            render = data->textures[0]; // diffuse
+         } else {
+            this->_render = Render::Failed;
+            this->_stopAnimation();
+            this->update();
+            return;
+         }
+      }
+      this->_render = Render::Asset;
+      this->_stopAnimation();
+      this->update();
+   #else
+      this->_render = Render::Failed;
+      this->_stopAnimation();
+      this->update();
+   #endif
+}
+void DKTextureAssetPane::_onRenderAssetHandled() {
+   #if !defined(QT_DESIGNER_LIB)
+      auto& render = this->_receptors.render;
+      if (render == nullptr || render.isFailed()) {
          this->_render = Render::Failed;
          this->_stopAnimation();
          this->update();
@@ -209,11 +256,6 @@ void DKTextureAssetPane::_onAssetHandled() {
       this->_stopAnimation();
       this->update();
    #endif
-}
-void DKTextureAssetPane::_onAssetUnloaded() {
-   this->_render = Render::Null;
-   this->_stopAnimation();
-   this->update();
 }
 
 void DKTextureAssetPane::_clearThrottleData() {
@@ -362,17 +404,9 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
       case Render::Asset:
          #if !defined(QT_DESIGNER_LIB)
          {
-            auto image = this->_handle->asQImage();
-            if (image.isNull()) {
-               if (auto* ts = this->_handle->asTextureSet()) {
-                  auto& diffuse = ts->textures[0];
-                  if (diffuse != nullptr)
-                     image = diffuse->asQImage();
-               }
-               if (image.isNull()) {
-                  break;
-               }
-            }
+            auto image = this->_receptors.render->asQImage();
+            if (image.isNull())
+               break;
             auto cr    = this->contentsRect();
             auto ir    = image.rect();
             auto scale = std::min((qreal)cr.width() / ir.width(), (qreal)cr.height() / ir.height());
