@@ -52,12 +52,14 @@ class DovahKitAssetManager : public QObject {
 
       std::shared_mutex asset_lock;
       QHash<QString, DovahKitAsset*> assets;
-      QHash<dovah::form_stub*, DovahKitAsset*> form_assets;
       struct {
-         QVector<DovahKitAsset*> load;
-         QVector<DovahKitAsset*> discard;
-      } form_queues;
-      std::atomic<bool> form_management_paused = false;
+         QHash<dovah::form_stub*, DovahKitAsset*> assets;
+         struct {
+            QVector<DovahKitAsset*> load;
+            QVector<DovahKitAsset*> discard;
+         } queues;
+         std::atomic<bool> paused = false;
+      } forms;
       //
       std::array<Worker, worker_thread_count> workers;
       size_t last_worker = worker_thread_count - 1;
@@ -79,7 +81,7 @@ class DovahKitAssetManager : public QObject {
 
       void onUnreferenced(asset_passkey, DovahKitAsset&);
 
-      inline bool isFormManagementPaused() const noexcept { return this->form_management_paused; }
+      inline bool isFormManagementPaused() const noexcept { return this->forms.paused; }
 
    public slots:
       void pauseFormManagement(); // the asset manager won't (un)load forms while this is paused (except when a form deletion is imminent); any such operations will be queued. necessary to avoid thread-safety issues while Dovahscript is active.

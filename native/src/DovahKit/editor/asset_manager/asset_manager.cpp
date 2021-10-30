@@ -128,6 +128,7 @@ DovahKitAssetManager::DovahKitAssetManager() {
 }
 
 void DovahKitAssetManager::_load(DovahKitAsset& asset) {
+   assert(asset.type() != DovahKitAsset::Type::Form);
    {
       auto guard = std::unique_lock(asset._locks.load_state);
       if (asset._state.load_requested)
@@ -183,12 +184,12 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub
    DovahKitAsset* asset = nullptr;
    {
       auto guard = std::shared_lock(this->asset_lock);
-      auto it    = this->form_assets.find(&stub);
-      if (it != this->form_assets.end()) {
+      auto it    = this->forms.assets.find(&stub);
+      if (it != this->forms.assets.end()) {
          return *it;
       }
       asset = new DovahKitAsset(&stub);
-      this->form_assets[&stub] = asset;
+      this->forms.assets[&stub] = asset;
       if (!on_same_thread) {
          asset->moveToThread(this->thread());
       }
@@ -198,7 +199,7 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub
    }
    if (this->isFormManagementPaused()) {
       auto guard = std::unique_lock(this->asset_lock);
-      this->form_queues.load.push_back(asset);
+      this->forms.queues.load.push_back(asset);
    } else {
       if (on_same_thread) {
          asset->load(); // MUST occur on this thread
@@ -215,8 +216,8 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
    }
    if (asset.type() == DovahKitAsset::Type::Form && this->isFormManagementPaused()) {
       auto  guard = std::unique_lock(this->asset_lock);
-      auto& list  = this->form_queues.discard;
-      this->form_queues.load.removeOne(&asset);
+      auto& list  = this->forms.queues.discard;
+      this->forms.queues.load.removeOne(&asset);
       if (!list.contains(&asset))
          list.push_back(&asset);
       return;
@@ -224,11 +225,22 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
    {
       auto guard = std::unique_lock(this->asset_lock);
       if (asset.type() == DovahKitAsset::Type::Form) {
-         auto i = this->form_assets.remove(asset._stub);
+         auto i = this->forms.assets.remove(asset._stub);
          assert(i && "Was this asset not tracked?!");
       } else {
          auto i = this->assets.remove(asset._path);
          assert(i && "Was this asset not tracked?!");
+      }
+   }
+   if (asset._state.load_requested) {
+      //
+      // It's not safe to delete assets while they're queued to load.
+      //
+      auto guard = std::unique_lock(asset._locks.load_state);
+      if (asset._state.load_requested) {
+         QObject::connect(&asset, &DovahKitAsset::contentLoaded,        &asset, &QObject::deleteLater);
+         QObject::connect(&asset, &DovahKitAsset::contentLoadingFailed, &asset, &QObject::deleteLater);
+         return;
       }
    }
    asset.deleteLater();
@@ -237,18 +249,18 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
 void DovahKitAssetManager::pauseFormManagement() {
    assert(QThread::currentThread() == this->thread());
    //
-   this->form_management_paused = true;
+   this->forms.paused = true;
 }
 void DovahKitAssetManager::unpauseFormManagement() {
    assert(QThread::currentThread() == this->thread());
    //
-   decltype(this->form_queues.load)    lq;
-   decltype(this->form_queues.discard) dq;
+   decltype(this->forms.queues.load)    lq;
+   decltype(this->forms.queues.discard) dq;
    {
       auto guard = std::unique_lock(this->asset_lock);
-      this->form_management_paused = false;
-      std::swap(lq, this->form_queues.load);
-      std::swap(dq, this->form_queues.discard);
+      this->forms.paused = false;
+      std::swap(lq, this->forms.queues.load);
+      std::swap(dq, this->forms.queues.discard);
    }
    for (auto* asset : lq)
       asset->load();
@@ -276,7 +288,7 @@ void DovahKitAssetManager::unloadAll() {
       this->assets.clear();
    }
    {
-      for (auto* asset : this->form_assets) {
+      for (auto* asset : this->forms.assets) {
          //
          // The asset destructor unloads the asset content, but because we're calling deleteLater, 
          // that  may not happen soon enough. Commonly,  we would want to mass-unload assets  when 
@@ -288,10 +300,10 @@ void DovahKitAssetManager::unloadAll() {
          asset->unload();
          asset->deleteLater();
       }
-      this->form_assets.clear();
+      this->forms.assets.clear();
    }
-   this->form_queues.load.clear();
-   this->form_queues.discard.clear();
+   this->forms.queues.load.clear();
+   this->forms.queues.discard.clear();
 }
 
 void DovahKitAssetManager::killThreads() {
@@ -316,37 +328,37 @@ void DovahKitAssetManager::spawnThreads() {
 
 void DovahKitAssetManager::onFormDeleted(dovah::form_stub* stub, bool will_be_flagged) {
    auto guard = std::unique_lock(this->asset_lock);
-   auto it    = this->form_assets.find(stub);
-   if (it != this->form_assets.end()) {
+   auto it    = this->forms.assets.find(stub);
+   if (it != this->forms.assets.end()) {
       (*it)->unload();
       (*it)->deleteLater();
-      this->form_assets.erase(it);
+      this->forms.assets.erase(it);
    }
    //
    if (this->isFormManagementPaused()) {
       int i = -1;
-      for (int j = 0; j < this->form_queues.load.size(); ++j) {
-         auto* asset = this->form_queues.load[j];
+      for (int j = 0; j < this->forms.queues.load.size(); ++j) {
+         auto* asset = this->forms.queues.load[j];
          if (asset->_stub == stub) {
-            // don't call deleteLater here; assets in this queue are also in this->form_assets, so it will have been called above
+            // don't call deleteLater here; assets in this queue are also in this->forms.assets, so it will have been called above
             i = j;
             break;
          }
       }
       if (i >= 0)
-         this->form_queues.load.removeAt(i);
+         this->forms.queues.load.removeAt(i);
       //
       i = -1;
-      for (int j = 0; j < this->form_queues.discard.size(); ++j) {
-         auto* asset = this->form_queues.discard[j];
+      for (int j = 0; j < this->forms.queues.discard.size(); ++j) {
+         auto* asset = this->forms.queues.discard[j];
          if (asset->_stub == stub) {
-            // don't call deleteLater here; assets in this queue are also in this->form_assets, so it will have been called above
+            // don't call deleteLater here; assets in this queue are also in this->forms.assets, so it will have been called above
             i = j;
             break;
          }
       }
       if (i >= 0)
-         this->form_queues.load.removeAt(i);
+         this->forms.queues.load.removeAt(i);
    }
 }
 void DovahKitAssetManager::loadFormAsset(DovahKitAsset* asset) {
@@ -355,7 +367,7 @@ void DovahKitAssetManager::loadFormAsset(DovahKitAsset* asset) {
    //
    if (this->isFormManagementPaused()) {
       auto guard = std::unique_lock(this->asset_lock);
-      this->form_queues.load.push_back(asset);
+      this->forms.queues.load.push_back(asset);
       return;
    }
    asset->load();
