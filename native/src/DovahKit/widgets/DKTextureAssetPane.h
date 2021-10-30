@@ -14,6 +14,9 @@ namespace dovah {
 
 class DKTextureAssetPane : public QFrame {
    Q_OBJECT;
+   Q_PROPERTY(bool showAlpha       READ showAlpha         WRITE setShowAlpha       DESIGNABLE true);
+   Q_PROPERTY(bool throttleEnabled READ isThrottleEnabled WRITE setThrottleEnabled DESIGNABLE true);
+   Q_PROPERTY(uint throttleTime    READ throttleTime      WRITE setThrottleTime    DESIGNABLE true);
    private:
       #if defined(QT_DESIGNER_LIB)
       struct DovahKitAssetReceptor {};
@@ -39,7 +42,10 @@ class DKTextureAssetPane : public QFrame {
       inline bool isThrottleEnabled() const noexcept { return this->_throttle.enabled; }
       inline uint throttleTime() const noexcept { return this->_throttle.ms; }
 
+      inline bool showAlpha() const noexcept { return this->_showAlpha; }
+
    public slots:
+      void setShowAlpha(bool);
       void setThrottleEnabled(bool);
       void setThrottleTime(uint ms);
 
@@ -56,7 +62,8 @@ class DKTextureAssetPane : public QFrame {
          Asset,
       };
 
-      Render _render = Render::Null;
+      Render _render    = Render::Null;
+      bool   _showAlpha = true;
       struct {
          DovahKitAssetReceptor target;
          DovahKitAssetReceptor render;

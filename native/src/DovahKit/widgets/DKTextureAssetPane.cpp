@@ -74,26 +74,28 @@ void DKTextureAssetPane::setAsset(const QString& path) {
       this->update();
       return;
    }
-   if (this->_receptors.target != nullptr) {
-      if (this->_receptors.target->samePathAs(path))
-         //
-         // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
-         // signal if the asset is already ready or failed, so if we don't catch that case here, 
-         // then we'll be stuck with a loading spinner that never ends.
-         //
+   #if !defined(QT_DESIGNER_LIB)
+      if (this->_receptors.target != nullptr) {
+         if (this->_receptors.target->samePathAs(path))
+            //
+            // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
+            // signal if the asset is already ready or failed, so if we don't catch that case here, 
+            // then we'll be stuck with a loading spinner that never ends.
+            //
+            return;
+      }
+      if (this->_throttle.enabled) {
+         if (this->_throttle.path == path)
+            return;
+         this->_throttle.timer.start(this->_throttle.ms);
+         this->_throttle.path = path;
+         this->_throttle.stub = nullptr;
+         this->_receptors.render = nullptr;
+         this->_receptors.target = nullptr;
+         this->update();
          return;
-   }
-   if (this->_throttle.enabled) {
-      if (this->_throttle.path == path)
-         return;
-      this->_throttle.timer.start(this->_throttle.ms);
-      this->_throttle.path = path;
-      this->_throttle.stub = nullptr;
-      this->_receptors.render = nullptr;
-      this->_receptors.target = nullptr;
-      this->update();
-      return;
-   }
+      }
+   #endif
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
@@ -112,26 +114,28 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
       this->update();
       return;
    }
-   if (this->_receptors.target != nullptr) {
-      if (this->_receptors.target->formStub() == stub)
-         //
-         // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
-         // signal if the asset is already ready or failed, so if we don't catch that case here, 
-         // then we'll be stuck with a loading spinner that never ends.
-         //
+   #if !defined(QT_DESIGNER_LIB)
+      if (this->_receptors.target != nullptr) {
+         if (this->_receptors.target->formStub() == stub)
+            //
+            // Setting a receptor to the asset it already holds won't re-emit a "ready" or "failed" 
+            // signal if the asset is already ready or failed, so if we don't catch that case here, 
+            // then we'll be stuck with a loading spinner that never ends.
+            //
+            return;
+      }
+      if (this->_throttle.enabled) {
+         if (this->_throttle.stub == stub)
+            return;
+         this->_throttle.timer.start(this->_throttle.ms);
+         this->_throttle.stub = stub;
+         this->_throttle.path.clear();
+         this->_receptors.render = nullptr;
+         this->_receptors.target = nullptr;
+         this->update();
          return;
-   }
-   if (this->_throttle.enabled) {
-      if (this->_throttle.stub == stub)
-         return;
-      this->_throttle.timer.start(this->_throttle.ms);
-      this->_throttle.stub = stub;
-      this->_throttle.path.clear();
-      this->_receptors.render = nullptr;
-      this->_receptors.target = nullptr;
-      this->update();
-      return;
-   }
+      }
+   #endif
    this->_render = Render::Loading;
    #if !defined(QT_DESIGNER_LIB)
       auto& am = DovahKitAssetManager::get();
@@ -165,6 +169,13 @@ void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
    #endif
 }
 
+void DKTextureAssetPane::setShowAlpha(bool v) {
+   if (v == this->_showAlpha)
+      return;
+   this->_showAlpha = v;
+   if (this->_render == Render::Asset)
+      this->update();
+}
 void DKTextureAssetPane::setThrottleEnabled(bool e) {
    auto& t = this->_throttle;
    //
@@ -412,6 +423,9 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
             auto scale = std::min((qreal)cr.width() / ir.width(), (qreal)cr.height() / ir.height());
             ir.setSize(ir.size() * scale);
             ir.moveCenter(cr.center());
+            if (!this->_showAlpha) {
+               painter.setCompositionMode(QPainter::CompositionMode::CompositionMode_Source);
+            }
             painter.drawImage(ir, image);
          }
          #endif

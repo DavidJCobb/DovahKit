@@ -8,12 +8,14 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_
 FormDialogLandTexture::FormDialogLandTexture(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
    form_dialog_helpers::initialize<FormDialogLandTexture, dovah::loaded_forms::LandTexture>(*this, stub);
    //
+   this->ui.texturesetPreview->setShowAlpha(false);
+   this->ui.texturesetPreview->setThrottleEnabled(true);
+   this->ui.texturesetPreview->setThrottleTime(75);
+   //
    this->ui.havokMaterialType->setAllowedFormType(dovah::form_type::material_type);
    this->ui.textureset->setAllowedFormType(dovah::form_type::texture_set);
-   QObject::connect(this->ui.textureset, &FormPicker::formChanged, this, [this]() {
-      //
-      // TODO: Display a preview image of the selected textureset.
-      //
+   QObject::connect(this->ui.textureset, &FormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+      this->ui.texturesetPreview->setAsset(stub);
    });
    //
    this->load();
@@ -36,6 +38,10 @@ void FormDialogLandTexture::_load_impl() {
       this->ui.isSnow->setVisible(true);
       this->ui.isSnow->setEnabled(true);
       this->ui.isSnow->setChecked(this->form->remaster_flags & dovah::loaded_forms::LandTexture::remaster_flag::is_snow);
+   }
+   //
+   if (auto* stub = this->form->texture_set.get_form_stub()) {
+      this->ui.texturesetPreview->setAsset(stub);
    }
 }
 void FormDialogLandTexture::_save_impl() {

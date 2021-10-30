@@ -116,6 +116,9 @@ DovahKitAssetManager::DovahKitAssetManager() {
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &DovahKitAssetManager::unloadAll);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &DovahKitAssetManager::onFormDeleted);
 }
+DovahKitAssetManager::~DovahKitAssetManager() {
+   this->unloadAll();
+}
 
 /*static*/ QString DovahKitAssetManager::normalizeAssetPath(const QString& base) {
    auto path = QDir::cleanPath(base);

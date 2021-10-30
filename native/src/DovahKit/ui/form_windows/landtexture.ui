@@ -21,7 +21,7 @@
        <item>
         <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>Texture Set</string>
+          <string>Texture Set:</string>
          </property>
          <property name="buddy">
           <cstring>textureset</cstring>
@@ -34,14 +34,7 @@
       </layout>
      </item>
      <item>
-      <widget class="QFrame" name="texturesetPreview">
-       <property name="frameShape">
-        <enum>QFrame::WinPanel</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Sunken</enum>
-       </property>
-      </widget>
+      <widget class="DKTextureAssetPane" name="texturesetPreview"/>
      </item>
     </layout>
    </item>
@@ -251,6 +244,11 @@
    <class>DKFormListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKTextureAssetPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKTextureAssetPane.h</header>
   </customwidget>
   <customwidget>
    <class>FormPicker</class>

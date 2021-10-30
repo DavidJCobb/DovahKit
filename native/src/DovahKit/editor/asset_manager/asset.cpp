@@ -111,23 +111,23 @@ void DovahKitAsset::load() {
          qDebug("DovahKitAsset: Failed: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
-      this->_state.load_requested = false;
       this->_state.content_failed = true;
       this->data->abandonDependencies();
       emit contentLoadingFailed();
+      this->_state.load_requested = false;
    };
    auto _done = [this]() {
       if constexpr (debug_asset_lifetime) {
          qDebug("DovahKitAsset: Loaded: %p %s", this, qUtf8Printable(this->description()));
       }
       auto guard = std::unique_lock(this->_locks.load_state);
-      this->_state.load_requested      = false;
       this->_state.content_loaded      = true;
       this->_state.dependencies_loaded = !this->data->hasPendingDependencies();
       emit this->contentLoaded();
       if (this->_state.dependencies_loaded) {
          emit this->ready();
       }
+      this->_state.load_requested = false;
    };
    
    using file_type = dovah::bsa_archived_file;
@@ -188,7 +188,7 @@ void DovahKitAsset::onDependenciesLoaded() {
    auto  guard = std::unique_lock(this->_locks.load_state);
    if (state.dependencies_loaded)
       return;
-   state.dependencies_loaded = false;
+   state.dependencies_loaded = true;
    if (state.content_loaded) {
       if constexpr (debug_asset_lifetime) {
          qDebug("DovahKitAsset: Dependencies loaded; now ready: %p %s", this, qUtf8Printable(this->description()));

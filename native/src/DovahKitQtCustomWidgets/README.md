@@ -49,6 +49,12 @@ LandTexture. The widget can optionally display buttons to manipulate its content
 (e.g. "Move Up" and "Move Down"), and can arrange its buttons in a column on the side 
 or in a row below the list.
 
+### DKTextureAssetPane
+A frame capable of rendering a game asset &mdash; either a DDS file or a TextureSet 
+form (the diffuse texture is always the one shown). Displays a placeholder icon when 
+no asset has been supplied, an icon if the asset fails to load, and a loading spinner 
+while the asset is loading. Relies on the `DovahKitAssetManager` system.
+
 ## Notes
 
 We include the full code for each custom widget in both DovahKit and this project in 

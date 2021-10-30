@@ -23,6 +23,7 @@ class DovahKitAssetManager : public QObject {
 
    protected:
       DovahKitAssetManager();
+      ~DovahKitAssetManager();
 
       class Worker {
          friend class DovahKitAssetManager;

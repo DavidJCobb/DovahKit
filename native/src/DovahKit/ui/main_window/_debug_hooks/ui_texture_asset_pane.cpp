@@ -11,7 +11,7 @@ namespace DovahKitDebug::features {
    /*static*/ void ui_texture_asset_pane::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QGridLayout(dialog);
-      auto* widget = new DKTextureAssetPane;
+      auto* widget = new DKTextureAssetPane(dialog);
       auto* picker = new DKGameFilePicker(dialog);
       auto* f_list = new FormPicker(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
@@ -37,6 +37,8 @@ namespace DovahKitDebug::features {
          widget->setAsset(stub);
       });
       //
+      widget->setThrottleEnabled(true);
+      widget->setThrottleTime(75);
       dialog->show();
    }
 }

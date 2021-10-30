@@ -1,14 +1,22 @@
 #pragma once
 #include <QElapsedTimer>
 #include <QFrame>
+#include <QTimer>
 #if !defined(QT_DESIGNER_LIB)
    #include "../editor/asset_manager/asset.h"
 #else
    class DovahKitAsset;
 #endif
 
+namespace dovah {
+   class form_stub;
+}
+
 class DKTextureAssetPane : public QFrame {
    Q_OBJECT;
+   Q_PROPERTY(bool showAlpha       READ showAlpha         WRITE setShowAlpha       DESIGNABLE true);
+   Q_PROPERTY(bool throttleEnabled READ isThrottleEnabled WRITE setThrottleEnabled DESIGNABLE true);
+   Q_PROPERTY(uint throttleTime    READ throttleTime      WRITE setThrottleTime    DESIGNABLE true);
    private:
       #if defined(QT_DESIGNER_LIB)
       struct DovahKitAssetReceptor {};
@@ -20,12 +28,31 @@ class DKTextureAssetPane : public QFrame {
 
       bool hasAsset() const noexcept;
       void setAsset(const QString& path);
+      void setAsset(dovah::form_stub*);
       void setAsset(DovahKitAssetTransport&&);
       void setAsset(const DovahKitAssetReceptor&);
 
+      // Throttle the loading of new assets (from a path or a form stub). Useful for if 
+      // you've hooked this DKTextureAssetPane up to a QComboBox or something else that 
+      // users can scroll through very quickly one item at a time.
+      //
+      // A throttle of 75ms is good for the case  of the user clicking into a QComboBox 
+      // like that and just holding the arrow key to blitz through its contents, but it 
+      // won't generally catch button mashing.
+      inline bool isThrottleEnabled() const noexcept { return this->_throttle.enabled; }
+      inline uint throttleTime() const noexcept { return this->_throttle.ms; }
+
+      inline bool showAlpha() const noexcept { return this->_showAlpha; }
+
+   public slots:
+      void setShowAlpha(bool);
+      void setThrottleEnabled(bool);
+      void setThrottleTime(uint ms);
+
    protected slots:
-      void _onAssetHandled();
       void _onAssetUnloaded();
+      void _onTargetAssetHandled();
+      void _onRenderAssetHandled();
 
    protected:
       enum class Render {
@@ -35,12 +62,26 @@ class DKTextureAssetPane : public QFrame {
          Asset,
       };
 
-      DovahKitAssetReceptor _handle;
-      Render _render = Render::Null;
+      Render _render    = Render::Null;
+      bool   _showAlpha = true;
+      struct {
+         DovahKitAssetReceptor target;
+         DovahKitAssetReceptor render;
+      } _receptors;
       struct {
          QElapsedTimer elapsed;
          int updateID = 0;
       } _animation;
+      struct {
+         bool enabled = false;
+         uint ms      = 100;
+         QTimer  timer;
+         QString path;
+         dovah::form_stub* stub = nullptr;
+      } _throttle;
+
+      void _clearThrottleData();
+      bool _hasThrottleData() const noexcept;
 
       void _drawLoadingSpinner(QPainter&, QRect);
       void _drawNullSymbol(QPainter&, QRect);
