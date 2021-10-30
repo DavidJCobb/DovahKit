@@ -12,16 +12,9 @@ namespace dovah {
 }
 
 class DovahKitAssetDataTextureSet: public DovahKitAssetData {
-   protected:
-      struct path_list {
-         std::array<QString, 8> paths = {};
-      };
-
-      path_list* pending       = nullptr;
-      size_t     pending_count = 0;
-
    public:
       using DovahKitAssetData::DovahKitAssetData;
+      DovahKitAssetDataTextureSet(DovahKitAsset& owner);
 
       dovah::loaded_form_ptr<dovah::loaded_forms::TextureSet> loaded;
       std::array<DovahKitAssetReceptor, 8> textures = {};
@@ -29,8 +22,5 @@ class DovahKitAssetDataTextureSet: public DovahKitAssetData {
       virtual bool load(const dovah::bsa_archived_file&) override { return false; }
       virtual bool load(dovah::form_stub&) override;
 
-      virtual bool hasPendingDependencies() const override;
-      virtual void requestDependencies() override;
-
-      static_assert(std::tuple_size_v<decltype(path_list::paths)> == std::tuple_size_v<decltype(textures)>);
+      virtual void abandonDependencies() override;
 };

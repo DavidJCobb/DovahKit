@@ -22,7 +22,11 @@ namespace {
 }
 
 #pragma region DovahKitAsset
+void DovahKitAsset::_initialize() {
+   QObject::connect(this, &DovahKitAsset::dependenciesLoaded, this, &DovahKitAsset::onDependenciesLoaded);
+}
 DovahKitAsset::DovahKitAsset(QString p, Type t, QObject* parent) : QObject(parent), _type(t), _path(p) {
+   this->_initialize();
    switch (t) {
       case Type::DDS:
          this->data = new DovahKitAssetDataDDS(*this);
@@ -30,6 +34,7 @@ DovahKitAsset::DovahKitAsset(QString p, Type t, QObject* parent) : QObject(paren
    }
 }
 DovahKitAsset::DovahKitAsset(dovah::form_stub* s, QObject* parent) : QObject(parent), _type(Type::Form), _stub(s) {
+   this->_initialize();
    if (s) {
       switch (s->formType) {
          case dovah::form_type::texture_set:
@@ -104,6 +109,7 @@ void DovahKitAsset::load() {
       auto guard = std::unique_lock(this->_locks.load_state);
       this->_state.load_requested = false;
       this->_state.content_failed = true;
+      this->data->abandonDependencies();
       emit contentLoadingFailed();
    };
    auto _done = [this]() {
@@ -117,8 +123,6 @@ void DovahKitAsset::load() {
       emit this->contentLoaded();
       if (this->_state.dependencies_loaded) {
          emit this->ready();
-      } else {
-         DovahKitAssetManager::get().requestDependencies(passkey_to_manager(), *this);
       }
    };
    
@@ -175,10 +179,14 @@ void DovahKitAsset::unload() {
       p = nullptr;
    }
 }
-void DovahKitAsset::requestDependencies() {
-   if (!this->data)
+void DovahKitAsset::onDependenciesLoaded() {
+   auto& state = this->_state;
+   auto  guard = std::unique_lock(this->_locks.load_state);
+   if (state.dependencies_loaded)
       return;
-   this->data->requestDependencies();
+   state.dependencies_loaded = false;
+   if (state.content_loaded)
+      emit this->ready();
 }
 #pragma endregion
 

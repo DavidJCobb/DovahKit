@@ -34,9 +34,9 @@ class DovahKitAsset : public QObject {
       Q_ENUM(Type);
 
    protected:
-      Type    _type = Type::Undefined;
-      QString _path;
-      dovah::form_stub* _stub = nullptr;
+      const Type    _type = Type::Undefined;
+      const QString _path;
+      dovah::form_stub* const _stub = nullptr;
       struct {
          std::mutex load_state;
       } _locks;
@@ -56,6 +56,8 @@ class DovahKitAsset : public QObject {
       void on_handle_made(DovahKitAssetReceptor&);
       void on_handle_lost(DovahKitAssetReceptor&);
 
+   private:
+      void _initialize();
    public:
       DovahKitAsset(QString path, Type, QObject* parent = nullptr);
       DovahKitAsset(dovah::form_stub*, QObject* parent = nullptr);
@@ -82,7 +84,7 @@ class DovahKitAsset : public QObject {
    protected slots:
       void load();
       void unload();
-      void requestDependencies();
+      void onDependenciesLoaded();
 
    signals:
       void contentLoaded();        // The asset's own content has loaded.

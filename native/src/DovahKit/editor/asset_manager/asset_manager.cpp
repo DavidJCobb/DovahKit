@@ -147,7 +147,7 @@ void DovahKitAssetManager::_load(DovahKitAsset& asset) {
 }
 
 DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
-   assert(QThread::currentThread() == this->thread() && "We don't currently account for requesting an asset from off the main thread. We'll need some adjustments.");
+   bool on_same_thread = QThread::currentThread() == this->thread();
    //
    auto norm = this->normalizeAssetPath(path);
    if (norm.isEmpty())
@@ -167,6 +167,9 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
       //
       asset = new DovahKitAsset(norm, type);
       this->assets[norm] = asset;
+      if (!on_same_thread) {
+         asset->moveToThread(this->thread());
+      }
    }
    if constexpr (debug_asset_lifetime) {
       qDebug("Created DovahKitAsset: %p %s", asset, qUtf8Printable(asset->description()));
@@ -175,17 +178,20 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(const QString& path) {
    return asset;
 }
 DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub) {
-   assert(QThread::currentThread() == this->thread() && "We don't currently account for requesting a form-asset from off the main thread. We'll need some adjustments.");
+   bool on_same_thread = QThread::currentThread() == this->thread();
    //
    DovahKitAsset* asset = nullptr;
    {
       auto guard = std::shared_lock(this->asset_lock);
-      auto it = this->form_assets.find(&stub);
+      auto it    = this->form_assets.find(&stub);
       if (it != this->form_assets.end()) {
          return *it;
       }
       asset = new DovahKitAsset(&stub);
       this->form_assets[&stub] = asset;
+      if (!on_same_thread) {
+         asset->moveToThread(this->thread());
+      }
    }
    if constexpr (debug_asset_lifetime) {
       qDebug("Created DovahKitAsset: %p %s", asset, qUtf8Printable(asset->description()));
@@ -194,26 +200,15 @@ DovahKitAssetTransport DovahKitAssetManager::requestAsset(dovah::form_stub& stub
       auto guard = std::unique_lock(this->asset_lock);
       this->form_queues.load.push_back(asset);
    } else {
-      asset->load(); // MUST occur on this thread
+      if (on_same_thread) {
+         asset->load(); // MUST occur on this thread
+      } else {
+         QMetaObject::invokeMethod(this, "loadFormAsset", Qt::QueuedConnection, Q_ARG(DovahKitAsset*, asset)); // the function pointer overload doesn't support arguments. nice one, Qt
+      }
    }
    return asset;
 }
 
-void DovahKitAssetManager::requestDependencies(asset_passkey, DovahKitAsset& asset) {
-   if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAsset is requesting dependencies: %p %s", &asset, qUtf8Printable(asset.description()));
-   }
-   auto& adh = this->asset_dependency_handling;
-   //
-   auto guard = std::unique_lock(adh.lock);
-   assert(!adh.list.contains(&asset));
-   adh.list.push_back(&asset);
-   //
-   if (!adh.requested) {
-      adh.requested = true;
-      QMetaObject::invokeMethod(this, &DovahKitAssetManager::queueDependencyLoad, Qt::QueuedConnection);
-   }
-}
 void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
    if constexpr (debug_asset_lifetime) {
       qDebug("DovahKitAsset is unreferenced: %p %s", &asset, qUtf8Printable(asset.description()));
@@ -227,7 +222,7 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
       return;
    }
    {
-      auto guard_a = std::unique_lock(this->asset_lock);
+      auto guard = std::unique_lock(this->asset_lock);
       if (asset.type() == DovahKitAsset::Type::Form) {
          auto i = this->form_assets.remove(asset._stub);
          assert(i && "Was this asset not tracked?!");
@@ -235,10 +230,6 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
          auto i = this->assets.remove(asset._path);
          assert(i && "Was this asset not tracked?!");
       }
-      //
-      auto& adh = this->asset_dependency_handling;
-      auto guard_b = std::unique_lock(adh.lock);
-      adh.list.removeOne(&asset);
    }
    asset.deleteLater();
 }
@@ -273,8 +264,7 @@ void DovahKitAssetManager::unloadAll() {
    }
    this->killThreads();
    //
-   auto guard_a = std::unique_lock(this->asset_lock);
-   auto guard_b = std::unique_lock(this->asset_dependency_handling.lock);
+   auto guard = std::unique_lock(this->asset_lock);
    {
       for (auto* asset : this->assets) {
          //
@@ -300,7 +290,6 @@ void DovahKitAssetManager::unloadAll() {
       }
       this->form_assets.clear();
    }
-   this->asset_dependency_handling.list.clear();
    this->form_queues.load.clear();
    this->form_queues.discard.clear();
 }
@@ -325,26 +314,10 @@ void DovahKitAssetManager::spawnThreads() {
       worker.start();
 }
 
-void DovahKitAssetManager::queueDependencyLoad() {
-   assert(QThread::currentThread() == this->thread());
-   //
-   if constexpr (debug_asset_lifetime) {
-      qDebug("DovahKitAssetManager is executing a queued asset dependency load...");
-   }
-   auto& adh = this->asset_dependency_handling;
-   //
-   auto guard = std::unique_lock(adh.lock);
-   for (auto* asset : adh.list)
-      if (asset)
-         asset->requestDependencies();
-   //
-   adh.requested = false;
-}
 void DovahKitAssetManager::onFormDeleted(dovah::form_stub* stub, bool will_be_flagged) {
    auto guard = std::unique_lock(this->asset_lock);
    auto it    = this->form_assets.find(stub);
    if (it != this->form_assets.end()) {
-      this->asset_dependency_handling.list.removeOne(*it);
       (*it)->unload();
       (*it)->deleteLater();
       this->form_assets.erase(it);
@@ -375,4 +348,15 @@ void DovahKitAssetManager::onFormDeleted(dovah::form_stub* stub, bool will_be_fl
       if (i >= 0)
          this->form_queues.load.removeAt(i);
    }
+}
+void DovahKitAssetManager::loadFormAsset(DovahKitAsset* asset) {
+   assert(asset);
+   assert(QThread::currentThread() == this->thread() && "This function should only run on the main thread; its literal sole purpose is to carry out a main-thread form-asset load.");
+   //
+   if (this->isFormManagementPaused()) {
+      auto guard = std::unique_lock(this->asset_lock);
+      this->form_queues.load.push_back(asset);
+      return;
+   }
+   asset->load();
 }

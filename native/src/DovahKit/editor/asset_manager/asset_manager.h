@@ -59,13 +59,6 @@ class DovahKitAssetManager : public QObject {
       } form_queues;
       std::atomic<bool> form_management_paused = false;
       //
-      struct {
-         std::mutex lock;
-         QVector<DovahKitAsset*> list;
-         //
-         bool requested = false;
-      } asset_dependency_handling;
-      //
       std::array<Worker, worker_thread_count> workers;
       size_t last_worker = worker_thread_count - 1;
 
@@ -84,7 +77,6 @@ class DovahKitAssetManager : public QObject {
       DovahKitAssetTransport requestAsset(const QString& path);
       DovahKitAssetTransport requestAsset(dovah::form_stub& stub);
 
-      void requestDependencies(asset_passkey, DovahKitAsset&);
       void onUnreferenced(asset_passkey, DovahKitAsset&);
 
       inline bool isFormManagementPaused() const noexcept { return this->form_management_paused; }
@@ -99,6 +91,6 @@ class DovahKitAssetManager : public QObject {
       void spawnThreads(); // starts all worker threads back up
 
    protected slots:
-      void queueDependencyLoad();
       void onFormDeleted(dovah::form_stub*, bool will_be_flagged);
+      void loadFormAsset(DovahKitAsset*);
 };

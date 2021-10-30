@@ -4,5 +4,5 @@
 void DovahKitAssetData::dependencyResolved() {
    --this->pending_count;
    if (this->pending_count == 0)
-      emit this->owner.ready();
+      emit this->owner.dependenciesLoaded();
 }
