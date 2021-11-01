@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <mutex>
+#include <QElapsedTimer>
 #include <QObject>
 #include <QPointer>
 
@@ -15,6 +16,7 @@ namespace dovah {
 }
 class DovahKitAssetReceptor;
 class DovahKitAssetManager;
+class DovahKitAssetTransport;
 
 class DovahKitAssetData;
 class DovahKitAssetDataDDS;
@@ -24,6 +26,7 @@ class DovahKitAsset : public QObject {
    Q_OBJECT;
    friend class DovahKitAssetReceptor;
    friend class DovahKitAssetManager;
+   friend class DovahKitAssetTransport;
    public:
       enum Type {
          Undefined,
@@ -42,19 +45,27 @@ class DovahKitAsset : public QObject {
       } _locks;
       struct {
          struct {
-            uint32_t all           = 0;
+            std::atomic<uint32_t> all = 0;
             uint32_t other_assets  = 0;
             uint32_t render_window = 0;
          } refcounts;
          bool load_requested      = false; // prevents the asset manager from queuing multiple threads to load the same asset
          bool content_loaded      = false;
          bool content_failed      = false;
-         bool dependencies_loaded = false;
+         bool dependencies_loaded = false; // all dependencies have either finished loading or failed loading
+         QElapsedTimer when_unreferenced;  // used by the asset manager for delayed unloads (not including deferred form-unloads)
       } _state;
       DovahKitAssetData* data = nullptr;
 
       void on_handle_made(DovahKitAssetReceptor&);
       void on_handle_lost(DovahKitAssetReceptor&);
+      void on_transport_start(DovahKitAssetTransport&);
+
+      // These are provided for DovahKitAssetReceptor.
+      inline bool areDependenciesLoaded() const noexcept { return this->_state.dependencies_loaded; }
+      inline bool didContentLoadingFail() const noexcept { return this->_state.content_failed; }
+      inline bool isContentLoaded() const noexcept { return this->_state.content_loaded; }
+      inline bool isReady() const noexcept { return this->isContentLoaded() && this->areDependenciesLoaded(); }
 
    private:
       void _initialize();
@@ -66,11 +77,6 @@ class DovahKitAsset : public QObject {
       inline QString path() const noexcept { return this->_path; }
       inline Type type() const noexcept { return this->_type; }
       inline dovah::form_stub* formStub() const noexcept { return this->_stub; }
-
-      inline bool areDependenciesLoaded() const noexcept { return this->_state.dependencies_loaded; }
-      inline bool didContentLoadingFail() const noexcept { return this->_state.content_failed; }
-      inline bool isContentLoaded() const noexcept { return this->_state.content_loaded; }
-      inline bool isReady() const noexcept { return this->isContentLoaded() && this->areDependenciesLoaded(); }
 
       bool samePathAs(const QString& p) const noexcept; // normalizes (p) before comparing
 
@@ -99,9 +105,28 @@ class DovahKitAssetTransport {
    friend class DovahKitAssetReceptor;
    protected:
       DovahKitAsset* value = nullptr;
+
+      inline void _inc() {
+         if (this->value)
+            this->value->on_transport_start(*this);
+      }
+      inline void _dec() {
+         if (this->value)
+            --this->value->_state.refcounts.all;
+      }
+
+      // DovahKitAssetReceptor should call this after it has wrapped the asset this transport 
+      // is carrying. After, not before.
+      inline void _clear() {
+         if (!this->value)
+            return;
+         --this->value->_state.refcounts.all;
+         this->value = nullptr;
+      }
+
    public:
       DovahKitAssetTransport() {}
-      DovahKitAssetTransport(DovahKitAsset* v) : value(v) {}
+      DovahKitAssetTransport(DovahKitAsset* v);
       ~DovahKitAssetTransport();
 
       DovahKitAssetTransport(const DovahKitAssetTransport&) = delete;

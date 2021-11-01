@@ -55,9 +55,12 @@ DovahKitAsset::~DovahKitAsset() {
 }
 
 void DovahKitAsset::on_handle_made(DovahKitAssetReceptor& handle) {
-   ++this->_state.refcounts.all;
+   auto to = ++this->_state.refcounts.all;
    if (handle.flags & DovahKitAssetReceptor::Flag::IsRenderWindow)
       ++this->_state.refcounts.render_window;
+   //
+   if (to == 1 && this->_state.when_unreferenced.isValid())
+      DovahKitAssetManager::get().onReReferenced(passkey_to_manager(), *this);
 }
 void DovahKitAsset::on_handle_lost(DovahKitAssetReceptor& handle) {
    auto to = --this->_state.refcounts.all;
@@ -66,6 +69,12 @@ void DovahKitAsset::on_handle_lost(DovahKitAssetReceptor& handle) {
    //
    if (to == 0)
       DovahKitAssetManager::get().onUnreferenced(passkey_to_manager(), *this);
+}
+void DovahKitAsset::on_transport_start(DovahKitAssetTransport& transport) {
+   auto to = ++this->_state.refcounts.all;
+   //
+   if (to == 1 && this->_state.when_unreferenced.isValid())
+      DovahKitAssetManager::get().onReReferenced(passkey_to_manager(), *this);
 }
 
 bool DovahKitAsset::samePathAs(const QString& p) const noexcept {
@@ -210,16 +219,26 @@ void DovahKitAsset::onFormModified() {
 #pragma endregion
 
 #pragma region DovahKitAssetTransport
+DovahKitAssetTransport::DovahKitAssetTransport(DovahKitAsset* v) : value(v) {
+   _inc();
+}
 DovahKitAssetTransport::~DovahKitAssetTransport() {
    assert(this->value == nullptr && "a DovahKitAssetTransport failed to make it into a receptor");
+   _dec();
 }
 
 DovahKitAssetTransport::DovahKitAssetTransport(DovahKitAssetTransport&& other) noexcept {
-   this->value = other.value;
+   if (this->value != other.value) {
+      _dec();
+      this->value = other.value;
+   }
    other.value = nullptr;
 }
 DovahKitAssetTransport& DovahKitAssetTransport::operator=(DovahKitAssetTransport&& other) noexcept {
-   this->value = other.value;
+   if (this->value != other.value) {
+      _dec();
+      this->value = other.value;
+   }
    other.value = nullptr;
    return *this;
 }
@@ -303,6 +322,7 @@ void DovahKitAssetReceptor::_severLoadSignals() {
    QObject::disconnect(this->asset, &value_type::contentLoadingFailed, this, nullptr);
 }
 
+#pragma region Member functions to forward signals
 void DovahKitAssetReceptor::_forwardFailed() {
    if (this->asset) {
       this->_severLoadSignals();
@@ -329,6 +349,7 @@ void DovahKitAssetReceptor::_forwardUnloaded(QObject* target) {
 void DovahKitAssetReceptor::_forwardDependenciesChanged() {
    emit this->dependenciesChanged();
 }
+#pragma endregion
 
 bool DovahKitAssetReceptor::isReady() const noexcept {
    if (this->asset) {
@@ -349,8 +370,8 @@ bool DovahKitAssetReceptor::isFailed() const noexcept {
 
 DovahKitAssetReceptor::DovahKitAssetReceptor(DovahKitAssetTransport&& target) {
    auto* p = target.value;
-   target.value = nullptr;
    this->_acquire(p);
+   target._clear();
 }
 DovahKitAssetReceptor::DovahKitAssetReceptor(const DovahKitAssetReceptor& other) {
    this->flags = other.flags;
@@ -362,15 +383,16 @@ DovahKitAssetReceptor::DovahKitAssetReceptor(DovahKitAssetReceptor&& other) noex
    other._clear();
 }
 DovahKitAssetReceptor::~DovahKitAssetReceptor() {
+   this->_clear();
 }
 
 DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(DovahKitAssetTransport&& target) noexcept {
    auto* p = target.value;
-   target.value = nullptr;
-   if (this->asset == p)
-      return *this;
-   this->_clear();
-   this->_acquire(p);
+   if (this->asset != p) {
+      this->_clear();
+      this->_acquire(p);
+   }
+   target._clear();
    return *this;
 }
 DovahKitAssetReceptor& DovahKitAssetReceptor::operator=(const DovahKitAssetReceptor& other) noexcept {

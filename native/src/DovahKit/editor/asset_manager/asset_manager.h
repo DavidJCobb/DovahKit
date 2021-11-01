@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QObject>
 #include <QString>
+#include <QTimer>
 #include "../../helpers/passkey.h"
 #include "asset.h"
 
@@ -51,7 +52,7 @@ class DovahKitAssetManager : public QObject {
             inline bool isRunning() const noexcept { return this->thread.joinable(); }
       };
 
-      std::shared_mutex asset_lock;
+      std::mutex asset_lock;
       QHash<QString, DovahKitAsset*> assets;
       struct {
          QHash<dovah::form_stub*, DovahKitAsset*> assets;
@@ -61,11 +62,17 @@ class DovahKitAssetManager : public QObject {
          } queues;
          std::atomic<bool> paused = false;
       } forms;
+      struct {
+         std::mutex lock;
+         QVector<DovahKitAsset*> queue;
+         QTimer timer;
+      } deferred_unload;
       //
       std::array<Worker, worker_thread_count> workers;
       size_t last_worker = worker_thread_count - 1;
 
       void _load(DovahKitAsset&);
+      void _discard(DovahKitAsset&, bool lock = true);
 
    public:
       inline static DovahKitAssetManager& get() {
@@ -81,6 +88,7 @@ class DovahKitAssetManager : public QObject {
       DovahKitAssetTransport requestAsset(dovah::form_stub& stub);
 
       void onUnreferenced(asset_passkey, DovahKitAsset&);
+      void onReReferenced(asset_passkey, DovahKitAsset&);
 
       inline bool isFormManagementPaused() const noexcept { return this->forms.paused; }
 
@@ -95,5 +103,6 @@ class DovahKitAssetManager : public QObject {
 
    protected slots:
       void onFormDeleted(dovah::form_stub*, bool will_be_flagged);
+      void onDeferredUnloadTimer();
       void loadFormAsset(DovahKitAsset*);
 };
