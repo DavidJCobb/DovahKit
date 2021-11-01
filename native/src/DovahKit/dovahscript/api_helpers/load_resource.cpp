@@ -1,7 +1,7 @@
 #include "load_resource.h"
 #include <array>
 #include <filesystem>
-#include <QBuffer>
+#include <QtCore/QBuffer> // prefix necessary if your project uses Qt 3D (see QTBUG-49413); naturally, Qt documentation does not mention this anywhere
 #include <QByteArray>
 #include <QDir>
 #include <QImage>

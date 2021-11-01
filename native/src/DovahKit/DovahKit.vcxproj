@@ -65,12 +65,12 @@
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtModules>core;gui;help;widgets;winextras;3dcore;3danimation;3dextras;3dinput;3dlogic;3drender</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtModules>core;gui;help;widgets;winextras;3dcore;3danimation;3dextras;3dinput;3dlogic;3drender</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -493,6 +493,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
@@ -589,6 +590,7 @@
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\unreachable.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />

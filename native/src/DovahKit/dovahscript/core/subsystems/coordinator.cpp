@@ -579,6 +579,7 @@ namespace dovahscript::core::subsystems {
          }
          return;
       }
+      emit host::get().scriptStartImminent();
       this->scripts_to_run = scripts;
       if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
          this->worker_thread.join();

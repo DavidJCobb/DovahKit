@@ -21,6 +21,7 @@ class DovahscriptHost : public QObject, cobb::singleton {
       
    signals:
       void messageLogged(const QString&);
+      void scriptStartImminent();
       void scriptStarted();
       void scriptEnded();
       void userClickedLink(const QString& url, QWidget* opener);
