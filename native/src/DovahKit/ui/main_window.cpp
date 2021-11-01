@@ -75,6 +75,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->subwindows.cell_view.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
    this->subwindows.cell_view.open(this->ui.mdi);
    this->subwindows.log.open(this->ui.mdi);
+   this->subwindows.render.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
+   this->subwindows.render.open(this->ui.mdi);
    //
    #pragma region Window menu
    {

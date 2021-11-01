@@ -3,7 +3,7 @@
 
 namespace DovahKitDebug::features {
    struct qt_3d_tests : debug_feature {
-      static constexpr const char* name = "Initial 3D tests";
+      static constexpr const char* name = "Initial Qt 3D tests";
       static void execute(QWidget* from);
    };
 }

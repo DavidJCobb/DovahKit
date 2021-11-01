@@ -26,6 +26,8 @@ This program and its source code contain text content that has been data-mined f
 
 [DirectXTex](https://github.com/microsoft/DirectXTex), Lua, and [miniz](https://github.com/richgel999/miniz) are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
 
+The [OpenGL Mathematics Library (GLM)](https://github.com/g-truc/glm) uses a slightly modified variant of the MIT license, listed in the `copying.txt` file in its folder.
+
 Qt and its components are licensed under LGPL v3. Per the terms of LGPL, I am required to make [the source code for Qt 5.15.2](https://download.qt.io/archive/qt/5.15/5.15.2/single/) available to you in case you're unable to acquire it on your own. Presently I have a copy saved to my machine.
 
 The Qt Visual Studio Tools plug-in is [GPL-licensed with a special exemption](https://marketplace.visualstudio.com/items/TheQtCompany.QtVisualStudioTools2019/license) which allows its use in developing non-GPL software. Qt Designer has [a similar exception](https://opensource.stackexchange.com/questions/7709/using-qt-designer-to-create-ui-design-for-closed-source-application).

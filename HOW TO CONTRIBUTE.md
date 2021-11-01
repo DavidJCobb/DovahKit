@@ -7,6 +7,9 @@ In order to contribute to DovahKit, you'll need to set up your build environment
 * Qt version 5.15.2, 64-bit, for MSVC 2019 x64.
 
   [You'll need to set that up in the Qt VS plug-in.](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) When setting it up, you'll need to select names for the Qt versions; the names used for DovahKit are `5.15.2 MSVC2019 x64`.
+* The [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows).
+  
+  DovahKit's project files are configured to pull this from `C:\VulkanSDK\1.2.189.2`.
 
 Anyone wishing to contribute their changes to the main DovahKit project must also agree to [the contributor license agreement](https://gist.github.com/DavidJCobb/2023bca5e5d9c30ce1afa020e0424ae6) before contributing. This license agreement serves three purposes:
 
@@ -16,7 +19,7 @@ Anyone wishing to contribute their changes to the main DovahKit project must als
 
 * You promise that you're legally allowed to share your contributions with this project (i.e. it's your content or you have the rights to it; your employer doesn't own it as part of your contract with them; et cetera).
 
-GitHub has an equivalent clause in their Terms of Service (when contributing to a repo, you agree to license your contribution under the same license(s) as the repo), but I would prefer to make this explicit, rather than relying on a couple paragraphs buried in a Terms of Service agreement that a corporation can change at any time without warning.
+GitHub has an equivalent clause in their Terms of Service (when contributing to a repo, you agree to license your contribution under the same license(s) as the repo), but I would prefer to make this explicit, rather than relying on a couple paragraphs buried in a Terms of Service agreement that a giant corporation can change at any time without warning.
 
 The help manual (when we create one...) is licensed under CC0 so that people can share excerpts, etc., without having to bundle any raw source files or program code used to create and publish the help manual. That is: if we design the help manual so that it is initially written in a raw format, with a program used to generate human-readable HTML, users should not have to bundle that program and its source in order to share the help manual or excerpts from the manual.
 

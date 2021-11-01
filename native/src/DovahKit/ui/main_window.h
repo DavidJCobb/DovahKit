@@ -6,6 +6,7 @@
 #include "main_window/cell_view.h"
 #include "main_window/object_window.h"
 #include "main_window/log_window.h"
+#include "main_window/render_window.h"
 
 class DefaultObjectWindow;
 class FileMetadataWindow;
@@ -50,6 +51,7 @@ class MainWindow : public QMainWindow {
          _subwindow<CellViewWindow> cell_view;
          _subwindow<LogWindow>      log;
          _subwindow<ObjectWindow>   object;
+         _subwindow<RenderWindow>   render;
       } subwindows;
       QWinTaskbarButton*   taskbar_button        = nullptr;
       DefaultObjectWindow* default_object_window = nullptr;

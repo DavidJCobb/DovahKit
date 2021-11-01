@@ -50,27 +50,33 @@
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
-      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.2.189.2\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
-      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.2.189.2\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras;3dcore;3danimation;3dextras;3dinput;3dlogic;3drender</QtModules>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras;3dcore;3danimation;3dextras;3dinput;3dlogic;3drender</QtModules>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -413,6 +419,7 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
+    <ClCompile Include="editor\DovahKitVulkanSubsystem.cpp" />
     <ClCompile Include="editor\form_data_cache.cpp" />
     <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
     <ClCompile Include="editor\get_condition_description.cpp" />
@@ -492,6 +499,7 @@
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
@@ -587,9 +595,11 @@
     <ClInclude Include="editor\asset_manager\data\dds.h" />
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
+    <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\unreachable.h" />
+    <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
