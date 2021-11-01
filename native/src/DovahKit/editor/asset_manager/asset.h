@@ -39,7 +39,7 @@ class DovahKitAsset : public QObject {
    protected:
       const Type    _type = Type::Undefined;
       const QString _path;
-      dovah::form_stub* const _stub = nullptr;
+      dovah::form_stub* _stub = nullptr;
       struct {
          std::mutex load_state;
       } _locks;

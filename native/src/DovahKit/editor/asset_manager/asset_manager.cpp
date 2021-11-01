@@ -286,6 +286,16 @@ void DovahKitAssetManager::onUnreferenced(asset_passkey, DovahKitAsset& asset) {
    if constexpr (debug_asset_lifetime) {
       qDebug("DovahKitAsset is unreferenced: %p %s", &asset, qUtf8Printable(asset.description()));
    }
+   if (this->teardown_in_progress)
+      //
+      // We're in the middle of an unloadAll call. If there are interdependent assets loaded, 
+      // unloading one asset could plausibly trigger  another asset to become unreferenced... 
+      // but we don't  want to discard that other asset here or anything, because  that would 
+      // end up hitting locks and deadlocking. (We don't want to do the special-case handling 
+      // for form-assets for the same reason.)
+      //
+      return;
+   //
    if (asset.type() == DovahKitAsset::Type::Form && this->isFormManagementPaused()) {
       auto  guard = std::unique_lock(this->asset_lock);
       auto& list  = this->forms.queues.discard;
@@ -390,6 +400,8 @@ void DovahKitAssetManager::unloadAll() {
    if constexpr (debug_asset_lifetime || debug_worker_threads) {
       qDebug("Asset manager is unloading all content and killing all worker threads...");
    }
+   assert(!this->isFormManagementPaused() && "Cannot unload all assets if form management is paused; form-assets cannot load or unload. This is a logic or sequence error: you shouldn't be doing teardown while form management is paused.");
+   this->teardown_in_progress = true;
    this->killThreads();
    //
    auto& du = this->deferred_unload;
@@ -424,6 +436,8 @@ void DovahKitAssetManager::unloadAll() {
    }
    this->forms.queues.load.clear();
    this->forms.queues.discard.clear();
+   //
+   this->teardown_in_progress = false;
 }
 
 void DovahKitAssetManager::killThreads() {

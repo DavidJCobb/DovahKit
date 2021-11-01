@@ -67,6 +67,7 @@ class DovahKitAssetManager : public QObject {
          QVector<DovahKitAsset*> queue;
          QTimer timer;
       } deferred_unload;
+      std::atomic<bool> teardown_in_progress = false;
       //
       std::array<Worker, worker_thread_count> workers;
       size_t last_worker = worker_thread_count - 1;

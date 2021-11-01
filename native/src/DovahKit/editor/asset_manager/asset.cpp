@@ -91,7 +91,7 @@ QString DovahKitAsset::description() const noexcept {
    if (this->_stub) {
       return QString("[FORM:%1]%2").arg(QString("%1").arg(this->_stub->formID, 8, 16, QChar('0'))).arg(this->_stub->editorID.c_str());
    }
-   return QString("(?)");
+   return QString("[FORM:????????]UnloadedAsset");
 }
 
 const DovahKitAssetDataDDS* DovahKitAsset::asDDS() const noexcept {
@@ -191,6 +191,15 @@ void DovahKitAsset::unload() {
       delete p;
       p = nullptr;
    }
+   //
+   // Edge-case: when DovahKit is about to abandon all loaded game data, the DovahKitAssetManager will respond 
+   // by mass-unloading all  assets, including form-assets; we call DovahKitAsset::unload  and then delete the 
+   // asset. However, we use QObject::deleteLater in order to avoid deleting assets out from under any pending 
+   // Qt events...  and that necessarily means that the  form-assets will be deleted after game  data has been 
+   // discarded. The stub will not be safe to query (whether  by debug logging or anything else) at that time. 
+   // We need to clear it here, in DovahKitAsset::unload.
+   //
+   this->_stub = nullptr;
 }
 void DovahKitAsset::onDependenciesLoaded() {
    auto& state = this->_state;

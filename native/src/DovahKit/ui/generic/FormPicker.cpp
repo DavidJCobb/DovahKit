@@ -145,6 +145,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       this->_setSubwidgetEnableState(false);
       this->subwidgets.type->clear();
       this->_prior_selections.clear();
+      this->_value = nullptr;
    });
 }
 
