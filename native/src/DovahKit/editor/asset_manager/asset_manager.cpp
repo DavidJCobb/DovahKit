@@ -392,7 +392,11 @@ void DovahKitAssetManager::unloadAll() {
    }
    this->killThreads();
    //
-   auto guard = std::unique_lock(this->asset_lock);
+   auto& du = this->deferred_unload;
+   auto guard_a = std::unique_lock(du.lock);
+   auto guard_b = std::unique_lock(this->asset_lock);
+   du.queue.clear();
+   du.timer.stop();
    {
       for (auto* asset : this->assets) {
          //
