@@ -207,6 +207,7 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupFramebuffers();
    this->setupCommandPool();
    this->setupVertexBuffer();
+   this->setupIndexBuffer();
    this->setupCommandBuffers();
    this->setupSemaphores();
    //
@@ -225,7 +226,10 @@ void DovahKitVulkanSubsystem::teardown() {
    // TODO: Ensure all child objects belonging to the instance are destroyed first.
    //
    this->teardownSwapChain();
+   vkDestroyBuffer(device, this->index_buffer, nullptr);
+   vkFreeMemory   (device, this->index_buffer_memory, nullptr);
    vkDestroyBuffer(device, this->vertex_buffer, nullptr);
+   vkFreeMemory   (device, this->vertex_buffer_memory, nullptr);
    for (auto& frame : this->frames_in_flight) {
       vkDestroySemaphore(device, frame.semaphores.render_finished, nullptr);
       vkDestroySemaphore(device, frame.semaphores.image_available, nullptr);
@@ -291,6 +295,13 @@ void DovahKitVulkanSubsystem::createBuffer(VkDeviceSize size, VkBufferUsageFlags
    //
    VkMemoryRequirements memRequirements;
    vkGetBufferMemoryRequirements(this->devices.logical, buffer, &memRequirements);
+   //
+   // In a real-world application, you wouldn't use vkAllocateMemory for each individual object you wish 
+   // to render, because there's actually a limit on the number of allocations you can make irrespective 
+   // of their total size. Even on high-end hardware, that limit may be in the low thousands, the Vulkan 
+   // tutorial gives 4096 as a plausible limit for  hardware like an NVIDIA GTX 1080. What you'd want to 
+   // do instead, then, is allocate memory in larger blocks and then manually divide those blocks up for 
+   // different objects -- similar to what you'd do when making a block allocator.
    //
    auto alloc_info = VkMemoryAllocateInfo{
       .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -936,6 +947,24 @@ void DovahKitVulkanSubsystem::setupVertexBuffer() {
    vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
    vkFreeMemory(this->devices.logical, staging_memory, nullptr);
 }
+void DovahKitVulkanSubsystem::setupIndexBuffer() {
+   VkDeviceSize bufferSize = sizeof(this->indices[0]) * this->indices.size();
+   //
+   VkBuffer       staging_buffer;
+   VkDeviceMemory staging_memory;
+   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+   //
+   void* data;
+   vkMapMemory(this->devices.logical, staging_memory, 0, bufferSize, 0, &data);
+   memcpy(data, indices.data(), (size_t)bufferSize);
+   vkUnmapMemory(this->devices.logical, staging_memory);
+   //
+   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->index_buffer, this->index_buffer_memory);
+   this->copyBuffer(staging_buffer, this->index_buffer, bufferSize);
+   //
+   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+   vkFreeMemory(this->devices.logical, staging_memory, nullptr);
+}
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
    //
    // Command buffers allow us to "record" several draw commands (possibly across multiple 
@@ -958,12 +987,14 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
    // but that's how the Vulkan tutorial wants me to do it, at least for now.
    //
    for (size_t i = 0; i < this->command_buffers.size(); i++) {
+      auto& command_buffer = this->command_buffers[i];
+      //
       auto buffer_begin_info = VkCommandBufferBeginInfo{
          .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
          .flags = 0,
          .pInheritanceInfo = nullptr,
       };
-      if (vkBeginCommandBuffer(this->command_buffers[i], &buffer_begin_info) != VK_SUCCESS) {
+      if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
          throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to begin recording command buffer.");
       }
       //
@@ -980,19 +1011,29 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
          .pClearValues    = clear_values.data(),
       };
 
-      vkCmdBeginRenderPass(this->command_buffers[i], &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+      vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
       {
-         vkCmdBindPipeline(this->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
+         using index_type = decltype(this->indices)::value_type;
+         constexpr bool indices_are_uint32_t = std::is_same_v<uint32_t, index_type>;
+         constexpr bool indices_are_uint16_t = std::is_same_v<uint16_t, index_type>;
+         static_assert(indices_are_uint32_t || indices_are_uint16_t);
+         //
+         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
          //
          std::array buffers = { this->vertex_buffer };
          std::array<VkDeviceSize, buffers.size()> offsets = { 0 };
-         vkCmdBindVertexBuffers(this->command_buffers[i], 0, buffers.size(), buffers.data(), offsets.data());
+         vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
+         if constexpr (indices_are_uint32_t) {
+            vkCmdBindIndexBuffer(command_buffer, this->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+         } else if constexpr (indices_are_uint16_t) {
+            vkCmdBindIndexBuffer(command_buffer, this->index_buffer, 0, VK_INDEX_TYPE_UINT16);
+         }
          //
-         vkCmdDraw(this->command_buffers[i], (uint32_t)this->vertices.size(), 1, 0, 0);
+         vkCmdDrawIndexed(command_buffer, (uint32_t)this->indices.size(), 1, 0, 0, 0);
       }
-      vkCmdEndRenderPass(this->command_buffers[i]);
+      vkCmdEndRenderPass(command_buffer);
 
-      if (vkEndCommandBuffer(this->command_buffers[i]) != VK_SUCCESS) {
+      if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
          throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to record a command buffer.");
       }
    }

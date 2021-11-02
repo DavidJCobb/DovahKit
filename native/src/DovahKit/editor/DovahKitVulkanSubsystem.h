@@ -103,6 +103,8 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkPipeline       pipeline;
       VkBuffer         vertex_buffer;
       VkDeviceMemory   vertex_buffer_memory;
+      VkBuffer         index_buffer;
+      VkDeviceMemory   index_buffer_memory;
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
       struct {
@@ -137,9 +139,13 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkDebugUtilsMessengerEXT debugMessenger;
       //
       const std::vector<vertex> vertices = {
-          {{ 0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-          {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
-          {{-0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}}
+         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+         {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+         {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
+         {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}},
+      };
+      const std::vector<uint16_t> indices = {
+         0, 1, 2, 2, 3, 0
       };
 
       static VkDebugUtilsMessengerCreateInfoEXT _get_debug_create_params();
@@ -170,6 +176,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupFramebuffers();
       void setupCommandPool();
       void setupVertexBuffer();
+      void setupIndexBuffer();
       void setupCommandBuffers();
       void setupSemaphores();
 
