@@ -7,6 +7,8 @@
 
 namespace {
    static constexpr auto desired_swap_chain_presentation_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+
+   static constexpr size_t frame_in_flight_count = 2;
 }
 
 namespace {
@@ -36,6 +38,34 @@ namespace {
       }
       return extensions;
    }
+}
+
+DovahKitVulkanWidget::DovahKitVulkanWidget(QWidget* parent) : QWidget(parent) {
+   this->setAttribute(Qt::WA_OpaquePaintEvent, true);
+   this->setAttribute(Qt::WA_PaintOnScreen,    true);
+   this->winId(); // force the widget to have a unique HWND
+}
+void DovahKitVulkanWidget::hideEvent(QHideEvent* event) {
+   this->killTimer(this->timerID);
+   this->timerID = 0;
+}
+void DovahKitVulkanWidget::paintEvent(QPaintEvent* event) {
+   auto& vulkan = DovahKitVulkanSubsystem::get();
+   if (!vulkan.isInitialized())
+      return;
+   vulkan.drawFrame();
+}
+void DovahKitVulkanWidget::resizeEvent(QResizeEvent* event) {
+   auto& vulkan = DovahKitVulkanSubsystem::get();
+   if (!vulkan.isInitialized())
+      return;
+   vulkan.recreateSwapChain();
+}
+void DovahKitVulkanWidget::showEvent(QShowEvent* event) {
+   this->timerID = this->startTimer(16, Qt::PreciseTimer);
+}
+void DovahKitVulkanWidget::timerEvent(QTimerEvent* event) {
+   this->repaint();
 }
 
 #pragma region QueueFamilies
@@ -108,12 +138,12 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
 
 DovahKitVulkanSubsystem::DovahKitVulkanSubsystem() {
    auto& rw = this->surfaces.render_window;
-   rw.widget = new QWidget;
-   rw.widget->winId(); // force the widget to have a unique HWND
+   rw.widget = new DovahKitVulkanWidget;
    //
    // Do not call (initialize) here. There are some cases where we need to re-access the 
    // singleton via its getter, but that breaks if the singleton is still being constructed.
    //
+   this->frames_in_flight.resize(frame_in_flight_count);
 }
 DovahKitVulkanSubsystem::~DovahKitVulkanSubsystem() {
    this->teardown();
@@ -136,6 +166,10 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupImageViews();
    this->setupRenderPass();
    this->setupGraphicsPipeline();
+   this->setupFramebuffers();
+   this->setupCommandPool();
+   this->setupCommandBuffers();
+   this->setupSemaphores();
    //
    qDebug("[DovahKitVulkanSubsystem] Initialized.");
    emit this->ready();
@@ -146,18 +180,20 @@ void DovahKitVulkanSubsystem::teardown() {
    //
    emit this->teardownImminent();
    //
-   vkDeviceWaitIdle(this->devices.logical); // wait for all draw commands to finish (remember: they're asynch)
+   auto device = this->devices.logical;
+   vkDeviceWaitIdle(device); // wait for all draw commands to finish (remember: they're asynch)
    //
    // TODO: Ensure all child objects belonging to the instance are destroyed first.
    //
-   vkDestroyPipeline(this->devices.logical, this->pipeline, nullptr);
-   vkDestroyPipelineLayout(this->devices.logical, this->pipeline_layout, nullptr);
-   vkDestroyRenderPass(this->devices.logical, this->render_pass, nullptr);
-   for (auto view : this->swap_chain.views) {
-      vkDestroyImageView(this->devices.logical, view, nullptr);
+   this->teardownSwapChain();
+   for (auto& frame : this->frames_in_flight) {
+      vkDestroySemaphore(device, frame.semaphores.render_finished, nullptr);
+      vkDestroySemaphore(device, frame.semaphores.image_available, nullptr);
+      vkDestroyFence(device, frame.fence, nullptr);
    }
-   vkDestroySwapchainKHR(this->devices.logical, this->swap_chain.handle, nullptr);
-   vkDestroyDevice(this->devices.logical, nullptr);
+   vkDestroyCommandPool(device, this->command_pool, nullptr);
+   vkDestroyDevice(device, nullptr);
+   //
    if constexpr (enable_debug_logging) {
       auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
       if (func != nullptr)
@@ -552,6 +588,14 @@ void DovahKitVulkanSubsystem::setupRenderPass() {
       .colorAttachmentCount = 1,
       .pColorAttachments    = &color_attachment_ref, // this is actually an array, and indices in it are used directly within shader code
    };
+   auto dependency = VkSubpassDependency{
+      .srcSubpass    = VK_SUBPASS_EXTERNAL,
+      .dstSubpass    = 0,
+      .srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .srcAccessMask = 0,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+   };
    //
    auto render_pass_info = VkRenderPassCreateInfo{
       .sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -559,6 +603,8 @@ void DovahKitVulkanSubsystem::setupRenderPass() {
       .pAttachments    = &color_attachment,
       .subpassCount    = 1,
       .pSubpasses      = &subpass,
+      .dependencyCount = 1,
+      .pDependencies   = &dependency,
    };
    if (vkCreateRenderPass(this->devices.logical, &render_pass_info, nullptr, &this->render_pass) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create render pass.");
@@ -715,6 +761,219 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    //
    vkDestroyShaderModule(this->devices.logical, frag_module, nullptr);
    vkDestroyShaderModule(this->devices.logical, vert_module, nullptr);
+}
+void DovahKitVulkanSubsystem::setupFramebuffers() {
+   auto& sc = this->swap_chain;
+   sc.framebuffers.resize(sc.views.size());
+   for (size_t i = 0; i < sc.views.size(); i++) {
+      auto attachments = std::array{ sc.views[i] };
+      auto framebuffer_info = VkFramebufferCreateInfo{
+         .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+         .renderPass      = this->render_pass,
+         .attachmentCount = attachments.size(),
+         .pAttachments    = attachments.data(),
+         .width           = sc.extent.width,
+         .height          = sc.extent.height,
+         .layers          = 1,
+      };
+      if (vkCreateFramebuffer(this->devices.logical, &framebuffer_info, nullptr, &sc.framebuffers[i]) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create a framebuffer.");
+      }
+   }
+}
+void DovahKitVulkanSubsystem::setupCommandPool() {
+   auto indices   = QueueFamilies(this->devices.physical);
+   auto pool_info = VkCommandPoolCreateInfo{
+      .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+      .flags            = 0,
+      .queueFamilyIndex = indices.families.graphics,
+   };
+   if (vkCreateCommandPool(this->devices.logical, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the command pool.");
+   }
+}
+void DovahKitVulkanSubsystem::setupCommandBuffers() {
+   //
+   // Command buffers allow us to "record" several draw commands (possibly across multiple 
+   // threads) and then execute them all at once in the main thread. You could think of it 
+   // like a transaction, I guess.
+   //
+   this->command_buffers.resize(this->swap_chain.framebuffers.size());
+   auto alloc_info = VkCommandBufferAllocateInfo{
+      .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool        = this->command_pool,
+      .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+      .commandBufferCount = (uint32_t)this->command_buffers.size(),
+   };
+   if (vkAllocateCommandBuffers(this->devices.logical, &alloc_info, this->command_buffers.data()) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to allocate command buffers.");
+   }
+   //
+   // I believe the code from here on out is just for deciding what to render -- recording 
+   // a command buffer, pretty much. I maybe wouldn't put this inline in the setup method, 
+   // but that's how the Vulkan tutorial wants me to do it, at least for now.
+   //
+   for (size_t i = 0; i < this->command_buffers.size(); i++) {
+      auto buffer_begin_info = VkCommandBufferBeginInfo{
+         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+         .flags = 0,
+         .pInheritanceInfo = nullptr,
+      };
+      if (vkBeginCommandBuffer(this->command_buffers[i], &buffer_begin_info) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to begin recording command buffer.");
+      }
+      //
+      auto clear_values    = std::array{ VkClearValue{0, 0, 0, 1} }; // color(s) to use with the VK_ATTACHMENT_LOAD_OP_CLEAR option, passed in an earlier setup function
+      auto pass_begin_info = VkRenderPassBeginInfo{
+         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+         .renderPass  = this->render_pass,
+         .framebuffer = this->swap_chain.framebuffers[i],
+         .renderArea  = {
+            .offset = { 0, 0 },
+            .extent = this->swap_chain.extent,
+         },
+         .clearValueCount = (uint32_t)clear_values.size(),
+         .pClearValues    = clear_values.data(),
+      };
+
+      vkCmdBeginRenderPass(this->command_buffers[i], &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+      vkCmdBindPipeline(this->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
+      //
+      vkCmdDraw(this->command_buffers[i], 3, 1, 0, 0);
+      //
+      vkCmdEndRenderPass(this->command_buffers[i]);
+
+      if (vkEndCommandBuffer(this->command_buffers[i]) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to record a command buffer.");
+      }
+   }
+}
+void DovahKitVulkanSubsystem::setupSemaphores() {
+   auto semaphore_info = VkSemaphoreCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+   };
+   auto fence_info = VkFenceCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+      //
+      // Our drawFrame code waits until a frame is signalled, but frames start off unsignalled by 
+      // default. This means that it'll wait forever, unless we initialize the frame as signalled.
+      //
+      .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+   };
+   for (auto& frame : this->frames_in_flight) {
+      if (vkCreateSemaphore(this->devices.logical, &semaphore_info, nullptr, &frame.semaphores.image_available) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create frame-in-flight semaphore (image-available).");
+      }
+      if (vkCreateSemaphore(this->devices.logical, &semaphore_info, nullptr, &frame.semaphores.render_finished) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create frame-in-flight semaphore (render-finished).");
+      }
+      if (vkCreateFence(this->devices.logical, &fence_info, nullptr, &frame.fence) != VK_SUCCESS) {
+         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create frame-in-flight fence.");
+      }
+   }
+   //
+   // These don't get created; they're just handles.
+   //
+   this->swap_chain.images_in_flight.resize(this->swap_chain.images.size());
+}
+
+void DovahKitVulkanSubsystem::teardownSwapChain() {
+   auto device = this->devices.logical;
+   for (auto framebuffer : this->swap_chain.framebuffers) {
+      vkDestroyFramebuffer(device, framebuffer, nullptr);
+   }
+   //
+   // Free the command buffers, but don't destroy the whole command pool. This saves us 
+   // the trouble of having to rebuild the command pool if we're merely rebuilding the 
+   // swap chain rather than doing full teardown.
+   //
+   vkFreeCommandBuffers(device, this->command_pool, (uint32_t)this->command_buffers.size(), this->command_buffers.data());
+   //
+   vkDestroyPipeline(device, this->pipeline, nullptr);
+   vkDestroyPipelineLayout(device, this->pipeline_layout, nullptr);
+   vkDestroyRenderPass(device, this->render_pass, nullptr);
+   for (auto view : this->swap_chain.views) {
+      vkDestroyImageView(device, view, nullptr);
+   }
+   vkDestroySwapchainKHR(device, this->swap_chain.handle, nullptr);
+}
+
+void DovahKitVulkanSubsystem::drawFrame() {
+   constexpr auto no_timeout = UINT64_MAX;
+   //
+   //  - Acquire an image from the swap chain
+   //  - Execute the command buffer with that image as attachment in the framebuffer
+   //  - Return the image to the swap chain for presentation
+   // 
+   // These tasks are asynchronous, but must run sequentially.
+   //
+   auto& frame = this->frames_in_flight[this->current_frame];
+   this->current_frame = (this->current_frame + 1) % frame_in_flight_count;
+   vkWaitForFences(this->devices.logical, 1, &frame.fence, VK_TRUE, no_timeout);
+   //
+   uint32_t imageIndex;
+   VkResult result = vkAcquireNextImageKHR(this->devices.logical, this->swap_chain.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &imageIndex);
+   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+      this->recreateSwapChain();
+      return;
+   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to acquire swap chain image!");
+   }
+   {
+      auto& handle = this->swap_chain.images_in_flight[imageIndex];
+      //
+      // Check if a previous frame is using this image.
+      //
+      if (handle != VK_NULL_HANDLE) {
+         vkWaitForFences(this->devices.logical, 1, &handle, VK_TRUE, UINT64_MAX);
+      }
+      //
+      // Mark the image as now being in use by this frame.
+      //
+      handle = frame.fence;
+   }
+   //
+   auto wait_semaphores   = std::array{ frame.semaphores.image_available };
+   auto signal_semaphores = std::array{ frame.semaphores.render_finished };
+   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+   auto submit_info = VkSubmitInfo{
+      .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .waitSemaphoreCount   = wait_semaphores.size(),
+      .pWaitSemaphores      = wait_semaphores.data(),
+      .pWaitDstStageMask    = waitStages,
+      .commandBufferCount   = 1,
+      .pCommandBuffers      = &this->command_buffers[imageIndex],
+      .signalSemaphoreCount = signal_semaphores.size(),
+      .pSignalSemaphores    = signal_semaphores.data(),
+   };
+   vkResetFences(this->devices.logical, 1, &frame.fence);
+   if (vkQueueSubmit(this->queues.graphics, 1, &submit_info, frame.fence) != VK_SUCCESS) {
+      throw std::runtime_error("failed to submit draw command buffer!");
+   }
+   //
+   auto swap_chain_handles = std::array{ this->swap_chain.handle };
+   auto presentation_info  = VkPresentInfoKHR{
+      .sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+      .waitSemaphoreCount  = signal_semaphores.size(),
+      .pWaitSemaphores     = signal_semaphores.data(),
+      .swapchainCount      = swap_chain_handles.size(),
+      .pSwapchains         = swap_chain_handles.data(),
+      .pImageIndices       = &imageIndex,
+      .pResults            = nullptr,
+   };
+   vkQueuePresentKHR(this->queues.presentation, &presentation_info);
+}
+void DovahKitVulkanSubsystem::recreateSwapChain() {
+   vkDeviceWaitIdle(this->devices.logical);
+
+   this->teardownSwapChain();
+
+   this->setupSwapChain();
+   this->setupImageViews();
+   this->setupRenderPass();
+   this->setupGraphicsPipeline();
+   this->setupFramebuffers();
+   this->setupCommandBuffers();
 }
 
 /*static*/ VkDebugUtilsMessengerCreateInfoEXT DovahKitVulkanSubsystem::_get_debug_create_params() {

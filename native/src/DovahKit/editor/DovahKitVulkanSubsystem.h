@@ -8,6 +8,25 @@
 #include <vulkan/vulkan.h>
 #include "../helpers/intrusive_windows_defines.h"
 
+// Currently only usable for the render window's 3D widget, but then, that goes for this 
+// whole file right now. We'll figure out multiple 3D views later, I'm sure.
+class DovahKitVulkanWidget : public QWidget {
+   Q_OBJECT;
+   public:
+      DovahKitVulkanWidget(QWidget* parent = nullptr);
+
+      virtual QPaintEngine* paintEngine() const override { return nullptr; }
+
+   protected:
+      virtual void hideEvent(QHideEvent* event) override;
+      virtual void paintEvent(QPaintEvent *event) override;
+      virtual void resizeEvent(QResizeEvent* event) override;
+      virtual void showEvent(QShowEvent* event) override;
+      virtual void timerEvent(QTimerEvent* event) override;
+
+      int timerID = 0;
+};
+
 class DovahKitVulkanSubsystem final : public QObject {
    Q_OBJECT;
    public:
@@ -59,18 +78,30 @@ class DovahKitVulkanSubsystem final : public QObject {
          swap_chain_support_info(VkPhysicalDevice, VkSurfaceKHR);
       };
 
+      struct frame_in_flight {
+         VkFence fence;
+         struct {
+            VkSemaphore image_available;
+            VkSemaphore render_finished;
+         } semaphores;
+      };
+
       bool initialized = false;
       bool failed      = false;
       VkInstance       instance;
       VkRenderPass     render_pass;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
+      VkCommandPool    command_pool;
+      std::vector<VkCommandBuffer> command_buffers;
       struct {
          VkSwapchainKHR handle;
          VkFormat       format;
          VkExtent2D     extent;
-         std::vector<VkImage>     images;
-         std::vector<VkImageView> views;
+         std::vector<VkImage>       images;
+         std::vector<VkImageView>   views;
+         std::vector<VkFramebuffer> framebuffers;
+         std::vector<VkFence>       images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
       } swap_chain;
       struct {
          VkPhysicalDevice physical = VK_NULL_HANDLE;
@@ -86,6 +117,8 @@ class DovahKitVulkanSubsystem final : public QObject {
             QPointer<QWidget> widget;
          } render_window;
       } surfaces;
+      std::vector<frame_in_flight> frames_in_flight;
+      size_t current_frame = 0;
       VkDebugUtilsMessengerEXT debugMessenger;
 
       static VkDebugUtilsMessengerCreateInfoEXT _get_debug_create_params();
@@ -110,6 +143,12 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupImageViews();
       void setupRenderPass();
       void setupGraphicsPipeline();
+      void setupFramebuffers();
+      void setupCommandPool();
+      void setupCommandBuffers();
+      void setupSemaphores();
+
+      void teardownSwapChain();
 
    public:
       void initialize(); // TODO: do stuff here instead of in the constructor
@@ -117,6 +156,11 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       inline QWidget* renderWindowWidget() const noexcept { return this->surfaces.render_window.widget; }
       inline VkSurfaceKHR& renderWindowSurface() noexcept { return this->surfaces.render_window.surface; }
+
+      inline bool isInitialized() const noexcept { return this->initialized; }
+
+      void drawFrame();
+      void recreateSwapChain();
 
    signals:
       void ready();
