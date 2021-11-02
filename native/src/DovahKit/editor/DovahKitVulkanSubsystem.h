@@ -151,6 +151,8 @@ class DovahKitVulkanSubsystem final : public QObject {
          void* pUserData
       );
 
+      void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+      void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
       int32_t deviceScore(VkPhysicalDevice) const;
       uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 

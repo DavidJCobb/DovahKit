@@ -245,6 +245,64 @@ void DovahKitVulkanSubsystem::teardown() {
    emit this->teardownComplete();
 }
 
+void DovahKitVulkanSubsystem::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+   auto alloc_info = VkCommandBufferAllocateInfo{
+      .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool        = this->command_pool,
+      .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+      .commandBufferCount = 1,
+   };
+   VkCommandBuffer commandBuffer;
+   vkAllocateCommandBuffers(this->devices.logical, &alloc_info, &commandBuffer);
+
+   auto begin_info = VkCommandBufferBeginInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+   };
+   vkBeginCommandBuffer(commandBuffer, &begin_info);
+
+   auto copy_region = VkBufferCopy{
+      .size = size,
+   };
+   vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copy_region);
+
+   vkEndCommandBuffer(commandBuffer);
+
+   auto submit_info = VkSubmitInfo{
+      .sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers    = &commandBuffer,
+   };
+   vkQueueSubmit(this->queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
+   vkQueueWaitIdle(this->queues.graphics);
+
+   vkFreeCommandBuffers(this->devices.logical, this->command_pool, 1, &commandBuffer);
+}
+void DovahKitVulkanSubsystem::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const {
+   auto buffer_info = VkBufferCreateInfo{
+      .sType        = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size         = size,
+      .usage        = usage,
+      .sharingMode  = VK_SHARING_MODE_EXCLUSIVE,
+   };
+   if (vkCreateBuffer(this->devices.logical, &buffer_info, nullptr, &buffer) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create vertex buffer.");
+   }
+   //
+   VkMemoryRequirements memRequirements;
+   vkGetBufferMemoryRequirements(this->devices.logical, buffer, &memRequirements);
+   //
+   auto alloc_info = VkMemoryAllocateInfo{
+      .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+      .allocationSize  = memRequirements.size,
+      .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties),
+   };
+   if (vkAllocateMemory(this->devices.logical, &alloc_info, nullptr, &bufferMemory) != VK_SUCCESS) {
+      throw std::runtime_error("failed to allocate vertex buffer memory!");
+   }
+
+   vkBindBufferMemory(this->devices.logical, buffer, bufferMemory, 0);
+}
 int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
    int32_t score  = 0;
    //
@@ -848,37 +906,35 @@ void DovahKitVulkanSubsystem::setupCommandPool() {
    }
 }
 void DovahKitVulkanSubsystem::setupVertexBuffer() {
-   auto buffer_info = VkBufferCreateInfo{
-      .sType        = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-      .size         = sizeof(vertex) * vertices.size(),
-      .usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-      .sharingMode  = VK_SHARING_MODE_EXCLUSIVE,
-   };
-   if (vkCreateBuffer(this->devices.logical, &buffer_info, nullptr, &this->vertex_buffer) != VK_SUCCESS) {
-      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create vertex buffer.");
-   }
+   VkDeviceSize bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
    //
-   VkMemoryRequirements memRequirements;
-   vkGetBufferMemoryRequirements(this->devices.logical, this->vertex_buffer, &memRequirements);
+   // Our normal vertex buffer is going to have a flag set which renders its contents entirely 
+   // inaccessible to the CPU; this aids in performance. But how, then, shall we get our vertices 
+   // from the CPU to the GPU? We'll use a staging buffer -- a temporary GPU-side buffer which 
+   // lacks this flag.
    //
-   auto alloc_info = VkMemoryAllocateInfo{
-      .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-      .allocationSize  = memRequirements.size,
-      .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
-   };
-   if (vkAllocateMemory(this->devices.logical, &alloc_info, nullptr, &this->vertex_buffer_memory) != VK_SUCCESS) {
-      throw std::runtime_error("failed to allocate vertex buffer memory!");
-   }
-
-   vkBindBufferMemory(this->devices.logical, this->vertex_buffer, this->vertex_buffer_memory, 0);
+   VkBuffer       staging_buffer;
+   VkDeviceMemory staging_memory;
+   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
    //
    // We want to transfer our vertex data to the GPU. We'll do this by mapping a section of 
    // CPU-accessible memory, copying the data into that section, and then unmapping it.
    //
    void* data;
-   vkMapMemory(this->devices.logical, this->vertex_buffer_memory, 0, buffer_info.size, 0, &data);
-   memcpy(data, this->vertices.data(), (size_t)buffer_info.size);
-   vkUnmapMemory(this->devices.logical, this->vertex_buffer_memory);
+   vkMapMemory(this->devices.logical, staging_memory, 0, bufferSize, 0, &data);
+   memcpy(data, this->vertices.data(), (size_t)bufferSize);
+   vkUnmapMemory(this->devices.logical, staging_memory);
+   //
+   // Now let's create our normal buffer, and transfer data from the staging buffer to the 
+   // normal buffer.
+   //
+   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vertex_buffer, this->vertex_buffer_memory);
+   this->copyBuffer(staging_buffer, this->vertex_buffer, bufferSize);
+   //
+   // And of course, let's destroy the temporary buffer and its memory:
+   //
+   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+   vkFreeMemory(this->devices.logical, staging_memory, nullptr);
 }
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
    //
