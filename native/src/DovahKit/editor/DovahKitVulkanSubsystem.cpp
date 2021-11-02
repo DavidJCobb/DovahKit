@@ -508,6 +508,7 @@ void DovahKitVulkanSubsystem::setupImageViews() {
          .sType      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
          .image      = sc.images[i],
          .viewType   = VK_IMAGE_VIEW_TYPE_2D,
+         .format     = this->swap_chain.format,
          .components = {
             //
             // No color channel mixing/swapping/etc.

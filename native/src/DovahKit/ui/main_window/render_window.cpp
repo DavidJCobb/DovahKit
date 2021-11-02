@@ -11,6 +11,9 @@
 //
 
 RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
+   this->setWindowTitle(tr("Render Window"));
+   this->setMinimumSize({ 150, 150 });
+   //
    auto* layout = new QVBoxLayout(this);
    layout->setContentsMargins({ 0, 0, 0, 0 });
    //
