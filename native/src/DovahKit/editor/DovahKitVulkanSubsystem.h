@@ -115,6 +115,10 @@ class DovahKitVulkanSubsystem final : public QObject {
          struct {
             VkSurfaceKHR      surface;
             QPointer<QWidget> widget;
+            //
+            QSize last_size;
+            bool  resized = false;
+            bool  visible = false;
          } render_window;
       } surfaces;
       std::vector<frame_in_flight> frames_in_flight;
@@ -148,6 +152,8 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupCommandBuffers();
       void setupSemaphores();
 
+      void recreateSwapChain();
+
       void teardownSwapChain();
 
    public:
@@ -160,7 +166,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       inline bool isInitialized() const noexcept { return this->initialized; }
 
       void drawFrame();
-      void recreateSwapChain();
+      void renderWindowStateChange(QSize, bool visible);
 
    signals:
       void ready();

@@ -9,6 +9,8 @@ namespace {
    static constexpr auto desired_swap_chain_presentation_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 
    static constexpr size_t frame_in_flight_count = 2;
+
+   static constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
 }
 
 namespace {
@@ -48,6 +50,11 @@ DovahKitVulkanWidget::DovahKitVulkanWidget(QWidget* parent) : QWidget(parent) {
 void DovahKitVulkanWidget::hideEvent(QHideEvent* event) {
    this->killTimer(this->timerID);
    this->timerID = 0;
+   //
+   auto& vulkan = DovahKitVulkanSubsystem::get();
+   if (!vulkan.isInitialized())
+      return;
+   vulkan.renderWindowStateChange(this->size(), this->isVisible());
 }
 void DovahKitVulkanWidget::paintEvent(QPaintEvent* event) {
    auto& vulkan = DovahKitVulkanSubsystem::get();
@@ -59,10 +66,15 @@ void DovahKitVulkanWidget::resizeEvent(QResizeEvent* event) {
    auto& vulkan = DovahKitVulkanSubsystem::get();
    if (!vulkan.isInitialized())
       return;
-   vulkan.recreateSwapChain();
+   vulkan.renderWindowStateChange(this->size(), this->isVisible());
 }
 void DovahKitVulkanWidget::showEvent(QShowEvent* event) {
    this->timerID = this->startTimer(16, Qt::PreciseTimer);
+   //
+   auto& vulkan = DovahKitVulkanSubsystem::get();
+   if (!vulkan.isInitialized())
+      return;
+   vulkan.renderWindowStateChange(this->size(), this->isVisible());
 }
 void DovahKitVulkanWidget::timerEvent(QTimerEvent* event) {
    this->repaint();
@@ -877,6 +889,19 @@ void DovahKitVulkanSubsystem::setupSemaphores() {
    this->swap_chain.images_in_flight.resize(this->swap_chain.images.size());
 }
 
+void DovahKitVulkanSubsystem::recreateSwapChain() {
+   vkDeviceWaitIdle(this->devices.logical);
+
+   this->teardownSwapChain();
+
+   this->setupSwapChain();
+   this->setupImageViews();
+   this->setupRenderPass();
+   this->setupGraphicsPipeline();
+   this->setupFramebuffers();
+   this->setupCommandBuffers();
+}
+
 void DovahKitVulkanSubsystem::teardownSwapChain() {
    auto device = this->devices.logical;
    for (auto framebuffer : this->swap_chain.framebuffers) {
@@ -907,12 +932,21 @@ void DovahKitVulkanSubsystem::drawFrame() {
    // 
    // These tasks are asynchronous, but must run sequentially.
    //
+   auto& rw = this->surfaces.render_window;
+   if (!rw.visible)
+      return;
    auto& frame = this->frames_in_flight[this->current_frame];
    this->current_frame = (this->current_frame + 1) % frame_in_flight_count;
    vkWaitForFences(this->devices.logical, 1, &frame.fence, VK_TRUE, no_timeout);
    //
    uint32_t imageIndex;
    VkResult result = vkAcquireNextImageKHR(this->devices.logical, this->swap_chain.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &imageIndex);
+   if constexpr (rebuild_swap_chain_asap_if_suboptimal) {
+      if (result == VK_SUBOPTIMAL_KHR) {
+         this->recreateSwapChain();
+         return;
+      }
+   }
    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
       this->recreateSwapChain();
       return;
@@ -961,19 +995,21 @@ void DovahKitVulkanSubsystem::drawFrame() {
       .pImageIndices       = &imageIndex,
       .pResults            = nullptr,
    };
-   vkQueuePresentKHR(this->queues.presentation, &presentation_info);
+   result = vkQueuePresentKHR(this->queues.presentation, &presentation_info);
+   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || rw.resized) {
+      rw.resized = false;
+      recreateSwapChain();
+   } else if (result != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem][drawFrame] Failed to present swap chain image.");
+   }
 }
-void DovahKitVulkanSubsystem::recreateSwapChain() {
-   vkDeviceWaitIdle(this->devices.logical);
-
-   this->teardownSwapChain();
-
-   this->setupSwapChain();
-   this->setupImageViews();
-   this->setupRenderPass();
-   this->setupGraphicsPipeline();
-   this->setupFramebuffers();
-   this->setupCommandBuffers();
+void DovahKitVulkanSubsystem::renderWindowStateChange(QSize size, bool visible) {
+   auto& rw = this->surfaces.render_window;
+   if (size != rw.last_size) {
+      rw.last_size = size;
+      rw.resized   = true;
+   }
+   rw.visible = visible && !size.isEmpty();
 }
 
 /*static*/ VkDebugUtilsMessengerCreateInfoEXT DovahKitVulkanSubsystem::_get_debug_create_params() {
