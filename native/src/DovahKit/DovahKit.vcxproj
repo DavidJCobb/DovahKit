@@ -1186,6 +1186,7 @@
     <QtUic Include="ui\main_window\script_window_single.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtRcc Include="shaders\all_compiled.qrc" />
     <QtRcc Include="ui\resources\resources.qrc" />
     <QtRcc Include="widgets\widget-assets.qrc" />
   </ItemGroup>
@@ -1264,6 +1265,12 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\impl\form_subclass_components.txt" />
+    <None Include="shaders\shader.frag">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="shaders\shader.frag.spv" />
+    <None Include="shaders\shader.vert" />
+    <None Include="shaders\shader.vert.spv" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>

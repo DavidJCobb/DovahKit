@@ -61,8 +61,17 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       bool initialized = false;
       bool failed      = false;
-      VkInstance     instance;
-      VkSwapchainKHR swap_chain;
+      VkInstance       instance;
+      VkRenderPass     render_pass;
+      VkPipelineLayout pipeline_layout;
+      VkPipeline       pipeline;
+      struct {
+         VkSwapchainKHR handle;
+         VkFormat       format;
+         VkExtent2D     extent;
+         std::vector<VkImage>     images;
+         std::vector<VkImageView> views;
+      } swap_chain;
       struct {
          VkPhysicalDevice physical = VK_NULL_HANDLE;
          VkDevice logical;
@@ -90,12 +99,17 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       int32_t deviceScore(VkPhysicalDevice) const;
 
+      VkShaderModule createShaderModule(const QByteArray compiled_shader);
+
       void setupInstance();
       void setupDebugMessenger();
       void setupRenderWindowSurface();
       void setupPhysicalDevice();
       void setupLogicalDevice();
       void setupSwapChain();
+      void setupImageViews();
+      void setupRenderPass();
+      void setupGraphicsPipeline();
 
    public:
       void initialize(); // TODO: do stuff here instead of in the constructor
