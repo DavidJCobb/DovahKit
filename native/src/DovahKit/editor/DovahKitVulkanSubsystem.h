@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QWidget>
+#include <glm/glm.hpp>
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 #include "../helpers/intrusive_windows_defines.h"
@@ -86,12 +87,22 @@ class DovahKitVulkanSubsystem final : public QObject {
          } semaphores;
       };
 
+      struct vertex {
+         glm::vec2 pos;
+         glm::vec3 color;
+         //
+         static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+         static VkVertexInputBindingDescription getBindingDescription();
+      };
+
       bool initialized = false;
       bool failed      = false;
       VkInstance       instance;
       VkRenderPass     render_pass;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
+      VkBuffer         vertex_buffer;
+      VkDeviceMemory   vertex_buffer_memory;
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
       struct {
@@ -124,6 +135,12 @@ class DovahKitVulkanSubsystem final : public QObject {
       std::vector<frame_in_flight> frames_in_flight;
       size_t current_frame = 0;
       VkDebugUtilsMessengerEXT debugMessenger;
+      //
+      const std::vector<vertex> vertices = {
+          {{ 0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+          {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
+          {{-0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}}
+      };
 
       static VkDebugUtilsMessengerCreateInfoEXT _get_debug_create_params();
 
@@ -135,6 +152,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       );
 
       int32_t deviceScore(VkPhysicalDevice) const;
+      uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
       VkShaderModule createShaderModule(const QByteArray compiled_shader);
 
@@ -149,6 +167,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupGraphicsPipeline();
       void setupFramebuffers();
       void setupCommandPool();
+      void setupVertexBuffer();
       void setupCommandBuffers();
       void setupSemaphores();
 

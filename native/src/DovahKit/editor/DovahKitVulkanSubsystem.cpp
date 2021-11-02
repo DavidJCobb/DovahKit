@@ -148,6 +148,32 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
 }
 #pragma endregion
 
+#pragma region vertex
+/*static*/ std::array<VkVertexInputAttributeDescription, 2> DovahKitVulkanSubsystem::vertex::getAttributeDescriptions() {
+   return {
+      VkVertexInputAttributeDescription{
+         .location = 0, // should match the location value in the shader's code
+         .binding  = 0,
+         .format   = VK_FORMAT_R32G32_SFLOAT, // vec2
+         .offset   = offsetof(vertex, pos),
+      },
+      VkVertexInputAttributeDescription{
+         .location = 1,
+         .binding  = 0,
+         .format   = VK_FORMAT_R32G32B32_SFLOAT,
+         .offset   = offsetof(vertex, color),
+      },
+   };
+}
+/*static*/ VkVertexInputBindingDescription DovahKitVulkanSubsystem::vertex::getBindingDescription() {
+   return VkVertexInputBindingDescription{
+      .binding   = 0,
+      .stride    = sizeof(vertex),
+      .inputRate = VK_VERTEX_INPUT_RATE_VERTEX, // used for non-instanced rendering
+   };
+}
+#pragma endregion
+
 DovahKitVulkanSubsystem::DovahKitVulkanSubsystem() {
    auto& rw = this->surfaces.render_window;
    rw.widget = new DovahKitVulkanWidget;
@@ -180,6 +206,7 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupGraphicsPipeline();
    this->setupFramebuffers();
    this->setupCommandPool();
+   this->setupVertexBuffer();
    this->setupCommandBuffers();
    this->setupSemaphores();
    //
@@ -198,6 +225,7 @@ void DovahKitVulkanSubsystem::teardown() {
    // TODO: Ensure all child objects belonging to the instance are destroyed first.
    //
    this->teardownSwapChain();
+   vkDestroyBuffer(device, this->vertex_buffer, nullptr);
    for (auto& frame : this->frames_in_flight) {
       vkDestroySemaphore(device, frame.semaphores.render_finished, nullptr);
       vkDestroySemaphore(device, frame.semaphores.image_available, nullptr);
@@ -274,6 +302,19 @@ int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
    score += (std::min)((uint32_t)8192, properties.limits.maxImageDimension2D); // max texture size
    //
    return score;
+}
+uint32_t DovahKitVulkanSubsystem::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
+   VkPhysicalDeviceMemoryProperties memProperties;
+   vkGetPhysicalDeviceMemoryProperties(this->devices.physical, &memProperties);
+   //
+   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+      if ((typeFilter & (1 << i)) == 0)
+         continue;
+      if ((memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+         return i;
+      }
+   }
+   throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to find suitable memory type.");
 }
 
 VkShaderModule DovahKitVulkanSubsystem::createShaderModule(const QByteArray compiled_shader) {
@@ -651,12 +692,14 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    //
    auto shaderStages = std::array{ frag_info, vert_info };
    //
+   auto vert_binding    = vertex::getBindingDescription();
+   auto vert_attributes = vertex::getAttributeDescriptions();
    auto visc = VkPipelineVertexInputStateCreateInfo{ // describes the format of vertex info to be passed to the vertex shader
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-      .vertexBindingDescriptionCount   = 0,
-      .pVertexBindingDescriptions      = nullptr,
-      .vertexAttributeDescriptionCount = 0,
-      .pVertexAttributeDescriptions    = nullptr,
+      .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+      .vertexBindingDescriptionCount   = 1,
+      .pVertexBindingDescriptions      = &vert_binding,
+      .vertexAttributeDescriptionCount = (uint32_t)vert_attributes.size(),
+      .pVertexAttributeDescriptions    = vert_attributes.data(),
    };
    auto iasc = VkPipelineInputAssemblyStateCreateInfo{ // describes how to generate triangles from the vertices we're passing in
       .sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -804,6 +847,39 @@ void DovahKitVulkanSubsystem::setupCommandPool() {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the command pool.");
    }
 }
+void DovahKitVulkanSubsystem::setupVertexBuffer() {
+   auto buffer_info = VkBufferCreateInfo{
+      .sType        = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size         = sizeof(vertex) * vertices.size(),
+      .usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .sharingMode  = VK_SHARING_MODE_EXCLUSIVE,
+   };
+   if (vkCreateBuffer(this->devices.logical, &buffer_info, nullptr, &this->vertex_buffer) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create vertex buffer.");
+   }
+   //
+   VkMemoryRequirements memRequirements;
+   vkGetBufferMemoryRequirements(this->devices.logical, this->vertex_buffer, &memRequirements);
+   //
+   auto alloc_info = VkMemoryAllocateInfo{
+      .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+      .allocationSize  = memRequirements.size,
+      .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+   };
+   if (vkAllocateMemory(this->devices.logical, &alloc_info, nullptr, &this->vertex_buffer_memory) != VK_SUCCESS) {
+      throw std::runtime_error("failed to allocate vertex buffer memory!");
+   }
+
+   vkBindBufferMemory(this->devices.logical, this->vertex_buffer, this->vertex_buffer_memory, 0);
+   //
+   // We want to transfer our vertex data to the GPU. We'll do this by mapping a section of 
+   // CPU-accessible memory, copying the data into that section, and then unmapping it.
+   //
+   void* data;
+   vkMapMemory(this->devices.logical, this->vertex_buffer_memory, 0, buffer_info.size, 0, &data);
+   memcpy(data, this->vertices.data(), (size_t)buffer_info.size);
+   vkUnmapMemory(this->devices.logical, this->vertex_buffer_memory);
+}
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
    //
    // Command buffers allow us to "record" several draw commands (possibly across multiple 
@@ -849,10 +925,15 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
       };
 
       vkCmdBeginRenderPass(this->command_buffers[i], &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-      vkCmdBindPipeline(this->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
-      //
-      vkCmdDraw(this->command_buffers[i], 3, 1, 0, 0);
-      //
+      {
+         vkCmdBindPipeline(this->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
+         //
+         std::array buffers = { this->vertex_buffer };
+         std::array<VkDeviceSize, buffers.size()> offsets = { 0 };
+         vkCmdBindVertexBuffers(this->command_buffers[i], 0, buffers.size(), buffers.data(), offsets.data());
+         //
+         vkCmdDraw(this->command_buffers[i], (uint32_t)this->vertices.size(), 1, 0, 0);
+      }
       vkCmdEndRenderPass(this->command_buffers[i]);
 
       if (vkEndCommandBuffer(this->command_buffers[i]) != VK_SUCCESS) {
