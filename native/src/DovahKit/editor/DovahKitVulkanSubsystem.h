@@ -90,15 +90,19 @@ class DovahKitVulkanSubsystem final : public QObject {
       struct vertex {
          glm::vec2 pos;
          glm::vec3 color;
+         glm::vec2 texCoord;
          //
-         static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+         static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
          static VkVertexInputBindingDescription getBindingDescription();
       };
       
       struct uniform_buffer_object {
-         glm::mat4 model;
-         glm::mat4 view;
-         glm::mat4 proj;
+         //
+         // Vulkan expects precise member aligmnent; see: <https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap15.html#interfaces-resources-layout>
+         //
+         alignas(16) glm::mat4 model;
+         alignas(16) glm::mat4 view;
+         alignas(16) glm::mat4 proj;
       };
 
       bool initialized = false;
@@ -116,6 +120,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkDeviceMemory   index_buffer_memory;
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
+      VkSampler        texture_sampler;
       struct {
          VkSwapchainKHR handle;
          VkFormat       format;
@@ -151,14 +156,19 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkDebugUtilsMessengerEXT debugMessenger;
       //
       const std::vector<vertex> vertices = {
-         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-         {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-         {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-         {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}},
+         {{-0.5f, -0.395f}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
+         {{ 0.5f, -0.395f}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
+         {{ 0.5f,  0.395f}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
+         {{-0.5f,  0.395f}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
       };
       const std::vector<uint16_t> indices = {
          0, 1, 2, 2, 3, 0
       };
+      struct {
+         VkImage        image;
+         VkDeviceMemory memory;
+         VkImageView    view;
+      } test_texture;
 
       static VkDebugUtilsMessengerCreateInfoEXT _get_debug_create_params();
 
@@ -169,10 +179,18 @@ class DovahKitVulkanSubsystem final : public QObject {
          void* pUserData
       );
 
-      void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-      void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+      VkCommandBuffer beginSingleTimeCommands();
+      void endSingleTimeCommands(VkCommandBuffer single_time_command_buffer);
+
+      void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize);
+      void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+      VkImageView createImageView(VkImage, VkFormat) const;
+      void createVkImage(uint32_t w, uint32_t h, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage& out_image, VkDeviceMemory& out_memory) const;
       int32_t deviceScore(VkPhysicalDevice) const;
-      uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+      uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags) const;
+
+      void copyBufferToImage(VkBuffer, VkImage, uint32_t width, uint32_t height);
+      void transitionImageLayout(VkImage, VkFormat, VkImageLayout oldLayout, VkImageLayout newLayout);
 
       VkShaderModule createShaderModule(const QByteArray compiled_shader);
 
@@ -188,6 +206,9 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupGraphicsPipeline();
       void setupFramebuffers();
       void setupCommandPool();
+      void setupTestTexture();
+      void setupTestTextureView();
+      void setupTextureSampler();
       void setupVertexBuffer();
       void setupIndexBuffer();
       void setupUniformBuffers();

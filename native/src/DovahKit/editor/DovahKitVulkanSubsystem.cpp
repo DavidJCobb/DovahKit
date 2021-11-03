@@ -9,6 +9,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+// testing:
+#include <QBuffer>
+#include <QImage>
+#include <QImageReader>
+
 namespace {
    static constexpr auto desired_swap_chain_presentation_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 
@@ -153,7 +158,7 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
 #pragma endregion
 
 #pragma region vertex
-/*static*/ std::array<VkVertexInputAttributeDescription, 2> DovahKitVulkanSubsystem::vertex::getAttributeDescriptions() {
+/*static*/ std::array<VkVertexInputAttributeDescription, 3> DovahKitVulkanSubsystem::vertex::getAttributeDescriptions() {
    return {
       VkVertexInputAttributeDescription{
          .location = 0, // should match the location value in the shader's code
@@ -161,11 +166,17 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
          .format   = VK_FORMAT_R32G32_SFLOAT, // vec2
          .offset   = offsetof(vertex, pos),
       },
-      VkVertexInputAttributeDescription{
+      VkVertexInputAttributeDescription{ // vertex color
          .location = 1,
          .binding  = 0,
          .format   = VK_FORMAT_R32G32B32_SFLOAT,
          .offset   = offsetof(vertex, color),
+      },
+      VkVertexInputAttributeDescription{ // UVs
+         .location = 2,
+         .binding  = 0,
+         .format   = VK_FORMAT_R32G32_SFLOAT,
+         .offset   = offsetof(vertex, texCoord),
       },
    };
 }
@@ -211,6 +222,9 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupGraphicsPipeline();
    this->setupFramebuffers();
    this->setupCommandPool();
+   this->setupTestTexture();
+   this->setupTestTextureView();
+   this->setupTextureSampler();
    this->setupVertexBuffer();
    this->setupIndexBuffer();
    this->setupUniformBuffers();
@@ -234,6 +248,10 @@ void DovahKitVulkanSubsystem::teardown() {
    // TODO: Ensure all child objects belonging to the instance are destroyed first.
    //
    this->teardownSwapChain();
+   vkDestroySampler(device, this->texture_sampler, nullptr);
+   vkDestroyImageView(device, this->test_texture.view,   nullptr);
+   vkDestroyImage    (device, this->test_texture.image,  nullptr);
+   vkFreeMemory      (device, this->test_texture.memory, nullptr);
    vkDestroyDescriptorSetLayout(device, this->descriptor_set_layout, nullptr); // don't teardown with the swap chain; we may reuse it
    vkDestroyBuffer(device, this->index_buffer, nullptr);
    vkFreeMemory   (device, this->index_buffer_memory, nullptr);
@@ -258,38 +276,55 @@ void DovahKitVulkanSubsystem::teardown() {
    emit this->teardownComplete();
 }
 
-void DovahKitVulkanSubsystem::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+VkCommandBuffer DovahKitVulkanSubsystem::beginSingleTimeCommands() {
+   //
+   // TODO: This is a useful helper function, but you'll actually get higher throughput if you 
+   // reuse a single command buffer instead of spawning several temporary buffers; you'd want 
+   // to have a function to create that single reusable buffer, and a "flush" function to 
+   // execute whatever commands have been recorded so far.
+   // 
+   // See the end of: https://vulkan-tutorial.com/en/Texture_mapping/Images#page_Transition-barrier-masks
+   //
    auto alloc_info = VkCommandBufferAllocateInfo{
       .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .commandPool        = this->command_pool,
       .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
       .commandBufferCount = 1,
    };
-   VkCommandBuffer commandBuffer;
-   vkAllocateCommandBuffers(this->devices.logical, &alloc_info, &commandBuffer);
-
+   VkCommandBuffer single_time_command_buffer;
+   vkAllocateCommandBuffers(this->devices.logical, &alloc_info, &single_time_command_buffer);
+   //
    auto begin_info = VkCommandBufferBeginInfo{
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
       .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
    };
-   vkBeginCommandBuffer(commandBuffer, &begin_info);
+   vkBeginCommandBuffer(single_time_command_buffer, &begin_info);
+   //
+   return single_time_command_buffer;
+}
+void DovahKitVulkanSubsystem::endSingleTimeCommands(VkCommandBuffer single_time_command_buffer) {
+   vkEndCommandBuffer(single_time_command_buffer);
+   //
+   auto submit_info = VkSubmitInfo{
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers = &single_time_command_buffer,
+   };
+   vkQueueSubmit(this->queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
+   vkQueueWaitIdle(this->queues.graphics);
+   //
+   vkFreeCommandBuffers(this->devices.logical, this->command_pool, 1, &single_time_command_buffer);
+}
+
+void DovahKitVulkanSubsystem::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+   auto commandBuffer = this->beginSingleTimeCommands();
 
    auto copy_region = VkBufferCopy{
       .size = size,
    };
    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copy_region);
 
-   vkEndCommandBuffer(commandBuffer);
-
-   auto submit_info = VkSubmitInfo{
-      .sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-      .commandBufferCount = 1,
-      .pCommandBuffers    = &commandBuffer,
-   };
-   vkQueueSubmit(this->queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
-   vkQueueWaitIdle(this->queues.graphics);
-
-   vkFreeCommandBuffers(this->devices.logical, this->command_pool, 1, &commandBuffer);
+   this->endSingleTimeCommands(commandBuffer);
 }
 void DovahKitVulkanSubsystem::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const {
    auto buffer_info = VkBufferCreateInfo{
@@ -322,6 +357,73 @@ void DovahKitVulkanSubsystem::createBuffer(VkDeviceSize size, VkBufferUsageFlags
    }
 
    vkBindBufferMemory(this->devices.logical, buffer, bufferMemory, 0);
+}
+VkImageView DovahKitVulkanSubsystem::createImageView(VkImage image, VkFormat format) const {
+   auto view_info = VkImageViewCreateInfo{
+      .sType      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .image      = image,
+      .viewType   = VK_IMAGE_VIEW_TYPE_2D,
+      .format     = format,
+      .components = {
+         //
+         // No color channel mixing/swapping/etc.
+         //
+         .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+      },
+      .subresourceRange = { // control what part of the image is accessed
+         .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+         .baseMipLevel   = 0, // don't skip mipmaps
+         .levelCount     = 1, // don't use mipmaps
+         .baseArrayLayer = 0, // don't skip layers (layers would be useful for stereoscopic 3D, etc.)
+         .layerCount     = 1, // only one layer
+      },
+   };
+   VkImageView imageView;
+   if (vkCreateImageView(this->devices.logical, &view_info, nullptr, &imageView) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem][createImageView] Failed to create texture image view.");
+   }
+   return imageView;
+
+}
+void DovahKitVulkanSubsystem::createVkImage(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& out_image, VkDeviceMemory& out_memory) const {
+   auto image_info = VkImageCreateInfo{
+      .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+      .flags     = 0,
+      .imageType = VK_IMAGE_TYPE_2D,
+      .format    = format, // TODO: if I write a function to convert between Qt and Vulkan format enums, we can use potentially any format, though not all cards support all formats
+      .extent    = {
+         .width  = w,
+         .height = h,
+         .depth  = 1,
+      },
+      .mipLevels     = 1,
+      .arrayLayers   = 1,
+      .samples       = VK_SAMPLE_COUNT_1_BIT,
+      .tiling        = VK_IMAGE_TILING_OPTIMAL,
+      .usage         = usage,
+      .sharingMode   = VK_SHARING_MODE_EXCLUSIVE,
+      .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+   };
+   if (vkCreateImage(this->devices.logical, &image_info, nullptr, &out_image) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create image!");
+   }
+   //
+   VkMemoryRequirements memRequirements;
+   vkGetImageMemoryRequirements(this->devices.logical, out_image, &memRequirements);
+   //
+   auto alloc_info = VkMemoryAllocateInfo{
+      .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+      .allocationSize  = memRequirements.size,
+      .memoryTypeIndex = this->findMemoryType(memRequirements.memoryTypeBits, properties),
+   };
+   if (vkAllocateMemory(this->devices.logical, &alloc_info, nullptr, &out_memory) != VK_SUCCESS) {
+      throw std::runtime_error("failed to allocate image memory!");
+   }
+   //
+   vkBindImageMemory(this->devices.logical, out_image, out_memory, 0);
 }
 int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
    int32_t score  = 0;
@@ -374,6 +476,15 @@ int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
    vkGetPhysicalDeviceProperties(device, &properties);
    vkGetPhysicalDeviceFeatures  (device, &features);
    //
+   if (!features.samplerAnisotropy) { // require anisotropic filtering support
+      //
+      // TODO: We don't actually need to REQUIRE anisotropic filtering, if we instead just 
+      //       remember whether the physical device we chose to use has support for it. We 
+      //       can just disable it (when setting up our logical device and when creating 
+      //       our texture sampler) if it's unsupported.
+      //
+      return 0;
+   }
    if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) { // dedicated graphics card (i.e. not integrated graphics)
       score += 10000;
    }
@@ -393,6 +504,101 @@ uint32_t DovahKitVulkanSubsystem::findMemoryType(uint32_t typeFilter, VkMemoryPr
       }
    }
    throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to find suitable memory type.");
+}
+
+void DovahKitVulkanSubsystem::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+   VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+   auto region = VkBufferImageCopy{
+      .bufferOffset      = 0,
+      .bufferRowLength   = 0, // amount of padding bytes between rows?
+      .bufferImageHeight = 0, // amount of padding bytes... somewhere?
+      .imageSubresource  = {
+         .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+         .mipLevel       = 0,
+         .baseArrayLayer = 0,
+         .layerCount     = 1,
+      },
+      .imageOffset = { 0,     0,      0 },
+      .imageExtent = { width, height, 1 },
+   };
+   vkCmdCopyBufferToImage(
+      commandBuffer,
+      buffer,
+      image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      1,
+      &region
+   );
+
+   endSingleTimeCommands(commandBuffer);
+}
+void DovahKitVulkanSubsystem::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+   VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+   auto barrier = VkImageMemoryBarrier{
+      .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .srcAccessMask       = 0, // TODO
+      .dstAccessMask       = 0, // TODO
+      .oldLayout           = oldLayout, // can use VK_IMAGE_LAYOUT_UNDEFINED if you don't care to preserve the image's existing content
+      .newLayout           = newLayout,
+      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .image               = image,
+      .subresourceRange    = {
+         .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+         .baseMipLevel   = 0,
+         .levelCount     = 1,
+         .baseArrayLayer = 0,
+         .layerCount     = 1,
+      },
+   };
+
+   //
+   // We need to set up the proper access masks and indicate when (i.e. during what pipeline 
+   // stages) we can read and write. We need to handle different transitions here, so we'll 
+   // need to extend this function as we add more.
+   //
+   VkPipelineStageFlags sourceStage;
+   VkPipelineStageFlags destinationStage;
+   if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      //
+      // If we're going from an undefined layout (i.e. we don't care about the image's prior 
+      // content) to a transfer-destination layout, then our transfer writes don't need to 
+      // wait on anything.
+      // 
+      // Because transfer writes don't need to wait, we can specify an empty access mask and 
+      // use the earliest possible pipeline stage: "top of pipe."
+      //
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      //
+      sourceStage      = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+   } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      //
+      // If we're going from a transfer-destination layout to a shader-read-only layout (i.e. 
+      // the fragment shader wants to read the image), then we need to wait on transfer writes.
+      //
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; // wait on transfer writes
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;    // we're doing a shader read
+      //
+      sourceStage      = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // do this when processing the fragment shader
+   } else {
+      throw std::invalid_argument("[DovahKitVulkanSubsystem][transitionImageLayout] Unsupported layout transition!");
+   }
+
+   vkCmdPipelineBarrier(
+      commandBuffer,
+      sourceStage, destinationStage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &barrier
+   );
+
+   endSingleTimeCommands(commandBuffer);
 }
 
 VkShaderModule DovahKitVulkanSubsystem::createShaderModule(const QByteArray compiled_shader) {
@@ -546,7 +752,9 @@ void DovahKitVulkanSubsystem::setupLogicalDevice() {
       }
    }
    //
-   VkPhysicalDeviceFeatures deviceFeatures{};
+   auto deviceFeatures = VkPhysicalDeviceFeatures{
+      .samplerAnisotropy = VK_TRUE, 
+   };
    auto create_info = VkDeviceCreateInfo{
       .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
       .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
@@ -671,31 +879,7 @@ void DovahKitVulkanSubsystem::setupImageViews() {
    auto& sc = this->swap_chain;
    sc.views.resize(sc.images.size());
    for (size_t i = 0; i < sc.images.size(); i++) {
-      auto create_info = VkImageViewCreateInfo{
-         .sType      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-         .image      = sc.images[i],
-         .viewType   = VK_IMAGE_VIEW_TYPE_2D,
-         .format     = this->swap_chain.format,
-         .components = {
-            //
-            // No color channel mixing/swapping/etc.
-            //
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-         },
-         .subresourceRange = { // control what part of the image is accessed
-            .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel   = 0, // don't skip mipmaps
-            .levelCount     = 1, // don't use mipmaps
-            .baseArrayLayer = 0, // don't skip layers (layers would be useful for stereoscopic 3D, etc.)
-            .layerCount     = 1, // only one layer
-         },
-      };
-      if (vkCreateImageView(this->devices.logical, &create_info, nullptr, &sc.views[i]) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create an image view.");
-      }
+      sc.views[i] = this->createImageView(sc.images[i], this->swap_chain.format);
    }
 }
 void DovahKitVulkanSubsystem::setupRenderPass() {
@@ -743,11 +927,18 @@ void DovahKitVulkanSubsystem::setupRenderPass() {
 }
 void DovahKitVulkanSubsystem::setupDescriptorSetLayout() {
    std::array bindings = {
-      VkDescriptorSetLayoutBinding{
+      VkDescriptorSetLayoutBinding{ // uniform buffer object
          .binding            = 0,
          .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
          .descriptorCount    = 1,
          .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+         .pImmutableSamplers = nullptr,
+      },
+      VkDescriptorSetLayoutBinding{ // texture sampler
+         .binding            = 1,
+         .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+         .descriptorCount    = 1,
+         .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
          .pImmutableSamplers = nullptr,
       },
    };
@@ -945,6 +1136,95 @@ void DovahKitVulkanSubsystem::setupCommandPool() {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the command pool.");
    }
 }
+void DovahKitVulkanSubsystem::setupTestTexture() {
+   QImage texture;
+   {
+      auto bytearray = QResource("shaders/Tamriel-Skyrim.esm.png").uncompressedData();
+      auto buffer    = QBuffer(&bytearray);
+      buffer.open(QIODevice::ReadOnly);
+      auto reader    = QImageReader(&buffer, "PNG");
+      reader.read(&texture);
+      texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
+   }
+   if (texture.isNull()) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem][setupTestTexture] Failed to load test image.");
+   }
+   VkDeviceSize image_size = texture.width() * texture.height() * 4;
+   assert(image_size == texture.sizeInBytes());
+   //
+   // We're gonna be setting up our image on a staging buffer, and then transferring that 
+   // to the final (non-CPU-writeable) buffer.
+   //
+   VkBuffer       staging_buffer;
+   VkDeviceMemory staging_memory;
+   this->createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+   //
+   void* data;
+   vkMapMemory(this->devices.logical, staging_memory, 0, image_size, 0, &data);
+   memcpy(data, texture.constBits(), image_size);
+   vkUnmapMemory(this->devices.logical, staging_memory);
+   //
+   uint32_t w = texture.width();
+   uint32_t h = texture.height();
+   texture = QImage();
+   //
+   // Now let's create an image:
+   //
+   this->createVkImage(
+      w, h,
+      VK_FORMAT_R8G8B8A8_SRGB,
+      VK_IMAGE_TILING_OPTIMAL,
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      this->test_texture.image,
+      this->test_texture.memory
+   );
+   //
+   // Now we need to transfer our image from the staging buffer to the final buffer, 
+   // transitioning its layout to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL as we do. We 
+   // can use VK_IMAGE_LAYOUT_UNDEFINED as the "old layout" because we don't actually 
+   // care about the data (or lack thereof, really) in the freshly-created VkImage.
+   //
+   this->transitionImageLayout(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+   this->copyBufferToImage(staging_buffer, this->test_texture.image, w, h);
+   this->transitionImageLayout(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+   //
+   // Discard the staging buffer:
+   //
+   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+   vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
+}
+void DovahKitVulkanSubsystem::setupTestTextureView() {
+   this->test_texture.view = createImageView(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB);
+}
+void DovahKitVulkanSubsystem::setupTextureSampler() {
+   auto sampler_info = VkSamplerCreateInfo{
+      .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .magFilter        = VK_FILTER_LINEAR,
+      .minFilter        = VK_FILTER_LINEAR,
+      .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+      .addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .mipLodBias       = 0.0,
+      .anisotropyEnable = VK_TRUE,
+      .maxAnisotropy    = 8,
+      .compareEnable    = VK_FALSE,
+      .compareOp        = VK_COMPARE_OP_ALWAYS,
+      .minLod           = 0.0,
+      .maxLod           = 0.0,
+      .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+      .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
+   };
+   {  // Constrain based on device capabilities.
+      VkPhysicalDeviceProperties properties{};
+      vkGetPhysicalDeviceProperties(this->devices.physical, &properties);
+      sampler_info.maxAnisotropy = std::min(sampler_info.maxAnisotropy, properties.limits.maxSamplerAnisotropy);
+   }
+   if (vkCreateSampler(this->devices.logical, &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the texture sampler.");
+   }
+}
 void DovahKitVulkanSubsystem::setupVertexBuffer() {
    VkDeviceSize bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
    //
@@ -1016,15 +1296,21 @@ void DovahKitVulkanSubsystem::setupUniformBuffers() {
 void DovahKitVulkanSubsystem::setupDescriptorPool() {
    auto& sc = this->swap_chain;
    //
-   auto pool_size = VkDescriptorPoolSize{
-      .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-      .descriptorCount = (uint32_t)sc.images.size(),
+   auto pool_sizes = std::array{
+      VkDescriptorPoolSize{ // uniform buffer object
+         .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+         .descriptorCount = (uint32_t)sc.images.size(),
+      },
+      VkDescriptorPoolSize{ // texture sampler
+         .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+         .descriptorCount = (uint32_t)sc.images.size(),
+      },
    };
    auto pool_info = VkDescriptorPoolCreateInfo{
       .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
       .maxSets       = (uint32_t)sc.images.size(),
-      .poolSizeCount = 1,
-      .pPoolSizes    = &pool_size,
+      .poolSizeCount = (uint32_t)pool_sizes.size(),
+      .pPoolSizes    = pool_sizes.data(),
    };
    //
    if (vkCreateDescriptorPool(this->devices.logical, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
@@ -1043,6 +1329,12 @@ void DovahKitVulkanSubsystem::setupDescriptorSets() {
    };
    //
    this->descriptor_sets.resize(sc.images.size());
+   //
+   // WARNING: If the descriptor pool has an inadequate size, vkAllocateDescriptorSets 
+   // MAY fail with an VK_ERROR_POOL_OUT_OF_MEMORY error code... However, some device 
+   // drivers may try to solve the problem internally instead, which means that that 
+   // particular class of error will not fail consistently across all hardware. Beware. 
+   //
    if (vkAllocateDescriptorSets(this->devices.logical, &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to allocate descriptor sets.");
    }
@@ -1057,18 +1349,35 @@ void DovahKitVulkanSubsystem::setupDescriptorSets() {
          .offset = 0,
          .range  = sizeof(uniform_buffer_object), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
       };
-      auto descriptor_write = VkWriteDescriptorSet{
-         .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-         .dstSet           = this->descriptor_sets[i],
-         .dstBinding       = 0, // this should match the binding value in the shader
-         .dstArrayElement  = 0, // index of the first descriptor in the raray to update
-         .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
-         .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-         .pImageInfo       = nullptr,
-         .pBufferInfo      = &buffer_info,
-         .pTexelBufferView = nullptr,
+      auto image_info = VkDescriptorImageInfo{
+         .sampler     = this->texture_sampler,
+         .imageView   = this->test_texture.view,
+         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       };
-      vkUpdateDescriptorSets(this->devices.logical, 1, &descriptor_write, 0, nullptr);
+      //
+      auto descriptor_writes = std::array{
+         VkWriteDescriptorSet{ // uniform buffer object
+            .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet           = this->descriptor_sets[i],
+            .dstBinding       = 0, // this should match the binding value in the shader
+            .dstArrayElement  = 0, // index of the first descriptor in the raray to update
+            .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
+            .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .pImageInfo       = nullptr,
+            .pBufferInfo      = &buffer_info,
+            .pTexelBufferView = nullptr,
+         },
+         VkWriteDescriptorSet{ // texture sampler
+            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet          = this->descriptor_sets[i],
+            .dstBinding      = 1, // this should match the binding value in the shader
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .pImageInfo      = &image_info,
+         },
+      };
+      vkUpdateDescriptorSets(this->devices.logical, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
    }
 }
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
