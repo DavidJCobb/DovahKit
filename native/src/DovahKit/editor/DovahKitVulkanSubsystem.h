@@ -94,11 +94,20 @@ class DovahKitVulkanSubsystem final : public QObject {
          static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
          static VkVertexInputBindingDescription getBindingDescription();
       };
+      
+      struct uniform_buffer_object {
+         glm::mat4 model;
+         glm::mat4 view;
+         glm::mat4 proj;
+      };
 
       bool initialized = false;
       bool failed      = false;
       VkInstance       instance;
       VkRenderPass     render_pass;
+      VkDescriptorSetLayout        descriptor_set_layout;
+      VkDescriptorPool             descriptor_pool;
+      std::vector<VkDescriptorSet> descriptor_sets;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
       VkBuffer         vertex_buffer;
@@ -111,10 +120,13 @@ class DovahKitVulkanSubsystem final : public QObject {
          VkSwapchainKHR handle;
          VkFormat       format;
          VkExtent2D     extent;
-         std::vector<VkImage>       images;
-         std::vector<VkImageView>   views;
-         std::vector<VkFramebuffer> framebuffers;
-         std::vector<VkFence>       images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
+         std::vector<VkImage>        images;
+         std::vector<VkImageView>    views;
+         std::vector<VkFramebuffer>  framebuffers;
+         std::vector<VkBuffer>       uniform_buffers;
+         std::vector<VkDeviceMemory> uniform_buffer_memory;
+         //
+         std::vector<VkFence> images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
       } swap_chain;
       struct {
          VkPhysicalDevice physical = VK_NULL_HANDLE;
@@ -172,11 +184,15 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupSwapChain();
       void setupImageViews();
       void setupRenderPass();
+      void setupDescriptorSetLayout();
       void setupGraphicsPipeline();
       void setupFramebuffers();
       void setupCommandPool();
       void setupVertexBuffer();
       void setupIndexBuffer();
+      void setupUniformBuffers();
+      void setupDescriptorPool();
+      void setupDescriptorSets();
       void setupCommandBuffers();
       void setupSemaphores();
 
@@ -193,6 +209,7 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       inline bool isInitialized() const noexcept { return this->initialized; }
 
+      void updateUniformBuffer(uint32_t which);
       void drawFrame();
       void renderWindowStateChange(QSize, bool visible);
 

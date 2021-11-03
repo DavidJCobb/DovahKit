@@ -1,9 +1,13 @@
 #include "DovahKitVulkanSubsystem.h"
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <vector>
 #include <QFile>
 #include <QResource>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace {
    static constexpr auto desired_swap_chain_presentation_mode = VK_PRESENT_MODE_MAILBOX_KHR;
@@ -203,11 +207,15 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupSwapChain();
    this->setupImageViews();
    this->setupRenderPass();
+   this->setupDescriptorSetLayout();
    this->setupGraphicsPipeline();
    this->setupFramebuffers();
    this->setupCommandPool();
    this->setupVertexBuffer();
    this->setupIndexBuffer();
+   this->setupUniformBuffers();
+   this->setupDescriptorPool();
+   this->setupDescriptorSets();
    this->setupCommandBuffers();
    this->setupSemaphores();
    //
@@ -226,6 +234,7 @@ void DovahKitVulkanSubsystem::teardown() {
    // TODO: Ensure all child objects belonging to the instance are destroyed first.
    //
    this->teardownSwapChain();
+   vkDestroyDescriptorSetLayout(device, this->descriptor_set_layout, nullptr); // don't teardown with the swap chain; we may reuse it
    vkDestroyBuffer(device, this->index_buffer, nullptr);
    vkFreeMemory   (device, this->index_buffer_memory, nullptr);
    vkDestroyBuffer(device, this->vertex_buffer, nullptr);
@@ -732,6 +741,26 @@ void DovahKitVulkanSubsystem::setupRenderPass() {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create render pass.");
    }
 }
+void DovahKitVulkanSubsystem::setupDescriptorSetLayout() {
+   std::array bindings = {
+      VkDescriptorSetLayoutBinding{
+         .binding            = 0,
+         .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+         .descriptorCount    = 1,
+         .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+         .pImmutableSamplers = nullptr,
+      },
+   };
+   //
+   auto layout_info = VkDescriptorSetLayoutCreateInfo{
+      .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .bindingCount = bindings.size(),
+      .pBindings    = bindings.data(),
+   };
+   if (vkCreateDescriptorSetLayout(this->devices.logical, &layout_info, nullptr, &this->descriptor_set_layout) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create descriptor set layout.");
+   }
+}
 void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    QByteArray frag = QResource("shaders/shader.frag.spv").uncompressedData();
    QByteArray vert = QResource("shaders/shader.vert.spv").uncompressedData();
@@ -802,7 +831,7 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
       .rasterizerDiscardEnable = VK_FALSE, // setting this to true basically disables the rasterizer entirely
       .polygonMode      = VK_POLYGON_MODE_FILL,
       .cullMode         = VK_CULL_MODE_BACK_BIT,   // cull backfaces, frontfaces (why? lol), or no faces
-      .frontFace        = VK_FRONT_FACE_CLOCKWISE, // specify which vertex order (clockwise or counterclockwise) signifies a face pointing toward us
+      .frontFace        = VK_FRONT_FACE_COUNTER_CLOCKWISE, // specify which vertex order (clockwise or counterclockwise) signifies a face pointing toward us
       .depthBiasEnable         = VK_FALSE,
       .depthBiasConstantFactor = 0.0f,
       .depthBiasClamp          = 0.0f,
@@ -844,8 +873,8 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    //
    auto pipeline_layout_info = VkPipelineLayoutCreateInfo{
       .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount         = 0,
-      .pSetLayouts            = nullptr,
+      .setLayoutCount         = 1,
+      .pSetLayouts            = &this->descriptor_set_layout,
       .pushConstantRangeCount = 0,
       .pPushConstantRanges    = nullptr,
    };
@@ -950,6 +979,13 @@ void DovahKitVulkanSubsystem::setupVertexBuffer() {
 void DovahKitVulkanSubsystem::setupIndexBuffer() {
    VkDeviceSize bufferSize = sizeof(this->indices[0]) * this->indices.size();
    //
+   // The index buffer allows us to reuse vertices without having to re-specify them, in the 
+   // case where multiple triangles share a vertex or few.
+   //
+   // A side note: device drivers can optimize better if we actually store the vertex and index 
+   // data in the same buffer, and use the "offset" parameter in vkCmdBindVertexBuffers (when 
+   // setting up our command buffers) to indicate where one ends and the other begins.
+   //
    VkBuffer       staging_buffer;
    VkDeviceMemory staging_memory;
    this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
@@ -964,6 +1000,76 @@ void DovahKitVulkanSubsystem::setupIndexBuffer() {
    //
    vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
    vkFreeMemory(this->devices.logical, staging_memory, nullptr);
+}
+void DovahKitVulkanSubsystem::setupUniformBuffers() {
+   VkDeviceSize buffer_size = sizeof(uniform_buffer_object);
+   //
+   auto& sc     = this->swap_chain;
+   auto& list_b = sc.uniform_buffers;
+   auto& list_m = sc.uniform_buffer_memory;
+   list_b.resize(sc.images.size());
+   list_m.resize(sc.images.size());
+   for (size_t i = 0; i < sc.images.size(); i++) {
+      createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, list_b[i], list_m[i]);
+   }
+}
+void DovahKitVulkanSubsystem::setupDescriptorPool() {
+   auto& sc = this->swap_chain;
+   //
+   auto pool_size = VkDescriptorPoolSize{
+      .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorCount = (uint32_t)sc.images.size(),
+   };
+   auto pool_info = VkDescriptorPoolCreateInfo{
+      .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+      .maxSets       = (uint32_t)sc.images.size(),
+      .poolSizeCount = 1,
+      .pPoolSizes    = &pool_size,
+   };
+   //
+   if (vkCreateDescriptorPool(this->devices.logical, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the descriptor pool.");
+   }
+}
+void DovahKitVulkanSubsystem::setupDescriptorSets() {
+   auto& sc = this->swap_chain;
+
+   std::vector<VkDescriptorSetLayout> layouts(sc.images.size(), this->descriptor_set_layout);
+   auto alloc_info = VkDescriptorSetAllocateInfo{
+      .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+      .descriptorPool     = this->descriptor_pool,
+      .descriptorSetCount = (uint32_t)sc.images.size(),
+      .pSetLayouts        = layouts.data(),
+   };
+   //
+   this->descriptor_sets.resize(sc.images.size());
+   if (vkAllocateDescriptorSets(this->devices.logical, &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to allocate descriptor sets.");
+   }
+   //
+   // Descriptor sets are owned by their descriptor pool. No manual cleanup needed.
+   //
+   // Configure the new descriptor sets:
+   //
+   for (size_t i = 0; i < sc.images.size(); i++) {
+      auto buffer_info = VkDescriptorBufferInfo{
+         .buffer = sc.uniform_buffers[i],
+         .offset = 0,
+         .range  = sizeof(uniform_buffer_object), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+      };
+      auto descriptor_write = VkWriteDescriptorSet{
+         .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+         .dstSet           = this->descriptor_sets[i],
+         .dstBinding       = 0, // this should match the binding value in the shader
+         .dstArrayElement  = 0, // index of the first descriptor in the raray to update
+         .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
+         .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+         .pImageInfo       = nullptr,
+         .pBufferInfo      = &buffer_info,
+         .pTexelBufferView = nullptr,
+      };
+      vkUpdateDescriptorSets(this->devices.logical, 1, &descriptor_write, 0, nullptr);
+   }
 }
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
    //
@@ -1029,6 +1135,8 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
             vkCmdBindIndexBuffer(command_buffer, this->index_buffer, 0, VK_INDEX_TYPE_UINT16);
          }
          //
+         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, 1, &this->descriptor_sets[i], 0, nullptr);
+         //
          vkCmdDrawIndexed(command_buffer, (uint32_t)this->indices.size(), 1, 0, 0, 0);
       }
       vkCmdEndRenderPass(command_buffer);
@@ -1077,12 +1185,16 @@ void DovahKitVulkanSubsystem::recreateSwapChain() {
    this->setupRenderPass();
    this->setupGraphicsPipeline();
    this->setupFramebuffers();
+   this->setupUniformBuffers();
+   this->setupDescriptorPool();
+   this->setupDescriptorSets();
    this->setupCommandBuffers();
 }
 
 void DovahKitVulkanSubsystem::teardownSwapChain() {
-   auto device = this->devices.logical;
-   for (auto framebuffer : this->swap_chain.framebuffers) {
+   auto  device = this->devices.logical;
+   auto& sc     = this->swap_chain;
+   for (auto framebuffer : sc.framebuffers) {
       vkDestroyFramebuffer(device, framebuffer, nullptr);
    }
    //
@@ -1092,15 +1204,49 @@ void DovahKitVulkanSubsystem::teardownSwapChain() {
    //
    vkFreeCommandBuffers(device, this->command_pool, (uint32_t)this->command_buffers.size(), this->command_buffers.data());
    //
+   for (size_t i = 0; i < sc.images.size(); i++) {
+      vkDestroyBuffer(device, sc.uniform_buffers[i], nullptr);
+      vkFreeMemory(device, sc.uniform_buffer_memory[i], nullptr);
+   }
+   vkDestroyDescriptorPool(device, this->descriptor_pool, nullptr);
    vkDestroyPipeline(device, this->pipeline, nullptr);
    vkDestroyPipelineLayout(device, this->pipeline_layout, nullptr);
    vkDestroyRenderPass(device, this->render_pass, nullptr);
-   for (auto view : this->swap_chain.views) {
+   for (auto view : sc.views) {
       vkDestroyImageView(device, view, nullptr);
    }
-   vkDestroySwapchainKHR(device, this->swap_chain.handle, nullptr);
+   vkDestroySwapchainKHR(device, sc.handle, nullptr);
 }
 
+void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
+   auto& sc = this->swap_chain;
+   assert(which < sc.images.size());
+   //
+   static auto start_time = std::chrono::high_resolution_clock::now();
+   //
+   auto  now     = std::chrono::high_resolution_clock::now();
+   float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - start_time).count();
+   //
+   uniform_buffer_object ubo{};
+   ubo.model = glm::rotate(glm::mat4(1.0f), elapsed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   ubo.proj  = glm::perspective(glm::radians(45.0f), sc.extent.width / (float)sc.extent.height, 0.1f, 10.0f);
+   //
+   // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
+   // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
+   // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
+   // considers a "backface" versus a "frontface." You can update the handedness in 
+   // the setupGraphicsPipeline function.
+   //
+   ubo.proj[1][1] *= -1;
+   //
+   // Send data to the GPU:
+   //
+   void* data;
+   vkMapMemory(this->devices.logical, sc.uniform_buffer_memory[which], 0, sizeof(ubo), 0, &data);
+   memcpy(data, &ubo, sizeof(ubo));
+   vkUnmapMemory(this->devices.logical, sc.uniform_buffer_memory[which]);
+}
 void DovahKitVulkanSubsystem::drawFrame() {
    constexpr auto no_timeout = UINT64_MAX;
    //
@@ -1145,6 +1291,7 @@ void DovahKitVulkanSubsystem::drawFrame() {
       handle = frame.fence;
    }
    //
+   this->updateUniformBuffer(imageIndex);
    auto wait_semaphores   = std::array{ frame.semaphores.image_available };
    auto signal_semaphores = std::array{ frame.semaphores.render_finished };
    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
