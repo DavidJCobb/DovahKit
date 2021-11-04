@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QResource>
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -48,6 +49,12 @@ namespace {
          extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
       }
       return extensions;
+   }
+}
+
+namespace {
+   bool hasStencilComponent(VkFormat format) {
+      return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
    }
 }
 
@@ -163,7 +170,7 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
       VkVertexInputAttributeDescription{
          .location = 0, // should match the location value in the shader's code
          .binding  = 0,
-         .format   = VK_FORMAT_R32G32_SFLOAT, // vec2
+         .format   = VK_FORMAT_R32G32B32_SFLOAT, // vec3
          .offset   = offsetof(vertex, pos),
       },
       VkVertexInputAttributeDescription{ // vertex color
@@ -220,8 +227,9 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupRenderPass();
    this->setupDescriptorSetLayout();
    this->setupGraphicsPipeline();
-   this->setupFramebuffers();
    this->setupCommandPool();
+   this->setupDepthBuffer();
+   this->setupFramebuffers(); // dependency on the depth buffer
    this->setupTestTexture();
    this->setupTestTextureView();
    this->setupTextureSampler();
@@ -358,7 +366,7 @@ void DovahKitVulkanSubsystem::createBuffer(VkDeviceSize size, VkBufferUsageFlags
 
    vkBindBufferMemory(this->devices.logical, buffer, bufferMemory, 0);
 }
-VkImageView DovahKitVulkanSubsystem::createImageView(VkImage image, VkFormat format) const {
+VkImageView DovahKitVulkanSubsystem::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspect) const {
    auto view_info = VkImageViewCreateInfo{
       .sType      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
       .image      = image,
@@ -374,7 +382,7 @@ VkImageView DovahKitVulkanSubsystem::createImageView(VkImage image, VkFormat for
          .a = VK_COMPONENT_SWIZZLE_IDENTITY,
       },
       .subresourceRange = { // control what part of the image is accessed
-         .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+         .aspectMask     = aspect,
          .baseMipLevel   = 0, // don't skip mipmaps
          .levelCount     = 1, // don't use mipmaps
          .baseArrayLayer = 0, // don't skip layers (layers would be useful for stereoscopic 3D, etc.)
@@ -505,6 +513,31 @@ uint32_t DovahKitVulkanSubsystem::findMemoryType(uint32_t typeFilter, VkMemoryPr
    }
    throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to find suitable memory type.");
 }
+VkFormat DovahKitVulkanSubsystem::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const {
+   for (VkFormat format : candidates) {
+      VkFormatProperties props;
+      vkGetPhysicalDeviceFormatProperties(this->devices.physical, format, &props);
+      //
+      if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+         return format;
+      } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+         return format;
+      }
+   }
+   return VK_FORMAT_UNDEFINED;
+}
+
+VkFormat DovahKitVulkanSubsystem::findDepthFormat() const {
+   auto fmt = this->findSupportedFormat(
+      { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+      VK_IMAGE_TILING_OPTIMAL,
+      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+   );
+   if (fmt == VK_FORMAT_UNDEFINED) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem][findDepthFormat] No format.");
+   }
+   return fmt;
+}
 
 void DovahKitVulkanSubsystem::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
@@ -553,7 +586,14 @@ void DovahKitVulkanSubsystem::transitionImageLayout(VkImage image, VkFormat form
          .layerCount     = 1,
       },
    };
-
+   //
+   // Handle special-case aspect masks:
+   //
+   if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+      barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+      if (hasStencilComponent(format))
+         barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+   }
    //
    // We need to set up the proper access masks and indicate when (i.e. during what pipeline 
    // stages) we can read and write. We need to handle different transitions here, so we'll 
@@ -585,6 +625,15 @@ void DovahKitVulkanSubsystem::transitionImageLayout(VkImage image, VkFormat form
       //
       sourceStage      = VK_PIPELINE_STAGE_TRANSFER_BIT;
       destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // do this when processing the fragment shader
+   } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+      //
+      // Transition used when creating a new depth image for our depth buffer.
+      //
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      //
+      sourceStage      = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
    } else {
       throw std::invalid_argument("[DovahKitVulkanSubsystem][transitionImageLayout] Unsupported layout transition!");
    }
@@ -879,43 +928,62 @@ void DovahKitVulkanSubsystem::setupImageViews() {
    auto& sc = this->swap_chain;
    sc.views.resize(sc.images.size());
    for (size_t i = 0; i < sc.images.size(); i++) {
-      sc.views[i] = this->createImageView(sc.images[i], this->swap_chain.format);
+      sc.views[i] = this->createImageView(sc.images[i], this->swap_chain.format, VK_IMAGE_ASPECT_COLOR_BIT);
    }
 }
 void DovahKitVulkanSubsystem::setupRenderPass() {
-   auto color_attachment = VkAttachmentDescription{
-      .format         = this->swap_chain.format,
-      .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-      .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-      .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-      .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-      .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-      .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+   std::array attachment_descs = {
+      VkAttachmentDescription{ // color
+         .format         = this->swap_chain.format,
+         .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+         .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+         .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+         .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+         .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+         .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+         .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+      },
+      VkAttachmentDescription{ // depth
+         .format         = this->findDepthFormat(),
+         .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+         .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+         .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after drawing, so let the driver decide how best to discard it
+         .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+         .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+         .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+         .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      },
    };
-   auto color_attachment_ref = VkAttachmentReference{
-      .attachment = 0,
-      .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+   std::array attachment_refs = {
+      VkAttachmentReference{ // color
+         .attachment = 0,
+         .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      },
+      VkAttachmentReference{ // depth
+         .attachment = 1,
+         .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      },
    };
    //
    auto subpass = VkSubpassDescription{
-      .pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS,
-      .colorAttachmentCount = 1,
-      .pColorAttachments    = &color_attachment_ref, // this is actually an array, and indices in it are used directly within shader code
+      .pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS,
+      .colorAttachmentCount    = 1,
+      .pColorAttachments       = &attachment_refs[0],
+      .pDepthStencilAttachment = &attachment_refs[1], // subpasses can only use a single depth-and-stencil attachment
    };
    auto dependency = VkSubpassDependency{
       .srcSubpass    = VK_SUBPASS_EXTERNAL,
       .dstSubpass    = 0,
-      .srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      .dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+      .dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
       .srcAccessMask = 0,
-      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
    };
    //
    auto render_pass_info = VkRenderPassCreateInfo{
       .sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-      .attachmentCount = 1,
-      .pAttachments    = &color_attachment,
+      .attachmentCount = attachment_descs.size(),
+      .pAttachments    = attachment_descs.data(),
       .subpassCount    = 1,
       .pSubpasses      = &subpass,
       .dependencyCount = 1,
@@ -1059,6 +1127,18 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
       .pAttachments    = &color_blend_attach_info,
       .blendConstants  = { 0.0f, 0.0f, 0.0f, 0.0f },
    };
+   auto depth_stencil_attach_info = VkPipelineDepthStencilStateCreateInfo{
+      .sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+      .depthTestEnable       = VK_TRUE,
+      .depthWriteEnable      = VK_TRUE,
+      .depthCompareOp        = VK_COMPARE_OP_LESS, // lower depth value = closer
+      .depthBoundsTestEnable = VK_FALSE, // toggle whether values outside of a depth range are culled
+      .stencilTestEnable     = VK_FALSE,
+      .front                 = {}, // stencil info
+      .back                  = {}, // stencil info
+      .minDepthBounds        = 0.0, // depth culling range
+      .maxDepthBounds        = 1.0, // depth culling range
+   };
    //
    // Now let's create the pipeline layout.
    //
@@ -1085,7 +1165,7 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
       .pViewportState      = &viewport_create,
       .pRasterizationState = &rasterizer_create,
       .pMultisampleState   = &multisample_info,
-      .pDepthStencilState  = nullptr,
+      .pDepthStencilState  = &depth_stencil_attach_info,
       .pColorBlendState    = &color_blend_create_info,
       .pDynamicState       = nullptr,
       //
@@ -1110,7 +1190,12 @@ void DovahKitVulkanSubsystem::setupFramebuffers() {
    auto& sc = this->swap_chain;
    sc.framebuffers.resize(sc.views.size());
    for (size_t i = 0; i < sc.views.size(); i++) {
-      auto attachments = std::array{ sc.views[i] };
+      //
+      // Each swap chain image needs its own view for color attachment, but they can 
+      // share a single view for depth attachment because our semaphores ensure that 
+      // only one subpass is running at a time.
+      //
+      auto attachments = std::array{ sc.views[i], this->depth_buffer.view };
       auto framebuffer_info = VkFramebufferCreateInfo{
          .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
          .renderPass      = this->render_pass,
@@ -1135,6 +1220,17 @@ void DovahKitVulkanSubsystem::setupCommandPool() {
    if (vkCreateCommandPool(this->devices.logical, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the command pool.");
    }
+}
+void DovahKitVulkanSubsystem::setupDepthBuffer() {
+   auto depthFormat = this->findDepthFormat();
+   //
+   auto& sc = this->swap_chain;
+   auto& db = this->depth_buffer;
+   //
+   this->createVkImage(sc.extent.width, sc.extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, db.image, db.memory);
+   db.view = createImageView(db.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+   //
+   this->transitionImageLayout(db.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 void DovahKitVulkanSubsystem::setupTestTexture() {
    QImage texture;
@@ -1195,7 +1291,7 @@ void DovahKitVulkanSubsystem::setupTestTexture() {
    vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
 }
 void DovahKitVulkanSubsystem::setupTestTextureView() {
-   this->test_texture.view = createImageView(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB);
+   this->test_texture.view = createImageView(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 void DovahKitVulkanSubsystem::setupTextureSampler() {
    auto sampler_info = VkSamplerCreateInfo{
@@ -1413,7 +1509,13 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
          throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to begin recording command buffer.");
       }
       //
-      auto clear_values    = std::array{ VkClearValue{0, 0, 0, 1} }; // color(s) to use with the VK_ATTACHMENT_LOAD_OP_CLEAR option, passed in an earlier setup function
+      auto clear_values = std::array{
+         //
+         // Values here should match the attachments we're using.
+         //
+         VkClearValue{ .color        = {0, 0, 0, 1} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
+         VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+      };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
          .renderPass  = this->render_pass,
@@ -1493,6 +1595,7 @@ void DovahKitVulkanSubsystem::recreateSwapChain() {
    this->setupImageViews();
    this->setupRenderPass();
    this->setupGraphicsPipeline();
+   this->setupDepthBuffer();
    this->setupFramebuffers();
    this->setupUniformBuffers();
    this->setupDescriptorPool();
@@ -1503,6 +1606,12 @@ void DovahKitVulkanSubsystem::recreateSwapChain() {
 void DovahKitVulkanSubsystem::teardownSwapChain() {
    auto  device = this->devices.logical;
    auto& sc     = this->swap_chain;
+   //
+   auto& db = this->depth_buffer;
+   vkDestroyImageView(device, db.view,   nullptr);
+   vkDestroyImage    (device, db.image,  nullptr);
+   vkFreeMemory      (device, db.memory, nullptr);
+   //
    for (auto framebuffer : sc.framebuffers) {
       vkDestroyFramebuffer(device, framebuffer, nullptr);
    }

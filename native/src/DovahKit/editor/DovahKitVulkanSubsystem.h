@@ -88,7 +88,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       };
 
       struct vertex {
-         glm::vec2 pos;
+         glm::vec3 pos;
          glm::vec3 color;
          glm::vec2 texCoord;
          //
@@ -121,6 +121,11 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
       VkSampler        texture_sampler;
+      struct {
+         VkImage        image;
+         VkDeviceMemory memory;
+         VkImageView    view;
+      } depth_buffer;
       struct {
          VkSwapchainKHR handle;
          VkFormat       format;
@@ -156,13 +161,19 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkDebugUtilsMessengerEXT debugMessenger;
       //
       const std::vector<vertex> vertices = {
-         {{-0.5f, -0.395f}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-         {{ 0.5f, -0.395f}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-         {{ 0.5f,  0.395f}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-         {{-0.5f,  0.395f}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
+         {{-0.5f, -0.395f, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
+         {{ 0.5f, -0.395f, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
+         {{ 0.5f,  0.395f, 0.0}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
+         {{-0.5f,  0.395f, 0.0}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
+         //
+         {{-0.5f, -0.395f, -0.5}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
+         {{ 0.5f, -0.395f, -0.5}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
+         {{ 0.5f,  0.395f, -0.5}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
+         {{-0.5f,  0.395f, -0.5}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
       };
       const std::vector<uint16_t> indices = {
-         0, 1, 2, 2, 3, 0
+         0, 1, 2, 2, 3, 0,
+         4, 5, 6, 6, 7, 4,
       };
       struct {
          VkImage        image;
@@ -184,10 +195,13 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize);
       void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
-      VkImageView createImageView(VkImage, VkFormat) const;
+      VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags) const;
       void createVkImage(uint32_t w, uint32_t h, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage& out_image, VkDeviceMemory& out_memory) const;
       int32_t deviceScore(VkPhysicalDevice) const;
       uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags) const;
+      VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling, VkFormatFeatureFlags) const;
+
+      VkFormat findDepthFormat() const;
 
       void copyBufferToImage(VkBuffer, VkImage, uint32_t width, uint32_t height);
       void transitionImageLayout(VkImage, VkFormat, VkImageLayout oldLayout, VkImageLayout newLayout);
@@ -206,6 +220,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupGraphicsPipeline();
       void setupFramebuffers();
       void setupCommandPool();
+      void setupDepthBuffer();
       void setupTestTexture();
       void setupTestTextureView();
       void setupTextureSampler();
