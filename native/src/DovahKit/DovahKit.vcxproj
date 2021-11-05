@@ -1275,6 +1275,8 @@
     <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="shaders\ScreenShot278.bmp" />
+    <Image Include="shaders\ScreenShot389.bmp" />
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

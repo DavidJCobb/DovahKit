@@ -35,6 +35,17 @@ class DovahKitVulkanSubsystem final : public QObject {
          static DovahKitVulkanSubsystem instance;
          return instance;
       }
+
+   public:
+      struct vertex {
+         glm::vec3 pos;
+         glm::vec3 color;
+         glm::vec2 texCoord;
+         //
+         static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+         static VkVertexInputBindingDescription getBindingDescription();
+      };
+
    protected:
       DovahKitVulkanSubsystem();
       ~DovahKitVulkanSubsystem();
@@ -86,15 +97,6 @@ class DovahKitVulkanSubsystem final : public QObject {
             VkSemaphore render_finished;
          } semaphores;
       };
-
-      struct vertex {
-         glm::vec3 pos;
-         glm::vec3 color;
-         glm::vec2 texCoord;
-         //
-         static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
-         static VkVertexInputBindingDescription getBindingDescription();
-      };
       
       struct uniform_buffer_object {
          //
@@ -104,11 +106,36 @@ class DovahKitVulkanSubsystem final : public QObject {
          alignas(16) glm::mat4 view;
          alignas(16) glm::mat4 proj;
       };
+      struct push_constant {
+         int32_t texture_index;
+         int32_t object_index;
+      };
+
+      struct loaded_texture {
+         VkImage     image = VK_NULL_HANDLE;
+         VkImageView view  = VK_NULL_HANDLE;
+         VkDeviceMemory memory = VK_NULL_HANDLE; // TODO: in the future, multiple textures should share a single VkDeviceMemory via suballocation
+      };
+      struct rendered_object {
+         struct shader_parameters { // pass to the shader via a storage buffer
+            glm::mat4 transform;
+         };
+         //
+         struct {
+            VkBuffer       buffer;
+            VkDeviceMemory memory; // TODO: in the future, buffers should share VkDeviceMemory allocations via suballocations (we need to build a custom CPU-side heap for GPU memory, basically)
+            uint32_t       indices_at     = 0;
+            uint32_t       index_count    = 0;
+            VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
+         } vertex_and_index_buffer;
+         shader_parameters shader_params;
+      };
 
       bool initialized = false;
       bool failed      = false;
       VkInstance       instance;
       VkRenderPass     render_pass;
+      std::vector<VkDescriptorImageInfo> descriptor_texture_infos;
       VkDescriptorSetLayout        descriptor_set_layout;
       VkDescriptorPool             descriptor_pool;
       std::vector<VkDescriptorSet> descriptor_sets;
@@ -136,6 +163,11 @@ class DovahKitVulkanSubsystem final : public QObject {
          std::vector<VkBuffer>       uniform_buffers;
          std::vector<VkDeviceMemory> uniform_buffer_memory;
          //
+         struct {
+            std::vector<VkBuffer>       buffer_handles;
+            std::vector<VkDeviceMemory> buffer_memory;
+         } rendered_object_shader_parameters;
+         //
          std::vector<VkFence> images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
       } swap_chain;
       struct {
@@ -160,6 +192,10 @@ class DovahKitVulkanSubsystem final : public QObject {
       size_t current_frame = 0;
       VkDebugUtilsMessengerEXT debugMessenger;
       //
+      struct {
+         std::vector<loaded_texture> textures;
+      } assets;
+      std::vector<rendered_object> rendered_objects;
       const std::vector<vertex> vertices = {
          {{-0.5f, -0.395f, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
          {{ 0.5f, -0.395f, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},

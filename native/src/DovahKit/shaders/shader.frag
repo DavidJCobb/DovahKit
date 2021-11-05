@@ -1,6 +1,14 @@
 #version 450
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(push_constant) uniform PER_OBJECT {
+	int texture_index;
+   int object_index;
+} pushed;
+
+// binding 0 is used by the vertex shader (UBO for camera/view transforms)
+layout(binding = 1) uniform sampler   texSampler;
+layout(binding = 2) uniform texture2D textures[3];
+// binding 3 is used by the vertex shader (buffer for object data)
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
@@ -9,5 +17,5 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
    //outColor = vec4(fragTexCoord, 0.0, 1.0);
-   outColor = texture(texSampler, fragTexCoord);
+   outColor = texture(sampler2D(textures[pushed.texture_index], texSampler), fragTexCoord);
 }

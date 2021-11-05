@@ -3,5 +3,7 @@
         <file>shader.frag.spv</file>
         <file>shader.vert.spv</file>
         <file>Tamriel-Skyrim.esm.png</file>
+        <file>ScreenShot278.bmp</file>
+        <file>ScreenShot389.bmp</file>
     </qresource>
 </RCC>
