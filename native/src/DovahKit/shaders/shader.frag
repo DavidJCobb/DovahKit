@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require
 
 layout(push_constant) uniform PER_OBJECT {
 	int texture_index;
@@ -7,8 +8,8 @@ layout(push_constant) uniform PER_OBJECT {
 
 // binding 0 is used by the vertex shader (UBO for camera/view transforms)
 layout(binding = 1) uniform sampler   texSampler;
-layout(binding = 2) uniform texture2D textures[3];
-// binding 3 is used by the vertex shader (buffer for object data)
+// binding 2 is used by the vertex shader (buffer for object data)
+layout(binding = 3) uniform texture2D textures[];
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;

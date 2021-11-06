@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require
 
 //
 // Location sizes:
@@ -27,10 +28,10 @@ layout(binding = 0) uniform UniformBufferObject {
    mat4 proj;
 } ubo;
 // binding 1 is used by the fragment shader (texture sampler)
-// binding 2 is used by the fragment shader (texture array)
-layout(std140,set = 0, binding = 3) readonly buffer ObjectBuffer {
+layout(std140,set = 0, binding = 2) readonly buffer ObjectBuffer {
 	ObjectData objects[];
 } objectBuffer;
+// binding 3 is used by the fragment shader (texture array)
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;

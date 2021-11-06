@@ -512,6 +512,7 @@
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
     <ClCompile Include="ui\generic\FormPicker.cpp" />
@@ -604,6 +605,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
+    <ClInclude Include="vulkan\descriptor_definitions.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />

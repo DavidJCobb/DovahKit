@@ -16,6 +16,12 @@
 #include <QImageReader>
 
 namespace {
+   //static constexpr int  target_frames_per_second = 60;
+   static constexpr int  target_frames_per_second = -1;
+   static constexpr uint frame_delay = (target_frames_per_second >= 0) ? 1000 / target_frames_per_second : 0;
+}
+
+namespace {
    static constexpr auto desired_swap_chain_presentation_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 
    static constexpr size_t frame_in_flight_count = 2;
@@ -30,7 +36,8 @@ namespace {
    static constexpr bool debug_print_all_extensions = false;
 
    const std::vector<const char*> device_extensions = {
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
    };
 
    const std::vector<const char*> desired_validation_layers = {
@@ -145,7 +152,7 @@ void DovahKitVulkanWidget::resizeEvent(QResizeEvent* event) {
    vulkan.renderWindowStateChange(this->size(), this->isVisible());
 }
 void DovahKitVulkanWidget::showEvent(QShowEvent* event) {
-   this->timerID = this->startTimer(16, Qt::PreciseTimer);
+   this->timerID = this->startTimer(frame_delay, Qt::PreciseTimer);
    //
    auto& vulkan = DovahKitVulkanSubsystem::get();
    if (!vulkan.isInitialized())
@@ -300,6 +307,39 @@ DovahKitVulkanSubsystem::DovahKitVulkanSubsystem() {
    // singleton via its getter, but that breaks if the singleton is still being constructed.
    //
    this->frames_in_flight.resize(frame_in_flight_count);
+   //
+   this->descriptor_set_layout.bindings = {
+      DovahKit::vulkan::descriptor_binding{ // uniform buffer object
+         .index              = 0,
+         .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+         .count              = 1,
+         .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+         .immutable_samplers = nullptr,
+      },
+      DovahKit::vulkan::descriptor_binding{ // texture sampler
+         .index              = 1,
+         .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
+         .count              = 1,
+         .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+         .immutable_samplers = nullptr,
+         //.is_global          = true,
+      },
+      DovahKit::vulkan::descriptor_binding{ // storage buffer object: rendered_object::shader_parameters
+         .index              = 2,
+         .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+         .count              = 1,
+         .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+         .immutable_samplers = nullptr,
+      },
+      DovahKit::vulkan::descriptor_binding{ // texture array
+         .index              = 3,
+         .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+         .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+         .count              = max_available_textures,
+         .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+         .immutable_samplers = nullptr,
+      },
+   };
 }
 DovahKitVulkanSubsystem::~DovahKitVulkanSubsystem() {
    this->teardown();
@@ -330,7 +370,7 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupDepthBuffer();
    this->setupFramebuffers(); // dependency on the depth buffer
    this->setupRenderedObjects();
-   this->setupUniformBuffers();
+   this->setupShaderParameterBuffers();
    this->setupDescriptorPool();
    this->setupDescriptorSets();
    this->setupCommandBuffers();
@@ -365,7 +405,7 @@ void DovahKitVulkanSubsystem::teardown() {
       }
       list.clear();
    }
-   vkDestroyDescriptorSetLayout(device, this->descriptor_set_layout, nullptr); // don't teardown with the swap chain; we may reuse it
+   this->descriptor_set_layout.teardown(); // don't teardown with the swap chain; we may reuse it
    {
       auto& list = this->shader_modules;
       list.clear();
@@ -599,12 +639,25 @@ int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
          return 0;
    }
    //
-   VkPhysicalDeviceProperties properties;
-   VkPhysicalDeviceFeatures   features;
+   auto indexing_features = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+      .pNext = nullptr,
+   };
+   auto properties = VkPhysicalDeviceProperties{};
+   auto features   = VkPhysicalDeviceFeatures2{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+      .pNext = &indexing_features,
+   };
    vkGetPhysicalDeviceProperties(device, &properties);
-   vkGetPhysicalDeviceFeatures  (device, &features);
+   vkGetPhysicalDeviceFeatures2 (device, &features);
    //
-   if (!features.samplerAnisotropy) { // require anisotropic filtering support
+   if (!indexing_features.descriptorBindingVariableDescriptorCount) // variable-length arrays as descriptor bindings
+      return 0;
+   if (!indexing_features.descriptorBindingPartiallyBound) // arrays with empty slots as descriptor bindings
+      return 0;
+   if (!indexing_features.runtimeDescriptorArray)
+      return 0;
+   if (!features.features.samplerAnisotropy) { // require anisotropic filtering support
       //
       // TODO: We don't actually need to REQUIRE anisotropic filtering, if we instead just 
       //       remember whether the physical device we chose to use has support for it. We 
@@ -924,8 +977,16 @@ void DovahKitVulkanSubsystem::setupLogicalDevice() {
    auto deviceFeatures = VkPhysicalDeviceFeatures{
       .samplerAnisotropy = VK_TRUE, 
    };
+   auto indexing_extensions = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+      .pNext = nullptr,
+      .descriptorBindingPartiallyBound          = VK_TRUE,
+      .descriptorBindingVariableDescriptorCount = VK_TRUE,
+      .runtimeDescriptorArray                   = VK_TRUE,
+   };
    auto create_info = VkDeviceCreateInfo{
       .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+      .pNext                   = &indexing_extensions,
       .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
       .pQueueCreateInfos       = queue_infos.data(),
       .enabledExtensionCount   = (uint32_t)device_extensions.size(),
@@ -1127,45 +1188,8 @@ void DovahKitVulkanSubsystem::setupRenderPass() {
    }
 }
 void DovahKitVulkanSubsystem::setupDescriptorSetLayout() {
-   std::array bindings = {
-      VkDescriptorSetLayoutBinding{ // uniform buffer object
-         .binding            = 0,
-         .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-         .descriptorCount    = 1,
-         .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
-         .pImmutableSamplers = nullptr,
-      },
-      VkDescriptorSetLayoutBinding{ // texture sampler
-         .binding            = 1,
-         .descriptorType     = VK_DESCRIPTOR_TYPE_SAMPLER,
-         .descriptorCount    = 1,
-         .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
-         .pImmutableSamplers = nullptr,
-      },
-      VkDescriptorSetLayoutBinding{ // texture array
-         .binding            = 2,
-         .descriptorType     = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-         .descriptorCount    = (uint32_t)this->assets.textures.size(),
-         .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-         .pImmutableSamplers = nullptr,
-      },
-      VkDescriptorSetLayoutBinding{ // storage buffer object: rendered_object::shader_parameters
-         .binding            = 3,
-         .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-         .descriptorCount    = 1,
-         .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
-         .pImmutableSamplers = nullptr,
-      },
-   };
-   //
-   auto layout_info = VkDescriptorSetLayoutCreateInfo{
-      .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-      .bindingCount = bindings.size(),
-      .pBindings    = bindings.data(),
-   };
-   if (vkCreateDescriptorSetLayout(this->devices.logical, &layout_info, nullptr, &this->descriptor_set_layout) != VK_SUCCESS) {
-      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create descriptor set layout.");
-   }
+   this->descriptor_set_layout.set_device(this->devices.logical);
+   this->descriptor_set_layout.setup();
 }
 void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    auto frag_info = VkPipelineShaderStageCreateInfo{
@@ -1289,7 +1313,7 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    auto pipeline_layout_info = VkPipelineLayoutCreateInfo{
       .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
       .setLayoutCount         = 1,
-      .pSetLayouts            = &this->descriptor_set_layout,
+      .pSetLayouts            = &this->descriptor_set_layout.handle,
       .pushConstantRangeCount = 1,
       .pPushConstantRanges    = &push_constant_struct,
    };
@@ -1510,7 +1534,7 @@ void DovahKitVulkanSubsystem::setupRenderedObjects() {
       vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
    }
 }
-void DovahKitVulkanSubsystem::setupUniformBuffers() {
+void DovahKitVulkanSubsystem::setupShaderParameterBuffers() {
    constexpr VkDeviceSize buffer_size = sizeof(uniform_buffer_object);
    //
    auto& sc     = this->swap_chain;
@@ -1535,38 +1559,39 @@ void DovahKitVulkanSubsystem::setupUniformBuffers() {
 }
 void DovahKitVulkanSubsystem::setupDescriptorPool() {
    auto& sc = this->swap_chain;
+   auto& dl = this->descriptor_set_layout;
    //
-   auto pool_sizes = std::array{
+   auto image_count = sc.images.size();
+   //
+   std::vector<VkDescriptorPoolSize> sizes;
+   for (auto& binding : dl.bindings) {
+      auto count = binding.count;
+      if (!binding.is_global)
+         count *= image_count;
       //
-      // These sizes basically dictate how many of each descriptor type can ever be allocated from 
-      // this descriptor pool, totaled up across all frames. For descriptors that represent arrays 
-      // within the shader, the size of the array counts (i.e. someValue[5] is five descriptors as 
-      // far as these pool sizes are concerned).
-      //
-      VkDescriptorPoolSize{ // uniform buffer object
+      auto t    = binding.type;
+      bool done = false;
+      for(auto& prior : sizes) {
+         if (prior.type == t) {
+            prior.descriptorCount += count;
+            done = true;
+            break;
+         }
+      }
+      if (done)
+         continue;
+      sizes.emplace_back(VkDescriptorPoolSize{
          .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-         .descriptorCount = (uint32_t)sc.images.size(),
-      },
-      VkDescriptorPoolSize{ // texture sampler
-         .type            = VK_DESCRIPTOR_TYPE_SAMPLER,
-         .descriptorCount = 1,
-      },
-      VkDescriptorPoolSize{ // texture array?
-         .type            = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-         .descriptorCount = (uint32_t)sc.images.size() * max_available_textures,
-      },
-      VkDescriptorPoolSize{ // storage buffer object for rendered_object::shader_parameters
-         .type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-         .descriptorCount = (uint32_t)sc.images.size(),
-      },
-   };
+         .descriptorCount = count,
+      });
+   }
+   //
    auto pool_info = VkDescriptorPoolCreateInfo{
       .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-      .maxSets       = (uint32_t)sc.images.size(),
-      .poolSizeCount = (uint32_t)pool_sizes.size(),
-      .pPoolSizes    = pool_sizes.data(),
+      .maxSets       = (uint32_t)image_count,
+      .poolSizeCount = (uint32_t)sizes.size(),
+      .pPoolSizes    = sizes.data(),
    };
-   //
    if (vkCreateDescriptorPool(this->devices.logical, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the descriptor pool.");
    }
@@ -1574,15 +1599,40 @@ void DovahKitVulkanSubsystem::setupDescriptorPool() {
 void DovahKitVulkanSubsystem::setupDescriptorSets() {
    auto& sc = this->swap_chain;
 
-   std::vector<VkDescriptorSetLayout> layouts(sc.images.size(), this->descriptor_set_layout);
+   std::vector<VkDescriptorSetLayout> layouts(sc.images.size(), this->descriptor_set_layout.handle);
+   std::vector<uint32_t> variable_counts(layouts.size(), 0);
+   {  //
+      // The (variable_counts) list should have one value per layout, because each layout may 
+      // have only zero or one descriptor bindings with variable descriptor counts.
+      //
+      auto& bl = this->descriptor_set_layout.bindings;
+      for (size_t i = 0; i < layouts.size(); ++i) {
+         auto& bl = this->descriptor_set_layout.bindings; // TODO: if we have multiple sets per frame, pick the right set layout
+         auto& vc = variable_counts[i];
+         for (size_t j = 0; j < bl.size(); ++j) {
+            auto& binding = bl[j];
+            if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT) {
+               assert(vc == 0            && "A descriptor set is not allowed to have multiple variable-length descriptor bindings.");
+               assert(j == bl.size() - 1 && "If a descriptor set has a variable-length descriptor binding, it must be the last binding in the list.");
+               vc = binding.count;
+            }
+         }
+      }
+   }
+   auto variable_count_info = VkDescriptorSetVariableDescriptorCountAllocateInfo{
+      .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
+      .descriptorSetCount = (uint32_t)variable_counts.size(),
+      .pDescriptorCounts  = variable_counts.data(),
+   };
    auto alloc_info = VkDescriptorSetAllocateInfo{
       .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+      .pNext              = &variable_count_info,
       .descriptorPool     = this->descriptor_pool,
-      .descriptorSetCount = (uint32_t)sc.images.size(),
+      .descriptorSetCount = (uint32_t)layouts.size(),
       .pSetLayouts        = layouts.data(),
    };
    //
-   this->descriptor_sets.resize(sc.images.size());
+   this->descriptor_sets.resize(layouts.size());
    //
    // WARNING: If the descriptor pool has an inadequate size, vkAllocateDescriptorSets 
    // MAY fail with an VK_ERROR_POOL_OUT_OF_MEMORY error code... However, some device 
@@ -1648,25 +1698,25 @@ void DovahKitVulkanSubsystem::setupDescriptorSets() {
             .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
             .pImageInfo      = &sampler_info,
          },
-         VkWriteDescriptorSet{ // texture array
-            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet          = this->descriptor_sets[i],
-            .dstBinding      = 2, // this should match the binding value in the shader
-            .dstArrayElement = 0,
-            .descriptorCount = (uint32_t)texture_infos.size(),
-            .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .pImageInfo      = texture_infos.data(),
-         },
          VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
             .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet           = this->descriptor_sets[i],
-            .dstBinding       = 3, // this should match the binding value in the shader
+            .dstBinding       = 2, // this should match the binding value in the shader
             .dstArrayElement  = 0,
             .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
             .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .pImageInfo       = nullptr,
             .pBufferInfo      = &rosp_buffer_info,
             .pTexelBufferView = nullptr,
+         },
+         VkWriteDescriptorSet{ // texture array
+            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet          = this->descriptor_sets[i],
+            .dstBinding      = 3, // this should match the binding value in the shader
+            .dstArrayElement = 0,
+            .descriptorCount = (uint32_t)texture_infos.size(),
+            .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .pImageInfo      = texture_infos.data(),
          },
       };
       vkUpdateDescriptorSets(this->devices.logical, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
@@ -1822,7 +1872,7 @@ void DovahKitVulkanSubsystem::recreateSwapChain() {
    this->setupGraphicsPipeline();
    this->setupDepthBuffer();
    this->setupFramebuffers();
-   this->setupUniformBuffers();
+   this->setupShaderParameterBuffers();
    this->setupDescriptorPool();
    this->setupDescriptorSets();
    this->setupCommandBuffers();
@@ -1868,7 +1918,7 @@ void DovahKitVulkanSubsystem::teardownSwapChain() {
    vkDestroySwapchainKHR(device, sc.handle, nullptr);
 }
 
-void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
+void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
    auto& sc = this->swap_chain;
    assert(which < sc.images.size());
    //
@@ -1878,9 +1928,8 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
    float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - start_time).count();
    //
    uniform_buffer_object ubo{};
-   //ubo.model = glm::rotate(glm::mat4(1.0f), elapsed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   ubo.proj  = glm::perspective(glm::radians(45.0f), sc.extent.width / (float)sc.extent.height, 0.1f, 10.0f);
+   ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   ubo.proj = glm::perspective(glm::radians(45.0f), sc.extent.width / (float)sc.extent.height, 0.1f, 10.0f);
    //
    // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
    // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
@@ -1896,34 +1945,14 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
    vkMapMemory(this->devices.logical, sc.uniform_buffer_memory[which], 0, sizeof(ubo), 0, &data);
    memcpy(data, &ubo, sizeof(ubo));
    vkUnmapMemory(this->devices.logical, sc.uniform_buffer_memory[which]);
-
    //
-   // let's also update the rendered-object shader parameters storage buffer here:
+   // Let's also update the rendered-object shader parameters storage buffer here:
    //
-   {  // Process animation state
-      auto  now     = std::chrono::high_resolution_clock::now();
-      float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - this->last_update).count();
-      this->last_update = now;
-      //
-      auto& ro    = this->rendered_objects;
-      auto& as    = this->anim_state;
-      auto  count = ro.size(); // TODO: decouple anim state indices from rendered object indices; only store anim state for actual animated objects
-      //
-      for (size_t i = 0; i < count; ++i) {
-         if (!as[i].playing)
-            continue;
-         as[i].elapsed += elapsed;
-         if (as[i].elapsed > as[i].duration)
-            as[i].elapsed -= as[i].duration;
-         //
-         auto t = ro[i].transform();
-         t = glm::rotate(t, (elapsed / as[i].duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-         ro[i].set_transform(t);
-      }
-   }
    {
       using entry_type = rendered_object::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
+
+      constexpr bool map_only_what_is_necessary = true;
 
       auto& rosp   = sc.rendered_object_shader_parameters;
       auto& handle = rosp.buffer_handles[which];
@@ -1937,33 +1966,66 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
       uint32_t flag = 1 << which; // TODO: if the swap chain frame count exceeds 32, this won't work
       //
       size_t first_dirty = 0;
+      size_t last_dirty  = 0;
       bool   any_dirty   = false;
-      for (size_t i = 0; i < count; ++i) {
-         auto& item = ro[i];
-         if (item.frame_dirty_flags & flag) {
-            first_dirty = i;
-            any_dirty   = true;
-            break;
+      if constexpr (map_only_what_is_necessary) {
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = ro[i];
+            if (item.frame_dirty_flags & flag) {
+               if (!any_dirty) {
+                  first_dirty = i;
+                  any_dirty   = true;
+               }
+               last_dirty = i;
+            }
+         }
+      } else {
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = ro[i];
+            if (item.frame_dirty_flags & flag) {
+               first_dirty = i;
+               any_dirty   = true;
+               break;
+            }
          }
       }
       //
       if (any_dirty) {
-         flag = ~flag;
+         constexpr bool map_only_what_is_necessary = true;
          //
          entry_type* data;
-         vkMapMemory(this->devices.logical, memory, 0, size, 0, (void**)&data);
-         for (size_t i = first_dirty; i < count; ++i) {
-            auto& src = ro[i].shader_params;
-            auto& dst = data[i];
-            memcpy(&dst, &src, entry_size);
-            //
-            ro[i].frame_dirty_flags &= flag;
+         if constexpr (map_only_what_is_necessary) {
+            VkDeviceSize offset = first_dirty * entry_size;
+            VkDeviceSize length = (last_dirty - first_dirty + 1) * entry_size;
+            vkMapMemory(this->devices.logical, memory, offset, length, 0, (void**)&data);
+            for (size_t i = first_dirty; i <= last_dirty; ++i) {
+               if (!(ro[i].frame_dirty_flags & flag))
+                  continue;
+               auto& src = ro[i].shader_params;
+               auto& dst = data[i - first_dirty];
+               memcpy(&dst, &src, entry_size);
+               //
+               ro[i].frame_dirty_flags &= ~flag;
+            }
+         } else {
+            vkMapMemory(this->devices.logical, memory, 0, size, 0, (void**)&data);
+            for (size_t i = first_dirty; i < count; ++i) {
+               if (!(ro[i].frame_dirty_flags & flag))
+                  continue;
+               auto& src = ro[i].shader_params;
+               auto& dst = data[i];
+               memcpy(&dst, &src, entry_size);
+               //
+               ro[i].frame_dirty_flags &= ~flag;
+            }
          }
          vkUnmapMemory(this->devices.logical, memory);
       }
    }
 }
 void DovahKitVulkanSubsystem::drawFrame() {
+   this->updateAnimationState();
+   //
    constexpr auto no_timeout = UINT64_MAX;
    //
    //  - Acquire an image from the swap chain
@@ -2007,7 +2069,7 @@ void DovahKitVulkanSubsystem::drawFrame() {
       handle = frame.fence;
    }
    //
-   this->updateUniformBuffer(imageIndex);
+   this->updateShaderParameterBuffers(imageIndex);
    auto wait_semaphores   = std::array{ frame.semaphores.image_available };
    auto signal_semaphores = std::array{ frame.semaphores.render_finished };
    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -2083,4 +2145,32 @@ void DovahKitVulkanSubsystem::setAnimationPaused(size_t i, bool paused) {
    if (i >= as.size())
       return;
    as[i].playing = !paused;
+}
+void DovahKitVulkanSubsystem::updateAnimationState() {
+   //
+   // TODO: Arguably we may want to do this elsewhere; we should eventually separate 
+   //       anim_state from the renderer core. You could imagine a tree of NiNode 
+   //       structs, some with animation state, which map to a flat list of rendered 
+   //       objects in the engine; and you could imagine these structs pushing updates 
+   //       elsewhere in the overall flow (or at a fixed tick rate e.g. 60 FPS, etc.).
+   //
+   auto  now     = std::chrono::high_resolution_clock::now();
+   float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - this->last_update).count();
+   this->last_update = now;
+   //
+   auto& ro    = this->rendered_objects;
+   auto& as    = this->anim_state;
+   auto  count = ro.size(); // TODO: decouple anim state indices from rendered object indices; only store anim state for actual animated objects
+   //
+   for (size_t i = 0; i < count; ++i) {
+      if (!as[i].playing)
+         continue;
+      as[i].elapsed += elapsed;
+      if (as[i].elapsed > as[i].duration)
+         as[i].elapsed -= as[i].duration;
+      //
+      auto t = ro[i].transform();
+      t = glm::rotate(t, (elapsed / as[i].duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+      ro[i].set_transform(t);
+   }
 }

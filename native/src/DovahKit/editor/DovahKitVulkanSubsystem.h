@@ -10,6 +10,7 @@
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 #include "../helpers/intrusive_windows_defines.h"
+#include "../vulkan/descriptor_definitions.h"
 
 // Currently only usable for the render window's 3D widget, but then, that goes for this 
 // whole file right now. We'll figure out multiple 3D views later, I'm sure.
@@ -148,7 +149,7 @@ class DovahKitVulkanSubsystem final : public QObject {
             VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
          } vertex_and_index_buffer;
          shader_parameters shader_params;
-         uint32_t frame_dirty_flags = 0;
+         uint32_t frame_dirty_flags = -1;
          //
          inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
          void set_transform(const glm::mat4&);
@@ -165,10 +166,10 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkInstance       instance;
       VkRenderPass     render_pass;
       std::vector<shader_module> shader_modules;
-      std::vector<VkDescriptorImageInfo> descriptor_texture_infos;
-      VkDescriptorSetLayout        descriptor_set_layout;
-      VkDescriptorPool             descriptor_pool;
-      std::vector<VkDescriptorSet> descriptor_sets;
+      std::vector<VkDescriptorImageInfo>      descriptor_texture_infos;
+      DovahKit::vulkan::descriptor_set_layout descriptor_set_layout;
+      VkDescriptorPool                        descriptor_pool;
+      std::vector<VkDescriptorSet>            descriptor_sets;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
       VkCommandPool    command_pool;
@@ -269,7 +270,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupTextures();
       void setupTextureSampler();
       void setupRenderedObjects();
-      void setupUniformBuffers();
+      void setupShaderParameterBuffers();
       void setupDescriptorPool();
       void setupDescriptorSets();
       void setupCommandBuffers();
@@ -288,11 +289,12 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       inline bool isInitialized() const noexcept { return this->initialized; }
 
-      void updateUniformBuffer(uint32_t which);
+      void updateShaderParameterBuffers(uint32_t which);
       void drawFrame();
       void renderWindowStateChange(QSize, bool visible);
 
       void setAnimationPaused(size_t, bool);
+      void updateAnimationState();
 
    signals:
       void ready();
