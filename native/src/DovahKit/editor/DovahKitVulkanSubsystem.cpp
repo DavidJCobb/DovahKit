@@ -224,6 +224,42 @@ DovahKitVulkanSubsystem::swap_chain_support_info::swap_chain_support_info(VkPhys
 }
 #pragma endregion
 
+#pragma region shader_module
+DovahKitVulkanSubsystem::shader_module::shader_module(VkDevice device, const QByteArray& compiled) : device(device) {
+   auto create_info = VkShaderModuleCreateInfo{
+      .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+      .codeSize = (uint32_t)compiled.size(),
+      .pCode    = (const uint32_t*)compiled.data(),
+   };
+   if (vkCreateShaderModule(device, &create_info, nullptr, &this->handle) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem::shader_module::shader_module] Failed to create shader module.");
+   }
+}
+DovahKitVulkanSubsystem::shader_module::~shader_module() {
+   if (this->device != VK_NULL_HANDLE && this->handle != VK_NULL_HANDLE)
+      vkDestroyShaderModule(this->device, this->handle, nullptr);
+   this->handle = VK_NULL_HANDLE;
+   this->device = VK_NULL_HANDLE;
+}
+//
+DovahKitVulkanSubsystem::shader_module::shader_module(shader_module&& o) noexcept {
+   std::swap(this->handle, o.handle);
+   std::swap(this->device, o.device);
+}
+DovahKitVulkanSubsystem::shader_module& DovahKitVulkanSubsystem::shader_module::operator=(shader_module&& o) noexcept {
+   std::swap(this->handle, o.handle);
+   std::swap(this->device, o.device);
+   return *this;
+}
+#pragma endregion
+
+#pragma region rendered_object
+void DovahKitVulkanSubsystem::rendered_object::set_transform(const glm::mat4& in) {
+   this->shader_params.transform = in;
+   this->frame_dirty_flags = -1;
+}
+#pragma endregion
+
 #pragma region vertex
 /*static*/ std::array<VkVertexInputAttributeDescription, 3> DovahKitVulkanSubsystem::vertex::getAttributeDescriptions() {
    return {
@@ -282,19 +318,18 @@ void DovahKitVulkanSubsystem::initialize() {
    this->setupRenderWindowSurface();
    this->setupPhysicalDevice();
    this->setupLogicalDevice();
+   this->setupShaderModules();
    this->setupCommandPool(); // cannot copy buffers, etc., for texture loading until this is set up
    this->setupSwapChain();
    this->setupImageViews();
    this->setupRenderPass();
-      this->setupTestTexture(); // descriptor set layout must know how many textures we want to have room for (currently we use a dynamic count, rather than, say, just having 1000 or something)
-      this->setupTestTextureView();
+      this->setupTextures(); // descriptor set layout must know how many textures we want to have room for (currently we use a dynamic count, rather than, say, just having 1000 or something)
       this->setupTextureSampler(); // descriptor set layout must be able to refer to our immutable sampler
    this->setupDescriptorSetLayout();
    this->setupGraphicsPipeline();
    this->setupDepthBuffer();
    this->setupFramebuffers(); // dependency on the depth buffer
-   this->setupVertexBuffer();
-   this->setupIndexBuffer();
+   this->setupRenderedObjects();
    this->setupUniformBuffers();
    this->setupDescriptorPool();
    this->setupDescriptorSets();
@@ -330,14 +365,26 @@ void DovahKitVulkanSubsystem::teardown() {
       }
       list.clear();
    }
-   vkDestroyImageView(device, this->test_texture.view,   nullptr);
-   vkDestroyImage    (device, this->test_texture.image,  nullptr);
-   vkFreeMemory      (device, this->test_texture.memory, nullptr);
    vkDestroyDescriptorSetLayout(device, this->descriptor_set_layout, nullptr); // don't teardown with the swap chain; we may reuse it
-   vkDestroyBuffer(device, this->index_buffer, nullptr);
-   vkFreeMemory   (device, this->index_buffer_memory, nullptr);
-   vkDestroyBuffer(device, this->vertex_buffer, nullptr);
-   vkFreeMemory   (device, this->vertex_buffer_memory, nullptr);
+   {
+      auto& list = this->shader_modules;
+      list.clear();
+   }
+   {
+      auto& list = this->rendered_objects;
+      for (auto& ro : list) {
+         auto& vib = ro.vertex_and_index_buffer;
+         if (vib.buffer == VK_NULL_HANDLE) {
+            assert(vib.memory == VK_NULL_HANDLE);
+         } else {
+            vkDestroyBuffer(device, vib.buffer, nullptr);
+            vkFreeMemory   (device, vib.memory, nullptr);
+            vib.buffer = VK_NULL_HANDLE;
+            vib.memory = VK_NULL_HANDLE;
+         }
+      }
+      list.clear();
+   }
    for (auto& frame : this->frames_in_flight) {
       vkDestroySemaphore(device, frame.semaphores.render_finished, nullptr);
       vkDestroySemaphore(device, frame.semaphores.image_available, nullptr);
@@ -898,6 +945,19 @@ void DovahKitVulkanSubsystem::setupLogicalDevice() {
    vkGetDeviceQueue(this->devices.logical, indices.families.graphics,     0, &this->queues.graphics);
    vkGetDeviceQueue(this->devices.logical, indices.families.presentation, 0, &this->queues.presentation);
 }
+void DovahKitVulkanSubsystem::setupShaderModules() {
+   QByteArray frag = QResource("shaders/shader.frag.spv").uncompressedData();
+   QByteArray vert = QResource("shaders/shader.vert.spv").uncompressedData();
+   if (frag.isNull()) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to load fragment shader.");
+   }
+   if (vert.isNull()) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to load vertex shader.");
+   }
+   //
+   this->shader_modules.emplace_back(this->devices.logical, frag);
+   this->shader_modules.emplace_back(this->devices.logical, vert);
+}
 void DovahKitVulkanSubsystem::setupSwapChain() {
    auto deets = swap_chain_support_info(this->devices.physical, this->surfaces.render_window.surface);
    auto& sc = this->swap_chain;
@@ -1075,13 +1135,6 @@ void DovahKitVulkanSubsystem::setupDescriptorSetLayout() {
          .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
          .pImmutableSamplers = nullptr,
       },
-      /*VkDescriptorSetLayoutBinding{ // texture sampler combined with texture
-         .binding            = 1,
-         .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-         .descriptorCount    = 1,
-         .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
-         .pImmutableSamplers = nullptr,
-      },*/
       VkDescriptorSetLayoutBinding{ // texture sampler
          .binding            = 1,
          .descriptorType     = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -1115,28 +1168,17 @@ void DovahKitVulkanSubsystem::setupDescriptorSetLayout() {
    }
 }
 void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
-   QByteArray frag = QResource("shaders/shader.frag.spv").uncompressedData();
-   QByteArray vert = QResource("shaders/shader.vert.spv").uncompressedData();
-   if (frag.isNull()) {
-      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to load fragment shader.");
-   }
-   if (vert.isNull()) {
-      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to load vertex shader.");
-   }
-   VkShaderModule frag_module = createShaderModule(frag);
-   VkShaderModule vert_module = createShaderModule(vert);
-   //
    auto frag_info = VkPipelineShaderStageCreateInfo{
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage  = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = frag_module,
+      .module = this->shader_modules[0].handle,
       .pName  = "main",
       .pSpecializationInfo = nullptr, // can pass parameters to the shader
    };
    auto vert_info = VkPipelineShaderStageCreateInfo{
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage  = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = vert_module,
+      .module = this->shader_modules[1].handle,
       .pName  = "main",
       .pSpecializationInfo = nullptr, // can pass parameters to the shader
    };
@@ -1282,11 +1324,6 @@ void DovahKitVulkanSubsystem::setupGraphicsPipeline() {
    if (vkCreateGraphicsPipelines(this->devices.logical, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->pipeline) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create graphics pipeline.");
    }
-   //
-   // We're done, so we can ditch these shader objects now:
-   //
-   vkDestroyShaderModule(this->devices.logical, frag_module, nullptr);
-   vkDestroyShaderModule(this->devices.logical, vert_module, nullptr);
 }
 void DovahKitVulkanSubsystem::setupFramebuffers() {
    auto& sc = this->swap_chain;
@@ -1334,7 +1371,7 @@ void DovahKitVulkanSubsystem::setupDepthBuffer() {
    //
    this->transitionImageLayout(db.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
-void DovahKitVulkanSubsystem::setupTestTexture() {
+void DovahKitVulkanSubsystem::setupTextures() {
    auto& files = texture_files;
    auto  count = files.size();
    auto& list  = this->assets.textures;
@@ -1407,69 +1444,6 @@ void DovahKitVulkanSubsystem::setupTestTexture() {
       vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
       vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
    }
-   //
-   QImage texture;
-   {
-      auto bytearray = QResource("shaders/Tamriel-Skyrim.esm.png").uncompressedData();
-      auto buffer    = QBuffer(&bytearray);
-      buffer.open(QIODevice::ReadOnly);
-      auto reader    = QImageReader(&buffer, "PNG");
-      reader.read(&texture);
-      texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
-   }
-   if (texture.isNull()) {
-      throw std::runtime_error("[DovahKitVulkanSubsystem][setupTestTexture] Failed to load test image.");
-   }
-   VkDeviceSize image_size = texture.width() * texture.height() * 4;
-   assert(image_size == texture.sizeInBytes());
-   //
-   // We're gonna be setting up our image on a staging buffer, and then transferring that 
-   // to the final (non-CPU-writeable) buffer.
-   //
-   VkBuffer       staging_buffer;
-   VkDeviceMemory staging_memory;
-   this->createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
-   //
-   void* data;
-   vkMapMemory(this->devices.logical, staging_memory, 0, image_size, 0, &data);
-   memcpy(data, texture.constBits(), image_size);
-   vkUnmapMemory(this->devices.logical, staging_memory);
-   //
-   uint32_t w = texture.width();
-   uint32_t h = texture.height();
-   texture = QImage();
-   //
-   // Now let's create an image:
-   //
-   this->createVkImage(
-      w, h,
-      VK_FORMAT_R8G8B8A8_SRGB,
-      VK_IMAGE_TILING_OPTIMAL,
-      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-      this->test_texture.image,
-      this->test_texture.memory
-   );
-   //
-   // Now we need to transfer our image from the staging buffer to the final buffer, 
-   // transitioning its layout to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL as we do. We 
-   // can use VK_IMAGE_LAYOUT_UNDEFINED as the "old layout" because we don't actually 
-   // care about the data (or lack thereof, really) in the freshly-created VkImage.
-   //
-   this->transitionImageLayout(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-   this->copyBufferToImage(staging_buffer, this->test_texture.image, w, h);
-   this->transitionImageLayout(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-   //
-   // Discard the staging buffer:
-   //
-   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
-   vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
-}
-void DovahKitVulkanSubsystem::setupTestTextureView() {
-   //
-   // assets.textures has its views created in setupTestTexture above
-   //
-   this->test_texture.view = createImageView(this->test_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 void DovahKitVulkanSubsystem::setupTextureSampler() {
    auto sampler_info = VkSamplerCreateInfo{
@@ -1499,98 +1473,42 @@ void DovahKitVulkanSubsystem::setupTextureSampler() {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the texture sampler.");
    }
 }
-void DovahKitVulkanSubsystem::setupVertexBuffer() {
-   {
-      auto& src  = models;
-      auto& dst  = this->rendered_objects;
-      auto  size = models.size();
-      dst.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& s   = src[i];
-         auto& d   = dst[i];
-         auto& vib = d.vertex_and_index_buffer;
-         //
-         VkDeviceSize buffer_size_v = sizeof(vertex)   * s.vertices.size();
-         VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
-         VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
-         //
-         VkBuffer       staging_buffer;
-         VkDeviceMemory staging_memory;
-         this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
-         //
-         void* data;
-         vkMapMemory(this->devices.logical, staging_memory, 0, buffer_size, 0, &data);
-         memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
-         memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
-         vkUnmapMemory(this->devices.logical, staging_memory);
-         //
-         vib.indices_at     = buffer_size_v;
-         vib.index_count    = s.indices.size();
-         vib.allocated_size = buffer_size;
-         //
-         this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vib.buffer, vib.memory);
-         this->copyBuffer(staging_buffer, vib.buffer, buffer_size);
-         d.shader_params.transform = s.transform;
-         //
-         vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
-         vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
-      }
+void DovahKitVulkanSubsystem::setupRenderedObjects() {
+   auto& src  = models;
+   auto& dst  = this->rendered_objects;
+   auto  size = models.size();
+   dst.resize(size);
+   this->anim_state.resize(size); // TODO: decouple anim states from rendered objects eventually
+   for (size_t i = 0; i < size; ++i) {
+      auto& s   = src[i];
+      auto& d   = dst[i];
+      auto& vib = d.vertex_and_index_buffer;
+      //
+      VkDeviceSize buffer_size_v = sizeof(vertex)   * s.vertices.size();
+      VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
+      VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+      //
+      VkBuffer       staging_buffer;
+      VkDeviceMemory staging_memory;
+      this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+      //
+      void* data;
+      vkMapMemory(this->devices.logical, staging_memory, 0, buffer_size, 0, &data);
+      memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
+      memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
+      vkUnmapMemory(this->devices.logical, staging_memory);
+      //
+      vib.indices_at     = buffer_size_v;
+      vib.index_count    = s.indices.size();
+      vib.allocated_size = buffer_size;
+      //
+      this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vib.buffer, vib.memory);
+      this->copyBuffer(staging_buffer, vib.buffer, buffer_size);
+      d.shader_params.transform = s.transform;
+      //
+      vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+      vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
    }
-   //
-   VkDeviceSize bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
-   //
-   // Our normal vertex buffer is going to have a flag set which renders its contents entirely 
-   // inaccessible to the CPU; this aids in performance. But how, then, shall we get our vertices 
-   // from the CPU to the GPU? We'll use a staging buffer -- a temporary GPU-side buffer which 
-   // lacks this flag.
-   //
-   VkBuffer       staging_buffer;
-   VkDeviceMemory staging_memory;
-   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
-   //
-   // We want to transfer our vertex data to the GPU. We'll do this by mapping a section of 
-   // CPU-accessible memory, copying the data into that section, and then unmapping it.
-   //
-   void* data;
-   vkMapMemory(this->devices.logical, staging_memory, 0, bufferSize, 0, &data);
-   memcpy(data, this->vertices.data(), (size_t)bufferSize);
-   vkUnmapMemory(this->devices.logical, staging_memory);
-   //
-   // Now let's create our normal buffer, and transfer data from the staging buffer to the 
-   // normal buffer.
-   //
-   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vertex_buffer, this->vertex_buffer_memory);
-   this->copyBuffer(staging_buffer, this->vertex_buffer, bufferSize);
-   //
-   // And of course, let's destroy the temporary buffer and its memory:
-   //
-   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
-   vkFreeMemory(this->devices.logical, staging_memory, nullptr);
-}
-void DovahKitVulkanSubsystem::setupIndexBuffer() {
-   VkDeviceSize bufferSize = sizeof(this->indices[0]) * this->indices.size();
-   //
-   // The index buffer allows us to reuse vertices without having to re-specify them, in the 
-   // case where multiple triangles share a vertex or few.
-   //
-   // A side note: device drivers can optimize better if we actually store the vertex and index 
-   // data in the same buffer, and use the "offset" parameter in vkCmdBindVertexBuffers (when 
-   // setting up our command buffers) to indicate where one ends and the other begins.
-   //
-   VkBuffer       staging_buffer;
-   VkDeviceMemory staging_memory;
-   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
-   //
-   void* data;
-   vkMapMemory(this->devices.logical, staging_memory, 0, bufferSize, 0, &data);
-   memcpy(data, indices.data(), (size_t)bufferSize);
-   vkUnmapMemory(this->devices.logical, staging_memory);
-   //
-   this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->index_buffer, this->index_buffer_memory);
-   this->copyBuffer(staging_buffer, this->index_buffer, bufferSize);
-   //
-   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
-   vkFreeMemory(this->devices.logical, staging_memory, nullptr);
 }
 void DovahKitVulkanSubsystem::setupUniformBuffers() {
    constexpr VkDeviceSize buffer_size = sizeof(uniform_buffer_object);
@@ -1697,11 +1615,6 @@ void DovahKitVulkanSubsystem::setupDescriptorSets() {
          };
       }
    }
-   /*auto image_info = VkDescriptorImageInfo{
-      .sampler     = this->texture_sampler,
-      .imageView   = this->test_texture.view,
-      .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-   };*/
    for (size_t i = 0; i < sc.images.size(); i++) {
       auto buffer_info = VkDescriptorBufferInfo{
          .buffer = sc.uniform_buffers[i],
@@ -1763,7 +1676,9 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
    //
    // Command buffers allow us to "record" several draw commands (possibly across multiple 
    // threads) and then execute them all at once in the main thread. You could think of it 
-   // like a transaction, I guess.
+   // like a transaction, I guess. A command buffer cannot receive commands while the GPU 
+   // is executing any commands it's already received, which is why we use multiple command 
+   // buffers for rendering (one per framebuffer).
    //
    this->command_buffers.resize(this->swap_chain.framebuffers.size());
    auto alloc_info = VkCommandBufferAllocateInfo{
@@ -1813,7 +1728,7 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
 
       vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
       {
-         using index_type = decltype(this->indices)::value_type;
+         using index_type = decltype(_model::indices)::value_type;
          constexpr bool indices_are_uint32_t = std::is_same_v<uint32_t, index_type>;
          constexpr bool indices_are_uint16_t = std::is_same_v<uint16_t, index_type>;
          static_assert(indices_are_uint32_t || indices_are_uint16_t);
@@ -1853,20 +1768,6 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
                vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
             }
          }
-         /*// old code for a single hardcoded model
-         std::array buffers = { this->vertex_buffer };
-         std::array<VkDeviceSize, buffers.size()> offsets = { 0 };
-         vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-         if constexpr (indices_are_uint32_t) {
-            vkCmdBindIndexBuffer(command_buffer, this->index_buffer, 0, VK_INDEX_TYPE_UINT32);
-         } else if constexpr (indices_are_uint16_t) {
-            vkCmdBindIndexBuffer(command_buffer, this->index_buffer, 0, VK_INDEX_TYPE_UINT16);
-         }
-         //
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, 1, &this->descriptor_sets[i], 0, nullptr);
-         //
-         vkCmdDrawIndexed(command_buffer, (uint32_t)this->indices.size(), 1, 0, 0, 0);
-         //*/
       }
       vkCmdEndRenderPass(command_buffer);
 
@@ -1876,6 +1777,12 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
    }
 }
 void DovahKitVulkanSubsystem::setupSemaphores() {
+   //
+   // Semaphores are used to synchronize concurrent processes occurring within the GPU. Fences are 
+   // used to synchronize the CPU with the GPU -- which is to say: waiting on a fence blocks the 
+   // CPU by definition, but waiting on a semaphore allows the CPU to do work -- and send commands 
+   // to the GPU to be executed when possible.
+   //
    auto semaphore_info = VkSemaphoreCreateInfo{
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
    };
@@ -1919,6 +1826,13 @@ void DovahKitVulkanSubsystem::recreateSwapChain() {
    this->setupDescriptorPool();
    this->setupDescriptorSets();
    this->setupCommandBuffers();
+   
+   //
+   // The above procedure will have reset all shader-side data for rendered objects, 
+   // so we need to mark all rendered objects as dirty so we resynchronize that.
+   //
+   for (auto& ro : this->rendered_objects)
+      ro.frame_dirty_flags = -1;
 }
 
 void DovahKitVulkanSubsystem::teardownSwapChain() {
@@ -1964,7 +1878,7 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
    float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - start_time).count();
    //
    uniform_buffer_object ubo{};
-   ubo.model = glm::rotate(glm::mat4(1.0f), elapsed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   //ubo.model = glm::rotate(glm::mat4(1.0f), elapsed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    ubo.proj  = glm::perspective(glm::radians(45.0f), sc.extent.width / (float)sc.extent.height, 0.1f, 10.0f);
    //
@@ -1986,6 +1900,27 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
    //
    // let's also update the rendered-object shader parameters storage buffer here:
    //
+   {  // Process animation state
+      auto  now     = std::chrono::high_resolution_clock::now();
+      float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - this->last_update).count();
+      this->last_update = now;
+      //
+      auto& ro    = this->rendered_objects;
+      auto& as    = this->anim_state;
+      auto  count = ro.size(); // TODO: decouple anim state indices from rendered object indices; only store anim state for actual animated objects
+      //
+      for (size_t i = 0; i < count; ++i) {
+         if (!as[i].playing)
+            continue;
+         as[i].elapsed += elapsed;
+         if (as[i].elapsed > as[i].duration)
+            as[i].elapsed -= as[i].duration;
+         //
+         auto t = ro[i].transform();
+         t = glm::rotate(t, (elapsed / as[i].duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         ro[i].set_transform(t);
+      }
+   }
    {
       using entry_type = rendered_object::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
@@ -1999,14 +1934,33 @@ void DovahKitVulkanSubsystem::updateUniformBuffer(uint32_t which) {
       assert(count < max_rendered_objects);
       VkDeviceSize size = count * entry_size;
       //
-      entry_type* data;
-      vkMapMemory(this->devices.logical, memory, 0, size, 0, (void**)&data);
+      uint32_t flag = 1 << which; // TODO: if the swap chain frame count exceeds 32, this won't work
+      //
+      size_t first_dirty = 0;
+      bool   any_dirty   = false;
       for (size_t i = 0; i < count; ++i) {
-         auto& src = ro[i].shader_params;
-         auto& dst = data[i];
-         memcpy(&dst, &src, entry_size);
+         auto& item = ro[i];
+         if (item.frame_dirty_flags & flag) {
+            first_dirty = i;
+            any_dirty   = true;
+            break;
+         }
       }
-      vkUnmapMemory(this->devices.logical, memory);
+      //
+      if (any_dirty) {
+         flag = ~flag;
+         //
+         entry_type* data;
+         vkMapMemory(this->devices.logical, memory, 0, size, 0, (void**)&data);
+         for (size_t i = first_dirty; i < count; ++i) {
+            auto& src = ro[i].shader_params;
+            auto& dst = data[i];
+            memcpy(&dst, &src, entry_size);
+            //
+            ro[i].frame_dirty_flags &= flag;
+         }
+         vkUnmapMemory(this->devices.logical, memory);
+      }
    }
 }
 void DovahKitVulkanSubsystem::drawFrame() {
@@ -2121,4 +2075,12 @@ void DovahKitVulkanSubsystem::renderWindowStateChange(QSize size, bool visible) 
       qDebug("[Vulkan][Validation Layer] %s", pCallbackData->pMessage);
    }
    return VK_FALSE;
+}
+
+
+void DovahKitVulkanSubsystem::setAnimationPaused(size_t i, bool paused) {
+   auto& as = this->anim_state;
+   if (i >= as.size())
+      return;
+   as[i].playing = !paused;
 }

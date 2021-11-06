@@ -1,5 +1,7 @@
 #include "render_window.h"
 #include <QBoxLayout>
+#include <QStyle>
+#include <QToolButton>
 #include "../../editor/DovahKitVulkanSubsystem.h"
 
 //
@@ -33,6 +35,18 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);
 
+   for (size_t i = 0; i < 3; ++i) {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText(QString("Pause %#1").arg(i));
+      button->setCheckable(true);
+      QObject::connect(button, &QAbstractButton::toggled, this, [this, i](bool checked) {
+         auto& vulkan = DovahKitVulkanSubsystem::get();
+         vulkan.setAnimationPaused(i, checked);
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
+      //
+      this->toolbar->addWidget(button);
+   }
 
    vulkan.initialize();
 }

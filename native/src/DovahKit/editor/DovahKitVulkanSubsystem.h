@@ -1,6 +1,8 @@
 #pragma once
 #include <array>
+#include <atomic>
 #include <bit>
+#include <chrono>
 #include <QObject>
 #include <QPointer>
 #include <QWidget>
@@ -90,6 +92,24 @@ class DovahKitVulkanSubsystem final : public QObject {
          swap_chain_support_info(VkPhysicalDevice, VkSurfaceKHR);
       };
 
+      struct shader_module {
+         //
+         // You can technically discard this after you've created the graphics pipelines that 
+         // will use it, but keeping it around will avoid the need to reload your compiled 
+         // shaders every time you rebuild the swap chain.
+         //
+         VkDevice       device = VK_NULL_HANDLE;
+         VkShaderModule handle = VK_NULL_HANDLE;
+
+         shader_module(VkDevice, const QByteArray&);
+         ~shader_module();
+
+         shader_module(const shader_module&) = delete;
+         shader_module& operator=(const shader_module&) = delete;
+         shader_module(shader_module&&) noexcept;
+         shader_module& operator=(shader_module&&) noexcept;
+      };
+
       struct frame_in_flight {
          VkFence fence;
          struct {
@@ -102,7 +122,6 @@ class DovahKitVulkanSubsystem final : public QObject {
          //
          // Vulkan expects precise member aligmnent; see: <https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap15.html#interfaces-resources-layout>
          //
-         alignas(16) glm::mat4 model;
          alignas(16) glm::mat4 view;
          alignas(16) glm::mat4 proj;
       };
@@ -129,22 +148,29 @@ class DovahKitVulkanSubsystem final : public QObject {
             VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
          } vertex_and_index_buffer;
          shader_parameters shader_params;
+         uint32_t frame_dirty_flags = 0;
+         //
+         inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
+         void set_transform(const glm::mat4&);
+      };
+
+      struct rendered_object_animation_state {
+         bool  playing  = true;
+         float duration = 4.0;
+         float elapsed  = 0.0;
       };
 
       bool initialized = false;
       bool failed      = false;
       VkInstance       instance;
       VkRenderPass     render_pass;
+      std::vector<shader_module> shader_modules;
       std::vector<VkDescriptorImageInfo> descriptor_texture_infos;
       VkDescriptorSetLayout        descriptor_set_layout;
       VkDescriptorPool             descriptor_pool;
       std::vector<VkDescriptorSet> descriptor_sets;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
-      VkBuffer         vertex_buffer;
-      VkDeviceMemory   vertex_buffer_memory;
-      VkBuffer         index_buffer;
-      VkDeviceMemory   index_buffer_memory;
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
       VkSampler        texture_sampler;
@@ -196,26 +222,8 @@ class DovahKitVulkanSubsystem final : public QObject {
          std::vector<loaded_texture> textures;
       } assets;
       std::vector<rendered_object> rendered_objects;
-      const std::vector<vertex> vertices = {
-         {{-0.5f, -0.395f, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-         {{ 0.5f, -0.395f, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-         {{ 0.5f,  0.395f, 0.0}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-         {{-0.5f,  0.395f, 0.0}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
-         //
-         {{-0.5f, -0.395f, -0.5}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-         {{ 0.5f, -0.395f, -0.5}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-         {{ 0.5f,  0.395f, -0.5}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-         {{-0.5f,  0.395f, -0.5}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
-      };
-      const std::vector<uint16_t> indices = {
-         0, 1, 2, 2, 3, 0,
-         4, 5, 6, 6, 7, 4,
-      };
-      struct {
-         VkImage        image;
-         VkDeviceMemory memory;
-         VkImageView    view;
-      } test_texture;
+      std::vector<rendered_object_animation_state> anim_state;
+      std::chrono::steady_clock::time_point last_update;
 
       static VkDebugUtilsMessengerCreateInfoEXT _get_debug_create_params();
 
@@ -249,6 +257,7 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupRenderWindowSurface();
       void setupPhysicalDevice();
       void setupLogicalDevice();
+      void setupShaderModules();
       void setupSwapChain();
       void setupImageViews();
       void setupRenderPass();
@@ -257,11 +266,9 @@ class DovahKitVulkanSubsystem final : public QObject {
       void setupFramebuffers();
       void setupCommandPool();
       void setupDepthBuffer();
-      void setupTestTexture();
-      void setupTestTextureView();
+      void setupTextures();
       void setupTextureSampler();
-      void setupVertexBuffer();
-      void setupIndexBuffer();
+      void setupRenderedObjects();
       void setupUniformBuffers();
       void setupDescriptorPool();
       void setupDescriptorSets();
@@ -284,6 +291,8 @@ class DovahKitVulkanSubsystem final : public QObject {
       void updateUniformBuffer(uint32_t which);
       void drawFrame();
       void renderWindowStateChange(QSize, bool visible);
+
+      void setAnimationPaused(size_t, bool);
 
    signals:
       void ready();
