@@ -261,9 +261,15 @@ DovahKitVulkanSubsystem::shader_module& DovahKitVulkanSubsystem::shader_module::
 #pragma endregion
 
 #pragma region rendered_object
+void DovahKitVulkanSubsystem::rendered_object::_on_shader_parameter_change() {
+   if (this->pending_delete)
+      return;
+   this->frame_dirty_flags = -1;
+}
+//
 void DovahKitVulkanSubsystem::rendered_object::set_transform(const glm::mat4& in) {
    this->shader_params.transform = in;
-   this->frame_dirty_flags = -1;
+   this->_on_shader_parameter_change();
 }
 #pragma endregion
 
@@ -404,6 +410,19 @@ void DovahKitVulkanSubsystem::teardown() {
          vkFreeMemory      (device, entry.memory, nullptr);
       }
       list.clear();
+   }
+   {  // Delete null-texture (used to clear texture-array entries when null-descriptors aren't allowed by the hardware).
+      auto& entry = this->null_texture;
+      if (entry.image == VK_NULL_HANDLE) {
+         assert(entry.view == VK_NULL_HANDLE && entry.memory == VK_NULL_HANDLE);
+      } else {
+         vkDestroyImageView(device, entry.view,   nullptr);
+         vkDestroyImage    (device, entry.image,  nullptr);
+         vkFreeMemory      (device, entry.memory, nullptr);
+         entry.view   = VK_NULL_HANDLE;
+         entry.image  = VK_NULL_HANDLE;
+         entry.memory = VK_NULL_HANDLE;
+      }
    }
    this->descriptor_set_layout.teardown(); // don't teardown with the swap chain; we may reuse it
    {
@@ -657,15 +676,7 @@ int32_t DovahKitVulkanSubsystem::deviceScore(VkPhysicalDevice device) const {
       return 0;
    if (!indexing_features.runtimeDescriptorArray)
       return 0;
-   if (!features.features.samplerAnisotropy) { // require anisotropic filtering support
-      //
-      // TODO: We don't actually need to REQUIRE anisotropic filtering, if we instead just 
-      //       remember whether the physical device we chose to use has support for it. We 
-      //       can just disable it (when setting up our logical device and when creating 
-      //       our texture sampler) if it's unsupported.
-      //
-      return 0;
-   }
+   //
    if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) { // dedicated graphics card (i.e. not integrated graphics)
       score += 10000;
    }
@@ -933,6 +944,27 @@ void DovahKitVulkanSubsystem::setupPhysicalDevice() {
    }
    if (highest_score > 0) {
       this->devices.physical = devices[highest_index];
+      //
+      // Identify support:
+      //
+      auto robustness = VkPhysicalDeviceRobustness2FeaturesEXT{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
+         .pNext = nullptr,
+      };
+      auto features = VkPhysicalDeviceFeatures2{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+         .pNext = &robustness,
+      };
+      VkPhysicalDeviceProperties properties{};
+      vkGetPhysicalDeviceProperties(this->devices.physical, &properties);
+      vkGetPhysicalDeviceFeatures2 (this->devices.physical, &features);
+      //
+      this->support.anisotropic_filtering = 0;
+      this->support.null_descriptors      = robustness.nullDescriptor;
+      //
+      if (features.features.samplerAnisotropy) {
+         this->support.anisotropic_filtering = properties.limits.maxSamplerAnisotropy;
+      }
    }
    if (this->devices.physical == VK_NULL_HANDLE) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to find a graphics card with Vulkan support.");
@@ -974,12 +1006,23 @@ void DovahKitVulkanSubsystem::setupLogicalDevice() {
       }
    }
    //
+   // Note that if we want device features or extensions, we generally have to request them 
+   // explicitly.
+   //
    auto deviceFeatures = VkPhysicalDeviceFeatures{
-      .samplerAnisotropy = VK_TRUE, 
+      .samplerAnisotropy = this->support.anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
+   };
+   //
+   auto robustness_extensions = VkPhysicalDeviceRobustness2FeaturesEXT{
+      .sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
+      .pNext               = nullptr,
+      .robustBufferAccess2 = VK_FALSE,
+      .robustImageAccess2  = VK_FALSE,
+      .nullDescriptor      = this->support.null_descriptors ? VK_TRUE : VK_FALSE,
    };
    auto indexing_extensions = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
       .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
-      .pNext = nullptr,
+      .pNext = &robustness_extensions,
       .descriptorBindingPartiallyBound          = VK_TRUE,
       .descriptorBindingVariableDescriptorCount = VK_TRUE,
       .runtimeDescriptorArray                   = VK_TRUE,
@@ -999,9 +1042,12 @@ void DovahKitVulkanSubsystem::setupLogicalDevice() {
    } else {
       create_info.enabledLayerCount = 0;
    }
+   //
    if (vkCreateDevice(this->devices.physical, &create_info, nullptr, &this->devices.logical) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create logical device.");
    }
+   //
+   // And lastly, let's get our queues:
    //
    vkGetDeviceQueue(this->devices.logical, indices.families.graphics,     0, &this->queues.graphics);
    vkGetDeviceQueue(this->devices.logical, indices.families.presentation, 0, &this->queues.presentation);
@@ -1377,7 +1423,7 @@ void DovahKitVulkanSubsystem::setupCommandPool() {
    auto indices   = QueueFamilies(this->devices.physical);
    auto pool_info = VkCommandPoolCreateInfo{
       .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-      .flags            = 0,
+      .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
       .queueFamilyIndex = indices.families.graphics,
    };
    if (vkCreateCommandPool(this->devices.logical, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
@@ -1396,6 +1442,48 @@ void DovahKitVulkanSubsystem::setupDepthBuffer() {
    this->transitionImageLayout(db.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 void DovahKitVulkanSubsystem::setupTextures() {
+   //
+   // If the "null descriptors" device feature is unavailable, then we can't write VK_NULL_HANDLE 
+   // to texture descriptors. Instead, we need to create a dummy "null" texture.
+   //
+   if (!this->support.null_descriptors) {
+      constexpr int w = 4;
+      constexpr int h = 4;
+      this->createVkImage(
+         w, h,
+         VK_FORMAT_R8G8B8A8_SRGB,
+         VK_IMAGE_TILING_OPTIMAL,
+         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+         this->null_texture.image,
+         this->null_texture.memory
+      );
+      //
+      {
+         VkDeviceSize image_size = w * h * 4;
+         //
+         VkBuffer       staging_buffer;
+         VkDeviceMemory staging_memory;
+         this->createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+         //
+         void* data;
+         vkMapMemory(this->devices.logical, staging_memory, 0, image_size, 0, &data);
+         memset(data, 0, image_size);
+         vkUnmapMemory(this->devices.logical, staging_memory);
+         //
+         this->transitionImageLayout(this->null_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+         this->copyBufferToImage(staging_buffer, this->null_texture.image, w, h);
+         this->transitionImageLayout(this->null_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+         //
+         // Discard the staging buffer:
+         //
+         vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+         vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
+      }
+      //
+      this->null_texture.view = this->createImageView(this->null_texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+   }
+   //
    auto& files = texture_files;
    auto  count = files.size();
    auto& list  = this->assets.textures;
@@ -1461,7 +1549,7 @@ void DovahKitVulkanSubsystem::setupTextures() {
       this->copyBufferToImage(staging_buffer, target.image, w, h);
       this->transitionImageLayout(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       //
-      target.view = createImageView(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+      target.view = this->createImageView(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
       //
       // Discard the staging buffer:
       //
@@ -1479,8 +1567,8 @@ void DovahKitVulkanSubsystem::setupTextureSampler() {
       .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
       .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
       .mipLodBias       = 0.0,
-      .anisotropyEnable = VK_TRUE,
-      .maxAnisotropy    = 8,
+      .anisotropyEnable = this->support.anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
+      .maxAnisotropy    = std::min(8.0F, this->support.anisotropic_filtering),
       .compareEnable    = VK_FALSE,
       .compareOp        = VK_COMPARE_OP_ALWAYS,
       .minLod           = 0.0,
@@ -1488,11 +1576,6 @@ void DovahKitVulkanSubsystem::setupTextureSampler() {
       .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
       .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
    };
-   {  // Constrain based on device capabilities.
-      VkPhysicalDeviceProperties properties{};
-      vkGetPhysicalDeviceProperties(this->devices.physical, &properties);
-      sampler_info.maxAnisotropy = std::min(sampler_info.maxAnisotropy, properties.limits.maxSamplerAnisotropy);
-   }
    if (vkCreateSampler(this->devices.logical, &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the texture sampler.");
    }
@@ -1507,6 +1590,7 @@ void DovahKitVulkanSubsystem::setupRenderedObjects() {
       auto& s   = src[i];
       auto& d   = dst[i];
       auto& vib = d.vertex_and_index_buffer;
+      d.texture_index = i; // TODO: in the future we'd load objects and textures together, basically; for our simple test, the default 3 objects and their textures load separately
       //
       VkDeviceSize buffer_size_v = sizeof(vertex)   * s.vertices.size();
       VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
@@ -1720,6 +1804,11 @@ void DovahKitVulkanSubsystem::setupDescriptorSets() {
          },
       };
       vkUpdateDescriptorSets(this->devices.logical, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+      //
+      // Mark textures as synchronized:
+      //
+      for (auto& entry : this->assets.textures)
+         entry.frame_dirty_flags &= ~(decltype(entry.frame_dirty_flags))(1 << i);
    }
 }
 void DovahKitVulkanSubsystem::setupCommandBuffers() {
@@ -1731,6 +1820,7 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
    // buffers for rendering (one per framebuffer).
    //
    this->command_buffers.resize(this->swap_chain.framebuffers.size());
+   this->command_buffer_is_out_of_date.resize(this->command_buffers.size());
    auto alloc_info = VkCommandBufferAllocateInfo{
       .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .commandPool        = this->command_pool,
@@ -1746,84 +1836,7 @@ void DovahKitVulkanSubsystem::setupCommandBuffers() {
    // but that's how the Vulkan tutorial wants me to do it, at least for now.
    //
    for (size_t i = 0; i < this->command_buffers.size(); i++) {
-      auto& command_buffer = this->command_buffers[i];
-      //
-      auto buffer_begin_info = VkCommandBufferBeginInfo{
-         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-         .flags = 0,
-         .pInheritanceInfo = nullptr,
-      };
-      if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to begin recording command buffer.");
-      }
-      //
-      auto clear_values = std::array{
-         //
-         // Values here should match the attachments we're using.
-         //
-         VkClearValue{ .color        = {0, 0, 0, 1} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
-         VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
-      };
-      auto pass_begin_info = VkRenderPassBeginInfo{
-         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = this->render_pass,
-         .framebuffer = this->swap_chain.framebuffers[i],
-         .renderArea  = {
-            .offset = { 0, 0 },
-            .extent = this->swap_chain.extent,
-         },
-         .clearValueCount = (uint32_t)clear_values.size(),
-         .pClearValues    = clear_values.data(),
-      };
-
-      vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-      {
-         using index_type = decltype(_model::indices)::value_type;
-         constexpr bool indices_are_uint32_t = std::is_same_v<uint32_t, index_type>;
-         constexpr bool indices_are_uint16_t = std::is_same_v<uint16_t, index_type>;
-         static_assert(indices_are_uint32_t || indices_are_uint16_t);
-         //
-         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
-         //
-         {
-            VkDeviceSize offset = 0;
-            for (size_t j = 0; j < this->rendered_objects.size(); ++j) {
-               auto& ro  = this->rendered_objects[j];
-               auto& vib = ro.vertex_and_index_buffer;
-               vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.buffer, &offset);
-               if constexpr (indices_are_uint32_t) {
-                  vkCmdBindIndexBuffer(command_buffer, vib.buffer, vib.indices_at, VK_INDEX_TYPE_UINT32);
-               } else if constexpr (indices_are_uint16_t) {
-                  vkCmdBindIndexBuffer(command_buffer, vib.buffer, vib.indices_at, VK_INDEX_TYPE_UINT16);
-               }
-               auto pc = push_constant{
-                  .texture_index = (int32_t)j, // TODO: object indices and texture indices are likely to differ in dynamic scenes (e.g. multiple objects using the same texture, etc.)
-                  .object_index  = (int32_t)j,
-               };
-               vkCmdPushConstants(
-                  command_buffer,
-                  this->pipeline_layout,
-                  VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                  0,
-                  sizeof(push_constant),
-                  (void*)&pc
-               );
-               //
-               // TODO: Descriptor sets will vary if the object uses different shaders, I think. For a dynamic scene, 
-               // I believe we can pre-sort the rendered objects by descriptor set, and then only (re)bind descriptor 
-               // sets when the current object's sets differ from those of the previous object.
-               //
-               vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, 1, &this->descriptor_sets[i], 0, nullptr);
-               //
-               vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
-            }
-         }
-      }
-      vkCmdEndRenderPass(command_buffer);
-
-      if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to record a command buffer.");
-      }
+      this->refillCommandBuffers(i);
    }
 }
 void DovahKitVulkanSubsystem::setupSemaphores() {
@@ -1918,6 +1931,174 @@ void DovahKitVulkanSubsystem::teardownSwapChain() {
    vkDestroySwapchainKHR(device, sc.handle, nullptr);
 }
 
+void DovahKitVulkanSubsystem::refillCommandBuffers(size_t which_frame) {
+   auto& command_buffer = this->command_buffers[which_frame];
+   this->command_buffer_is_out_of_date[which_frame] = false;
+   qDebug("Refilling command buffer for frame %u.", which_frame);
+   //
+   vkResetCommandBuffer(command_buffer, 0);
+   //
+   auto buffer_begin_info = VkCommandBufferBeginInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .flags = 0,
+      .pInheritanceInfo = nullptr,
+   };
+   if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to begin recording command buffer.");
+   }
+   //
+   auto clear_values = std::array{
+      //
+      // Values here should match the attachments we're using.
+      //
+      VkClearValue{ .color        = {0, 0, 0, 1} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
+      VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+   };
+   auto pass_begin_info = VkRenderPassBeginInfo{
+      .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+      .renderPass  = this->render_pass,
+      .framebuffer = this->swap_chain.framebuffers[which_frame],
+      .renderArea  = {
+         .offset = { 0, 0 },
+         .extent = this->swap_chain.extent,
+      },
+      .clearValueCount = (uint32_t)clear_values.size(),
+      .pClearValues    = clear_values.data(),
+   };
+
+   bool any_deleted_objects = false;
+
+   vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+   {
+      using index_type = decltype(_model::indices)::value_type;
+      constexpr bool indices_are_uint32_t = std::is_same_v<uint32_t, index_type>;
+      constexpr bool indices_are_uint16_t = std::is_same_v<uint16_t, index_type>;
+      static_assert(indices_are_uint32_t || indices_are_uint16_t);
+      //
+      vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
+      //
+      {
+         VkDeviceSize offset = 0;
+         for (size_t j = 0; j < this->rendered_objects.size(); ++j) {
+            auto& ro  = this->rendered_objects[j];
+            auto& vib = ro.vertex_and_index_buffer;
+            //
+            if (ro.empty()) // object is deleted
+               continue;
+            if (ro.pending_delete) {
+               any_deleted_objects = true;
+               continue;
+            }
+            //
+            vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.buffer, &offset);
+            if constexpr (indices_are_uint32_t) {
+               vkCmdBindIndexBuffer(command_buffer, vib.buffer, vib.indices_at, VK_INDEX_TYPE_UINT32);
+            } else if constexpr (indices_are_uint16_t) {
+               vkCmdBindIndexBuffer(command_buffer, vib.buffer, vib.indices_at, VK_INDEX_TYPE_UINT16);
+            }
+            auto pc = push_constant{
+               .texture_index = (int32_t)ro.texture_index,
+               .object_index  = (int32_t)j,
+            };
+            vkCmdPushConstants(
+               command_buffer,
+               this->pipeline_layout,
+               VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+               0,
+               sizeof(push_constant),
+               (void*)&pc
+            );
+            //
+            // TODO: Descriptor sets will vary if the object uses different shaders, I think. For a dynamic scene, 
+            // I believe we can pre-sort the rendered objects by descriptor set, and then only (re)bind descriptor 
+            // sets when the current object's sets differ from those of the previous object.
+            //
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, 1, &this->descriptor_sets[which_frame], 0, nullptr);
+            //
+            vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
+         }
+         qDebug("Command buffer: drew %u objects.", this->rendered_objects.size());
+      }
+   }
+   vkCmdEndRenderPass(command_buffer);
+
+   if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+      throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to record a command buffer.");
+   }
+
+   if (any_deleted_objects) {
+      uint32_t mask = (1 << this->swap_chain.images.size()) - 1;
+      //
+      for (size_t i = 0; i < this->rendered_objects.size(); ++i) {
+         auto& ro = this->rendered_objects[i];
+         if (ro.pending_delete) {
+            ro.frame_dirty_flags &= ~(1 << which_frame);
+            if ((ro.frame_dirty_flags & mask) == 0) {
+               this->deleteRenderedObject(i);
+            }
+         }
+      }
+   }
+}
+
+size_t DovahKitVulkanSubsystem::insertNewLoadedTexture() {
+   auto& list = this->assets.textures;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      if (item.image == VK_NULL_HANDLE && !item.pending_delete)
+         return i;
+   }
+   if (size >= max_available_textures)
+      return std::string::npos;
+   list.emplace_back();
+   return size;
+}
+size_t DovahKitVulkanSubsystem::insertNewRenderedObject() {
+   auto& list = this->rendered_objects;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      if (item.empty() && !item.pending_delete)
+         return i;
+   }
+   if (size >= max_rendered_objects)
+      return std::string::npos;
+   list.emplace_back();
+   this->anim_state.emplace_back(); // TODO: decouple anim states from rendered objects eventually
+   return size;
+}
+void DovahKitVulkanSubsystem::deleteRenderedObject(size_t index) {
+   qDebug("Attempting to delete rendered object #%u.", index);
+   auto& list = this->rendered_objects;
+   auto& ro   = list[index];
+   assert(ro.pending_delete);
+   {
+      uint32_t mask = (1 << this->swap_chain.images.size()) - 1;
+      assert((ro.frame_dirty_flags & mask) == 0 && "Do not delete rendered objects before their vertex-and-index buffers have been unhooked from all frames in flight.");
+   }
+   //
+   auto  device = this->devices.logical;
+   auto& vib    = ro.vertex_and_index_buffer;
+   if (vib.buffer == VK_NULL_HANDLE) {
+      assert(vib.memory == VK_NULL_HANDLE);
+   } else {
+      vkDestroyBuffer(device, vib.buffer, nullptr);
+      vkFreeMemory   (device, vib.memory, nullptr);
+      vib.buffer = VK_NULL_HANDLE;
+      vib.memory = VK_NULL_HANDLE;
+   }
+   vib.index_count    = 0;
+   vib.indices_at     = 0;
+   vib.allocated_size = 0;
+   //
+   ro.pending_delete    = false;
+   ro.frame_dirty_flags = -1;
+   ro.texture_index     = -1;
+   //
+   qDebug("Deleted rendered object #%u.", index);
+}
+
 void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
    auto& sc = this->swap_chain;
    assert(which < sc.images.size());
@@ -1970,7 +2151,9 @@ void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
       bool   any_dirty   = false;
       if constexpr (map_only_what_is_necessary) {
          for (size_t i = 0; i < count; ++i) {
-            auto& item = ro[i];
+            const auto& item = ro[i];
+            if (item.pending_delete || item.empty()) // TODO: could skip the "empty" check if we force the dirty-flags to 0 on empty items and set to -1 when filling them again
+               continue;
             if (item.frame_dirty_flags & flag) {
                if (!any_dirty) {
                   first_dirty = i;
@@ -1981,7 +2164,9 @@ void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
          }
       } else {
          for (size_t i = 0; i < count; ++i) {
-            auto& item = ro[i];
+            const auto& item = ro[i];
+            if (item.pending_delete || item.empty())
+               continue;
             if (item.frame_dirty_flags & flag) {
                first_dirty = i;
                any_dirty   = true;
@@ -1993,13 +2178,16 @@ void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
       if (any_dirty) {
          constexpr bool map_only_what_is_necessary = true;
          //
-         entry_type* data;
+         entry_type* data = nullptr;
          if constexpr (map_only_what_is_necessary) {
             VkDeviceSize offset = first_dirty * entry_size;
             VkDeviceSize length = (last_dirty - first_dirty + 1) * entry_size;
             vkMapMemory(this->devices.logical, memory, offset, length, 0, (void**)&data);
             for (size_t i = first_dirty; i <= last_dirty; ++i) {
-               if (!(ro[i].frame_dirty_flags & flag))
+               auto& item = ro[i];
+               if (item.pending_delete || item.empty())
+                  continue;
+               if (!(item.frame_dirty_flags & flag))
                   continue;
                auto& src = ro[i].shader_params;
                auto& dst = data[i - first_dirty];
@@ -2010,16 +2198,129 @@ void DovahKitVulkanSubsystem::updateShaderParameterBuffers(uint32_t which) {
          } else {
             vkMapMemory(this->devices.logical, memory, 0, size, 0, (void**)&data);
             for (size_t i = first_dirty; i < count; ++i) {
-               if (!(ro[i].frame_dirty_flags & flag))
+               auto& item = ro[i];
+               if (item.pending_delete || item.empty())
+                  continue;
+               if (!(item.frame_dirty_flags & flag))
                   continue;
                auto& src = ro[i].shader_params;
                auto& dst = data[i];
                memcpy(&dst, &src, entry_size);
                //
-               ro[i].frame_dirty_flags &= ~flag;
+               item.frame_dirty_flags &= ~flag;
             }
          }
          vkUnmapMemory(this->devices.logical, memory);
+      }
+   }
+}
+void DovahKitVulkanSubsystem::updateShaderTextureDescriptors(uint32_t which_frame) {
+   auto&    list = this->assets.textures;
+   uint32_t size = list.size();
+   //
+   struct pending_write {
+      uint32_t start = 0;
+      std::vector<VkDescriptorImageInfo> entries;
+      //
+      inline uint32_t end() const noexcept { return this->start + this->entries.size(); }
+   };
+   //
+   std::vector<pending_write> writes;
+   auto flag      = decltype(loaded_texture::frame_dirty_flags)(1) << which_frame;
+   bool deletions = false;
+   for (uint32_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      if (!(item.frame_dirty_flags & flag))
+         continue;
+      if (item.image == VK_NULL_HANDLE) // deleted texture
+         continue;
+      item.frame_dirty_flags &= ~flag;
+      auto view = item.view;
+      if (item.pending_delete) {
+         if (!this->support.null_descriptors) {
+            view = this->null_texture.view;
+            assert(view != VK_NULL_HANDLE && "Null descriptor handles aren't supported, but we never set up our null texture!");
+         } else {
+            view = VK_NULL_HANDLE;
+         }
+         deletions = true; // TODO: optimize by only setting this if the texture has no dirty flags (that correspond to actual frames) remaining
+      }
+      //
+      if (!writes.empty()) { // group consecutive textures into a single write, when possible
+         auto& back = writes.back();
+         if (back.end() == i) {
+            back.entries.emplace_back(VkDescriptorImageInfo{
+               .sampler     = nullptr,
+               .imageView   = view,
+               .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            });
+            continue;
+         }
+      }
+      writes.emplace_back(pending_write{
+         .start   = i,
+         .entries = {
+            {
+               .sampler     = nullptr,
+               .imageView   = view,
+               .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            }
+         },
+      });
+   }
+   if (writes.empty())
+      return;
+   //
+   auto& target_set = this->descriptor_sets[which_frame];
+   //
+   std::vector<VkWriteDescriptorSet> write_info(writes.size());
+   for (size_t i = 0; i < writes.size(); ++i) {
+      auto& src  = writes[i];
+      auto& info = writes[i].entries;
+      //
+      write_info[i] = VkWriteDescriptorSet{ // texture array
+         .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+         .dstSet          = target_set,
+         .dstBinding      = 3, // this should match the binding value in the shader
+         .dstArrayElement = src.start,
+         .descriptorCount = (uint32_t)info.size(),
+         .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+         .pImageInfo      = info.data(),
+      };
+   }
+   vkUpdateDescriptorSets(this->devices.logical, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+   //
+   // Updating a descriptor set will invalidate any command buffers using it; they must 
+   // be reset and their queue regenerated:
+   //
+   this->command_buffer_is_out_of_date[which_frame] = true;
+   //
+   if (deletions) {
+      //
+      // Textures were marked for delete; any textures that have been unhooked from all 
+      // frames in flight should be deleted.
+      //
+      uint32_t mask = (uint32_t(1) << this->swap_chain.images.size()) - 1; // bits set only for valid frames
+      //
+      auto device = this->devices.logical;
+      for (auto& item : list) {
+         if (!item.pending_delete)
+            continue;
+         if (item.frame_dirty_flags & mask) // texture hasn't been unhooked from all frames yet
+            continue;
+         qDebug("Attempting to delete texture: %s", qUtf8Printable(item.path));
+         assert(item.refcount == 0);
+         assert(item.image    != VK_NULL_HANDLE);
+         vkDestroyImageView(device, item.view,   nullptr);
+         vkDestroyImage    (device, item.image,  nullptr);
+         vkFreeMemory      (device, item.memory, nullptr);
+         item.view   = VK_NULL_HANDLE;
+         item.image  = VK_NULL_HANDLE;
+         item.memory = VK_NULL_HANDLE;
+         item.path.clear();
+         item.w = item.h = 0;
+         item.pending_delete = false;
+         qDebug(" - Texture deleted.");
       }
    }
 }
@@ -2070,6 +2371,10 @@ void DovahKitVulkanSubsystem::drawFrame() {
    }
    //
    this->updateShaderParameterBuffers(imageIndex);
+   this->updateShaderTextureDescriptors(imageIndex); // can invalidate command buffers, so must run before we check whether command buffers need refilling
+   if (this->command_buffer_is_out_of_date[imageIndex]) {
+      this->refillCommandBuffers(imageIndex);
+   }
    auto wait_semaphores   = std::array{ frame.semaphores.image_available };
    auto signal_semaphores = std::array{ frame.semaphores.render_finished };
    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -2173,4 +2478,217 @@ void DovahKitVulkanSubsystem::updateAnimationState() {
       t = glm::rotate(t, (elapsed / as[i].duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
       ro[i].set_transform(t);
    }
+}
+
+
+size_t DovahKitVulkanSubsystem::addTexture(const QString& texture_path) {
+   constexpr size_t fail = std::string::npos;
+   //
+   auto& list = this->assets.textures;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      if (list[i].path == texture_path) {
+         return i;
+      }
+   }
+   QImage texture;
+   {
+      //auto path      = QLatin1Literal("shaders/") + texture_path;
+      //auto bytearray = QResource(path).uncompressedData();
+      auto file = QFile(texture_path);
+      if (!file.open(QIODevice::ReadOnly)) {
+         qDebug("[DovahKitVulkanSubsystem][addRenderedObject] Failed to open test image.");
+         return fail;
+      }
+      auto bytearray = file.readAll();
+      auto buffer    = QBuffer(&bytearray);
+      buffer.open(QIODevice::ReadOnly);
+      QImageReader reader(&buffer);
+      if (texture_path.endsWith("png"))
+         reader.setFormat("PNG");
+      else if (texture_path.endsWith("bmp"))
+         reader.setFormat("BMP");
+      reader.read(&texture);
+      texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
+   }
+   if (texture.isNull()) {
+      qDebug("[DovahKitVulkanSubsystem][addRenderedObject] Failed to load test image.");
+      return fail;
+   }
+   uint32_t w = texture.width();
+   uint32_t h = texture.height();
+   //
+   // here, we may want to lock the texture asset list, if we were doing a multithreaded renderer
+   //
+   auto texture_index = this->insertNewLoadedTexture();
+   if (texture_index == std::string::npos) {
+      qDebug("Cannot add new rendered textures. Maximum has been reached.");
+      return fail;
+   }
+   auto& target = list[texture_index];
+   target.w    = w;
+   target.h    = h;
+   target.path = texture_path;
+   //
+   VkDeviceSize image_size = w * h * 4;
+   assert(image_size == texture.sizeInBytes());
+   //
+   // We're gonna be setting up our image on a staging buffer, and then transferring that 
+   // to the final (non-CPU-writeable) buffer.
+   //
+   VkBuffer       staging_buffer;
+   VkDeviceMemory staging_memory;
+   this->createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+   //
+   void* data;
+   vkMapMemory(this->devices.logical, staging_memory, 0, image_size, 0, &data);
+   memcpy(data, texture.constBits(), image_size);
+   vkUnmapMemory(this->devices.logical, staging_memory);
+   //
+   texture = QImage();
+
+   //
+   // Now let's create an image:
+   //
+   this->createVkImage(
+      w, h,
+      VK_FORMAT_R8G8B8A8_SRGB,
+      VK_IMAGE_TILING_OPTIMAL,
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      target.image,
+      target.memory
+   );
+   //
+   // Now we need to transfer our image from the staging buffer to the final buffer, 
+   // transitioning its layout to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL as we do. We 
+   // can use VK_IMAGE_LAYOUT_UNDEFINED as the "old layout" because we don't actually 
+   // care about the data (or lack thereof, really) in the freshly-created VkImage.
+   //
+   this->transitionImageLayout(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+   this->copyBufferToImage(staging_buffer, target.image, w, h);
+   this->transitionImageLayout(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+   //
+   target.view = createImageView(target.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+   //
+   // Discard the staging buffer:
+   //
+   vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+   vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
+   //
+   target.frame_dirty_flags = -1;
+   return texture_index;
+}
+void DovahKitVulkanSubsystem::addRenderedObject(const QString& texture_path) {
+   size_t texture_index = this->addTexture(texture_path);
+   if (texture_index == std::string::npos) {
+      qDebug("Cannot add new rendered object: failed to add its texture.");
+      return;
+   }
+   auto&  texture_item = this->assets.textures[texture_index];
+   size_t object_index = this->insertNewRenderedObject();
+   if (object_index == std::string::npos) {
+      qDebug("Cannot add new rendered objects. Maximum has been reached.");
+      if (texture_item.refcount == 0) {
+         //
+         // This texture was created for us, but we never got a chance to use it. Mark it 
+         // for deletion.
+         //
+         texture_item.pending_delete    = true;
+         texture_item.frame_dirty_flags = -1;
+      }
+      return;
+   }
+   QSize texture_size = { (int)texture_item.w, (int)texture_item.h }; // just used to size the quad so we maintain aspect ratio
+   {  // Create model
+      if (!texture_size.isValid())
+         texture_size = { 1, 1 };
+      //
+      auto& ro  = this->rendered_objects[object_index];
+      auto& vib = ro.vertex_and_index_buffer;
+      ro.texture_index = texture_index;
+      ++texture_item.refcount;
+      texture_item.pending_delete = false;
+      //
+      glm::vec3 position = {};
+      for (size_t j = 0; j < 3; ++j)
+         position[j] = ((float)rand() / RAND_MAX) * 5.0F - 2.5F;
+      //
+      float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
+      std::array<vertex, 4> vertices = {
+         vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0 } },
+         vertex{ {  0.5f, -hfwc, 0.0 }, { 0.0f, 1.0f, 0.0f }, { 0.0, 0.0 } },
+         vertex{ {  0.5f,  hfwc, 0.0 }, { 0.0f, 0.0f, 1.0f }, { 0.0, 1.0 } },
+         vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
+      };
+      std::array<uint16_t, 6> indices = { 0, 1, 2, 2, 3, 0 };
+      glm::mat4 transform = glm::translate(
+         glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+         position
+      );
+      //
+      VkDeviceSize buffer_size_v = sizeof(vertex)   * vertices.size();
+      VkDeviceSize buffer_size_i = sizeof(uint16_t) * indices.size();
+      VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+      //
+      VkBuffer       staging_buffer;
+      VkDeviceMemory staging_memory;
+      this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+      //
+      void* data;
+      vkMapMemory(this->devices.logical, staging_memory, 0, buffer_size, 0, &data);
+      memcpy((void*)((std::intptr_t)data), vertices.data(), buffer_size_v);
+      memcpy((void*)((std::intptr_t)data + buffer_size_v), indices.data(), buffer_size_i);
+      vkUnmapMemory(this->devices.logical, staging_memory);
+      //
+      vib.indices_at     = buffer_size_v;
+      vib.index_count    = indices.size();
+      vib.allocated_size = buffer_size;
+      //
+      this->createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vib.buffer, vib.memory);
+      this->copyBuffer(staging_buffer, vib.buffer, buffer_size);
+      ro.shader_params.transform = transform;
+      //
+      vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
+      vkFreeMemory(this->devices.logical, staging_memory, nullptr);
+      //
+      ro.frame_dirty_flags = -1;
+   }
+   //
+   for (size_t i = 0; i < this->command_buffer_is_out_of_date.size(); ++i) // range-based for-loops are broken for std::vector<bool>
+      this->command_buffer_is_out_of_date[i] = true;
+}
+void DovahKitVulkanSubsystem::removeRenderedObject() {
+   auto& list = this->rendered_objects;
+   if (list.empty())
+      return;
+   std::decay_t<decltype(list)>::reverse_iterator it;
+   for (it = list.rbegin(); it != list.rend(); ++it) {
+      auto& item = *it;
+      if (item.empty() || item.pending_delete)
+         continue;
+      break;
+   }
+   if (it == list.rend())
+      return;
+   auto& item = *it;
+   item.pending_delete    = true;
+   item.frame_dirty_flags = -1;
+   {
+      auto ti = item.texture_index;
+      if (ti >= 0) {
+         auto& list = this->assets.textures;
+         if (ti < list.size()) {
+            auto& tex = list[ti];
+            if (--tex.refcount == 0) {
+               tex.pending_delete    = true;
+               tex.frame_dirty_flags = -1;
+            }
+         }
+      }
+   }
+   item.texture_index = -1;
+   //
+   for (size_t i = 0; i < this->command_buffer_is_out_of_date.size(); ++i) // range-based for-loops are broken for std::vector<bool>
+      this->command_buffer_is_out_of_date[i] = true;
 }

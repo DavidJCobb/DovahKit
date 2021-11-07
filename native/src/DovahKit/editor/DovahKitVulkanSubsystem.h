@@ -135,24 +135,39 @@ class DovahKitVulkanSubsystem final : public QObject {
          VkImage     image = VK_NULL_HANDLE;
          VkImageView view  = VK_NULL_HANDLE;
          VkDeviceMemory memory = VK_NULL_HANDLE; // TODO: in the future, multiple textures should share a single VkDeviceMemory via suballocation
+         //
+         uint32_t w;
+         uint32_t h;
+         QString  path;
+         //
+         bool     pending_delete    = false; // unhook the texture from frames' descriptors; delete it when it's fully unhooked
+         uint32_t frame_dirty_flags = -1; // for normal textures: frames that need descriptors resynchronized. for pending-delete textures: frames that may still be using the texture in their descriptors.
+         uint32_t refcount          =  0;
       };
       struct rendered_object {
-         struct shader_parameters { // pass to the shader via a storage buffer
-            glm::mat4 transform;
-         };
-         //
-         struct {
-            VkBuffer       buffer;
-            VkDeviceMemory memory; // TODO: in the future, buffers should share VkDeviceMemory allocations via suballocations (we need to build a custom CPU-side heap for GPU memory, basically)
-            uint32_t       indices_at     = 0;
-            uint32_t       index_count    = 0;
-            VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
-         } vertex_and_index_buffer;
-         shader_parameters shader_params;
-         uint32_t frame_dirty_flags = -1;
-         //
-         inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
-         void set_transform(const glm::mat4&);
+         protected:
+            void _on_shader_parameter_change();
+         public:
+            struct shader_parameters { // pass to the shader via a storage buffer
+               glm::mat4 transform;
+            };
+            //
+            struct {
+               VkBuffer       buffer = VK_NULL_HANDLE;
+               VkDeviceMemory memory = VK_NULL_HANDLE; // TODO: in the future, buffers should share VkDeviceMemory allocations via suballocations (we need to build a custom CPU-side heap for GPU memory, basically)
+               uint32_t       indices_at     = 0;
+               uint32_t       index_count    = 0;
+               VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
+            } vertex_and_index_buffer;
+            shader_parameters shader_params;
+            uint32_t frame_dirty_flags = -1; // for normal objects: frames that need (shader_params) resynchronized. for pending-delete objects: frames that may still be using the vertex-and-index buffer
+            bool     pending_delete    = false; // unhook the object's vertex-and-index buffer from frames' command buffers; delete it when it's fully unhooked
+            int32_t  texture_index     = -1;
+            //
+            inline bool empty() const noexcept { return this->vertex_and_index_buffer.buffer == VK_NULL_HANDLE; }
+            //
+            inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
+            void set_transform(const glm::mat4&);
       };
 
       struct rendered_object_animation_state {
@@ -163,6 +178,10 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       bool initialized = false;
       bool failed      = false;
+      struct {
+         bool  null_descriptors      = false; // are we allowed to set descriptors to VK_NULL_HANDLE (presuming we also enable logical-device-side support)?
+         float anisotropic_filtering = 0;     // max supported value
+      } support;
       VkInstance       instance;
       VkRenderPass     render_pass;
       std::vector<shader_module> shader_modules;
@@ -174,12 +193,18 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkPipeline       pipeline;
       VkCommandPool    command_pool;
       std::vector<VkCommandBuffer> command_buffers;
+      std::vector<bool> command_buffer_is_out_of_date;
       VkSampler        texture_sampler;
       struct {
          VkImage        image;
          VkDeviceMemory memory;
          VkImageView    view;
       } depth_buffer;
+      struct {
+         VkImage        image;
+         VkDeviceMemory memory; // TODO: should share; implement a buffer allocator
+         VkImageView    view;
+      } null_texture; // for if the nullDescriptor feature isn't supported/enabled
       struct {
          VkSwapchainKHR handle;
          VkFormat       format;
@@ -280,6 +305,12 @@ class DovahKitVulkanSubsystem final : public QObject {
 
       void teardownSwapChain();
 
+      void refillCommandBuffers(size_t which_frame);
+
+      size_t insertNewLoadedTexture();  // grabs the first free entry in the list, or creates one. returns std::string::npos if no slot available.
+      size_t insertNewRenderedObject(); // grabs the first free entry in the list, or creates one. returns std::string::npos if no slot available.
+      void deleteRenderedObject(size_t index);
+
    public:
       void initialize(); // TODO: do stuff here instead of in the constructor
       void teardown();
@@ -290,11 +321,17 @@ class DovahKitVulkanSubsystem final : public QObject {
       inline bool isInitialized() const noexcept { return this->initialized; }
 
       void updateShaderParameterBuffers(uint32_t which);
+      void updateShaderTextureDescriptors(uint32_t which);
       void drawFrame();
       void renderWindowStateChange(QSize, bool visible);
 
       void setAnimationPaused(size_t, bool);
       void updateAnimationState();
+
+      // For testing:
+      size_t addTexture(const QString& texture_path); // returns std::string::npos if loading fails. does NOT increment the texture refcount; do that yourself!
+      void addRenderedObject(const QString& texture_path); // load a texture and add a quad with it
+      void removeRenderedObject(); // remove the last rendered object in the list
 
    signals:
       void ready();
