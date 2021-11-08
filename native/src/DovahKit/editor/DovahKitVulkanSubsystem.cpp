@@ -315,14 +315,14 @@ DovahKitVulkanSubsystem::DovahKitVulkanSubsystem() {
    this->frames_in_flight.resize(frame_in_flight_count);
    //
    this->descriptor_set_layout.bindings = {
-      DovahKit::vulkan::descriptor_binding{ // uniform buffer object
+      vulkanDK::descriptor_binding{ // uniform buffer object
          .index              = 0,
          .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
          .count              = 1,
          .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
          .immutable_samplers = nullptr,
       },
-      DovahKit::vulkan::descriptor_binding{ // texture sampler
+      vulkanDK::descriptor_binding{ // texture sampler
          .index              = 1,
          .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
          .count              = 1,
@@ -330,14 +330,14 @@ DovahKitVulkanSubsystem::DovahKitVulkanSubsystem() {
          .immutable_samplers = nullptr,
          //.is_global          = true,
       },
-      DovahKit::vulkan::descriptor_binding{ // storage buffer object: rendered_object::shader_parameters
+      vulkanDK::descriptor_binding{ // storage buffer object: rendered_object::shader_parameters
          .index              = 2,
          .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
          .count              = 1,
          .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
          .immutable_samplers = nullptr,
       },
-      DovahKit::vulkan::descriptor_binding{ // texture array
+      vulkanDK::descriptor_binding{ // texture array
          .index              = 3,
          .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
          .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,

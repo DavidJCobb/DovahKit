@@ -1,7 +1,7 @@
 #include "descriptor_definitions.h"
 #include <stdexcept>
 
-namespace DovahKit::vulkan {
+namespace vulkanDK {
    VkDescriptorSetLayoutBinding descriptor_binding::setup_params() const {
       return VkDescriptorSetLayoutBinding{
          .binding            = this->index,

@@ -1,21 +1,13 @@
 #pragma once
 #include <vector>
-#include <QByteArray>
-#include "device.h"
+#include "_vulkan.h"
+#include "_util.h"
+#include "shader_module.h"
 
-namespace DovahKit::vulkan {
-   class shader_module {
-      protected:
-         device& owner;
-      public:
-         QByteArray     compiled;
-         VkShaderModule handle = VK_NULL_HANDLE;
+namespace vulkanDK {
+   class context;
 
-         shader_module(device&, const QByteArray&);
-         ~shader_module();
-   };
-
-   class material {
+   class material_definition {
       public:
          struct stage_info {
             shader_module* module = nullptr;
@@ -25,27 +17,25 @@ namespace DovahKit::vulkan {
             const VkSpecializationInfo*      specialization_info = nullptr; // can pass parameters to the shader
          };
 
-      protected:
-         device& owner;
       public:
-         material(device&);
-         ~material();
-
          std::vector<stage_info> stages;
 
          void add_stage(const stage_info&);
 
          std::vector<VkPipelineShaderStageCreateInfo> stage_create_info() const;
-
-         inline const VkDevice logical_device() const noexcept { return this->owner.logical; }
    };
 
-   class material_per_swap_chain {
+   class material : no_copy {
       protected:
-         material& source;
+         material_definition* source = nullptr;
       public:
-         material_per_swap_chain(material&);
-         ~material_per_swap_chain();
+         material(context&, material_definition*);
+         ~material();
+
+         material(material&&) noexcept;
+         material& operator=(material&&) noexcept;
+
+         context* owner = nullptr;
 
          struct {
             VkPipelineLayout layout = VK_NULL_HANDLE;

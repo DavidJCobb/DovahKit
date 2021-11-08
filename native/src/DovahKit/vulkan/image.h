@@ -1,15 +1,58 @@
 #pragma once
-#include "device.h"
+#include "_vulkan.h"
+#include "_util.h"
 
-namespace DovahKit::vulkan {
-   class image {
-      protected;
-         device& owner;
+namespace vulkanDK {
+   class context;
+   class device;
+
+   class image : no_copy {
       public:
-         VkImage     handle = VK_NULL_HANDLE;
-         VkImageView view   = VK_NULL_HANDLE;
-
+         image() {}
          image(device&);
          ~image();
+
+         image(image&&) noexcept;
+         image& operator=(image&&) noexcept;
+
+         device* owner  = nullptr;
+         VkImage handle = VK_NULL_HANDLE;
+   };
+
+   class image_and_view : no_copy {
+      public:
+         ~image_and_view();
+      
+         image       content;
+         VkImageView view = VK_NULL_HANDLE;
+
+         void create_basic_view(VkFormat, VkImageAspectFlags);
+         void destroy_view();
+   };
+
+   class concrete_image : public image_and_view {
+      public:
+         concrete_image(context& c) : owner(&c) {}
+         ~concrete_image();
+
+         context* owner = nullptr;
+         VkImage        handle = VK_NULL_HANDLE;
+         VkImageView    view   = VK_NULL_HANDLE;
+         VkDeviceMemory memory = VK_NULL_HANDLE;
+         //
+         VkFormat format = VK_FORMAT_UNDEFINED;
+         struct {
+            uint32_t w = 0;
+            uint32_t h = 0;
+         } size;
+
+         void create_image(uint32_t w, uint32_t h, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags);
+         void create_basic_view(VkFormat, VkImageAspectFlags);
+
+         void copy_content_from_buffer(VkBuffer);
+
+         void transition_layout(VkImageLayout old_layout, VkImageLayout new_layout);
+
+         void teardown();
    };
 }

@@ -3,96 +3,88 @@
 #include <QPointer>
 #include <QWidget>
 #include "device.h"
+#include "_vulkan.h"
+#include "_util.h"
+#include "command_buffer.h"
+#include "descriptor_definitions.h"
+#include "image.h"
+#include "shader_module.h"
+#include "swap_chain.h"
 
-namespace DovahKit::vulkan {
-   class context;
-   class material;
+// scene:
+#include <chrono>
+#include "loaded_texture.h"
+#include "rendered_mesh.h"
 
-   class surface {
+namespace vulkanDK {
+   class device;
+   class render_pass;
+   class swap_chain;
+
+   class context : no_copy {
       public:
-         VkSurfaceKHR      handle;
-         QPointer<QWidget> widget;
-         
-         QSize last_size;
-         bool  resized = false;
-         bool  visible = false;
-
-         uint32_t width() const;
-         uint32_t height() const;
-         inline VkExtent2D extent() const { return VkExtent2D{ this->width(), this->height() }; }
-   };
-
-   
-   struct swap_chain_support_info {
-      VkSurfaceCapabilitiesKHR        capabilities;
-      std::vector<VkSurfaceFormatKHR> formats;
-      std::vector<VkPresentModeKHR>   presentation_modes;
-      //
-      swap_chain_support_info() {}
-      swap_chain_support_info(VkPhysicalDevice, const surface&);
-   };
-
-   class swap_chain {
-      public:
-         context*       owner  = nullptr;
-         VkSwapchainKHR handle = VK_NULL_HANDLE;
-         VkFormat       format;
-         VkExtent2D     extent;
-         VkRenderPass   render_pass = VK_NULL_HANDLE;
-         struct {
-            VkPipelineLayout layout = VK_NULL_HANDLE;
-            VkPipeline       handle = VK_NULL_HANDLE;
-         } pipeline;
-         std::vector<VkImage>        images;
-         std::vector<VkImageView>    views;
-         std::vector<VkFramebuffer>  framebuffers;
-         std::vector<VkBuffer>       uniform_buffers;
-         std::vector<VkDeviceMemory> uniform_buffer_memory;
-         //
-         std::vector<VkFence> images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
-
-         std::vector<material*> known_materials;
-
-      public:
-         swap_chain();
-         ~swap_chain();
-
-         void set_owner(context*);
-
-         void add_material(material*);
-         void remove_material(material*);
-
-         void setup();
-         void teardown(); // TODO: needs to somehow notify dependent systems, e.g. rendered_objects which have one descriptor of each type per swap chain image, and one descriptor set layout per swap chain image
-
-         inline size_t image_count() const noexcept { return this->images.size(); }
-
-      protected:
-         void setup_basics();
-         void setup_views();
-         void setup_render_pass();
-         void setup_pipeline(); // requires knowledge of the dimensions to render to; requires the descriptor set layout
-         void setup_depth_buffer();
-         void setup_framebuffers();
-         void setup_uniform_buffers(); // requires one buffer per swap chain image
-   };
-
-   class context {
-      public:
-         device&  devices;
-         surface* surface = nullptr;
-         struct {
-            VkQueue graphics;
-            VkQueue presentation;
-         } queues;
-         swap_chain*   swap_chain   = nullptr;
-         VkCommandPool command_pool = VK_NULL_HANDLE;
-
          context(device&);
          ~context();
 
-         void set_surface(surface*);
+         device& owner;
+         descriptor_set_layout descriptor_set_definition;
+         //
+         VkCommandPool    command_pool    = VK_NULL_HANDLE;
+         VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
+         //
+         VkSurfaceKHR surface = VK_NULL_HANDLE;
+         struct {
+            QPointer<QWidget> widget;
+            bool resized = false;
+            bool visible = false;
+         } ui;
+         VkExtent2D extent;
+         //
+         swap_chain swap_chain;
+         std::vector<render_pass*>   render_passes;
+         std::vector<shader_module*> shader_modules;
+         VkSampler texture_sampler = VK_NULL_HANDLE;
+         concrete_image null_texture;
+         //
+         struct {
+            std::chrono::steady_clock::time_point last_update;
+            std::vector<rendered_mesh>  meshes;
+            std::vector<loaded_texture> textures;
+         } scene;
+
+         inline VkDevice logical_device() const noexcept { return this->owner.logical; }
+         inline VkPhysicalDevice physical_device() const noexcept { return this->owner.physical; }
+
+         void setup();
+
+         void handle_resize();
+
+         VkExtent2D current_surface_size() const;
+         VkExtent2D desired_surface_size() const;
+
+         template<typename T> inline void do_single_commands(T func) {
+            (func)(this->_begin_one_time_commands());
+            this->_end_one_time_commands();
+         }
+
+         size_t add_texture(const QString& texture_path);
+         void add_mesh(const QString& texture_path);
+         void remove_mesh(size_t);
+         void remove_last_mesh();
 
       protected:
+         void _setup_command_pool();
+         void _setup_descriptor_pool(); // requires awareness of the frame-in-flight count
+         void _setup_shader_modules();
+         void _setup_texture_sampler();
+         //
+         void _create_null_texture(); // requires command pool
+         void _setup_initial_scene(); // requires command pool for textures
+         void _initialize_descriptor_sets();
+         //
+         void _setup_render_passes(); // requires awareness of the swap chain format; must rebuild if that format has changed
+
+         command_buffer _begin_one_time_commands();
+         void _end_one_time_commands(command_buffer&);
    };
 }

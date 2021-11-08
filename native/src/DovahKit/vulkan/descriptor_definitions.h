@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#define VK_USE_PLATFORM_WIN32_KHR
-#include <vulkan/vulkan.h>
+#include "_vulkan.h"
+#include "_util.h"
 
-namespace DovahKit::vulkan {
+namespace vulkanDK {
    class descriptor_binding {
       public:
          uint32_t                 index;
@@ -14,7 +14,7 @@ namespace DovahKit::vulkan {
          VkShaderStageFlags       shader_stages;
          const VkSampler*         immutable_samplers = nullptr;
          //
-         bool is_global = false; // if false, then we want (count * frames) descriptors; else, (count) descriptors
+         bool is_global = false; // TODO: remove this field
       
          VkDescriptorSetLayoutBinding setup_params() const;
    };

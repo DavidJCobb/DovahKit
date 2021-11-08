@@ -185,10 +185,9 @@ class DovahKitVulkanSubsystem final : public QObject {
       VkInstance       instance;
       VkRenderPass     render_pass;
       std::vector<shader_module> shader_modules;
-      std::vector<VkDescriptorImageInfo>      descriptor_texture_infos;
-      DovahKit::vulkan::descriptor_set_layout descriptor_set_layout;
-      VkDescriptorPool                        descriptor_pool;
-      std::vector<VkDescriptorSet>            descriptor_sets;
+      vulkanDK::descriptor_set_layout descriptor_set_layout;
+      VkDescriptorPool                descriptor_pool;
+      std::vector<VkDescriptorSet>    descriptor_sets;
       VkPipelineLayout pipeline_layout;
       VkPipeline       pipeline;
       VkCommandPool    command_pool;
