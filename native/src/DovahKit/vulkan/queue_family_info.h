@@ -4,7 +4,9 @@
 #include "_vulkan.h"
 
 namespace vulkanDK {
-   class context;
+   class physical_device;
+   class surface;
+   class surface_renderer;
 
    class queue_family_info {
       public:
@@ -26,7 +28,8 @@ namespace vulkanDK {
          static constexpr size_t         unique_family_count = std::tuple_size_v<decltype(families.list)>;
          static constexpr decltype(mask) all_mask_bits_set   = (1 << unique_family_count) - 1;
 
-         queue_family_info(context&);
+         queue_family_info(surface_renderer&);
+         queue_family_info(const physical_device&, const surface&);
          bool has(const queue_index_t& entry) const noexcept;
 
          inline bool has_index(size_t i) const noexcept {

@@ -18,6 +18,10 @@ namespace vulkanDK {
          struct shader_parameters { // pass to the shader via a storage buffer
             glm::mat4 transform;
          };
+         struct push_constant {
+            int32_t object_index;
+            int32_t texture_index;
+         };
          
          struct {
             buffer         buffer;
@@ -33,9 +37,12 @@ namespace vulkanDK {
          //
          mesh_animation_state* anim_state = nullptr;
          
-         inline bool empty() const noexcept { return this->vertex_and_index_buffer.buffer == VK_NULL_HANDLE; }
+         inline bool empty() const noexcept { return this->vertex_and_index_buffer.buffer.empty(); }
          
          inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
          void set_transform(const glm::mat4&);
+
+         // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
+         void draw_call(VkCommandBuffer);
    };
 }

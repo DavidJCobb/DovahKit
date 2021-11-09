@@ -5,6 +5,9 @@
 #include "command_buffer.h"
 #include "context.h"
 #include "device.h"
+#include "logical_device.h"
+#include "physical_device.h"
+#include "surface_renderer.h"
 
 namespace {
    VkResult _create_basic_view(VkDevice device, VkImage& image, VkImageView& view, VkFormat format, VkImageAspectFlags aspect) {
@@ -95,7 +98,7 @@ namespace vulkanDK {
    void concrete_image::create_image(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
       assert(this->handle == VK_NULL_HANDLE);
       assert(this->owner);
-      auto device = this->owner->logical_device();
+      auto device = this->owner->device.handle;
       //
       auto image_info = VkImageCreateInfo{
          .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -128,7 +131,7 @@ namespace vulkanDK {
       auto alloc_info = VkMemoryAllocateInfo{
          .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
          .allocationSize  = memRequirements.size,
-         .memoryTypeIndex = this->owner->owner.find_memory_type(memRequirements.memoryTypeBits, properties),
+         .memoryTypeIndex = this->owner->device.physical.find_memory_type(memRequirements.memoryTypeBits, properties),
       };
       if (vkAllocateMemory(device, &alloc_info, nullptr, &this->memory) != VK_SUCCESS) {
          throw std::runtime_error("failed to allocate image memory!");
@@ -139,7 +142,7 @@ namespace vulkanDK {
    void concrete_image::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto device = this->owner->logical_device();
+      auto device = this->owner->device.handle;
       auto result = _create_basic_view(device, this->handle, this->view, format, aspect);
       if (result != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::concrete_image::create_basic_view] Failed to create texture image view.");
@@ -261,7 +264,7 @@ namespace vulkanDK {
       if (this->handle == VK_NULL_HANDLE)
          return;
       assert(this->owner);
-      auto* device = this->owner->logical_device();
+      auto device = this->owner->device.handle;
       vkDestroyImageView(device, this->view,   nullptr);
       vkDestroyImage    (device, this->handle, nullptr);
       vkFreeMemory      (device, this->memory, nullptr);

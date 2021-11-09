@@ -1,72 +1,56 @@
 #pragma once
-#include <vector>
-#include <QPointer>
-#include <QWidget>
-#include "device.h"
 #include "_vulkan.h"
 #include "_util.h"
 #include "command_buffer.h"
 #include "descriptor_definitions.h"
 #include "image.h"
-#include "shader_module.h"
 #include "swap_chain.h"
-
-// scene:
-#include <chrono>
-#include "loaded_texture.h"
-#include "rendered_mesh.h"
+#include "scene.h"
 
 namespace vulkanDK {
-   class device;
+   class logical_device;
    class render_pass;
-   class swap_chain;
+   class shader_module;
+   class surface;
 
-   class context : no_copy {
+   // formerly "context"
+   class surface_renderer {
       public:
-         context(device&);
-         ~context();
+         surface_renderer(surface&, logical_device&);
+         ~surface_renderer();
 
-         device& owner;
-         descriptor_set_layout descriptor_set_definition;
+         surface&        target;
+         logical_device& device;
+         VkExtent2D      surface_extent; // last extent we set ourselves up for
          //
          VkCommandPool    command_pool    = VK_NULL_HANDLE;
          VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
-         //
-         VkSurfaceKHR surface = VK_NULL_HANDLE;
-         struct {
-            QPointer<QWidget> widget;
-            bool resized = false;
-            bool visible = false;
-         } ui;
-         VkExtent2D extent;
+         descriptor_set_layout descriptor_set_definition;
          //
          swap_chain swap_chain;
          std::vector<render_pass*>   render_passes;
          std::vector<shader_module*> shader_modules;
-         VkSampler texture_sampler = VK_NULL_HANDLE;
+         VkSampler      texture_sampler = VK_NULL_HANDLE;
          concrete_image null_texture;
          //
-         struct {
-            std::chrono::steady_clock::time_point last_update;
-            std::vector<rendered_mesh>  meshes;
-            std::vector<loaded_texture> textures;
-         } scene;
-
-         inline VkDevice logical_device() const noexcept { return this->owner.logical; }
-         inline VkPhysicalDevice physical_device() const noexcept { return this->owner.physical; }
+         scene scene;
 
          void setup();
+         void teardown();
 
          void handle_resize();
 
-         VkExtent2D current_surface_size() const;
-         VkExtent2D desired_surface_size() const;
+         void draw_next_frame();
 
          template<typename T> inline void do_single_commands(T func) {
             (func)(this->_begin_one_time_commands());
             this->_end_one_time_commands();
          }
 
+         VkExtent2D desired_surface_size() const;
+         VkFormat find_depth_format() const;
+
+         // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);
          void add_mesh(const QString& texture_path);
          void remove_mesh(size_t);

@@ -1,9 +1,8 @@
 #pragma once
 #include "_vulkan.h"
-#include "context.h"
 
 namespace vulkanDK {
-   class context;
+   class surface_renderer;
 
    struct surface_support_info {
       VkSurfaceCapabilitiesKHR        capabilities;
@@ -11,6 +10,6 @@ namespace vulkanDK {
       std::vector<VkPresentModeKHR>   presentation_modes;
       
       surface_support_info() {}
-      surface_support_info(context&);
+      surface_support_info(surface_renderer&);
    };
 }

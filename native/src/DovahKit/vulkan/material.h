@@ -5,7 +5,7 @@
 #include "shader_module.h"
 
 namespace vulkanDK {
-   class context;
+   class surface_renderer;
 
    class material_definition {
       public:
@@ -29,13 +29,13 @@ namespace vulkanDK {
       protected:
          material_definition* source = nullptr;
       public:
-         material(context&, material_definition*);
+         material(surface_renderer&, material_definition*);
          ~material();
 
          material(material&&) noexcept;
          material& operator=(material&&) noexcept;
 
-         context* owner = nullptr;
+         surface_renderer* owner = nullptr;
 
          struct {
             VkPipelineLayout layout = VK_NULL_HANDLE;

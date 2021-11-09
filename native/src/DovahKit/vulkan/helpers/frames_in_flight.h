@@ -28,9 +28,16 @@ namespace vulkanDK {
 
          inline bool any_set() const noexcept { return (this->mask & all_bits) != 0; }
          inline void set_all() { this->mask = all_bits; }
+         inline void clear_all() { this->mask = 0; }
 
          inline bool test(size_t i) const noexcept { return (this->mask & (1 << i)) != 0; }
          inline void set(size_t i) { this->mask |= (1 << i); }
          inline void clear(size_t i) { this->mask &= ~(1 << i); }
+
+         mask_type operator&(mask_type i) const noexcept { return this->mask & i; }
+         frames_in_flight_mask& operator&=(mask_type i) {
+            this->mask &= i;
+            return *this;
+         }
    };
 }

@@ -4,7 +4,7 @@
 #include "_util.h"
 
 namespace vulkanDK {
-   class context;
+   class surface_renderer;
 
    class render_pass : no_copy {
       public:
@@ -18,12 +18,12 @@ namespace vulkanDK {
 
 
       public:
-         render_pass(context&);
+         render_pass(surface_renderer&);
          ~render_pass();
 
          render_pass(render_pass&&) noexcept;
 
-         context& owner;
+         surface_renderer& owner;
          //
          std::vector<VkAttachmentDescription> attachments;
          struct {

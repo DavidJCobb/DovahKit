@@ -143,24 +143,6 @@ namespace DovahKit::vulkan {
          void copy_to(buffer&);
    };
 
-   // scene config
-   class swap_chain {
-      public:
-         VkSwapchainKHR handle;
-         VkFormat       format;
-         VkExtent2D     extent;
-         std::vector<VkImage>        images;
-         std::vector<VkImageView>    views;
-         std::vector<VkFramebuffer>  framebuffers;
-         std::vector<VkBuffer>       uniform_buffers;
-         std::vector<VkDeviceMemory> uniform_buffer_memory;
-         //
-         std::vector<VkFence> images_in_flight; // handles. if swap_chain.images[i] is in flight, then swap_chain.images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
-
-      public:
-         inline size_t image_count() const noexcept { return this->images.size(); }
-   };
-
    struct vertex {
       glm::vec3 pos;
       glm::vec3 color;

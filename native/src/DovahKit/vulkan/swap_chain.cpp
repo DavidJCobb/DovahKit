@@ -1,8 +1,11 @@
 #include "swap_chain.h"
 #include <cassert>
 #include "config/frames_in_flight.h"
+#include "logical_device.h"
 #include "queue_family_info.h"
 #include "render_pass.h"
+#include "surface.h"
+#include "surface_renderer.h"
 #include "surface_support_info.h"
 
 namespace {
@@ -10,10 +13,13 @@ namespace {
 }
 
 namespace vulkanDK {
-   swap_chain::swap_chain(context& c) : owner(c) {
+   swap_chain::swap_chain(surface_renderer& c) : owner(c), depth_buffer(c) {
       this->frames_in_flight.resize(config::frames_in_flight_count);
    }
-   swap_chain::~swap_chain();
+   swap_chain::~swap_chain() {
+      this->teardown();
+      this->frames_in_flight.clear();
+   }
 
    void swap_chain::setup() {
       auto ssi = surface_support_info(this->owner);
@@ -55,7 +61,7 @@ namespace vulkanDK {
             extent.width  = std::clamp(extent.width,  min_e.width,  max_e.width);
             extent.height = std::clamp(extent.height, min_e.height, max_e.height);
          }
-         this->owner.extent = extent;
+         this->owner.surface_extent = extent;
       #pragma endregion
       #pragma region choose image count
          imageCount = ssi.capabilities.minImageCount + 1;
@@ -66,7 +72,7 @@ namespace vulkanDK {
       //
       auto create_info = VkSwapchainCreateInfoKHR{
          .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-         .surface          = this->owner.surface,
+         .surface          = this->owner.target.handle,
          .minImageCount    = imageCount,
          .imageFormat      = surfaceFormat.format,
          .imageColorSpace  = surfaceFormat.colorSpace,
@@ -97,7 +103,7 @@ namespace vulkanDK {
       create_info.clipped        = VK_TRUE;        // disable rendering of pixels covered (e.g. by other windows); good optimization, but prevents querying the colors of those pixels (e.g. for saving snapshots)
       create_info.oldSwapchain   = VK_NULL_HANDLE; // must be specified when rebuilding a swap chain; keep null for making a new swap chain
       //
-      if (vkCreateSwapchainKHR(this->owner.logical_device(), &create_info, nullptr, &this->handle) != VK_SUCCESS) {
+      if (vkCreateSwapchainKHR(this->owner.device.handle, &create_info, nullptr, &this->handle) != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::swap_chain::setup] Failed to create swap chain.");
       }
       //
@@ -107,20 +113,29 @@ namespace vulkanDK {
       this->_setup_images();
       this->_setup_framebuffers();
       //
+      // Set up frames in flight:
+      //
+      {
+         auto& list = this->frames_in_flight;
+         auto  size = list.size();
+         for (size_t i = 0; i < size; ++i)
+            list[i].setup(this->owner, i);
+      }
+      //
       // Set up materials:
       //
       this->_setup_materials();
    }
    void swap_chain::_setup_depth_buffer() {
-      auto  extent = this->owner.extent;
-      auto  format = this->owner.owner.find_depth_format();
+      auto  extent = this->owner.surface_extent;
+      auto  format = this->owner.find_depth_format();
       auto& db     = this->depth_buffer;
       db.create_image(extent.width, extent.height, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
       db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
    }
    void swap_chain::_setup_images() {
-      auto     device = this->owner.logical_device();
+      auto     device = this->owner.device.handle;
       uint32_t image_count;
       //
       // Get the number of swapchain images:
@@ -145,8 +160,8 @@ namespace vulkanDK {
       }
    }
    void swap_chain::_setup_framebuffers() {
-      auto device = this->owner.logical_device();
-      auto extent = this->owner.extent;
+      auto device = this->owner.device.handle;
+      auto extent = this->owner.surface_extent;
       auto r_pass = this->owner.render_passes[0]->handle;
       //
       auto count = this->images.size();
@@ -187,11 +202,56 @@ namespace vulkanDK {
    void swap_chain::teardown() {
       this->materials.clear();
       //
+      for (auto& fb : this->framebuffers) {
+         vkDestroyFramebuffer(this->owner.device.handle, fb, nullptr);
+         fb = VK_NULL_HANDLE;
+      }
       for (auto& image : this->images) {
          image.destroy_view();
       }
       this->depth_buffer.teardown();
-      vkDestroySwapchainKHR(this->owner.logical_device(), this->handle, nullptr);
+      vkDestroySwapchainKHR(this->owner.device.handle, this->handle, nullptr);
       this->handle = VK_NULL_HANDLE;
+   }
+
+   swap_chain::pending_frame swap_chain::advance_frame() {
+      constexpr auto no_timeout = UINT64_MAX;
+      //
+      auto& frame = this->frames_in_flight[this->current_frame];
+      this->current_frame = (this->current_frame + 1) % this->frames_in_flight.size();
+      vkWaitForFences(this->owner.device.handle, 1, &frame.fence, VK_TRUE, no_timeout);
+      //
+      auto result = pending_frame{ frame };
+      result.result = vkAcquireNextImageKHR(this->owner.device.handle, this->handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &result.sc_image_index);
+      return result;
+   }
+   void swap_chain::confirm_frame(pending_frame& pf) {
+      {
+         auto& handle = this->images_in_flight[pf.sc_image_index];
+         //
+         // Check if a previous frame is using this image.
+         //
+         if (handle != VK_NULL_HANDLE) {
+            vkWaitForFences(this->owner.device.handle, 1, &handle, VK_TRUE, UINT64_MAX);
+         }
+         //
+         // Mark the image as now being in use by this frame.
+         //
+         handle = pf.frame.fence;
+      }
+      pf.frame.draw(this->framebuffers[pf.sc_image_index]);
+      //
+      auto signal_semaphores  = std::array{ pf.frame.semaphores.render_finished };
+      auto swap_chain_handles = std::array{ this->handle };
+      auto presentation_info  = VkPresentInfoKHR{
+         .sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+         .waitSemaphoreCount  = signal_semaphores.size(),
+         .pWaitSemaphores     = signal_semaphores.data(),
+         .swapchainCount      = swap_chain_handles.size(),
+         .pSwapchains         = swap_chain_handles.data(),
+         .pImageIndices       = &pf.sc_image_index,
+         .pResults            = nullptr,
+      };
+      pf.result = vkQueuePresentKHR(this->owner.device.queues.presentation, &presentation_info);
    }
 }

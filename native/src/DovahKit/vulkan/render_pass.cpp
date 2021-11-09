@@ -1,8 +1,9 @@
 #include "render_pass.h"
-#include "context.h"
+#include "logical_device.h"
+#include "surface_renderer.h"
 
 namespace vulkanDK {
-   render_pass::render_pass(context& c) : owner(c) {
+   render_pass::render_pass(surface_renderer& c) : owner(c) {
    }
    render_pass::~render_pass() {
       this->teardown();
@@ -39,13 +40,13 @@ namespace vulkanDK {
          .dependencyCount = (uint32_t)this->subpasses.dependencies.size(),
          .pDependencies   = this->subpasses.dependencies.data(),
       };
-      if (vkCreateRenderPass(this->owner.logical_device(), &render_pass_info, nullptr, &this->handle) != VK_SUCCESS) {
+      if (vkCreateRenderPass(this->owner.device.handle, &render_pass_info, nullptr, &this->handle) != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::render_pass] Failed to create render pass.");
       }
    }
    void render_pass::teardown() {
       if (this->handle == VK_NULL_HANDLE)
          return;
-      vkDestroyRenderPass(this->owner.logical_device(), this->handle, nullptr);
+      vkDestroyRenderPass(this->owner.device.handle, this->handle, nullptr);
    }
 }

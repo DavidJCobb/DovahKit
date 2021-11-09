@@ -1,6 +1,7 @@
 #include "material.h"
 #include <stdexcept>
-#include "context.h"
+#include "logical_device.h"
+#include "surface_renderer.h"
 
 namespace vulkanDK {
    #pragma region material_definition
@@ -29,10 +30,10 @@ namespace vulkanDK {
    #pragma endregion
 
    #pragma region material
-   material::material(context& c, material_definition* d) : source(d), owner(&c) {
+   material::material(surface_renderer& c, material_definition* d) : source(d), owner(&c) {
    }
    material::~material() {
-      auto device = this->owner->logical_device();
+      auto device = this->owner->device.handle;
       vkDestroyPipeline      (device, this->pipeline.handle, nullptr);
       vkDestroyPipelineLayout(device, this->pipeline.layout, nullptr);
    }

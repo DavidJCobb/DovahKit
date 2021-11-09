@@ -3,8 +3,8 @@
 #include "_util.h"
 
 namespace vulkanDK {
-   class context;
    class device;
+   class surface_renderer;
 
    class image : no_copy {
       public:
@@ -32,10 +32,11 @@ namespace vulkanDK {
 
    class concrete_image : public image_and_view {
       public:
-         concrete_image(context& c) : owner(&c) {}
+         concrete_image(); // if you default-construct a concrete image, you MUST replace it with an owned image (constructor with args).
+         concrete_image(surface_renderer& c) : owner(&c) {}
          ~concrete_image();
 
-         context* owner = nullptr;
+         surface_renderer* owner = nullptr;
          VkImage        handle = VK_NULL_HANDLE;
          VkImageView    view   = VK_NULL_HANDLE;
          VkDeviceMemory memory = VK_NULL_HANDLE;

@@ -1,10 +1,13 @@
 #include "surface_support_info.h"
-#include "context.h"
+#include "logical_device.h"
+#include "physical_device.h"
+#include "surface.h"
+#include "surface_renderer.h"
 
 namespace vulkanDK {
-   surface_support_info::surface_support_info(context& c) {
-      auto device  = c.owner.physical;
-      auto surface = c.surface;
+   surface_support_info::surface_support_info(surface_renderer& c) {
+      auto device  = c.device.physical.handle;
+      auto surface = c.target.handle;
       //
       vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &this->capabilities);
       {

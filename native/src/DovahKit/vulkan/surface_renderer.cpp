@@ -1,9 +1,14 @@
-#include "context.h"
+#include "surface_renderer.h"
+#include <QResource> // for loading shaders
 #include "frame_in_flight.h"
+#include "logical_device.h"
 #include "material.h"
+#include "physical_device.h"
 #include "queue_family_info.h"
 #include "render_pass.h"
 #include "shader_module.h"
+#include "surface.h"
+#include "vertex.h"
 #include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
 
@@ -14,10 +19,20 @@
 
 #include "loaded_texture.h"
 #include "rendered_mesh.h"
+#include "scene_global_state.h"
+//
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace {
+   constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
+}
 
 namespace { // test scene properties
    struct _model {
-      using vertex = DovahKitVulkanSubsystem::vertex;
+      using vertex = vulkanDK::vertex;
       const std::vector<vertex>   vertices;
       const std::vector<uint16_t> indices;
       glm::mat4 transform;
@@ -29,7 +44,7 @@ namespace { // test scene properties
       "ScreenShot389.bmp",
    };
 
-   std::array initial_models = {
+   std::array initial_meshes = {
       _model{  // Skyrim texture plane
          {  // Vertices
             {{-0.5f, -0.395f, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
@@ -73,7 +88,7 @@ namespace { // test scene properties
 }
 
 namespace vulkanDK {
-   context::context(device& d) : owner(d) {
+   surface_renderer::surface_renderer(surface& s, logical_device& d) : target(s), device(d), swap_chain(*this), null_texture(*this) {
       this->descriptor_set_definition.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object
             .index              = 0,
@@ -88,7 +103,6 @@ namespace vulkanDK {
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
-            //.is_global          = true,
          },
          vulkanDK::descriptor_binding{ // storage buffer object: rendered_object::shader_parameters
             .index              = 2,
@@ -101,29 +115,29 @@ namespace vulkanDK {
             .index              = 3,
             .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .count              = max_available_textures,
+            .count              = config::max_loaded_textures,
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
       };
-
-      static_assert(false);
+      //
+      this->device.on_dependent_object_created(*this);
+      this->setup();
    }
-   context::~context();
+   surface_renderer::~surface_renderer() {
+      this->teardown();
+      this->device.on_dependent_object_deleted(*this);
+   }
 
-   void context::setup() {
-      static_assert(false, "TODO: Write code for setting up the (device) that we're initialized from, i.e. write a (device) constructor. We'll probably want a wrapper for VkInstance that can help pick a device, too.");
-      this->setupRenderWindowSurface(); static_assert(false, "TODO");
-      //this->setupPhysicalDevice(); // TODO: device::setup or similar
-      //this->setupLogicalDevice();  // TODO: device::setup or similar
+   void surface_renderer::setup() {
       {
-         this->descriptor_set_definition.set_device(this->logical_device());
+         this->descriptor_set_definition.set_device(this->device.handle);
          this->descriptor_set_definition.setup();
       }
       this->_setup_shader_modules();
       this->_setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
       //
-      this->_setup_command_pool(); // Cannot copy buffers, etc., for texture loading until the command pool is ready.
+      this->_setup_command_pool(); // Cannot copy buffers, etc., for texture loading, scene setup, etc., until the command pool is ready.
       this->_setup_descriptor_pool();
       //
       this->swap_chain.setup(); // includes frames-in-flight, which in turn includes semaphores, shader parameter buffers, descriptor set allocations (though not their contained descriptors), and command buffers
@@ -132,25 +146,25 @@ namespace vulkanDK {
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
       //
-      static_assert(false, "TODO: Notify outside code that we're ready, somehow.");
+      this->target._on_renderer_ready();
    }
-   void context::_setup_shader_modules() {
+   void surface_renderer::_setup_shader_modules() {
       auto* dfn = new material_definition;
       this->swap_chain.material_definitions.push_back(dfn);
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
       {
-         frag = new shader_module(this->owner, QResource("shaders/shader.frag.spv").uncompressedData());
-         vert = new shader_module(this->owner, QResource("shaders/shader.vert.spv").uncompressedData());
+         frag = new shader_module(this->device, QResource("shaders/shader.frag.spv").uncompressedData());
+         vert = new shader_module(this->device, QResource("shaders/shader.vert.spv").uncompressedData());
          this->shader_modules.push_back(frag);
          this->shader_modules.push_back(vert);
       }
       if (frag->empty()) {
-         throw std::runtime_error("[vulkanDK::context::_setup_shader_modules] Failed to load fragment shader.");
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load fragment shader.");
       }
       if (vert->empty()) {
-         throw std::runtime_error("[vulkanDK::context::_setup_shader_modules] Failed to load vertex shader.");
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load vertex shader.");
       }
       //
       dfn->stages = {
@@ -168,8 +182,9 @@ namespace vulkanDK {
          },
       };
    }
-   void context::_setup_texture_sampler() {
-      const auto& support = this->owner.support;
+   void surface_renderer::_setup_texture_sampler() {
+      const auto& physical = this->device.physical;
+      const auto& support  = physical.support;
       //
       auto sampler_info = VkSamplerCreateInfo{
          .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -180,8 +195,8 @@ namespace vulkanDK {
          .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
          .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
          .mipLodBias       = 0.0,
-         .anisotropyEnable = support.anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
-         .maxAnisotropy    = std::min(8.0F, support.anisotropic_filtering),
+         .anisotropyEnable = support.max_anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
+         .maxAnisotropy    = std::min(8.0F, support.max_anisotropic_filtering),
          .compareEnable    = VK_FALSE,
          .compareOp        = VK_COMPARE_OP_ALWAYS,
          .minLod           = 0.0,
@@ -189,23 +204,23 @@ namespace vulkanDK {
          .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
          .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
       };
-      if (vkCreateSampler(this->logical_device(), &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the texture sampler.");
+      if (vkCreateSampler(this->device.handle, &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_texture_sampler] Failed to create the texture sampler.");
       }
    }
    //
-   void context::_setup_command_pool() {
-      auto indices   = queue_family_info(this->physical_device());
+   void surface_renderer::_setup_command_pool() {
+      auto indices   = queue_family_info(this->device.physical, this->target);
       auto pool_info = VkCommandPoolCreateInfo{
          .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
          .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
          .queueFamilyIndex = indices.families.graphics,
       };
-      if (vkCreateCommandPool(this->logical_device(), &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create the command pool.");
+      if (vkCreateCommandPool(this->device.handle, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_command_pool] Failed to create the command pool.");
       }
    }
-   void context::_setup_descriptor_pool() {
+   void surface_renderer::_setup_descriptor_pool() {
       auto& dl = this->descriptor_set_definition;
       //
       auto image_count = config::frames_in_flight_count;
@@ -237,12 +252,12 @@ namespace vulkanDK {
          .poolSizeCount = (uint32_t)sizes.size(),
          .pPoolSizes    = sizes.data(),
       };
-      if (vkCreateDescriptorPool(this->logical_device(), &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::context::_setup_descriptor_pool] Failed to create the descriptor pool.");
+      if (vkCreateDescriptorPool(this->device.handle, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_descriptor_pool] Failed to create the descriptor pool.");
       }
    }
-   void context::_create_null_texture() {
-      if (this->owner.support.null_descriptors)
+   void surface_renderer::_create_null_texture() {
+      if (this->device.physical.support.descriptor_bindings.null_handles)
          return;
       auto& nt = this->null_texture;
       //
@@ -253,37 +268,27 @@ namespace vulkanDK {
          VK_FORMAT_R8G8B8A8_SRGB,
          VK_IMAGE_TILING_OPTIMAL,
          VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-         this->null_texture.image,
-         this->null_texture.memory
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
       //
       {
          VkDeviceSize image_size = w * h * 4;
          //
-         VkBuffer       staging_buffer;
-         VkDeviceMemory staging_memory;
-         this->owner.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_memory);
+         auto staging = this->device.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          //
-         void* data;
-         vkMapMemory(this->devices.logical, staging_memory, 0, image_size, 0, &data);
+         void* data = staging.map_memory();
          memset(data, 0, image_size);
-         vkUnmapMemory(this->devices.logical, staging_memory);
+         staging.unmap_memory(data);
          //
          nt.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-         nt.copy_content_from_buffer(staging_buffer);
+         nt.copy_content_from_buffer(staging.handle);
          nt.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-         //
-         // Discard the staging buffer:
-         //
-         vkDestroyBuffer(this->devices.logical, staging_buffer, nullptr);
-         vkFreeMemory   (this->devices.logical, staging_memory, nullptr);
       }
       //
       nt.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
    }
-   void context::_setup_initial_scene() {
-      auto device = this->logical_device();
+   void surface_renderer::_setup_initial_scene() {
+      auto device = this->device.handle;
       //
       // Textures:
       //
@@ -319,12 +324,11 @@ namespace vulkanDK {
             // We're gonna be setting up our image on a staging buffer, and then transferring that 
             // to the final (non-CPU-writeable) buffer.
             //
-            auto staging = this->owner.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto staging = this->device.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             //
-            void* data;
-            vkMapMemory(device, staging.memory, 0, image_size, 0, &data);
+            void* data = staging.map_memory();
             memcpy(data, texture.constBits(), image_size);
-            vkUnmapMemory(device, staging.memory);
+            staging.unmap_memory(data);
             //
             uint32_t w = texture.width();
             uint32_t h = texture.height();
@@ -346,7 +350,7 @@ namespace vulkanDK {
             // care about the data (or lack thereof, really) in the freshly-created VkImage.
             //
             target.content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            target.content.copy_content_from_buffer(staging.buffer);
+            target.content.copy_content_from_buffer(staging.handle);
             target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
          }
@@ -359,7 +363,7 @@ namespace vulkanDK {
          auto& list_dst = this->scene.meshes;
          auto  count    = list_src.size();
          list_dst.resize(count);
-         for (size_t i = 0; i < size; ++i) {
+         for (size_t i = 0; i < count; ++i) {
             auto& s   = list_src[i];
             auto& d   = list_dst[i];
             auto& vib = d.vertex_and_index_buffer;
@@ -372,19 +376,18 @@ namespace vulkanDK {
             VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
             VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
             //
-            auto staging = this->owner.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto staging = this->device.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             //
-            void* data;
-            vkMapMemory(this->devices.logical, staging_memory, 0, buffer_size, 0, &data);
+            void* data = staging.map_memory();
             memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
             memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
-            vkUnmapMemory(this->devices.logical, staging_memory);
+            staging.unmap_memory(data);
             //
             vib.indices_at     = buffer_size_v;
             vib.index_count    = s.indices.size();
             vib.allocated_size = buffer_size;
             //
-            vib.buffer = this->owner.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.buffer = this->device.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             vib.buffer.copy_from(*this, staging);
             d.shader_params.transform = s.transform;
          }
@@ -393,7 +396,7 @@ namespace vulkanDK {
       // Done.
       //
    }
-   void context::_initialize_descriptor_sets() {
+   void surface_renderer::_initialize_descriptor_sets() {
       auto sampler_info = VkDescriptorImageInfo{
          .sampler     = this->texture_sampler,
          .imageView   = VK_NULL_HANDLE,
@@ -407,7 +410,7 @@ namespace vulkanDK {
          for (size_t i = 0; i < size; ++i) {
             texture_infos[i] = {
                .sampler     = nullptr,
-               .imageView   = list[i].view,
+               .imageView   = list[i].content.view,
                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             };
          }
@@ -432,7 +435,7 @@ namespace vulkanDK {
          auto descriptor_writes = std::array{
             VkWriteDescriptorSet{ // uniform buffer object
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet           = frame.shader_params.descriptor_sets[0],
+               .dstSet           = frame.descriptor_sets[0],
                .dstBinding       = 0, // this should match the binding value in the shader
                .dstArrayElement  = 0, // index of the first descriptor in the raray to update
                .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
@@ -443,7 +446,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // texture sampler
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet          = frame.shader_params.descriptor_sets[0],
+               .dstSet          = frame.descriptor_sets[0],
                .dstBinding      = 1, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = 1,
@@ -452,7 +455,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet           = frame.shader_params.descriptor_sets[0],
+               .dstSet           = frame.descriptor_sets[0],
                .dstBinding       = 2, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
@@ -463,7 +466,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // texture array
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet          = frame.shader_params.descriptor_sets[0],
+               .dstSet          = frame.descriptor_sets[0],
                .dstBinding      = 3, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)texture_infos.size(),
@@ -471,16 +474,16 @@ namespace vulkanDK {
                .pImageInfo      = texture_infos.data(),
             },
          };
-         vkUpdateDescriptorSets(this->logical_device(), (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+         vkUpdateDescriptorSets(this->device.handle, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
       }
       //
       // Mark textures as synchronized:
       //
       for (auto& entry : this->scene.textures)
-         entry.frame_dirty_flags.clear(i);
+         entry.frame_dirty_flags.clear_all();
    }
    //
-   void context::_setup_render_passes() {
+   void surface_renderer::_setup_render_passes() {
       if (this->render_passes.empty()) {
          //
          // Set up our render pass definitions.
@@ -488,7 +491,7 @@ namespace vulkanDK {
          auto* rp = new render_pass(*this);
          this->render_passes = { rp };
          //
-         rp->attachments.descriptions = {
+         rp->attachments = {
             VkAttachmentDescription{ // color
                .format         = this->swap_chain.format,
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
@@ -500,7 +503,7 @@ namespace vulkanDK {
                .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             },
             VkAttachmentDescription{ // depth
-               .format         = this->owner.find_depth_format(),
+               .format         = this->find_depth_format(),
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
                .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
                .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after drawing, so let the driver decide how best to discard it
@@ -545,16 +548,47 @@ namespace vulkanDK {
          rp->setup();
    }
 
-   void context::handle_resize() {
-      auto  device = this->logical_device();
+   void surface_renderer::teardown() {
+      this->target._on_renderer_teardown_imminent();
+      //
+      vkDeviceWaitIdle(this->device.handle); // wait for all draw commands to finish (remember: they're asynch)
+      //
+      // Ensure all child objects belonging to the instance are destroyed.
+      //
+      this->scene.teardown();
+      this->null_texture.teardown();
+      {
+         auto& list = this->render_passes;
+         for (auto* rp : this->render_passes)
+            delete rp;
+         list.clear();
+      }
+      this->swap_chain.teardown();
+      vkDestroyDescriptorPool(this->device.handle, this->descriptor_pool, nullptr);
+      vkDestroyCommandPool(this->device.handle, this->command_pool, nullptr);
+      //
+      vkDestroySampler(this->device.handle, this->texture_sampler, nullptr);
+      {
+         auto& list = this->shader_modules;
+         for (auto* sm : list)
+            delete sm;
+         list.clear();
+      }
+      this->descriptor_set_definition.teardown();
+      //
+      this->target._on_renderer_teardown_complete();
+   }
+
+   void surface_renderer::handle_resize() {
+      auto  device = this->device.handle;
       auto& sc     = this->swap_chain;
       //
       VkFormat sc_format = sc.format;
       {  // Tear down swap chain state
          for (auto& fif : sc.frames_in_flight) {
-            fif.teardown_for_resize();
+            fif.invalidate_all_command_buffers(); // FIF doesn't have any other state that we'd need to reset
          }
-         vkDestroyDescriptorPool(device, this->descriptor_pool, nullptr);
+         //vkDestroyDescriptorPool(device, this->descriptor_pool, nullptr); // only necessary if the frame-in-flight count has changed
          /*// We don't actually need to tear down the render passes unless the info they needed from the swap chain (i.e. the swap chain image format) has changed.
          for (auto* rp : this->render_passes) {
             rp->teardown();
@@ -587,11 +621,63 @@ namespace vulkanDK {
       //
       for (auto& ro : this->scene.meshes)
          ro.frame_dirty_flags.set_all();
-      static_assert(false, "finish me");
+      //
+      // Update surface state:
+      //
+      this->target.state.resized = false;
    }
 
 
-   command_buffer context::_begin_one_time_commands() {
+   void surface_renderer::draw_next_frame() {
+      this->scene.update();
+      //
+      constexpr auto no_timeout = UINT64_MAX;
+      //
+      //  - Acquire an image from the swap chain
+      //  - Execute the command buffer with that image as attachment in the framebuffer
+      //  - Return the image to the swap chain for presentation
+      // 
+      // These tasks are asynchronous, but must run sequentially.
+      //
+      if (!this->target.state.visible)
+         return;
+      auto pf = this->swap_chain.advance_frame();
+      switch (pf.result) {
+         case VK_SUCCESS:
+            break;
+         case VK_SUBOPTIMAL_KHR:
+            if constexpr (rebuild_swap_chain_asap_if_suboptimal) {
+               this->handle_resize();
+               return;
+            }
+            break;
+         case VK_ERROR_OUT_OF_DATE_KHR:
+            this->handle_resize();
+            return;
+         default:
+            throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
+      }
+      this->swap_chain.confirm_frame(pf);
+      switch (pf.result) {
+         case VK_SUCCESS:
+            if (this->target.state.resized)
+               this->handle_resize();
+            break;
+         case VK_ERROR_OUT_OF_DATE_KHR:
+         case VK_SUBOPTIMAL_KHR:
+            this->handle_resize();
+            break;
+         default:
+            throw std::runtime_error("[DovahKitVulkanSubsystem][drawFrame] Failed to present swap chain image.");
+      }
+      //
+      //
+      //
+      static_assert(false, "TODO: scene post-frame behavior (delete detached objects, etc.)");
+   }
+
+
+   command_buffer surface_renderer::_begin_one_time_commands() {
       //
       // TODO: This is a useful helper function, but you'll actually get higher throughput if you 
       // reuse a single command buffer instead of spawning several temporary buffers; you'd want 
@@ -610,7 +696,7 @@ namespace vulkanDK {
       //
       return scratch;
    }
-   void context::_end_one_time_commands(command_buffer& scratch) {
+   void surface_renderer::_end_one_time_commands(command_buffer& scratch) {
       vkEndCommandBuffer(scratch.handle);
       //
       auto submit_info = VkSubmitInfo{
@@ -618,16 +704,28 @@ namespace vulkanDK {
          .commandBufferCount = 1,
          .pCommandBuffers    = &scratch.handle,
       };
-      vkQueueSubmit(this->owner.queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
-      vkQueueWaitIdle(this->owner.queues.graphics);
+      vkQueueSubmit(this->device.queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
+      vkQueueWaitIdle(this->device.queues.graphics);
    }
 
 
+   VkFormat surface_renderer::find_depth_format() const {
+      auto fmt = this->device.physical.find_supported_format(
+         { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+         VK_IMAGE_TILING_OPTIMAL,
+         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+      );
+      if (fmt == VK_FORMAT_UNDEFINED) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::find_depth_format] No format.");
+      }
+      return fmt;
+   }
+
    #pragma region scene
-   size_t context::add_texture(const QString& texture_path);
-   void context::add_mesh(const QString& texture_path);
-   void context::remove_mesh(size_t i);
-   void context::remove_last_mesh() {
+   size_t surface_renderer::add_texture(const QString& texture_path);
+   void surface_renderer::add_mesh(const QString& texture_path);
+   void surface_renderer::remove_mesh(size_t i);
+   void surface_renderer::remove_last_mesh() {
       auto& list = this->scene.meshes;
       auto  size = list.size();
       if (size == 0)

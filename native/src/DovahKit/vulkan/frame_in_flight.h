@@ -6,9 +6,10 @@
 #include "command_buffer.h"
 
 namespace vulkanDK {
-   class context;
    class descriptor_set;
    class render_pass;
+   class scene;
+   class surface_renderer;
 
    class frame_render_pass {
       public:
@@ -19,15 +20,16 @@ namespace vulkanDK {
 
    class frame_in_flight : no_copy {
       public:
-         frame_in_flight(context&);
+         frame_in_flight() {}
          ~frame_in_flight();
       
-         context* owner = nullptr;
+         surface_renderer* owner = nullptr;
+         size_t my_index = 0; // needed for scene updates
          //
-         VkFence fence;
+         VkFence fence = VK_NULL_HANDLE;
          struct {
-            VkSemaphore image_available;
-            VkSemaphore render_finished;
+            VkSemaphore image_available = VK_NULL_HANDLE;
+            VkSemaphore render_finished = VK_NULL_HANDLE;
          } semaphores;
          //
          std::vector<VkDescriptorSet>   descriptor_sets;
@@ -41,12 +43,18 @@ namespace vulkanDK {
 
          void invalidate_all_command_buffers();
 
-         void teardown_for_resize();
+         void setup(surface_renderer&, size_t which_am_i);
 
       protected:
          void _setup_semaphores();
          void _setup_shader_parameter_buffers();
          void _setup_descriptor_sets();
          void _setup_command_buffers();
+         
+         // draw steps:
+         scene& get_scene();
+         void _update_shader_object_data_buffer();
+         void _update_shader_texture_descriptors();
+         void _refill_command_buffers(VkFramebuffer);
    };
 }

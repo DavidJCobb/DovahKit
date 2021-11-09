@@ -2,18 +2,16 @@
 #include <cassert>
 #include <vector>
 #include "context.h"
+#include "logical_device.h"
+#include "physical_device.h"
+#include "surface.h"
+#include "surface_renderer.h"
 
 namespace vulkanDK {
-   queue_family_info::queue_family_info(context& ct) {
-      auto device  = ct.physical_device();
-      auto surface = ct.surface;
-      //
-      uint32_t count = 0;
-      vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
-      std::vector<VkQueueFamilyProperties> list(count);
-      vkGetPhysicalDeviceQueueFamilyProperties(device, &count, list.data());
-      //
-      for (size_t i = 0; i < count; ++i) {
+   queue_family_info::queue_family_info(surface_renderer& ct) : queue_family_info(ct.device.physical, ct.target) {}
+   queue_family_info::queue_family_info(const physical_device& pd, const surface& s) {
+      const auto& list = pd.info.queue_families;
+      for (size_t i = 0; i < list.size(); ++i) {
          const auto& family = list[i];
          //
          if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
@@ -21,7 +19,7 @@ namespace vulkanDK {
          }
          {  // Can this device render to our render window widget?
             VkBool32 support = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &support);
+            vkGetPhysicalDeviceSurfaceSupportKHR(pd.handle, i, s.handle, &support);
             if (support) {
                this->set(this->families.presentation, i);
             }

@@ -4,15 +4,15 @@
 #include "_util.h"
 
 namespace vulkanDK {
-   class device;
+   class logical_device;
 
    class shader_module : no_copy {
       public:
-         shader_module(device&, const QByteArray&);
+         shader_module(logical_device&, const QByteArray&);
          ~shader_module();
       
-         device*        owner  = nullptr;
-         VkShaderModule handle = VK_NULL_HANDLE;
+         logical_device* device = nullptr;
+         VkShaderModule  handle = VK_NULL_HANDLE;
 
          shader_module(shader_module&&) noexcept;
          shader_module& operator=(shader_module&&) noexcept;
