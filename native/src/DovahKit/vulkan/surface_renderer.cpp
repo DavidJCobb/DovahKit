@@ -11,6 +11,7 @@
 #include "vertex.h"
 #include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
+#include "config/validation_layers.h"
 
 // loading textures from files using Qt:
 #include <QBuffer>
@@ -27,6 +28,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace {
+   const std::vector<const char*> device_extensions = {
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+   };
+
    constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
 }
 
@@ -88,8 +94,95 @@ namespace { // test scene properties
 }
 
 namespace vulkanDK {
-   surface_renderer::surface_renderer(surface& s, logical_device& d) : target(s), device(d), swap_chain(*this), null_texture(*this) {
-      this->descriptor_set_definition.bindings = {
+   #pragma region queue
+   void surface_renderer::queue::setup(VkDevice device, uint32_t index) {
+      vkGetDeviceQueue(device, index, 0, &this->handle);
+      this->index = index;
+   }
+   #pragma endregion
+
+   surface_renderer::surface_renderer(surface& s, physical_device& d) : target(s), swap_chain(*this), null_texture(*this) {
+      this->device_info = &d;
+      {  // Logical device setup
+         auto  indices        = queue_family_info(d, s);
+         float queue_priority = 1.0F;
+         std::vector<VkDeviceQueueCreateInfo> queue_infos;
+         {
+            queue_infos.reserve(queue_family_info::unique_family_count);
+            //
+            for (size_t i = 0; i < queue_family_info::unique_family_count; ++i) {
+               if (!indices.has_index(i))
+                  continue;
+               bool already_used = false;
+               for (size_t j = 0; j < i; ++j) {
+                  if (indices.families.list[j] == indices.families.list[i]) {
+                     already_used = true;
+                     break;
+                  }
+               }
+               if (already_used)
+                  //
+                  // It's possible for queue families to share an index, but we need to make 
+                  // sure that we create only one queue-info for each index.
+                  //
+                  continue;
+               //
+               queue_infos.push_back(VkDeviceQueueCreateInfo{
+                  .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                  .queueFamilyIndex = indices.families.list[i],
+                  .queueCount       = 1,
+                  .pQueuePriorities = &queue_priority,
+               });
+            }
+         }
+         //
+         auto deviceFeatures = VkPhysicalDeviceFeatures{
+            .samplerAnisotropy = d.support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
+         };
+         //
+         auto robustness_extensions = VkPhysicalDeviceRobustness2FeaturesEXT{
+            .sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
+            .pNext               = nullptr,
+            .robustBufferAccess2 = VK_FALSE,
+            .robustImageAccess2  = VK_FALSE,
+            .nullDescriptor      = d.support.descriptor_bindings.null_handles ? VK_TRUE : VK_FALSE,
+         };
+         auto indexing_extensions = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+            .pNext = &robustness_extensions,
+            .descriptorBindingPartiallyBound          = VK_TRUE,
+            .descriptorBindingVariableDescriptorCount = VK_TRUE,
+            .runtimeDescriptorArray                   = VK_TRUE,
+         };
+         auto create_info = VkDeviceCreateInfo{
+            .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .pNext                   = &indexing_extensions,
+            .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
+            .pQueueCreateInfos       = queue_infos.data(),
+            .enabledExtensionCount   = (uint32_t)device_extensions.size(),
+            .ppEnabledExtensionNames = device_extensions.data(),
+            .pEnabledFeatures        = &deviceFeatures,
+         };
+         if (config::enable_validation_layers) {
+            create_info.enabledLayerCount   = static_cast<uint32_t>(config::desired_validation_layers.size());
+            create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
+         } else {
+            create_info.enabledLayerCount = 0;
+         }
+         //
+         if (vkCreateDevice(d.handle, &create_info, nullptr, &this->logical_device) != VK_SUCCESS) {
+            // report VK_ERROR_DEVICE_LOST
+            throw std::runtime_error("[vulkanDK::surface_renderer] Failed to create logical device.");
+         }
+         //
+         // And lastly, let's get our queues:
+         //
+         this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
+         this->queues.presentation.setup(this->logical_device, indices.families.presentation);
+      }
+      //
+      this->descriptor_set_layouts.resize(1);
+      this->descriptor_set_layouts[0].bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -121,24 +214,21 @@ namespace vulkanDK {
          },
       };
       //
-      this->device.on_dependent_object_created(*this);
       this->setup();
    }
    surface_renderer::~surface_renderer() {
       this->teardown();
-      this->device.on_dependent_object_deleted(*this);
    }
 
    void surface_renderer::setup() {
-      {
-         this->descriptor_set_definition.set_device(this->device.handle);
-         this->descriptor_set_definition.setup();
-      }
-      this->_setup_shader_modules();
-      this->_setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
+      this->configuration.image_count = config::frames_in_flight_count; // TODO: use swap chain size instead
       //
-      this->_setup_command_pool(); // Cannot copy buffers, etc., for texture loading, scene setup, etc., until the command pool is ready.
-      this->_setup_descriptor_pool();
+      this->setup_descriptor_set_layouts();
+      this->_setup_shader_modules();
+      this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
+      //
+      this->setup_command_pool(this->queues.graphics.index);
+      this->setup_descriptor_pool();
       //
       this->swap_chain.setup(); // includes frames-in-flight, which in turn includes semaphores, shader parameter buffers, descriptor set allocations (though not their contained descriptors), and command buffers
       this->_setup_render_passes();
@@ -148,6 +238,9 @@ namespace vulkanDK {
       //
       this->target._on_renderer_ready();
    }
+   void surface_renderer::_setup_device() {
+
+   }
    void surface_renderer::_setup_shader_modules() {
       auto* dfn = new material_definition;
       this->swap_chain.material_definitions.push_back(dfn);
@@ -155,8 +248,8 @@ namespace vulkanDK {
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
       {
-         frag = new shader_module(this->device, QResource("shaders/shader.frag.spv").uncompressedData());
-         vert = new shader_module(this->device, QResource("shaders/shader.vert.spv").uncompressedData());
+         frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
          this->shader_modules.push_back(frag);
          this->shader_modules.push_back(vert);
       }
@@ -182,82 +275,9 @@ namespace vulkanDK {
          },
       };
    }
-   void surface_renderer::_setup_texture_sampler() {
-      const auto& physical = this->device.physical;
-      const auto& support  = physical.support;
-      //
-      auto sampler_info = VkSamplerCreateInfo{
-         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-         .magFilter        = VK_FILTER_LINEAR,
-         .minFilter        = VK_FILTER_LINEAR,
-         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-         .addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-         .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-         .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-         .mipLodBias       = 0.0,
-         .anisotropyEnable = support.max_anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
-         .maxAnisotropy    = std::min(8.0F, support.max_anisotropic_filtering),
-         .compareEnable    = VK_FALSE,
-         .compareOp        = VK_COMPARE_OP_ALWAYS,
-         .minLod           = 0.0,
-         .maxLod           = 0.0,
-         .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
-         .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
-      };
-      if (vkCreateSampler(this->device.handle, &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_texture_sampler] Failed to create the texture sampler.");
-      }
-   }
    //
-   void surface_renderer::_setup_command_pool() {
-      auto indices   = queue_family_info(this->device.physical, this->target);
-      auto pool_info = VkCommandPoolCreateInfo{
-         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-         .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-         .queueFamilyIndex = indices.families.graphics,
-      };
-      if (vkCreateCommandPool(this->device.handle, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_command_pool] Failed to create the command pool.");
-      }
-   }
-   void surface_renderer::_setup_descriptor_pool() {
-      auto& dl = this->descriptor_set_definition;
-      //
-      auto image_count = config::frames_in_flight_count;
-      //
-      std::vector<VkDescriptorPoolSize> sizes;
-      for (auto& binding : dl.bindings) {
-         auto count = binding.count;
-         //
-         auto t    = binding.type;
-         bool done = false;
-         for(auto& prior : sizes) {
-            if (prior.type == t) {
-               prior.descriptorCount += count;
-               done = true;
-               break;
-            }
-         }
-         if (done)
-            continue;
-         sizes.emplace_back(VkDescriptorPoolSize{
-            .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .descriptorCount = count,
-         });
-      }
-      //
-      auto pool_info = VkDescriptorPoolCreateInfo{
-         .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-         .maxSets       = (uint32_t)image_count,
-         .poolSizeCount = (uint32_t)sizes.size(),
-         .pPoolSizes    = sizes.data(),
-      };
-      if (vkCreateDescriptorPool(this->device.handle, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_descriptor_pool] Failed to create the descriptor pool.");
-      }
-   }
    void surface_renderer::_create_null_texture() {
-      if (this->device.physical.support.descriptor_bindings.null_handles)
+      if (this->device_info->support.descriptor_bindings.null_handles)
          return;
       auto& nt = this->null_texture;
       //
@@ -274,7 +294,7 @@ namespace vulkanDK {
       {
          VkDeviceSize image_size = w * h * 4;
          //
-         auto staging = this->device.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         auto staging = this->create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          //
          void* data = staging.map_memory();
          memset(data, 0, image_size);
@@ -288,7 +308,7 @@ namespace vulkanDK {
       nt.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
    }
    void surface_renderer::_setup_initial_scene() {
-      auto device = this->device.handle;
+      auto device = this->logical_device;
       //
       // Textures:
       //
@@ -324,7 +344,7 @@ namespace vulkanDK {
             // We're gonna be setting up our image on a staging buffer, and then transferring that 
             // to the final (non-CPU-writeable) buffer.
             //
-            auto staging = this->device.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto staging = this->create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             //
             void* data = staging.map_memory();
             memcpy(data, texture.constBits(), image_size);
@@ -376,7 +396,7 @@ namespace vulkanDK {
             VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
             VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
             //
-            auto staging = this->device.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             //
             void* data = staging.map_memory();
             memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
@@ -387,8 +407,8 @@ namespace vulkanDK {
             vib.index_count    = s.indices.size();
             vib.allocated_size = buffer_size;
             //
-            vib.buffer = this->device.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            vib.buffer.copy_from(*this, staging);
+            vib.buffer = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.buffer.copy_from(staging);
             d.shader_params.transform = s.transform;
          }
       }
@@ -474,7 +494,7 @@ namespace vulkanDK {
                .pImageInfo      = texture_infos.data(),
             },
          };
-         vkUpdateDescriptorSets(this->device.handle, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+         vkUpdateDescriptorSets(this->logical_device, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
       }
       //
       // Mark textures as synchronized:
@@ -551,36 +571,20 @@ namespace vulkanDK {
    void surface_renderer::teardown() {
       this->target._on_renderer_teardown_imminent();
       //
-      vkDeviceWaitIdle(this->device.handle); // wait for all draw commands to finish (remember: they're asynch)
+      vkDeviceWaitIdle(this->logical_device); // wait for all draw commands to finish (remember: they're asynch)
       //
       // Ensure all child objects belonging to the instance are destroyed.
       //
       this->scene.teardown();
       this->null_texture.teardown();
-      {
-         auto& list = this->render_passes;
-         for (auto* rp : this->render_passes)
-            delete rp;
-         list.clear();
-      }
       this->swap_chain.teardown();
-      vkDestroyDescriptorPool(this->device.handle, this->descriptor_pool, nullptr);
-      vkDestroyCommandPool(this->device.handle, this->command_pool, nullptr);
-      //
-      vkDestroySampler(this->device.handle, this->texture_sampler, nullptr);
-      {
-         auto& list = this->shader_modules;
-         for (auto* sm : list)
-            delete sm;
-         list.clear();
-      }
-      this->descriptor_set_definition.teardown();
+      abstract_renderer::teardown(); // tears down the logical device, too
       //
       this->target._on_renderer_teardown_complete();
    }
 
    void surface_renderer::handle_resize() {
-      auto  device = this->device.handle;
+      auto  device = this->logical_device;
       auto& sc     = this->swap_chain;
       //
       VkFormat sc_format = sc.format;
@@ -719,6 +723,42 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::surface_renderer::find_depth_format] No format.");
       }
       return fmt;
+   }
+
+   buffer surface_renderer::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+      buffer out = buffer(*this);
+      //
+      auto buffer_info = VkBufferCreateInfo{
+         .sType        = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+         .size         = size,
+         .usage        = usage,
+         .sharingMode  = VK_SHARING_MODE_EXCLUSIVE,
+      };
+      if (vkCreateBuffer(this->logical_device, &buffer_info, nullptr, &out.handle) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::create_buffer] Failed to create vertex buffer.");
+      }
+      //
+      VkMemoryRequirements memRequirements;
+      vkGetBufferMemoryRequirements(this->logical_device, out.handle, &memRequirements);
+      out.size = memRequirements.size;
+      //
+      // In a real-world application, you wouldn't use vkAllocateMemory for each individual object you wish 
+      // to render, because there's actually a limit on the number of allocations you can make irrespective 
+      // of their total size. Even on high-end hardware, that limit may be in the low thousands, the Vulkan 
+      // tutorial gives 4096 as a plausible limit for  hardware like an NVIDIA GTX 1080. What you'd want to 
+      // do instead, then, is allocate memory in larger blocks and then manually divide those blocks up for 
+      // different objects -- similar to what you'd do when making a block allocator.
+      //
+      auto alloc_info = VkMemoryAllocateInfo{
+         .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+         .allocationSize  = memRequirements.size,
+         .memoryTypeIndex = this->device_info->find_memory_type(memRequirements.memoryTypeBits, properties),
+      };
+      if (vkAllocateMemory(this->logical_device, &alloc_info, nullptr, &out.memory) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::create_buffer] Failed to allocate vertex buffer memory.");
+      }
+
+      vkBindBufferMemory(this->logical_device, out.handle, out.memory, 0);
    }
 
    #pragma region scene

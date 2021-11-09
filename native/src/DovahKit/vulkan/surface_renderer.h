@@ -1,6 +1,8 @@
 #pragma once
 #include "_vulkan.h"
 #include "_util.h"
+#include "abstract_renderer.h"
+#include "buffer.h"
 #include "command_buffer.h"
 #include "descriptor_definitions.h"
 #include "image.h"
@@ -13,24 +15,26 @@ namespace vulkanDK {
    class shader_module;
    class surface;
 
-   // formerly "context"
-   class surface_renderer {
+   class surface_renderer : public abstract_renderer {
       public:
-         surface_renderer(surface&, logical_device&);
+         struct queue {
+            VkQueue  handle = VK_NULL_HANDLE;
+            uint32_t index  = 0; // family index
+
+            void setup(VkDevice, uint32_t);
+         };
+      public:
+         surface_renderer(surface&, physical_device&);
          ~surface_renderer();
 
-         surface&        target;
-         logical_device& device;
-         VkExtent2D      surface_extent; // last extent we set ourselves up for
-         //
-         VkCommandPool    command_pool    = VK_NULL_HANDLE;
-         VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
-         descriptor_set_layout descriptor_set_definition;
+         surface&   target;
+         VkExtent2D surface_extent; // last extent we set ourselves up for
+         struct {
+            queue graphics;
+            queue presentation;
+         } queues;
          //
          swap_chain swap_chain;
-         std::vector<render_pass*>   render_passes;
-         std::vector<shader_module*> shader_modules;
-         VkSampler      texture_sampler = VK_NULL_HANDLE;
          concrete_image null_texture;
          //
          scene scene;
@@ -50,6 +54,8 @@ namespace vulkanDK {
          VkExtent2D desired_surface_size() const;
          VkFormat find_depth_format() const;
 
+         buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+
          // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);
          void add_mesh(const QString& texture_path);
@@ -57,10 +63,9 @@ namespace vulkanDK {
          void remove_last_mesh();
 
       protected:
-         void _setup_command_pool();
-         void _setup_descriptor_pool(); // requires awareness of the frame-in-flight count
+         void _setup_device();
+         //
          void _setup_shader_modules();
-         void _setup_texture_sampler();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

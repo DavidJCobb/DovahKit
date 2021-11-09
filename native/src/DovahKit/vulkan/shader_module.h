@@ -8,10 +8,10 @@ namespace vulkanDK {
 
    class shader_module : no_copy {
       public:
-         shader_module(logical_device&, const QByteArray&);
+         shader_module(VkDevice, const QByteArray&);
          ~shader_module();
       
-         logical_device* device = nullptr;
+         VkDevice        device = VK_NULL_HANDLE;
          VkShaderModule  handle = VK_NULL_HANDLE;
 
          shader_module(shader_module&&) noexcept;

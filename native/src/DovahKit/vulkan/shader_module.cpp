@@ -3,7 +3,7 @@
 #include "logical_device.h"
 
 namespace vulkanDK {
-   shader_module::shader_module(logical_device& d, const QByteArray& compiled) : device(&d) {
+   shader_module::shader_module(VkDevice d, const QByteArray& compiled) : device(d) {
       if (compiled.isNull())
          return;
       auto create_info = VkShaderModuleCreateInfo{
@@ -11,16 +11,16 @@ namespace vulkanDK {
          .codeSize = (uint32_t)compiled.size(),
          .pCode    = (const uint32_t*)compiled.data(),
       };
-      if (vkCreateShaderModule(d.handle, &create_info, nullptr, &this->handle) != VK_SUCCESS) {
+      if (vkCreateShaderModule(d, &create_info, nullptr, &this->handle) != VK_SUCCESS) {
          this->handle = VK_NULL_HANDLE;
          return;
       }
    }
    shader_module::~shader_module() {
-      if (this->device != nullptr && this->handle != VK_NULL_HANDLE)
-         vkDestroyShaderModule(this->device->handle, this->handle, nullptr);
+      if (this->device != VK_NULL_HANDLE && this->handle != VK_NULL_HANDLE)
+         vkDestroyShaderModule(this->device, this->handle, nullptr);
       this->handle = VK_NULL_HANDLE;
-      this->device = nullptr;
+      this->device = VK_NULL_HANDLE;
    }
    //
    shader_module::shader_module(shader_module&& o) noexcept {
