@@ -1,13 +1,12 @@
 #include "surface_renderer.h"
 #include <QResource> // for loading shaders
+#include "DKVulkanInstance.h"
 #include "frame_in_flight.h"
-#include "logical_device.h"
 #include "material.h"
 #include "physical_device.h"
 #include "queue_family_info.h"
 #include "render_pass.h"
 #include "shader_module.h"
-#include "surface.h"
 #include "vertex.h"
 #include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
@@ -97,86 +96,79 @@ namespace { // test scene properties
 }
 
 namespace vulkanDK {
-   surface_renderer::surface_renderer(surface& s, physical_device& d) : target(s), null_texture(*this) {
-      this->device_info = &d;
-      {  // Logical device setup
-         auto  indices        = queue_family_info(d, s);
-         float queue_priority = 1.0F;
-         std::vector<VkDeviceQueueCreateInfo> queue_infos;
-         {
-            queue_infos.reserve(queue_family_info::unique_family_count);
-            //
-            for (size_t i = 0; i < queue_family_info::unique_family_count; ++i) {
-               if (!indices.has_index(i))
-                  continue;
-               bool already_used = false;
-               for (size_t j = 0; j < i; ++j) {
-                  if (indices.families.list[j] == indices.families.list[i]) {
-                     already_used = true;
-                     break;
-                  }
-               }
-               if (already_used)
-                  //
-                  // It's possible for queue families to share an index, but we need to make 
-                  // sure that we create only one queue-info for each index.
-                  //
-                  continue;
-               //
-               queue_infos.push_back(VkDeviceQueueCreateInfo{
-                  .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                  .queueFamilyIndex = indices.families.list[i],
-                  .queueCount       = 1,
-                  .pQueuePriorities = &queue_priority,
-               });
-            }
-         }
-         //
-         auto deviceFeatures = VkPhysicalDeviceFeatures{
-            .samplerAnisotropy = d.support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
-         };
-         //
-         auto robustness_extensions = VkPhysicalDeviceRobustness2FeaturesEXT{
-            .sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
-            .pNext               = nullptr,
-            .robustBufferAccess2 = VK_FALSE,
-            .robustImageAccess2  = VK_FALSE,
-            .nullDescriptor      = d.support.descriptor_bindings.null_handles ? VK_TRUE : VK_FALSE,
-         };
-         auto indexing_extensions = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
-            .pNext = &robustness_extensions,
-            .descriptorBindingPartiallyBound          = VK_TRUE,
-            .descriptorBindingVariableDescriptorCount = VK_TRUE,
-            .runtimeDescriptorArray                   = VK_TRUE,
-         };
-         auto create_info = VkDeviceCreateInfo{
-            .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .pNext                   = &indexing_extensions,
-            .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
-            .pQueueCreateInfos       = queue_infos.data(),
-            .enabledExtensionCount   = (uint32_t)device_extensions.size(),
-            .ppEnabledExtensionNames = device_extensions.data(),
-            .pEnabledFeatures        = &deviceFeatures,
-         };
-         if (config::enable_validation_layers) {
-            create_info.enabledLayerCount   = static_cast<uint32_t>(config::desired_validation_layers.size());
-            create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
-         } else {
-            create_info.enabledLayerCount = 0;
-         }
-         //
-         if (vkCreateDevice(d.handle, &create_info, nullptr, &this->logical_device) != VK_SUCCESS) {
-            // report VK_ERROR_DEVICE_LOST
-            throw std::runtime_error("[vulkanDK::surface_renderer] Failed to create logical device.");
-         }
-         //
-         // And lastly, let's get our queues:
-         //
-         this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
-         this->queues.presentation.setup(this->logical_device, indices.families.presentation);
+   #pragma region communicate with DKVulkanView
+   // renderer events:
+   void surface_renderer::_on_renderer_ready() {
+      if (this->widget.pointer)
+         emit this->widget.pointer->rendererReady();
+   }
+   void surface_renderer::_on_renderer_teardown_imminent() {
+      if (this->widget.pointer)
+         emit this->widget.pointer->rendererTeardownImminent();
+   }
+   void surface_renderer::_on_renderer_teardown_complete() {
+      if (this->widget.pointer)
+         emit this->widget.pointer->rendererTeardownComplete();
+   }
+
+   // widget events:
+   void surface_renderer::_on_repaint() {
+      this->draw_next_frame();
+   }
+   void surface_renderer::_on_visibility_change(QSize size, bool visible) {
+      this->widget.resized = true;
+      this->widget.visible = visible && !size.isEmpty();
+   }
+   #pragma endregion
+
+   #pragma region expose to DKVulkanView
+   void surface_renderer::set_physical_device(const physical_device& pd) {
+      if (this->logical_device != VK_NULL_HANDLE) {
+         this->teardown();
       }
-      //
+      this->device_info = &pd;
+      if (this->handle != VK_NULL_HANDLE) {
+         this->_init_device();
+         this->setup();
+      }
+   }
+   void surface_renderer::set_widget(DKVulkanView* widget) {
+      if (this->widget.pointer == widget)
+         return;
+      if (this->handle != VK_NULL_HANDLE) {
+         this->teardown();
+         this->_reset_surface();
+      }
+      this->widget.pointer = widget;
+      if (widget) {
+         this->widget.last_id = widget->winId();
+         this->_init_surface();
+         this->_init_device();
+         this->setup();
+         this->widget.resized = false;
+         this->widget.visible = widget->isVisible();
+      } else {
+         this->widget.last_id = {};
+         this->widget.resized = false;
+         this->widget.visible = false;
+      }
+   }
+   void surface_renderer::update_widget_id() {
+      if (this->widget.pointer == nullptr)
+         return;
+      auto id = this->widget.pointer->winId();
+      if (id == this->widget.last_id)
+         return;
+      this->teardown();
+      this->_reset_surface();
+      this->widget.last_id = id;
+      this->_init_surface();
+      this->_init_device();
+      this->setup();
+   }
+   #pragma endregion
+
+   surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
       this->descriptor_set_layouts.resize(1);
       this->descriptor_set_layouts[0].bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object
@@ -210,13 +202,123 @@ namespace vulkanDK {
          },
       };
       //
+      this->_init_surface();
+      if (this->handle == VK_NULL_HANDLE) {
+         qDebug("[surface_renderer] Failed to initialize surface (constructor).");
+         return;
+      }
+      this->_init_device();
+      //
       this->setup();
    }
    surface_renderer::~surface_renderer() {
       this->teardown();
+      this->_reset_surface();
+   }
+
+   void surface_renderer::_init_surface() {
+      auto create_info = VkWin32SurfaceCreateInfoKHR{
+         .sType     = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+         .hinstance = GetModuleHandle(nullptr),
+         .hwnd      = (HWND)this->widget.last_id,
+      };
+      if (vkCreateWin32SurfaceKHR(this->owner.getHandle(), &create_info, nullptr, &this->handle) != VK_SUCCESS) {
+         this->handle         = VK_NULL_HANDLE;
+         this->widget.last_id = {};
+      }
+   }
+   void surface_renderer::_init_device() {
+      auto  pd_handle  = this->device_info->handle;
+      auto& pd_support = this->device_info->support;
+      //
+      auto  indices        = queue_family_info(*this->device_info, this->handle);
+      float queue_priority = 1.0F;
+      std::vector<VkDeviceQueueCreateInfo> queue_infos;
+      {
+         queue_infos.reserve(queue_family_info::unique_family_count);
+         //
+         for (size_t i = 0; i < queue_family_info::unique_family_count; ++i) {
+            if (!indices.has_index(i))
+               continue;
+            bool already_used = false;
+            for (size_t j = 0; j < i; ++j) {
+               if (indices.families.list[j] == indices.families.list[i]) {
+                  already_used = true;
+                  break;
+               }
+            }
+            if (already_used)
+               //
+               // It's possible for queue families to share an index, but we need to make 
+               // sure that we create only one queue-info for each index.
+               //
+               continue;
+            //
+            queue_infos.push_back(VkDeviceQueueCreateInfo{
+               .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+               .queueFamilyIndex = indices.families.list[i],
+               .queueCount       = 1,
+               .pQueuePriorities = &queue_priority,
+            });
+         }
+      }
+      //
+      auto deviceFeatures = VkPhysicalDeviceFeatures{
+         .samplerAnisotropy = pd_support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
+      };
+      //
+      auto robustness_extensions = VkPhysicalDeviceRobustness2FeaturesEXT{
+         .sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
+         .pNext               = nullptr,
+         .robustBufferAccess2 = VK_FALSE,
+         .robustImageAccess2  = VK_FALSE,
+         .nullDescriptor      = pd_support.descriptor_bindings.null_handles ? VK_TRUE : VK_FALSE,
+      };
+      auto indexing_extensions = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+         .pNext = &robustness_extensions,
+         .descriptorBindingPartiallyBound          = VK_TRUE,
+         .descriptorBindingVariableDescriptorCount = VK_TRUE,
+         .runtimeDescriptorArray                   = VK_TRUE,
+      };
+      auto create_info = VkDeviceCreateInfo{
+         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+         .pNext                   = &indexing_extensions,
+         .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
+         .pQueueCreateInfos       = queue_infos.data(),
+         .enabledExtensionCount   = (uint32_t)device_extensions.size(),
+         .ppEnabledExtensionNames = device_extensions.data(),
+         .pEnabledFeatures        = &deviceFeatures,
+      };
+      if (config::enable_validation_layers) {
+         create_info.enabledLayerCount   = static_cast<uint32_t>(config::desired_validation_layers.size());
+         create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
+      } else {
+         create_info.enabledLayerCount = 0;
+      }
+      //
+      if (vkCreateDevice(pd_handle, &create_info, nullptr, &this->logical_device) != VK_SUCCESS) {
+         // report VK_ERROR_DEVICE_LOST
+         throw std::runtime_error("[vulkanDK::surface_renderer] Failed to create logical device.");
+      }
+      //
+      // And lastly, let's get our queues:
+      //
+      this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
+      this->queues.presentation.setup(this->logical_device, indices.families.presentation);
+   }
+
+   void surface_renderer::_reset_surface() {
+      if (this->handle != VK_NULL_HANDLE) {
+         vkDestroySurfaceKHR(this->owner.getHandle(), this->handle, nullptr);
+         this->handle = VK_NULL_HANDLE;
+      }
    }
 
    void surface_renderer::setup() {
+      if (this->logical_device == VK_NULL_HANDLE) {
+         return;
+      }
       this->configuration.image_count = config::frames_in_flight_count; // TODO: use swap chain size instead?
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
@@ -245,10 +347,7 @@ namespace vulkanDK {
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
       //
-      this->target._on_renderer_ready();
-   }
-   void surface_renderer::_setup_device() {
-
+      this->_on_renderer_ready();
    }
    void surface_renderer::_setup_shader_modules() {
       auto& dfn = this->material_definitions.emplace_back();
@@ -642,7 +741,7 @@ namespace vulkanDK {
       //
       auto create_info = VkSwapchainCreateInfoKHR{
          .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-         .surface          = this->target.handle,
+         .surface          = this->handle,
          .minImageCount    = imageCount,
          .imageFormat      = surfaceFormat.format,
          .imageColorSpace  = surfaceFormat.colorSpace,
@@ -785,7 +884,7 @@ namespace vulkanDK {
    }
 
    void surface_renderer::teardown() {
-      this->target._on_renderer_teardown_imminent();
+      this->_on_renderer_teardown_imminent();
       //
       vkDeviceWaitIdle(this->logical_device); // wait for all draw commands to finish (remember: they're asynch)
       //
@@ -810,7 +909,7 @@ namespace vulkanDK {
       }
       abstract_renderer::teardown(); // tears down the logical device, too
       //
-      this->target._on_renderer_teardown_complete();
+      this->_on_renderer_teardown_complete();
    }
 
    void surface_renderer::handle_resize() {
@@ -877,7 +976,7 @@ namespace vulkanDK {
       //
       // Update surface state:
       //
-      this->target.state.resized = false;
+      this->widget.resized = false;
    }
 
 
@@ -893,7 +992,7 @@ namespace vulkanDK {
       // 
       // These tasks are asynchronous, but must run sequentially.
       //
-      if (!this->target.state.visible)
+      if (!this->widget.visible)
          return;
       //
       uint32_t sc_image_index;
@@ -946,7 +1045,7 @@ namespace vulkanDK {
       result = vkQueuePresentKHR(this->queues.presentation.handle, &presentation_info);
       switch (result) {
          case VK_SUCCESS:
-            if (this->target.state.resized)
+            if (this->widget.resized)
                this->handle_resize();
             break;
          case VK_ERROR_OUT_OF_DATE_KHR:
@@ -995,6 +1094,12 @@ namespace vulkanDK {
    }
 
 
+   VkExtent2D surface_renderer::desired_surface_size() const {
+      QWidget* w = this->widget.pointer;
+      if (!w || !w->isVisible())
+         return { 0, 0 };
+      return { (uint32_t)w->width(), (uint32_t)w->height() };
+   }
    VkFormat surface_renderer::find_depth_format() const {
       auto fmt = this->device_info->find_supported_format(
          { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
@@ -1044,6 +1149,8 @@ namespace vulkanDK {
       }
 
       vkBindBufferMemory(this->logical_device, out.handle, out.memory, 0);
+
+      return out;
    }
 
    #pragma region scene

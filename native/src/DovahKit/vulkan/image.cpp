@@ -3,7 +3,6 @@
 #include <cassert>
 #include <stdexcept>
 #include "command_buffer.h"
-#include "logical_device.h"
 #include "physical_device.h"
 #include "surface_renderer.h"
 

@@ -3,31 +3,33 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWinExtras/qwintaskbarbutton.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "ui_main_window.h"
-#include "main_window/cell_view.h"
-#include "main_window/object_window.h"
-#include "main_window/log_window.h"
-#include "main_window/render_window.h"
 
 class DefaultObjectWindow;
 class FileMetadataWindow;
 class GameSettingWindow;
+
+class CellViewWindow;
+class LogWindow;
+class ObjectWindow;
+class RenderWindow;
 
 class MainWindow : public QMainWindow {
    Q_OBJECT
    //
    public:
       MainWindow(QWidget* parent = Q_NULLPTR);
+      ~MainWindow();
       //
       static MainWindow& get();
-      //
+      
    public slots:
       void setProgressBounds(int, int);
       void setProgressStep(int);
       void setProgressEnableState(bool);
-      //
+      
    signals:
       void shown();
-      //
+      
    private:
       struct _subwindow_base {
          QWidget*        _widget = nullptr;
@@ -44,7 +46,7 @@ class MainWindow : public QMainWindow {
          }
          inline C* widget() const noexcept { return (C*)this->_widget; }
       };
-      //
+      
    private:
       Ui::MainWindow ui;
       struct {
@@ -62,7 +64,7 @@ class MainWindow : public QMainWindow {
       QMenu* form_edit_window_menu = nullptr;
       //
       QMdiSubWindow* getSubwindowFor(QWidget*) const noexcept;
-      //
+      
    protected:
       virtual void closeEvent(QCloseEvent* event) override;
       virtual void showEvent(QShowEvent* event) override;

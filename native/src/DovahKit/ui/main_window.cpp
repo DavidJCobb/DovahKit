@@ -8,14 +8,21 @@
 #include "../editor/core.h"
 #include "../editor/open_window_for_form.h"
 #include "../dovah/files/file_load_order.h"
-#include "main_window/load_window.h"
-#include "main_window/save_window.h"
-#include "main_window/file_metadata_window.h"
-#include "main_window/log_window.h"
-#include "main_window/game_setting_window.h"
-#include "main_window/default_object_window.h"
-#include "main_window/script_window_single.h"
-#include "main_window/script_window_package.h"
+#pragma region subwindows
+   #include "main_window/cell_view.h"
+   #include "main_window/object_window.h"
+   #include "main_window/log_window.h"
+   #include "main_window/render_window.h"
+#pragma endregion
+#pragma region dialogs
+   #include "main_window/load_window.h"
+   #include "main_window/save_window.h"
+   #include "main_window/file_metadata_window.h"
+   #include "main_window/game_setting_window.h"
+   #include "main_window/default_object_window.h"
+   #include "main_window/script_window_single.h"
+   #include "main_window/script_window_package.h"
+#pragma endregion
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -107,39 +114,39 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       action->setText(tr("Use Info dialogs", "main window - window menu"));
       //
       #pragma region Form-editing window list
-      QObject::connect(this->form_edit_window_menu, &QMenu::aboutToShow, this, [this]() {
-         this->updateFormEditWindowList();
-      });
-      QObject::connect(this->form_edit_window_menu, &QMenu::triggered, this, [this](QAction* action) {
-         uint32_t formID = action->data().toUInt();
-         if (!formID)
-            return;
-         auto* form = DovahKitCore::get().get_form(formID);
-         if (form)
-            open_edit_dialog_for_form(form, this);
-      });
-      // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
-      /*QObject::connect(this->form_edit_window_menu, &QMenu::aboutToHide, this, [this]() {
-         this->form_edit_window_menu->clear();
-      });*/
+         QObject::connect(this->form_edit_window_menu, &QMenu::aboutToShow, this, [this]() {
+            this->updateFormEditWindowList();
+         });
+         QObject::connect(this->form_edit_window_menu, &QMenu::triggered, this, [this](QAction* action) {
+            uint32_t formID = action->data().toUInt();
+            if (!formID)
+               return;
+            auto* form = DovahKitCore::get().get_form(formID);
+            if (form)
+               open_edit_dialog_for_form(form, this);
+         });
+         // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
+         /*QObject::connect(this->form_edit_window_menu, &QMenu::aboutToHide, this, [this]() {
+            this->form_edit_window_menu->clear();
+         });*/
       #pragma endregion
       //
       #pragma region Use Info window list
-      QObject::connect(this->form_uses_window_menu, &QMenu::aboutToShow, this, [this]() {
-         this->updateFormUsesWindowList();
-      });
-      QObject::connect(this->form_uses_window_menu, &QMenu::triggered, this, [this](QAction* action) {
-         uint32_t formID = action->data().toUInt();
-         if (!formID)
-            return;
-         auto* form = DovahKitCore::get().get_form(formID);
-         if (form)
-            open_use_info_dialog_for_form(form, this);
-      });
-      // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
-      /*QObject::connect(this->form_uses_window_menu, &QMenu::aboutToHide, this, [this]() {
-         this->form_uses_window_menu->clear();
-      });*/
+         QObject::connect(this->form_uses_window_menu, &QMenu::aboutToShow, this, [this]() {
+            this->updateFormUsesWindowList();
+         });
+         QObject::connect(this->form_uses_window_menu, &QMenu::triggered, this, [this](QAction* action) {
+            uint32_t formID = action->data().toUInt();
+            if (!formID)
+               return;
+            auto* form = DovahKitCore::get().get_form(formID);
+            if (form)
+               open_use_info_dialog_for_form(form, this);
+         });
+         // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
+         /*QObject::connect(this->form_uses_window_menu, &QMenu::aboutToHide, this, [this]() {
+            this->form_uses_window_menu->clear();
+         });*/
       #pragma endregion
    }
    #pragma endregion
@@ -258,6 +265,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
    DovahKitDebug::add_features_to_menu(this->ui.menuDebug);
 }
+MainWindow::~MainWindow() {
+   _window = nullptr;
+}
 
 void MainWindow::setProgressBounds(int min, int max) {
    if (!this->taskbar_button)
@@ -292,7 +302,6 @@ void MainWindow::closeEvent(QCloseEvent* event) {
    // choose not to exit, then we want to call {event->ignore()} and then return 
    // immediately.
    //
-   _window = nullptr;
    event->accept();
 }
 void MainWindow::showEvent(QShowEvent* event) {

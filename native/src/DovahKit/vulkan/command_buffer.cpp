@@ -1,12 +1,11 @@
 #include "command_buffer.h"
-#include "logical_device.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
    command_buffer::command_buffer(VkDevice d, VkCommandPool p) : owning_device(d), owning_pool(p) {
       this->_setup();
    }
-   command_buffer::command_buffer(surface_renderer& sr) : owning_device(sr.device.handle), owning_pool(sr.command_pool) {
+   command_buffer::command_buffer(surface_renderer& sr) : command_buffer(sr.logical_device, sr.command_pool) {
       this->_setup();
    }
    command_buffer::~command_buffer() {
@@ -47,7 +46,7 @@ namespace vulkanDK {
       return out;
    }
    /*static*/ std::vector<command_buffer> command_buffer::create_in_bulk(surface_renderer& sr, size_t count) {
-      return create_in_bulk(sr.device.handle, sr.command_pool, count);
+      return create_in_bulk(sr.logical_device, sr.command_pool, count);
    }
 
    void command_buffer::_setup() {

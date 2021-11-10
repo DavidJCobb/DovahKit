@@ -22,8 +22,8 @@ namespace vulkanDK {
          abstract_renderer() {}
          ~abstract_renderer();
 
-         physical_device* device_info    = nullptr;
-         VkDevice         logical_device = VK_NULL_HANDLE; // subclasses set it up; we tear it down
+         const physical_device* device_info = nullptr;
+         VkDevice logical_device = VK_NULL_HANDLE; // subclasses set it up; we tear it down
          //
          VkCommandPool    command_pool    = VK_NULL_HANDLE;
          VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;

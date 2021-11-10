@@ -32,7 +32,7 @@ namespace vulkanDK {
       // you manage and control entirely on your own.
       //
       public:
-         concrete_image(); // if you default-construct a concrete image, you MUST replace it with an owned image (constructor with args).
+         concrete_image() {} // if you default-construct a concrete image, you MUST replace it with an owned image (constructor with args).
          concrete_image(surface_renderer& c) : owner(&c) {}
          ~concrete_image();
 

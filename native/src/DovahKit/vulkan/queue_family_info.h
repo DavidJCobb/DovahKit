@@ -29,7 +29,7 @@ namespace vulkanDK {
          static constexpr decltype(mask) all_mask_bits_set   = (1 << unique_family_count) - 1;
 
          queue_family_info(surface_renderer&);
-         queue_family_info(const physical_device&, const surface&);
+         queue_family_info(const physical_device&, const VkSurfaceKHR);
          bool has(const queue_index_t& entry) const noexcept;
 
          inline bool has_index(size_t i) const noexcept {

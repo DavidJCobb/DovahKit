@@ -15,6 +15,9 @@ namespace vulkanDK {
       public:
          frame_in_flight() {}
          ~frame_in_flight();
+
+         frame_in_flight(frame_in_flight&&) noexcept = default;
+         frame_in_flight& operator=(frame_in_flight&&) noexcept = default;
       
          surface_renderer* owner = nullptr;
          size_t my_index = 0; // needed for scene updates

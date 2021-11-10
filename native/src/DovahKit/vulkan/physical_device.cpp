@@ -1,4 +1,5 @@
 #include "physical_device.h"
+#include <stdexcept>
 
 namespace vulkanDK {
    physical_device::physical_device(VkPhysicalDevice d) : handle(d) {

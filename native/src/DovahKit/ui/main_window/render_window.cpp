@@ -1,5 +1,6 @@
 #include "render_window.h"
 #include <QBoxLayout>
+#include <QFileDialog>
 #include <QStyle>
 #include <QToolButton>
 #include "../../editor/DovahKitVulkanSubsystem.h"
@@ -44,6 +45,33 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          vulkan.setAnimationPaused(i, checked);
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
+      //
+      this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("New Object");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this]() {
+         auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.png, *.bmp)");
+         if (path.isEmpty())
+            return;
+         //
+         auto& vulkan = DovahKitVulkanSubsystem::get();
+         vulkan.addRenderedObject(path);
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_FileDialogNewFolder));
+      //
+      this->toolbar->addWidget(button);
+   }
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Delete Last Object");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this]() {
+         auto& vulkan = DovahKitVulkanSubsystem::get();
+         vulkan.removeRenderedObject();
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_BrowserStop));
       //
       this->toolbar->addWidget(button);
    }

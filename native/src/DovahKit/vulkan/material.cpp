@@ -1,6 +1,5 @@
 #include "material.h"
 #include <stdexcept>
-#include "logical_device.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -76,8 +75,6 @@ namespace vulkanDK {
    #pragma endregion
 
    #pragma region material
-   material::material(surface_renderer& c) : owner(&c) {
-   }
    material::~material() {
       if (!this->owner)
          return;

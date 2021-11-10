@@ -2,10 +2,11 @@
 #include <string>
 #include <vector>
 #include "_vulkan.h"
+#include "_util.h"
 #include "surface_support_info.h"
 
 namespace vulkanDK {
-   class physical_device {
+   class physical_device : only_heap_allocate {
       public:
          physical_device(VkPhysicalDevice);
          ~physical_device();

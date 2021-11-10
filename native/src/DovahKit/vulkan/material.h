@@ -77,7 +77,7 @@ namespace vulkanDK {
 
    class material : no_copy {
       public:
-         material(surface_renderer&);
+         material() {};
          ~material();
 
          material(material&&) noexcept;

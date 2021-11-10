@@ -3,7 +3,6 @@
 #include <cassert>
 #include <stdexcept>
 #include "config/scene_limits.h"
-#include "logical_device.h"
 #include "render_pass.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"

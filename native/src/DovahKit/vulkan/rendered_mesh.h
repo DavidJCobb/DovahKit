@@ -18,6 +18,9 @@ namespace vulkanDK {
          rendered_mesh() {}
          ~rendered_mesh();
 
+         rendered_mesh(rendered_mesh&&) noexcept = default;
+         rendered_mesh& operator=(rendered_mesh&&) noexcept = default;
+
          struct shader_parameters { // pass to the shader via a storage buffer
             glm::mat4 transform;
          };

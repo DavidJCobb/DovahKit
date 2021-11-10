@@ -1,4 +1,5 @@
 #include "DKVulkanInstance.h"
+#include "physical_device.h"
 #include "config/validation_layers.h"
 
 namespace {
@@ -74,6 +75,23 @@ DKVulkanInstance::DKVulkanInstance() {
       qDebug("[DKVulkanInstance] Failed to create Vulkan instance!");
       return;
    }
+   if constexpr (enable_debug_logging) {
+      //
+      // We actually set up two debug loggers: one, specified in createInfo above, to catch 90% of errors, and 
+      // another here to catch errors that occur specifically when creating or destroying the VkInstance.
+      //
+      auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(this->handle, "vkCreateDebugUtilsMessengerEXT");
+      if (func == nullptr) {
+         qDebug("[DKVulkanInstance] Failed to set up debug logging: failed to look up API: vkCreateDebugUtilsMessengerEXT.");
+      } else {
+         auto params = _get_debug_create_params();
+         auto result = func(this->handle, &params, nullptr, &this->debug_messenger);
+         if (result != VK_SUCCESS) {
+            qDebug("[DKVulkanInstance] Failed to set up debug logging: API call failed.");
+            this->debug_messenger = VK_NULL_HANDLE;
+         }
+      }
+   }
    //
    // Get physical device info:
    //
@@ -87,7 +105,7 @@ DKVulkanInstance::DKVulkanInstance() {
       for (auto& h : devices) {
          if (h == VK_NULL_HANDLE)
             continue;
-         this->physical_devices.push_back(h);
+         this->physical_devices.push_back(new vulkanDK::physical_device(h));
       }
    }
 }
@@ -99,9 +117,17 @@ DKVulkanInstance::~DKVulkanInstance() {
    // TODO: Tear down all associated contexts, scenes, etc..
    //
    if constexpr (enable_debug_logging) {
-      auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-      if (func != nullptr)
-         func(this->instance, this->debugMessenger, nullptr);
+      if (this->debug_messenger != VK_NULL_HANDLE) {
+         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(this->handle, "vkDestroyDebugUtilsMessengerEXT");
+         if (func != nullptr)
+            func(this->handle, this->debug_messenger, nullptr);
+      }
+   }
+   {
+      auto& list = this->physical_devices;
+      for (auto* p : list)
+         delete p;
+      list.clear();
    }
    vkDestroyInstance(this->handle, nullptr);
    this->handle = VK_NULL_HANDLE;

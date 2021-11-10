@@ -1,4 +1,6 @@
 #pragma once
+#include <QPointer>
+#include <QWidget>
 #include "_vulkan.h"
 #include "_util.h"
 #include "abstract_renderer.h"
@@ -7,6 +9,10 @@
 #include "descriptor_definitions.h"
 #include "image.h"
 #include "scene.h"
+//
+#include "widgets/DKVulkanView.h"
+
+class DKVulkanInstance;
 
 namespace vulkanDK {
    class frame_in_flight;
@@ -14,12 +20,38 @@ namespace vulkanDK {
    class shader_module;
    class surface;
 
-   class surface_renderer : public abstract_renderer {
+   class surface_renderer : public abstract_renderer, no_copy, only_heap_allocate {
+      friend class DKVulkanView;
       public:
-         surface_renderer(surface&, physical_device&);
+         surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
 
-         surface&   target;
+      protected:
+         // renderer events:
+         void _on_renderer_ready();
+         void _on_renderer_teardown_imminent();
+         void _on_renderer_teardown_complete();
+
+         // widget events:
+         void _on_repaint();
+         void _on_visibility_change(QSize, bool visible); // or resize
+
+      public:
+         // APIs
+         void set_physical_device(const physical_device&);
+         void set_widget(DKVulkanView*);
+         void update_widget_id();
+
+      public:
+         DKVulkanInstance& owner;
+         VkSurfaceKHR      handle = VK_NULL_HANDLE;
+         struct {
+            QPointer<DKVulkanView> pointer;
+            bool resized = false;
+            bool visible = false;
+            WId  last_id = {};
+         } widget;
+         //
          VkExtent2D surface_extent; // last extent we set ourselves up for
          struct {
             queue graphics;
@@ -45,16 +77,17 @@ namespace vulkanDK {
          //
          scene scene;
 
-         void setup();
-         void teardown();
+         void setup(); // sets up the device and everything below, but not the surface
+         void teardown(); // tears down the device and everything below, but not the surface
 
          void handle_resize();
 
          void draw_next_frame();
 
          template<typename T> inline void do_single_commands(T func) {
-            (func)(this->_begin_one_time_commands());
-            this->_end_one_time_commands();
+            auto cb = this->_begin_one_time_commands();
+            (func)(cb);
+            this->_end_one_time_commands(cb);
          }
 
          VkExtent2D desired_surface_size() const;
@@ -70,8 +103,10 @@ namespace vulkanDK {
          void remove_last_mesh();
 
       protected:
-         void _setup_device();
-         //
+         void _init_surface(); // on init, and when the HWND changes
+         void _init_device();
+         void _reset_surface();
+         
          void _setup_shader_modules();
          //
          void _create_null_texture(); // requires command pool
