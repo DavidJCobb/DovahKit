@@ -3,8 +3,23 @@
 #include <stdexcept>
 
 namespace vulkanDK {
+   #pragma region queue
+   void abstract_renderer::queue::setup(VkDevice device, uint32_t index) {
+      vkGetDeviceQueue(device, index, 0, &this->handle);
+      this->index = index;
+   }
+   #pragma endregion
+
    abstract_renderer::~abstract_renderer() {
       this->teardown();
+   }
+
+   std::vector<VkDescriptorSetLayout> abstract_renderer::descriptor_set_layout_handles() const {
+      std::vector<VkDescriptorSetLayout> list;
+      list.reserve(this->descriptor_set_layouts.size());
+      for (auto& dsl : this->descriptor_set_layouts)
+         list.push_back(dsl.handle);
+      return list;
    }
 
    void abstract_renderer::teardown() {
@@ -24,6 +39,7 @@ namespace vulkanDK {
          }
          list.clear();
       }
+      this->material_definitions.clear();
       {
          auto& list = this->shader_modules;
          for (auto* sm : list) {

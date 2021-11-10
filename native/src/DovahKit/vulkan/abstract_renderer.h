@@ -3,6 +3,7 @@
 #include "_vulkan.h"
 #include "_util.h"
 #include "descriptor_definitions.h"
+#include "material.h"
 #include "physical_device.h"
 
 namespace vulkanDK {
@@ -10,6 +11,13 @@ namespace vulkanDK {
    class shader_module;
 
    class abstract_renderer {
+      public:
+         struct queue {
+            VkQueue  handle = VK_NULL_HANDLE;
+            uint32_t index  = 0; // family index
+
+            void setup(VkDevice, uint32_t);
+         };
       public:
          abstract_renderer() {}
          ~abstract_renderer();
@@ -21,13 +29,16 @@ namespace vulkanDK {
          VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
          std::vector<descriptor_set_layout> descriptor_set_layouts;
          //
-         std::vector<render_pass*>   render_passes;  // owns
-         std::vector<shader_module*> shader_modules; // owns
+         std::vector<render_pass*>        render_passes;  // owns
+         std::vector<shader_module*>      shader_modules; // owns
+         std::vector<material_definition> material_definitions; // owns
          VkSampler texture_sampler = VK_NULL_HANDLE;
          //
          struct {
             uint32_t image_count = 1;
          } configuration;
+
+         std::vector<VkDescriptorSetLayout> descriptor_set_layout_handles() const;
 
          void teardown();
 

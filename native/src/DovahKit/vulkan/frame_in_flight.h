@@ -11,13 +11,6 @@ namespace vulkanDK {
    class scene;
    class surface_renderer;
 
-   class frame_render_pass {
-      public:
-         render_pass* pass = nullptr;
-         std::vector<command_buffer> command_buffers;
-         bool command_buffers_invalid = false;
-   };
-
    class frame_in_flight : no_copy {
       public:
          frame_in_flight() {}
@@ -32,12 +25,14 @@ namespace vulkanDK {
             VkSemaphore render_finished = VK_NULL_HANDLE;
          } semaphores;
          //
-         std::vector<VkDescriptorSet>   descriptor_sets;
-         std::vector<frame_render_pass> render_passes;
+         std::vector<VkDescriptorSet> descriptor_sets;
+         command_buffer commands;
          struct {
             buffer uniform;
             buffer object_data;
          } shader_params;
+         //
+         bool command_buffers_invalid = false;
 
          void draw(VkFramebuffer);
 

@@ -1,6 +1,5 @@
 #include "shader_module.h"
 #include <stdexcept>
-#include "logical_device.h"
 
 namespace vulkanDK {
    shader_module::shader_module(VkDevice d, const QByteArray& compiled) : device(d) {

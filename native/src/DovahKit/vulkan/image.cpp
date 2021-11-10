@@ -3,8 +3,6 @@
 #include <cassert>
 #include <stdexcept>
 #include "command_buffer.h"
-#include "context.h"
-#include "device.h"
 #include "logical_device.h"
 #include "physical_device.h"
 #include "surface_renderer.h"
@@ -44,49 +42,38 @@ namespace {
 }
 
 namespace vulkanDK {
-   #pragma region image
-   image::image(device& d) : owner(&d) {
-   }
-   image::~image() {
-      if (this->handle != VK_NULL_HANDLE) {
-         assert(this->owner);
-         vkDestroyImage(this->owner->logical, this->handle, nullptr);
-         this->handle = VK_NULL_HANDLE;
-      }
-   }
-
-   image::image(image&& o) noexcept {
-      std::swap(this->owner,  o.owner);
-      std::swap(this->handle, o.handle);
-   }
-   image& image::operator=(image&& o) noexcept {
-      std::swap(this->owner,  o.owner);
-      std::swap(this->handle, o.handle);
-      return *this;
-   }
-   #pragma endregion
-
-   #pragma region image_and_view
-   image_and_view::~image_and_view() {
+   #pragma region surface_renderer_image_view
+   surface_renderer_image_view::surface_renderer_image_view(surface_renderer& o, VkImage i) : owner(&o), image(i) {}
+   surface_renderer_image_view::~surface_renderer_image_view() {
       this->destroy_view();
    }
-   //
-   void image_and_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
+
+
+   surface_renderer_image_view::surface_renderer_image_view(surface_renderer_image_view&& o) noexcept {
+      std::swap(this->owner, o.owner);
+      std::swap(this->image, o.image);
+      std::swap(this->view,  o.view);
+   }
+   surface_renderer_image_view& surface_renderer_image_view::operator=(surface_renderer_image_view&& o) noexcept {
+      std::swap(this->owner, o.owner);
+      std::swap(this->image, o.image);
+      std::swap(this->view,  o.view);
+      return *this;
+   }
+   
+   void surface_renderer_image_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
-      assert(this->content.owner);
-      auto* device = this->content.owner->logical;
-      auto  result = _create_basic_view(device, this->content.handle, this->view, format, aspect);
+      assert(this->owner);
+      auto result = _create_basic_view(this->owner->logical_device, this->image, this->view, format, aspect);
       if (result != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::image_and_view::create_basic_view] Failed to create texture image view.");
+         throw std::runtime_error("[vulkanDK::surface_renderer_image_view::create_basic_view] Failed to create texture image view.");
       }
    }
-   void image_and_view::destroy_view() {
+   void surface_renderer_image_view::destroy_view() {
       if (this->view == VK_NULL_HANDLE)
          return;
-      assert(this->content.owner);
-      auto* device = this->content.owner->logical;
-      //
-      vkDestroyImageView(device, this->view, nullptr);
+      assert(this->owner);
+      vkDestroyImageView(this->owner->logical_device, this->view, nullptr);
       this->view = VK_NULL_HANDLE;
    }
    #pragma endregion
@@ -95,10 +82,26 @@ namespace vulkanDK {
    concrete_image::~concrete_image() {
       this->teardown();
    }
+
+
+   concrete_image::concrete_image(concrete_image&& o) noexcept {
+      std::swap(this->owner,  o.owner);
+      std::swap(this->handle, o.handle);
+      std::swap(this->view,   o.view);
+      std::swap(this->memory, o.memory);
+   }
+   concrete_image& concrete_image::operator=(concrete_image&& o) noexcept {
+      std::swap(this->owner,  o.owner);
+      std::swap(this->handle, o.handle);
+      std::swap(this->view,   o.view);
+      std::swap(this->memory, o.memory);
+      return *this;
+   }
+
    void concrete_image::create_image(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
       assert(this->handle == VK_NULL_HANDLE);
       assert(this->owner);
-      auto device = this->owner->device.handle;
+      auto device = this->owner->logical_device;
       //
       auto image_info = VkImageCreateInfo{
          .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -131,7 +134,7 @@ namespace vulkanDK {
       auto alloc_info = VkMemoryAllocateInfo{
          .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
          .allocationSize  = memRequirements.size,
-         .memoryTypeIndex = this->owner->device.physical.find_memory_type(memRequirements.memoryTypeBits, properties),
+         .memoryTypeIndex = this->owner->device_info->find_memory_type(memRequirements.memoryTypeBits, properties),
       };
       if (vkAllocateMemory(device, &alloc_info, nullptr, &this->memory) != VK_SUCCESS) {
          throw std::runtime_error("failed to allocate image memory!");
@@ -142,8 +145,7 @@ namespace vulkanDK {
    void concrete_image::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto device = this->owner->device.handle;
-      auto result = _create_basic_view(device, this->handle, this->view, format, aspect);
+      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, format, aspect);
       if (result != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::concrete_image::create_basic_view] Failed to create texture image view.");
       }
@@ -264,7 +266,7 @@ namespace vulkanDK {
       if (this->handle == VK_NULL_HANDLE)
          return;
       assert(this->owner);
-      auto device = this->owner->device.handle;
+      auto device = this->owner->logical_device;
       vkDestroyImageView(device, this->view,   nullptr);
       vkDestroyImage    (device, this->handle, nullptr);
       vkFreeMemory      (device, this->memory, nullptr);

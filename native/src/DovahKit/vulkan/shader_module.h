@@ -4,8 +4,6 @@
 #include "_util.h"
 
 namespace vulkanDK {
-   class logical_device;
-
    class shader_module : no_copy {
       public:
          shader_module(VkDevice, const QByteArray&);

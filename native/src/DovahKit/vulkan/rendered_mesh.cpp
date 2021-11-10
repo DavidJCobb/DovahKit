@@ -1,6 +1,13 @@
 #include "rendered_mesh.h"
 
 namespace vulkanDK {
+   rendered_mesh::~rendered_mesh() {
+      if (auto*& p = this->anim_state) {
+         delete p;
+         p = nullptr;
+      }
+   }
+
    void rendered_mesh::_on_shader_parameter_change() {
       if (this->pending_delete)
          return;
@@ -29,5 +36,18 @@ namespace vulkanDK {
          vkCmdBindIndexBuffer(command_buffer, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT16);
       }
       vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
+   }
+
+   void rendered_mesh::reset() {
+      auto& vib = this->vertex_and_index_buffer;
+      vib.buffer      = buffer();
+      vib.index_count = 0;
+      vib.indices_at  = 0;
+      //
+      if (auto*& p = this->anim_state) {
+         delete p;
+         p = nullptr;
+      }
+      this->frame_dirty_flags = frames_in_flight_mask();
    }
 }

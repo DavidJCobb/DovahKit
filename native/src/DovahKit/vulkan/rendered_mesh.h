@@ -15,6 +15,9 @@ namespace vulkanDK {
       protected:
          void _on_shader_parameter_change();
       public:
+         rendered_mesh() {}
+         ~rendered_mesh();
+
          struct shader_parameters { // pass to the shader via a storage buffer
             glm::mat4 transform;
          };
@@ -24,10 +27,9 @@ namespace vulkanDK {
          };
          
          struct {
-            buffer         buffer;
-            uint32_t       indices_at     = 0;
-            uint32_t       index_count    = 0;
-            VkDeviceSize   allocated_size = 0; // TODO: when we improve buffer management, this will be queryable from the buffer wrapper
+            buffer   buffer;
+            uint32_t indices_at  = 0;
+            uint32_t index_count = 0;
          } vertex_and_index_buffer;
          shader_parameters shader_params;
          int32_t texture_index = -1;
@@ -35,7 +37,7 @@ namespace vulkanDK {
          frames_in_flight_mask frame_dirty_flags; // for normal objects: frames that need (shader_params) resynchronized. for pending-delete objects: frames that may still be using the vertex-and-index buffer
          bool pending_delete = false; // unhook the object's vertex-and-index buffer from frames' command buffers; delete it when it's fully unhooked
          //
-         mesh_animation_state* anim_state = nullptr;
+         mesh_animation_state* anim_state = nullptr; // owns
          
          inline bool empty() const noexcept { return this->vertex_and_index_buffer.buffer.empty(); }
          
@@ -44,5 +46,7 @@ namespace vulkanDK {
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
+
+         void reset();
    };
 }

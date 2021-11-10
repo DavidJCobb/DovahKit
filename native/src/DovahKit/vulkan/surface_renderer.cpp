@@ -22,6 +22,8 @@
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
 //
+#include <QFile>
+//
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -33,7 +35,8 @@ namespace {
       VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
    };
 
-   constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
+   static constexpr auto desired_swap_chain_presentation_mode  = VK_PRESENT_MODE_MAILBOX_KHR;
+   static constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
 }
 
 namespace { // test scene properties
@@ -94,14 +97,7 @@ namespace { // test scene properties
 }
 
 namespace vulkanDK {
-   #pragma region queue
-   void surface_renderer::queue::setup(VkDevice device, uint32_t index) {
-      vkGetDeviceQueue(device, index, 0, &this->handle);
-      this->index = index;
-   }
-   #pragma endregion
-
-   surface_renderer::surface_renderer(surface& s, physical_device& d) : target(s), swap_chain(*this), null_texture(*this) {
+   surface_renderer::surface_renderer(surface& s, physical_device& d) : target(s), null_texture(*this) {
       this->device_info = &d;
       {  // Logical device setup
          auto  indices        = queue_family_info(d, s);
@@ -221,7 +217,8 @@ namespace vulkanDK {
    }
 
    void surface_renderer::setup() {
-      this->configuration.image_count = config::frames_in_flight_count; // TODO: use swap chain size instead
+      this->configuration.image_count = config::frames_in_flight_count; // TODO: use swap chain size instead?
+      this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->setup_descriptor_set_layouts();
       this->_setup_shader_modules();
@@ -230,7 +227,19 @@ namespace vulkanDK {
       this->setup_command_pool(this->queues.graphics.index);
       this->setup_descriptor_pool();
       //
-      this->swap_chain.setup(); // includes frames-in-flight, which in turn includes semaphores, shader parameter buffers, descriptor set allocations (though not their contained descriptors), and command buffers
+      {  // swap chain
+         this->_setup_swap_chain_instance();
+         this->_setup_materials();
+         this->_setup_depth_buffer();
+         this->_setup_swap_chain_images();
+         this->_setup_framebuffers();
+         {  // frames in flight (semaphores, shader parameter buffers, descriptor set allocations, command buffers)
+            auto& list = this->swap_chain.frames_in_flight;
+            auto  size = list.size();
+            for (size_t i = 0; i < size; ++i)
+               list[i].setup(*this, i);
+         }
+      }
       this->_setup_render_passes();
       this->_create_null_texture();
       this->_setup_initial_scene();
@@ -242,8 +251,9 @@ namespace vulkanDK {
 
    }
    void surface_renderer::_setup_shader_modules() {
-      auto* dfn = new material_definition;
-      this->swap_chain.material_definitions.push_back(dfn);
+      auto& dfn = this->material_definitions.emplace_back();
+      auto vert_binding    = vertex::getBindingDescription();
+      auto vert_attributes = vertex::getAttributeDescriptions();
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -260,7 +270,7 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load vertex shader.");
       }
       //
-      dfn->stages = {
+      dfn.stages = {
          {
             .module              = frag,
             .entry_point_name    = "main",
@@ -273,6 +283,18 @@ namespace vulkanDK {
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
             .specialization_info = nullptr,
          },
+      };
+      dfn.inputs.vertex = {
+         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+         .vertexBindingDescriptionCount   = 1,
+         .pVertexBindingDescriptions      = &vert_binding,
+         .vertexAttributeDescriptionCount = (uint32_t)vert_attributes.size(),
+         .pVertexAttributeDescriptions    = vert_attributes.data(),
+      };
+      dfn.inputs.triangles = {
+         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+         .topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+         .primitiveRestartEnable = VK_FALSE,
       };
    }
    //
@@ -403,9 +425,8 @@ namespace vulkanDK {
             memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
             staging.unmap_memory(data);
             //
-            vib.indices_at     = buffer_size_v;
-            vib.index_count    = s.indices.size();
-            vib.allocated_size = buffer_size;
+            vib.indices_at  = buffer_size_v;
+            vib.index_count = s.indices.size();
             //
             vib.buffer = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             vib.buffer.copy_from(staging);
@@ -567,6 +588,201 @@ namespace vulkanDK {
       for(auto* rp : this->render_passes)
          rp->setup();
    }
+   //
+   // Swap chain:
+   //
+   void surface_renderer::_setup_swap_chain_instance() {
+      auto& sc  = this->swap_chain;
+      auto  ssi = surface_support_info(*this);
+      //
+      VkSurfaceFormatKHR surfaceFormat;
+      VkPresentModeKHR   presentMode;
+      VkExtent2D         extent;
+      uint32_t           imageCount;
+      //
+      #pragma region choose format
+         assert(!ssi.formats.empty());
+         surfaceFormat = ssi.formats[0]; // fallback
+         for (const auto& current_format : ssi.formats) {
+            if (current_format.format == VK_FORMAT_B8G8R8A8_SRGB && current_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+               surfaceFormat = current_format;
+               break;
+            }
+         }
+         sc.format = surfaceFormat.format;
+      #pragma endregion
+      #pragma region choose presentation mode
+         presentMode = VK_PRESENT_MODE_FIFO_KHR; // fallback
+         for (const auto& current_mode : ssi.presentation_modes) {
+            if (current_mode == desired_swap_chain_presentation_mode) {
+               presentMode = current_mode;
+               break;
+            }
+         }
+      #pragma endregion
+      #pragma region choose extent
+         if (ssi.capabilities.currentExtent.width != UINT32_MAX) {
+            extent = ssi.capabilities.currentExtent;
+         } else {
+            auto& min_e = ssi.capabilities.minImageExtent;
+            auto& max_e = ssi.capabilities.maxImageExtent;
+            //
+            extent = this->desired_surface_size();
+            extent.width  = std::clamp(extent.width,  min_e.width,  max_e.width);
+            extent.height = std::clamp(extent.height, min_e.height, max_e.height);
+         }
+         this->surface_extent = extent;
+      #pragma endregion
+      #pragma region choose image count
+         imageCount = ssi.capabilities.minImageCount + 1;
+         if (ssi.capabilities.maxImageCount > 0 && imageCount > ssi.capabilities.maxImageCount) {
+            imageCount = ssi.capabilities.maxImageCount;
+         }
+      #pragma endregion
+      //
+      auto create_info = VkSwapchainCreateInfoKHR{
+         .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+         .surface          = this->target.handle,
+         .minImageCount    = imageCount,
+         .imageFormat      = surfaceFormat.format,
+         .imageColorSpace  = surfaceFormat.colorSpace,
+         .imageExtent      = extent,
+         .imageArrayLayers = 1,
+         .imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+      };
+      //
+      std::array<uint32_t, 2> queue_family_indices = { this->queues.graphics.index, this->queues.presentation.index };
+      if (this->queues.graphics.index != this->queues.presentation.index) {
+         //
+         // TODO: Apparently "exclusive" is faster for this case, but requires more complicated setup, 
+         //       which the tutorial I'm following feels should be saved for later.
+         // 
+         // See: https://vulkan-tutorial.com/en/Drawing_a_triangle/Presentation/Swap_chain#page_Creating-the-swap-chain
+         //
+         create_info.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
+         create_info.queueFamilyIndexCount = (uint32_t)queue_family_indices.size();
+         create_info.pQueueFamilyIndices   = queue_family_indices.data();
+      } else {
+         create_info.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
+         create_info.queueFamilyIndexCount = 0;       // clearing these two values is optional, but feels cleaner to me
+         create_info.pQueueFamilyIndices   = nullptr; //
+      }
+      create_info.preTransform   = ssi.capabilities.currentTransform; // don't rotate or otherwise transform the image while rendering
+      create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;   // disable alpha
+      create_info.presentMode    = presentMode;
+      create_info.clipped        = VK_TRUE;        // disable rendering of pixels covered (e.g. by other windows); good optimization, but prevents querying the colors of those pixels (e.g. for saving snapshots)
+      create_info.oldSwapchain   = VK_NULL_HANDLE; // must be specified when rebuilding a swap chain; keep null for making a new swap chain
+      //
+      if (vkCreateSwapchainKHR(this->logical_device, &create_info, nullptr, &sc.handle) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_swap_chain_instance] Failed to create swap chain.");
+      }
+   }
+   void surface_renderer::_setup_materials() {
+      auto& sc = this->swap_chain;
+      if (sc.materials.empty()) {
+         //
+         // Setting up the materials' pipeline layouts can be done at any point after we 
+         // have material definitions loaded and have created handles for our descriptor 
+         // set layouts.
+         //
+         sc.materials.resize(1);
+         //
+         sc.materials[0].owner = this;
+         sc.materials[0].setup_layout(
+            {  // Descriptor set layouts
+               this->descriptor_set_layouts[0].handle,
+            },
+            {  // Push constants
+               VkPushConstantRange{
+                  .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                  .offset     = 0,
+                  .size       = sizeof(rendered_mesh::push_constant),
+               }
+            }
+         );
+      }
+      //
+      // Setting up materials' pipeline handles requires knowledge of the final image size 
+      // to render to, and so must be re-done every time we rebuild our swap chain in 
+      // response to a resize.
+      //
+      auto viewport = VkViewport{ // describe what part of the framebuffer we should draw to
+         .x        = 0.0,
+         .y        = 0.0,
+         .width    = (float)this->surface_extent.width,
+         .height   = (float)this->surface_extent.height,
+         .minDepth = 0.0, // must be >= 0
+         .maxDepth = 1.0, // must be <= 1
+      };
+      auto scissor = VkRect2D{ // describe what part of the framebuffer we should retain (like a write-mask)
+         .offset = {0, 0},
+         .extent = this->surface_extent,
+      };
+      //
+      sc.materials[0].setup_handle(this->material_definitions[0], viewport, scissor, this->render_passes[0]->handle, 0);
+   }
+   void surface_renderer::_setup_depth_buffer() {
+      auto  extent = this->surface_extent;
+      auto  format = this->find_depth_format();
+      auto& db     = swap_chain.depth_buffer;
+      db.create_image(extent.width, extent.height, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
+      db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+   }
+   void surface_renderer::_setup_swap_chain_images() {
+      auto& sc = this->swap_chain;
+      //
+      uint32_t image_count;
+      //
+      // Get the number of swapchain images:
+      //
+      vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, nullptr);
+      if (sc.images.size() != image_count) {
+         //
+         // Get the image handles:
+         //
+         sc.images.resize(image_count);
+         std::vector<VkImage> image_handles(image_count);
+         vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, image_handles.data());
+         for (size_t i = 0; i < image_count; ++i) {
+            sc.images[i] = surface_renderer_image_view(*this, image_handles[i]);
+         }
+      }
+      //
+      // Set up the image views:
+      //
+      for (size_t i = 0; i < image_count; ++i) {
+         sc.images[i].create_basic_view(sc.format, VK_IMAGE_ASPECT_COLOR_BIT);
+      }
+   }
+   void surface_renderer::_setup_framebuffers() {
+      auto& sc = this->swap_chain;
+      auto extent = this->surface_extent;
+      auto r_pass = this->render_passes[0]->handle;
+      //
+      auto count = sc.images.size();
+      sc.framebuffers.resize(count);
+      for (size_t i = 0; i < count; i++) {
+         //
+         // Each swap chain image needs its own view for color attachment, but they can 
+         // share a single view for depth attachment because our semaphores ensure that 
+         // only one subpass is running at a time.
+         //
+         auto attachments = std::array{ sc.images[i].view, sc.depth_buffer.view };
+         auto framebuffer_info = VkFramebufferCreateInfo{
+            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass      = r_pass,
+            .attachmentCount = attachments.size(),
+            .pAttachments    = attachments.data(),
+            .width           = extent.width,
+            .height          = extent.height,
+            .layers          = 1,
+         };
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &sc.framebuffers[i]) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer.");
+         }
+      }
+   }
 
    void surface_renderer::teardown() {
       this->target._on_renderer_teardown_imminent();
@@ -577,7 +793,21 @@ namespace vulkanDK {
       //
       this->scene.teardown();
       this->null_texture.teardown();
-      this->swap_chain.teardown();
+      {  // Swap chain
+         auto& sc = this->swap_chain;
+         //
+         sc.materials.clear();
+         for (auto& fb : sc.framebuffers) {
+            vkDestroyFramebuffer(this->logical_device, fb, nullptr);
+            fb = VK_NULL_HANDLE;
+         }
+         sc.images.clear();
+         sc.depth_buffer.teardown();
+         vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
+         sc.handle = VK_NULL_HANDLE;
+         //
+         sc.frames_in_flight.clear();
+      }
       abstract_renderer::teardown(); // tears down the logical device, too
       //
       this->target._on_renderer_teardown_complete();
@@ -592,16 +822,35 @@ namespace vulkanDK {
          for (auto& fif : sc.frames_in_flight) {
             fif.invalidate_all_command_buffers(); // FIF doesn't have any other state that we'd need to reset
          }
-         //vkDestroyDescriptorPool(device, this->descriptor_pool, nullptr); // only necessary if the frame-in-flight count has changed
-         /*// We don't actually need to tear down the render passes unless the info they needed from the swap chain (i.e. the swap chain image format) has changed.
-         for (auto* rp : this->render_passes) {
-            rp->teardown();
+         for (auto& m : sc.materials)
+            //
+            // We don't need to completely destroy materials including their pipeline layouts; we 
+            // just need to destroy the pipelines themselves.
+            //
+            m.teardown_handle();
+         //
+         for (auto& fb : sc.framebuffers) {
+            vkDestroyFramebuffer(this->logical_device, fb, nullptr);
+            fb = VK_NULL_HANDLE;
          }
-         //*/
-         sc.teardown();
+         for (auto& image : sc.images)
+            image.destroy_view();
+         sc.depth_buffer.teardown();
+         vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
+         sc.handle = VK_NULL_HANDLE;
       }
       {  // Set up new state
-         sc.setup();
+         this->_setup_swap_chain_instance();
+         //
+         // If we have any resources that are per swap chain image, we'd want to tear them down and 
+         // rebuild them here if the swap chain image count has changed. For example, if we decided 
+         // to have our descriptor sets exist per swap chain image,  we'd need to teardown and then 
+         // rebuild the descriptor pool here.
+         //
+         this->_setup_materials();
+         this->_setup_depth_buffer();
+         this->_setup_swap_chain_images();
+         this->_setup_framebuffers();
          if (sc.format != sc_format) {
             //
             // The swap chain image format has changed. We need to update our render pass.
@@ -636,6 +885,7 @@ namespace vulkanDK {
       this->scene.update();
       //
       constexpr auto no_timeout = UINT64_MAX;
+      auto& sc = this->swap_chain;
       //
       //  - Acquire an image from the swap chain
       //  - Execute the command buffer with that image as attachment in the framebuffer
@@ -645,8 +895,13 @@ namespace vulkanDK {
       //
       if (!this->target.state.visible)
          return;
-      auto pf = this->swap_chain.advance_frame();
-      switch (pf.result) {
+      //
+      uint32_t sc_image_index;
+      auto&    frame = sc.frames_in_flight[sc.current_frame];
+      sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
+      vkWaitForFences(this->logical_device, 1, &frame.fence, VK_TRUE, no_timeout);
+      auto result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
+      switch (result) {
          case VK_SUCCESS:
             break;
          case VK_SUBOPTIMAL_KHR:
@@ -661,8 +916,35 @@ namespace vulkanDK {
          default:
             throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
       }
-      this->swap_chain.confirm_frame(pf);
-      switch (pf.result) {
+      //
+      {
+         auto& handle = sc.images_in_flight[sc_image_index];
+         //
+         // Check if a previous frame is using this image.
+         //
+         if (handle != VK_NULL_HANDLE) {
+            vkWaitForFences(this->logical_device, 1, &handle, VK_TRUE, UINT64_MAX);
+         }
+         //
+         // Mark the image as now being in use by this frame.
+         //
+         handle = frame.fence;
+      }
+      frame.draw(sc.framebuffers[sc_image_index]);
+      //
+      auto signal_semaphores  = std::array{ frame.semaphores.render_finished };
+      auto swap_chain_handles = std::array{ sc.handle };
+      auto presentation_info  = VkPresentInfoKHR{
+         .sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+         .waitSemaphoreCount  = signal_semaphores.size(),
+         .pWaitSemaphores     = signal_semaphores.data(),
+         .swapchainCount      = swap_chain_handles.size(),
+         .pSwapchains         = swap_chain_handles.data(),
+         .pImageIndices       = &sc_image_index,
+         .pResults            = nullptr,
+      };
+      result = vkQueuePresentKHR(this->queues.presentation.handle, &presentation_info);
+      switch (result) {
          case VK_SUCCESS:
             if (this->target.state.resized)
                this->handle_resize();
@@ -675,9 +957,9 @@ namespace vulkanDK {
             throw std::runtime_error("[DovahKitVulkanSubsystem][drawFrame] Failed to present swap chain image.");
       }
       //
+      // Post-draw behavior:
       //
-      //
-      static_assert(false, "TODO: scene post-frame behavior (delete detached objects, etc.)");
+      this->_execute_pending_scene_deletions();
    }
 
 
@@ -708,13 +990,13 @@ namespace vulkanDK {
          .commandBufferCount = 1,
          .pCommandBuffers    = &scratch.handle,
       };
-      vkQueueSubmit(this->device.queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
-      vkQueueWaitIdle(this->device.queues.graphics);
+      vkQueueSubmit(this->queues.graphics.handle, 1, &submit_info, VK_NULL_HANDLE);
+      vkQueueWaitIdle(this->queues.graphics.handle);
    }
 
 
    VkFormat surface_renderer::find_depth_format() const {
-      auto fmt = this->device.physical.find_supported_format(
+      auto fmt = this->device_info->find_supported_format(
          { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
          VK_IMAGE_TILING_OPTIMAL,
          VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -723,6 +1005,9 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::surface_renderer::find_depth_format] No format.");
       }
       return fmt;
+   }
+   bool surface_renderer::needs_null_texture() const {
+      return this->device_info->support.descriptor_bindings.null_handles == false;
    }
 
    buffer surface_renderer::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
@@ -762,9 +1047,188 @@ namespace vulkanDK {
    }
 
    #pragma region scene
-   size_t surface_renderer::add_texture(const QString& texture_path);
-   void surface_renderer::add_mesh(const QString& texture_path);
-   void surface_renderer::remove_mesh(size_t i);
+   size_t surface_renderer::add_texture(const QString& texture_path) {
+      constexpr size_t fail = std::string::npos;
+      //
+      auto& list = this->scene.textures;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         if (list[i].path == texture_path) {
+            return i;
+         }
+      }
+      QImage texture;
+      {
+         //auto path      = QLatin1Literal("shaders/") + texture_path;
+         //auto bytearray = QResource(path).uncompressedData();
+         auto file = QFile(texture_path);
+         if (!file.open(QIODevice::ReadOnly)) {
+            qDebug("[vulkanDK::surface_renderer::add_texture] Failed to open test image.");
+            return fail;
+         }
+         auto bytearray = file.readAll();
+         auto buffer    = QBuffer(&bytearray);
+         buffer.open(QIODevice::ReadOnly);
+         QImageReader reader(&buffer);
+         if (texture_path.endsWith("png"))
+            reader.setFormat("PNG");
+         else if (texture_path.endsWith("bmp"))
+            reader.setFormat("BMP");
+         reader.read(&texture);
+         texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
+      }
+      if (texture.isNull()) {
+         qDebug("[vulkanDK::surface_renderer::add_texture] Failed to load test image.");
+         return fail;
+      }
+      uint32_t w = texture.width();
+      uint32_t h = texture.height();
+      //
+      // here, we may want to lock the texture asset list, if we were doing a multithreaded renderer
+      //
+      auto texture_index = this->scene.insert_new_texture();
+      if (texture_index == std::string::npos) {
+         qDebug("Cannot add new rendered textures. Maximum has been reached.");
+         return fail;
+      }
+      auto& target = list[texture_index];
+      target.w    = w;
+      target.h    = h;
+      target.path = texture_path;
+      //
+      VkDeviceSize image_size = w * h * 4;
+      assert(image_size == texture.sizeInBytes());
+      //
+      // We're gonna be setting up our image on a staging buffer, and then transferring that 
+      // to the final (non-CPU-writeable) buffer.
+      //
+      auto  staging = this->create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      void* data    = staging.map_memory();
+      memcpy(data, texture.constBits(), image_size);
+      staging.unmap_memory(data);
+      //
+      texture = QImage();
+      //
+      target.content = concrete_image(*this);
+      target.content.create_image(
+         w, h,
+         VK_FORMAT_R8G8B8A8_SRGB,
+         VK_IMAGE_TILING_OPTIMAL,
+         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+      );
+      target.content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+      target.content.copy_content_from_buffer(staging.handle);
+      target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+      //
+      target.frame_dirty_flags.set_all();
+      return texture_index;
+   }
+   void surface_renderer::add_mesh(const QString& texture_path) {
+      size_t texture_index = this->add_texture(texture_path);
+      if (texture_index == std::string::npos) {
+         qDebug("Cannot add new rendered object: failed to add its texture.");
+         return;
+      }
+      auto&  texture_item = this->scene.textures[texture_index];
+      size_t object_index = this->scene.insert_new_mesh();
+      if (object_index == std::string::npos) {
+         qDebug("Cannot add new rendered objects. Maximum has been reached.");
+         if (texture_item.refcount == 0) {
+            //
+            // This texture was created for us, but we never got a chance to use it. Mark it 
+            // for deletion.
+            //
+            texture_item.pending_delete = true;
+            texture_item.frame_dirty_flags.set_all();
+         }
+         return;
+      }
+      QSize texture_size = { (int)texture_item.w, (int)texture_item.h }; // just used to size the quad so we maintain aspect ratio
+      {  // Create model
+         if (!texture_size.isValid())
+            texture_size = { 1, 1 };
+         //
+         auto& ro  = this->scene.meshes[object_index];
+         auto& vib = ro.vertex_and_index_buffer;
+         ro.texture_index = texture_index;
+         ++texture_item.refcount;
+         texture_item.pending_delete = false;
+         //
+         glm::vec3 position = {};
+         for (size_t j = 0; j < 3; ++j)
+            position[j] = ((float)rand() / RAND_MAX) * 5.0F - 2.5F;
+         //
+         float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
+         std::array<vertex, 4> vertices = {
+            vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0 } },
+            vertex{ {  0.5f, -hfwc, 0.0 }, { 0.0f, 1.0f, 0.0f }, { 0.0, 0.0 } },
+            vertex{ {  0.5f,  hfwc, 0.0 }, { 0.0f, 0.0f, 1.0f }, { 0.0, 1.0 } },
+            vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
+         };
+         std::array<uint16_t, 6> indices = { 0, 1, 2, 2, 3, 0 };
+         glm::mat4 transform = glm::translate(
+            glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            position
+         );
+         //
+         VkDeviceSize buffer_size_v = sizeof(vertex)   * vertices.size();
+         VkDeviceSize buffer_size_i = sizeof(uint16_t) * indices.size();
+         VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+         //
+         auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         void* data    = staging.map_memory();
+         memcpy((void*)((std::intptr_t)data), vertices.data(), buffer_size_v);
+         memcpy((void*)((std::intptr_t)data + buffer_size_v), indices.data(), buffer_size_i);
+         staging.unmap_memory(data);
+         //
+         vib.indices_at  = buffer_size_v;
+         vib.index_count = indices.size();
+         vib.buffer      = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+         vib.buffer.copy_from(staging);
+         //
+         ro.shader_params.transform = transform;
+         ro.frame_dirty_flags.set_all();
+      }
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
+   }
+   void surface_renderer::remove_mesh(size_t i) {
+      auto& list = this->scene.meshes;
+      if (list.empty())
+         return;
+      std::decay_t<decltype(list)>::reverse_iterator it;
+      for (it = list.rbegin(); it != list.rend(); ++it) {
+         auto& item = *it;
+         if (item.empty() || item.pending_delete)
+            continue;
+         break;
+      }
+      if (it == list.rend())
+         return;
+      auto& item = *it;
+      item.pending_delete = true;
+      item.frame_dirty_flags.set_all();
+      {
+         auto ti = item.texture_index;
+         if (ti >= 0) {
+            auto& list = this->scene.textures;
+            if (ti < list.size()) {
+               auto& tex = list[ti];
+               if (--tex.refcount == 0) {
+                  tex.pending_delete = true;
+                  tex.frame_dirty_flags.set_all();
+               }
+            }
+         }
+      }
+      item.texture_index = -1;
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
+   }
    void surface_renderer::remove_last_mesh() {
       auto& list = this->scene.meshes;
       auto  size = list.size();
@@ -776,6 +1240,40 @@ namespace vulkanDK {
             continue;
          this->remove_mesh(i);
          return;
+      }
+   }
+
+   void surface_renderer::_execute_pending_scene_deletions() {
+      auto& pd = this->scene.pending_deletions;
+      if (pd.meshes) {
+         size_t deleted    = 0;
+         size_t last_alive = 0;
+         auto&  list       = this->scene.meshes;
+         for (auto& item : list) {
+            if (item.pending_delete && !item.frame_dirty_flags.any_set()) {
+               item.reset();
+               ++deleted;
+            } else {
+               ++last_alive;
+            }
+         }
+         pd.meshes -= deleted;
+         list.resize(last_alive + 1);
+      }
+      if (pd.textures) {
+         size_t deleted    = 0;
+         size_t last_alive = 0;
+         auto&  list       = this->scene.textures;
+         for (auto& item : list) {
+            if (item.pending_delete && !item.frame_dirty_flags.any_set()) {
+               item.reset();
+               ++deleted;
+            } else {
+               ++last_alive;
+            }
+         }
+         pd.textures -= deleted;
+         list.resize(last_alive + 1);
       }
    }
    #pragma endregion

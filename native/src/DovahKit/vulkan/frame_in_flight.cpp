@@ -1,4 +1,5 @@
 #include "frame_in_flight.h"
+#include <array>
 #include <cassert>
 #include <stdexcept>
 #include "config/scene_limits.h"
@@ -23,7 +24,7 @@ namespace vulkanDK {
       //
       // Other resources have their own destructors, but we need to release these explicitly:
       //
-      auto* ld = this->owner->device.handle;
+      auto* ld = this->owner->logical_device;
       if (this->fence != VK_NULL_HANDLE) {
          vkDestroySemaphore(ld, this->semaphores.render_finished, nullptr);
          vkDestroySemaphore(ld, this->semaphores.image_available, nullptr);
@@ -43,7 +44,7 @@ namespace vulkanDK {
    //
    void frame_in_flight::_setup_semaphores() {
       assert(this->owner);
-      auto device = this->owner->device.handle;
+      auto device = this->owner->logical_device;
       //
       auto semaphore_info = VkSemaphoreCreateInfo{
          .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -69,24 +70,23 @@ namespace vulkanDK {
    void frame_in_flight::_setup_shader_parameter_buffers() {
       {  // Scene global state, as a uniform buffer object
          constexpr VkDeviceSize buffer_size = sizeof(scene_global_state);
-         this->shader_params.uniform = this->owner->device.create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->shader_params.uniform = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
       {  // Object data list
          constexpr VkDeviceSize rosp_buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
-         this->shader_params.object_data = this->owner->device.create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->shader_params.object_data = this->owner->create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
    }
    void frame_in_flight::_setup_descriptor_sets() {
-      const auto& layout = this->owner->descriptor_set_definition;
       //
       // Each descriptor set can have a single descriptor binding that acts as a variable-length 
       // array of descriptors. However, we have to provide suitable maximums for these lists via 
       // an extension struct.
       //
-      std::array<VkDescriptorSetLayout, 1> layouts = { layout.handle };
-      std::array<uint32_t, 1> variable_counts; // one count per set; sets with no variable-length array will ignore their respective count
-      {
-         auto& bl = layout.bindings; // TODO: if we have multiple sets per frame, pick the right set layout
+      auto layouts = this->owner->descriptor_set_layout_handles();
+      std::vector<uint32_t> variable_counts(layouts.size()); // one count per set; sets with no variable-length array will ignore their respective count
+      for(auto& layout : this->owner->descriptor_set_layouts) {
+         auto& bl = layout.bindings;
          for (size_t i = 0; i < layouts.size(); ++i) {
             auto& vc = variable_counts[i];
             for (size_t j = 0; j < bl.size(); ++j) {
@@ -119,37 +119,22 @@ namespace vulkanDK {
       // drivers may try to solve the problem internally instead, which means that that 
       // particular class of error will not fail consistently across all hardware. Beware. 
       //
-      if (vkAllocateDescriptorSets(this->owner->device.handle, &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS) {
+      if (vkAllocateDescriptorSets(this->owner->logical_device, &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS) {
          throw std::runtime_error("[vulkanKD::frame_in_flight::_setup_descriptor_sets] Failed to allocate descriptor sets.");
       }
    }
    void frame_in_flight::_setup_command_buffers() {
-      for (auto& pass : this->render_passes) {
-         pass.command_buffers.resize(1);
-         //
-         pass.command_buffers = command_buffer::create_in_bulk(*this->owner, pass.command_buffers.size());
-         for(auto& cb : pass.command_buffers)
-            if (cb.handle == VK_NULL_HANDLE)
-               throw std::runtime_error("[vulkanDK::frame_in_flight::_setup_command_buffers] Failed to allocate command buffers.");
-         //
-         pass.command_buffers_invalid = true;
-      }
+      this->commands = command_buffer(*this->owner);
+      this->command_buffers_invalid = true;
    }
 
    void frame_in_flight::draw(VkFramebuffer target_framebuffer) {
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
-      for (auto& rp : this->render_passes) {
-         if (!rp.command_buffers_invalid)
-            continue;
+      if (this->command_buffers_invalid) {
          this->_refill_command_buffers(target_framebuffer);
       }
-      std::vector<VkCommandBuffer> command_buffer_handles;
-      {
-         for (auto& rp : this->render_passes)
-            for (auto& cb : rp.command_buffers)
-               command_buffer_handles.push_back(cb.handle);
-      }
+      std::array command_buffer_handles = { this->commands.handle };
       auto wait_semaphores   = std::array{ this->semaphores.image_available };
       auto signal_semaphores = std::array{ this->semaphores.render_finished };
       VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -163,8 +148,8 @@ namespace vulkanDK {
          .signalSemaphoreCount = signal_semaphores.size(),
          .pSignalSemaphores    = signal_semaphores.data(),
       };
-      vkResetFences(this->owner->device.handle, 1, &this->fence);
-      if (vkQueueSubmit(this->owner->device.queues.graphics, 1, &submit_info, this->fence) != VK_SUCCESS) {
+      vkResetFences(this->owner->logical_device, 1, &this->fence);
+      if (vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, this->fence) != VK_SUCCESS) {
          throw std::runtime_error("failed to submit draw command buffer!");
       }
    }
@@ -261,7 +246,7 @@ namespace vulkanDK {
       auto&    list  = scene.textures;
       uint32_t size  = list.size();
       //
-      bool  needs_null_texture = this->owner->device.physical.support.descriptor_bindings.null_handles;
+      bool  needs_null_texture = this->owner->needs_null_texture();
       auto& null_texture       = this->owner->null_texture;
       //
       struct pending_write {
@@ -334,7 +319,7 @@ namespace vulkanDK {
             .pImageInfo      = info.data(),
          };
       }
-      vkUpdateDescriptorSets(this->owner->device.handle, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
       //
       // Updating a descriptor set will invalidate any command buffers using it; they must 
       // be reset and their queue regenerated:
@@ -342,11 +327,11 @@ namespace vulkanDK {
       this->invalidate_all_command_buffers();
    }
    void frame_in_flight::_refill_command_buffers(VkFramebuffer framebuffer) {
-      auto& pass_state     = this->render_passes[0];
-      auto  pass_handle    = this->owner->render_passes[0]->handle;
+      const auto& render_passes = this->owner->render_passes;
+      //
       auto& scene          = this->owner->scene;
-      auto  command_buffer = pass_state.command_buffers[0].handle;
-      pass_state.command_buffers_invalid = false;
+      auto  command_buffer = this->commands.handle;
+      this->command_buffers_invalid = false;
       //
       vkResetCommandBuffer(command_buffer, 0);
       auto buffer_begin_info = VkCommandBufferBeginInfo{
@@ -367,7 +352,7 @@ namespace vulkanDK {
       };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = pass_handle,
+         .renderPass  = render_passes[0]->handle,
          .framebuffer = framebuffer,
          .renderArea  = {
             .offset = { 0, 0 },
@@ -422,8 +407,7 @@ namespace vulkanDK {
    }
 
    void frame_in_flight::invalidate_all_command_buffers() {
-      for (auto& rp : this->render_passes)
-         rp.command_buffers_invalid = true;
+      this->command_buffers_invalid = true;
    }
    #pragma endregion
 }
