@@ -109,7 +109,9 @@ void DKVulkanView::resetRenderer() {
 
 bool DKVulkanView::event(QEvent* event) {
    if (event->type() == QEvent::Type::WinIdChange) {
-
+      if (auto* s = this->renderer) {
+         s->update_widget_id();
+      }
    }
    return QWidget::event(event);
 }
