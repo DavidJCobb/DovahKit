@@ -19,6 +19,7 @@
 #include "ui_bsa_picker.h"
 #include "ui_texture_asset_pane.h"
 #include "qt_3d_tests.h"
+#include "vulkan_renderer_instance.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -38,7 +39,8 @@ namespace DovahKitDebug {
       features::qt_paint_ellipse_tests,
       features::ui_bsa_picker,
       features::ui_texture_asset_pane,
-      features::qt_3d_tests//,
+      features::qt_3d_tests,
+      features::vulkan_renderer_instance//,
    >;
 
    template<typename T> struct _add_functor {

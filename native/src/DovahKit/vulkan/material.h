@@ -34,6 +34,8 @@ namespace vulkanDK {
          };
 
       public:
+         material_definition();
+
          std::vector<stage_info> stages;
          struct {
             struct {
@@ -59,7 +61,11 @@ namespace vulkanDK {
          } stencil;
          //
          struct {
-            VkPipelineVertexInputStateCreateInfo   vertex;
+            struct {
+               std::vector<VkVertexInputAttributeDescription> attributes;
+               std::vector<VkVertexInputBindingDescription>   bindings;
+               VkPipelineVertexInputStateCreateFlags          flags = 0;
+            } vertex;
             VkPipelineInputAssemblyStateCreateInfo triangles;
          } inputs;
          VkPipelineMultisampleStateCreateInfo   multisampling;
@@ -73,6 +79,8 @@ namespace vulkanDK {
 
          std::vector<VkPipelineColorBlendAttachmentState> color_blend_attachment_info() const;
          VkPipelineColorBlendStateCreateInfo color_blend_info(const std::vector<VkPipelineColorBlendAttachmentState>&) const;
+
+         VkPipelineVertexInputStateCreateInfo vertex_info() const;
    };
 
    class material : no_copy {

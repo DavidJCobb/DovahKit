@@ -1,6 +1,8 @@
 #include "abstract_renderer.h"
 #include <cassert>
 #include <stdexcept>
+#include "render_pass.h"
+#include "shader_module.h"
 
 namespace vulkanDK {
    #pragma region queue

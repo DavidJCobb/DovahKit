@@ -143,8 +143,10 @@ namespace vulkanDK {
       if (widget) {
          this->widget.last_id = widget->winId();
          this->_init_surface();
-         this->_init_device();
-         this->setup();
+         if (this->device_info) { // do we know what physical device we want to use yet?
+            this->_init_device();
+            this->setup();
+         }
          this->widget.resized = false;
          this->widget.visible = widget->isVisible();
       } else {
@@ -163,8 +165,10 @@ namespace vulkanDK {
       this->_reset_surface();
       this->widget.last_id = id;
       this->_init_surface();
-      this->_init_device();
-      this->setup();
+      if (this->device_info) { // do we know what physical device we want to use yet?
+         this->_init_device();
+         this->setup();
+      }
    }
    #pragma endregion
 
@@ -202,14 +206,11 @@ namespace vulkanDK {
          },
       };
       //
-      this->_init_surface();
+      this->set_widget(widget);
       if (this->handle == VK_NULL_HANDLE) {
          qDebug("[surface_renderer] Failed to initialize surface (constructor).");
          return;
       }
-      this->_init_device();
-      //
-      this->setup();
    }
    surface_renderer::~surface_renderer() {
       this->teardown();
@@ -331,7 +332,8 @@ namespace vulkanDK {
       //
       {  // swap chain
          this->_setup_swap_chain_instance();
-         this->_setup_materials();
+         this->_setup_render_passes(); // requires swap chain format
+         this->_setup_materials(); // requires render pass
          this->_setup_depth_buffer();
          this->_setup_swap_chain_images();
          this->_setup_framebuffers();
@@ -342,7 +344,6 @@ namespace vulkanDK {
                list[i].setup(*this, i);
          }
       }
-      this->_setup_render_passes();
       this->_create_null_texture();
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
@@ -383,18 +384,13 @@ namespace vulkanDK {
             .specialization_info = nullptr,
          },
       };
-      dfn.inputs.vertex = {
-         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-         .vertexBindingDescriptionCount   = 1,
-         .pVertexBindingDescriptions      = &vert_binding,
-         .vertexAttributeDescriptionCount = (uint32_t)vert_attributes.size(),
-         .pVertexAttributeDescriptions    = vert_attributes.data(),
-      };
-      dfn.inputs.triangles = {
-         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-         .topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-         .primitiveRestartEnable = VK_FALSE,
-      };
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      {
+         auto& vertex     = dfn.inputs.vertex;
+         auto  attributes = vertex::getAttributeDescriptions();
+         vertex.bindings.push_back(vertex::getBindingDescription());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
    }
    //
    void surface_renderer::_create_null_texture() {
@@ -477,6 +473,7 @@ namespace vulkanDK {
             //
             // Now let's create an image:
             //
+            target.content = concrete_image(*this);
             target.content.create_image(
                w, h,
                VK_FORMAT_R8G8B8A8_SRGB,
@@ -517,19 +514,19 @@ namespace vulkanDK {
             VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
             VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
             //
-            auto staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            //
-            void* data = staging.map_memory();
+            auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            void* data    = staging.map_memory();
             memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
             memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
             staging.unmap_memory(data);
             //
             vib.indices_at  = buffer_size_v;
             vib.index_count = s.indices.size();
-            //
-            vib.buffer = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.buffer      = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             vib.buffer.copy_from(staging);
+            //
             d.shader_params.transform = s.transform;
+            d.frame_dirty_flags.set_all();
          }
       }
       //
@@ -631,7 +628,7 @@ namespace vulkanDK {
          auto* rp = new render_pass(*this);
          this->render_passes = { rp };
          //
-         rp->attachments = {
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
             VkAttachmentDescription{ // color
                .format         = this->swap_chain.format,
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
@@ -646,7 +643,7 @@ namespace vulkanDK {
                .format         = this->find_depth_format(),
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
                .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after drawing, so let the driver decide how best to discard it
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
@@ -657,13 +654,13 @@ namespace vulkanDK {
             {  // subpass
                .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
                .attachments = {
-                  .color = {
-                     VkAttachmentReference{ // color
+                  .color = { // there can be multiple color attachments
+                     VkAttachmentReference{
                         .attachment = 0,
                         .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                      }
                   },
-                  .depth_stencil = VkAttachmentReference{ // depth
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
                      .attachment = 1,
                      .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                   },
@@ -671,13 +668,63 @@ namespace vulkanDK {
             },
          };
          rp->subpasses.dependencies = {
+            //
+            // A subpass dependency specifies that  certain tasks in the "source" must complete 
+            // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
+            // subpass must always precede (have a lower index than) the "destination" subpass. 
+            // The special subpass index VK_SUBPASS_EXTERNAL  refers to tasks occurring outside 
+            // of the render pass --  the start (source) or end (destination) of a render pass, 
+            // as it were.
+            // 
+            // For a subpass dependency,  a "task" is an operation (access mask) and the stages 
+            // in which that operation occurs (stage mask).
+            // 
+            // The start of a subpass  has an implicit  task: transitioning  the target image's 
+            // current layout  to the one specified by the relevant attachment's  initialLayout 
+            // field above. We of course need to ensure that the image in question (typically a 
+            // swap chain image) is actually available (i.e. has been acquired) before any such 
+            // transition is attempted.
+            //
             VkSubpassDependency{
-               .srcSubpass    = VK_SUBPASS_EXTERNAL,
-               .dstSubpass    = 0,
-               .srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .srcAccessMask = 0,
-               .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               //
+               // Ensure swap chain image has been acquired.
+               //
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = 0,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            //
+            // If you don't specify a final external dependency  -- that is, a dependency whose 
+            // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
+            // settings:
+            // 
+            //    .srcSubpass      = /* based on the last subpass */,
+            //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
+            //    .srcStageMask    = /* based on the last subpass */,
+            //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+            //    .srcAccessMask   = /* based on the last subpass */,
+            //    .dstAccessMask   = VK_ACCESS_NONE_KHR,
+            //    .dependencyFlags = 0, // guessed
+            //
+            // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
+            // layout  that the attachment has at the  end of your last subpass, you  will need 
+            // to specify  your own final  external dependency;  the default one  won't be good 
+            // enough. If you're able to rely on semaphores,  though, then the default can work 
+            // even in that case.
+            //
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+               //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
+               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
             }
          };
       }
@@ -824,6 +871,7 @@ namespace vulkanDK {
       auto  extent = this->surface_extent;
       auto  format = this->find_depth_format();
       auto& db     = swap_chain.depth_buffer;
+      db = concrete_image(*this);
       db.create_image(extent.width, extent.height, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
       db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -837,15 +885,18 @@ namespace vulkanDK {
       //
       vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, nullptr);
       if (sc.images.size() != image_count) {
-         //
-         // Get the image handles:
-         //
+         sc.images_in_flight.resize(image_count);
          sc.images.resize(image_count);
-         std::vector<VkImage> image_handles(image_count);
-         vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, image_handles.data());
-         for (size_t i = 0; i < image_count; ++i) {
-            sc.images[i] = surface_renderer_image_view(*this, image_handles[i]);
-         }
+      } else {
+         assert(sc.images_in_flight.size() == image_count);
+      }
+      //
+      // Get the image handles:
+      //
+      std::vector<VkImage> image_handles(image_count);
+      vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, image_handles.data());
+      for (size_t i = 0; i < image_count; ++i) {
+         sc.images[i] = surface_renderer_image_view(*this, image_handles[i]);
       }
       //
       // Set up the image views:
@@ -916,11 +967,10 @@ namespace vulkanDK {
       auto  device = this->logical_device;
       auto& sc     = this->swap_chain;
       //
+      vkDeviceWaitIdle(device); // wait for all pending GPU-side commands to finish
+      //
       VkFormat sc_format = sc.format;
       {  // Tear down swap chain state
-         for (auto& fif : sc.frames_in_flight) {
-            fif.invalidate_all_command_buffers(); // FIF doesn't have any other state that we'd need to reset
-         }
          for (auto& m : sc.materials)
             //
             // We don't need to completely destroy materials including their pipeline layouts; we 
@@ -932,8 +982,12 @@ namespace vulkanDK {
             vkDestroyFramebuffer(this->logical_device, fb, nullptr);
             fb = VK_NULL_HANDLE;
          }
-         for (auto& image : sc.images)
+         for (auto& image : sc.images) {
             image.destroy_view();
+            image.image = VK_NULL_HANDLE;
+         }
+         for (auto& handle : sc.images_in_flight)
+            handle = VK_NULL_HANDLE;
          sc.depth_buffer.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
@@ -946,10 +1000,6 @@ namespace vulkanDK {
          // to have our descriptor sets exist per swap chain image,  we'd need to teardown and then 
          // rebuild the descriptor pool here.
          //
-         this->_setup_materials();
-         this->_setup_depth_buffer();
-         this->_setup_swap_chain_images();
-         this->_setup_framebuffers();
          if (sc.format != sc_format) {
             //
             // The swap chain image format has changed. We need to update our render pass.
@@ -962,8 +1012,17 @@ namespace vulkanDK {
             rp->attachments[0].format = sc.format;
             rp->setup();
          }
+         this->_setup_materials(); // requires render pass
+         this->_setup_depth_buffer();
+         this->_setup_swap_chain_images();
+         this->_setup_framebuffers();
+         for (auto& fif : sc.frames_in_flight) {
+            fif.invalidate_all_command_buffers(); // FIF doesn't have any other state that we'd need to reset
+         }
          // Rebuilding the descriptor pool is only necessary if the frame-in-flight count has changed.
          this->_initialize_descriptor_sets();
+         //
+         sc.current_frame = 0;
       }
       //
       // The above procedure will have reset all shader-side data for rendered objects, 
@@ -995,11 +1054,18 @@ namespace vulkanDK {
       if (!this->widget.visible)
          return;
       //
-      uint32_t sc_image_index;
-      auto&    frame = sc.frames_in_flight[sc.current_frame];
+      // If this frame-in-flight is still being used to render and present another swap 
+      // chain image, wait for it to finish. We'll also advance the current frame counter 
+      // here.
+      //
+      auto& frame = sc.frames_in_flight[sc.current_frame];
       sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
       vkWaitForFences(this->logical_device, 1, &frame.fence, VK_TRUE, no_timeout);
-      auto result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
+      //
+      // Next, let's acquire a swap chain image to use for this frame:
+      //
+      uint32_t sc_image_index;
+      auto     result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
       switch (result) {
          case VK_SUCCESS:
             break;
@@ -1029,7 +1095,12 @@ namespace vulkanDK {
          //
          handle = frame.fence;
       }
+      //
+      // Render the image:
+      //
       frame.draw(sc.framebuffers[sc_image_index]);
+      //
+      // Present the image:
       //
       auto signal_semaphores  = std::array{ frame.semaphores.render_finished };
       auto swap_chain_handles = std::array{ sc.handle };
@@ -1286,8 +1357,8 @@ namespace vulkanDK {
          //
          auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          void* data    = staging.map_memory();
-         memcpy((void*)((std::intptr_t)data), vertices.data(), buffer_size_v);
-         memcpy((void*)((std::intptr_t)data + buffer_size_v), indices.data(), buffer_size_i);
+         memcpy((void*)((std::intptr_t)data),                 vertices.data(), buffer_size_v);
+         memcpy((void*)((std::intptr_t)data + buffer_size_v), indices.data(),  buffer_size_i);
          staging.unmap_memory(data);
          //
          vib.indices_at  = buffer_size_v;

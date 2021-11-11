@@ -4,6 +4,38 @@
 
 namespace vulkanDK {
    #pragma region material_definition
+   material_definition::material_definition() {
+      this->inputs.triangles = VkPipelineInputAssemblyStateCreateInfo{
+         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+         .pNext                  = nullptr,
+         .flags                  = 0,
+         .topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+         .primitiveRestartEnable = VK_FALSE,
+      };
+      this->multisampling = VkPipelineMultisampleStateCreateInfo{ // MSAA (multisampling anti-alias); disable it by default (one sample only)
+         .sType                 = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+         .rasterizationSamples  = VK_SAMPLE_COUNT_1_BIT,
+         .sampleShadingEnable   = VK_FALSE,
+         .minSampleShading      = 1.0,
+         .pSampleMask           = nullptr,
+         .alphaToCoverageEnable = VK_FALSE,
+         .alphaToOneEnable      = VK_FALSE,
+      };
+      this->rasterization = VkPipelineRasterizationStateCreateInfo{
+         .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+         .depthClampEnable        = VK_FALSE,
+         .rasterizerDiscardEnable = VK_FALSE, // setting this to true basically disables the rasterizer entirely
+         .polygonMode             = VK_POLYGON_MODE_FILL,  // fill polygons, or render wireframes or point clouds?
+         .cullMode                = VK_CULL_MODE_BACK_BIT, // cull backfaces, frontfaces, or no faces
+         .frontFace               = VK_FRONT_FACE_COUNTER_CLOCKWISE, // specify which vertex order (clockwise or counterclockwise) signifies a face pointing toward us
+         .depthBiasEnable         = VK_FALSE,
+         .depthBiasConstantFactor = 0.0,
+         .depthBiasClamp          = 0.0,
+         .depthBiasSlopeFactor    = 0.0,
+         .lineWidth               = 1.0, // line width, e.g. for wireframes
+      };
+   }
+
    void material_definition::add_stage(const stage_info& s) {
       this->stages.push_back(s);
    }
@@ -72,6 +104,19 @@ namespace vulkanDK {
          .blendConstants  = { 0.0f, 0.0f, 0.0f, 0.0f },
       };
    }
+
+   VkPipelineVertexInputStateCreateInfo material_definition::vertex_info() const {
+      auto& src = this->inputs.vertex;
+      return VkPipelineVertexInputStateCreateInfo{
+         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+         .pNext                           = nullptr,
+         .flags                           = src.flags,
+         .vertexBindingDescriptionCount   = (uint32_t)src.bindings.size(),
+         .pVertexBindingDescriptions      = src.bindings.data(),
+         .vertexAttributeDescriptionCount = (uint32_t)src.attributes.size(),
+         .pVertexAttributeDescriptions    = src.attributes.data(),
+      };
+   }
    #pragma endregion
 
    #pragma region material
@@ -121,6 +166,7 @@ namespace vulkanDK {
       }
       auto stages = def.stage_create_info();
       auto depth  = def.depth_stencil_info();
+      auto vertex = def.vertex_info();
       //
       auto blends = def.color_blend_attachment_info();
       auto color  = def.color_blend_info(blends);
@@ -133,12 +179,20 @@ namespace vulkanDK {
          .pScissors     = &scissor,
       };
 
+      //
+      // TODO: If we take a render_pass& instead of a render pass handle, then we can verify that 
+      // (color) has the right blend count for the specified subpass (it should match the value 
+      // render_pass.subpasses[n].attachments.color.size()).
+      // 
+      // We could also validate that the subpass number itself is valid.
+      //
+
       auto pipeline_info = VkGraphicsPipelineCreateInfo{
          .sType      = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
          .stageCount = (uint32_t)stages.size(),
          .pStages    = stages.data(), 
          //
-         .pVertexInputState   = &def.inputs.vertex,
+         .pVertexInputState   = &vertex,
          .pInputAssemblyState = &def.inputs.triangles,
          .pViewportState      = &viewport_create,
          .pRasterizationState = &def.rasterization,

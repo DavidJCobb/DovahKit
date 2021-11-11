@@ -511,15 +511,16 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
-    <ClCompile Include="vulkan\context.cpp" />
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
-    <ClCompile Include="vulkan\logical_device.cpp" />
+    <ClCompile Include="vulkan\loaded_texture.cpp" />
     <ClCompile Include="vulkan\material.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
@@ -527,8 +528,6 @@
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
-    <ClCompile Include="vulkan\surface.cpp" />
-    <ClCompile Include="vulkan\swap_chain.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
     <ClCompile Include="vulkan\surface_support_info.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
@@ -626,19 +625,19 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h" />
+    <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
-    <ClInclude Include="vulkan\context.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frames_in_flight.h" />
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
-    <ClInclude Include="vulkan\logical_device.h" />
     <ClInclude Include="vulkan\material.h" />
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
@@ -647,10 +646,8 @@
     <ClInclude Include="vulkan\scene.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\shader_module.h" />
-    <ClInclude Include="vulkan\surface.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
     <ClInclude Include="vulkan\surface_support_info.h" />
-    <ClInclude Include="vulkan\swap_chain.h" />
     <ClInclude Include="vulkan\vertex.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />

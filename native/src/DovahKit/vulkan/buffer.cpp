@@ -22,18 +22,22 @@ namespace vulkanDK {
       std::swap(this->renderer, o.renderer);
       std::swap(this->memory,   o.memory);
       std::swap(this->handle,   o.handle);
+      std::swap(this->size,     o.size);
    }
    buffer& buffer::operator=(buffer&& o) noexcept {
       std::swap(this->renderer, o.renderer);
       std::swap(this->memory,   o.memory);
       std::swap(this->handle,   o.handle);
+      std::swap(this->size,     o.size);
       return *this;
    }
 
    void buffer::copy_from(const buffer& source) {
       this->renderer->do_single_commands([this, &source](command_buffer& scratch) {
          auto copy_region = VkBufferCopy{
-            .size = this->size,
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size      = source.size,
          };
          vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
       });
@@ -41,7 +45,9 @@ namespace vulkanDK {
    void buffer::copy_from(const buffer& source, VkDeviceSize size) {
       this->renderer->do_single_commands([this, &source, size](command_buffer& scratch) {
          auto copy_region = VkBufferCopy{
-            .size = size,
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size      = size,
          };
          vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
       });

@@ -133,6 +133,9 @@ namespace vulkanDK {
       if (this->command_buffers_invalid) {
          this->_refill_command_buffers(target_framebuffer);
       }
+      //
+      // Submit our command buffers:
+      //
       std::array command_buffer_handles = { this->commands.handle };
       auto wait_semaphores   = std::array{ this->semaphores.image_available };
       auto signal_semaphores = std::array{ this->semaphores.render_finished };
@@ -147,7 +150,7 @@ namespace vulkanDK {
          .signalSemaphoreCount = signal_semaphores.size(),
          .pSignalSemaphores    = signal_semaphores.data(),
       };
-      vkResetFences(this->owner->logical_device, 1, &this->fence);
+      vkResetFences(this->owner->logical_device, 1, &this->fence); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
       if (vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, this->fence) != VK_SUCCESS) {
          throw std::runtime_error("failed to submit draw command buffer!");
       }
