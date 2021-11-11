@@ -11,7 +11,7 @@ namespace vulkanDK {
    void rendered_mesh::_on_shader_parameter_change() {
       if (this->pending_delete)
          return;
-      this->frame_dirty_flags.set_all();
+      this->handled_frames.set_all_out_of_date();
    }
    //
    void rendered_mesh::set_transform(const glm::mat4& in) {
@@ -38,6 +38,10 @@ namespace vulkanDK {
       vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
    }
 
+   void rendered_mesh::mark_for_delete() {
+      this->pending_delete = true;
+      this->handled_frames.set_all_out_of_date();
+   }
    void rendered_mesh::reset() {
       auto& vib = this->vertex_and_index_buffer;
       vib.buffer      = buffer();
@@ -48,6 +52,6 @@ namespace vulkanDK {
          delete p;
          p = nullptr;
       }
-      this->frame_dirty_flags = frames_in_flight_mask();
+      this->handled_frames = frame_dirty_state();
    }
 }

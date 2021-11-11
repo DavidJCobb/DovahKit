@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "_vulkan.h"
-#include "helpers/frames_in_flight.h"
+#include "helpers/frame_dirty_state.h"
 #include "buffer.h"
 
 namespace vulkanDK {
@@ -37,7 +37,7 @@ namespace vulkanDK {
          shader_parameters shader_params;
          int32_t texture_index = -1;
          //
-         frames_in_flight_mask frame_dirty_flags; // for normal objects: frames that need (shader_params) resynchronized. for pending-delete objects: frames that may still be using the vertex-and-index buffer
+         frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
          bool pending_delete = false; // unhook the object's vertex-and-index buffer from frames' command buffers; delete it when it's fully unhooked
          //
          mesh_animation_state* anim_state = nullptr; // owns
@@ -50,6 +50,7 @@ namespace vulkanDK {
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
 
+         void mark_for_delete();
          void reset();
    };
 }

@@ -9,6 +9,7 @@
 #include "descriptor_definitions.h"
 #include "image.h"
 #include "scene.h"
+#include "swap_chain_image.h"
 //
 #include "widgets/DKVulkanView.h"
 
@@ -67,11 +68,9 @@ namespace vulkanDK {
             //
             std::vector<material> materials;
             //
-            std::vector<surface_renderer_image_view> images;
-            std::vector<VkFramebuffer>   framebuffers;
-            std::vector<frame_in_flight> frames_in_flight;
+            std::vector<swap_chain_image> images;
+            std::vector<frame_in_flight>  frames_in_flight;
             //
-            std::vector<VkFence> images_in_flight; // handles. if images[i] is in flight, then images_in_flight[i] == frames_in_flight[x].fence; else, it's a null handle
             size_t current_frame = 0;
          } swap_chain;
          //
@@ -101,6 +100,7 @@ namespace vulkanDK {
          void add_mesh(const QString& texture_path);
          void remove_mesh(size_t);
          void remove_last_mesh();
+         void set_animation_paused(size_t mesh, bool paused);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes
@@ -121,6 +121,7 @@ namespace vulkanDK {
          void _setup_materials(); // requires extent size
          void _setup_depth_buffer(); // requires extent size
          void _setup_swap_chain_images();
+         void _setup_swap_chain_image_frame_data(); // requires descriptor pool
          void _setup_framebuffers(); // per swap chain image, and requires each swap chain image's view
 
          command_buffer _begin_one_time_commands();

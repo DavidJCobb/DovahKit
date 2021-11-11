@@ -96,6 +96,11 @@ namespace { // test scene properties
 }
 
 namespace vulkanDK {
+   #pragma region swap_chain_image
+   #pragma endregion
+}
+
+namespace vulkanDK {
    #pragma region communicate with DKVulkanView
    // renderer events:
    void surface_renderer::_on_renderer_ready() {
@@ -320,7 +325,6 @@ namespace vulkanDK {
       if (this->logical_device == VK_NULL_HANDLE) {
          return;
       }
-      this->configuration.image_count = config::frames_in_flight_count; // TODO: use swap chain size instead?
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->setup_descriptor_set_layouts();
@@ -328,23 +332,21 @@ namespace vulkanDK {
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
       //
       this->setup_command_pool(this->queues.graphics.index);
-      this->setup_descriptor_pool();
       //
       {  // swap chain
          this->_setup_swap_chain_instance();
-         this->_setup_render_passes(); // requires swap chain format
-         this->_setup_materials(); // requires render pass
-         this->_setup_depth_buffer();
+         this->_setup_render_passes();               // requires swap chain format
+         this->_setup_materials();                   // requires render pass and extent size
+         this->_setup_depth_buffer();                // requires extent size
          this->_setup_swap_chain_images();
-         this->_setup_framebuffers();
-         {  // frames in flight (semaphores, shader parameter buffers, descriptor set allocations, command buffers)
-            auto& list = this->swap_chain.frames_in_flight;
-            auto  size = list.size();
-            for (size_t i = 0; i < size; ++i)
-               list[i].setup(*this, i);
-         }
+         this->_setup_framebuffers();                // requires swap chain image count and view handles
+         this->setup_descriptor_pool();              // requires swap chain image count
+         this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
+         for (auto& fif : this->swap_chain.frames_in_flight)
+            fif.setup(*this);
       }
       this->_create_null_texture();
+      this->scene.update_projection(this->surface_extent);
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
       //
@@ -491,6 +493,8 @@ namespace vulkanDK {
             target.content.copy_content_from_buffer(staging.handle);
             target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+            //
+            target.handled_frames.set_all_out_of_date();
          }
       }
       //
@@ -526,7 +530,7 @@ namespace vulkanDK {
             vib.buffer.copy_from(staging);
             //
             d.shader_params.transform = s.transform;
-            d.frame_dirty_flags.set_all();
+            d.handled_frames.set_all_out_of_date();
          }
       }
       //
@@ -553,10 +557,9 @@ namespace vulkanDK {
          }
       }
       //
-      auto& sc  = this->swap_chain;
-      auto& fif = sc.frames_in_flight;
-      for (size_t i = 0; i < fif.size(); ++i) {
-         auto& frame = fif[i];
+      auto& sc = this->swap_chain;
+      for (size_t i = 0; i < sc.images.size(); ++i) {
+         auto& frame = sc.images[i];
          //
          auto buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.uniform.handle,
@@ -617,7 +620,7 @@ namespace vulkanDK {
       // Mark textures as synchronized:
       //
       for (auto& entry : this->scene.textures)
-         entry.frame_dirty_flags.clear_all();
+         entry.handled_frames.set_all_up_to_date(sc.images.size());
    }
    //
    void surface_renderer::_setup_render_passes() {
@@ -901,40 +904,32 @@ namespace vulkanDK {
       //
       vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, nullptr);
       if (sc.images.size() != image_count) {
-         sc.images_in_flight.resize(image_count);
          sc.images.resize(image_count);
-      } else {
-         assert(sc.images_in_flight.size() == image_count);
       }
+      this->configuration.image_count = image_count; // for superclass stuff including descriptor pool sizing
       //
-      // Get the image handles:
+      // Get the image handles and set up image state (descriptor sets, views, etc.):
       //
       std::vector<VkImage> image_handles(image_count);
       vkGetSwapchainImagesKHR(this->logical_device, sc.handle, &image_count, image_handles.data());
       for (size_t i = 0; i < image_count; ++i) {
-         sc.images[i] = surface_renderer_image_view(*this, image_handles[i]);
+         sc.images[i].setup(*this, i);
+         //
+         sc.images[i].image = surface_renderer_image_view(*this, image_handles[i]);
+         sc.images[i].image.create_basic_view(sc.format, VK_IMAGE_ASPECT_COLOR_BIT);
       }
-      //
-      // Set up the image views:
-      //
-      for (size_t i = 0; i < image_count; ++i) {
-         sc.images[i].create_basic_view(sc.format, VK_IMAGE_ASPECT_COLOR_BIT);
-      }
+   }
+   void surface_renderer::_setup_swap_chain_image_frame_data() {
+      for (auto& image : this->swap_chain.images)
+         image.setup_descriptor_sets();
    }
    void surface_renderer::_setup_framebuffers() {
       auto& sc = this->swap_chain;
       auto extent = this->surface_extent;
       auto r_pass = this->render_passes[0]->handle;
       //
-      auto count = sc.images.size();
-      sc.framebuffers.resize(count);
-      for (size_t i = 0; i < count; i++) {
-         //
-         // Each swap chain image needs its own view for color attachment, but they can 
-         // share a single view for depth attachment because our semaphores ensure that 
-         // only one subpass is running at a time.
-         //
-         auto attachments = std::array{ sc.images[i].view, sc.depth_buffer.view };
+      for (auto& image : sc.images) {
+         auto attachments = std::array{ image.image.view, sc.depth_buffer.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .renderPass      = r_pass,
@@ -944,7 +939,7 @@ namespace vulkanDK {
             .height          = extent.height,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &sc.framebuffers[i]) != VK_SUCCESS) {
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffer) != VK_SUCCESS) {
             throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer.");
          }
       }
@@ -963,10 +958,6 @@ namespace vulkanDK {
          auto& sc = this->swap_chain;
          //
          sc.materials.clear();
-         for (auto& fb : sc.framebuffers) {
-            vkDestroyFramebuffer(this->logical_device, fb, nullptr);
-            fb = VK_NULL_HANDLE;
-         }
          sc.images.clear();
          sc.depth_buffer.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
@@ -986,6 +977,7 @@ namespace vulkanDK {
       vkDeviceWaitIdle(device); // wait for all pending GPU-side commands to finish
       //
       VkFormat sc_format = sc.format;
+      size_t   sc_count  = sc.images.size();
       {  // Tear down swap chain state
          for (auto& m : sc.materials)
             //
@@ -994,20 +986,15 @@ namespace vulkanDK {
             //
             m.teardown_handle();
          //
-         for (auto& fb : sc.framebuffers) {
-            vkDestroyFramebuffer(this->logical_device, fb, nullptr);
-            fb = VK_NULL_HANDLE;
-         }
          for (auto& image : sc.images) {
-            image.destroy_view();
-            image.image = VK_NULL_HANDLE;
+            image.teardown_descriptor_sets(); // TODO: we don't actually have to free and rebuild these if the descriptor pool itself doesn't need to be rebuilt
+            image.teardown();
          }
-         for (auto& handle : sc.images_in_flight)
-            handle = VK_NULL_HANDLE;
          sc.depth_buffer.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
       }
+      this->scene.update_projection(this->surface_extent);
       {  // Set up new state
          this->_setup_swap_chain_instance();
          //
@@ -1028,14 +1015,19 @@ namespace vulkanDK {
             rp->attachments[0].format = sc.format;
             rp->setup();
          }
-         this->_setup_materials(); // requires render pass
-         this->_setup_depth_buffer();
+         this->_setup_materials();    // requires render pass and surface extent
+         this->_setup_depth_buffer(); // requires surface extent
          this->_setup_swap_chain_images();
-         this->_setup_framebuffers();
-         for (auto& fif : sc.frames_in_flight) {
-            fif.invalidate_all_command_buffers(); // FIF doesn't have any other state that we'd need to reset
+         if (sc.images.size() != sc_count) {
+            //
+            // If the swap chain image count has changed, then we must ensure that the descriptor 
+            // pool is large enough to hold descriptor sets and descriptors for each image.
+            //
+            this->teardown_descriptor_pool();
+            this->setup_descriptor_pool();
          }
-         // Rebuilding the descriptor pool is only necessary if the frame-in-flight count has changed.
+         this->_setup_framebuffers(); // requires surface extent and image view handle
+         this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
          this->_initialize_descriptor_sets();
          //
          sc.current_frame = 0;
@@ -1044,10 +1036,10 @@ namespace vulkanDK {
       // The above procedure will have reset all shader-side data for rendered objects, 
       // so we need to mark all rendered objects as dirty so we resynchronize that. We 
       // don't have to update descriptors the same way because we just took care of them 
-      // when initializing descriptor sets.
+      // when initializing descriptor sets -- that is, textures are already dealt with.
       //
-      for (auto& ro : this->scene.meshes)
-         ro.frame_dirty_flags.set_all();
+      for (auto& mesh : this->scene.meshes)
+         mesh.handled_frames.set_all_out_of_date();
       //
       // Update surface state:
       //
@@ -1083,9 +1075,9 @@ namespace vulkanDK {
       // chain image, wait for it to finish. We'll also advance the current frame counter 
       // here.
       //
-      auto& frame = sc.frames_in_flight[sc.current_frame];
+      auto& fif = sc.frames_in_flight[sc.current_frame];
       sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
-      vkWaitForFences(this->logical_device, 1, &frame.fence, VK_TRUE, no_timeout);
+      vkWaitForFences(this->logical_device, 1, &fif.fence, VK_TRUE, no_timeout);
       //
       // Next, let's acquire a swap chain image to use for this frame.
       // 
@@ -1115,7 +1107,7 @@ namespace vulkanDK {
       // has been presented and can safely be drawn to.
       //
       uint32_t sc_image_index;
-      auto     result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
+      auto     result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, fif.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
       switch (result) {
          case VK_SUCCESS:
             break;
@@ -1131,32 +1123,17 @@ namespace vulkanDK {
          default:
             throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
       }
+      auto& sci = sc.images[sc_image_index];
       //
       // The acquired  image is initially in the VK_IMAGE_LAYOUT_UNDEFINED  layout, which 
       // we can't really use.  We have to transition it to a usable  layout before we can 
       // attempt to draw  to it. Our render pass is configured to do this  automatically, 
       // so the transition will happen when a command buffer begins the render pass.
       //
-      {
-         auto& handle = sc.images_in_flight[sc_image_index];
-         //
-         // It may be the case that the last frame  to use this swap chain image is still 
-         // drawing to it.  We can wait on that  frame's fence in order  to know when its 
-         // command buffers have finished executing.
-         //
-         if (handle != VK_NULL_HANDLE) {
-            vkWaitForFences(this->logical_device, 1, &handle, VK_TRUE, UINT64_MAX);
-         }
-         //
-         // Mark the image as now being in use by this frame's command buffer.
-         //
-         handle = frame.fence;
-         vkWaitForFences(this->logical_device, 1, &handle, VK_TRUE, UINT64_MAX); // TEST
-      }
+      // Let's hook the swap  chain image to the new frame-in-flight,  and then configure 
+      // and submit its command buffers to render the image:
       //
-      // Submit our command buffers, to render the image:
-      //
-      frame.draw(sc.framebuffers[sc_image_index]);
+      sci.draw(fif);
       //
       // Present the image.
       // 
@@ -1165,7 +1142,7 @@ namespace vulkanDK {
       // is signalled. It will be signalled after the frame's "submit" operation (which 
       // executes command buffers) is complete.
       //
-      auto wait_semaphores    = std::array{ frame.semaphores.render_finished };
+      auto wait_semaphores    = std::array{ fif.semaphores.render_finished };
       auto swap_chain_handles = std::array{ sc.handle };
       auto presentation_info  = VkPresentInfoKHR{
          .sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -1364,7 +1341,7 @@ namespace vulkanDK {
       target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
       //
-      target.frame_dirty_flags.set_all();
+      target.handled_frames.set_all_out_of_date();
       return texture_index;
    }
    void surface_renderer::add_mesh(const QString& texture_path) {
@@ -1382,8 +1359,7 @@ namespace vulkanDK {
             // This texture was created for us, but we never got a chance to use it. Mark it 
             // for deletion.
             //
-            texture_item.pending_delete = true;
-            texture_item.frame_dirty_flags.set_all();
+            texture_item.mark_for_delete();
          }
          return;
       }
@@ -1431,45 +1407,33 @@ namespace vulkanDK {
          vib.buffer.copy_from(staging);
          //
          ro.shader_params.transform = transform;
-         ro.frame_dirty_flags.set_all();
+         ro.handled_frames.set_all_out_of_date();
       }
       //
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.invalidate_all_command_buffers();
+      for (auto& image : this->swap_chain.images)
+         image.invalidate_all_command_buffers();
    }
    void surface_renderer::remove_mesh(size_t i) {
       auto& list = this->scene.meshes;
-      if (list.empty())
+      if (i >= list.size())
          return;
-      std::decay_t<decltype(list)>::reverse_iterator it;
-      for (it = list.rbegin(); it != list.rend(); ++it) {
-         auto& item = *it;
-         if (item.empty() || item.pending_delete)
-            continue;
-         break;
-      }
-      if (it == list.rend())
-         return;
-      auto& item = *it;
-      item.pending_delete = true;
-      item.frame_dirty_flags.set_all();
+      auto& item = list[i];
+      item.mark_for_delete();
       {
          auto ti = item.texture_index;
          if (ti >= 0) {
             auto& list = this->scene.textures;
             if (ti < list.size()) {
                auto& tex = list[ti];
-               if (--tex.refcount == 0) {
-                  tex.pending_delete = true;
-                  tex.frame_dirty_flags.set_all();
-               }
+               if (--tex.refcount == 0)
+                  tex.mark_for_delete();
             }
          }
       }
       item.texture_index = -1;
       //
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.invalidate_all_command_buffers();
+      for (auto& image : this->swap_chain.images)
+         image.invalidate_all_command_buffers();
    }
    void surface_renderer::remove_last_mesh() {
       auto& list = this->scene.meshes;
@@ -1484,15 +1448,25 @@ namespace vulkanDK {
          return;
       }
    }
+   void surface_renderer::set_animation_paused(size_t i, bool paused) {
+      auto& list = this->scene.meshes;
+      if (i >= list.size())
+         return;
+      auto& item = list[i];
+      if (auto* as = item.anim_state) {
+         as->playing = !paused;
+      }
+   }
 
    void surface_renderer::_execute_pending_scene_deletions() {
+      auto  ic = this->swap_chain.images.size();
       auto& pd = this->scene.pending_deletions;
       if (pd.meshes) {
          size_t deleted    = 0;
          size_t last_alive = 0;
          auto&  list       = this->scene.meshes;
          for (auto& item : list) {
-            if (item.pending_delete && !item.frame_dirty_flags.any_set()) {
+            if (item.pending_delete && item.handled_frames.are_all_up_to_date(ic)) {
                item.reset();
                ++deleted;
             } else {
@@ -1507,7 +1481,7 @@ namespace vulkanDK {
          size_t last_alive = 0;
          auto&  list       = this->scene.textures;
          for (auto& item : list) {
-            if (item.pending_delete && !item.frame_dirty_flags.any_set()) {
+            if (item.pending_delete && item.handled_frames.are_all_up_to_date(ic)) {
                item.reset();
                ++deleted;
             } else {

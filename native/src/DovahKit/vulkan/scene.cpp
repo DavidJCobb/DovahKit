@@ -6,6 +6,25 @@
 #include "config/scene_limits.h"
 
 namespace vulkanDK {
+   scene::scene() {
+      this->global_state.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   }
+
+   void scene::update_projection(VkExtent2D render_area) {
+      float aspect = 1.0F;
+      if (render_area.height != 0.0)
+         aspect = (float)render_area.width / (float)render_area.height;
+      this->global_state.proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, 0.1f, 10.0f);
+      //
+      // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
+      // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
+      // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
+      // considers a "backface" versus a "frontface." You can update the handedness in 
+      // the setupGraphicsPipeline function.
+      //
+      this->global_state.proj[1][1] *= -1;
+   }
+
    void scene::teardown() {
       this->meshes.clear();
       this->textures.clear();
@@ -29,6 +48,8 @@ namespace vulkanDK {
          if (mesh.pending_delete || mesh.empty())
             continue;
          auto& anim = *mesh.anim_state;
+         if (!anim.playing)
+            continue;
          anim.elapsed += elapsed;
          if (anim.elapsed > anim.duration)
             anim.elapsed -= anim.duration;

@@ -4,14 +4,12 @@
 #include <QStyle>
 #include <QToolButton>
 #include "../../editor/DovahKitVulkanSubsystem.h"
+#include "widgets/DKVulkanView.h"
+#include "../../vulkan/surface_renderer.h"
 
-//
-// TODO: for drawing directly to a widget using non-Qt systems (e.g. WinAPI, maybe Vulkan);
-// 
-//  - https://www.qtcentre.org/threads/29232-Qt-WINAPI-direct-painting
-//    Set widget attribute Qt::WA_PaintOnScreen; use widget subclass which overrides 
-//    paintEngine() to return nullptr.
-//
+namespace {
+   static constexpr bool use_new_renderer = true;
+}
 
 RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    this->setWindowTitle(tr("Render Window"));
@@ -20,29 +18,39 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    auto* layout = new QVBoxLayout(this);
    layout->setContentsMargins({ 0, 0, 0, 0 });
    //
-   auto& vulkan = DovahKitVulkanSubsystem::get();
-   QObject::connect(&vulkan, &DovahKitVulkanSubsystem::ready, this, [this]() {
+   DKVulkanView* view = nullptr;
+   //
+   if constexpr (use_new_renderer) {
+      view = new DKVulkanView(this);
+      this->layout()->addWidget(view);
+   } else {
       auto& vulkan = DovahKitVulkanSubsystem::get();
-      auto* render = vulkan.renderWindowWidget();
-      if (!render)
-         return;
-      this->layout()->addWidget(render);
-      qDebug("Render window adopted the Vulkan render-window widget.");
-   });
-   QObject::connect(&vulkan, &DovahKitVulkanSubsystem::teardownImminent, this, [this]() {
-      // ...
-   });
+      QObject::connect(&vulkan, &DovahKitVulkanSubsystem::ready, this, [this]() {
+         auto& vulkan = DovahKitVulkanSubsystem::get();
+         auto* render = vulkan.renderWindowWidget();
+         if (!render)
+            return;
+         this->layout()->addWidget(render);
+         qDebug("Render window adopted the Vulkan render-window widget.");
+      });
+      QObject::connect(&vulkan, &DovahKitVulkanSubsystem::teardownImminent, this, [this]() {
+         // ...
+      });
+   }
    //
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);
 
    for (size_t i = 0; i < 3; ++i) {
       auto* button = new QToolButton(this->toolbar);
-      button->setText(QString("Pause %#1").arg(i));
+      button->setText(QString("Pause #%1").arg(i));
       button->setCheckable(true);
-      QObject::connect(button, &QAbstractButton::toggled, this, [this, i](bool checked) {
-         auto& vulkan = DovahKitVulkanSubsystem::get();
-         vulkan.setAnimationPaused(i, checked);
+      QObject::connect(button, &QAbstractButton::toggled, this, [this, view, i](bool checked) {
+         if constexpr (use_new_renderer) {
+            view->surfaceRenderer()->set_animation_paused(i, checked);
+         } else {
+            DovahKitVulkanSubsystem::get().setAnimationPaused(i, checked);
+         }
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
       //
@@ -52,13 +60,16 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("New Object");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this]() {
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
          auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.png, *.bmp)");
          if (path.isEmpty())
             return;
          //
-         auto& vulkan = DovahKitVulkanSubsystem::get();
-         vulkan.addRenderedObject(path);
+         if constexpr (use_new_renderer) {
+            view->surfaceRenderer()->add_mesh(path);
+         } else {
+            DovahKitVulkanSubsystem::get().addRenderedObject(path);
+         }
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileDialogNewFolder));
       //
@@ -67,14 +78,19 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Delete Last Object");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this]() {
-         auto& vulkan = DovahKitVulkanSubsystem::get();
-         vulkan.removeRenderedObject();
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         if constexpr (use_new_renderer) {
+            view->surfaceRenderer()->remove_last_mesh();
+         } else {
+            DovahKitVulkanSubsystem::get().removeRenderedObject();
+         }
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_BrowserStop));
       //
       this->toolbar->addWidget(button);
    }
 
-   vulkan.initialize();
+   if constexpr (!use_new_renderer) {
+      DovahKitVulkanSubsystem::get().initialize();
+   }
 }

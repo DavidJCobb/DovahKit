@@ -11,10 +11,14 @@ class DKVulkanView : public QWidget {
       DKVulkanView(QWidget* parent = nullptr);
       ~DKVulkanView();
 
+      virtual QPaintEngine* paintEngine() const override { return nullptr; }
+
       inline QString preferredGPUName() const noexcept { return this->preferred_gpu.name; }
       inline bool requireExactGPUMatch() const noexcept { return this->preferred_gpu.exactMatch; }
 
       inline uint desiredFrameDelay() const noexcept { return this->desired_frame_delay_ms; }
+
+      inline vulkanDK::surface_renderer* surfaceRenderer() const { return this->renderer; }
 
    public slots:
       void setDesiredFrameDelay(uint ms);

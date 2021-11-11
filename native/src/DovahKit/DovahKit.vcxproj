@@ -530,6 +530,7 @@
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
     <ClCompile Include="vulkan\surface_support_info.cpp" />
+    <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
@@ -636,6 +637,7 @@
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frames_in_flight.h" />
+    <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\material.h" />
@@ -648,6 +650,7 @@
     <ClInclude Include="vulkan\shader_module.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
     <ClInclude Include="vulkan\surface_support_info.h" />
+    <ClInclude Include="vulkan\swap_chain_image.h" />
     <ClInclude Include="vulkan\vertex.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />

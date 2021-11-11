@@ -8,16 +8,23 @@
 namespace vulkanDK {
    class scene {
       public:
+         scene();
+
          std::chrono::steady_clock::time_point last_update;
          std::vector<rendered_mesh>  meshes;
          std::vector<loaded_texture> textures;
          //
+         struct {
+            float vertical_fov_degrees = 45.0F;
+         } config;
          scene_global_state global_state;
          //
          struct {
             size_t meshes   = 0;
             size_t textures = 0;
          } pending_deletions;
+
+         void update_projection(VkExtent2D render_area);
 
          void teardown();
          void update(); // anim state, etc.
