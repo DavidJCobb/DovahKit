@@ -22,7 +22,7 @@ namespace vulkanDK {
          surface_renderer* owner = nullptr;
          size_t my_index = 0; // needed for scene updates
          //
-         VkFence fence = VK_NULL_HANDLE;
+         VkFence fence = VK_NULL_HANDLE; // synchronize the command buffer: you cannot "record" commands to it if it's still being "played" by the GPU, so wait on this fence before trying
          struct {
             VkSemaphore image_available = VK_NULL_HANDLE;
             VkSemaphore render_finished = VK_NULL_HANDLE;

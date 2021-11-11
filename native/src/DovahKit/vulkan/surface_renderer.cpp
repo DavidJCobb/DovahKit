@@ -647,7 +647,7 @@ namespace vulkanDK {
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
             },
          };
          rp->subpasses.descriptions = {
@@ -676,25 +676,41 @@ namespace vulkanDK {
             // of the render pass --  the start (source) or end (destination) of a render pass, 
             // as it were.
             // 
-            // For a subpass dependency,  a "task" is an operation (access mask) and the stages 
-            // in which that operation occurs (stage mask).
+            // For a subpass  dependency, a "task" is a  read or write  operation (access mask) 
+            // and the stages in which that operation occurs (stage mask). Because you can list 
+            // multiple stages, many accesses are defined on a per-stage basis (e.g. a specific 
+            // flag for "reading the color attachment,"  rather than a single flag for "read").
             // 
             // The start of a subpass  has an implicit  task: transitioning  the target image's 
             // current layout  to the one specified by the relevant attachment's  initialLayout 
             // field above. We of course need to ensure that the image in question (typically a 
             // swap chain image) is actually available (i.e. has been acquired) before any such 
             // transition is attempted.
+            // 
+            // If you don't specify a first external dependency  -- that is, a dependency whose 
+            // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
+            // settings:
+            // 
+            //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
+            //    .dstSubpass      = /* first subpass the attachment is used in */,
+            //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+            //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+            //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            //    .dependencyFlags = 0,
             //
             VkSubpassDependency{
                //
-               // Ensure swap chain image has been acquired.
+               // Writing to the color attachment image  should be delayed until all operations 
+               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+               // layout) are complete.
                //
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
                .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
                .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .srcAccessMask   = 0,
-               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             },
             //
@@ -704,11 +720,11 @@ namespace vulkanDK {
             // 
             //    .srcSubpass      = /* based on the last subpass */,
             //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
-            //    .srcStageMask    = /* based on the last subpass */,
+            //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
             //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-            //    .srcAccessMask   = /* based on the last subpass */,
-            //    .dstAccessMask   = VK_ACCESS_NONE_KHR,
-            //    .dependencyFlags = 0, // guessed
+            //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+            //    .dependencyFlags = 0,
             //
             // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
             // layout  that the attachment has at the  end of your last subpass, you  will need 
@@ -1045,11 +1061,20 @@ namespace vulkanDK {
       constexpr auto no_timeout = UINT64_MAX;
       auto& sc = this->swap_chain;
       //
-      //  - Acquire an image from the swap chain
-      //  - Execute the command buffer with that image as attachment in the framebuffer
-      //  - Return the image to the swap chain for presentation
+      // We need to perform three operations:
       // 
-      // These tasks are asynchronous, but must run sequentially.
+      //  - ACQUIRE an image from the swap chain.
+      // 
+      //  - SUBMIT command buffers to draw to that swap chain image and its framebuffer.
+      // 
+      //  - PRESENT the swap chain image, so that it can display on the monitor.
+      // 
+      // These operations must occur in order,  but the API calls are asynchronous, so we 
+      // must manually synchronize them. We can rely on semaphores for this.
+      // 
+      // A "fence" allows  the CPU to synchronize with (i.e. wait for)  some task running 
+      // on the GPU,  whereas a "semaphore" allows one task on the GPU to  wait for other 
+      // tasks on the GPU.
       //
       if (!this->widget.visible)
          return;
@@ -1062,7 +1087,32 @@ namespace vulkanDK {
       sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
       vkWaitForFences(this->logical_device, 1, &frame.fence, VK_TRUE, no_timeout);
       //
-      // Next, let's acquire a swap chain image to use for this frame:
+      // Next, let's acquire a swap chain image to use for this frame.
+      // 
+      // By default, vkAcquireNextImageKHR is allowed to return a swap chain image before 
+      // the presentation engine has actually finished reading from that image; we're the 
+      // ones responsible for making sure that we don't write to the image until present-
+      // ation has  actually finished. This,  by the way, implies that the  function also 
+      // doesn't have to wait  for the GPU to finish  playing  whatever command buffer(s) 
+      // are being used for the swap chain image.
+      // 
+      // Whatever combination  of semaphores and fences we use, then,  must be sufficient 
+      // to ensure  that the image has finished  being presented and any command  buffers 
+      // that were previously drawing to it have finished playing.
+      // 
+      // vkAcquireNextImageKHR will allow us to  provide it with a semaphore handle and a 
+      // fence handle.  Any provided handles  will be signalled later on,  when the image 
+      // has been presented.
+      // 
+      // Apparently, semaphores are *unsignalled* if:
+      // 
+      //  - The batch of work that originally signalled the semaphore is finished.
+      // 
+      //  - A new batch of work which waits on the semaphore starts.
+      // 
+      // In this case, we're going to use the current frame's "image available" semaphore 
+      // for acquisition: that semaphore will be  signalled when the newly-acquired image 
+      // has been presented and can safely be drawn to.
       //
       uint32_t sc_image_index;
       auto     result = vkAcquireNextImageKHR(this->logical_device, sc.handle, no_timeout, frame.semaphores.image_available, VK_NULL_HANDLE, &sc_image_index);
@@ -1082,35 +1132,49 @@ namespace vulkanDK {
             throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
       }
       //
+      // The acquired  image is initially in the VK_IMAGE_LAYOUT_UNDEFINED  layout, which 
+      // we can't really use.  We have to transition it to a usable  layout before we can 
+      // attempt to draw  to it. Our render pass is configured to do this  automatically, 
+      // so the transition will happen when a command buffer begins the render pass.
+      //
       {
          auto& handle = sc.images_in_flight[sc_image_index];
          //
-         // Check if a previous frame is using this image.
+         // It may be the case that the last frame  to use this swap chain image is still 
+         // drawing to it.  We can wait on that  frame's fence in order  to know when its 
+         // command buffers have finished executing.
          //
          if (handle != VK_NULL_HANDLE) {
             vkWaitForFences(this->logical_device, 1, &handle, VK_TRUE, UINT64_MAX);
          }
          //
-         // Mark the image as now being in use by this frame.
+         // Mark the image as now being in use by this frame's command buffer.
          //
          handle = frame.fence;
+         vkWaitForFences(this->logical_device, 1, &handle, VK_TRUE, UINT64_MAX); // TEST
       }
       //
-      // Render the image:
+      // Submit our command buffers, to render the image:
       //
       frame.draw(sc.framebuffers[sc_image_index]);
       //
-      // Present the image:
+      // Present the image.
+      // 
+      // Here, we  use the frame's "render finished"  semaphore as a  "wait semaphore." 
+      // This means that the presentation operation will not begin until that semaphore 
+      // is signalled. It will be signalled after the frame's "submit" operation (which 
+      // executes command buffers) is complete.
       //
-      auto signal_semaphores  = std::array{ frame.semaphores.render_finished };
+      auto wait_semaphores    = std::array{ frame.semaphores.render_finished };
       auto swap_chain_handles = std::array{ sc.handle };
       auto presentation_info  = VkPresentInfoKHR{
          .sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-         .waitSemaphoreCount  = signal_semaphores.size(),
-         .pWaitSemaphores     = signal_semaphores.data(),
+         .pNext               = nullptr,
+         .waitSemaphoreCount  = wait_semaphores.size(),
+         .pWaitSemaphores     = wait_semaphores.data(),
          .swapchainCount      = swap_chain_handles.size(),
          .pSwapchains         = swap_chain_handles.data(),
-         .pImageIndices       = &sc_image_index,
+         .pImageIndices       = &sc_image_index, // should be an array, one per swap chain handle; if just one handle, you can use a pointer to a single index
          .pResults            = nullptr,
       };
       result = vkQueuePresentKHR(this->queues.presentation.handle, &presentation_info);
@@ -1201,7 +1265,7 @@ namespace vulkanDK {
       //
       VkMemoryRequirements memRequirements;
       vkGetBufferMemoryRequirements(this->logical_device, out.handle, &memRequirements);
-      out.size = memRequirements.size;
+      out.size = size; // should be the size of the buffer, not the size of the allocation
       //
       // In a real-world application, you wouldn't use vkAllocateMemory for each individual object you wish 
       // to render, because there's actually a limit on the number of allocations you can make irrespective 

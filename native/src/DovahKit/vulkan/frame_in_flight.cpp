@@ -130,11 +130,34 @@ namespace vulkanDK {
    void frame_in_flight::draw(VkFramebuffer target_framebuffer) {
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
-      if (this->command_buffers_invalid) {
+      //if (this->command_buffers_invalid) {
+         //
+         // The command buffer must render to the right framebuffer. Framebuffers are per 
+         // swap chain image, so if frames-in-flight are NOT per swap chain image, then 
+         // we need to redo the command buffers every frame so that they actually target 
+         // the right framebuffer at any given moment.
+         //
          this->_refill_command_buffers(target_framebuffer);
-      }
+      //}
       //
-      // Submit our command buffers:
+      // Submit our command buffers.
+      // 
+      // Our submit operation here will wait for all of the "wait semaphores" we provide 
+      // to be signalled before beginning. When all command buffers listed in the submit 
+      // operation have completed execution, it will signal the "signal semaphores" that 
+      // we've provided.
+      // 
+      // In this case,  we're waiting on our "image available" semaphore,  which will be 
+      // signalled when the swap chain image  provided by vkAcquireNextImageKHR is ready 
+      // for use; and we're signalling our "render finished" semaphore. The rendere will 
+      // use our "render finished" semaphore as  the "wait semaphore" for presenting the 
+      // rendered image via vkQueuePresentKHR.
+      // 
+      // We also have  a fence that we use to  indicate when our command  buffers are in 
+      // the middle of being executed, so we'll  reset that fence just before we submit, 
+      // and pass the fence as an argument for the queue-submit call. The call will then 
+      // signal our fence when the command buffers  have finished running. We need to do 
+      // all this so that we can safely reuse our command buffer when rendering.
       //
       std::array command_buffer_handles = { this->commands.handle };
       auto wait_semaphores   = std::array{ this->semaphores.image_available };
@@ -363,9 +386,6 @@ namespace vulkanDK {
          .clearValueCount = (uint32_t)clear_values.size(),
          .pClearValues    = clear_values.data(),
       };
-
-      bool any_deleted_objects = false;
-
       vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
       {
          //
@@ -399,7 +419,7 @@ namespace vulkanDK {
                );
                ro.draw_call(command_buffer);
             }
-            qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
+            //qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
          }
       }
       vkCmdEndRenderPass(command_buffer);
