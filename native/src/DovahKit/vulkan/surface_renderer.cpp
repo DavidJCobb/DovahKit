@@ -334,7 +334,7 @@ namespace vulkanDK {
       this->setup_command_pool(this->queues.graphics.index);
       //
       {  // swap chain
-         this->_setup_swap_chain_instance();
+         this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
          this->_setup_render_passes();               // requires swap chain format
          this->_setup_materials();                   // requires render pass and extent size
          this->_setup_depth_buffer();                // requires extent size
@@ -346,7 +346,7 @@ namespace vulkanDK {
             fif.setup(*this);
       }
       this->_create_null_texture();
-      this->scene.update_projection(this->surface_extent);
+      this->scene.update_projection(this->surface_extent); // requires extent size
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
       //
@@ -994,7 +994,6 @@ namespace vulkanDK {
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
       }
-      this->scene.update_projection(this->surface_extent);
       {  // Set up new state
          this->_setup_swap_chain_instance();
          //
@@ -1032,6 +1031,7 @@ namespace vulkanDK {
          //
          sc.current_frame = 0;
       }
+      this->scene.update_projection(this->surface_extent);
       //
       // The above procedure will have reset all shader-side data for rendered objects, 
       // so we need to mark all rendered objects as dirty so we resynchronize that. We 
