@@ -19,6 +19,25 @@ namespace vulkanDK {
       this->_on_shader_parameter_change();
    }
 
+   // Setup functions:
+   size_t rendered_mesh::total_size_for_setup() const {
+      return (sizeof(vertex) * this->data.vertices.size()) + this->data.indices.size_in_bytes();
+   }
+   void rendered_mesh::sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const {
+      v = this->data.vertices.size() * sizeof(vertex);
+      i = this->data.indices.size_in_bytes();
+      total = v + i;
+   }
+   void rendered_mesh::setup_vib_data_at(void* dest) const {
+      auto& vl = this->data.vertices;
+      auto& il = this->data.indices;
+      //
+      auto vs = vl.size() * sizeof(vertex);
+      //
+      memcpy((void*)((std::intptr_t)dest),      vl.data(), vs);
+      memcpy((void*)((std::intptr_t)dest + vs), il.data(), il.size_in_bytes());
+   }
+
    void rendered_mesh::draw_call(VkCommandBuffer command_buffer) {
       VkDeviceSize offset = 0;
       //
@@ -30,7 +49,7 @@ namespace vulkanDK {
          return;
       //
       vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.buffer.handle, &offset);
-      if constexpr (false) {
+      if (vib.wide_indices) {
          vkCmdBindIndexBuffer(command_buffer, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT32);
       } else {
          vkCmdBindIndexBuffer(command_buffer, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT16);
@@ -44,14 +63,18 @@ namespace vulkanDK {
    }
    void rendered_mesh::reset() {
       auto& vib = this->vertex_and_index_buffer;
-      vib.buffer      = buffer();
-      vib.index_count = 0;
-      vib.indices_at  = 0;
+      vib.buffer       = buffer();
+      vib.index_count  = 0;
+      vib.indices_at   = 0;
+      vib.wide_indices = false;
       //
       if (auto*& p = this->anim_state) {
          delete p;
          p = nullptr;
       }
       this->handled_frames = frame_dirty_state();
+      //
+      this->data.vertices.clear();
+      this->data.indices.clear();
    }
 }

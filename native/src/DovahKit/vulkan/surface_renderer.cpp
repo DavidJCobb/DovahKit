@@ -514,19 +514,23 @@ namespace vulkanDK {
                d.anim_state = new mesh_animation_state;
             }
             //
-            VkDeviceSize buffer_size_v = sizeof(vertex)   * s.vertices.size();
-            VkDeviceSize buffer_size_i = sizeof(uint16_t) * s.indices.size();
-            VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+            d.data.vertices = s.vertices;
+            d.data.indices  = s.indices;
+            //
+            VkDeviceSize buffer_size_v;
+            VkDeviceSize buffer_size_i;
+            VkDeviceSize buffer_size;
+            d.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
             //
             auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             void* data    = staging.map_memory();
-            memcpy((void*)((std::intptr_t)data),                 s.vertices.data(), buffer_size_v);
-            memcpy((void*)((std::intptr_t)data + buffer_size_v), s.indices.data(),  buffer_size_i);
+            d.setup_vib_data_at(data);
             staging.unmap_memory(data);
             //
-            vib.indices_at  = buffer_size_v;
-            vib.index_count = s.indices.size();
-            vib.buffer      = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.wide_indices = d.data.indices.type() == vertex_index_list::value_type::wide;
+            vib.indices_at   = buffer_size_v;
+            vib.index_count  = s.indices.size();
+            vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             vib.buffer.copy_from(staging);
             //
             d.shader_params.transform = s.transform;
@@ -1379,34 +1383,34 @@ namespace vulkanDK {
             position[j] = ((float)rand() / RAND_MAX) * 5.0F - 2.5F;
          //
          float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
-         std::array<vertex, 4> vertices = {
+         ro.data.vertices = {
             vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0 } },
             vertex{ {  0.5f, -hfwc, 0.0 }, { 0.0f, 1.0f, 0.0f }, { 0.0, 0.0 } },
             vertex{ {  0.5f,  hfwc, 0.0 }, { 0.0f, 0.0f, 1.0f }, { 0.0, 1.0 } },
             vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
          };
-         std::array<uint16_t, 6> indices = { 0, 1, 2, 2, 3, 0 };
-         glm::mat4 transform = glm::translate(
+         ro.data.indices = { 0, 1, 2, 2, 3, 0 };
+         ro.shader_params.transform = glm::translate(
             glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
             position
          );
          //
-         VkDeviceSize buffer_size_v = sizeof(vertex)   * vertices.size();
-         VkDeviceSize buffer_size_i = sizeof(uint16_t) * indices.size();
-         VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+         VkDeviceSize buffer_size_v;
+         VkDeviceSize buffer_size_i;
+         VkDeviceSize buffer_size;
+         ro.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
          //
          auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          void* data    = staging.map_memory();
-         memcpy((void*)((std::intptr_t)data),                 vertices.data(), buffer_size_v);
-         memcpy((void*)((std::intptr_t)data + buffer_size_v), indices.data(),  buffer_size_i);
+         ro.setup_vib_data_at(data);
          staging.unmap_memory(data);
          //
-         vib.indices_at  = buffer_size_v;
-         vib.index_count = indices.size();
-         vib.buffer      = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+         vib.wide_indices = ro.data.indices.type() == vertex_index_list::value_type::wide;
+         vib.indices_at   = buffer_size_v;
+         vib.index_count  = ro.data.indices.size();
+         vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          vib.buffer.copy_from(staging);
          //
-         ro.shader_params.transform = transform;
          ro.handled_frames.set_all_out_of_date();
       }
       //

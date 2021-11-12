@@ -1,8 +1,11 @@
 #pragma once
+#include <vector>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
 #include "helpers/frame_dirty_state.h"
+#include "helpers/vertex_index_list.h"
 #include "buffer.h"
+#include "vertex.h"
 
 namespace vulkanDK {
    struct mesh_animation_state {
@@ -30,9 +33,14 @@ namespace vulkanDK {
          };
          
          struct {
+            std::vector<vertex> vertices;
+            vertex_index_list   indices;
+         } data;
+         struct {
             buffer   buffer;
-            uint32_t indices_at  = 0;
-            uint32_t index_count = 0;
+            uint32_t indices_at   = 0;
+            uint32_t index_count  = 0;
+            bool     wide_indices = false;
          } vertex_and_index_buffer;
          shader_parameters shader_params;
          int32_t texture_index = -1;
@@ -46,6 +54,11 @@ namespace vulkanDK {
          
          inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
          void set_transform(const glm::mat4&);
+
+         // Setup functions:
+         size_t total_size_for_setup() const;
+         void sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const;
+         void setup_vib_data_at(void*) const;
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
