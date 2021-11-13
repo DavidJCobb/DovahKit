@@ -2,6 +2,8 @@
 #include <QToolBar>
 #include <QWidget>
 
+class QStatusBar;
+
 // use QWidget because we're gonna stuff it into a QMdiSubWindow or whatever
 class RenderWindow : public QWidget {
    Q_OBJECT;
@@ -10,5 +12,6 @@ class RenderWindow : public QWidget {
       
    private:
       //Ui::RenderWindow ui;
-      QToolBar* toolbar = nullptr;
+      QStatusBar* status  = nullptr;
+      QToolBar*   toolbar = nullptr;
 };

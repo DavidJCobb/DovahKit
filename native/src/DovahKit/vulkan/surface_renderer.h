@@ -101,6 +101,8 @@ namespace vulkanDK {
          void remove_mesh(size_t);
          void remove_last_mesh();
          void set_animation_paused(size_t mesh, bool paused);
+         //
+         size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
 
       protected:
          void _init_surface(); // on init, and when the HWND changes

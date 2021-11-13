@@ -1,5 +1,6 @@
 #include "DKVulkanView.h"
 #include <QEvent>
+#include <QMouseEvent>
 #include "../vulkan/DKVulkanInstance.h"
 #include "../vulkan/physical_device.h"
 #include "../vulkan/queue_family_info.h"
@@ -142,4 +143,15 @@ void DKVulkanView::showEvent(QShowEvent* event) {
 }
 void DKVulkanView::timerEvent(QTimerEvent* event) {
    this->repaint();
+}
+
+void DKVulkanView::mousePressEvent(QMouseEvent* event) {
+   auto* s = this->renderer;
+   if (!s)
+      return;
+   auto pos = event->localPos();
+   auto i   = s->object_index_at(pos.x(), pos.y());
+   if (i == -1)
+      return;
+   emit this->renderedMeshClicked(i);
 }

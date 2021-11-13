@@ -1,6 +1,7 @@
 #include "render_window.h"
 #include <QBoxLayout>
 #include <QFileDialog>
+#include <QStatusBar>
 #include <QStyle>
 #include <QToolButton>
 #include "../../editor/DovahKitVulkanSubsystem.h"
@@ -22,7 +23,10 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    //
    if constexpr (use_new_renderer) {
       view = new DKVulkanView(this);
-      this->layout()->addWidget(view);
+      layout->addWidget(view, 1);
+      QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {
+         this->status->showMessage(QString("Mesh #%1 clicked.").arg(index), 2000);
+      });
    } else {
       auto& vulkan = DovahKitVulkanSubsystem::get();
       QObject::connect(&vulkan, &DovahKitVulkanSubsystem::ready, this, [this]() {
@@ -40,6 +44,11 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    //
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);
+   {
+      auto* sb = new QStatusBar(this);
+      this->status = sb;
+      layout->addWidget(sb, 0);
+   }
 
    for (size_t i = 0; i < 3; ++i) {
       auto* button = new QToolButton(this->toolbar);

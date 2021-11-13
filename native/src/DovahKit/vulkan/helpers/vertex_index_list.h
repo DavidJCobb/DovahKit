@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <iterator>
@@ -61,23 +62,8 @@ namespace vulkanDK {
                   return old;
                }
 
-               inline bool operator==(const _iterator& other) const noexcept {
-                  return target == other.target;
-               }
-               inline bool operator!=(const _iterator& other) const noexcept {
-                  return target != other.target;
-               }
-               inline bool operator<(const _iterator& other) const noexcept {
-                  return target < other.target;
-               }
-               inline bool operator>(const _iterator& other) const noexcept {
-                  return target > other.target;
-               }
-               inline bool operator<=(const _iterator& other) const noexcept {
-                  return target <= other.target;
-               }
-               inline bool operator>=(const _iterator& other) const noexcept {
-                  return target >= other.target;
+               inline auto operator<=>(const _iterator& other) const noexcept {
+                  return target <=> other.target;
                }
          };
 
@@ -233,6 +219,24 @@ namespace vulkanDK {
          //
          inline size_t value_size() const noexcept { return value_size(this->_type); }
          inline size_t size_in_bytes() const noexcept { return this->value_size() * this->size(); }
+
+         inline const uint32_t operator[](size_t i) const noexcept {
+            if (this->_type == value_type::thin)
+               return this->_data.thin[i];
+            return this->_data.wide[i];
+         }
+
+         inline size_t triangle_count() const noexcept { return this->size() / 3; }
+         inline std::array<uint32_t, 3> triangle_from(size_t i) const noexcept {
+            if (this->_type == value_type::thin) {
+               return std::array<uint32_t, 3>{ this->_data.thin[i], this->_data.thin[i + 1], this->_data.thin[i + 2] };
+            } else {
+               return std::array<uint32_t, 3>{ this->_data.wide[i], this->_data.wide[i + 1], this->_data.wide[i + 2] };
+            }
+         }
+         inline std::array<uint32_t, 3> triangle(size_t i) const noexcept {
+            return this->triangle_from(i * 3);
+         }
 
          typed_range<uint16_t> as_thin_range() { return typed_range<uint16_t>(*this); }
          const typed_range<const uint16_t> as_thin_range() const noexcept { return typed_range<const uint16_t>(*this); }

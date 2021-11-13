@@ -516,6 +516,7 @@ namespace vulkanDK {
             //
             d.data.vertices = s.vertices;
             d.data.indices  = s.indices;
+            d.recalc_bounding_sphere();
             //
             VkDeviceSize buffer_size_v;
             VkDeviceSize buffer_size_i;
@@ -1390,6 +1391,7 @@ namespace vulkanDK {
             vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
          };
          ro.data.indices = { 0, 1, 2, 2, 3, 0 };
+         ro.recalc_bounding_sphere();
          ro.shader_params.transform = glm::translate(
             glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
             position
@@ -1460,6 +1462,60 @@ namespace vulkanDK {
       if (auto* as = item.anim_state) {
          as->playing = !paused;
       }
+   }
+   //
+   size_t surface_renderer::object_index_at(int x, int y) {
+      //
+      // IntelliSense DOES NOT understand GLM's vector types properly and 
+      // will display them as if they aren't templated on float. Examination 
+      // in the run-time debugger confirms that they are indeed floats, so 
+      // ignore IntelliSense's lies!
+      //
+      glm::vec3 eye_position;
+      glm::vec3 eye_endpoint;
+      glm::vec3 eye_direction;
+      {
+         auto viewport = glm::vec4( 0, 0, this->surface_extent.width, this->surface_extent.height );
+         //
+         eye_position = glm::unProject(
+            glm::vec3{ x, y, 0.0 },
+            this->scene.global_state.view,
+            this->scene.global_state.proj,
+            viewport
+         );
+         eye_endpoint = glm::unProject(
+            glm::vec3{ x, y, 1.0 },
+            this->scene.global_state.view,
+            this->scene.global_state.proj,
+            viewport
+         );
+         eye_direction = glm::normalize(eye_endpoint - eye_position);
+      }
+      //
+      size_t nearest  = -1;
+      float  distance = std::numeric_limits<float>::max();
+      auto&  list     = this->scene.meshes;
+      for (size_t i = 0; i < list.size(); ++i) {
+         auto& mesh  = list[i];
+         auto& bound = mesh.data.bounding_sphere;
+         if (mesh.empty())
+            continue;
+         if (!mesh.ray_intersects_bounding_sphere(eye_position, eye_direction))
+            continue;
+         auto mt = glm::inverse(mesh.transform()); // world -> local instead of local -> world
+         auto local_eye_position  = glm::vec3(mt * glm::vec4(eye_position,  1));
+         mt[3] = { 0, 0, 0, 0 }; // exclude position from next transform; only do rotation (and scale i guess)
+         auto local_eye_direction = glm::vec3(mt * glm::vec4(eye_direction, 1));
+         //
+         float hit_distance;
+         if (mesh.ray_intersects_shape(local_eye_position, local_eye_direction, hit_distance)) {
+            if (hit_distance < distance) {
+               distance = hit_distance;
+               nearest  = i;
+            }
+         }
+      }
+      return nearest;
    }
 
    void surface_renderer::_execute_pending_scene_deletions() {

@@ -1,4 +1,11 @@
 #include "rendered_mesh.h"
+#include "../helpers/math.h"
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace vulkanDK {
    rendered_mesh::~rendered_mesh() {
@@ -20,6 +27,48 @@ namespace vulkanDK {
    }
 
    // Setup functions:
+   void rendered_mesh::recalc_bounding_sphere() {
+      if (this->data.vertices.empty()) {
+         this->data.bounding_sphere = {
+            .center    = { 0, 0, 0 },
+            .radius_sq = 0,
+         };
+         return;
+      }
+      //
+      struct range {
+         float min = std::numeric_limits<float>::max();
+         float max = std::numeric_limits<float>::min();
+         //
+         void consider(float v) {
+            if (v < min)
+               min = v;
+            if (v > max)
+               max = v;
+         }
+         float center() const noexcept {
+            return (max + min) / 2;
+         }
+      };
+      range x;
+      range y;
+      range z;
+      for (auto& v : this->data.vertices) {
+         x.consider(v.pos.x);
+         y.consider(v.pos.y);
+         z.consider(v.pos.z);
+      }
+      //
+      auto& bs = this->data.bounding_sphere;
+      bs.center    = { x.center(), y.center(), z.center() };
+      bs.radius_sq = 0.0;
+      for (auto& v : this->data.vertices) {
+         //float radius_sq = std::pow(v.pos.x - bs.center.x, 2) + std::pow(v.pos.y - bs.center.y, 2) + std::pow(v.pos.z - bs.center.z, 2);
+         float radius_sq = glm::distance2(bs.center, v.pos);
+         bs.radius_sq = std::max(bs.radius_sq, radius_sq);
+      }
+   }
+   //
    size_t rendered_mesh::total_size_for_setup() const {
       return (sizeof(vertex) * this->data.vertices.size()) + this->data.indices.size_in_bytes();
    }
@@ -76,5 +125,61 @@ namespace vulkanDK {
       //
       this->data.vertices.clear();
       this->data.indices.clear();
+   }
+
+   // geometry
+   bool rendered_mesh::ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) {
+      constexpr float epsilon = 0.0001;
+      auto& bound  = this->data.bounding_sphere;
+      auto  center = glm::vec3(
+         (  // Have to convert the bounding sphere center to a transformation matrix; matrix-by-vector is, evidently, something else, and not something we can use
+            glm::translate(glm::mat4(1), bound.center) * this->transform()
+         )[3] // bottom row of a transformation matrix is the translation
+      );
+      //
+      // Line/sphere intersection check:
+      //
+      ray_direction.normalize();
+      //
+      auto gap   = ray_origin - center;
+      auto delta = std::pow(ray_direction.dot(gap), 2) - (gap.length_sq() - bound.radius_sq);
+      //
+      // Cases:
+      // 
+      //  - delta < -epsilon
+      //     - No intersection
+      //  - delta >= -epsilon && delta <= epsilon
+      //     - One intersection (ray scrapes sphere's surface)
+      //  - delta > epsilon
+      //     - Two intersections (ray penetrates and exits sphere)
+      //
+      return (delta >= -epsilon);
+   }
+   bool rendered_mesh::ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) {
+      ray_direction = glm::normalize(ray_direction);
+      glm::vec2 bary_position;
+      //
+      auto& list = this->data.indices;
+      auto& vert = this->data.vertices;
+      bool  hits = false;
+      hit_distance = std::numeric_limits<float>::max();
+      for (size_t i = 0; i + 2 < list.size(); i += 3) {
+         std::array<uint32_t, 3> indices = list.triangle_from(i);
+         float distance;
+         bool  result = glm::intersectRayTriangle(
+            ray_origin,
+            ray_direction,
+            vert[indices[0]].pos,
+            vert[indices[1]].pos,
+            vert[indices[2]].pos,
+            bary_position,
+            distance
+         );
+         if (result) {
+            hits         = result;
+            hit_distance = std::min(distance, hit_distance);
+         }
+      }
+      return hits;
    }
 }

@@ -7,6 +7,9 @@
 #include "buffer.h"
 #include "vertex.h"
 
+// geometry
+#include "../helpers/vector3.h"
+
 namespace vulkanDK {
    struct mesh_animation_state {
       bool  playing  = true;
@@ -35,6 +38,11 @@ namespace vulkanDK {
          struct {
             std::vector<vertex> vertices;
             vertex_index_list   indices;
+            //
+            struct {
+               glm::vec3 center    = { 0.0, 0.0, 0.0 };
+               float     radius_sq = 0.0F; // radius squared is faster for many calculations
+            } bounding_sphere;
          } data;
          struct {
             buffer   buffer;
@@ -56,6 +64,8 @@ namespace vulkanDK {
          void set_transform(const glm::mat4&);
 
          // Setup functions:
+         void recalc_bounding_sphere();
+         //
          size_t total_size_for_setup() const;
          void sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const;
          void setup_vib_data_at(void*) const;
@@ -65,5 +75,9 @@ namespace vulkanDK {
 
          void mark_for_delete();
          void reset();
+
+         // geometry
+         bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction); // ray direction must be normalized
+         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance); // ray direction must be normalized
    };
 }

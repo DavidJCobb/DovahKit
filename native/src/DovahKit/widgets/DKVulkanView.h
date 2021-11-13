@@ -32,6 +32,8 @@ class DKVulkanView : public QWidget {
       void rendererTeardownImminent();
       void rendererTeardownComplete();
 
+      void renderedMeshClicked(size_t);
+
    protected:
       vulkanDK::surface_renderer* renderer = nullptr; // owns
       struct {
@@ -47,4 +49,6 @@ class DKVulkanView : public QWidget {
       virtual void resizeEvent(QResizeEvent* event) override;
       virtual void showEvent(QShowEvent* event) override;
       virtual void timerEvent(QTimerEvent* event) override;
+
+      virtual void mousePressEvent(QMouseEvent* event) override;
 };
