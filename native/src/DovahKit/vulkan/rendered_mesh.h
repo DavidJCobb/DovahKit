@@ -76,8 +76,11 @@ namespace vulkanDK {
          void mark_for_delete();
          void reset();
 
-         // geometry
-         bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction); // ray direction must be normalized
-         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance); // ray direction must be normalized
+         // Object-local raycasts
+         bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const; // ray direction must be normalized
+         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const; // ray direction must be normalized
+
+         // World-local raycast
+         bool ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const;
    };
 }

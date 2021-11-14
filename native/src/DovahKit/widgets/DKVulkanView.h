@@ -1,5 +1,9 @@
 #pragma once
+#include <chrono>
 #include <QWidget>
+#include "../vulkan/DKVulkanCameraController.h"
+
+class DKVulkanCameraController;
 
 namespace vulkanDK {
    class surface_renderer;
@@ -27,6 +31,9 @@ class DKVulkanView : public QWidget {
 
       void resetRenderer(); // re-selects a physical device, etc.
 
+      void setCameraController(DKVulkanCameraController*);
+      void setInputHandlingEnabled(bool);
+
    signals:
       void rendererReady();
       void rendererTeardownImminent();
@@ -42,6 +49,13 @@ class DKVulkanView : public QWidget {
       } preferred_gpu;
       uint desired_frame_delay_ms = 0;
       int  timerID = 0;
+      struct {
+         bool enabled = false;
+         bool focused = false;
+         QPointer<DKVulkanCameraController> camera;
+      } input_handling;
+
+      void _inputPoll();
 
       virtual bool event(QEvent*) override;
       virtual void hideEvent(QHideEvent* event) override;
@@ -49,6 +63,9 @@ class DKVulkanView : public QWidget {
       virtual void resizeEvent(QResizeEvent* event) override;
       virtual void showEvent(QShowEvent* event) override;
       virtual void timerEvent(QTimerEvent* event) override;
+
+      virtual void focusInEvent(QFocusEvent* event) override;
+      virtual void focusOutEvent(QFocusEvent* event) override;
 
       virtual void mousePressEvent(QMouseEvent* event) override;
 };

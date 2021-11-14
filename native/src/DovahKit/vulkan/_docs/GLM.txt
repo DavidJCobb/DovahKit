@@ -1,0 +1,51 @@
+
+OpenGL Mathematics, or GLM, is a header-only C++ library which offers geometric 
+and other math functions based on the  GLSL spec. However, its documentation is 
+something of a  struggle to work with. The official API  reference is missing a 
+lot of information, and sometimes has entirely incorrect information; little is 
+done to explain the nuances of these functions, and that's cost me enough of my 
+time for me to begin taking my own notes.
+
+Functions are alphabetized.
+
+
+=== Basic operations ==========================================================
+
+Vector/matrix multiplication is not commutative; a * b != b * a. If you wish to 
+apply a transformation matrix to a position vector, the matrix goes on the left-
+hand side.
+
+
+=== glm::intersectRayTriangle =================================================
+
+Test whether the specified ray intersects  the specified triangle; returns true 
+if so,  or false otherwise. Uses out-arguments  to supply the hit distance  and 
+the barycentric  hit position (a two-value position relative  to the triangle's 
+vertices, apparently useful for raytracing).
+
+Arguments:
+
+ - const vec3& ray_origin
+ - const vec3& ray_direction
+ - const vec3& triangle_vertex_a
+ - const vec3& triangle_vertex_b
+ - const vec3& triangle_vertex_c
+ - vec2&       barycentric_position
+ - float&      hit_distance
+
+
+=== glm::normalize ============================================================
+
+Given a vector, it returns a new vector with all components normalized. A zero-
+length vector will result in NaN.
+
+
+=== glm::translate ============================================================
+
+Given a matrix argument representing a transformation to modify, and a ve3 that 
+represents a translation to apply, this  function *prepends* the translation to 
+the prior matrix and returns a new transformation matrix.
+
+Prepending the translation means that you're performing a world-relative trans-
+lation; appending would make it relative  to the original matrix's rotation and 
+scale instead.

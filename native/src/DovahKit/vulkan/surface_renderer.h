@@ -15,6 +15,8 @@
 
 class DKVulkanInstance;
 
+struct DKVulkanCameraUpdate;
+
 namespace vulkanDK {
    class frame_in_flight;
    class render_pass;
@@ -103,6 +105,8 @@ namespace vulkanDK {
          void set_animation_paused(size_t mesh, bool paused);
          //
          size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
+
+         void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes

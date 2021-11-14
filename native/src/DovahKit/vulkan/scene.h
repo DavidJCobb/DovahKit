@@ -5,6 +5,8 @@
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
 
+struct DKVulkanCameraUpdate;
+
 namespace vulkanDK {
    class scene {
       public:
@@ -25,6 +27,7 @@ namespace vulkanDK {
          } pending_deletions;
 
          void update_projection(VkExtent2D render_area);
+         void adjust_camera(const DKVulkanCameraUpdate&);
 
          void teardown();
          void update(); // anim state, etc.

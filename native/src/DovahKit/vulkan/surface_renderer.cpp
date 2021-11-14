@@ -27,6 +27,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace {
    const std::vector<const char*> device_extensions = {
@@ -1496,26 +1497,36 @@ namespace vulkanDK {
       float  distance = std::numeric_limits<float>::max();
       auto&  list     = this->scene.meshes;
       for (size_t i = 0; i < list.size(); ++i) {
-         auto& mesh  = list[i];
-         auto& bound = mesh.data.bounding_sphere;
-         if (mesh.empty())
-            continue;
-         if (!mesh.ray_intersects_bounding_sphere(eye_position, eye_direction))
-            continue;
-         auto mt = glm::inverse(mesh.transform()); // world -> local instead of local -> world
-         auto local_eye_position  = glm::vec3(mt * glm::vec4(eye_position,  1));
-         mt[3] = { 0, 0, 0, 0 }; // exclude position from next transform; only do rotation (and scale i guess)
-         auto local_eye_direction = glm::vec3(mt * glm::vec4(eye_direction, 1));
+         auto& mesh = list[i];
          //
          float hit_distance;
-         if (mesh.ray_intersects_shape(local_eye_position, local_eye_direction, hit_distance)) {
-            if (hit_distance < distance) {
-               distance = hit_distance;
-               nearest  = i;
-            }
+         if (!mesh.ray_intersects(eye_position, eye_direction, hit_distance))
+            continue;
+         if (hit_distance < distance) {
+            distance = hit_distance;
+            nearest = i;
          }
       }
       return nearest;
+   }
+
+   void surface_renderer::move_camera(const glm::vec3& move, const glm::vec3& turn) {
+      auto& gs     = this->scene.global_state;
+      auto& camera = gs.view;
+      //
+      auto rot = glm::eulerAngleZY(turn.z, turn.y);
+      rot *= glm::eulerAngleX(turn.x);
+      //
+      camera *= rot;
+      auto position = glm::inverse(glm::mat3x3(camera)) * move;
+      camera = glm::translate(camera, position);
+      /*//
+      glm::mat3 rotation = camera;
+      glm::vec3 position = camera[3];
+      rotation *= glm::mat3(rot);
+      position += glm::inverse(rotation) * move;
+      camera = glm::translate(glm::mat4(rotation), position);
+      //*/
    }
 
    void surface_renderer::_execute_pending_scene_deletions() {

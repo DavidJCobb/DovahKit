@@ -128,7 +128,7 @@ namespace vulkanDK {
    }
 
    // geometry
-   bool rendered_mesh::ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) {
+   bool rendered_mesh::ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const {
       constexpr float epsilon = 0.0001;
       auto& bound  = this->data.bounding_sphere;
       auto  center = glm::vec3(
@@ -155,7 +155,7 @@ namespace vulkanDK {
       //
       return (delta >= -epsilon);
    }
-   bool rendered_mesh::ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) {
+   bool rendered_mesh::ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const {
       ray_direction = glm::normalize(ray_direction);
       glm::vec2 bary_position;
       //
@@ -181,5 +181,18 @@ namespace vulkanDK {
          }
       }
       return hits;
+   }
+
+   bool rendered_mesh::ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const {
+      if (this->empty())
+         return false;
+      if (!this->ray_intersects_bounding_sphere(ray_origin, ray_direction))
+         return false;
+      auto mt = glm::inverse(this->transform()); // world -> local instead of local -> world
+      auto local_ray_origin    = glm::vec3(mt * glm::vec4(ray_origin,  1));
+      mt[3] = { 0, 0, 0, 0 }; // exclude position from next transform; only do rotation (and scale i guess)
+      auto local_ray_direction = glm::vec3(mt * glm::vec4(ray_direction, 1));
+      //
+      return this->ray_intersects_shape(local_ray_origin, local_ray_direction, hit_distance);
    }
 }

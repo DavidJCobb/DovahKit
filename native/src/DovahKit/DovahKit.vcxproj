@@ -462,6 +462,7 @@
     <ClCompile Include="helpers\qt\font.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
     <ClCompile Include="helpers\qt\ini.cpp" />
+    <ClCompile Include="helpers\qt\keycodes.cpp" />
     <ClCompile Include="helpers\qt\layout.cpp" />
     <ClCompile Include="helpers\qt\minimize_intent.cpp" />
     <ClCompile Include="helpers\qt\ownership.cpp" />
@@ -517,6 +518,7 @@
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
+    <ClCompile Include="vulkan\DKVulkanCameraController.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
@@ -621,6 +623,7 @@
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
+    <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
@@ -634,8 +637,10 @@
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
+    <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
+    <QtMoc Include="vulkan\DKVulkanCameraController.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frames_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
@@ -1313,6 +1318,7 @@
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
+    <Text Include="vulkan\_docs\GLM.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />

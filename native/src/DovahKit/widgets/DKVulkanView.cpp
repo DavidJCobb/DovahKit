@@ -108,6 +108,30 @@ void DKVulkanView::resetRenderer() {
    this->renderer->set_physical_device(*pd);
 }
 
+void DKVulkanView::setCameraController(DKVulkanCameraController* c) {
+   this->input_handling.camera = c;
+}
+void DKVulkanView::setInputHandlingEnabled(bool e) {
+   if (this->input_handling.enabled == e)
+      return;
+   this->input_handling.enabled = e;
+   this->setFocusPolicy(e ? Qt::ClickFocus : Qt::NoFocus);
+   if (!e)
+      this->input_handling.focused = false;
+}
+
+void DKVulkanView::_inputPoll() {
+   auto* s = this->renderer;
+   auto* c = this->input_handling.camera.data();
+   if (!s)
+      return;
+   if (!c)
+      return;
+   auto update = c->poll();
+   s->scene.adjust_camera(update);
+}
+
+#pragma region Events
 bool DKVulkanView::event(QEvent* event) {
    if (event->type() == QEvent::Type::WinIdChange) {
       if (auto* s = this->renderer) {
@@ -142,7 +166,15 @@ void DKVulkanView::showEvent(QShowEvent* event) {
    }
 }
 void DKVulkanView::timerEvent(QTimerEvent* event) {
+   this->_inputPoll();
    this->repaint();
+}
+
+void DKVulkanView::focusInEvent(QFocusEvent* event) {
+   this->input_handling.focused = true;
+}
+void DKVulkanView::focusOutEvent(QFocusEvent* event) {
+   this->input_handling.focused = false;
 }
 
 void DKVulkanView::mousePressEvent(QMouseEvent* event) {
@@ -155,3 +187,4 @@ void DKVulkanView::mousePressEvent(QMouseEvent* event) {
       return;
    emit this->renderedMeshClicked(i);
 }
+#pragma endregion

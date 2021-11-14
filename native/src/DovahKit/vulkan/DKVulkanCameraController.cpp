@@ -1,0 +1,119 @@
+#include "DKVulkanCameraController.h"
+
+#include <windows.h>
+#include "../helpers/intrusive_windows_defines.h"
+
+namespace {
+   constexpr float reset_after_lag_threshold = 3.0; // ignore all held inputs if this much time passed since we last polle
+}
+
+DKVulkanCameraController::DKVulkanCameraController(QObject* parent) : QObject(parent) {
+}
+
+bool DKVulkanCameraController::_Key::check(timestamp_t now) {
+   bool down = GetAsyncKeyState(this->vk) & 0x8000;
+   if (!down) {
+      this->down_at = not_down;
+      this->ignore  = false;
+      return false;
+   }
+   if (this->down_at == not_down) {
+      this->down_at = now;
+   } else {
+      return !this->ignore;
+   }
+   return true;
+}
+void DKVulkanCameraController::_Key::ignore_if_down() {
+   if (this->is_down())
+      this->ignore = true;
+}
+
+DKVulkanCameraUpdate DKVulkanCameraController::poll() {
+   constexpr float epsilon = 0.00001;
+   using elapsed_t = std::chrono::duration<double, std::chrono::seconds::period>;
+
+   auto now     = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+   auto elapsed = (this->state.last_poll == not_down) ? (1.0 / 60) : elapsed_t(now - this->state.last_poll).count();
+   if (elapsed <= 0.0)
+      //
+      // This can happen sometimes -- we receive  an update so soon that it's not even 
+      // an easily-measurable  fraction of a  second -- and in  that case, there's not 
+      // any point to doing input processing. We'll just be scaling speeds and whatnot 
+      // by zero anyway.
+      //
+      return DKVulkanCameraUpdate();
+   this->state.last_poll = now;
+   //
+   if (elapsed >= reset_after_lag_threshold) {
+      auto& km = this->state.keyboard.camera.move;
+      km.forward.ignore_if_down();
+      km.back.ignore_if_down();
+      km.left.ignore_if_down();
+      km.right.ignore_if_down();
+      km.up.ignore_if_down();
+      km.down.ignore_if_down();
+      auto& kt = this->state.keyboard.camera.turn;
+      kt.left.ignore_if_down();
+      kt.right.ignore_if_down();
+      kt.up.ignore_if_down();
+      kt.down.ignore_if_down();
+      return DKVulkanCameraUpdate();
+   }
+   //
+   // Knowing the camera axes will be important for handling this stuff.
+   // 
+   //    X = Side   = positive is left
+   //    Y = Height = positive is down (since OpenGL is inverted)
+   //    Z = Depth  = positive is forward
+   // 
+   // For rotations, that means:
+   // 
+   //    X = Pitch (tilt nose about the side axis)
+   //    Y = Yaw   (twist heading about the vertical axis)
+   //    Z = Lean  (tilt nose about the forward axis)
+   //
+   DKVulkanCameraUpdate update;
+   update.delta_seconds = elapsed;
+   update.move.speed    = 1.0;
+   {
+      auto& km = this->state.keyboard.camera.move;
+      auto& cm = update.move.direction;
+      if (km.forward.check(now)) {
+         cm.z += 1;
+      }
+      if (km.back.check(now)) {
+         cm.z -= 1;
+      }
+      if (km.left.check(now)) {
+         cm.x += 1;
+      }
+      if (km.right.check(now)) {
+         cm.x -= 1;
+      }
+      if (km.up.check(now)) {
+         cm.y -= 1;
+      }
+      if (km.down.check(now)) {
+         cm.y += 1;
+      }
+   }
+   update.turn.speed = glm::radians(90.0F);
+   {
+      auto& km = this->state.keyboard.camera.turn;
+      auto& cm = update.turn.rotation;
+      if (km.left.check(now)) {
+         cm.y += 1;
+      }
+      if (km.right.check(now)) {
+         cm.y -= 1;
+      }
+      if (km.up.check(now)) {
+         cm.x -= 1;
+      }
+      if (km.down.check(now)) {
+         cm.x += 1;
+      }
+   }
+   return update;
+}

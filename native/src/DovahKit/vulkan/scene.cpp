@@ -1,9 +1,16 @@
 #include "scene.h"
+//
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/norm.hpp>
+//
 #include "config/scene_limits.h"
+#include "data/DKVulkanCameraUpdate.h"
+
+#include <glm/gtx/matrix_decompose.hpp> // for debugging
 
 namespace vulkanDK {
    scene::scene() {
@@ -57,6 +64,38 @@ namespace vulkanDK {
          auto t = mesh.transform();
          t = glm::rotate(t, (elapsed / anim.duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
          mesh.set_transform(t);
+      }
+   }
+   void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
+      constexpr float epsilon    = 0.00001;
+      constexpr float epsilon_sq = epsilon * epsilon;
+      //
+      auto& camera = this->global_state.view;
+      //
+      bool do_move = true;
+      bool do_turn = true;
+      auto move = change.move.direction;
+      auto turn = change.turn.rotation;
+      if (change.delta_seconds) {
+         do_move = (glm::length2(move) >= epsilon_sq);
+         do_turn = (glm::length2(turn) >= epsilon_sq);
+         if (do_turn) {
+            turn = glm::normalize(turn) * (change.turn.speed * change.delta_seconds);
+         }
+      }
+      //
+      if (do_turn) {
+         auto rot = glm::eulerAngleZY(turn.z, turn.y);
+         rot *= glm::eulerAngleX(turn.x);
+         //
+         camera = rot * camera;
+      }
+      if (do_move) {
+         move = glm::inverse(glm::mat3x3(camera)) * move;
+         if (change.delta_seconds) {
+            move = glm::normalize(move) * (change.move.speed * change.delta_seconds); // NOTE: glm::normalize doesn't check for zero vectors; produces NaN
+         }
+         camera = glm::translate(camera, move);
       }
    }
 
