@@ -1,0 +1,51 @@
+
+Usually, when  you are rendering a 3D scene, you will want the  user to be able 
+to control the camera. DovahKit currently offers this by way of the interaction 
+between DKVulkanView and a DKVulkanCameraController class.
+
+The camera controller eschews Qt's event-based input handling in favor of poll-
+ing at regular intervals (DKVulkanView currently queries it using its own frame 
+timer). It keeps track of each key's state  as well as when the key was pressed 
+down.
+
+
+=== POLLING INSTEAD OF EVENTS =================================================
+
+Consider the  case of a user pressing a key briefly, only to  have their system 
+lag for five seconds  right as the key goes down.  In this scenario, Qt will in 
+theory only be able to dispatch the key-up event five seconds after it sends us 
+the key-down event,  so from our perspective,  that key was  held down for five 
+seconds. There's not really  a good way to mitigate  this -- a good way to know 
+that Qt was  "incapacitated," as it were,  for five seconds.  At best, we could 
+have a QTimer running on interval 0, but that's... indirect.
+
+Polling is a bit better. It completely  guards us from the above situation (but 
+not all possible permutations): if our polling is interrupted for five seconds, 
+then when we next poll, we will see that that key is no longer down. Of course, 
+if the user  has pressed the key again --  perhaps because they're  impatiently 
+mashing it -- then we will think it went down for five seconds... but the trick 
+is that we can keep track of when we last polled, and we can in this case check 
+and see that it's been five full seconds since we were last able to check input 
+states. We have the option to discard input states (i.e. flag any keys that are 
+current held to be  ignored until they're released) if  polling is interrupted.
+
+
+=== TRACKING WHEN KEYS GO DOWN, RATHER THAN USING A "DOWN" BOOL ===============
+
+I'd like to offer users the ability to  remap the camera controls, and ideally, 
+I'd like for them to be able to do so in  a manner similar to controls in Elder 
+Scrolls Online. ESO distinguishes between pressing a key and holding a key: you 
+can bind "press A" to one action and "hold A" to another.
+
+Generally, when you want to make that distinction, you'll do it in one of a few 
+ways:
+
+ - React to "press" events on key-up, and only if the key was down briefly.
+
+ - React to "hold" events either on key-up, if the key was down for a while, or 
+   react while the key is still down once it has been down for long enough.
+
+Ergo you need to know how long the key has been down. Storing an "elapsed time" 
+float per key  is one option; storing  a time point (the  time at which the key 
+first went down) is another. As of this writing, we do the latter for now.
+
