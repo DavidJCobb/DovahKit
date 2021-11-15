@@ -419,6 +419,7 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
+    <ClCompile Include="editor\DovahKit3DControls.cpp" />
     <ClCompile Include="editor\DovahKitVulkanSubsystem.cpp" />
     <ClCompile Include="editor\form_data_cache.cpp" />
     <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
@@ -621,6 +622,7 @@
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
+    <QtMoc Include="editor\DovahKit3DControls.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
@@ -1318,6 +1320,7 @@
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
+    <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
   </ItemGroup>
   <ItemGroup>

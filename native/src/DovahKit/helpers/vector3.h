@@ -16,10 +16,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include <array>
+#include <concepts>
 #include <math.h>
 #include <type_traits>
 
 namespace cobb {
+   namespace impl::vector3 {
+      template<typename T, typename O> concept is_vector_like = requires(O x) {
+         { x.x } -> std::convertible_to<T>;
+         { x.y } -> std::convertible_to<T>;
+         { x.z } -> std::convertible_to<T>;
+      };
+   }
+
    template<typename T> class vector3 {
       public:
          static_assert(std::is_arithmetic_v<T>, "cobb::vector3 must be templated on a numeric type.");
@@ -47,6 +56,13 @@ namespace cobb {
             this->z = a[2];
          }
 
+         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         constexpr vector3(const O& other) {
+            this->x = other.x;
+            this->y = other.y;
+            this->z = other.z;
+         }
+
          template<typename U> constexpr operator std::array<U, axis_count>() const noexcept {
             static_assert(std::is_arithmetic_v<U>, "cobb::vector3 can only be converted to an array of a numeric type.");
             return { this->x, this->y, this->z };
@@ -63,12 +79,6 @@ namespace cobb {
             return result;
          }
          [[nodiscard]] T dot(const vector3& other) const noexcept {
-            /*//
-            T sum = 0.0F;
-            for (int i = 0; i < axis_count; ++i)
-               sum += this->components[i] * other.components[i];
-            return sum;
-            //*/
             return (this->x * other.x) + (this->y * other.y) + (this->z * other.z);
          }
          [[nodiscard]] T length_sq() const noexcept {
@@ -89,24 +99,28 @@ namespace cobb {
          }
          
          #pragma region vector-with-vector operators
-         vector3& operator+=(const vector3& other) noexcept {
+         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         vector3& operator+=(const O& other) noexcept {
             x += other.x;
             y += other.y;
             z += other.z;
             return *this;
          }
-         vector3& operator-=(const vector3& other) noexcept {
+         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         vector3& operator-=(const O& other) noexcept {
             x -= other.x;
             y -= other.y;
             z -= other.z;
             return *this;
          }
-         vector3 operator+(const vector3& other) const noexcept {
+         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         vector3 operator+(const O& other) const noexcept {
             vector3 result = *this;
             result += other;
             return result;
          }
-         vector3 operator-(const vector3& other) const noexcept {
+         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         vector3 operator-(const O& other) const noexcept {
             vector3 result = *this;
             result -= other;
             return result;
@@ -115,26 +129,26 @@ namespace cobb {
 
          #pragma region vector-with-scalar operators
             #pragma region modify self
-            template<typename U> vector3& operator+=(U other) noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3& operator+=(U other) noexcept {
                x += other;
                y += other;
                z += other;
                return *this;
             }
-            template<typename U> vector3& operator-=(U other) noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3& operator-=(U other) noexcept {
                x -= other;
                y -= other;
                z -= other;
                return *this;
             }
-            template<typename U> vector3& operator*=(U other) noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3& operator*=(U other) noexcept {
                static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator*= must be given a numeric argument.");
                x *= other;
                y *= other;
                z *= other;
                return *this;
             }
-            template<typename U> vector3& operator/=(U other) noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3& operator/=(U other) noexcept {
                static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator/= must be given a numeric argument.");
                x /= other;
                y /= other;
@@ -144,23 +158,23 @@ namespace cobb {
             #pragma endregion
             //
             #pragma region create new
-            template<typename U> vector3 operator+(U other) const noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3 operator+(U other) const noexcept {
                vector3 result = *this;
                result += other;
                return result;
             }
-            template<typename U> vector3 operator-(U other) const noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3 operator-(U other) const noexcept {
                vector3 result = *this;
                result -= other;
                return result;
             }
-            template<typename U> vector3 operator*(U other) const noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3 operator*(U other) const noexcept {
                static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator* must be given a numeric argument.");
                vector3 result = *this;
                result *= other;
                return result;
             }
-            template<typename U> vector3 operator/(U other) const noexcept {
+            template<typename U> requires std::is_arithmetic_v<U> vector3 operator/(U other) const noexcept {
                static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator/ must be given a numeric argument.");
                vector3 result = *this;
                result /= other;

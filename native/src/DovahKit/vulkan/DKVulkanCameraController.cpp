@@ -1,4 +1,6 @@
 #include "DKVulkanCameraController.h"
+#include "../editor/DovahKit3DControls.h"
+#include "../helpers/qt/keycodes.h"
 
 #include <windows.h>
 #include "../helpers/intrusive_windows_defines.h"
@@ -8,6 +10,8 @@ namespace {
 }
 
 DKVulkanCameraController::DKVulkanCameraController(QObject* parent) : QObject(parent) {
+   this->updateBindings();
+   QObject::connect(&DovahKit3DControls::get(), &DovahKit3DControls::bindingsChanged, this, &DKVulkanCameraController::updateBindings);
 }
 
 bool DKVulkanCameraController::_Key::check(timestamp_t now) {
@@ -27,6 +31,10 @@ bool DKVulkanCameraController::_Key::check(timestamp_t now) {
 void DKVulkanCameraController::_Key::ignore_if_down() {
    if (this->is_down())
       this->ignore = true;
+}
+void DKVulkanCameraController::_Key::set(const cobb::qt::key& bind) {
+   this->down_at = not_down;
+   this->vk      = bind.native.vk;
 }
 
 DKVulkanCameraUpdate DKVulkanCameraController::poll() {
@@ -116,4 +124,26 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
       }
    }
    return update;
+}
+
+void DKVulkanCameraController::updateBindings() {
+   auto& controls = DovahKit3DControls::get();
+   {
+      auto& dst = this->state.keyboard.camera.move;
+      auto& src = controls.keyboard.camera.move;
+      dst.forward.set(src.forward);
+      dst.back.set(src.back);
+      dst.left.set(src.left);
+      dst.right.set(src.right);
+      dst.up.set(src.up);
+      dst.down.set(src.down);
+   }
+   {
+      auto& dst = this->state.keyboard.camera.turn;
+      auto& src = controls.keyboard.camera.turn;
+      dst.left.set(src.left);
+      dst.right.set(src.right);
+      dst.up.set(src.up);
+      dst.down.set(src.down);
+   }
 }

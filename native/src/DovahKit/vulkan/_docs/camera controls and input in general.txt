@@ -29,6 +29,14 @@ and see that it's been five full seconds since we were last able to check input
 states. We have the option to discard input states (i.e. flag any keys that are 
 current held to be  ignored until they're released) if  polling is interrupted.
 
+Unfortunately, Qt has no APIs for  querying key states in real-time, so we have 
+to fall back to OS-specific APIs. Windows allows us to query the states of each 
+virtual key,  and has functions for mapping between a single  virtual key and a 
+typed character, so in theory we can use QString/QChar to display and store our 
+keybinds, while using virtual keys to actually poll the key states. In general, 
+we should try to use OS-specific  representations only when we're "close to the 
+metal," preferring non-OS-specific representations higher up.
+
 
 === TRACKING WHEN KEYS GO DOWN, RATHER THAN USING A "DOWN" BOOL ===============
 

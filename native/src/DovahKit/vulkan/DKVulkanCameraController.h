@@ -6,6 +6,10 @@
 #include <QWidget>
 #include "data/DKVulkanCameraUpdate.h"
 
+namespace cobb::qt {
+   struct key;
+}
+
 // use as an event filter
 class DKVulkanCameraController : public QObject {
    Q_OBJECT;
@@ -14,6 +18,7 @@ class DKVulkanCameraController : public QObject {
 
    public slots:
       DKVulkanCameraUpdate poll();
+      void updateBindings();
 
    protected:
       using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
@@ -32,6 +37,7 @@ class DKVulkanCameraController : public QObject {
          inline bool is_down() const noexcept { return !this->ignore && this->down_at != not_down; }
          bool check(timestamp_t); // re-check input state; returns whether the key is down
          void ignore_if_down();
+         void set(const cobb::qt::key&);
       };
 
       struct {
