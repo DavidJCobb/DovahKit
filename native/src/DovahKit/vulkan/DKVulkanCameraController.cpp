@@ -1,5 +1,6 @@
 #include "DKVulkanCameraController.h"
 #include "../editor/DovahKit3DControls.h"
+#include "../editor/subsystems/DKXInputSubsystem.h"
 #include "../helpers/qt/keycodes.h"
 
 #include <windows.h>
@@ -81,6 +82,11 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
    //    Y = Yaw   (twist heading about the vertical axis)
    //    Z = Lean  (tilt nose about the forward axis)
    //
+   auto& xinput = DKXInputSubsystem::get();
+   xinput.update();
+   bool  has_gamepad   = xinput.isGamepadConnected();
+   auto& gamepad_state = xinput.gamepadState();
+   //
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
    update.move.speed    = 1.0;
@@ -105,6 +111,18 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
       if (km.down.check(now)) {
          cm.y += 1;
       }
+      if (has_gamepad) {
+         const auto& stick = gamepad_state.ls;
+         cm.z += stick.y();
+         cm.x -= stick.x();
+         //
+         if (gamepad_state.isButtonDown(DKXInputSubsystem::Button::LB)) { // LB = down
+            cm.y += 1;
+         }
+         if (gamepad_state.isButtonDown(DKXInputSubsystem::Button::RB)) { // RB = up
+            cm.y -= 1;
+         }
+      }
    }
    update.turn.speed = glm::radians(90.0F);
    {
@@ -121,6 +139,11 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
       }
       if (km.down.check(now)) {
          cm.x += 1;
+      }
+      if (has_gamepad) {
+         const auto& stick = gamepad_state.rs;
+         cm.y += stick.x();
+         cm.x -= stick.y();
       }
    }
    return update;

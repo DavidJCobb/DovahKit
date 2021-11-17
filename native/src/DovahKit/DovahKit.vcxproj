@@ -435,6 +435,7 @@
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
+    <ClCompile Include="editor\subsystems\DKXInputSubsystem.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
@@ -623,6 +624,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <QtMoc Include="editor\DovahKit3DControls.h" />
+    <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
@@ -644,7 +646,6 @@
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <QtMoc Include="vulkan\DKVulkanCameraController.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
-    <ClInclude Include="vulkan\helpers\frames_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\image.h" />
