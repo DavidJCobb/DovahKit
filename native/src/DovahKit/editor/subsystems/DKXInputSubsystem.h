@@ -55,6 +55,10 @@ class DKXInputSubsystem : public QObject {
       };
 
       struct Gamepad {
+         struct {
+            QPointF ls = {};
+            QPointF rs = {};
+         } raw;
          QPointF  ls = {};
          QPointF  rs = {};
          float    lt = 0;
@@ -124,7 +128,8 @@ class DKXInputSubsystem : public QObject {
       } state;
 
       QPointF normalize_stick(Side, int16_t x, int16_t y) const;
-      void normalize_input_state(Gamepad&, const XINPUT_GAMEPAD&) const;
+      void apply_stick_inertia(Side, float elapsed, const QPointF& raw, QPointF& out) const;
+      void normalize_input_state(float elapsed, Gamepad&, const XINPUT_GAMEPAD&) const;
 
    public:
       inline bool isXInputLoaded() const noexcept { return this->dll.handle != NULL; }
@@ -135,6 +140,7 @@ class DKXInputSubsystem : public QObject {
       bool isGamepadConnected(size_t i) const;
 
       bool invertStick(Side) const;
+      float stickInertiaChaseSpeed(Side) const; // per second; in the range (0, 1]; higher = faster; zero or negative is treated as "no inertia"
       float stickAxialDeadzone(Side) const; // radians; negative values should be treated as zero
       float stickInnerDeadzone(Side) const; // in the range [0, 1]
 

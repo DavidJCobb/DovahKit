@@ -94,56 +94,60 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
       auto& km = this->state.keyboard.camera.move;
       auto& cm = update.move.direction;
       if (km.forward.check(now)) {
-         cm.z += 1;
+         cm.y += 1;
       }
       if (km.back.check(now)) {
-         cm.z -= 1;
-      }
-      if (km.left.check(now)) {
-         cm.x += 1;
-      }
-      if (km.right.check(now)) {
-         cm.x -= 1;
-      }
-      if (km.up.check(now)) {
          cm.y -= 1;
       }
+      if (km.left.check(now)) {
+         cm.x -= 1;
+      }
+      if (km.right.check(now)) {
+         cm.x += 1;
+      }
+      if (km.up.check(now)) {
+         cm.z += 1;
+      }
       if (km.down.check(now)) {
-         cm.y += 1;
+         cm.z -= 1;
       }
       if (has_gamepad) {
          const auto& stick = gamepad_state.ls;
-         cm.z += stick.y();
-         cm.x -= stick.x();
+         cm.x += stick.x();
+         cm.y -= stick.y(); // stick up is negative; object forward is positive; need a sign flip
          //
          if (gamepad_state.isButtonDown(DKXInputSubsystem::Button::LB)) { // LB = down
-            cm.y += 1;
+            cm.z -= 1;
          }
          if (gamepad_state.isButtonDown(DKXInputSubsystem::Button::RB)) { // RB = up
-            cm.y -= 1;
+            cm.z += 1;
          }
       }
    }
    update.turn.speed = glm::radians(90.0F);
    {
       auto& km = this->state.keyboard.camera.turn;
-      auto& cm = update.turn.rotation;
+      auto& cm = update.turn;
       if (km.left.check(now)) {
-         cm.y += 1;
+         cm.yaw += 1;
       }
       if (km.right.check(now)) {
-         cm.y -= 1;
+         cm.yaw -= 1;
       }
       if (km.up.check(now)) {
-         cm.x -= 1;
+         cm.pitch -= 1;
       }
       if (km.down.check(now)) {
-         cm.x += 1;
+         cm.pitch += 1;
       }
       if (has_gamepad) {
          const auto& stick = gamepad_state.rs;
-         cm.y += stick.x();
-         cm.x -= stick.y();
+         cm.yaw   += stick.y();
+         cm.pitch -= stick.x();
+         //
+         auto speed = sqrt((stick.x() * stick.x()) + (stick.y() * stick.y()));
+         speed = std::clamp(speed, 0.0, 1.0);
+         update.turn.speed *= speed;
       }
    }
    return update;
