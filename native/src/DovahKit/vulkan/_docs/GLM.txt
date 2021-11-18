@@ -38,14 +38,3 @@ Arguments:
 
 Given a vector, it returns a new vector with all components normalized. A zero-
 length vector will result in NaN.
-
-
-=== glm::translate ============================================================
-
-Given a matrix argument representing a transformation to modify and a vec3 that 
-represents a translation to apply, this  function *prepends* the translation to 
-the prior matrix and returns a new transformation matrix.
-
-Prepending the translation means that you're performing a world-relative trans-
-lation; appending would make it relative  to the original matrix's rotation and 
-scale instead.

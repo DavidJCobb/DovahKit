@@ -113,8 +113,8 @@ DKVulkanCameraUpdate DKVulkanCameraController::poll() {
       }
       if (has_gamepad) {
          const auto& stick = gamepad_state.ls;
-         cm.x += stick.x();
-         cm.y -= stick.y(); // stick up is negative; object forward is positive; need a sign flip
+         cm.x += stick.x(); // stick right is positive; left is negative
+         cm.y += stick.y(); // stick up    is positive; down is negative
          //
          if (gamepad_state.isButtonDown(DKXInputSubsystem::Button::LB)) { // LB = down
             cm.z -= 1;

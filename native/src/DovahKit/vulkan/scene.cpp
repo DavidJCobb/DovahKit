@@ -35,10 +35,16 @@ namespace vulkanDK {
    void scene::update_camera() {
       auto& cs = this->camera;
       //
+      // Apply a lefthanded extrinsic ZYX Euler rotation:
+      //
       auto rot = glm::eulerAngleZ(cs.pitch); // extrinsic ZY(X) = intrinsic XY(Z)
       rot     *= glm::eulerAngleY(cs.roll);  // extrinsic Z(Y)X = intrinsic X(Y)Z
       rot     *= glm::eulerAngleX(cs.yaw);   // extrinsic (Z)YX = intrinsic (X)YZ
-      this->global_state.view = glm::inverse(glm::translate(rot, cs.position));
+      //
+      // Create the final view matrix.
+      // 
+      //this->global_state.view = glm::inverse(glm::translate(rot, cs.position));
+      this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
       constexpr float epsilon    = 0.00001;
@@ -91,17 +97,22 @@ namespace vulkanDK {
          // However, the camera's local axes are:
          // 
          //  +X = Right
-         //  +Y = Up (normally down in OpenGL, but we invert the projection Y to flip it)
+         //  +Y = Down
          //  +Z = Forward (Depth)
          // 
          // So to start with, we need to swap and possibly negate some axes.
          //
          std::swap(move.z, move.y);
+         move.z = -move.z;
          //
          // This turns our "camera-as-object"-relative movement vector into a camera-relative 
          // movement vector.
          //
          move = glm::normalize(move) * (float)(change.move.speed * change.delta_seconds); // NOTE: glm::normalize doesn't check for zero vectors; produces NaN
+         //
+         // Now, we need to make it world-relative.
+         //
+         move = glm::inverse(glm::mat3x3(this->global_state.view)) * move;
          this->camera.position += move;
       }
       //

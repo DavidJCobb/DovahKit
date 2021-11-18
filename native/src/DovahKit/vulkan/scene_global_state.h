@@ -8,11 +8,18 @@ namespace vulkanDK {
       //
       // Vulkan expects precise member aligmnent; see: <https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap15.html#interfaces-resources-layout>
       // 
-      // The "view" matrix is the INVERSE of the camera's matrix. That is: the view matrix is the 
-      // inverse of the transformation matrix one would use to place an object at the same world-
-      // relative position as the camera, facing the same direction as the camera. This means that 
-      // in order to modify the camera's own transform, you must produce a transform, invert it, 
-      // and *then* write it into (view).
+      // The "view" matrix isn't the camera matrix, nor the inverse of the camera matrix. 
+      // Rather, it is the inverse of each part of the camera matrix:
+      // 
+      //    glm::translate(
+      //       glm::inverse(rotation),
+      //       glm::inverse(glm::translate(glm::mat4(1), position))
+      //    );
+      // 
+      // Inverting the "translation" part of a transformation matrix inverts the translation 
+      // itself; ergo this code, which translates by an inverted position, is equivalent:
+      // 
+      //    glm::translate(glm::inverse(rotation), -position);
       //
       alignas(16) glm::mat4 view;
       alignas(16) glm::mat4 proj;

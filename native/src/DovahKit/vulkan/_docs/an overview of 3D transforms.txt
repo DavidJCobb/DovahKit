@@ -1,0 +1,123 @@
+
+Working with 3D transformation matrices can  be monstrously complicated even on 
+its own. Working with unwieldy tools can make it even more complicated: it ends 
+up being impossible to tell whether you're  doing the wrong thing, or doing the 
+right thing in the wrong way. This is actually my first 3D renderer, and it was 
+quite difficult to set up some of the fundamentals, so I'll be writing an over-
+view here.
+
+To render an object in a scene, you need three four-by-four matrices:
+
+ - The projection matrix
+ - The view matrix
+ - The model matrix
+
+In order to understand these  matrices, however,  we need to first take a brief 
+detour and explain the various coordinate spaces used for 3D rendering.
+
+
+=== COORDINATE SPACES =========================================================
+
+We start in local space. When you bind a vertex buffer and fire off a draw call 
+in Vulkan, the vertices are arranged in  local space: their positions are local 
+to the object itself. Simple enough.
+
+Applying the object's transformation matrix (called a "model matrix") brings us 
+into world space: we are now working with world-relative coordinates.
+
+From here, the shader must apply the  "view matrix." If we wanted to render the 
+scene with an orthographic projection,  we could arguably stop here: view space 
+is the scene as viewed from the camera, but without any perspective applied.
+
+Applying the "projection matrix" applies perspective projection: objects appear 
+to be smaller if they are further away from the camera, just like in real life. 
+At this point, we are in "clip space."  This is essentially identical to screen 
+space, except coordinates on each axis exist in the range of [-1, 1].
+
+The "viewport transform" is done for us, and remaps clip space coordinates into 
+screen space; the X-coordinate is remapped from [-1, 1] to [0, width], and thus 
+also for the Y-coordinate.
+
+Having looked at the coordinate spaces, we can now examine the matrices.
+
+
+=== MODEL MATRIX ==============================================================
+
+The model matrix is the transformation matrix for a single object in the scene; 
+this matrix brings us from local to world-relative coordinates. You can compute 
+this matrix by combining the object's various transforms like so:
+
+   mat3 rotation;
+   vec3 position;
+   glm::translate(rotation, position);
+
+Simple enough.
+
+
+=== VIEW MATRIX ===============================================================
+
+The view matrix is supposed to take  world-relative coordinates and map them to 
+the view; this is essentially where the camera as a concept enters the picture. 
+However, it's surprisingly difficult to find any description online of what the 
+view matrix actually *is*. There are (inefficient) copy-and-paste code snippets 
+which are occasionally even correct.  There are articles filled with butchered, 
+mangled descriptions of the fundamentals of 3D rotations, attempting to present 
+these as case-specific explanations of view matrices. Actual useful information 
+doesn't appear  to be out there at all. The closest thing I could  find was the 
+*incorrect* explanation that a view matrix is the inverse of the camera matrix.
+
+Fortunately, I was "lucky" enough to figure it out after several non-stop hours 
+of trial and error.
+
+If we treat the camera as an object in the scene, then we can construct a model 
+matrix for it as we would any other object in the scene; let's refer to this as 
+the "camera matrix."  The view matrix is not the inverse  of the camera matrix. 
+Rather, you construct the view matrix by inverting each component that you used 
+to create the  camera matrix, and then  combining those components  in the same 
+order.
+
+   // WRONG:
+   view = glm::inverse(glm::translate(cam_rotation, cam_position));
+
+   // RIGHT:
+   view = glm::translate(glm::inverse(cam_rotation), -cam_position);
+   //
+   // Negating a position is effectively the same as inverting it.
+
+The former approach  would result in  the entire scene  being rotated about the 
+world origin, rather than the camera rotating about its own position.
+
+It's worth noting, of course, that this matrix serves to map the camera's local 
+axes to those of the world. The camera's  local axes are different from typical 
+object axes. Simply put, the camera "sees" out of its "bottom." The camera uses 
+the following local axes:
+
+   +X: Right      | View width
+   +Y: Down       | View height
+   +Z: Forward    | View depth
+
+Within DovahKit, we want the camera to use the same common conventions that the 
+various game objects in Skyrim do:
+
+   +X: Right
+   +Y: Forward
+   +Z: Up
+
+As such, if we wish to translate the camera along a "camera-as-object"-relative 
+direction, we have to convert that  direction to a camera-relative direction by 
+swapping the  Z and Y axes, and then flipping the Z axis.  Fortunately, no such 
+tomfoolery seems to be necessary for the camera's world-relative position.
+
+
+=== PROJECTION MATRIX =========================================================
+
+The projection matrix is a matrix which remaps points from a 3D reference frame 
+to a 2D reference frame. It is here that you'll apply an FOV value and similar. 
+The GLM library makes it quite easy to generate these:
+
+   glm::perspective(vertical_fov_radians, aspect_ratio, 0.1F, 10.0F);
+
+The latter two parameters are, of course, completely undocumented, but I'm sure 
+that if we leave them alone, it'll be fine.
+
+
