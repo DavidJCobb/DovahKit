@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include "../helpers/qt/keycodes.h"
+#include "../dk3d/BoundInput.h"
 
 class DovahKit3DControls : public QObject {
    Q_OBJECT;
@@ -34,4 +35,14 @@ class DovahKit3DControls : public QObject {
             } turn;
          } camera;
       } keyboard;
+      struct {
+         struct {
+            struct {
+               DK3D::BoundInput lateral;
+               DK3D::BoundInput up;
+               DK3D::BoundInput down;
+            } move;
+            DK3D::BoundInput turn;
+         } camera;
+      } gamepad;
 };
