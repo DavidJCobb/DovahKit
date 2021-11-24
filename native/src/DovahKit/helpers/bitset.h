@@ -1,30 +1,80 @@
 #pragma once
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace cobb {
    template<uint32_t count> class bitset {
       private:
-         static constexpr int      bits_per_chunk    = 32;
-         static constexpr uint32_t all_bits_set      = std::numeric_limits<uint32_t>::max();
-         static constexpr int      chunk_count       = count / bits_per_chunk + (count % bits_per_chunk ? 1 : 0);
+         using chunk_type = uint32_t;
+         static_assert(std::is_unsigned_v<chunk_type>);
+
+         static constexpr int        bits_per_chunk    = sizeof(chunk_type) * 8;
+         static constexpr chunk_type all_bits_set      = std::numeric_limits<chunk_type>::max();
+         static constexpr int        chunk_count       = count / bits_per_chunk + (count % bits_per_chunk ? 1 : 0);
          //
          // To understand these next constexprs and any other mentions of "partial chunks," 
          // see the comments for find_first_clear.
          //
-         static constexpr int      undershoot_cc     = count / bits_per_chunk; // number of non-partial chunks
-         static constexpr int      bits_in_partial   = count % bits_per_chunk;
-         static constexpr bool     has_partial_chunk = bits_in_partial != 0;
-         static constexpr int      partial_chunk_max = (1 << (count % bits_per_chunk)) - 1; // like all_bits_set but for the partial chunk
-         //
-         uint32_t data[chunk_count];
-         //
+         static constexpr int        undershoot_cc     = count / bits_per_chunk; // number of non-partial chunks
+         static constexpr int        bits_in_partial   = count % bits_per_chunk;
+         static constexpr bool       has_partial_chunk = bits_in_partial != 0;
+         static constexpr chunk_type partial_chunk_max = (chunk_type(1) << (count % bits_per_chunk)) - 1; // like all_bits_set but for the partial chunk
+         
+         chunk_type data[chunk_count];
+
+         struct reference {
+            friend class bitset;
+            private:
+               bitset& target;
+               size_t  index;
+
+               reference(bitset& b, size_t i) : target(b), index(i) {}
+
+            public:
+               inline operator bool() const noexcept {
+                  return target.test(index);
+               }
+               inline bool operator~() const noexcept {
+                  return !target.test(index);
+               }
+
+               inline reference& operator=(bool x) noexcept {
+                  if (x)
+                     target.set(index);
+                  else
+                     target.reset(index);
+               }
+               inline reference& operator=(const reference& x) noexcept {
+                  if ((bool)x)
+                     target.set(index);
+                  else
+                     target.reset(index);
+               }
+               reference& flip() noexcept {
+                  target.flip(index);
+               }
+         };
+         
       public:
-         bitset() {
-            memset(&this->data, 0, sizeof(this->data));
+         constexpr bitset() {
+            this->clear();
          }
-         //
-         bool none() const {
+         
+         constexpr bool all() const noexcept {
+            for (uint32_t i = 0; i < undershoot_cc; i++)
+               if (this->data[i] == all_bits_set)
+                  return false;
+            if constexpr (has_partial_chunk) {
+               if (this->data[chunk_count - 1] != partial_chunk_max)
+                  return false;
+            }
+            return true;
+         }
+         constexpr bool any() const noexcept {
+            return !none();
+         }
+         constexpr bool none() const noexcept {
             //
             // We don't have to worry about partial chunks here, since we memset all chunks 
             // to zero. The unused portions of a partial chunk should always be cleared.
@@ -34,28 +84,42 @@ namespace cobb {
                   return false;
             return true;
          }
-         bool test(uint32_t index) const {
-            uint32_t ci  = index / bits_per_chunk;
-            uint32_t bit = 1 << (index % bits_per_chunk);
+
+         constexpr bool test(size_t index) const {
+            uint32_t   ci  = index / bits_per_chunk;
+            chunk_type bit = chunk_type(1) << (index % bits_per_chunk);
             return this->data[ci] & bit;
          }
-         //
-         void set(uint32_t index) {
-            uint32_t ci  = index / bits_per_chunk;
-            uint32_t bit = 1 << (index % bits_per_chunk);
+         constexpr void set(size_t index) {
+            uint32_t   ci  = index / bits_per_chunk;
+            chunk_type bit = chunk_type(1) << (index % bits_per_chunk);
             this->data[ci] |= bit;
          }
-         void reset(uint32_t index) {
-            uint32_t ci  = index / bits_per_chunk;
-            uint32_t bit = 1 << (index % bits_per_chunk);
+         constexpr void reset(size_t index) {
+            uint32_t   ci  = index / bits_per_chunk;
+            chunk_type bit = chunk_type(1) << (index % bits_per_chunk);
             this->data[ci] &= ~bit;
          }
-         void clear() {
-            for (uint32_t i = 0; i < chunk_count; i++)
-               this->data[i] = 0;
+         constexpr void flip(size_t index) {
+            uint32_t   ci  = index / bits_per_chunk;
+            chunk_type bit = chunk_type(1) << (index % bits_per_chunk);
+            auto& chunk = this->data[ci];
+            if (chunk & bit)
+               chunk &= ~bit;
+            else
+               chunk |= bit;
          }
-         //
-         int32_t find_first_clear() const {
+
+         constexpr void clear() noexcept {
+            if (std::is_constant_evaluated()) {
+               for (size_t i = 0; i < chunk_count; ++i)
+                  this->data[i] = 0;
+            } else {
+               memset(&this->data, 0, sizeof(this->data));
+            }
+         }
+         
+         constexpr int32_t find_first_clear() const {
             //
             // Finds the first zero bit in the set. This function performs significantly 
             // better than looping from 0 to (count) and testing each individual bit, as you 
@@ -71,7 +135,7 @@ namespace cobb {
                   }
                }
             }
-            if (has_partial_chunk) {
+            if constexpr (has_partial_chunk) {
                //
                // If the number of bits in the set isn't cleanly divisible by 32, then we're 
                // going to have a final chunk that only uses some of its bits. We need to ONLY 
@@ -80,7 +144,6 @@ namespace cobb {
                //
                auto chunk = this->data[chunk_count - 1];
                if (chunk != partial_chunk_max) {
-                  #pragma warning(suppress: 6294) // Initial condition in for-loop does not satisfy test. Normal if a bitmask has no partial chunk.
                   for (uint8_t j = 0; j < bits_in_partial; j++) {
                      if ((chunk & (1 << j)) == 0) {
                         return (chunk_count - 1) * bits_per_chunk + j;
@@ -90,17 +153,20 @@ namespace cobb {
             }
             return -1;
          }
-         int32_t find_first_clear_from(uint32_t index) const {
+         constexpr int32_t find_first_clear_from(uint32_t index) const {
             //
             // Finds the first zero bit in the set. This function performs significantly 
             // better than looping from 0 to (count) and testing each individual bit, as you 
             // would have to do when using std::bitset as of this writing.
             //
             uint32_t ci = index / bits_per_chunk; // chunks to skip
-            uint32_t bi = index % bits_per_chunk; // bits   to skip
+            uint8_t  bi = index % bits_per_chunk; // bits   to skip
             for (uint32_t i = ci; i < undershoot_cc; i++) {
                auto chunk = this->data[i];
                if (chunk != all_bits_set) {
+                  //
+                  // We'll clear (bi) after the first chunk, so it only gets used once.
+                  //
                   for (uint8_t j = bi; j < bits_per_chunk; j++) {
                      if ((chunk & (1 << j)) == 0) {
                         return i * bits_per_chunk + j;
@@ -109,8 +175,7 @@ namespace cobb {
                }
                bi = 0; // only skip bits in the first chunk we look at
             }
-            if (has_partial_chunk) {
-               index -= chunk_count * undershoot_cc;
+            if constexpr (has_partial_chunk) {
                //
                // If the number of bits in the set isn't cleanly divisible by 32, then we're 
                // going to have a final chunk that only uses some of its bits. We need to ONLY 
@@ -119,8 +184,7 @@ namespace cobb {
                //
                auto chunk = this->data[chunk_count - 1];
                if (chunk != partial_chunk_max) {
-                  #pragma warning(suppress: 6294) // Initial condition in for-loop does not satisfy test. Normal if a bitmask has no partial chunk.
-                  for (uint8_t j = index; j < bits_in_partial; j++) {
+                  for (uint8_t j = bi; j < bits_in_partial; j++) {
                      if ((chunk & (1 << j)) == 0) {
                         return (chunk_count - 1) * bits_per_chunk + j;
                      }
@@ -128,6 +192,13 @@ namespace cobb {
                }
             }
             return -1;
+         }
+
+         reference operator[](size_t i) {
+            return reference(*this, i);
+         }
+         constexpr bool operator[](size_t i) const {
+            return this->test(i);
          }
    };
 };
