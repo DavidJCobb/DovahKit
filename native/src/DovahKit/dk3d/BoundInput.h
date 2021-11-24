@@ -69,5 +69,6 @@ namespace DK3D {
       bool is_boolean_down() const; // checks whether the key is down. this cannot, on its own, process BooleanInputMods. it also can't enforce the "only catch mousedown on the 3D view" constraint.
 
       static BoundInput from_key(QChar, BooleanInputMod mod = BooleanInputMod::Tap);
+      static BoundInput from_xinput_button(XInputKey, BooleanInputMod mod = BooleanInputMod::Tap);
    };
 }

@@ -37,9 +37,9 @@ namespace vulkanDK {
       //
       // Apply a lefthanded extrinsic ZYX Euler rotation:
       //
-      auto rot = glm::eulerAngleZ(cs.pitch); // extrinsic ZY(X) = intrinsic XY(Z)
+      auto rot = glm::eulerAngleZ(cs.yaw);   // extrinsic ZY(X) = intrinsic XY(Z)
       rot     *= glm::eulerAngleY(cs.roll);  // extrinsic Z(Y)X = intrinsic X(Y)Z
-      rot     *= glm::eulerAngleX(cs.yaw);   // extrinsic (Z)YX = intrinsic (X)YZ
+      rot     *= glm::eulerAngleX(cs.pitch); // extrinsic (Z)YX = intrinsic (X)YZ
       //
       // Create the final view matrix.
       // 
@@ -70,7 +70,7 @@ namespace vulkanDK {
          float x = turn.pitch * speed;
          //
          auto& cs = this->camera;
-         cs.yaw   += z;
+         cs.yaw   -= z; // assume lefthanded (clockwise) input. TODO: do we have to transpose the matrix in (update_camera) to switch handedness?
          cs.roll  += y;
          cs.pitch += x;
          //

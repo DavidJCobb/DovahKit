@@ -109,6 +109,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dk3d\BoundInput.cpp" />
+    <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
+    <ClCompile Include="dk3d\InputResult.cpp" />
+    <ClCompile Include="dk3d\OSKeyboardState.cpp" />
+    <ClCompile Include="dk3d\XInputGamepadState.cpp" />
     <ClCompile Include="dovahscript\api_helpers\load_resource.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
@@ -608,6 +613,14 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dk3d\BoundInput.h" />
+    <ClInclude Include="dk3d\chrono.h" />
+    <QtMoc Include="dk3d\DK3DInputHandler.h" />
+    <ClInclude Include="dk3d\defaults.h" />
+    <ClInclude Include="dk3d\InputResult.h" />
+    <ClInclude Include="dk3d\KeyDownState.h" />
+    <ClInclude Include="dk3d\OSKeyboardState.h" />
+    <ClInclude Include="dk3d\XInputGamepadState.h" />
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\core\specialized_traceback.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
@@ -625,6 +638,7 @@
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <QtMoc Include="editor\DovahKit3DControls.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
+    <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />

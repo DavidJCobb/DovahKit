@@ -60,4 +60,10 @@ namespace DK3D {
       result.boolean.type = mod;
       return result;
    }
+   /*static*/ BoundInput BoundInput::from_xinput_button(XInputKey b, BooleanInputMod mod) {
+      BoundInput result;
+      result.boolean.gamepad.button = b;
+      result.boolean.type = mod;
+      return result;
+   }
 }

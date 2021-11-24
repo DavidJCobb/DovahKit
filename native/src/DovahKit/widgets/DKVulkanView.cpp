@@ -5,6 +5,7 @@
 #include "../vulkan/physical_device.h"
 #include "../vulkan/queue_family_info.h"
 #include "../vulkan/surface_renderer.h"
+#include "../dk3d/DK3DInputHandler.h"
 
 namespace {
    const std::vector<const char*> device_extensions = { // TODO: match this with the extension list we request in logical_device !
@@ -121,6 +122,9 @@ void DKVulkanView::setInputHandlingEnabled(bool e) {
 }
 
 void DKVulkanView::_inputPoll() {
+   if (!this->input_handling.enabled || !this->input_handling.focused)
+      return;
+   /*//
    auto* s = this->renderer;
    auto* c = this->input_handling.camera.data();
    if (!s)
@@ -128,6 +132,12 @@ void DKVulkanView::_inputPoll() {
    if (!c)
       return;
    auto update = c->poll();
+   s->scene.adjust_camera(update);
+   //*/
+   auto* s = this->renderer;
+   if (!s)
+      return;
+   auto update = DK3DInputHandler::get().update(this);
    s->scene.adjust_camera(update);
 }
 
@@ -172,9 +182,11 @@ void DKVulkanView::timerEvent(QTimerEvent* event) {
 
 void DKVulkanView::focusInEvent(QFocusEvent* event) {
    this->input_handling.focused = true;
+   DK3DInputHandler::get().viewFocusChange(this, true);
 }
 void DKVulkanView::focusOutEvent(QFocusEvent* event) {
    this->input_handling.focused = false;
+   DK3DInputHandler::get().viewFocusChange(this, false);
 }
 
 void DKVulkanView::mousePressEvent(QMouseEvent* event) {

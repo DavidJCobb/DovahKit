@@ -3,19 +3,24 @@
 #include <bitset>
 #include <QObject>
 #include "../helpers/bitfield_array.h"
+#include "../editor/subsystems/DKXInputSubsystem.h"
 #include "chrono.h"
 #include "BoundInput.h"
-#include "BoundInputState.h"
+#include "InputResult.h"
+#include "OSKeyboardState.h"
+#include "XInputGamepadState.h"
 #include "widgets/DKVulkanView.h"
 
 class DK3DInputHandler : public QObject {
    Q_OBJECT;
    public:
-      using Axis2D          = DK3D::Axis2D;
-      using BoundInputState = DK3D::BoundInputState;
-      using ScalarControl   = DK3D::ScalarControl;
-      using VectorControl   = DK3D::VectorControl;
-      using timestamp_t     = DK3D::timestamp_t;
+      using Axis2D        = DK3D::Axis2D;
+      using BoundInput    = DK3D::BoundInput;
+      using InputResult   = DK3D::InputResult;
+      using ScalarControl = DK3D::ScalarControl;
+      using VectorControl = DK3D::VectorControl;
+      using timestamp_t   = DK3D::timestamp_t;
+
    protected:
       DK3DInputHandler();
       ~DK3DInputHandler();
@@ -28,6 +33,11 @@ class DK3DInputHandler : public QObject {
       float   scalarControlValue(ScalarControl, Axis2D axis = Axis2D::X) const;
       QPointF vectorControlValue(VectorControl) const;
 
+      InputResult inputResultOf(const BoundInput&) const;
+
+   public:
+      void viewFocusChange(DKVulkanView* target, bool has_focus);
+
    public slots:
       void setTargetView(DKVulkanView* target);
       DKVulkanCameraUpdate update(DKVulkanView* subject); // TODO: should return something else -- a more complete command list -- in the future
@@ -37,21 +47,8 @@ class DK3DInputHandler : public QObject {
       void updateAllKeys(timestamp_t now);
 
    protected:
-      enum class key_release_type {
-         none,
-         tap,
-         hold,
-      };
-      static constexpr size_t vk_code_count = 256;
-
-      struct {
-         //
-         // This is OS-specific, since Qt has no APIs for polling for input.
-         //
-         std::array<timestamp_t, vk_code_count> start;
-         std::bitset<vk_code_count> ignore;
-         cobb::bitfield_array<key_release_type, vk_code_count, 2> releases;
-      } keyboard_state;
+      DK3D::OSKeyboardState    keyboard_state;
+      DK3D::XInputGamepadState gamepad_state;
 
       struct {
          QPointer<DKVulkanView> target_view;
@@ -69,36 +66,36 @@ class DK3DInputHandler : public QObject {
          struct {
             struct {
                struct {
-                  BoundInputState forward;
-                  BoundInputState back;
-                  BoundInputState left;
-                  BoundInputState right;
-                  BoundInputState up;
-                  BoundInputState down;
+                  BoundInput forward;
+                  BoundInput back;
+                  BoundInput left;
+                  BoundInput right;
+                  BoundInput up;
+                  BoundInput down;
                } move;
                struct {
-                  BoundInputState left;
-                  BoundInputState right;
-                  BoundInputState up;
-                  BoundInputState down;
+                  BoundInput left;
+                  BoundInput right;
+                  BoundInput up;
+                  BoundInput down;
                } turn;
             } camera;
          } keyboard;
          struct {
             struct {
                struct {
-                  BoundInputState lateral;
-                  BoundInputState down;
-                  BoundInputState up;
+                  BoundInput lateral;
+                  BoundInput down;
+                  BoundInput up;
                } move;
                struct {
-                  BoundInputState yaw;
-                  BoundInputState pitch;
+                  BoundInput yaw;
+                  BoundInput pitch;
                } turn;
             } camera;
-            BoundInputState test_tap;
-            BoundInputState test_hold;
-            BoundInputState test_while;
+            BoundInput test_tap;
+            BoundInput test_hold;
+            BoundInput test_while;
          } gamepad;
       } binds;
 };
