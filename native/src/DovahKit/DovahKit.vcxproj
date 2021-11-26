@@ -518,6 +518,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
@@ -604,6 +605,7 @@
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
@@ -615,6 +617,7 @@
   <ItemGroup>
     <ClInclude Include="dk3d\BoundInput.h" />
     <ClInclude Include="dk3d\chrono.h" />
+    <QtMoc Include="widgets\DKKeyPickerWidget.h" />
     <QtMoc Include="dk3d\DK3DInputHandler.h" />
     <ClInclude Include="dk3d\defaults.h" />
     <ClInclude Include="dk3d\InputResult.h" />
@@ -647,6 +650,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
@@ -678,6 +682,7 @@
     <ClInclude Include="vulkan\vertex.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />
+    <QtMoc Include="widgets\DKBoundInputWidget.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />
@@ -1285,6 +1290,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dk3d\_docs\keyboard inputs.txt" />
     <Text Include="dovahscript\_docs\abstract.txt" />
     <Text Include="dovahscript\_docs\case studies.txt" />
     <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />

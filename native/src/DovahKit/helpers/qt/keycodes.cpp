@@ -1,5 +1,8 @@
 #include "keycodes.h"
 #include <array>
+#include <QCoreApplication>
+#include <QKeyEvent>
+#include <QKeySequence>
 #include <windows.h>
 #include "../intrusive_windows_defines.h"
 
@@ -165,6 +168,74 @@ namespace cobb::qt {
       this->update_native_data();
    }
 
+   bool key::operator==(const key& other) const {
+      if (native.vk != other.native.vk)
+         return false;
+      if (native.scan != other.native.scan)
+         return false;
+      if (native.vk == 0) {
+         //
+         // Only bother testing Qt information if the native information isn't available.
+         //
+         if (code != other.code)
+            return false;
+         if (glyph != other.glyph)
+            return false;
+      }
+      return true;
+   }
+   bool key::operator!=(const key& other) const {
+      return !(*this == other);
+   }
+
+   QString key::toString(bool localize) const {
+      if (!this->glyph.isEmpty())
+         return this->glyph;
+      {
+         //
+         // Attempt to get the key name from OS-level APIs first.
+         //
+         TCHAR buffer[20];
+         auto len = GetKeyNameText((LONG)this->native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
+         if (len) {
+            if constexpr (std::is_same_v<TCHAR, WCHAR>) {
+               return QString::fromUtf16((const char16_t*)buffer, len);
+            } else {
+               return QString::fromLocal8Bit((const char*)buffer, len);
+            }
+         }/* else {
+            #if _DEBUG
+               auto err  = GetLastError();
+               auto scan = MapVirtualKey(this->native.vk, 4);
+               qDebug("cobb::qt::key::toString: failed; VK %u, scan %u, WinAPI scan %u, last error %08X", this->native.vk, this->native.scan, scan, err);
+            #endif
+         }*/
+      }
+      //
+      // If OS-level APIs failed, fall back to Qt.
+      //
+      switch (this->code) {
+         case (Qt::Key)0:
+         case Qt::Key::Key_unknown:
+            break;
+         case Qt::Key::Key_Alt:
+            return localize ? QCoreApplication::translate("QShortcut", "Alt") : "Alt";
+         case Qt::Key::Key_Control:
+            return localize ? QCoreApplication::translate("QShortcut", "Ctrl") : "Ctrl";
+         case Qt::Key::Key_Shift:
+            return localize ? QCoreApplication::translate("QShortcut", "Shift") : "Shift";
+         case Qt::Key::Key_Meta:
+            return localize ? QCoreApplication::translate("QShortcut", "Meta") : "Meta";
+         default:
+            //
+            // QKeySequence can't handle sequences consisting only of modifier keys, and will 
+            // return garbage bytes as a string if you try. We need to pre-filter those.
+            //
+            return QKeySequence(this->code).toString();
+      }
+      return QString();
+   }
+
    void key::update_native_data() {
       auto prior = this->native.vk;
       this->native.vk = 0;
@@ -233,15 +304,47 @@ namespace cobb::qt {
       }
       if (result.code == (Qt::Key)0) {
          TCHAR buffer[20];
-         auto len = GetKeyNameText(result.native.scan, buffer, sizeof(buffer));
+         auto len = GetKeyNameText((LONG)result.native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
          if (len) {
             if constexpr (std::is_same_v<TCHAR, WCHAR>) {
                result.glyph = QString::fromUtf16((const char16_t*)buffer, len);
             } else {
                result.glyph = QString::fromLocal8Bit((const char*)buffer, len);
             }
-         }
+         }/* else {
+            #if _DEBUG
+               auto err = GetLastError();
+            #endif
+         }*/
       }
+      return result;
+   }
+   /*static*/ key key::from_qt_event(const QKeyEvent* event) {
+      key result;
+      result.native.vk   = event->nativeVirtualKey();
+      result.native.scan = event->nativeScanCode();
+      result.code        = (Qt::Key)event->key();
+      //
+      if (result.native.scan == 0)
+         result.native.scan = MapVirtualKey(result.native.vk, MAPVK_VK_TO_VSC);
+      switch (result.native.vk) {
+         case VK_LCONTROL:
+         case VK_LMENU:
+         case VK_LSHIFT:
+         case VK_LWIN:
+            result.side = key_side::left;
+            break;
+         case VK_RCONTROL:
+         case VK_RMENU:
+         case VK_RSHIFT:
+         case VK_RWIN:
+            result.side = key_side::right;
+            break;
+      }
+      if (result.code == (Qt::Key)0) {
+         result.glyph = event->text();
+      }
+      //
       return result;
    }
 }

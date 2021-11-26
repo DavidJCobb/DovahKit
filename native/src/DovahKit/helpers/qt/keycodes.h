@@ -1,6 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <Qt>
 #include <QString>
+
+class QKeyEvent;
 
 namespace cobb::qt {
    enum class key_side {
@@ -8,7 +11,26 @@ namespace cobb::qt {
       left,
       right,
    };
-   struct key { // single key e.g. for key combinations; not suitable for typed text
+
+   //
+   // This struct identifies a single key, e.g. for use in key combinations. It is not 
+   // suitable for typed text; use Qt's APIs for that.
+   // 
+   // As an example:  on an American keyboard  layout, there is  a key for "=", and to 
+   // type  a "+" glyph you  hold Shift and press "=".  However, both symbols  entered 
+   // through that "="  key have the same  virtual key code and  scan code on Windows, 
+   // yet produce different Qt::Key values, because Qt::Key checks what glyph would be 
+   // produced were you to type into a textbox.  This means that you can only identify 
+   // the key itself, in isolation, using the OS-level information.
+   // 
+   // This struct, then, stores native key  information alongside the information that 
+   // would be sufficient to identify a typed  character or non-printable key using Qt 
+   // alone; and it prioritizes native key information above Qt information. Currently 
+   // it only  supports Windows, because that's  the OS I develop on; I don't  own any 
+   // machines with  other OSes. If one wanted to add support for other  OSes, though, 
+   // this would be a good place to do it.
+   //
+   struct key {
       key() {}
       key(Qt::Key, key_side s = key_side::none);
       key(QChar);
@@ -21,10 +43,17 @@ namespace cobb::qt {
          uint32_t vk   = 0;
       } native;
 
+      // we can't default these if we have anonymous struct members, because C++ is absolute trash sometimes
+      bool operator==(const key& other) const;
+      bool operator!=(const key& other) const;
+
       inline bool empty() const noexcept { return this->glyph.isEmpty() && (this->code == Qt::Key::Key_unknown || this->code == (Qt::Key)0); }
+
+      QString toString(bool localize = true) const;
 
       void update_native_data();
 
       static key from_windows_vk(int vk);
+      static key from_qt_event(const QKeyEvent*);
    };
 }
