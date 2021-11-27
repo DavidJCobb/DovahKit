@@ -55,6 +55,30 @@ QString DKKeyPickerWidget::toString() const {
    return name;
 }
 
+void DKKeyPickerWidget::setAllowKeyCombinations(bool b) {
+   if (this->allowKeyCombinations() == b)
+      return;
+   this->props.allowKeyCombinations = b;
+   if (!b) {
+      auto& list = this->state.keys;
+      if (list.size() > 1) {
+         size_t first = 0;
+         for (size_t i = 0; i < list.size(); ++i) {
+            if (list[i].still_down) {
+               first = i;
+               break;
+            }
+         }
+         if (first) {
+            auto k = list[first];
+            list.clear();
+            list.push_back(k);
+         } else {
+            list.resize(1);
+         }
+      }
+   }
+}
 void DKKeyPickerWidget::setKeys(const QVector<cobb::qt::key>& keys) {
    auto& list = this->state.keys;
    list.clear();
@@ -77,13 +101,20 @@ void DKKeyPickerWidget::_keyDown(QKeyEvent* event) {
    _key k = cobb::qt::key::from_qt_event(event);
    k.still_down = true;
    //
+   if (!this->allowKeyCombinations()) {
+      this->state.keys.clear();
+      this->state.keys.push_back(k);
+      this->_redraw();
+      return;
+   }
+   //
    auto& list = this->state.keys;
    list.erase(
       std::remove_if(
          list.begin(),
          list.end(),
-         [](const _key& entry) {
-            return !entry.still_down;
+         [k](const _key& entry) {
+            return !entry.still_down || entry == k;
          }
       ),
       list.end()
@@ -115,7 +146,8 @@ bool DKKeyPickerWidget::eventFilter(QObject* target, QEvent* event) {
          case QEvent::Type::FocusOut:
             for (auto& k : this->state.keys)
                k.still_down = false;
-               //
+            return false;
+            //
          case QEvent::InputMethod:
          case QEvent::InputMethodQuery:
             //
@@ -127,6 +159,10 @@ bool DKKeyPickerWidget::eventFilter(QObject* target, QEvent* event) {
          case QEvent::LanguageChange:
             this->_redraw();
             return false;
+            //
+         case QEvent::ShortcutOverride: // ensure we don't trigger keyboard shortcuts while remapping (can't prevent Windows-level ones like Alt+F4)
+            event->accept();
+            return true;
       }
    #endif
    return false;

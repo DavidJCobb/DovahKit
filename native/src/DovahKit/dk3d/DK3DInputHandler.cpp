@@ -15,6 +15,7 @@ namespace {
 }
 
 DK3DInputHandler::DK3DInputHandler() {
+   this->keyboard_state.recheckMouseMetrics();
    //
    // Hardcoded bindings for testing:
    //

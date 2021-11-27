@@ -7,6 +7,13 @@ namespace DK3D {
       X,
       Y,
    };
+
+   enum class ControlType {
+      Boolean,
+      Scalar,
+      Vector,
+   };
+
    enum class BooleanInputMod {
       Tap,   // execute the function when the key is released, if it was held only briefly
       Hold,  // execute the function when the key is released, if it was held for a little while

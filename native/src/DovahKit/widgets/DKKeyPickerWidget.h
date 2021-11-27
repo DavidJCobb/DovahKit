@@ -14,13 +14,17 @@
 
 class DKKeyPickerWidget : public QWidget {
    Q_OBJECT;
+   Q_PROPERTY(bool allowKeyCombinations READ allowKeyCombinations WRITE setAllowKeyCombinations DESIGNABLE true);
    public:
       DKKeyPickerWidget(QWidget* parent = nullptr);
 
       QVector<cobb::qt::key> keys() const;
       QString toString() const;
 
+      inline bool allowKeyCombinations() const { return this->props.allowKeyCombinations; }
+
    public slots:
+      void setAllowKeyCombinations(bool);
       void setKeys(const QVector<cobb::qt::key>&);
 
    signals:
@@ -42,6 +46,9 @@ class DKKeyPickerWidget : public QWidget {
       struct {
          QVector<_key> keys;
       } state;
+      struct {
+         bool allowKeyCombinations = true;
+      } props;
 
       void _redraw();
 

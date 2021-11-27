@@ -21,6 +21,13 @@ namespace {
       }
       return 0;
    }
+
+   constexpr MOUSEMOVEPOINT dummy_mouse_point = MOUSEMOVEPOINT{
+      .x = 0,
+      .y = 0,
+      .time = 0,
+      .dwExtraInfo = 0,
+   };
 }
 
 namespace DK3D {
@@ -63,6 +70,42 @@ namespace DK3D {
             }
          }
       }
+      //
+      // Get mousemove state:
+      //
+      auto dummy = dummy_mouse_point;
+      std::array<MOUSEMOVEPOINT, 1> points = {};
+      auto count = GetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &dummy, points.data(), 1, GMMP_USE_DISPLAY_POINTS);
+      if (count > 0) {
+         auto& point = points[count - 1];
+         //
+         // Multiple monitors may require some normalization:
+         //
+         if (point.x > 32767)
+            point.x -= 65536;
+         if (point.y > 32767)
+            point.y -= 65536;
+         //
+         auto prior = this->mouse.pos;
+         this->mouse.pos  = { point.x, point.y };
+         this->mouse.move = this->mouse.pos - prior;
+      }
+      //
+      // TODO: If we want mouse wheel state, we'll need to either find a way to bridge QWheelEvent to 
+      // this system, or use Windows's "Raw Input" API.
+      // 
+      // https://docs.microsoft.com/en-us/windows/win32/inputdev/about-raw-input
+      // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawmouse
+      //
+   }
+
+   void OSKeyboardState::recheckMouseMetrics() {
+      this->system.mouse.hitboxes.double_click.setX(GetSystemMetrics(SM_CXDOUBLECLK));
+      this->system.mouse.hitboxes.double_click.setY(GetSystemMetrics(SM_CYDOUBLECLK));
+      this->system.mouse.hitboxes.drag.setX(GetSystemMetrics(SM_CXDRAG));
+      this->system.mouse.hitboxes.drag.setY(GetSystemMetrics(SM_CYDRAG));
+      this->system.mouse.has_scroll_wheel = GetSystemMetrics(SM_MOUSEWHEELPRESENT) != 0;
+      this->system.mouse.swap_left_right  = GetSystemMetrics(SM_SWAPBUTTON) != 0;
    }
 
    KeyReleaseType OSKeyboardState::releaseType(int vk) const {
