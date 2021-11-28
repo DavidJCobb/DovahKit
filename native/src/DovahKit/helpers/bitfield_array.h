@@ -53,7 +53,7 @@ namespace cobb {
             size_t  byte  = bit / bits_per_unit;
             uint8_t shift = bit % bits_per_unit;
             //
-            auto value = (bytes[byte] >> (bits_per_unit - shift)) & item_mask;
+            auto value = (bytes[byte] >> shift) & item_mask;
             return (T)value;
          }
          void set(size_t i, T v) {
@@ -62,8 +62,8 @@ namespace cobb {
             uint8_t shift = bit % bits_per_unit;
             //
             auto& value = bytes[byte];
-            value &= (~item_mask << (bits_per_unit - shift));
-            value |= ((uint8_t)v) << (bits_per_unit - shift);
+            value &= ~(item_mask << shift);
+            value |= ((uint8_t)v) << shift;
          }
 
          bool is_nonzero(size_t i) const {
@@ -71,7 +71,7 @@ namespace cobb {
             size_t  byte  = bit / bits_per_unit;
             uint8_t shift = bit % bits_per_unit;
             //
-            auto value = (bytes[byte] >> (bits_per_unit - shift));
+            auto value = (bytes[byte] >> shift);
             return (value & item_mask) != 0;
          }
 

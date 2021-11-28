@@ -288,3 +288,65 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    }
    return update;
 }
+
+#include <QDialog>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QScrollArea>
+#include "widgets/DKBoundInputWidget.h"
+void DK3DInputHandler::debugOpenBindEditWindow() {
+   auto* dialog = new QDialog;
+   auto* layout = new QGridLayout(dialog);
+   auto* scroll = new QScrollArea(dialog);
+   QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+   layout->addWidget(scroll, 0, 0, 1, 2);
+   //
+   auto* body = new QWidget(scroll);
+   {
+      auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, body);
+      //
+      {  // Gamepad: Test Tap
+         auto* t = new DKBoundInputWidget(body);
+         t->setObjectName("gamepad.test_tap");
+         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
+         t->setValue(this->binds.gamepad.test_tap);
+         layout->addWidget(t);
+      }
+      {  // Gamepad: Test Hold
+         auto* t = new DKBoundInputWidget(body);
+         t->setObjectName("gamepad.test_hold");
+         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
+         t->setValue(this->binds.gamepad.test_hold);
+         layout->addWidget(t);
+      }
+      {  // Gamepad: Test While
+         auto* t = new DKBoundInputWidget(body);
+         t->setObjectName("gamepad.test_while");
+         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
+         t->setValue(this->binds.gamepad.test_while);
+         layout->addWidget(t);
+      }
+      //
+      scroll->setWidget(body);
+   }
+   auto* save = new QPushButton("Save", dialog);
+   QObject::connect(save, &QPushButton::clicked, dialog, [this, dialog, body]() {
+      this->ignoreAllHeldKeys();
+      //
+      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_tap")) {
+         this->binds.gamepad.test_tap = w->value();
+      }
+      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_hold")) {
+         this->binds.gamepad.test_hold = w->value();
+      }
+      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_while")) {
+         this->binds.gamepad.test_while = w->value();
+      }
+      //
+      dialog->accept();
+   });
+   layout->addWidget(save, 1, 1);
+   layout->addWidget(new DKBoundInputWidget(dialog), 2, 0, 1, 2); // TEST
+   //
+   dialog->show();
+}

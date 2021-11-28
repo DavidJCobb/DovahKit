@@ -39,24 +39,33 @@ class DKBoundInputWidget : public QWidget {
    signals:
 
    protected:
+      static constexpr auto ControlRole = Qt::ItemDataRole::UserRole;
+      static constexpr auto AxisRole    = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
+
       struct {
          InputDevice inputDevice = InputDevice::KeyboardMouse;
       } state;
       struct {
          QComboBox* control_type = nullptr;
          struct {
-            QLabel* label = nullptr;
+            QLabel*  label   = nullptr;
+            QWidget* wrapper = nullptr;
+            //
             DKKeyPickerWidget* control = nullptr;
             QComboBox* xinput = nullptr;
             QComboBox* mod = nullptr;
          } boolean;
          struct {
-            QLabel* label = nullptr;
+            QLabel*  label   = nullptr;
+            QWidget* wrapper = nullptr;
+            //
             QComboBox* control = nullptr;
             QComboBox* sign    = nullptr;
          } scalar;
          struct {
-            QLabel* label = nullptr;
+            QLabel*  label   = nullptr;
+            QWidget* wrapper = nullptr;
+            //
             QComboBox* control = nullptr;
          } vector;
       } subwidgets;

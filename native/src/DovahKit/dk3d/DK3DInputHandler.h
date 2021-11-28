@@ -42,6 +42,8 @@ class DK3DInputHandler : public QObject {
       void setTargetView(DKVulkanView* target);
       DKVulkanCameraUpdate update(DKVulkanView* subject); // TODO: should return something else -- a more complete command list -- in the future
 
+      void debugOpenBindEditWindow(); // opens a window for testing, to edit keybinds; we'll be able to use the normal UI once bindings are less hardcoded
+
    protected slots:
       void ignoreAllHeldKeys(timestamp_t now = DK3D::zero_timestamp);
       void updateAllKeys(timestamp_t now);

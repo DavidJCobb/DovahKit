@@ -100,12 +100,14 @@ namespace DK3D {
    }
 
    void OSKeyboardState::recheckMouseMetrics() {
-      this->system.mouse.hitboxes.double_click.setX(GetSystemMetrics(SM_CXDOUBLECLK));
-      this->system.mouse.hitboxes.double_click.setY(GetSystemMetrics(SM_CYDOUBLECLK));
-      this->system.mouse.hitboxes.drag.setX(GetSystemMetrics(SM_CXDRAG));
-      this->system.mouse.hitboxes.drag.setY(GetSystemMetrics(SM_CYDRAG));
-      this->system.mouse.has_scroll_wheel = GetSystemMetrics(SM_MOUSEWHEELPRESENT) != 0;
-      this->system.mouse.swap_left_right  = GetSystemMetrics(SM_SWAPBUTTON) != 0;
+      auto& mouse = this->system.mouse;
+      mouse.hitboxes.double_click.setX(GetSystemMetrics(SM_CXDOUBLECLK));
+      mouse.hitboxes.double_click.setY(GetSystemMetrics(SM_CYDOUBLECLK));
+      mouse.hitboxes.drag.setX(GetSystemMetrics(SM_CXDRAG));
+      mouse.hitboxes.drag.setY(GetSystemMetrics(SM_CYDRAG));
+      mouse.has_scroll_wheel = GetSystemMetrics(SM_MOUSEWHEELPRESENT) != 0;
+      mouse.swap_left_right  = GetSystemMetrics(SM_SWAPBUTTON) != 0;
+      mouse.double_click_ms  = GetDoubleClickTime();
    }
 
    KeyReleaseType OSKeyboardState::releaseType(int vk) const {

@@ -29,6 +29,7 @@ namespace DK3D {
             struct {
                bool has_scroll_wheel = false;
                bool swap_left_right  = false;
+               uint double_click_ms  = 500;
                struct {
                   QPoint double_click; // second click must occur within this distance of the first
                   QPoint drag;         // minimum mousemove distance before a click becomes a drag

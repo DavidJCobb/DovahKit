@@ -1,0 +1,247 @@
+
+Microsoft makes a number of useful recommendations for keyboard interaction and 
+keyboard shortcuts in a document titled "Guidelines for Keyboard User Interface 
+Design," hosted on their website:
+
+   https://docs.microsoft.com/en-us/previous-versions/windows/desktop/dnacc/guidelines-for-keyboard-user-interface-design
+
+I'll summarize some of the more directly relevant points in brief here.
+
+
+== DEFAULT KEYBOARD SHORTCUTS =================================================
+
+The best choices for shortcut keys are  function keys (F1 through F12), and the 
+Ctrl key paired with one letter. Shortcut keys in international programs should 
+be customizable because easy-to-remember mnemonics (e.g. Ctrl + B for Bold) are 
+generally language-specific.
+
+The Ctrl key should  be used as a  modifier for actions that  represent a large-
+scale effect, such as saving a document.
+
+The Shift key  should be used as a modifier for other shortcuts,  when offering 
+actions that extend  that shortcut. For example, the  system-level shortcut key 
+Alt + Tab allows users to cycle through all open program windows one at a time; 
+Shift + Alt + Tab allows them to switch in reverse order.
+
+The Alt key should generally be avoided as a modifier when designing typical UI 
+layouts, because it may conflict with  access keys -- the shortcuts that can be 
+set on individual controls and embedded  into their displayed labels. Moreover, 
+some Alt shortcuts are OS-specific; this includes actions like Alt + Tab, along 
+with more fundamental actions (e.g. Alt + ~ invokes a Japanese input editor).
+
+Combinations using Ctrl + Alt are also worth avoiding, as in some languages the 
+modifier pair is used to access alphanumeric characters.
+
+The Windows key should not be used as a modifier key for anything that is not a 
+system-level function.
+
+
+== COMMON SHORTCUT KEYS FOR APPLICATIONS ======================================
+
+   Esc
+      Cancel
+
+   Del
+      Delete
+
+   F1
+      Display program help.
+
+   Shift + F1
+      Display context-sensitive help near the selected control.
+
+   Shift + F10
+   ContextMenu
+      Display the context menu.
+
+   Ctrl + A
+      Select All
+
+   Ctrl + C
+      Copy
+
+   Ctrl + F
+      Find
+
+   Ctrl + N
+      New
+
+   Ctrl + O
+      Open
+
+   Ctrl + P
+      Print
+
+   Ctrl + V
+      Paste
+
+   Ctrl + X
+      Cut
+
+   Ctrl + Y
+      Redo
+
+   Ctrl + Z
+      Undo
+
+
+== WINDOWS SHORTCUT KEYS ======================================================
+
+--- Without modifiers ---------------------------------------------------------
+
+   PrintScreen
+      Copy an image of the screen.
+
+   Hold Shift for 8+ seconds
+      Accessibility: toggle FilterKeys.
+
+   Tap Shift 5 times
+      Accessibility: toggle StickyKeys.
+
+   Hold NumLock for 5+ seconds
+      Accessibility: toggle ToggleKeys.
+
+--- Ctrl ----------------------------------------------------------------------
+
+   Ctrl + Esc
+      Toggle the Start menu's open state.
+
+   Ctrl + F4
+      Close current document (in multi-document programs).
+
+   Ctrl + F6
+      Focus the next document (in multi-document programs).
+
+   Ctrl + Shift + F6
+      Focus the previous document (in multi-document programs).
+
+   Ctrl + Tab
+   F6
+      Move focus to the next pane or palette.
+
+   Ctrl + Shift + Tab
+   Shift + F6
+      Move focus to the previous pane or palette.
+
+   Ctrl + Alt + Delete
+      Open the Windows Security screen or the Windows Task Manager.
+
+   Ctrl + Shift
+      Switch input languages or keyboard layouts (per system options).
+
+   Ctrl + Shift + Esc
+      Open Task Manager.
+
+   Ctrl + Shift + ~
+   Ctrl + Shift + <number>
+   Ctrl + Shift + `
+      Hotkey for input lgnauges (per system options).
+
+   Ctrl + Win + F
+      Search for computers.
+
+--- Alt -----------------------------------------------------------------------
+
+   Alt + F4
+      Close current window/program.
+
+   Alt + PrintScreen
+      Copy an image of the current window.
+      
+   Alt + Shift + ~
+   Alt + Shift + <number>
+   Alt + Shift + `
+      Hotkey for input lgnauges (per system options).
+
+   Alt + Tab
+      Cycle through open windows in taskbar order.
+
+   Alt + Shift + Tab
+      Cycle through open windows in reverse taskbar order.
+
+   Alt + Esc
+      Cycle through open windows chronologically, by when they were opened.
+
+   Alt + Shift + Esc
+      Cycle through open windows in reverse-chronological order.
+
+   Alt + Space
+      Open context menu for window.
+
+   Alt + -
+      Open context menu for MDI subwindow.
+
+   Alt...
+      Focus the menu bar  and enter menu mode. Use the  arrow keys to navigate, 
+      or press letter keys to trigger access key shortcuts.
+
+   Left Alt + Shift
+      Switch input lagnauges or keyboard layouts (per system options).
+
+   Left Alt + Left Shift + PrintScreen
+      Accessibility: toggle High Contrast.
+
+   Left Alt + Left Shift + NumLock
+      Toggle MouseKeys.
+
+--- Win -----------------------------------------------------------------------
+
+   Win
+      Toggle the Start menu's open state.
+      
+   Win + B
+      Focus a notification.
+
+   Win + D
+      Show the desktop.
+
+   Win + E
+      Open Windows Explorer to My Computer.
+
+   Win + F
+      Search for a file or folder.
+
+   Win + P
+      Toggle through the "projection" mode introduced in Windows 7.
+
+   Win + L
+      Lock the computer, or switch users.
+
+   Win + M
+      Minimize all windows.
+
+   Win + Shift + M
+      Restore all windows.
+
+   Win + R
+      Open the "Run" dialog box.
+
+   Win + T
+      Focus the taskbar.
+
+   Win + U
+      Accessibility: open Utility Manager.
+
+   Win + +
+      Accessibility: Launch Mangnifier or increase magnification.
+
+   Win + Arrow Down
+      Minimize the active window.
+
+   Win + Arrow Up
+      Maximize the active window.
+
+   Win + Space
+      Peek at gadgets.
+
+   Win + <number>
+      Launch or focus applications by taskbar order.
+
+   Win + F1
+      Display Windows Help.
+
+   Win + Break
+      Open the "System Properties" dialog box.
+
+   Win + Tab
+      Switch between open windows.
