@@ -12,7 +12,7 @@ namespace DK3D {
    class XInputGamepadState {
       public:
          using Button = DKXInputSubsystem::Button;
-         static constexpr size_t button_count = 14;
+         static constexpr size_t button_count = 16;
 
       public:
          bool is_connected = false;

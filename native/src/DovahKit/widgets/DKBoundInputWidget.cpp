@@ -41,8 +41,8 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
       widget->addItem(tr("D-Pad Right",       "XInput button"), (int)DK3D::XInputKey::DPadRight);
       widget->addItem(tr("Left Stick Click",  "XInput button"), (int)DK3D::XInputKey::LS);
       widget->addItem(tr("Right Stick Click", "XInput button"), (int)DK3D::XInputKey::RS);
-      //widget->addItem(tr("A", "XInput button"), (int)DK3D::XInputKey::LT); // TODO
-      //widget->addItem(tr("A", "XInput button"), (int)DK3D::XInputKey::RT); // TODO
+      widget->addItem(tr("Left Trigger",      "XInput button"), (int)DK3D::XInputKey::LT);
+      widget->addItem(tr("Right Trigger",     "XInput button"), (int)DK3D::XInputKey::RT);
       widget->addItem(tr("Left Bumper",       "XInput button"), (int)DK3D::XInputKey::LB);
       widget->addItem(tr("Right Bumper",      "XInput button"), (int)DK3D::XInputKey::RB);
       layout->addWidget(widget);

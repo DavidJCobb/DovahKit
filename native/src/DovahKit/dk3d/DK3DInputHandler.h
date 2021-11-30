@@ -1,10 +1,12 @@
 #pragma once
 #include <array>
 #include <bitset>
+#include <vector>
 #include <QObject>
 #include "../helpers/bitfield_array.h"
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "chrono.h"
+#include "Binding.h"
 #include "BoundInput.h"
 #include "InputResult.h"
 #include "OSKeyboardState.h"
@@ -15,6 +17,7 @@ class DK3DInputHandler : public QObject {
    Q_OBJECT;
    public:
       using Axis2D        = DK3D::Axis2D;
+      using Binding       = DK3D::Binding;
       using BoundInput    = DK3D::BoundInput;
       using InputResult   = DK3D::InputResult;
       using ScalarControl = DK3D::ScalarControl;
@@ -82,6 +85,8 @@ class DK3DInputHandler : public QObject {
                   BoundInput down;
                } turn;
             } camera;
+            //
+            QVector<Binding> list;
          } keyboard;
          struct {
             struct {
@@ -98,6 +103,8 @@ class DK3DInputHandler : public QObject {
             BoundInput test_tap;
             BoundInput test_hold;
             BoundInput test_while;
+            //
+            QVector<Binding> list;
          } gamepad;
       } binds;
 };

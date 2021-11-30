@@ -28,6 +28,9 @@ namespace cobb {
       template<template<typename T> typename functor> concept IsBreakableForEachFunctor = requires {
          { functor<void>::execute() } -> std::same_as<bool>;
       };
+      template<template<typename T> typename functor> concept IsIndexOfMatchingFunctor = requires {
+         { functor<void>::execute() } -> std::same_as<bool>;
+      };
    }
 
    //
@@ -67,10 +70,31 @@ namespace cobb {
          template<int N, typename... Ts> using _nth_type = typename std::tuple_element<N, std::tuple<Ts...>>::type;
 
       public:
+         static constexpr size_t count = sizeof...(Types);
+         static constexpr size_t size() noexcept { return count; }
+
+         template<typename T, size_t n = 0>
+         static consteval size_t index_of() {
+            if constexpr (std::is_same_v<T, _nth_type<n>>)
+               return n;
+            if constexpr (n + 1 < count)
+               return index_of<T, n + 1>();
+            return -1;
+         };
+
+         template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsIndexOfMatchingFunctor<functor>
+         static constexpr size_t index_of_matching() {
+            if (functor<_nth_type<n, Types...>>::execute())
+               return n;
+            if constexpr (n + 1 < count)
+               return index_of_matching<functor, n + 1>();
+            return -1;
+         }
+
          template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsForEachFunctor<functor>
          static void for_each() {
             functor<_nth_type<n, Types...>>::execute();
-            if constexpr (n + 1 < sizeof...(Types))
+            if constexpr (n + 1 < count)
                for_each<functor, n + 1>();
          }
 
@@ -78,7 +102,7 @@ namespace cobb {
          static bool for_each_breakable() {
             if (functor<_nth_type<n, Types...>>::execute())
                return true;
-            if constexpr (n + 1 < sizeof...(Types))
+            if constexpr (n + 1 < count)
                return for_each_breakable<functor, n + 1>();
             return false;
          }
@@ -86,7 +110,7 @@ namespace cobb {
          template<template<typename T> typename functor, size_t n = 0, typename... Args>
          static void for_each_with_args(Args&&... a) {
             functor<_nth_type<n, Types...>>::execute(std::forward<Args>(a)...);
-            if constexpr (n + 1 < sizeof...(Types))
+            if constexpr (n + 1 < count)
                for_each_with_args<functor, n + 1>(std::forward<Args>(a)...);
          }
          
@@ -94,7 +118,7 @@ namespace cobb {
          static bool for_each_breakable_with_args(Args&&... a) {
             if (functor<_nth_type<n, Types...>>::execute(std::forward<Args>(a)...))
                return true;
-            if constexpr (n + 1 < sizeof...(Types))
+            if constexpr (n + 1 < count)
                return for_each_breakable_with_args<functor, n + 1>(std::forward<Args>(a)...);
             return false;
          }
@@ -130,6 +154,9 @@ namespace cobb {
       public:
          using data_type = typename decltype(list)::value_type;
          static_assert(list.size() == sizeof...(Types));
+
+         static constexpr size_t count = sizeof...(Types);
+         static constexpr size_t size() noexcept { return count; }
 
       private:
          template<int N, typename... Ts> using _nth_type = typename std::tuple_element<N, std::tuple<Ts...>>::type;

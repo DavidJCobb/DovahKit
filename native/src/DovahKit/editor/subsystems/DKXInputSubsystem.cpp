@@ -2,6 +2,8 @@
 #include <numbers>
 
 namespace {
+   constexpr float trigger_threshold_for_button = 0.6;
+
    struct _dll_version {
       constexpr _dll_version(const TCHAR* f, DKXInputSubsystem::DLLVersion v) : file(f), version(v) {}
 
@@ -15,6 +17,20 @@ namespace {
       _dll_version(TEXT("XINPUT9_1_0.DLL"), DKXInputSubsystem::DLLVersion::XInput_9_1_0),
    };
 }
+
+#pragma region Gamepad
+bool DKXInputSubsystem::Gamepad::isButtonDown(Button b) const noexcept {
+   if (b < Button::PseudoButton)
+      return (this->buttons & (uint16_t)b) != 0;
+   switch (b) {
+      case Button::LT:
+         return this->lt >= trigger_threshold_for_button;
+      case Button::RT:
+         return this->rt >= trigger_threshold_for_button;
+   }
+   return false;
+}
+#pragma endregion
 
 DKXInputSubsystem::DKXInputSubsystem() {
    for (auto& is : this->state.input)
@@ -125,8 +141,8 @@ void DKXInputSubsystem::apply_stick_inertia(Side s, float elapsed, const QPointF
 }
 void DKXInputSubsystem::normalize_input_state(float elapsed, Gamepad& out, const XINPUT_GAMEPAD& state) const {
    out.buttons = state.wButtons;
-   out.lt      = float(state.bLeftTrigger)  / 32767.0;
-   out.rt      = float(state.bRightTrigger) / 32767.0;
+   out.lt      = float(state.bLeftTrigger)  / 255.0;
+   out.rt      = float(state.bRightTrigger) / 255.0;
    out.raw.ls  = normalize_stick(Side::Left,  state.sThumbLX, state.sThumbLY);
    out.raw.rs  = normalize_stick(Side::Right, state.sThumbRX, state.sThumbRY);
    this->apply_stick_inertia(Side::Left,  elapsed, out.raw.ls, out.ls);

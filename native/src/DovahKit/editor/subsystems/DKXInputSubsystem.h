@@ -2,6 +2,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <QObject>
@@ -23,24 +24,33 @@ class DKXInputSubsystem : public QObject {
 
       enum class Button {
          None = 0,
-         A           = XINPUT_GAMEPAD_A,
-         B           = XINPUT_GAMEPAD_B,
-         X           = XINPUT_GAMEPAD_X,
-         Y           = XINPUT_GAMEPAD_Y,
-         Start       = XINPUT_GAMEPAD_START,
-         Back        = XINPUT_GAMEPAD_BACK,
-         DPadUp      = XINPUT_GAMEPAD_DPAD_UP,
-         DPadDown    = XINPUT_GAMEPAD_DPAD_DOWN,
-         DPadLeft    = XINPUT_GAMEPAD_DPAD_LEFT,
-         DPadRight   = XINPUT_GAMEPAD_DPAD_RIGHT,
-         LS          = XINPUT_GAMEPAD_LEFT_THUMB,
-         LeftStick   = XINPUT_GAMEPAD_LEFT_THUMB,
-         RS          = XINPUT_GAMEPAD_RIGHT_THUMB,
-         RightStick  = XINPUT_GAMEPAD_RIGHT_THUMB,
-         LB          = XINPUT_GAMEPAD_LEFT_SHOULDER,
-         LeftBumper  = XINPUT_GAMEPAD_LEFT_SHOULDER,
-         RB          = XINPUT_GAMEPAD_RIGHT_SHOULDER,
-         RightBumper = XINPUT_GAMEPAD_RIGHT_SHOULDER,
+         A            = XINPUT_GAMEPAD_A,
+         B            = XINPUT_GAMEPAD_B,
+         X            = XINPUT_GAMEPAD_X,
+         Y            = XINPUT_GAMEPAD_Y,
+         Start        = XINPUT_GAMEPAD_START,
+         Back         = XINPUT_GAMEPAD_BACK,
+         DPadUp       = XINPUT_GAMEPAD_DPAD_UP,
+         DPadDown     = XINPUT_GAMEPAD_DPAD_DOWN,
+         DPadLeft     = XINPUT_GAMEPAD_DPAD_LEFT,
+         DPadRight    = XINPUT_GAMEPAD_DPAD_RIGHT,
+         LS           = XINPUT_GAMEPAD_LEFT_THUMB,
+         LeftStick    = LS,
+         RS           = XINPUT_GAMEPAD_RIGHT_THUMB,
+         RightStick   = RS,
+         LB           = XINPUT_GAMEPAD_LEFT_SHOULDER,
+         LeftBumper   = LB,
+         RB           = XINPUT_GAMEPAD_RIGHT_SHOULDER,
+         RightBumper  = RB,
+         //
+         // Things that are not buttons that we may nonetheless wish to treat like buttons:
+         //
+         PseudoButton = std::numeric_limits<uint16_t>::max(),
+         //
+         LT           = PseudoButton + 1,
+         LeftTrigger  = LT,
+         RT           = PseudoButton + 2,
+         RightTrigger = RT,
       };
       enum class Side {
          Left,
@@ -65,7 +75,7 @@ class DKXInputSubsystem : public QObject {
          float    rt = 0;
          uint16_t buttons = 0;
          //
-         inline bool isButtonDown(Button b) const noexcept { return (this->buttons & (uint16_t)b) != 0; }
+         bool isButtonDown(Button b) const noexcept;
       };
 
       using VibrationFunc = float(*)(float percent, float magnitude);

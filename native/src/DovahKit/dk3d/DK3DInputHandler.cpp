@@ -1,8 +1,13 @@
 #include "DK3DInputHandler.h"
+#include <QApplication>
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "KeyDownState.h"
 
 using namespace DK3D;
+
+namespace {
+   constexpr bool test_function_binds = true;
+}
 
 namespace {
    constexpr float reset_after_lag_threshold = 3.0; // ignore all held inputs if this much time passed since we last polled
@@ -16,10 +21,150 @@ namespace {
 
 DK3DInputHandler::DK3DInputHandler() {
    this->keyboard_state.recheckMouseMetrics();
+   QObject::connect((QApplication*)QApplication::instance(), &QApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
+      if (state == Qt::ApplicationState::ApplicationActive) {
+         this->keyboard_state.recheckMouseMetrics();
+      }
+   });
+   //
+   // Default bindings for testing:
+   //
+   {
+      auto& kb = this->binds.keyboard.list;
+      //
+      struct _bind {
+         const char key;
+         float x = 0;
+         float y = 0;
+         float z = 0;
+      };
+      constexpr auto _binds = std::array{
+         _bind{ 'W',  0,  1,  0 },
+         _bind{ 'S',  0, -1,  0 },
+         _bind{ 'A', -1,  0,  0 },
+         _bind{ 'D',  1,  0,  0 },
+         _bind{ 'Q',  0,  0,  1 },
+         _bind{ 'Z',  0,  0, -1 },
+      };
+      auto* func = &editor_functions::move_camera::get();
+      for (const auto& b : _binds) {
+         kb.push_back(Binding{
+            BoundInput::from_key(b.key, BooleanInputMod::While),
+            func,
+            editor_functions::move_camera::options{
+               .reference_frames = {
+                  .baseline  = ReferenceFrame::Camera,
+                  .selection = ReferenceFrame::Camera,
+               },
+               .magnitudes = { .x = b.x, .y = b.y, .z = b.z },
+            }
+         });
+      }
+   }
+   {  // gamepad functions: move camera
+      auto& gb   = this->binds.gamepad.list;
+      auto* func = &editor_functions::move_camera::get();
+      //
+      gb.push_back(Binding{ // Lateral
+         BoundInput{
+            .vector = {
+               .input = VectorControl::XInput_LS,
+            },
+         },
+         func,
+         editor_functions::move_camera::options{
+            .reference_frames = {
+               .baseline  = ReferenceFrame::Camera,
+               .selection = ReferenceFrame::Camera,
+            },
+            .non_button = {
+               .input_x = Axis3D::X,
+               .input_y = Axis3D::Y,
+               .x_sign  = Sign::Positive,
+               .y_sign  = Sign::Positive,
+            },
+         }
+      });
+      gb.push_back(Binding{ // Down
+         BoundInput{
+            .boolean = {
+               .gamepad = {
+                  .button = XInputKey::LB,
+               },
+               .type = BooleanInputMod::While,
+            },
+         },
+         func,
+         editor_functions::move_camera::options{
+            .reference_frames = {
+               .baseline  = ReferenceFrame::Camera,
+               .selection = ReferenceFrame::Camera,
+            },
+            .magnitudes = { .z = -1 },
+         }
+      });
+      gb.push_back(Binding{ // Up
+         BoundInput{
+            .boolean = {
+               .gamepad = {
+                  .button = XInputKey::RB,
+               },
+               .type = BooleanInputMod::While,
+            },
+         },
+         func,
+         editor_functions::move_camera::options{
+            .reference_frames = {
+               .baseline  = ReferenceFrame::Camera,
+               .selection = ReferenceFrame::Camera,
+            },
+            .magnitudes = { .z = 1 },
+         }
+      });
+   }
+   {  // Gamepad functions: test echo
+      auto& gb = this->binds.gamepad.list;
+      gb.push_back(Binding{
+         BoundInput{
+            .boolean = {
+               .gamepad = {
+                  .button = XInputKey::X,
+               },
+               .type = BooleanInputMod::Tap,
+            },
+         },
+         &editor_functions::debug_log::get(),
+         editor_functions::debug_log::options{ .number = 1 }
+      });
+      gb.push_back(Binding{
+         BoundInput{
+            .boolean = {
+               .gamepad = {
+                  .button = XInputKey::Y,
+               },
+               .type = BooleanInputMod::Hold,
+            },
+         },
+         &editor_functions::debug_log::get(),
+         editor_functions::debug_log::options{ .number = 2 }
+      });
+      gb.push_back(Binding{
+         BoundInput{
+            .boolean = {
+               .gamepad = {
+                  .button = XInputKey::B,
+               },
+               .type = BooleanInputMod::While,
+            },
+         },
+         &editor_functions::debug_log::get(),
+         editor_functions::debug_log::options{ .number = 3 }
+      });
+   }
    //
    // Hardcoded bindings for testing:
    //
-   {
+   if constexpr (test_function_binds) {
       auto& cb = this->binds.keyboard.camera.move;
       cb.forward = BoundInput::from_key('W', BooleanInputMod::While);
       cb.back    = BoundInput::from_key('S', BooleanInputMod::While);
@@ -35,7 +180,7 @@ DK3DInputHandler::DK3DInputHandler() {
       ct.up    = BoundInput::from_key('R', BooleanInputMod::While);
       ct.down  = BoundInput::from_key('V', BooleanInputMod::While);
    }
-   {
+   if constexpr (test_function_binds) {
       auto& cb = this->binds.gamepad.camera.move;
       cb.lateral.vector.input = VectorControl::XInput_LS;
       cb.down = BoundInput::from_xinput_button(DK3D::XInputKey::LB, BooleanInputMod::While);
@@ -49,7 +194,7 @@ DK3DInputHandler::DK3DInputHandler() {
       cb.pitch.scalar.axis  = Axis2D::Y;
    }
    //
-   { // Test binds:
+   if constexpr (test_function_binds) { // Test binds:
       auto& cb = this->binds.gamepad;
       cb.test_tap   = BoundInput::from_xinput_button(DK3D::XInputKey::X, BooleanInputMod::Tap);
       cb.test_hold  = BoundInput::from_xinput_button(DK3D::XInputKey::Y, BooleanInputMod::Hold);
@@ -286,6 +431,26 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
       speed = std::clamp(speed, 0.0, 1.0);
       update.turn.speed *= speed;
    }
+
+   for (auto& bind : this->binds.keyboard.list) {
+      if (!bind.function)
+         continue;
+      auto r = inputResultOf(bind.input);
+      if (r.active() || r.while_has_changed) {
+         bind.function->invoke(r, bind.params, update);
+      }
+   }
+   if (has_gamepad) {
+      for (auto& bind : this->binds.gamepad.list) {
+         if (!bind.function)
+            continue;
+         auto r = inputResultOf(bind.input);
+         if (r.active() || r.while_has_changed) {
+            bind.function->invoke(r, bind.params, update);
+         }
+      }
+   }
+
    return update;
 }
 

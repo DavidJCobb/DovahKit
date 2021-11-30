@@ -111,6 +111,8 @@
   <ItemGroup>
     <ClCompile Include="dk3d\BoundInput.cpp" />
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
+    <ClCompile Include="dk3d\editor_functions\debug_log.cpp" />
+    <ClCompile Include="dk3d\editor_functions\move_camera.cpp" />
     <ClCompile Include="dk3d\InputResult.cpp" />
     <ClCompile Include="dk3d\OSKeyboardState.cpp" />
     <ClCompile Include="dk3d\XInputGamepadState.cpp" />
@@ -508,6 +510,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\dk3d_debug_rebind.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
@@ -543,6 +546,7 @@
     <ClCompile Include="vulkan\surface_support_info.cpp" />
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
+    <ClCompile Include="widgets\DKBoundInputWidget.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
     <ClCompile Include="ui\generic\FormPicker.cpp" />
@@ -615,11 +619,21 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dk3d\Binding.h" />
     <ClInclude Include="dk3d\BoundInput.h" />
     <ClInclude Include="dk3d\chrono.h" />
     <QtMoc Include="widgets\DKKeyPickerWidget.h" />
     <QtMoc Include="dk3d\DK3DInputHandler.h" />
     <ClInclude Include="dk3d\defaults.h" />
+    <ClInclude Include="dk3d\editor_functions\debug_log.h" />
+    <ClInclude Include="dk3d\editor_functions\move_camera.h" />
+    <ClInclude Include="dk3d\editor_functions\_all.h" />
+    <ClInclude Include="dk3d\editor_functions\_base.h" />
+    <ClInclude Include="dk3d\editor_functions\_options.h" />
+    <ClInclude Include="dk3d\enums\Axis3D.h" />
+    <ClInclude Include="dk3d\enums\AxisPlane.h" />
+    <ClInclude Include="dk3d\enums\ReferenceFrame.h" />
+    <ClInclude Include="dk3d\enums\Sign.h" />
     <ClInclude Include="dk3d\InputResult.h" />
     <ClInclude Include="dk3d\KeyDownState.h" />
     <ClInclude Include="dk3d\OSKeyboardState.h" />
@@ -647,6 +661,7 @@
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\dk3d_debug_rebind.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
@@ -1291,6 +1306,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dk3d\_docs\keyboard inputs.txt" />
+    <Text Include="dk3d\_docs\keyboard shortcuts - guidelines for defaults.txt" />
     <Text Include="dovahscript\_docs\abstract.txt" />
     <Text Include="dovahscript\_docs\case studies.txt" />
     <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />

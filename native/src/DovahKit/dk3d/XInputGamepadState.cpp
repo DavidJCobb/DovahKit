@@ -18,6 +18,8 @@ namespace {
       DK3D::XInputGamepadState::Button::RS,
       DK3D::XInputGamepadState::Button::LB,
       DK3D::XInputGamepadState::Button::RB,
+      DK3D::XInputGamepadState::Button::LT,
+      DK3D::XInputGamepadState::Button::RT,
    };
    static_assert(DK3D::XInputGamepadState::button_count == _indices_to_buttons.size());
 
