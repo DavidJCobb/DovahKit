@@ -24,10 +24,10 @@ namespace DK3D::editor_functions {
                float z = 0;
             } magnitudes;
             struct {
-               Axis3D input_x : 2 = Axis3D::X;
-               Axis3D input_y : 2 = Axis3D::Y;
-               Sign   x_sign  : 1 = Sign::Positive;
-               Sign   y_sign  : 1 = Sign::Negative;
+               Axis3D input_x = Axis3D::X;
+               Axis3D input_y = Axis3D::Y;
+               Sign   x_sign  = Sign::Positive;
+               Sign   y_sign  = Sign::Negative;
             } non_button;
          };
       public:

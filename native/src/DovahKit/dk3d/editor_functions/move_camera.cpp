@@ -40,9 +40,13 @@ namespace DK3D::editor_functions {
       // saying it's world-relative are currently wrong).
       //
       glm::vec3 move = { o->magnitudes.x, o->magnitudes.y, o->magnitudes.z };
+      camera_update.move.scale_by_delta = true;
       switch (input.type) {
          using _ = InputResult::Type;
          case _::Boolean:
+            if (input.bool_mod != BooleanInputMod::While) {
+               camera_update.move.scale_by_delta = false;
+            }
             break;
          case _::Scalar:
          case _::Vector:

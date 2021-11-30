@@ -64,7 +64,9 @@ namespace vulkanDK {
          // matrix after each camera adjustment.
          //
          const auto& turn = change.turn;
-         float speed = turn.speed * change.delta_seconds;
+         float speed = turn.speed;
+         if (change.turn.scale_by_delta)
+            speed *= change.delta_seconds;
          float z = turn.yaw   * speed;
          float y = turn.roll  * speed;
          float x = turn.pitch * speed;
@@ -108,7 +110,10 @@ namespace vulkanDK {
          // This turns our "camera-as-object"-relative movement vector into a camera-relative 
          // movement vector.
          //
-         move = glm::normalize(move) * (float)(change.move.speed * change.delta_seconds); // NOTE: glm::normalize doesn't check for zero vectors; produces NaN
+         float mod = change.move.speed;
+         if (change.move.scale_by_delta)
+            mod *= change.delta_seconds;
+         move = glm::normalize(move) * mod; // NOTE: glm::normalize doesn't check for zero vectors; produces NaN
          //
          // Now, we need to make it world-relative.
          //

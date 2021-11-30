@@ -113,6 +113,7 @@
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
     <ClCompile Include="dk3d\editor_functions\debug_log.cpp" />
     <ClCompile Include="dk3d\editor_functions\move_camera.cpp" />
+    <ClCompile Include="dk3d\editor_functions\turn_camera.cpp" />
     <ClCompile Include="dk3d\InputResult.cpp" />
     <ClCompile Include="dk3d\OSKeyboardState.cpp" />
     <ClCompile Include="dk3d\XInputGamepadState.cpp" />
@@ -627,11 +628,13 @@
     <ClInclude Include="dk3d\defaults.h" />
     <ClInclude Include="dk3d\editor_functions\debug_log.h" />
     <ClInclude Include="dk3d\editor_functions\move_camera.h" />
+    <ClInclude Include="dk3d\editor_functions\turn_camera.h" />
     <ClInclude Include="dk3d\editor_functions\_all.h" />
     <ClInclude Include="dk3d\editor_functions\_base.h" />
     <ClInclude Include="dk3d\editor_functions\_options.h" />
     <ClInclude Include="dk3d\enums\Axis3D.h" />
     <ClInclude Include="dk3d\enums\AxisPlane.h" />
+    <ClInclude Include="dk3d\enums\CameraTurnAxis.h" />
     <ClInclude Include="dk3d\enums\ReferenceFrame.h" />
     <ClInclude Include="dk3d\enums\Sign.h" />
     <ClInclude Include="dk3d\InputResult.h" />
