@@ -27,7 +27,17 @@ namespace DK3D::editor_functions {
    using opaque_option_union = impl::option_union_base;
 
    class base {
+      protected:
+         base() {}
+
+         template<typename T> void setup(T*) {
+            this->name = T::function_name;
+         }
+
       public:
+         static constexpr const char* function_name = "unnamed";
+         const char* name = function_name;
+
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) = 0;
    };
 }

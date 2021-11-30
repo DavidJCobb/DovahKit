@@ -7,6 +7,11 @@
 namespace DK3D::editor_functions {
    class turn_camera : public base {
       public:
+         static constexpr const char* function_name = "turn_camera";
+      protected:
+         turn_camera() { this->setup(this); }
+
+      public:
          static turn_camera& get() {
             static turn_camera instance;
             return instance;

@@ -514,7 +514,38 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
    {
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, body);
       //
-      {  // Gamepad: Test Tap
+      layout->addWidget(new QLabel("Keyboard:", body));
+      {
+         auto& list = this->binds.keyboard.list;
+         auto  size = list.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto& bind = list[i];
+            auto* t = new DKBoundInputWidget(body);
+            t->setProperty("DK3D-input-index", i);
+            t->setInputDevice(DKBoundInputWidget::InputDevice::KeyboardMouse);
+            t->setValue(bind.input);
+            layout->addWidget(t);
+         }
+      }
+      layout->addWidget(new QLabel("Gamepad:", body));
+      {
+         auto& list = this->binds.gamepad.list;
+         auto  size = list.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto& bind = list[i];
+            if (bind.function) {
+               layout->addWidget(new QLabel(bind.function->name, body));
+            } else {
+               layout->addWidget(new QLabel("no function", body));
+            }
+            auto* t = new DKBoundInputWidget(body);
+            t->setProperty("DK3D-input-index", i);
+            t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
+            t->setValue(bind.input);
+            layout->addWidget(t);
+         }
+      }
+      /*{  // Gamepad: Test Tap
          auto* t = new DKBoundInputWidget(body);
          t->setObjectName("gamepad.test_tap");
          t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
@@ -534,7 +565,7 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
          t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
          t->setValue(this->binds.gamepad.test_while);
          layout->addWidget(t);
-      }
+      }*/
       //
       scroll->setWidget(body);
    }
@@ -542,6 +573,24 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
    QObject::connect(save, &QPushButton::clicked, dialog, [this, dialog, body]() {
       this->ignoreAllHeldKeys();
       //
+      auto kids = body->findChildren<DKBoundInputWidget*>();
+      for (auto* widget : kids) {
+         auto idx = widget->property("DK3D-input-index");
+         if (!idx.isValid())
+            continue;
+         auto i = idx.toInt();
+         //
+         switch (widget->inputDevice()) {
+            using _ = DKBoundInputWidget::InputDevice;
+            case _::KeyboardMouse:
+               this->binds.keyboard.list[i].input = widget->value();
+               break;
+            case _::XInput:
+               this->binds.gamepad.list[i].input = widget->value();
+               break;
+         }
+      }
+      /*//
       if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_tap")) {
          this->binds.gamepad.test_tap = w->value();
       }
@@ -551,6 +600,7 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
       if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_while")) {
          this->binds.gamepad.test_while = w->value();
       }
+      //*/
       //
       dialog->accept();
    });

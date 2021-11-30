@@ -7,6 +7,11 @@
 namespace DK3D::editor_functions {
    class move_camera : public base {
       public:
+         static constexpr const char* function_name = "move_camera";
+      protected:
+         move_camera() { this->setup(this); }
+
+      public:
          static move_camera& get() {
             static move_camera instance;
             return instance;

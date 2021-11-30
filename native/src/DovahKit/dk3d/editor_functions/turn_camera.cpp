@@ -20,7 +20,7 @@ namespace DK3D::editor_functions {
             cut.yaw   = o->magnitudes.yaw;
             cut.pitch = o->magnitudes.pitch;
             if (input.bool_mod != BooleanInputMod::While) {
-               camera_update.move.scale_by_delta = false;
+               camera_update.turn.scale_by_delta = false;
                //
                // If the user wants to just turn the camera in increments when a key is tapped, 
                // then we need to disable scaling by the time delta, but we also need to modify 
