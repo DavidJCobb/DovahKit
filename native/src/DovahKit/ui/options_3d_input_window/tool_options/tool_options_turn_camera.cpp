@@ -1,5 +1,6 @@
 #include "tool_options_turn_camera.h"
 #include "helpers/qt/combobox.h"
+#include "helpers/qt/mass_block_signals.h"
 #include "helpers/qt/mass_set_visible.h"
 #include "dk3d/tools/_options.h"
 
@@ -13,20 +14,22 @@ namespace DK3DToolOptions {
       QObject::connect(this, &Base::controlTypeChanged, this, &TurnCamera::_onControlTypeChanged);
       //
       {  // Configure spinboxes
-         auto cfg = [](QDoubleSpinBox* widget) {
+         auto cfg = [this](QDoubleSpinBox* widget) {
             widget->setRange(-max_turn_angle, max_turn_angle);
             widget->setValue(0);
             widget->setLayoutDirection(Qt::LayoutDirection::RightToLeft);
-            widget->setSuffix(tr(" °", "degrees unit"));
+            widget->setSuffix(tr((const char*)u8" \u00B0", "degrees unit"));
+            QObject::connect(widget, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.booleanX);
          cfg(this->ui.booleanZ);
       }
       {  // Configure 3D axes
-         auto cfg = [](QComboBox* widget) {
+         auto cfg = [this](QComboBox* widget) {
             widget->clear();
             widget->addItem(tr("Yaw",   "3D axis"), (int)DK3D::CameraTurnAxis::Yaw);
             widget->addItem(tr("Pitch", "3D axis"), (int)DK3D::CameraTurnAxis::Pitch);
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.scalarAxis);
          cfg(this->ui.vectorXAxis);
@@ -39,16 +42,19 @@ namespace DK3DToolOptions {
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorXSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorYSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
       }
       //
       this->_onControlTypeChanged();
@@ -77,6 +83,17 @@ namespace DK3DToolOptions {
       if (!o)
          return;
       auto& options = *o;
+      //
+      auto blockers = cobb::qt::mass_signal_blocker(
+         this->ui.booleanX,
+         this->ui.booleanZ,
+         this->ui.scalarAxis,
+         this->ui.scalarSign,
+         this->ui.vectorXAxis,
+         this->ui.vectorXSign,
+         this->ui.vectorYAxis,
+         this->ui.vectorYSign
+      );
       //
       this->ui.booleanX->setValue(options.magnitudes.pitch);
       this->ui.booleanZ->setValue(options.magnitudes.yaw);

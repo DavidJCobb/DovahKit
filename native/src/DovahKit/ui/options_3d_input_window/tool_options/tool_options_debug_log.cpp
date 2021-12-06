@@ -12,12 +12,14 @@ namespace DK3DToolOptions {
       layout->addWidget(this->ui.spinbox, 0, 0);
       //
       this->ui.spinbox->setRange(0, 255);
+      QObject::connect(this->ui.spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Base::edited); // signal-to-signal
    }
 
    void DebugLog::_readOptions(const DK3D::tools::opaque_option_union& oou) {
       const auto* o = DK3D::tools::option_union::as<options_type>(oou);
       if (!o)
          return;
+      const auto blocker = QSignalBlocker(this->ui.spinbox);
       this->ui.spinbox->setValue(o->number);
    }
    void DebugLog::_writeOptions(DK3D::tools::opaque_option_union& oou) {

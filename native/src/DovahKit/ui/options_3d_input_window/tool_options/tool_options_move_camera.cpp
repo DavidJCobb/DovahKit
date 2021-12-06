@@ -1,5 +1,6 @@
 #include "tool_options_move_camera.h"
 #include "helpers/qt/combobox.h"
+#include "helpers/qt/mass_block_signals.h"
 #include "helpers/qt/mass_set_visible.h"
 #include "dk3d/tools/_options.h"
 
@@ -13,32 +14,35 @@ namespace DK3DToolOptions {
       QObject::connect(this, &Base::controlTypeChanged, this, &MoveCamera::_onControlTypeChanged);
       //
       {  // Configure spinboxes
-         auto cfg = [](QDoubleSpinBox* widget) {
+         auto cfg = [this](QDoubleSpinBox* widget) {
             widget->setRange(-max_move_distance, max_move_distance);
             widget->setValue(0);
             widget->setLayoutDirection(Qt::LayoutDirection::RightToLeft);
+            QObject::connect(widget, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.booleanX);
          cfg(this->ui.booleanY);
          cfg(this->ui.booleanZ);
       }
       {  // Configure reference frames
-         auto cfg = [](QComboBox* widget) {
+         auto cfg = [this](QComboBox* widget) {
             widget->clear();
             widget->addItem(tr("Camera",  "reference frame"), (int)DK3D::ReferenceFrame::Camera);
             widget->addItem(tr("World",   "reference frame"), (int)DK3D::ReferenceFrame::World);
             widget->addItem(tr("Local",   "reference frame"), (int)DK3D::ReferenceFrame::Local);
             widget->addItem(tr("Current", "reference frame"), (int)DK3D::ReferenceFrame::Current);
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.referenceFrame);
          cfg(this->ui.referenceFrameSel);
       }
       {  // Configure 3D axes
-         auto cfg = [](QComboBox* widget) {
+         auto cfg = [this](QComboBox* widget) {
             widget->clear();
             widget->addItem(tr("X", "3D axis"), (int)DK3D::Axis3D::X);
             widget->addItem(tr("Y", "3D axis"), (int)DK3D::Axis3D::Y);
             widget->addItem(tr("Z", "3D axis"), (int)DK3D::Axis3D::Z);
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.scalarAxis);
          cfg(this->ui.vectorXAxis);
@@ -51,16 +55,19 @@ namespace DK3DToolOptions {
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorXSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorYSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
          widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
          widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
       }
       //
       this->_onControlTypeChanged();
@@ -90,6 +97,21 @@ namespace DK3DToolOptions {
       if (!o)
          return;
       auto& options = *o;
+      //
+      auto blockers = cobb::qt::mass_signal_blocker(
+         this->ui.referenceFrame,
+         this->ui.referenceFrameSel,
+         this->ui.alsoMoveSelection,
+         this->ui.booleanX,
+         this->ui.booleanY,
+         this->ui.booleanZ,
+         this->ui.scalarAxis,
+         this->ui.scalarSign,
+         this->ui.vectorXAxis,
+         this->ui.vectorXSign,
+         this->ui.vectorYAxis,
+         this->ui.vectorYSign
+      );
       //
       cobb::qt::set_combobox_value(this->ui.referenceFrame,    options.reference_frames.baseline);
       cobb::qt::set_combobox_value(this->ui.referenceFrameSel, options.reference_frames.selection);

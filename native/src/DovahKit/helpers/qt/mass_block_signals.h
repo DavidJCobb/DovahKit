@@ -15,7 +15,18 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <array>
+#include <type_traits>
+#include <QObject>
+#include <QSignalBlocker>
+#include "../concepts.h"
 
-namespace cobb {
-   extern void set_current_thread_name(const wchar_t*);
+namespace cobb::qt {
+   template<typename... Types> requires cobb::is_base_of_all<QObject, std::remove_pointer_t<Types>...>
+   struct mass_signal_blocker {
+      protected:
+         std::array<QSignalBlocker, sizeof...(Types)> blockers;
+      public:
+         mass_signal_blocker(Types... t) : blockers({ QSignalBlocker(t)... }) {}
+   };
 }

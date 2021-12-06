@@ -676,6 +676,7 @@
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
+    <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
