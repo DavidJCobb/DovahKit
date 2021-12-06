@@ -24,7 +24,7 @@ namespace {
 }
 
 namespace DK3D::tools {
-   void move_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) {
+   void move_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
       if (!input.active())
          return;
       const auto* o = option_union::as<options>(raw_options);

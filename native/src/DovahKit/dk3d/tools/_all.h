@@ -52,7 +52,8 @@ namespace DK3D {
       return id_of_tool_options<T>();
    }
 
-   template<typename Options> concept is_tool_options = all_tools::has_matching<impl::id_of_tool_by_options<Options>::functor>;
+   // can't use a concept here, apparently due to MSVC issues with template template parameters
+   template<typename Options> inline constexpr bool is_tool_options = ([]() { return all_tools::has_matching<impl::id_of_tool_by_options<Options>::functor>(); })();
 
    class all_tool_instances {
       public:

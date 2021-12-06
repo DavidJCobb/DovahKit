@@ -4,7 +4,7 @@
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
 namespace DK3D::tools {
-   void turn_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) {
+   void turn_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
       if (!input.active())
          return;
       const auto* o = option_union::as<options>(raw_options);

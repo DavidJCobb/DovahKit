@@ -97,7 +97,7 @@ namespace cobb {
 
          template<template<typename T> typename functor> requires class_list_concepts::IsIndexOfMatchingFunctor<functor>
          static constexpr bool has_matching() {
-            return index_of_matching<functor> != (size_t)-1;
+            return (index_of_matching<functor>() != (size_t)-1);
          }
 
          template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsForEachFunctor<functor>

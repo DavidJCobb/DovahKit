@@ -3,36 +3,17 @@
 namespace {
    #pragma region Machinery for: option_union::construct_for_type
    template<typename T> DK3D::tools::option_union default_construct_union() {
-      if constexpr (tool_has_options_member_type<T>) {
+      if constexpr (DK3D::tools::tool_has_options_member_type<T>) {
          return DK3D::tools::option_union(T::options());
       }
       return DK3D::tools::option_union();
    }
-   using option_union_constructor = DK3D::tools::option_union(*)();
 
    template<typename T> struct _types_to_constructors;
    template<typename... Types> struct _types_to_constructors<std::tuple<Types...>> {
-      static constexpr size_t size = sizeof...(Types);
-
-      static std::array<option_union_constructor, size> value = { &default_construct_union<Types>, ... };
+      static constexpr const auto value = std::array{ &default_construct_union<Types>... };
    };
-   static const auto union_constructors_by_id = _types_to_constructors<DK3D::all_tools::as_tuple>::value;
-   #pragma endregion
-
-   #pragma region Machinery for: option_union::_destroy_data
-   template<typename T> void destroy_union_data(DK3D::tools::option_union& ou) {
-      if constexpr (tool_has_options_member_type<T>) {
-         auto* p = (T*)ou.data.data();
-         p->~T();
-      }
-   }
-   template<typename T> struct _types_to_destructors;
-   template<typename... Types> struct _types_to_destructors<std::tuple<Types...>> {
-      static constexpr size_t size = sizeof...(Types);
-
-      static std::array<decltype(destroy_union_data<void>), size> value = { &destroy_union_data<Types>, ... };
-   };
-   static const auto union_data_destructors_by_id = _types_to_destructors<DK3D::all_tools::as_tuple>::value;
+   static constexpr const auto union_constructors_by_id = _types_to_constructors<DK3D::all_tools::as_tuple>::value;
    #pragma endregion
 }
 

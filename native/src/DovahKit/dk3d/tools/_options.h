@@ -4,6 +4,9 @@
 #include "_all.h"
 
 namespace DK3D::tools {
+   namespace impl::option_union {
+   }
+
    struct option_union : impl::option_union_base {
       //
       // This is a tagged union constructed at compile-time from a cobb::class_list. It 
@@ -27,7 +30,25 @@ namespace DK3D::tools {
 
          alignas(_required_alignment) std::array<uint8_t, _required_size> data;
 
+         #pragma region Data destructors
+            #pragma region Metaprogramming
+            template<typename T> static void _typed_data_destructor(DK3D::tools::option_union& ou) {
+               if constexpr (DK3D::tools::tool_has_options_member_type<T>) {
+                  auto* p = (T*)ou.data.data();
+                  p->~T();
+               }
+            }
+            //
+            template<typename T> struct _types_to_destructors;
+            template<typename... Types> struct _types_to_destructors<std::tuple<Types...>> {
+               static constexpr const auto value = std::array{ &_typed_data_destructor<Types>... };
+            };
+            //
+            static constexpr const auto union_data_destructors_by_id = _types_to_destructors<DK3D::all_tools::as_tuple>::value;
+            #pragma endregion
+
          void _destroy_data();
+         #pragma endregion
 
       public:
          option_union() : impl::option_union_base(id_of_none) {}
@@ -75,7 +96,7 @@ namespace DK3D::tools {
             return (T*)this->data.data();
          }
          template<typename T> requires (id_of_tool<T>() != id_of_none) inline static T* as(option_union_base& b) {
-            return ((const option_union*)&b)->as<T>();
+            return ((option_union*)&b)->as<T>();
          }
 
          static option_union construct_for_type(tool_id);

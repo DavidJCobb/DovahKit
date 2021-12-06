@@ -1,10 +1,8 @@
 #pragma once
 #include "ui_options_3d_input_window.h"
 #include "widgets/DKBoundInputWidget.h"
+#include "dk3d/Binding.h"
 
-namespace DK3D {
-   struct Binding;
-}
 namespace DK3DToolOptions {
    class Base;
 }

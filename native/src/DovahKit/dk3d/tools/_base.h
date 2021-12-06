@@ -43,10 +43,11 @@ namespace DK3D::tools {
          static constexpr const char* function_name = "unnamed";
          const char* name = function_name;
 
-         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) = 0;
+         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const = 0;
 
          virtual bool has_options() const { return false; }
    };
 
    template<typename T> concept tool_has_options_member_type = requires { typename T::options; requires std::is_base_of_v<base, T>; };
+   template<typename T> concept tool_lacks_options_member_type = !tool_has_options_member_type<T> && std::is_base_of_v<base, T>;
 }

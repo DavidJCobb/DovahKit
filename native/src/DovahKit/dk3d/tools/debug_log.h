@@ -18,7 +18,7 @@ namespace DK3D::tools {
             int number = 0;
          };
       public:
-         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) override;
+         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const override;
 
          virtual bool has_options() const { return true; }
    };

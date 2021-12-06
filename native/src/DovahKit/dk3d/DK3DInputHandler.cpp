@@ -46,12 +46,12 @@ DK3DInputHandler::DK3DInputHandler() {
          _bind{ 'Q',  0,  0,  1 },
          _bind{ 'Z',  0,  0, -1 },
       };
-      auto* func = &editor_functions::move_camera::get();
+      auto* func = &tools::move_camera::get();
       for (const auto& b : _binds) {
          kb.push_back(Binding(
             BoundInput::from_key(b.key, BooleanInputMod::While),
             func,
-            editor_functions::move_camera::options{
+            tools::move_camera::options{
                .reference_frames = {
                   .baseline  = ReferenceFrame::Camera,
                   .selection = ReferenceFrame::Camera,
@@ -75,12 +75,12 @@ DK3DInputHandler::DK3DInputHandler() {
          _bind{ 'R',  1,  0 },
          _bind{ 'V', -1,  0 },
       };
-      auto* func = &editor_functions::turn_camera::get();
+      auto* func = &tools::turn_camera::get();
       for (const auto& b : _binds) {
          kb.push_back(Binding(
             BoundInput::from_key(b.key, BooleanInputMod::While),
             func,
-            editor_functions::turn_camera::options{
+            tools::turn_camera::options{
                .magnitudes = {.yaw = b.z, .pitch = b.x },
             }
          ));
@@ -88,7 +88,7 @@ DK3DInputHandler::DK3DInputHandler() {
    }
    {  // gamepad functions: move camera
       auto& gb   = this->binds.gamepad;
-      auto* func = &editor_functions::move_camera::get();
+      auto* func = &tools::move_camera::get();
       //
       gb.push_back(Binding( // Lateral
          BoundInput{
@@ -97,7 +97,7 @@ DK3DInputHandler::DK3DInputHandler() {
             },
          },
          func,
-         editor_functions::move_camera::options{
+         tools::move_camera::options{
             .reference_frames = {
                .baseline  = ReferenceFrame::Camera,
                .selection = ReferenceFrame::Camera,
@@ -120,7 +120,7 @@ DK3DInputHandler::DK3DInputHandler() {
             },
          },
          func,
-         editor_functions::move_camera::options{
+         tools::move_camera::options{
             .reference_frames = {
                .baseline  = ReferenceFrame::Camera,
                .selection = ReferenceFrame::Camera,
@@ -138,7 +138,7 @@ DK3DInputHandler::DK3DInputHandler() {
             },
          },
          func,
-         editor_functions::move_camera::options{
+         tools::move_camera::options{
             .reference_frames = {
                .baseline  = ReferenceFrame::Camera,
                .selection = ReferenceFrame::Camera,
@@ -155,8 +155,8 @@ DK3DInputHandler::DK3DInputHandler() {
                .input = VectorControl::XInput_RS,
             },
          },
-         &editor_functions::turn_camera::get(),
-         editor_functions::turn_camera::options{
+         &tools::turn_camera::get(),
+         tools::turn_camera::options{
             .non_button = {
                .input_x = CameraTurnAxis::Yaw,
                .input_y = CameraTurnAxis::Pitch,
@@ -177,8 +177,8 @@ DK3DInputHandler::DK3DInputHandler() {
                .type = BooleanInputMod::Tap,
             },
          },
-         &editor_functions::debug_log::get(),
-         editor_functions::debug_log::options{ .number = 1 }
+         &tools::debug_log::get(),
+         tools::debug_log::options{ .number = 1 }
       ));
       gb.push_back(Binding(
          BoundInput{
@@ -189,8 +189,8 @@ DK3DInputHandler::DK3DInputHandler() {
                .type = BooleanInputMod::Hold,
             },
          },
-         &editor_functions::debug_log::get(),
-         editor_functions::debug_log::options{ .number = 2 }
+         &tools::debug_log::get(),
+         tools::debug_log::options{ .number = 2 }
       ));
       gb.push_back(Binding(
          BoundInput{
@@ -201,8 +201,8 @@ DK3DInputHandler::DK3DInputHandler() {
                .type = BooleanInputMod::While,
             },
          },
-         &editor_functions::debug_log::get(),
-         editor_functions::debug_log::options{ .number = 3 }
+         &tools::debug_log::get(),
+         tools::debug_log::options{ .number = 3 }
       ));
    }
 }
