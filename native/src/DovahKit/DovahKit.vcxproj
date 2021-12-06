@@ -110,12 +110,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dk3d\BoundInput.cpp" />
+    <ClCompile Include="dk3d\DK3DBindingOptionsContainerWidget.cpp" />
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
-    <ClCompile Include="dk3d\editor_functions\debug_log.cpp" />
-    <ClCompile Include="dk3d\editor_functions\move_camera.cpp" />
-    <ClCompile Include="dk3d\editor_functions\turn_camera.cpp" />
+    <ClCompile Include="dk3d\tools\debug_log.cpp" />
+    <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
+    <ClCompile Include="dk3d\tools\move_camera.cpp" />
+    <ClCompile Include="dk3d\tools\turn_camera.cpp" />
     <ClCompile Include="dk3d\InputResult.cpp" />
     <ClCompile Include="dk3d\OSKeyboardState.cpp" />
+    <ClCompile Include="dk3d\tools\_all.cpp" />
+    <ClCompile Include="dk3d\tools\_options.cpp" />
     <ClCompile Include="dk3d\XInputGamepadState.cpp" />
     <ClCompile Include="dovahscript\api_helpers\load_resource.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
@@ -526,6 +530,13 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_base.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp" />
+    <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
@@ -626,12 +637,15 @@
     <QtMoc Include="widgets\DKKeyPickerWidget.h" />
     <QtMoc Include="dk3d\DK3DInputHandler.h" />
     <ClInclude Include="dk3d\defaults.h" />
-    <ClInclude Include="dk3d\editor_functions\debug_log.h" />
-    <ClInclude Include="dk3d\editor_functions\move_camera.h" />
-    <ClInclude Include="dk3d\editor_functions\turn_camera.h" />
-    <ClInclude Include="dk3d\editor_functions\_all.h" />
-    <ClInclude Include="dk3d\editor_functions\_base.h" />
-    <ClInclude Include="dk3d\editor_functions\_options.h" />
+    <QtMoc Include="dk3d\DK3DBindingOptionsContainerWidget.h" />
+    <ClInclude Include="dk3d\enums\InputDevice.h" />
+    <ClInclude Include="dk3d\tools\debug_log.h" />
+    <ClInclude Include="dk3d\tools\debug_placeholder.h" />
+    <ClInclude Include="dk3d\tools\move_camera.h" />
+    <ClInclude Include="dk3d\tools\turn_camera.h" />
+    <ClInclude Include="dk3d\tools\_all.h" />
+    <ClInclude Include="dk3d\tools\_base.h" />
+    <ClInclude Include="dk3d\tools\_options.h" />
     <ClInclude Include="dk3d\enums\Axis3D.h" />
     <ClInclude Include="dk3d\enums\AxisPlane.h" />
     <ClInclude Include="dk3d\enums\CameraTurnAxis.h" />
@@ -662,6 +676,7 @@
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
+    <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\dk3d_debug_rebind.h" />
@@ -671,6 +686,13 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h" />
+    <QtMoc Include="ui\options_window\options_window.h" />
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.h" />
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.h" />
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.h" />
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.h" />
+    <QtMoc Include="ui\options_3d_input_window\options_3d_input_window.h" />
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_base.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
@@ -1281,6 +1303,11 @@
     <QtUic Include="ui\main_window\save_window.ui" />
     <QtUic Include="ui\main_window\script_window_package.ui" />
     <QtUic Include="ui\main_window\script_window_single.ui" />
+    <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui" />
+    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui" />
+    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui" />
+    <QtUic Include="ui\options_window\options_window.ui" />
+    <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="shaders\all_compiled.qrc" />

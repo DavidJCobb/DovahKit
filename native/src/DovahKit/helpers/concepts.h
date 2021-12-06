@@ -44,6 +44,11 @@ namespace cobb {
       requires sizeof...(Ts) < 2 || std::conjunction_v<std::is_same<std::tuple_element_t<0, std::tuple<Ts...>>, Ts>...>;
    };
 
+   template<typename Base, class... Ts> concept is_base_of_all = requires {
+      requires sizeof...(Ts) > 0;
+      requires (std::is_base_of_v<Base, Ts> && ...);
+   };
+
    //
    // There are only two ways to make a template take a std::array instance as a parameter:
    // 

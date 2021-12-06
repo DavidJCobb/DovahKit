@@ -30,7 +30,7 @@ DK3DInputHandler::DK3DInputHandler() {
    // Default bindings for testing:
    //
    {  // keyboard functions: move camera
-      auto& kb = this->binds.keyboard.list;
+      auto& kb = this->binds.keyboard;
       //
       struct _bind {
          const char key;
@@ -62,7 +62,7 @@ DK3DInputHandler::DK3DInputHandler() {
       }
    }
    {  // keyboard functions: turn camera
-      auto& kb = this->binds.keyboard.list;
+      auto& kb = this->binds.keyboard;
       //
       struct _bind {
          const char key;
@@ -87,7 +87,7 @@ DK3DInputHandler::DK3DInputHandler() {
       }
    }
    {  // gamepad functions: move camera
-      auto& gb   = this->binds.gamepad.list;
+      auto& gb   = this->binds.gamepad;
       auto* func = &editor_functions::move_camera::get();
       //
       gb.push_back(Binding( // Lateral
@@ -148,7 +148,7 @@ DK3DInputHandler::DK3DInputHandler() {
       ));
    }
    {  // gamepad functions: turn camera
-      auto& gb = this->binds.gamepad.list;
+      auto& gb = this->binds.gamepad;
       gb.push_back(Binding( // Lateral
          BoundInput{
             .vector = {
@@ -167,7 +167,7 @@ DK3DInputHandler::DK3DInputHandler() {
       ));
    }
    {  // Gamepad functions: test echo
-      auto& gb = this->binds.gamepad.list;
+      auto& gb = this->binds.gamepad;
       gb.push_back(Binding(
          BoundInput{
             .boolean = {
@@ -205,45 +205,6 @@ DK3DInputHandler::DK3DInputHandler() {
          editor_functions::debug_log::options{ .number = 3 }
       ));
    }
-   //
-   // Hardcoded bindings for testing:
-   //
-   if constexpr (!test_function_binds) {
-      auto& cb = this->binds.keyboard.camera.move;
-      cb.forward = BoundInput::from_key('W', BooleanInputMod::While);
-      cb.back    = BoundInput::from_key('S', BooleanInputMod::While);
-      cb.left    = BoundInput::from_key('A', BooleanInputMod::While);
-      cb.right   = BoundInput::from_key('D', BooleanInputMod::While);
-      cb.up      = BoundInput::from_key('Q', BooleanInputMod::While);
-      cb.down    = BoundInput::from_key('Z', BooleanInputMod::While);
-   }
-   if constexpr (!test_function_binds) {
-      auto& ct = this->binds.keyboard.camera.turn;
-      ct.left  = BoundInput::from_key('G', BooleanInputMod::While);
-      ct.right = BoundInput::from_key('H', BooleanInputMod::While);
-      ct.up    = BoundInput::from_key('R', BooleanInputMod::While);
-      ct.down  = BoundInput::from_key('V', BooleanInputMod::While);
-   }
-   if constexpr (!test_function_binds) {
-      auto& cb = this->binds.gamepad.camera.move;
-      cb.lateral.vector.input = VectorControl::XInput_LS;
-      cb.down = BoundInput::from_xinput_button(DK3D::XInputKey::LB, BooleanInputMod::While);
-      cb.up = BoundInput::from_xinput_button(DK3D::XInputKey::RB, BooleanInputMod::While);
-   }
-   if constexpr (!test_function_binds) {
-      auto& cb = this->binds.gamepad.camera.turn;
-      cb.yaw.scalar.input = ScalarControl::XInput_RS;
-      cb.yaw.scalar.axis  = Axis2D::X;
-      cb.pitch.scalar.input = ScalarControl::XInput_RS;
-      cb.pitch.scalar.axis  = Axis2D::Y;
-   }
-   //
-   if constexpr (!test_function_binds) { // Test binds:
-      auto& cb = this->binds.gamepad;
-      cb.test_tap   = BoundInput::from_xinput_button(DK3D::XInputKey::X, BooleanInputMod::Tap);
-      cb.test_hold  = BoundInput::from_xinput_button(DK3D::XInputKey::Y, BooleanInputMod::Hold);
-      cb.test_while = BoundInput::from_xinput_button(DK3D::XInputKey::B, BooleanInputMod::While);
-   }
 }
 DK3DInputHandler::~DK3DInputHandler() {
 }
@@ -255,10 +216,10 @@ float DK3DInputHandler::scalarControlValue(ScalarControl c, Axis2D axis) const {
          return 0;
       case _::MouseMove:
          if (axis == Axis2D::X)
-            return this->state.mousemove.x;
-         return this->state.mousemove.y;
+            return this->keyboard_state.mouse.move.x();
+         return this->keyboard_state.mouse.move.y();
       case _::MouseWheel:
-         return this->state.mousemove.wheel;
+         return 0; // TODO
    }
    auto& xi = DKXInputSubsystem::get();
    if (!xi.isGamepadConnected())
@@ -287,7 +248,7 @@ QPointF DK3DInputHandler::vectorControlValue(VectorControl c) const {
       case _::None:
          return { 0, 0 };
       case _::MouseMove:
-         return { (qreal)this->state.mousemove.x, (qreal)this->state.mousemove.y };
+         return this->keyboard_state.mouse.move;
    }
    auto& xi = DKXInputSubsystem::get();
    if (!xi.isGamepadConnected())
@@ -348,6 +309,16 @@ void DK3DInputHandler::updateAllKeys(timestamp_t now) {
    this->gamepad_state.update(now, xinput.isGamepadConnected(), xinput.gamepadState());
 }
 
+QVector<Binding> DK3DInputHandler::bindingsFor(InputDevice d) const {
+   switch (d) {
+      using _ = InputDevice;
+      case _::KeyboardMouse:
+         return this->binds.keyboard;
+      case _::XInput:
+         return this->binds.gamepad;
+   }
+   return QVector<Binding>();
+}
 void DK3DInputHandler::viewFocusChange(DKVulkanView* target, bool has_focus) {
    if (has_focus) {
       this->setTargetView(target);
@@ -387,96 +358,10 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    this->updateAllKeys(now);
    bool has_gamepad = this->gamepad_state.is_connected;
    //
-   if (has_gamepad) {
-      auto& gp = this->binds.gamepad;
-      if (inputResultOf(gp.test_tap).active()) {
-         qDebug("[DK3DInputHandler] \"Tap\" test bind activated.");
-      }
-      if (inputResultOf(gp.test_hold).active()) {
-         qDebug("[DK3DInputHandler] \"Hold\" test bind activated.");
-      }
-      auto tw = inputResultOf(gp.test_while);
-      if (tw.while_has_changed) {
-         if (tw.active()) {
-            qDebug("[DK3DInputHandler] \"While\" test bind has started...");
-         } else {
-            qDebug("[DK3DInputHandler] \"While\" test bind has ended.");
-         }
-      }
-   }
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
    update.move.speed    = 1.0;
-   {
-      auto& km = this->binds.keyboard.camera.move;
-      auto& cm = update.move.direction;
-      if (inputResultOf(km.forward).active()) {
-         cm.y += 1;
-      }
-      if (inputResultOf(km.back).active()) {
-         cm.y -= 1;
-      }
-      if (inputResultOf(km.left).active()) {
-         cm.x -= 1;
-      }
-      if (inputResultOf(km.right).active()) {
-         cm.x += 1;
-      }
-      if (inputResultOf(km.up).active()) {
-         cm.z += 1;
-      }
-      if (inputResultOf(km.down).active()) {
-         cm.z -= 1;
-      }
-      //
-      if (has_gamepad) {
-         auto& gm = this->binds.gamepad.camera.move;
-         auto  lateral = inputResultOf(gm.lateral);
-         if (lateral.active()) {
-            cm.x += lateral.x; // stick right is positive; left is negative
-            cm.y += lateral.y; // stick up    is positive; down is negative
-         }
-         if (inputResultOf(gm.up).active()) {
-            cm.z += 1;
-         }
-         if (inputResultOf(gm.down).active()) {
-            cm.z -= 1;
-         }
-      }
-   }
-   update.turn.speed = glm::radians(90.0F);
-   {
-      auto& km = this->binds.keyboard.camera.turn;
-      auto& cm = update.turn;
-      if (inputResultOf(km.left).active()) {
-         cm.yaw += 1;
-      }
-      if (inputResultOf(km.right).active()) {
-         cm.yaw -= 1;
-      }
-      if (inputResultOf(km.up).active()) {
-         cm.pitch -= 1;
-      }
-      if (inputResultOf(km.down).active()) {
-         cm.pitch += 1;
-      }
-      if (has_gamepad) {
-         auto& gm    = this->binds.gamepad.camera.turn;
-         auto  yaw   = inputResultOf(gm.yaw);
-         auto  pitch = inputResultOf(gm.pitch);
-         if (yaw.active()) {
-            cm.yaw += yaw.x;
-         }
-         if (pitch.active()) {
-            cm.pitch += pitch.x;
-         }
-      }
-      double speed = sqrt((cm.yaw * cm.yaw) + (cm.pitch * cm.pitch));
-      speed = std::clamp(speed, 0.0, 1.0);
-      update.turn.speed *= speed;
-   }
-
-   for (auto& bind : this->binds.keyboard.list) {
+   for (auto& bind : this->binds.keyboard) {
       if (!bind.function)
          continue;
       auto r = inputResultOf(bind.input);
@@ -485,7 +370,7 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
       }
    }
    if (has_gamepad) {
-      for (auto& bind : this->binds.gamepad.list) {
+      for (auto& bind : this->binds.gamepad) {
          if (!bind.function)
             continue;
          auto r = inputResultOf(bind.input);
@@ -496,6 +381,20 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    }
 
    return update;
+}
+
+void DK3DInputHandler::setBindingsFor(InputDevice d, const QVector<Binding>& b) {
+   switch (d) {
+      using _ = InputDevice;
+      case _::KeyboardMouse:
+         this->binds.keyboard = b;
+         break;
+      case _::XInput:
+         this->binds.gamepad = b;
+         break;
+      default:
+         return;
+   }
 }
 
 #include <QDialog>
@@ -514,12 +413,17 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
    {
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, body);
       //
-      layout->addWidget(new QLabel("Keyboard:", body));
+      layout->addWidget(new QLabel("KEYBOARD:", body));
       {
-         auto& list = this->binds.keyboard.list;
+         auto& list = this->binds.keyboard;
          auto  size = list.size();
          for (size_t i = 0; i < size; ++i) {
             auto& bind = list[i];
+            if (bind.function) {
+               layout->addWidget(new QLabel(bind.function->name, body));
+            } else {
+               layout->addWidget(new QLabel("no function", body));
+            }
             auto* t = new DKBoundInputWidget(body);
             t->setProperty("DK3D-input-index", i);
             t->setInputDevice(DKBoundInputWidget::InputDevice::KeyboardMouse);
@@ -527,9 +431,9 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
             layout->addWidget(t);
          }
       }
-      layout->addWidget(new QLabel("Gamepad:", body));
+      layout->addWidget(new QLabel("GAMEPAD:", body));
       {
-         auto& list = this->binds.gamepad.list;
+         auto& list = this->binds.gamepad;
          auto  size = list.size();
          for (size_t i = 0; i < size; ++i) {
             auto& bind = list[i];
@@ -545,28 +449,6 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
             layout->addWidget(t);
          }
       }
-      /*{  // Gamepad: Test Tap
-         auto* t = new DKBoundInputWidget(body);
-         t->setObjectName("gamepad.test_tap");
-         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
-         t->setValue(this->binds.gamepad.test_tap);
-         layout->addWidget(t);
-      }
-      {  // Gamepad: Test Hold
-         auto* t = new DKBoundInputWidget(body);
-         t->setObjectName("gamepad.test_hold");
-         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
-         t->setValue(this->binds.gamepad.test_hold);
-         layout->addWidget(t);
-      }
-      {  // Gamepad: Test While
-         auto* t = new DKBoundInputWidget(body);
-         t->setObjectName("gamepad.test_while");
-         t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
-         t->setValue(this->binds.gamepad.test_while);
-         layout->addWidget(t);
-      }*/
-      //
       scroll->setWidget(body);
    }
    auto* save = new QPushButton("Save", dialog);
@@ -583,24 +465,13 @@ void DK3DInputHandler::debugOpenBindEditWindow() {
          switch (widget->inputDevice()) {
             using _ = DKBoundInputWidget::InputDevice;
             case _::KeyboardMouse:
-               this->binds.keyboard.list[i].input = widget->value();
+               this->binds.keyboard[i].input = widget->value();
                break;
             case _::XInput:
-               this->binds.gamepad.list[i].input = widget->value();
+               this->binds.gamepad[i].input = widget->value();
                break;
          }
       }
-      /*//
-      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_tap")) {
-         this->binds.gamepad.test_tap = w->value();
-      }
-      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_hold")) {
-         this->binds.gamepad.test_hold = w->value();
-      }
-      if (auto* w = body->findChild<DKBoundInputWidget*>("gamepad.test_while")) {
-         this->binds.gamepad.test_while = w->value();
-      }
-      //*/
       //
       dialog->accept();
    });

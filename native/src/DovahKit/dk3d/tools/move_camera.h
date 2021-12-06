@@ -4,7 +4,7 @@
 #include "../enums/ReferenceFrame.h"
 #include "../enums/Sign.h"
 
-namespace DK3D::editor_functions {
+namespace DK3D::tools {
    class move_camera : public base {
       public:
          static constexpr const char* function_name = "move_camera";
@@ -37,5 +37,7 @@ namespace DK3D::editor_functions {
          };
       public:
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) override;
+
+         virtual bool has_options() const { return true; }
    };
 }

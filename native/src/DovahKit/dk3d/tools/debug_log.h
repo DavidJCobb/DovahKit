@@ -1,7 +1,7 @@
 #pragma once
 #include "_base.h"
 
-namespace DK3D::editor_functions {
+namespace DK3D::tools {
    class debug_log : public base {
       public:
          static constexpr const char* function_name = "debug_log";
@@ -19,5 +19,7 @@ namespace DK3D::editor_functions {
          };
       public:
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) override;
+
+         virtual bool has_options() const { return true; }
    };
 }

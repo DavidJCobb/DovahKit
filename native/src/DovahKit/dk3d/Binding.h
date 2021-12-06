@@ -1,16 +1,18 @@
 #pragma once
+#include <QString>
 #include "BoundInput.h"
-#include "editor_functions/_options.h"
+#include "tools/_options.h"
 
 namespace DK3D {
-   namespace editor_functions {
+   namespace tools {
       class base;
    }
 
    struct Binding {
+      QString name;
       BoundInput input;
-      editor_functions::base*        function = nullptr;
-      editor_functions::option_union params;
+      const tools::base*  function = nullptr;
+      tools::option_union params;
 
       Binding() {}
 

@@ -11,6 +11,7 @@
 #include "InputResult.h"
 #include "OSKeyboardState.h"
 #include "XInputGamepadState.h"
+#include "enums/InputDevice.h"
 #include "widgets/DKVulkanView.h"
 
 class DK3DInputHandler : public QObject {
@@ -39,6 +40,7 @@ class DK3DInputHandler : public QObject {
       InputResult inputResultOf(const BoundInput&) const;
 
    public:
+      QVector<Binding> bindingsFor(DK3D::InputDevice) const;
       void viewFocusChange(DKVulkanView* target, bool has_focus);
 
    public slots:
@@ -46,6 +48,7 @@ class DK3DInputHandler : public QObject {
       DKVulkanCameraUpdate update(DKVulkanView* subject); // TODO: should return something else -- a more complete command list -- in the future
 
       void debugOpenBindEditWindow(); // opens a window for testing, to edit keybinds; we'll be able to use the normal UI once bindings are less hardcoded
+      void setBindingsFor(DK3D::InputDevice, const QVector<Binding>&);
 
    protected slots:
       void ignoreAllHeldKeys(timestamp_t now = DK3D::zero_timestamp);
@@ -58,53 +61,9 @@ class DK3DInputHandler : public QObject {
       struct {
          QPointer<DKVulkanView> target_view;
          timestamp_t last_update = DK3D::zero_timestamp;
-         struct {
-            int32_t x     = 0;
-            int32_t y     = 0;
-            int32_t wheel = 0;
-         } mousemove;
       } state;
       struct {
-         //
-         // Bindings are still hardcoded for now.
-         //
-         struct {
-            struct {
-               struct {
-                  BoundInput forward;
-                  BoundInput back;
-                  BoundInput left;
-                  BoundInput right;
-                  BoundInput up;
-                  BoundInput down;
-               } move;
-               struct {
-                  BoundInput left;
-                  BoundInput right;
-                  BoundInput up;
-                  BoundInput down;
-               } turn;
-            } camera;
-            //
-            QVector<Binding> list;
-         } keyboard;
-         struct {
-            struct {
-               struct {
-                  BoundInput lateral;
-                  BoundInput down;
-                  BoundInput up;
-               } move;
-               struct {
-                  BoundInput yaw;
-                  BoundInput pitch;
-               } turn;
-            } camera;
-            BoundInput test_tap;
-            BoundInput test_hold;
-            BoundInput test_while;
-            //
-            QVector<Binding> list;
-         } gamepad;
+         QVector<Binding> keyboard;
+         QVector<Binding> gamepad;
       } binds;
 };

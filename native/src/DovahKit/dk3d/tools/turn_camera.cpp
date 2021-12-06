@@ -3,7 +3,7 @@
 #include "../InputResult.h"
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
-namespace DK3D::editor_functions {
+namespace DK3D::tools {
    void turn_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) {
       if (!input.active())
          return;

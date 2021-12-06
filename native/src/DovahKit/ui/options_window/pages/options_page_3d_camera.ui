@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OptionsPage3DCamera</class>
+ <widget class="QWidget" name="OptionsPage3DCamera">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>548</width>
+    <height>491</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>3D Camera and View</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="cameraSpeeds">
+     <property name="whatsThis">
+      <string>The camera in a 3D view can be switched between three separate speeds (Normal, Precision, and Boost) using assigned keys. Here, you can control how fast each speed actually is.</string>
+     </property>
+     <property name="title">
+      <string>Camera speeds</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Normal</string>
+        </property>
+        <property name="buddy">
+         <cstring>cameraSpeedNormal</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="cameraSpeedNormal">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>128.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Precision</string>
+        </property>
+        <property name="buddy">
+         <cstring>cameraSpeedPrecision</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="cameraSpeedPrecision">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>128.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.500000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Boost</string>
+        </property>
+        <property name="buddy">
+         <cstring>cameraSpeedBoost</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="cameraSpeedBoost">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>128.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>3.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>16</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="sky">
+     <property name="title">
+      <string>Sky and weather</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0" colspan="2">
+       <widget class="QCheckBox" name="enableSky">
+        <property name="text">
+         <string>Enable sky by default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Time of day:</string>
+        </property>
+        <property name="buddy">
+         <cstring>timeOfDay</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QTimeEdit" name="timeOfDay">
+        <property name="whatsThis">
+         <string>Control the default time of day used by the Render Window for outdoor scenes and certain indoor lights.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="timeSpec">
+         <enum>Qt::UTC</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QGroupBox" name="moons">
+        <property name="whatsThis">
+         <string>Control how DovahKit displays Tamriel's two moons.</string>
+        </property>
+        <property name="title">
+         <string>Moons</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="masser">
+           <property name="title">
+            <string>Masser</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3" columnstretch="2,3,1">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Phase</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonPhaseMasser</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Visibility</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonVisibilityMasser</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Position</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonPosSliderMasser</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="moonPosSliderMasser">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QSpinBox" name="moonPositionMasser">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="suffix">
+               <string extracomment="degrees unit of measurement">°</string>
+              </property>
+              <property name="maximum">
+               <number>360</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QComboBox" name="moonPhaseMasser"/>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QDoubleSpinBox" name="moonVisibilityMasser">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="secunda">
+           <property name="title">
+            <string>Secunda</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4" columnstretch="2,3,1">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>Position</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonPosSliderSecunda</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Phase</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonPhaseSecunda</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="moonPosSliderSecunda">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Visibility</string>
+              </property>
+              <property name="buddy">
+               <cstring>moonVisibilitySecunda</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QSpinBox" name="moonPositionSecunda">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="suffix">
+               <string extracomment="degrees unit of measurement">°</string>
+              </property>
+              <property name="maximum">
+               <number>360</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QComboBox" name="moonPhaseSecunda"/>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QDoubleSpinBox" name="moonVisibilitySecunda">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1" rowspan="2">
+    <layout class="QGridLayout" name="gridLayout_5">
+     <property name="leftMargin">
+      <number>9</number>
+     </property>
+     <property name="topMargin">
+      <number>9</number>
+     </property>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Gizmo size:</string>
+       </property>
+       <property name="buddy">
+        <cstring>gizmoSize</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Bright light color:</string>
+       </property>
+       <property name="buddy">
+        <cstring>brightLightColor</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QGroupBox" name="defaultShowHide">
+       <property name="title">
+        <string>Default show/hide settings</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="defaultShowShadows">
+          <property name="whatsThis">
+           <string>Control whether shadows are rendered.</string>
+          </property>
+          <property name="text">
+           <string>Shadows</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="defaultShowCellBorders">
+          <property name="whatsThis">
+           <string>Control whether loaded cells in a worldspace have borders drawn along the edges of their heightmapped terrain.</string>
+          </property>
+          <property name="text">
+           <string>Cell borders</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="defaultShowGrass">
+          <property name="whatsThis">
+           <string>Control whether grass is rendered.</string>
+          </property>
+          <property name="text">
+           <string>Grass</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="defaultShowMarkers">
+          <property name="whatsThis">
+           <string>Control whether editor markers are rendered.</string>
+          </property>
+          <property name="text">
+           <string>Markers</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QCheckBox" name="defaultOrtho">
+       <property name="text">
+        <string>Use orthographic projection by default</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>16</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKColorPickerButton" name="brightLightColor">
+       <property name="whatsThis">
+        <string>Control the base color used when lighting and shadows are disabled.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="gizmoSize">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="minimum">
+        <number>32</number>
+       </property>
+       <property name="maximum">
+        <number>600</number>
+       </property>
+       <property name="value">
+        <number>125</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="defaultEnableLightShadow">
+       <property name="text">
+        <string>Enable lighting and shadows by default</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QPushButton" name="buttonEdit3DControls">
+       <property name="whatsThis">
+        <string>Open a dialog box where you can change the control schemes used in a 3D view.</string>
+       </property>
+       <property name="text">
+        <string>Modify 3D view controls...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>cameraSpeedNormal</tabstop>
+  <tabstop>cameraSpeedPrecision</tabstop>
+  <tabstop>cameraSpeedBoost</tabstop>
+  <tabstop>enableSky</tabstop>
+  <tabstop>timeOfDay</tabstop>
+  <tabstop>moons</tabstop>
+  <tabstop>moonPhaseMasser</tabstop>
+  <tabstop>moonVisibilityMasser</tabstop>
+  <tabstop>moonPosSliderMasser</tabstop>
+  <tabstop>moonPositionMasser</tabstop>
+  <tabstop>moonPhaseSecunda</tabstop>
+  <tabstop>moonVisibilitySecunda</tabstop>
+  <tabstop>moonPosSliderSecunda</tabstop>
+  <tabstop>moonPositionSecunda</tabstop>
+  <tabstop>defaultOrtho</tabstop>
+  <tabstop>gizmoSize</tabstop>
+  <tabstop>brightLightColor</tabstop>
+  <tabstop>defaultEnableLightShadow</tabstop>
+  <tabstop>defaultShowCellBorders</tabstop>
+  <tabstop>defaultShowGrass</tabstop>
+  <tabstop>defaultShowMarkers</tabstop>
+  <tabstop>defaultShowShadows</tabstop>
+  <tabstop>buttonEdit3DControls</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -89,9 +89,16 @@
      <string>Window</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="action3DViewInput"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuTools"/>
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -168,6 +175,11 @@
   <action name="actionRunScriptPackage">
    <property name="text">
     <string>Run script package...</string>
+   </property>
+  </action>
+  <action name="action3DViewInput">
+   <property name="text">
+    <string>3D view input options...</string>
    </property>
   </action>
  </widget>

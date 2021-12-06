@@ -22,6 +22,8 @@
    #include "main_window/default_object_window.h"
    #include "main_window/script_window_single.h"
    #include "main_window/script_window_package.h"
+   //
+   #include "options_3d_input_window/options_3d_input_window.h"
 #pragma endregion
 
 #include "../dovah/files/common.h"
@@ -261,6 +263,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       modal->setModal(true);
       modal->exec();
       modal->deleteLater();
+   });
+
+   QObject::connect(this->ui.action3DViewInput, &QAction::triggered, this, [this]() {
+      auto* win = Options3DInputDialog::open(this);
+      QObject::connect(win, &QDialog::finished, win, &QObject::deleteLater);
    });
 
    DovahKitDebug::add_features_to_menu(this->ui.menuDebug);

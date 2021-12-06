@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ToolOptionsTurnCamera</class>
+ <widget class="QWidget" name="ToolOptionsTurnCamera">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>124</height>
+   </rect>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,1">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_booleanZ">
+     <property name="text">
+      <string>Yaw:</string>
+     </property>
+     <property name="buddy">
+      <cstring>booleanZ</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QDoubleSpinBox" name="booleanZ"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_booleanX">
+     <property name="text">
+      <string>Pitch:</string>
+     </property>
+     <property name="buddy">
+      <cstring>booleanX</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="2">
+    <widget class="QDoubleSpinBox" name="booleanX"/>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_scalar">
+     <property name="text">
+      <string>Turn Along Axis:</string>
+     </property>
+     <property name="buddy">
+      <cstring>scalarAxis</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="scalarAxis"/>
+   </item>
+   <item row="2" column="2">
+    <widget class="QComboBox" name="scalarSign"/>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_vectorX">
+     <property name="text">
+      <string>Map Input X-Axis To:</string>
+     </property>
+     <property name="buddy">
+      <cstring>vectorXAxis</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_vectorY">
+     <property name="text">
+      <string>Map Input Y-Axis To:</string>
+     </property>
+     <property name="buddy">
+      <cstring>vectorYAxis</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="vectorXAxis"/>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="vectorYAxis"/>
+   </item>
+   <item row="3" column="2">
+    <widget class="QComboBox" name="vectorXSign"/>
+   </item>
+   <item row="4" column="2">
+    <widget class="QComboBox" name="vectorYSign"/>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>booleanZ</tabstop>
+  <tabstop>booleanX</tabstop>
+  <tabstop>scalarAxis</tabstop>
+  <tabstop>scalarSign</tabstop>
+  <tabstop>vectorXAxis</tabstop>
+  <tabstop>vectorXSign</tabstop>
+  <tabstop>vectorYAxis</tabstop>
+  <tabstop>vectorYSign</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
