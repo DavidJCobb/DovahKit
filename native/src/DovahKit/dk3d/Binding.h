@@ -17,9 +17,9 @@ namespace DK3D {
       Binding() {}
 
       template<typename T> requires tools::tool_has_options_member_type<T>
-      Binding(const BoundInput& bi, T* f, const typename T::options& o) : input(bi), function(f), params(o) {}
+      Binding(const QString& n, const BoundInput& bi, T* f, const typename T::options& o) : name(n), input(bi), function(f), params(o) {}
 
       template<typename T> requires tools::tool_lacks_options_member_type<T>
-      Binding(const BoundInput& bi, T* f) : input(bi), function(f) {}
+      Binding(const QString& n, const BoundInput& bi, T* f) : name(n), input(bi), function(f) {}
    };
 }

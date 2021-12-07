@@ -79,6 +79,7 @@ namespace DK3DToolOptions {
       bool vector = (this->controlType() == DK3D::ControlType::Vector);
       //
       cobb::qt::set_visibility_of(button,
+         this->ui.label_boolean,
          this->ui.label_booleanX, this->ui.booleanX,
          this->ui.label_booleanY, this->ui.booleanY,
          this->ui.label_booleanZ, this->ui.booleanZ

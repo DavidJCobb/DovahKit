@@ -1,6 +1,7 @@
 #include "DKBoundInputWidget.h"
 #include <QGridLayout>
 #include <QLabel>
+#include "helpers/qt/combobox.h"
 
 DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
    auto* layout = new QGridLayout(this);
@@ -46,6 +47,10 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
       widget->addItem(tr("Left Bumper",       "XInput button"), (int)DK3D::XInputKey::LB);
       widget->addItem(tr("Right Bumper",      "XInput button"), (int)DK3D::XInputKey::RB);
       layout->addWidget(widget);
+      //
+      QObject::connect(picker, &DKKeyPickerWidget::valueChanged, this, &DKBoundInputWidget::_sendValueChanged);
+      QObject::connect(type,   QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_sendValueChanged);
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_sendValueChanged);
    }
    {
       auto* wrapper = sw.scalar.wrapper = new QWidget(this);
@@ -55,6 +60,9 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
       layout->setContentsMargins({ 0, 0, 0, 0 });
       layout->addWidget(sw.scalar.control);
       layout->addWidget(sw.scalar.sign);
+      //
+      QObject::connect(sw.scalar.control, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_sendValueChanged);
+      QObject::connect(sw.scalar.sign,    QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_sendValueChanged);
    }
    {
       auto* wrapper = sw.vector.wrapper = new QWidget(this);
@@ -62,6 +70,8 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
       sw.vector.control = new QComboBox(this);
       layout->setContentsMargins({ 0, 0, 0, 0 });
       layout->addWidget(sw.vector.control);
+      //
+      QObject::connect(sw.vector.control, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_sendValueChanged);
    }
    //
    sw.boolean.label = new QLabel(tr("Interaction:"), this);
@@ -130,12 +140,12 @@ void DKBoundInputWidget::setInputDevice(InputDevice d) {
 void DKBoundInputWidget::setValue(const DK3D::BoundInput& src) {
    const auto blocker0 = QSignalBlocker(this->subwidgets.control_type);
    if (src.is_boolean()) {
-      this->subwidgets.control_type->setCurrentIndex(this->subwidgets.control_type->findData((int)ControlType::Boolean));
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, ControlType::Boolean);
       this->_onControlTypeChange();
       //
       auto& b  = src.boolean;
       auto& sw = this->subwidgets.boolean;
-      sw.mod->setCurrentIndex(sw.mod->findData((int)b.type));
+      cobb::qt::set_combobox_value(sw.mod, b.type);
       if (!b.key.empty()) {
          sw.control->setKeys({ b.key });
       } else if (b.mouse.button != Qt::MouseButton::NoButton) {
@@ -143,12 +153,17 @@ void DKBoundInputWidget::setValue(const DK3D::BoundInput& src) {
          // TODO
          //
       } else if (b.gamepad.button != DK3D::XInputKey::None) {
-         sw.xinput->setCurrentIndex(sw.xinput->findData((int)b.gamepad.button));
+         cobb::qt::set_combobox_value(sw.xinput, b.gamepad.button);
       }
       return;
+   } else {
+      auto& sw = this->subwidgets.boolean;
+      sw.control->setKeys({});
+      cobb::qt::set_combobox_value(sw.mod,    DK3D::BooleanInputMod::Tap);
+      cobb::qt::set_combobox_value(sw.xinput, DK3D::XInputKey::A);
    }
    if (src.is_scalar()) {
-      this->subwidgets.control_type->setCurrentIndex(this->subwidgets.control_type->findData((int)ControlType::Scalar));
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, ControlType::Scalar);
       this->_onControlTypeChange();
       //
       auto& s  = src.scalar;
@@ -173,14 +188,23 @@ void DKBoundInputWidget::setValue(const DK3D::BoundInput& src) {
       return;
    }
    if (src.is_vector()) {
-      this->subwidgets.control_type->setCurrentIndex(this->subwidgets.control_type->findData((int)ControlType::Vector));
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, ControlType::Vector);
       this->_onControlTypeChange();
       //
       auto& v  = src.vector;
       auto& sw = this->subwidgets.vector;
-      //
-      sw.control->setCurrentIndex(sw.control->findData((int)v.input));
+      cobb::qt::set_combobox_value(sw.control, v.input);
       return;
+   } else {
+      auto& sw = this->subwidgets.vector;
+      switch (this->inputDevice()) {
+         case InputDevice::KeyboardMouse:
+            cobb::qt::set_combobox_value(sw.control, DK3D::VectorControl::MouseMove);
+            break;
+         case InputDevice::XInput:
+            cobb::qt::set_combobox_value(sw.control, DK3D::VectorControl::XInput_LS);
+            break;
+      }
    }
 }
 
@@ -207,6 +231,8 @@ void DKBoundInputWidget::_onControlTypeChange() {
    sw.scalar.wrapper->setHidden(!scalar);
    sw.vector.label->setHidden(!vector);
    sw.vector.wrapper->setHidden(!vector);
+   //
+   this->_sendValueChanged();
 }
 void DKBoundInputWidget::_onInputDeviceChange() {
    auto id = this->inputDevice();
@@ -268,4 +294,8 @@ void DKBoundInputWidget::_onInputDeviceChange() {
          widget->addItem(tr("Right Stick"), (int)DK3D::VectorControl::XInput_RS);
       }
    }
+   this->_sendValueChanged();
+}
+void DKBoundInputWidget::_sendValueChanged() {
+   emit this->valueChanged(this->value());
 }

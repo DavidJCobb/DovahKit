@@ -41,6 +41,155 @@ namespace {
       }
       return Options3DInputDialog::tr("<unknown>", "tool name");
    }
+
+   QString stringify_input(const DK3D::BoundInput& bi) {
+      if (bi.is_boolean()) {
+         QString mod;
+         switch (bi.boolean.type) {
+            using _ = DK3D::BooleanInputMod;
+            case _::Tap:
+               mod = Options3DInputDialog::tr("Tap", "boolean input mod");
+               break;
+            case _::Hold:
+               mod = Options3DInputDialog::tr("Hold", "boolean input mod");
+               break;
+            case _::While:
+               mod = Options3DInputDialog::tr("While", "boolean input mod");
+               break;
+         }
+         QString button;
+         if (!bi.boolean.key.empty()) {
+            button = bi.boolean.key.toString();
+         } else if (bi.boolean.gamepad.button != DK3D::XInputKey::None) {
+            switch (bi.boolean.gamepad.button) {
+               using _ = DK3D::XInputKey;
+               case _::A:
+                  button = Options3DInputDialog::tr("A", "XInput button");
+                  break;
+               case _::B:
+                  button = Options3DInputDialog::tr("B", "XInput button");
+                  break;
+               case _::X:
+                  button = Options3DInputDialog::tr("X", "XInput button");
+                  break;
+               case _::Y:
+                  button = Options3DInputDialog::tr("Y", "XInput button");
+                  break;
+               case _::LT:
+                  button = Options3DInputDialog::tr("LT", "XInput button");
+                  break;
+               case _::RT:
+                  button = Options3DInputDialog::tr("RT", "XInput button");
+                  break;
+               case _::LB:
+                  button = Options3DInputDialog::tr("LB", "XInput button");
+                  break;
+               case _::RB:
+                  button = Options3DInputDialog::tr("RB", "XInput button");
+                  break;
+               case _::LS:
+                  button = Options3DInputDialog::tr("LS-Click", "XInput button");
+                  break;
+               case _::RS:
+                  button = Options3DInputDialog::tr("RS-Click", "XInput button");
+                  break;
+               case _::DPadUp:
+                  button = Options3DInputDialog::tr("D-Pad Up", "XInput button");
+                  break;
+               case _::DPadDown:
+                  button = Options3DInputDialog::tr("D-Pad Down", "XInput button");
+                  break;
+               case _::DPadLeft:
+                  button = Options3DInputDialog::tr("D-Pad Left", "XInput button");
+                  break;
+               case _::DPadRight:
+                  button = Options3DInputDialog::tr("D-Pad Right", "XInput button");
+                  break;
+               case _::Back:
+                  button = Options3DInputDialog::tr("Back", "XInput button");
+                  break;
+               case _::Start:
+                  button = Options3DInputDialog::tr("Start", "XInput button");
+                  break;
+            }
+         } else if (bi.boolean.mouse.button != Qt::MouseButton::NoButton) {
+            switch (bi.boolean.mouse.button) {
+               using _ = Qt::MouseButton;
+               case _::LeftButton:
+                  button = Options3DInputDialog::tr("LMB", "mouse button");
+                  break;
+               case _::RightButton:
+                  button = Options3DInputDialog::tr("RMB", "mouse button");
+                  break;
+               case _::MiddleButton:
+                  button = Options3DInputDialog::tr("MMB", "mouse button");
+                  break;
+               case _::XButton1:
+                  button = Options3DInputDialog::tr("Mouse-X1", "mouse button");
+                  break;
+               case _::XButton2:
+                  button = Options3DInputDialog::tr("Mouse-X2", "mouse button");
+                  break;
+            }
+         }
+         //
+         return Options3DInputDialog::tr("%1 %2", "format string for button inputs").arg(mod).arg(button);
+      }
+      if (bi.is_scalar()) {
+         QString control;
+         //
+         bool has_axis = false;
+         switch (bi.scalar.input) {
+            using _ = DK3D::ScalarControl;
+            case _::MouseMove:
+               control  = Options3DInputDialog::tr("Mouse-Move", "scalar control");
+               has_axis = true;
+               break;
+            case _::XInput_LS:
+               control  = Options3DInputDialog::tr("LS", "scalar control");
+               has_axis = true;
+               break;
+            case _::XInput_RS:
+               control  = Options3DInputDialog::tr("RS", "scalar control");
+               has_axis = true;
+               break;
+            case _::XInput_LT:
+               control = Options3DInputDialog::tr("LT", "scalar control");
+               break;
+            case _::XInput_RT:
+               control = Options3DInputDialog::tr("RT", "scalar control");
+               break;
+         }
+         if (has_axis) {
+            QString axis;
+            switch (bi.scalar.axis) {
+               using _ = DK3D::Axis2D;
+               case _::X:
+                  axis = Options3DInputDialog::tr("Left/Right", "scalar axis");
+                  break;
+               case _::Y:
+                  axis = Options3DInputDialog::tr("Up/Down", "scalar axis");
+                  break;
+            }
+            if (!axis.isEmpty())
+               return Options3DInputDialog::tr("%1 %2", "scalar input format string").arg(control).arg(axis);
+         }
+         return control;
+      }
+      if (bi.is_vector()) {
+         QString control;
+         switch (bi.vector.input) {
+            using _ = DK3D::VectorControl;
+            case _::MouseMove:
+               return Options3DInputDialog::tr("Mouse-Move", "vector control");
+            case _::XInput_LS:
+               return Options3DInputDialog::tr("LS", "vector control");
+            case _::XInput_RS:
+               return Options3DInputDialog::tr("RS", "vector control");
+         }
+      }
+      return Options3DInputDialog::tr("<none>");
+   }
 }
 
 Options3DInputDialog* Options3DInputDialog::current_instance = nullptr;
@@ -53,7 +202,16 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
       auto* widget = this->ui.bindList;
       widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-      widget->verticalHeader()->setHidden(true);
+      widget->setWordWrap(false);
+      if (auto* vh = widget->verticalHeader()) {
+         vh->setHidden(true);
+         vh->setSectionResizeMode(QHeaderView::ResizeToContents);
+      }
+      if (auto* hh = widget->horizontalHeader()) { // TODO: use my custom "flex" header instead, for better control
+         hh->setStretchLastSection(true);
+         widget->setColumnCount(3);
+         widget->setHorizontalHeaderLabels({ tr("Name"), tr("Tool"), tr("Mapped to") });
+      }
       //
       if (auto* sm = widget->selectionModel()) {
          QObject::connect(sm, &QItemSelectionModel::currentRowChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
@@ -62,9 +220,14 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
             } else {
                this->state.selected_binding = current.row();
             }
+            this->_updateBindListButtons();
             this->bindingSelected();
          });
       }
+      QObject::connect(this->ui.buttonNewBind,      &QPushButton::clicked, this, &Options3DInputDialog::addBind);
+      QObject::connect(this->ui.buttonDeleteBind,   &QPushButton::clicked, this, &Options3DInputDialog::deleteBind);
+      QObject::connect(this->ui.buttonMoveBindUp,   &QPushButton::clicked, this, &Options3DInputDialog::moveBindUp);
+      QObject::connect(this->ui.buttonMoveBindDown, &QPushButton::clicked, this, &Options3DInputDialog::moveBindDown);
    }
    {  // tools
       constexpr const char* disamb = "tool name";
@@ -85,12 +248,20 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
       auto* layout = qobject_cast<QGridLayout*>(this->ui.bindOptions->layout());
       assert(layout);
       layout->addWidget(widget, 2, 0, 1, 2);
+      QObject::connect(widget, &DKBoundInputWidget::valueChanged, this, [this](const DK3D::BoundInput& bi) {
+         if (auto* b = this->selectedBinding()) {
+            b->input = bi;
+            this->_updateBindListRow(this->state.selected_binding);
+         }
+      });
    }
    this->ui.bindOptions->setEnabled(false);
    //
    QObject::connect(this->ui.bindName, &QLineEdit::textEdited, this, [this](const QString& name) {
-      if (auto* b = this->selectedBinding())
+      if (auto* b = this->selectedBinding()) {
          b->name = name;
+         this->_updateBindListRow(this->state.selected_binding);
+      }
    });
    QObject::connect(this->ui.bindTool, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
       if (auto* b = this->selectedBinding()) {
@@ -98,6 +269,7 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
          b->function = DK3D::all_tool_instances::get()[id];
          b->params   = DK3D::tools::option_union::construct_for_type(id);
          this->rebuildToolOptions();
+         this->_updateBindListRow(this->state.selected_binding);
       }
    });
    //
@@ -152,7 +324,7 @@ void Options3DInputDialog::_updateBindList() {
       //
       auto* name = new QTableWidgetItem(binding.name);
       auto* tool = new QTableWidgetItem(tool_name(id));
-      auto* bind = new QTableWidgetItem();
+      auto* bind = new QTableWidgetItem(stringify_input(binding.input));
       widget->setItem(i, 0, name);
       widget->setItem(i, 1, tool);
       widget->setItem(i, 2, bind);
@@ -166,7 +338,44 @@ void Options3DInputDialog::_updateBindList() {
          sm->setCurrentIndex(qmi, QItemSelectionModel::ClearAndSelect);
       }
    }
+   this->_updateBindListButtons();
    this->bindingSelected();
+}
+void Options3DInputDialog::_updateBindListRow(int i) {
+   auto* widget = this->ui.bindList;
+   if (i < 0 || i >= widget->rowCount())
+      return;
+   const auto& list = this->state.bindings;
+   if (i >= list.size())
+      return;
+   auto& bind = list[i];
+   //
+   if (auto* item = widget->item(i, 0))
+      item->setText(bind.name);
+   if (auto* item = widget->item(i, 1)) {
+      DK3D::tool_id id = DK3D::tools::id_of_none;
+      if (bind.function)
+         id = DK3D::all_tool_instances::get().id_of(*bind.function);
+      //
+      item->setText(tool_name(id));
+   }
+   if (auto* item = widget->item(i, 2)) {
+      item->setText(stringify_input(bind.input));
+   }
+}
+void Options3DInputDialog::_updateBindListButtons() {
+   auto& list = this->state.bindings;
+   auto  size = list.size();
+   auto  i    = this->state.selected_binding;
+   if (i < 0) {
+      this->ui.buttonDeleteBind->setEnabled(false);
+      this->ui.buttonMoveBindUp->setEnabled(false);
+      this->ui.buttonMoveBindDown->setEnabled(false);
+   } else {
+      this->ui.buttonDeleteBind->setEnabled(true);
+      this->ui.buttonMoveBindUp->setEnabled(i > 0);
+      this->ui.buttonMoveBindDown->setEnabled(i < size - 1);
+   }
 }
 DK3D::Binding* Options3DInputDialog::selectedBinding() {
    if (this->state.selected_binding >= 0) {
@@ -185,6 +394,7 @@ void Options3DInputDialog::bindingSelected() {
    if (!binding) {
       this->ui.bindName->setText("");
       this->ui.bindTool->setCurrentIndex(0);
+      this->subwidgets.input->setValue(DK3D::BoundInput());
       this->rebuildToolOptions();
       return;
    }
@@ -234,4 +444,58 @@ void Options3DInputDialog::rebuildToolOptions() {
          layout->addWidget(to, 3, 0, 1, 2);
       }
    }
+}
+
+void Options3DInputDialog::addBind() {
+   DK3D::Binding added;
+   //
+   auto& list = this->state.bindings;
+   auto  size = list.size();
+   auto  i    = this->state.selected_binding;
+   if (i < 0 || i == size - 1) {
+      list.push_back(added);
+      this->state.selected_binding = size;
+   } else {
+      list.insert(i + 1, added);
+      this->state.selected_binding = i + 1;
+   }
+   this->_updateBindList();
+}
+void Options3DInputDialog::deleteBind() {
+   auto i = this->state.selected_binding;
+   if (i < 0)
+      return;
+   auto& list = this->state.bindings;
+   auto  size = list.size();
+   list.removeAt(i);
+   if (i == size - 1) {
+      --this->state.selected_binding;
+   }
+   //
+   this->_updateBindList();
+}
+void Options3DInputDialog::moveBind(int by) {
+   if (!by)
+      return;
+   auto  from = this->state.selected_binding;
+   if (from < 0)
+      return;
+   auto& list = this->state.bindings;
+   auto  size = list.size();
+   //
+   int to = from + by;
+   if (by < 0) {
+      to = std::max(0, to);
+   } else {
+      to = std::min(size - 1, to);
+   }
+   list.move(from, to);
+   this->state.selected_binding = to;
+   this->_updateBindList();
+}
+void Options3DInputDialog::moveBindUp() {
+   this->moveBind(-1);
+}
+void Options3DInputDialog::moveBindDown() {
+   this->moveBind(1);
 }

@@ -37,6 +37,7 @@ class DKBoundInputWidget : public QWidget {
       void setValue(const DK3D::BoundInput&);
 
    signals:
+      void valueChanged(const DK3D::BoundInput&);
 
    protected:
       static constexpr auto ControlRole = Qt::ItemDataRole::UserRole;
@@ -73,4 +74,5 @@ class DKBoundInputWidget : public QWidget {
    protected slots:
       void _onControlTypeChange();
       void _onInputDeviceChange();
+      void _sendValueChanged();
 };

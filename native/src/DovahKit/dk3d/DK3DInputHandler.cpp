@@ -33,22 +33,24 @@ DK3DInputHandler::DK3DInputHandler() {
       auto& kb = this->binds.keyboard;
       //
       struct _bind {
-         const char key;
+         const char* name;
+         char  key;
          float x = 0;
          float y = 0;
          float z = 0;
       };
       constexpr auto _binds = std::array{
-         _bind{ 'W',  0,  1,  0 },
-         _bind{ 'S',  0, -1,  0 },
-         _bind{ 'A', -1,  0,  0 },
-         _bind{ 'D',  1,  0,  0 },
-         _bind{ 'Q',  0,  0,  1 },
-         _bind{ 'Z',  0,  0, -1 },
+         _bind{ ("Move Camera Forward"), 'W',  0,  1,  0 },
+         _bind{ ("Move Camera Back"),    'S',  0, -1,  0 },
+         _bind{ ("Move Camera Left"),    'A', -1,  0,  0 },
+         _bind{ ("Move Camera Right"),   'D',  1,  0,  0 },
+         _bind{ ("Move Camera Up"),      'Q',  0,  0,  1 },
+         _bind{ ("Move Camera Down"),    'Z',  0,  0, -1 },
       };
       auto* func = &tools::move_camera::get();
       for (const auto& b : _binds) {
          kb.push_back(Binding(
+            tr(b.name),
             BoundInput::from_key(b.key, BooleanInputMod::While),
             func,
             tools::move_camera::options{
@@ -65,19 +67,21 @@ DK3DInputHandler::DK3DInputHandler() {
       auto& kb = this->binds.keyboard;
       //
       struct _bind {
-         const char key;
+         const char* name;
+         const char  key;
          float x = 0; // pitch
          float z = 0; // yaw
       };
       constexpr auto _binds = std::array{
-         _bind{ 'G',  0,  1 }, // counterclockwise, so turning left is positive
-         _bind{ 'H',  0, -1 },
-         _bind{ 'R',  1,  0 },
-         _bind{ 'V', -1,  0 },
+         _bind{ "Turn Camera Left",  'G',  0,  1}, // counterclockwise, so turning left is positive
+         _bind{ "Turn Camera Right", 'H',  0, -1},
+         _bind{ "Turn Camera Up",    'R',  1,  0},
+         _bind{ "Turn Camera Down" , 'V', -1,  0},
       };
       auto* func = &tools::turn_camera::get();
       for (const auto& b : _binds) {
          kb.push_back(Binding(
+            tr(b.name),
             BoundInput::from_key(b.key, BooleanInputMod::While),
             func,
             tools::turn_camera::options{
@@ -91,6 +95,7 @@ DK3DInputHandler::DK3DInputHandler() {
       auto* func = &tools::move_camera::get();
       //
       gb.push_back(Binding( // Lateral
+         tr("Move Camera Laterally"),
          BoundInput{
             .vector = {
                .input = VectorControl::XInput_LS,
@@ -111,6 +116,7 @@ DK3DInputHandler::DK3DInputHandler() {
          }
       ));
       gb.push_back(Binding( // Down
+         tr("Move Camera Down"),
          BoundInput{
             .boolean = {
                .gamepad = {
@@ -129,6 +135,7 @@ DK3DInputHandler::DK3DInputHandler() {
          }
       ));
       gb.push_back(Binding( // Up
+         tr("Move Camera Up"),
          BoundInput{
             .boolean = {
                .gamepad = {
@@ -149,7 +156,8 @@ DK3DInputHandler::DK3DInputHandler() {
    }
    {  // gamepad functions: turn camera
       auto& gb = this->binds.gamepad;
-      gb.push_back(Binding( // Lateral
+      gb.push_back(Binding(
+         tr("Turn Camera"),
          BoundInput{
             .vector = {
                .input = VectorControl::XInput_RS,
@@ -169,6 +177,7 @@ DK3DInputHandler::DK3DInputHandler() {
    {  // Gamepad functions: test echo
       auto& gb = this->binds.gamepad;
       gb.push_back(Binding(
+         tr("Test Binding (Tap)"),
          BoundInput{
             .boolean = {
                .gamepad = {
@@ -181,6 +190,7 @@ DK3DInputHandler::DK3DInputHandler() {
          tools::debug_log::options{ .number = 1 }
       ));
       gb.push_back(Binding(
+         tr("Test Binding (Hold)"),
          BoundInput{
             .boolean = {
                .gamepad = {
@@ -193,6 +203,7 @@ DK3DInputHandler::DK3DInputHandler() {
          tools::debug_log::options{ .number = 2 }
       ));
       gb.push_back(Binding(
+         tr("Test Binding (While)"),
          BoundInput{
             .boolean = {
                .gamepad = {

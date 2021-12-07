@@ -42,11 +42,56 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <layout class="QVBoxLayout" name="_2">
-     <item>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="0" column="0">
       <widget class="QTableWidget" name="bindList"/>
      </item>
-     <item>
+     <item row="0" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QPushButton" name="buttonNewBind">
+         <property name="text">
+          <string>New</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonMoveBindUp">
+         <property name="text">
+          <string>Move Up</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonMoveBindDown">
+         <property name="text">
+          <string>Move Down</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonDeleteBind">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>16</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0" colspan="2">
       <widget class="QWidget" name="bindOptions" native="true">
        <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,4">
         <property name="leftMargin">

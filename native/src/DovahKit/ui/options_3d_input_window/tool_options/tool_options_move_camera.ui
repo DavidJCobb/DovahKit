@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>225</height>
+    <height>175</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,1">
@@ -23,59 +23,7 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
-   <item row="7" column="1" colspan="2">
-    <widget class="QDoubleSpinBox" name="booleanX"/>
-   </item>
-   <item row="6" column="0" colspan="3">
-    <widget class="QCheckBox" name="alsoMoveSelection">
-     <property name="text">
-      <string>Also move selection</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_referenceFrame">
-     <property name="text">
-      <string>Reference frame:</string>
-     </property>
-     <property name="buddy">
-      <cstring>referenceFrame</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1" colspan="2">
-    <widget class="QComboBox" name="referenceFrameSel"/>
-   </item>
-   <item row="11" column="1">
-    <widget class="QComboBox" name="vectorXAxis"/>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="label_booleanY">
-     <property name="text">
-      <string>Move Y:</string>
-     </property>
-     <property name="buddy">
-      <cstring>booleanY</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="label_booleanZ">
-     <property name="text">
-      <string>Move Z:</string>
-     </property>
-     <property name="buddy">
-      <cstring>booleanZ</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1" colspan="2">
-    <widget class="QDoubleSpinBox" name="booleanY"/>
-   </item>
-   <item row="0" column="1" colspan="2">
-    <widget class="QComboBox" name="referenceFrame"/>
-   </item>
-   <item row="10" column="2">
+   <item row="11" column="2">
     <widget class="QComboBox" name="scalarSign">
      <item>
       <property name="text">
@@ -99,17 +47,20 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="0">
-    <widget class="QLabel" name="label_scalar">
+   <item row="1" column="1" colspan="2">
+    <widget class="QComboBox" name="referenceFrameSel"/>
+   </item>
+   <item row="13" column="1">
+    <widget class="QComboBox" name="vectorYAxis"/>
+   </item>
+   <item row="6" column="0" colspan="3">
+    <widget class="QCheckBox" name="alsoMoveSelection">
      <property name="text">
-      <string>Move Along Axis:</string>
-     </property>
-     <property name="buddy">
-      <cstring>scalarAxis</cstring>
+      <string>Also move selection</string>
      </property>
     </widget>
    </item>
-   <item row="10" column="1">
+   <item row="11" column="1">
     <widget class="QComboBox" name="scalarAxis">
      <item>
       <property name="text">
@@ -128,7 +79,36 @@
      </item>
     </widget>
    </item>
+   <item row="13" column="2">
+    <widget class="QComboBox" name="vectorYSign"/>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QComboBox" name="referenceFrame"/>
+   </item>
    <item row="11" column="0">
+    <widget class="QLabel" name="label_scalar">
+     <property name="text">
+      <string>Move Along Axis:</string>
+     </property>
+     <property name="buddy">
+      <cstring>scalarAxis</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_referenceFrame">
+     <property name="text">
+      <string>Reference frame:</string>
+     </property>
+     <property name="buddy">
+      <cstring>referenceFrame</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="1">
+    <widget class="QComboBox" name="vectorXAxis"/>
+   </item>
+   <item row="12" column="0">
     <widget class="QLabel" name="label_vectorX">
      <property name="text">
       <string>Map Input X-Axis To:</string>
@@ -138,23 +118,7 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="1" colspan="2">
-    <widget class="QDoubleSpinBox" name="booleanZ"/>
-   </item>
-   <item row="11" column="2">
-    <widget class="QComboBox" name="vectorXSign"/>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="label_booleanX">
-     <property name="text">
-      <string>Move X:</string>
-     </property>
-     <property name="buddy">
-      <cstring>booleanX</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="0">
+   <item row="13" column="0">
     <widget class="QLabel" name="label_vectorY">
      <property name="text">
       <string>Map Input Y-Axis To:</string>
@@ -164,11 +128,103 @@
      </property>
     </widget>
    </item>
-   <item row="12" column="1">
-    <widget class="QComboBox" name="vectorYAxis"/>
-   </item>
    <item row="12" column="2">
-    <widget class="QComboBox" name="vectorYSign"/>
+    <widget class="QComboBox" name="vectorXSign"/>
+   </item>
+   <item row="7" column="1" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_booleanX">
+         <property name="text">
+          <string>X:</string>
+         </property>
+         <property name="buddy">
+          <cstring>booleanX</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="booleanX">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_booleanY">
+         <property name="text">
+          <string>Y:</string>
+         </property>
+         <property name="buddy">
+          <cstring>booleanY</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="booleanY">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_booleanZ">
+         <property name="text">
+          <string>Z:</string>
+         </property>
+         <property name="buddy">
+          <cstring>booleanZ</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="booleanZ">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_boolean">
+     <property name="text">
+      <string>Move X:</string>
+     </property>
+     <property name="buddy">
+      <cstring>booleanX</cstring>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

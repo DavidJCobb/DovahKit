@@ -1,5 +1,6 @@
 #include "tool_options_debug_placeholder.h"
 #include <QGridLayout>
+#include <QLabel>
 #include "dk3d/tools/_options.h"
 
 namespace DK3DToolOptions {
@@ -9,7 +10,9 @@ namespace DK3DToolOptions {
       //
       auto* layout = new QGridLayout(this);
       this->ui.textbox = new QLineEdit(this);
-      layout->addWidget(this->ui.textbox, 0, 0);
+      layout->addWidget(new QLabel(tr("Text:"), this), 0, 0);
+      layout->addWidget(this->ui.textbox, 0, 1);
+      layout->setContentsMargins({ 0, 0, 0, 0 });
       QObject::connect(this->ui.textbox, &QLineEdit::textEdited, this, &Base::edited); // signal-to-signal
    }
 

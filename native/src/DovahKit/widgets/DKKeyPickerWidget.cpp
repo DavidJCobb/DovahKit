@@ -76,6 +76,7 @@ void DKKeyPickerWidget::setAllowKeyCombinations(bool b) {
          } else {
             list.resize(1);
          }
+         emit this->valueChanged();
       }
    }
 }
@@ -87,6 +88,7 @@ void DKKeyPickerWidget::setKeys(const QVector<cobb::qt::key>& keys) {
       list.push_back(k);
    //
    this->_redraw();
+   emit this->valueChanged();
 }
 
 void DKKeyPickerWidget::_redraw() {
@@ -105,6 +107,7 @@ void DKKeyPickerWidget::_keyDown(QKeyEvent* event) {
       this->state.keys.clear();
       this->state.keys.push_back(k);
       this->_redraw();
+      emit this->valueChanged();
       return;
    }
    //
@@ -121,6 +124,7 @@ void DKKeyPickerWidget::_keyDown(QKeyEvent* event) {
    );
    list.push_back(k);
    this->_redraw();
+   emit this->valueChanged();
 }
 void DKKeyPickerWidget::_keyUp(QKeyEvent* event) {
    auto k = cobb::qt::key::from_qt_event(event);

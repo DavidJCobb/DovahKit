@@ -32,11 +32,19 @@ class Options3DInputDialog : public QDialog {
 
    protected:
       void _updateBindList();
+      void _updateBindListRow(int);
+      void _updateBindListButtons();
       DK3D::Binding* selectedBinding();
 
    protected slots:
       void bindingSelected();
       void rebuildToolOptions();
+
+      void addBind();
+      void deleteBind();
+      void moveBind(int);
+      void moveBindUp();
+      void moveBindDown();
 
    private:
       Ui::Options3DInputDialog ui;
