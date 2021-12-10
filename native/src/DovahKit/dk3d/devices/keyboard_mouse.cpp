@@ -1,8 +1,8 @@
-#include "OSKeyboardState.h"
-#include "InputResult.h"
-#include "defaults.h"
+#include "keyboard_mouse.h"
+#include "dk3d/defaults.h"
+#include "dk3d/inputs/button.h"
 #include <windows.h>
-#include "../helpers/intrusive_windows_defines.h"
+#include "helpers/intrusive_windows_defines.h"
 
 namespace {
    int qt_mouse_button_to_vk(Qt::MouseButton b) {
@@ -21,6 +21,14 @@ namespace {
       }
       return 0;
    }
+   int button_to_vk(const DK3D::inputs::button& b) {
+      if (!b.key.empty()) {
+         return b.key.native.vk;
+      }
+      if (b.mouse != Qt::MouseButton::NoButton)
+         return qt_mouse_button_to_vk(b.mouse);
+      return -1;
+   }
 
    constexpr MOUSEMOVEPOINT dummy_mouse_point = MOUSEMOVEPOINT{
       .x = 0,
@@ -30,13 +38,13 @@ namespace {
    };
 }
 
-namespace DK3D {
-   void OSKeyboardState::ignoreAllDown() {
+namespace DK3D::devices {
+   void keyboard_mouse::ignore_all_down() {
       for (size_t i = 0; i < vk_code_count; ++i)
          if (this->buttons.start[i] != zero_timestamp)
             this->buttons.ignore.set(i, true);
    }
-   void OSKeyboardState::update(timestamp_t now) {
+   void keyboard_mouse::update(timestamp_t now) {
       this->buttons.processed.reset();
       //
       for (size_t i = 0; i < vk_code_count; ++i) {
@@ -101,7 +109,7 @@ namespace DK3D {
       //
    }
 
-   void OSKeyboardState::recheckMouseMetrics() {
+   void keyboard_mouse::recheck_mouse_metrics() {
       auto& mouse = this->system.mouse;
       mouse.hitboxes.double_click.setX(GetSystemMetrics(SM_CXDOUBLECLK));
       mouse.hitboxes.double_click.setY(GetSystemMetrics(SM_CYDOUBLECLK));
@@ -112,25 +120,27 @@ namespace DK3D {
       mouse.double_click_ms  = GetDoubleClickTime();
    }
 
-   void OSKeyboardState::markButtonProcessed(int vk) {
+   void keyboard_mouse::mark_button_processed(const inputs::button& button) {
+      auto vk = button_to_vk(button);
       if (vk < 0 || vk >= vk_code_count)
          return;
       this->buttons.processed.set(vk);
    }
-   void OSKeyboardState::markButtonProcessed(Qt::MouseButton button) {
-      this->markButtonProcessed(qt_mouse_button_to_vk(button));
+   bool keyboard_mouse::is_button_processed(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return false;
+      return this->buttons.processed.test(vk);
    }
 
-   KeyReleaseType OSKeyboardState::releaseType(int vk) const {
+   KeyReleaseType keyboard_mouse::release_type(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
       if (vk < 0 || vk >= vk_code_count)
          return KeyReleaseType::None;
       return this->buttons.releases[vk];
    }
-   KeyReleaseType OSKeyboardState::releaseType(Qt::MouseButton button) const {
-      return this->releaseType(qt_mouse_button_to_vk(button));
-   }
-
-   bool OSKeyboardState::isDown(int vk, bool even_if_ignored) const {
+   bool keyboard_mouse::is_down(const inputs::button& button, bool even_if_ignored) const {
+      auto vk = button_to_vk(button);
       if (vk < 0 || vk >= vk_code_count)
          return false;
       bool down = (this->buttons.start[vk] != zero_timestamp);
@@ -140,26 +150,21 @@ namespace DK3D {
          return down;
       return !this->buttons.ignore.test(vk);
    }
-   bool OSKeyboardState::isDown(Qt::MouseButton button, bool even_if_ignored) const {
-      return this->isDown(qt_mouse_button_to_vk(button), even_if_ignored);
-   }
-
-   timestamp_t OSKeyboardState::downWhen(int vk) const {
+   timestamp_t keyboard_mouse::down_when(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return zero_timestamp;
       return this->buttons.start[vk];
    }
-   timestamp_t OSKeyboardState::downWhen(Qt::MouseButton button) const {
-      return this->downWhen(qt_mouse_button_to_vk(button));
-   }
 
-   KeyDownState OSKeyboardState::keyDownState(int vk) const {
+   KeyDownState keyboard_mouse::key_down_state(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      //
       KeyDownState out;
       out.down_when = this->buttons.start[vk];
       out.is_down   = (out.down_when != zero_timestamp) && !this->buttons.ignore.test(vk);
       if (!out.is_down)
          out.released = this->buttons.releases[vk];
       return out;
-   }
-   KeyDownState OSKeyboardState::keyDownState(Qt::MouseButton button) const {
-      return this->keyDownState(qt_mouse_button_to_vk(button));
    }
 }

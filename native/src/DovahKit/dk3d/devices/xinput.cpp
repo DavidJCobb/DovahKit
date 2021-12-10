@@ -1,45 +1,50 @@
-#include "XInputGamepadState.h"
-#include "../helpers/unreachable.h"
-#include "defaults.h"
+#include "xinput.h"
+#include "helpers/unreachable.h"
+#include "dk3d/defaults.h"
+#include "dk3d/inputs/button.h"
 
 namespace {
-   constexpr std::array _indices_to_buttons = {
-      DK3D::XInputGamepadState::Button::A,
-      DK3D::XInputGamepadState::Button::B,
-      DK3D::XInputGamepadState::Button::X,
-      DK3D::XInputGamepadState::Button::Y,
-      DK3D::XInputGamepadState::Button::Start,
-      DK3D::XInputGamepadState::Button::Back,
-      DK3D::XInputGamepadState::Button::DPadUp,
-      DK3D::XInputGamepadState::Button::DPadDown,
-      DK3D::XInputGamepadState::Button::DPadLeft,
-      DK3D::XInputGamepadState::Button::DPadRight,
-      DK3D::XInputGamepadState::Button::LS,
-      DK3D::XInputGamepadState::Button::RS,
-      DK3D::XInputGamepadState::Button::LB,
-      DK3D::XInputGamepadState::Button::RB,
-      DK3D::XInputGamepadState::Button::LT,
-      DK3D::XInputGamepadState::Button::RT,
-   };
-   static_assert(DK3D::XInputGamepadState::button_count == _indices_to_buttons.size());
+   using Button = DK3D::devices::xinput::Button;
 
-   size_t _button_to_index(DK3D::XInputGamepadState::Button b) {
+   constexpr std::array _indices_to_buttons = {
+      Button::A,
+      Button::B,
+      Button::X,
+      Button::Y,
+      Button::Start,
+      Button::Back,
+      Button::DPadUp,
+      Button::DPadDown,
+      Button::DPadLeft,
+      Button::DPadRight,
+      Button::LS,
+      Button::RS,
+      Button::LB,
+      Button::RB,
+      Button::LT,
+      Button::RT,
+   };
+   static_assert(DK3D::devices::xinput::button_count == _indices_to_buttons.size());
+
+   constexpr size_t no_button = -1;
+   //
+   size_t _button_to_index(const DK3D::inputs::button& button) {
+      auto b = button.gamepad;
       for (size_t i = 0; i < _indices_to_buttons.size(); ++i)
          if (_indices_to_buttons[i] == b)
             return i;
-      assert(false);
-      cobb::unreachable();
+      return no_button;
    }
 }
 
-namespace DK3D {
-   void XInputGamepadState::ignoreAllDown() {
+namespace DK3D::devices {
+   void xinput::ignore_all_down() {
       auto& btn = this->buttons;
       for (size_t i = 0; i < button_count; ++i)
          if (btn.start[i] != zero_timestamp)
             btn.ignore.set(i, true);
    }
-   void XInputGamepadState::update(timestamp_t now, bool connected, const DKXInputSubsystem::Gamepad& gs) {
+   void xinput::update(timestamp_t now, bool connected, const DKXInputSubsystem::Gamepad& gs) {
       this->is_connected = connected;
       //
       this->buttons.processed.reset();
@@ -102,38 +107,56 @@ namespace DK3D {
       }
    }
 
-   void XInputGamepadState::markButtonProcessed(Button btn) {
-      this->buttons.processed.set((size_t)btn);
+   void xinput::mark_button_processed(const inputs::button& b) {
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return;
+      this->buttons.processed.set(i);
+   }
+   bool xinput::is_button_processed(const inputs::button& b) const {
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return false;
+      return this->buttons.processed.test(i);
    }
 
-   KeyReleaseType XInputGamepadState::releaseType(Button btn) const {
-      return this->buttons.releases[_button_to_index(btn)];
+   KeyReleaseType xinput::release_type(const inputs::button& b) const {
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return KeyReleaseType::None;
+      return this->buttons.releases[i];
    }
 
-   bool XInputGamepadState::isDown(Button btn, bool even_if_ignored) const {
-      auto idx = _button_to_index(btn);
-      bool down = (this->buttons.start[idx] != zero_timestamp);
+   bool xinput::is_down(const inputs::button& b, bool even_if_ignored) const {
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return false;
+      bool down = (this->buttons.start[i] != zero_timestamp);
       if (!down)
          return false;
       if (even_if_ignored)
          return down;
-      return !this->buttons.ignore.test(idx);
+      return !this->buttons.ignore.test(i);
    }
-   timestamp_t XInputGamepadState::downWhen(Button btn) const {
-      return this->buttons.start[_button_to_index(btn)];
+   timestamp_t xinput::down_when(const inputs::button& b) const {
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return zero_timestamp;
+      return this->buttons.start[i];
    }
 
-   KeyDownState XInputGamepadState::keyDownState(Button btn) const {
+   KeyDownState xinput::key_down_state(const inputs::button& b) const {
       if (!this->is_connected)
          return KeyDownState();
-      //
-      auto idx = _button_to_index(btn);
+      auto i = _button_to_index(b);
+      if (i == no_button)
+         return KeyDownState();
       //
       KeyDownState out;
-      out.down_when = this->buttons.start[idx];
-      out.is_down   = (out.down_when != zero_timestamp) && !this->buttons.ignore.test(idx);
+      out.down_when = this->buttons.start[i];
+      out.is_down   = (out.down_when != zero_timestamp) && !this->buttons.ignore.test(i);
       if (!out.is_down)
-         out.released = this->buttons.releases[idx];
+         out.released = this->buttons.releases[i];
       return out;
    }
 }

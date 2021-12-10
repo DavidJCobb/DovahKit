@@ -42,14 +42,18 @@ namespace DK3D::tools {
       glm::vec3 move = { o->magnitudes.x, o->magnitudes.y, o->magnitudes.z };
       camera_update.move.scale_by_delta = true;
       switch (input.type) {
-         using _ = InputResult::Type;
-         case _::Boolean:
-            if (input.bool_mod != BooleanInputMod::While) {
+         using _ = control_type;
+         case _::button:
+            if (input.press_type != button_press_type::while_down) {
+               //
+               // A "while" bind should treat the "movement" option as a speed per second, while 
+               // other binds should simply make the camera jump by that distance per press.
+               //
                camera_update.move.scale_by_delta = false;
             }
             break;
-         case _::Scalar:
-         case _::Vector:
+         case _::scalar:
+         case _::vector:
             move = glm::vec3();
             _apply(move, input.x, o->non_button.input_x, o->non_button.x_sign);
             _apply(move, input.y, o->non_button.input_y, o->non_button.y_sign);

@@ -3,7 +3,6 @@
 #include <limits>
 #include <type_traits>
 
-class  DK3DBindingOptionsContainerWidget;
 struct DKVulkanCameraUpdate;
 namespace DK3D {
    struct InputResult;
@@ -29,6 +28,16 @@ namespace DK3D::tools {
             inline tool_id id() const noexcept { return this->tag; }
       };
    }
+   //
+   // Base class for tool option unions; this exists so that code which uses an option 
+   // union doesn't have to include every single tool option type (which, in the case 
+   // of the tools themselves, would require moving the option types to their own files 
+   // to avoid cyclical include dependencies).
+   // 
+   // When you're using the opaque type, you MUST pass it BY REFERENCE, not by value, 
+   // to avoid object slicing. Code which receives an opaque union must pointer cast it 
+   // to the full union type.
+   //
    using opaque_option_union = impl::option_union_base;
 
    class base {

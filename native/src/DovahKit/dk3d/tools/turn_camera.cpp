@@ -15,11 +15,11 @@ namespace DK3D::tools {
       cut.speed = glm::radians(90.0F);
       cut.scale_by_delta = true;
       switch (input.type) {
-         using _ = InputResult::Type;
-         case _::Boolean:
+         using _ = control_type;
+         case _::button:
             cut.yaw   = o->magnitudes.yaw;
             cut.pitch = o->magnitudes.pitch;
-            if (input.bool_mod != BooleanInputMod::While) {
+            if (input.press_type != button_press_type::while_down) {
                camera_update.turn.scale_by_delta = false;
                //
                // If the user wants to just turn the camera in increments when a key is tapped, 
@@ -30,8 +30,8 @@ namespace DK3D::tools {
                cut.speed = glm::radians(speed);
             }
             break;
-         case _::Scalar:
-         case _::Vector:
+         case _::scalar:
+         case _::vector:
             cut.yaw   = 0;
             cut.pitch = 0;
             {

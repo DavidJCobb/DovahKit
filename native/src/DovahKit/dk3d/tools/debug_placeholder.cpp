@@ -14,17 +14,17 @@ namespace DK3D::tools {
          return;
       }
       switch (input.type) {
-         using _ = InputResult::Type;
-         case _::Boolean:
-            switch (input.bool_mod) {
-               using _ = BooleanInputMod;
-               case _::Tap:
+         using _ = control_type;
+         case _::button:
+            switch (input.press_type) {
+               using _ = button_press_type;
+               case _::tap:
                   qDebug("[DK3D::tools::debug_placeholder::invoke] A \"Tap\" bind has been pressed and released. Param was %s.", qUtf8Printable(o->text));
                   break;
-               case _::Hold:
+               case _::hold:
                   qDebug("[DK3D::tools::debug_placeholder::invoke] A \"Hold\" bind has been pressed and released. Param was %s.", qUtf8Printable(o->text));
                   break;
-               case _::While:
+               case _::while_down:
                   if (input.while_has_changed)
                      //
                      // If false, the key is still down; would fire every tick.
@@ -33,10 +33,10 @@ namespace DK3D::tools {
                   break;
             }
             break;
-         case _::Scalar:
+         case _::scalar:
             //qDebug("[DK3D::tools::debug_log::invoke] \"Scalar\" bind invoked with input %f. Param was %s.", input.x, qUtf8Printable(o->text));
             break;
-         case _::Vector:
+         case _::vector:
             //qDebug("[DK3D::tools::debug_log::invoke] \"Vector\" bind invoked with input (%f, %f). Param was %s.", input.x, input.y, qUtf8Printable(o->text));
             break;
       }

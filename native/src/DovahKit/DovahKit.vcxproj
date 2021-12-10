@@ -109,9 +109,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dk3d\bind_tree\node.cpp" />
+    <ClCompile Include="dk3d\bind_tree\nodes\editor_mode.cpp" />
+    <ClCompile Include="dk3d\bind_tree\nodes\input.cpp" />
+    <ClCompile Include="dk3d\bind_tree\tree.cpp" />
     <ClCompile Include="dk3d\BoundInput.cpp" />
-    <ClCompile Include="dk3d\DK3DBindingOptionsContainerWidget.cpp" />
+    <ClCompile Include="dk3d\devices\keyboard_mouse.cpp" />
+    <ClCompile Include="dk3d\devices\xinput.cpp" />
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
+    <ClCompile Include="dk3d\inputs\bound_input.cpp" />
     <ClCompile Include="dk3d\tools\debug_log.cpp" />
     <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
     <ClCompile Include="dk3d\tools\move_camera.cpp" />
@@ -515,7 +521,6 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\dk3d_debug_rebind.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
@@ -632,13 +637,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dk3d\Binding.h" />
+    <ClInclude Include="dk3d\bind_tree\node.h" />
+    <ClInclude Include="dk3d\bind_tree\nodes\editor_mode.h" />
+    <ClInclude Include="dk3d\bind_tree\nodes\input.h" />
+    <ClInclude Include="dk3d\bind_tree\nodes\root.h" />
+    <ClInclude Include="dk3d\bind_tree\tree.h" />
     <ClInclude Include="dk3d\BoundInput.h" />
     <ClInclude Include="dk3d\chrono.h" />
     <QtMoc Include="widgets\DKKeyPickerWidget.h" />
     <QtMoc Include="dk3d\DK3DInputHandler.h" />
     <ClInclude Include="dk3d\defaults.h" />
-    <QtMoc Include="dk3d\DK3DBindingOptionsContainerWidget.h" />
+    <ClInclude Include="dk3d\devices\xinput.h" />
+    <ClInclude Include="dk3d\enums\axis2D.h" />
+    <ClInclude Include="dk3d\enums\button_press_type.h" />
+    <ClInclude Include="dk3d\enums\control_type.h" />
+    <ClInclude Include="dk3d\enums\EditorMode.h" />
     <ClInclude Include="dk3d\enums\InputDevice.h" />
+    <ClInclude Include="dk3d\enums\scalar_control.h" />
+    <ClInclude Include="dk3d\enums\vector_control.h" />
+    <ClInclude Include="dk3d\inputs\bound_input.h" />
+    <ClInclude Include="dk3d\inputs\button.h" />
+    <ClInclude Include="dk3d\devices\keyboard_mouse.h" />
     <ClInclude Include="dk3d\tools\debug_log.h" />
     <ClInclude Include="dk3d\tools\debug_placeholder.h" />
     <ClInclude Include="dk3d\tools\move_camera.h" />
@@ -680,7 +699,6 @@
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\dk3d_debug_rebind.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />

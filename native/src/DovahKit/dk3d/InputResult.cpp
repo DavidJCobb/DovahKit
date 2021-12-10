@@ -1,29 +1,30 @@
 #include "InputResult.h"
-#include "BoundInput.h"
 #include "KeyDownState.h"
+#include "inputs/bound_input.h"
 
 namespace DK3D {
    bool InputResult::active() const {
       switch (this->type) {
-         case Type::None:
+         using _ = control_type;
+         case _::none:
             return false;
-         case Type::Boolean:
+         case _::button:
             return true;
-         case Type::Scalar:
+         case _::scalar:
             return this->x;
-         case Type::Vector:
+         case _::vector:
             return this->x || this->y;
       }
       return false;
    }
 
-   /*static*/ InputResult InputResult::for_boolean_input(timestamp_t now, const BoundInput& bind, const KeyDownState& kds) {
-      bool is_while = bind.boolean.type == BooleanInputMod::While;
+   /*static*/ InputResult InputResult::for_boolean_input(timestamp_t now, const inputs::bound_input& bind, const KeyDownState& kds) {
+      bool is_while = bind.button.press_type == button_press_type::while_down;
       //
       InputResult result;
       if (kds.is_down) {
-         result.type     = InputResult::Type::Boolean;
-         result.bool_mod = BooleanInputMod::While;
+         result.type       = control_type::button;
+         result.press_type = button_press_type::while_down;
          if (is_while) {
             if (kds.down_when == now) {
                //
@@ -33,17 +34,17 @@ namespace DK3D {
             }
          }
       } else {
-         result.type = InputResult::Type::Boolean;
+         result.type = control_type::button;
          switch (kds.released) {
             using _ = KeyReleaseType;
             case _::Tap:
-               result.bool_mod = BooleanInputMod::Tap;
+               result.press_type = button_press_type::tap;
                break;
             case _::Hold:
-               result.bool_mod = BooleanInputMod::Hold;
+               result.press_type = button_press_type::hold;
                break;
             default:
-               result.type = InputResult::Type::None;
+               result.type = control_type::none;
                break;
          }
       }
@@ -51,12 +52,12 @@ namespace DK3D {
       // Now that we know whether the key is down, how the key was released, and so on, 
       // let's check which of those the binding in question actually wanted.
       //
-      if (result.bool_mod != bind.boolean.type) {
+      if (result.press_type != bind.button.press_type) {
          //
          // This particular action isn't what the binding was mapped to. Give a "none" 
          // result.
          //
-         result.type = InputResult::Type::None;
+         result.type = control_type::none;
          if (is_while && kds.released != KeyReleaseType::None)
             //
             // "While" bindings may still need to know when the key is released.

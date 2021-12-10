@@ -2,6 +2,8 @@
 #include <QApplication>
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "KeyDownState.h"
+#include "bind_tree/nodes/input.h"
+#include "bind_tree/nodes/root.h"
 
 using namespace DK3D;
 
@@ -20,15 +22,238 @@ namespace {
 }
 
 DK3DInputHandler::DK3DInputHandler() {
-   this->keyboard_state.recheckMouseMetrics();
+   this->keyboard_state.recheck_mouse_metrics();
    QObject::connect((QApplication*)QApplication::instance(), &QApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
       if (state == Qt::ApplicationState::ApplicationActive) {
-         this->keyboard_state.recheckMouseMetrics();
+         this->keyboard_state.recheck_mouse_metrics();
       }
    });
    //
    // Default bindings for testing:
    //
+   #pragma region tree binds: keyboard
+   {
+      auto& tree = this->binds.keyboard_tree;
+      auto* root = tree.root;
+      {  // keyboard functions: move camera
+         struct _bind {
+            const char* name;
+            char  key;
+            float x = 0;
+            float y = 0;
+            float z = 0;
+         };
+         constexpr auto _binds = std::array{
+            _bind{ ("Move Camera Forward"), 'W',  0,  1,  0 },
+            _bind{ ("Move Camera Back"),    'S',  0, -1,  0 },
+            _bind{ ("Move Camera Left"),    'A', -1,  0,  0 },
+            _bind{ ("Move Camera Right"),   'D',  1,  0,  0 },
+            _bind{ ("Move Camera Up"),      'Q',  0,  0,  1 },
+            _bind{ ("Move Camera Down"),    'Z',  0,  0, -1 },
+         };
+         auto* func = &tools::move_camera::get();
+         for (const auto& b : _binds) {
+            root->append(*(new binds::nodes::input(
+               tr(b.name),
+               DK3D::inputs::bound_input::from_key(b.key, DK3D::button_press_type::while_down),
+               func,
+               tools::move_camera::options{
+                  .reference_frames = {
+                     .baseline  = ReferenceFrame::Camera,
+                     .selection = ReferenceFrame::Camera,
+                  },
+                  .magnitudes = { .x = b.x, .y = b.y, .z = b.z },
+               }
+            )));
+         }
+      }
+      {  // keyboard functions: turn camera
+         struct _bind {
+            const char* name;
+            const char  key;
+            float x = 0; // pitch
+            float z = 0; // yaw
+         };
+         constexpr auto _binds = std::array{
+            _bind{ "Turn Camera Left",  'G',  0,  1}, // counterclockwise, so turning left is positive
+            _bind{ "Turn Camera Right", 'H',  0, -1},
+            _bind{ "Turn Camera Up",    'R',  1,  0},
+            _bind{ "Turn Camera Down" , 'V', -1,  0},
+         };
+         auto* func = &tools::turn_camera::get();
+         for (const auto& b : _binds) {
+            root->append(*(new binds::nodes::input(
+               tr(b.name),
+               DK3D::inputs::bound_input::from_key(b.key, DK3D::button_press_type::while_down),
+               func,
+               tools::turn_camera::options{
+                  .magnitudes = {.yaw = b.z, .pitch = b.x },
+               }
+            )));
+         }
+      }
+   }
+   #pragma endregion
+   #pragma region tree binds: gamepad
+   {
+      auto& tree = this->binds.gamepad_tree;
+      auto* root = tree.root;
+      {  // gamepad functions: move camera
+         auto* func = &tools::move_camera::get();
+         //
+         root->append(*(new binds::nodes::input( // Lateral
+            tr("Move Camera Laterally"),
+            DK3D::inputs::bound_input{
+               .vector = {
+                  .input = vector_control::xinput_ls,
+               },
+            },
+            func,
+            tools::move_camera::options{
+               .reference_frames = {
+                  .baseline  = ReferenceFrame::Camera,
+                  .selection = ReferenceFrame::Camera,
+               },
+               .non_button = {
+                  .input_x = Axis3D::X,
+                  .input_y = Axis3D::Y,
+                  .x_sign  = Sign::Positive,
+                  .y_sign  = Sign::Positive,
+               },
+            }
+         )));
+         root->append(*(new binds::nodes::input( // Down
+            tr("Move Camera Down"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = DK3D::inputs::xinput_button::LB,
+                  .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            func,
+            tools::move_camera::options{
+               .reference_frames = {
+                  .baseline  = ReferenceFrame::Camera,
+                  .selection = ReferenceFrame::Camera,
+               },
+               .magnitudes = { .z = -1 },
+            }
+         )));
+         root->append(*(new binds::nodes::input( // Up
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::RB,
+                  .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            func,
+            tools::move_camera::options{
+               .reference_frames = {
+                  .baseline  = ReferenceFrame::Camera,
+                  .selection = ReferenceFrame::Camera,
+               },
+               .magnitudes = { .z = 1 },
+            }
+         )));
+      }
+      {  // gamepad functions: turn camera
+         root->append(*(new binds::nodes::input(
+            tr("Turn Camera"),
+            DK3D::inputs::bound_input{
+               .vector = {
+                  .input = vector_control::xinput_rs,
+               },
+            },
+            &tools::turn_camera::get(),
+            tools::turn_camera::options{
+               .non_button = {
+                  .input_x = CameraTurnAxis::Yaw,
+                  .input_y = CameraTurnAxis::Pitch,
+                  .x_sign  = Sign::Positive,
+                  .y_sign  = Sign::Positive,
+               },
+            }
+         )));
+      }
+      //
+      // Nested versus non-nested binds:
+      //
+      {  // Non-nested
+         root->append(*(new binds::nodes::input( // Tap
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::A,
+                  .press_type = DK3D::button_press_type::tap,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 1 }
+         )));
+         root->append(*(new binds::nodes::input( // Hold
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::B,
+                  .press_type = DK3D::button_press_type::hold,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 1 }
+         )));
+         root->append(*(new binds::nodes::input( // While
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::X,
+                  .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 1 }
+         )));
+      }
+      {  // Nested
+         auto* node = new binds::nodes::input( // Modifier
+            tr("Test Modifier"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::LT,
+                  .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            nullptr,
+            true
+         );
+         root->append(*node);
+         //
+         node->append(*(new binds::nodes::input( // Tap
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::A,
+                  .press_type = DK3D::button_press_type::tap,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 2 }
+         )));
+         node->append(*(new binds::nodes::input( // Hold
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::B,
+                  .press_type = DK3D::button_press_type::hold,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 2 }
+         )));
+      }
+   }
+   #pragma endregion
+   #pragma region linear (non-tree) bind lists
    {  // keyboard functions: move camera
       auto& kb = this->binds.keyboard;
       //
@@ -216,49 +441,48 @@ DK3DInputHandler::DK3DInputHandler() {
          tools::debug_log::options{ .number = 3 }
       ));
    }
+   #pragma endregion
 }
 DK3DInputHandler::~DK3DInputHandler() {
 }
 
-float DK3DInputHandler::scalarControlValue(ScalarControl c, Axis2D axis) const {
+float DK3DInputHandler::scalarControlValue(DK3D::scalar_control c, DK3D::axis2D axis) const {
    switch (c) {
-      using _ = ScalarControl;
-      case _::None:
+      using _ = DK3D::scalar_control;
+      case _::none:
          return 0;
-      case _::MouseMove:
-         if (axis == Axis2D::X)
+      case _::mouse_move:
+         if (axis == axis2D::x)
             return this->keyboard_state.mouse.move.x();
          return this->keyboard_state.mouse.move.y();
-      case _::MouseWheel:
-         return 0; // TODO
    }
    auto& xi = DKXInputSubsystem::get();
    if (!xi.isGamepadConnected())
       return 0;
    auto& gs = xi.gamepadState();
    switch (c) {
-      using _ = ScalarControl;
-      case _::XInput_LT:
+      using _ = DK3D::scalar_control;
+      case _::xinput_lt:
          return gs.lt;
-      case _::XInput_RT:
+      case _::xinput_rt:
          return gs.rt;
-      case _::XInput_LS:
-         if (axis == Axis2D::X)
+      case _::xinput_ls:
+         if (axis == DK3D::axis2D::x)
             return gs.ls.x();
          return gs.ls.y();
-      case _::XInput_RS:
-         if (axis == Axis2D::X)
+      case _::xinput_rs:
+         if (axis == DK3D::axis2D::x)
             return gs.rs.x();
          return gs.rs.y();
    }
    return 0;
 }
-QPointF DK3DInputHandler::vectorControlValue(VectorControl c) const {
+QPointF DK3DInputHandler::vectorControlValue(DK3D::vector_control c) const {
    switch (c) {
-      using _ = VectorControl;
-      case _::None:
+      using _ = DK3D::vector_control;
+      case _::none:
          return { 0, 0 };
-      case _::MouseMove:
+      case _::mouse_move:
          return this->keyboard_state.mouse.move;
    }
    auto& xi = DKXInputSubsystem::get();
@@ -266,38 +490,36 @@ QPointF DK3DInputHandler::vectorControlValue(VectorControl c) const {
       return { 0, 0 };
    auto& gs = xi.gamepadState();
    switch (c) {
-      using _ = VectorControl;
-      case _::XInput_LS:
+      using _ = DK3D::vector_control;
+      case _::xinput_ls:
          return gs.ls;
-      case _::XInput_RS:
+      case _::xinput_rs:
          return gs.rs;
    }
    return { 0, 0 };
 }
 
-InputResult DK3DInputHandler::inputResultOf(const BoundInput& input) const {
+InputResult DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_input& input) const {
    InputResult result;
-   if (input.is_boolean()) {
-      bool is_while = (input.boolean.type == BooleanInputMod::While);
+   if (input.is_button()) {
+      bool is_while = (input.button.press_type == DK3D::button_press_type::while_down);
       //
-      auto& b = input.boolean;
+      auto& b = input.button;
       KeyDownState kds;
-      if (b.mouse.button != Qt::MouseButton::NoButton) {
-         kds = this->keyboard_state.keyDownState(b.mouse.button);
-      } else if (b.gamepad.button != XInputKey::None) {
-         kds = this->gamepad_state.keyDownState(b.gamepad.button);
+      if (b.gamepad != DK3D::inputs::xinput_button::None) {
+         kds = this->gamepad_state.key_down_state(b);
       } else {
-         kds = this->keyboard_state.keyDownState(b.key.native.vk);
+         kds = this->keyboard_state.key_down_state(b);
       }
       return InputResult::for_boolean_input(this->state.last_update, input, kds);
    }
    if (input.is_scalar()) {
-      result.type = InputResult::Type::Scalar;
+      result.type = control_type::scalar;
       result.x = this->scalarControlValue(input.scalar.input, input.scalar.axis);
       return result;
    }
    if (input.is_vector()) {
-      result.type = InputResult::Type::Vector;
+      result.type = control_type::vector;
       auto xy = this->vectorControlValue(input.vector.input);
       result.x = xy.x();
       result.y = xy.y();
@@ -310,8 +532,8 @@ void DK3DInputHandler::ignoreAllHeldKeys(timestamp_t now) {
    if (now == zero_timestamp)
       now = current_time();
    //
-   this->keyboard_state.ignoreAllDown();
-   this->gamepad_state.ignoreAllDown();
+   this->keyboard_state.ignore_all_down();
+   this->gamepad_state.ignore_all_down();
 }
 void DK3DInputHandler::updateAllKeys(timestamp_t now) {
    this->keyboard_state.update(now);
@@ -372,6 +594,7 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
    update.move.speed    = 1.0;
+   /*//
    for (auto& bind : this->binds.keyboard) {
       if (!bind.function)
          continue;
@@ -390,6 +613,9 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
          }
       }
    }
+   //*/
+   this->binds.keyboard_tree.process(update);
+   this->binds.gamepad_tree.process(update); // process even if no gamepad, so we can handle implicit key-ups
 
    return update;
 }
@@ -408,86 +634,16 @@ void DK3DInputHandler::setBindingsFor(InputDevice d, const QVector<Binding>& b) 
    }
 }
 
-#include <QDialog>
-#include <QGridLayout>
-#include <QPushButton>
-#include <QScrollArea>
-#include "widgets/DKBoundInputWidget.h"
-void DK3DInputHandler::debugOpenBindEditWindow() {
-   auto* dialog = new QDialog;
-   auto* layout = new QGridLayout(dialog);
-   auto* scroll = new QScrollArea(dialog);
-   QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
-   layout->addWidget(scroll, 0, 0, 1, 2);
-   //
-   auto* body = new QWidget(scroll);
-   {
-      auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, body);
-      //
-      layout->addWidget(new QLabel("KEYBOARD:", body));
-      {
-         auto& list = this->binds.keyboard;
-         auto  size = list.size();
-         for (size_t i = 0; i < size; ++i) {
-            auto& bind = list[i];
-            if (bind.function) {
-               layout->addWidget(new QLabel(bind.function->name, body));
-            } else {
-               layout->addWidget(new QLabel("no function", body));
-            }
-            auto* t = new DKBoundInputWidget(body);
-            t->setProperty("DK3D-input-index", i);
-            t->setInputDevice(DKBoundInputWidget::InputDevice::KeyboardMouse);
-            t->setValue(bind.input);
-            layout->addWidget(t);
-         }
-      }
-      layout->addWidget(new QLabel("GAMEPAD:", body));
-      {
-         auto& list = this->binds.gamepad;
-         auto  size = list.size();
-         for (size_t i = 0; i < size; ++i) {
-            auto& bind = list[i];
-            if (bind.function) {
-               layout->addWidget(new QLabel(bind.function->name, body));
-            } else {
-               layout->addWidget(new QLabel("no function", body));
-            }
-            auto* t = new DKBoundInputWidget(body);
-            t->setProperty("DK3D-input-index", i);
-            t->setInputDevice(DKBoundInputWidget::InputDevice::XInput);
-            t->setValue(bind.input);
-            layout->addWidget(t);
-         }
-      }
-      scroll->setWidget(body);
+bool DK3DInputHandler::_isButtonProcessed(passkey_to_bind_tree, const DK3D::inputs::button& button) const {
+   if (button.gamepad != DK3D::inputs::xinput_button::None) {
+      return this->gamepad_state.is_button_processed(button);
    }
-   auto* save = new QPushButton("Save", dialog);
-   QObject::connect(save, &QPushButton::clicked, dialog, [this, dialog, body]() {
-      this->ignoreAllHeldKeys();
-      //
-      auto kids = body->findChildren<DKBoundInputWidget*>();
-      for (auto* widget : kids) {
-         auto idx = widget->property("DK3D-input-index");
-         if (!idx.isValid())
-            continue;
-         auto i = idx.toInt();
-         //
-         switch (widget->inputDevice()) {
-            using _ = DKBoundInputWidget::InputDevice;
-            case _::KeyboardMouse:
-               this->binds.keyboard[i].input = widget->value();
-               break;
-            case _::XInput:
-               this->binds.gamepad[i].input = widget->value();
-               break;
-         }
-      }
-      //
-      dialog->accept();
-   });
-   layout->addWidget(save, 1, 1);
-   layout->addWidget(new DKBoundInputWidget(dialog), 2, 0, 1, 2); // TEST
-   //
-   dialog->show();
+   return this->keyboard_state.is_button_processed(button);
+}
+void DK3DInputHandler::_markButtonProcessed(passkey_to_bind_tree, const DK3D::inputs::button& button) {
+   if (button.gamepad != DK3D::inputs::xinput_button::None) {
+      this->gamepad_state.mark_button_processed(button);
+      return;
+   }
+   this->keyboard_state.mark_button_processed(button);
 }

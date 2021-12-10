@@ -2,13 +2,19 @@
 #include <array>
 #include <bitset>
 #include <Qt>
-#include "../helpers/bitfield_array.h"
-#include "chrono.h"
-#include "InputResult.h"
-#include "KeyDownState.h"
+#include "helpers/bitfield_array.h"
+#include "dk3d/chrono.h"
+#include "dk3d/InputResult.h"
+#include "dk3d/KeyDownState.h"
 
 namespace DK3D {
-   class OSKeyboardState { // also handles mouse buttons
+   namespace inputs {
+      struct button;
+   }
+}
+
+namespace DK3D::devices {
+   class keyboard_mouse {
       public:
          static constexpr size_t vk_code_count = 256;
 
@@ -40,21 +46,18 @@ namespace DK3D {
             } mouse;
          } system;
 
-         void ignoreAllDown();
+      public:
+         void recheck_mouse_metrics();
+
+         void ignore_all_down();
          void update(timestamp_t now);
 
-         void recheckMouseMetrics();
+         void mark_button_processed(const inputs::button&);
+         bool is_button_processed(const inputs::button&) const;
 
-         void markButtonProcessed(int vk);
-         void markButtonProcessed(Qt::MouseButton);
-
-         KeyReleaseType releaseType(int vk) const;
-         KeyReleaseType releaseType(Qt::MouseButton) const;
-         bool isDown(int vk, bool even_if_ignored = false) const;
-         bool isDown(Qt::MouseButton, bool even_if_ignored = false) const;
-         timestamp_t downWhen(int vk) const;
-         timestamp_t downWhen(Qt::MouseButton) const;
-         KeyDownState keyDownState(int vk) const;
-         KeyDownState keyDownState(Qt::MouseButton) const;
+         KeyReleaseType release_type(const inputs::button&) const;
+         bool is_down(const inputs::button&, bool even_if_ignored = false) const;
+         timestamp_t down_when(const inputs::button&) const;
+         KeyDownState key_down_state(const inputs::button&) const;
    };
 }

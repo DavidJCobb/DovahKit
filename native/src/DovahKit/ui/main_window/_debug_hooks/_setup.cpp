@@ -21,7 +21,6 @@
 #include "qt_3d_tests.h"
 #include "vulkan_renderer_instance.h"
 #include "ui_key_picker.h"
-#include "dk3d_debug_rebind.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -43,8 +42,7 @@ namespace DovahKitDebug {
       features::ui_texture_asset_pane,
       features::qt_3d_tests,
       features::vulkan_renderer_instance,
-      features::ui_key_picker,
-      features::dk3d_debug_rebind//,
+      features::ui_key_picker//,
    >;
 
    template<typename T> struct _add_functor {
