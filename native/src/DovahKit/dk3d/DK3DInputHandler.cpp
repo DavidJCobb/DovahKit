@@ -181,7 +181,7 @@ DK3DInputHandler::DK3DInputHandler() {
       //
       {  // Non-nested
          root->append(*(new binds::nodes::input( // Tap
-            tr("Move Camera Up"),
+            tr("Test Tap (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
                   .gamepad    = XInputKey::A,
@@ -192,7 +192,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tools::debug_log::options{ .number = 1 }
          )));
          root->append(*(new binds::nodes::input( // Hold
-            tr("Move Camera Up"),
+            tr("Test Hold (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
                   .gamepad    = XInputKey::B,
@@ -203,11 +203,22 @@ DK3DInputHandler::DK3DInputHandler() {
             tools::debug_log::options{ .number = 1 }
          )));
          root->append(*(new binds::nodes::input( // While
-            tr("Move Camera Up"),
+            tr("Test While (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
                   .gamepad    = XInputKey::X,
                   .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 1 }
+         )));
+         root->append(*(new binds::nodes::input( // Tap (not shadowed)
+            tr("Test Tap (not shadowed)"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::Y,
+                  .press_type = DK3D::button_press_type::tap,
                },
             },
             &tools::debug_log::get(),
@@ -245,6 +256,17 @@ DK3DInputHandler::DK3DInputHandler() {
                .button = {
                   .gamepad    = XInputKey::B,
                   .press_type = DK3D::button_press_type::hold,
+               },
+            },
+            &tools::debug_log::get(),
+            tools::debug_log::options{ .number = 2 }
+         )));
+         node->append(*(new binds::nodes::input( // While
+            tr("Move Camera Up"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = XInputKey::X,
+                  .press_type = DK3D::button_press_type::while_down,
                },
             },
             &tools::debug_log::get(),

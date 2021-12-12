@@ -49,16 +49,103 @@ namespace DK3D::binds {
       // Start with an upward pass, to verify that the active node is still active.
       //
       if (active != this->root) {
-         node* highest_inactive = nullptr;
+         node* prior = active;
+         node* after = nullptr;
          for (auto* node = active; node; node = node->parent_node()) {
             if (node == this->root)
                break;
             if (!node->check_still_active(ih))
-               highest_inactive = node;
+               after = node;
          }
-         if (highest_inactive) {
-            active = highest_inactive->parent_node();
-            assert(active);
+         if (after) {
+            //
+            // The active node or one of its ancestors has ceased to be active. We 
+            // need to back out to the nearest still-active node, or to the root.
+            //
+            after  = after->parent_node();
+            assert(after);
+            active = after;
+            //
+            // A parent node has ceased to be active. Update states on any "while" 
+            // button binds that were in that node; there are some edge-cases that 
+            // we need to account for.
+            // 
+            // Consider the following binds:
+            // 
+            //    [L]     Modifier
+            //    [U]     Test Shadowed
+            //    [L + U] Test Shadower
+            // 
+            // If you press and hold [L], press and hold [U], release [L] and then 
+            // release [U], then "Test Shadower" will stop running (because the 
+            // parent modifier is no longer down) but will never receive a key-up 
+            // "invoke" call, which is incorrect behavior.
+            // 
+            /// TODO: THE BELOW IS NOT FIXED; REQUIRES ACTION WHEN ENTERING A MODIFIER, NOT LEAVING ONE
+            // 
+            // If you press and hold [U], and then press and hold [L], then "Test 
+            // Shadowed" will stop running (because it becomes shadowed), but it 
+            // will never receive a key-up "invoke" call, which is also incorrect 
+            // behavior.
+            // 
+            /// TODO: THE ABOVE IS NOT FIXED; REQUIRES ACTION WHEN ENTERING A MODIFIER, NOT LEAVING ONE
+            // 
+            // Lastly, if you press and hold [L] and [U] on the same frame, and 
+            // then release both keys on the same frame, then "Test Shadower" will 
+            // stop running but will never receive a key-up "invoke" call, because 
+            // (if we don't do any special processing here) we'll have backed out 
+            // of the modifier; "Test Shadowed" will incorrectly receive the key-up 
+            // "invoke" call.
+            // 
+            // These are the cases we want to fix here. When we back out of any 
+            // parent nodes, we need to check the "while" button binds inside of 
+            // those nodes, searching from the deepest nodes to the shallowest. We 
+            // need to fake "key-up" events in the first two cases; in the third 
+            // case, we need to send an authentic "key-up" event here and then 
+            // make sure that that event is not also received by any shadowed bind.
+            //
+            for (const auto* node = prior; node && node != after; node = node->parent_node()) {
+               for (const auto* child : node->child_nodes()) {
+                  auto* input = child->as<nodes::input>();
+                  if (!input)
+                     continue;
+                  auto& mapping = input->mapping;
+                  auto& button  = mapping.button;
+                  if (button.press_type != button_press_type::while_down)
+                     continue;
+                  if (!mapping.is_button())
+                     continue;
+                  if (ih._isButtonProcessed(ih_passkey_t(), button))
+                     //
+                     // If we've already passed a key-up for this key, don't pass 
+                     // another.
+                     //
+                     continue;
+                  //
+                  auto ir = ih.inputResultOf(mapping);
+                  if (ir.active()) {
+                     //
+                     // The key is currently down, or just went down. Send a faked key-up 
+                     // to this binding. Don't mark the binding as processed; we want any 
+                     // (formerly) shadowed binds to the same key to be able to detect the 
+                     // key-down on this frame.
+                     //
+                     InputResult faked;
+                     faked.while_has_changed = true;
+                     if (input->tool)
+                        input->tool->invoke(faked, input->params, camera_update);
+                  } else if (ir.while_has_changed) {
+                     //
+                     // The key just went up. Send a real key-up to this binding, and then 
+                     // mark the key as processed so that (formerly) shadowed "while" binds 
+                     // in ancestor nodes  don't also receive the same key-up.
+                     //
+                     if (input->tool)
+                        input->tool->invoke(ir, input->params, camera_update);
+                     ih._markButtonProcessed(ih_passkey_t(), mapping.button);
+                  }
+               }
+            }
          }
       }
       //

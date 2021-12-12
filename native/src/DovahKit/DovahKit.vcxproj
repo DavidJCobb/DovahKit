@@ -652,6 +652,7 @@
     <ClInclude Include="dk3d\enums\button_press_type.h" />
     <ClInclude Include="dk3d\enums\control_type.h" />
     <ClInclude Include="dk3d\enums\EditorMode.h" />
+    <ClInclude Include="dk3d\enums\editor_mode.h" />
     <ClInclude Include="dk3d\enums\InputDevice.h" />
     <ClInclude Include="dk3d\enums\scalar_control.h" />
     <ClInclude Include="dk3d\enums\vector_control.h" />
@@ -692,6 +693,7 @@
     <QtMoc Include="editor\DovahKit3DControls.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
+    <ClInclude Include="helpers\enum_flags.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
