@@ -535,6 +535,8 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
+    <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_base.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.cpp" />
@@ -650,10 +652,11 @@
     <ClInclude Include="dk3d\devices\xinput.h" />
     <ClInclude Include="dk3d\enums\axis2D.h" />
     <ClInclude Include="dk3d\enums\button_press_type.h" />
+    <ClInclude Include="dk3d\enums\camera_turn_axis.h" />
     <ClInclude Include="dk3d\enums\control_type.h" />
-    <ClInclude Include="dk3d\enums\EditorMode.h" />
     <ClInclude Include="dk3d\enums\editor_mode.h" />
-    <ClInclude Include="dk3d\enums\InputDevice.h" />
+    <ClInclude Include="dk3d\enums\input_device_type.h" />
+    <ClInclude Include="dk3d\enums\reference_frame.h" />
     <ClInclude Include="dk3d\enums\scalar_control.h" />
     <ClInclude Include="dk3d\enums\vector_control.h" />
     <ClInclude Include="dk3d\inputs\bound_input.h" />
@@ -666,11 +669,8 @@
     <ClInclude Include="dk3d\tools\_all.h" />
     <ClInclude Include="dk3d\tools\_base.h" />
     <ClInclude Include="dk3d\tools\_options.h" />
-    <ClInclude Include="dk3d\enums\Axis3D.h" />
-    <ClInclude Include="dk3d\enums\AxisPlane.h" />
-    <ClInclude Include="dk3d\enums\CameraTurnAxis.h" />
-    <ClInclude Include="dk3d\enums\ReferenceFrame.h" />
-    <ClInclude Include="dk3d\enums\Sign.h" />
+    <ClInclude Include="dk3d\enums\axis3D.h" />
+    <ClInclude Include="dk3d\enums\sign.h" />
     <ClInclude Include="dk3d\InputResult.h" />
     <ClInclude Include="dk3d\KeyDownState.h" />
     <ClInclude Include="dk3d\OSKeyboardState.h" />
@@ -714,6 +714,8 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.h" />
     <QtMoc Include="ui\options_3d_input_window\options_3d_input_window.h" />
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_base.h" />
+    <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h" />
+    <QtMoc Include="ui\options_3d_input_window\localization.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />

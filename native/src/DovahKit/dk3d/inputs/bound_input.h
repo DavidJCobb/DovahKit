@@ -29,3 +29,6 @@ namespace DK3D::inputs {
       static bound_input from_xinput_button(xinput_button, button_press_type mod = button_press_type::tap);
    };
 }
+
+#include <QObject>
+Q_DECLARE_METATYPE(DK3D::inputs::bound_input)

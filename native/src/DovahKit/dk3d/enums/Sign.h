@@ -1,8 +1,8 @@
 #pragma once
 
 namespace DK3D {
-   enum class Sign {
-      Positive,
-      Negative,
+   enum class sign {
+      positive,
+      negative,
    };
 }

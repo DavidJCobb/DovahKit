@@ -38,8 +38,9 @@ namespace DK3D::binds {
          ~node();
 
          void append(node& o);
+         void insert(node& o, size_t before);
          void remove(node& o);
-         inline int index_of(node& o) const { return this->children.indexOf(&o); }
+         inline int index_of(const node& o) const { return this->children.indexOf(const_cast<node*>(&o)); }
 
          inline node* parent_node() const noexcept { return this->parent; }
          inline const QVector<node*>& child_nodes() const noexcept { return this->children; }

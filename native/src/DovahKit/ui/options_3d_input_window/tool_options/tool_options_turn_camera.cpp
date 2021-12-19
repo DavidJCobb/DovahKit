@@ -27,8 +27,8 @@ namespace DK3DToolOptions {
       {  // Configure 3D axes
          auto cfg = [this](QComboBox* widget) {
             widget->clear();
-            widget->addItem(tr("Yaw",   "3D axis"), (int)DK3D::CameraTurnAxis::Yaw);
-            widget->addItem(tr("Pitch", "3D axis"), (int)DK3D::CameraTurnAxis::Pitch);
+            widget->addItem(tr("Yaw",   "3D axis"), (int)DK3D::camera_turn_axis::yaw);
+            widget->addItem(tr("Pitch", "3D axis"), (int)DK3D::camera_turn_axis::pitch);
             QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.scalarAxis);
@@ -40,20 +40,20 @@ namespace DK3DToolOptions {
          //
          widget = this->ui.scalarSign;
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorXSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorYSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::Sign::Positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::Sign::Negative);
+         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
       }
       //
@@ -61,9 +61,9 @@ namespace DK3DToolOptions {
    }
 
    void TurnCamera::_onControlTypeChanged() {
-      bool button = (this->controlType() == DK3D::ControlType::Boolean);
-      bool scalar = (this->controlType() == DK3D::ControlType::Scalar);
-      bool vector = (this->controlType() == DK3D::ControlType::Vector);
+      bool button = (this->controlType() == DK3D::control_type::button);
+      bool scalar = (this->controlType() == DK3D::control_type::scalar);
+      bool vector = (this->controlType() == DK3D::control_type::vector);
       //
       cobb::qt::set_visibility_of(button,
          this->ui.label_booleanX, this->ui.booleanX,
@@ -97,7 +97,7 @@ namespace DK3DToolOptions {
       //
       this->ui.booleanX->setValue(options.magnitudes.pitch);
       this->ui.booleanZ->setValue(options.magnitudes.yaw);
-      if (this->controlType() == DK3D::ControlType::Scalar) {
+      if (this->controlType() == DK3D::control_type::scalar) {
          cobb::qt::set_combobox_value(this->ui.scalarAxis, options.non_button.input_x);
          cobb::qt::set_combobox_value(this->ui.scalarSign, options.non_button.x_sign);
       } else {
@@ -115,14 +115,14 @@ namespace DK3DToolOptions {
       //
       out.magnitudes.pitch = this->ui.booleanX->value();
       out.magnitudes.yaw   = this->ui.booleanZ->value();
-      if (this->controlType() == DK3D::ControlType::Scalar) {
-         out.non_button.input_x = (DK3D::CameraTurnAxis)this->ui.scalarAxis->currentData().toInt();
-         out.non_button.x_sign  = (DK3D::Sign)this->ui.scalarSign->currentData().toInt();
+      if (this->controlType() == DK3D::control_type::scalar) {
+         out.non_button.input_x = (DK3D::camera_turn_axis)this->ui.scalarAxis->currentData().toInt();
+         out.non_button.x_sign  = (DK3D::sign)this->ui.scalarSign->currentData().toInt();
       } else {
-         out.non_button.input_x = (DK3D::CameraTurnAxis)this->ui.vectorXAxis->currentData().toInt();
-         out.non_button.input_y = (DK3D::CameraTurnAxis)this->ui.vectorYAxis->currentData().toInt();
-         out.non_button.x_sign  = (DK3D::Sign)this->ui.vectorXSign->currentData().toInt();
-         out.non_button.y_sign  = (DK3D::Sign)this->ui.vectorYSign->currentData().toInt();
+         out.non_button.input_x = (DK3D::camera_turn_axis)this->ui.vectorXAxis->currentData().toInt();
+         out.non_button.input_y = (DK3D::camera_turn_axis)this->ui.vectorYAxis->currentData().toInt();
+         out.non_button.x_sign  = (DK3D::sign)this->ui.vectorXSign->currentData().toInt();
+         out.non_button.y_sign  = (DK3D::sign)this->ui.vectorYSign->currentData().toInt();
       }
    }
 }

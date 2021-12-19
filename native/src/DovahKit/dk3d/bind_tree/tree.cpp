@@ -8,7 +8,7 @@
 #include "nodes/root.h"
 
 namespace DK3D::binds {
-   tree::tree(InputDevice d) : device(d) {
+   tree::tree(input_device_type d) : device(d) {
       this->root = new nodes::root;
    }
    

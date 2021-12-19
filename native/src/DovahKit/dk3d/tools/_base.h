@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include "dk3d/enums/editor_mode.h"
 
 struct DKVulkanCameraUpdate;
 namespace DK3D {
@@ -55,6 +56,7 @@ namespace DK3D::tools {
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const = 0;
 
          virtual bool has_options() const { return false; }
+         virtual editor_mode_set supported_editor_modes() const { return all_editor_modes; }
    };
 
    template<typename T> concept tool_has_options_member_type = requires { typename T::options; requires std::is_base_of_v<base, T>; };

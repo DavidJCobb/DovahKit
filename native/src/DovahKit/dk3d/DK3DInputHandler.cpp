@@ -33,7 +33,7 @@ DK3DInputHandler::DK3DInputHandler() {
    //
    #pragma region tree binds: keyboard
    {
-      auto& tree = this->binds.keyboard_tree;
+      auto& tree = this->binds.keyboard;
       auto* root = tree.root;
       {  // keyboard functions: move camera
          struct _bind {
@@ -59,8 +59,8 @@ DK3DInputHandler::DK3DInputHandler() {
                func,
                tools::move_camera::options{
                   .reference_frames = {
-                     .baseline  = ReferenceFrame::Camera,
-                     .selection = ReferenceFrame::Camera,
+                     .baseline  = reference_frame::camera,
+                     .selection = reference_frame::camera,
                   },
                   .magnitudes = { .x = b.x, .y = b.y, .z = b.z },
                }
@@ -96,7 +96,7 @@ DK3DInputHandler::DK3DInputHandler() {
    #pragma endregion
    #pragma region tree binds: gamepad
    {
-      auto& tree = this->binds.gamepad_tree;
+      auto& tree = this->binds.gamepad;
       auto* root = tree.root;
       {  // gamepad functions: move camera
          auto* func = &tools::move_camera::get();
@@ -111,14 +111,14 @@ DK3DInputHandler::DK3DInputHandler() {
             func,
             tools::move_camera::options{
                .reference_frames = {
-                  .baseline  = ReferenceFrame::Camera,
-                  .selection = ReferenceFrame::Camera,
+                  .baseline  = reference_frame::camera,
+                  .selection = reference_frame::camera,
                },
                .non_button = {
-                  .input_x = Axis3D::X,
-                  .input_y = Axis3D::Y,
-                  .x_sign  = Sign::Positive,
-                  .y_sign  = Sign::Positive,
+                  .input_x = axis3D::x,
+                  .input_y = axis3D::y,
+                  .x_sign  = sign::positive,
+                  .y_sign  = sign::positive,
                },
             }
          )));
@@ -133,8 +133,8 @@ DK3DInputHandler::DK3DInputHandler() {
             func,
             tools::move_camera::options{
                .reference_frames = {
-                  .baseline  = ReferenceFrame::Camera,
-                  .selection = ReferenceFrame::Camera,
+                  .baseline  = reference_frame::camera,
+                  .selection = reference_frame::camera,
                },
                .magnitudes = { .z = -1 },
             }
@@ -150,8 +150,8 @@ DK3DInputHandler::DK3DInputHandler() {
             func,
             tools::move_camera::options{
                .reference_frames = {
-                  .baseline  = ReferenceFrame::Camera,
-                  .selection = ReferenceFrame::Camera,
+                  .baseline  = reference_frame::camera,
+                  .selection = reference_frame::camera,
                },
                .magnitudes = { .z = 1 },
             }
@@ -168,10 +168,10 @@ DK3DInputHandler::DK3DInputHandler() {
             &tools::turn_camera::get(),
             tools::turn_camera::options{
                .non_button = {
-                  .input_x = CameraTurnAxis::Yaw,
-                  .input_y = CameraTurnAxis::Pitch,
-                  .x_sign  = Sign::Positive,
-                  .y_sign  = Sign::Positive,
+                  .input_x = camera_turn_axis::yaw,
+                  .input_y = camera_turn_axis::pitch,
+                  .x_sign  = sign::positive,
+                  .y_sign  = sign::positive,
                },
             }
          )));
@@ -275,195 +275,6 @@ DK3DInputHandler::DK3DInputHandler() {
       }
    }
    #pragma endregion
-   #pragma region linear (non-tree) bind lists
-   {  // keyboard functions: move camera
-      auto& kb = this->binds.keyboard;
-      //
-      struct _bind {
-         const char* name;
-         char  key;
-         float x = 0;
-         float y = 0;
-         float z = 0;
-      };
-      constexpr auto _binds = std::array{
-         _bind{ ("Move Camera Forward"), 'W',  0,  1,  0 },
-         _bind{ ("Move Camera Back"),    'S',  0, -1,  0 },
-         _bind{ ("Move Camera Left"),    'A', -1,  0,  0 },
-         _bind{ ("Move Camera Right"),   'D',  1,  0,  0 },
-         _bind{ ("Move Camera Up"),      'Q',  0,  0,  1 },
-         _bind{ ("Move Camera Down"),    'Z',  0,  0, -1 },
-      };
-      auto* func = &tools::move_camera::get();
-      for (const auto& b : _binds) {
-         kb.push_back(Binding(
-            tr(b.name),
-            BoundInput::from_key(b.key, BooleanInputMod::While),
-            func,
-            tools::move_camera::options{
-               .reference_frames = {
-                  .baseline  = ReferenceFrame::Camera,
-                  .selection = ReferenceFrame::Camera,
-               },
-               .magnitudes = { .x = b.x, .y = b.y, .z = b.z },
-            }
-         ));
-      }
-   }
-   {  // keyboard functions: turn camera
-      auto& kb = this->binds.keyboard;
-      //
-      struct _bind {
-         const char* name;
-         const char  key;
-         float x = 0; // pitch
-         float z = 0; // yaw
-      };
-      constexpr auto _binds = std::array{
-         _bind{ "Turn Camera Left",  'G',  0,  1}, // counterclockwise, so turning left is positive
-         _bind{ "Turn Camera Right", 'H',  0, -1},
-         _bind{ "Turn Camera Up",    'R',  1,  0},
-         _bind{ "Turn Camera Down" , 'V', -1,  0},
-      };
-      auto* func = &tools::turn_camera::get();
-      for (const auto& b : _binds) {
-         kb.push_back(Binding(
-            tr(b.name),
-            BoundInput::from_key(b.key, BooleanInputMod::While),
-            func,
-            tools::turn_camera::options{
-               .magnitudes = {.yaw = b.z, .pitch = b.x },
-            }
-         ));
-      }
-   }
-   {  // gamepad functions: move camera
-      auto& gb   = this->binds.gamepad;
-      auto* func = &tools::move_camera::get();
-      //
-      gb.push_back(Binding( // Lateral
-         tr("Move Camera Laterally"),
-         BoundInput{
-            .vector = {
-               .input = VectorControl::XInput_LS,
-            },
-         },
-         func,
-         tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = ReferenceFrame::Camera,
-               .selection = ReferenceFrame::Camera,
-            },
-            .non_button = {
-               .input_x = Axis3D::X,
-               .input_y = Axis3D::Y,
-               .x_sign  = Sign::Positive,
-               .y_sign  = Sign::Positive,
-            },
-         }
-      ));
-      gb.push_back(Binding( // Down
-         tr("Move Camera Down"),
-         BoundInput{
-            .boolean = {
-               .gamepad = {
-                  .button = XInputKey::LB,
-               },
-               .type = BooleanInputMod::While,
-            },
-         },
-         func,
-         tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = ReferenceFrame::Camera,
-               .selection = ReferenceFrame::Camera,
-            },
-            .magnitudes = { .z = -1 },
-         }
-      ));
-      gb.push_back(Binding( // Up
-         tr("Move Camera Up"),
-         BoundInput{
-            .boolean = {
-               .gamepad = {
-                  .button = XInputKey::RB,
-               },
-               .type = BooleanInputMod::While,
-            },
-         },
-         func,
-         tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = ReferenceFrame::Camera,
-               .selection = ReferenceFrame::Camera,
-            },
-            .magnitudes = { .z = 1 },
-         }
-      ));
-   }
-   {  // gamepad functions: turn camera
-      auto& gb = this->binds.gamepad;
-      gb.push_back(Binding(
-         tr("Turn Camera"),
-         BoundInput{
-            .vector = {
-               .input = VectorControl::XInput_RS,
-            },
-         },
-         &tools::turn_camera::get(),
-         tools::turn_camera::options{
-            .non_button = {
-               .input_x = CameraTurnAxis::Yaw,
-               .input_y = CameraTurnAxis::Pitch,
-               .x_sign  = Sign::Positive,
-               .y_sign  = Sign::Positive,
-            },
-         }
-      ));
-   }
-   {  // Gamepad functions: test echo
-      auto& gb = this->binds.gamepad;
-      gb.push_back(Binding(
-         tr("Test Binding (Tap)"),
-         BoundInput{
-            .boolean = {
-               .gamepad = {
-                  .button = XInputKey::X,
-               },
-               .type = BooleanInputMod::Tap,
-            },
-         },
-         &tools::debug_log::get(),
-         tools::debug_log::options{ .number = 1 }
-      ));
-      gb.push_back(Binding(
-         tr("Test Binding (Hold)"),
-         BoundInput{
-            .boolean = {
-               .gamepad = {
-                  .button = XInputKey::Y,
-               },
-               .type = BooleanInputMod::Hold,
-            },
-         },
-         &tools::debug_log::get(),
-         tools::debug_log::options{ .number = 2 }
-      ));
-      gb.push_back(Binding(
-         tr("Test Binding (While)"),
-         BoundInput{
-            .boolean = {
-               .gamepad = {
-                  .button = XInputKey::B,
-               },
-               .type = BooleanInputMod::While,
-            },
-         },
-         &tools::debug_log::get(),
-         tools::debug_log::options{ .number = 3 }
-      ));
-   }
-   #pragma endregion
 }
 DK3DInputHandler::~DK3DInputHandler() {
 }
@@ -521,8 +332,8 @@ QPointF DK3DInputHandler::vectorControlValue(DK3D::vector_control c) const {
    return { 0, 0 };
 }
 
-InputResult DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_input& input) const {
-   InputResult result;
+DK3D::InputResult DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_input& input) const {
+   DK3D::InputResult result;
    if (input.is_button()) {
       bool is_while = (input.button.press_type == DK3D::button_press_type::while_down);
       //
@@ -564,15 +375,15 @@ void DK3DInputHandler::updateAllKeys(timestamp_t now) {
    this->gamepad_state.update(now, xinput.isGamepadConnected(), xinput.gamepadState());
 }
 
-QVector<Binding> DK3DInputHandler::bindingsFor(InputDevice d) const {
+DK3D::binds::tree DK3DInputHandler::bindingsFor(input_device_type d) const {
    switch (d) {
-      using _ = InputDevice;
-      case _::KeyboardMouse:
+      using _ = input_device_type;
+      case _::keyboard_mouse:
          return this->binds.keyboard;
-      case _::XInput:
+      case _::xinput:
          return this->binds.gamepad;
    }
-   return QVector<Binding>();
+   return DK3D::binds::tree(d);
 }
 void DK3DInputHandler::viewFocusChange(DKVulkanView* target, bool has_focus) {
    if (has_focus) {
@@ -616,39 +427,19 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
    update.move.speed    = 1.0;
-   /*//
-   for (auto& bind : this->binds.keyboard) {
-      if (!bind.function)
-         continue;
-      auto r = inputResultOf(bind.input);
-      if (r.active() || r.while_has_changed) {
-         bind.function->invoke(r, bind.params, update);
-      }
-   }
-   if (has_gamepad) {
-      for (auto& bind : this->binds.gamepad) {
-         if (!bind.function)
-            continue;
-         auto r = inputResultOf(bind.input);
-         if (r.active() || r.while_has_changed) {
-            bind.function->invoke(r, bind.params, update);
-         }
-      }
-   }
-   //*/
-   this->binds.keyboard_tree.process(update);
-   this->binds.gamepad_tree.process(update); // process even if no gamepad, so we can handle implicit key-ups
+   this->binds.keyboard.process(update);
+   this->binds.gamepad.process(update); // process even if no gamepad, so we can handle implicit key-ups
 
    return update;
 }
 
-void DK3DInputHandler::setBindingsFor(InputDevice d, const QVector<Binding>& b) {
+void DK3DInputHandler::setBindingsFor(input_device_type d, const DK3D::binds::tree& b) {
    switch (d) {
-      using _ = InputDevice;
-      case _::KeyboardMouse:
+      using _ = input_device_type;
+      case _::keyboard_mouse:
          this->binds.keyboard = b;
          break;
-      case _::XInput:
+      case _::xinput:
          this->binds.gamepad = b;
          break;
       default:

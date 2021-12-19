@@ -1,9 +1,9 @@
 #pragma once
 
 namespace DK3D {
-   enum class Axis3D {
-      X,
-      Y,
-      Z,
+   enum class axis3D {
+      x,
+      y,
+      z,
    };
 }

@@ -4,19 +4,19 @@
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
 namespace {
-   void _apply(glm::vec3& out, float input, DK3D::Axis3D axis, DK3D::Sign sign) {
+   void _apply(glm::vec3& out, float input, DK3D::axis3D axis, DK3D::sign sign) {
       using namespace DK3D;
       //
-      if (sign == Sign::Negative)
+      if (sign == sign::negative)
          input = -input;
       switch (axis) {
-         case Axis3D::X:
+         case axis3D::x:
             out.x = input;
             break;
-         case Axis3D::Y:
+         case axis3D::y:
             out.y = input;
             break;
-         case Axis3D::Z:
+         case axis3D::z:
             out.z = input;
             break;
       }

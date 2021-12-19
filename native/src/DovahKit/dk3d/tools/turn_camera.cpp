@@ -37,26 +37,26 @@ namespace DK3D::tools {
             {
                float x = input.x;
                float y = input.y;
-               if (o->non_button.x_sign == Sign::Negative)
+               if (o->non_button.x_sign == sign::negative)
                   x = -x;
-               if (o->non_button.y_sign == Sign::Negative)
+               if (o->non_button.y_sign == sign::negative)
                   y = -y;
                //
                switch (o->non_button.input_x) {
-                  using _ = CameraTurnAxis;
-                  case _::Pitch:
+                  using _ = camera_turn_axis;
+                  case _::pitch:
                      cut.pitch = x;
                      break;
-                  case _::Yaw:
+                  case _::yaw:
                      cut.yaw = x;
                      break;
                }
                switch (o->non_button.input_y) {
-                  using _ = CameraTurnAxis;
-                  case _::Pitch:
+                  using _ = camera_turn_axis;
+                  case _::pitch:
                      cut.pitch = y;
                      break;
-                  case _::Yaw:
+                  case _::yaw:
                      cut.yaw = y;
                      break;
                }

@@ -1,5 +1,5 @@
 #pragma once
-#include "../enums/InputDevice.h"
+#include "../enums/input_device_type.h"
 
 struct DKVulkanCameraUpdate;
 namespace DK3D::binds {
@@ -12,7 +12,7 @@ namespace DK3D::binds {
 namespace DK3D::binds {
    class tree {
       public:
-         tree(InputDevice);
+         tree(input_device_type);
          //
          tree(const tree&);
          tree& operator=(const tree& o);
@@ -20,9 +20,9 @@ namespace DK3D::binds {
          tree(tree&&);
          tree& operator=(tree&& o);
 
-         InputDevice  device;
-         nodes::root* root   = nullptr;
-         node*        active = nullptr;
+         input_device_type device;
+         nodes::root*      root   = nullptr;
+         node*             active = nullptr;
 
          void process(DKVulkanCameraUpdate&);
    };

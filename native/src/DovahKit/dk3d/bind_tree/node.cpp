@@ -19,6 +19,16 @@ namespace DK3D::binds {
       o.parent = this;
       this->children.append(&o);
    }
+   void node::insert(node& o, size_t before) {
+      assert(o.type != node_type::root);
+      if (o.parent) {
+         if (o.parent == this)
+            return;
+         o.parent->remove(o);
+      }
+      o.parent = this;
+      this->children.insert(before, &o);
+   }
    void node::remove(node& o) {
       assert(o.type != node_type::root);
       if (o.parent != this)

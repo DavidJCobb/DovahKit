@@ -1500,6 +1500,81 @@
     <ClCompile Include="dk3d\InputResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKKeyPickerWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKBoundInputWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\move_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\debug_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\turn_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\options_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\debug_placeholder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\_all.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\_options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\bind_tree\tree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\bind_tree\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\bind_tree\nodes\editor_mode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\devices\keyboard_mouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\devices\xinput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\inputs\bound_input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\bind_tree\nodes\input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\localization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3029,6 +3104,102 @@
     <ClInclude Include="dk3d\KeyDownState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\move_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\axis3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\sign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\Binding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\debug_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\turn_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\mass_set_visible.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\debug_placeholder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\mass_block_signals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\bind_tree\tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\bind_tree\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\bind_tree\nodes\root.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\bind_tree\nodes\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\bind_tree\nodes\input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\inputs\button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\inputs\bound_input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\button_press_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\scalar_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\vector_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\devices\keyboard_mouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\devices\xinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\axis2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\control_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\enum_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\camera_turn_axis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\reference_frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\input_device_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -3131,6 +3302,21 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\textureset.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\options_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -3435,6 +3621,39 @@
     <QtMoc Include="dk3d\DK3DInputHandler.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKBoundInputWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKKeyPickerWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_window\options_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\options_3d_input_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_base.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\localization.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -3500,6 +3719,8 @@
     <Text Include="vulkan\_docs\GLM.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
+    <Text Include="dk3d\_docs\keyboard inputs.txt" />
+    <Text Include="dk3d\_docs\keyboard shortcuts - guidelines for defaults.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

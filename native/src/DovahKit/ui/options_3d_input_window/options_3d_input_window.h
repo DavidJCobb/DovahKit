@@ -1,8 +1,14 @@
 #pragma once
 #include "ui_options_3d_input_window.h"
 #include "widgets/DKBoundInputWidget.h"
-#include "dk3d/Binding.h"
 
+class Options3DControlSchemeModel;
+namespace DK3D::binds {
+   class tree;
+   namespace nodes {
+      class input;
+   }
+}
 namespace DK3DToolOptions {
    class Base;
 }
@@ -12,6 +18,8 @@ class Options3DInputDialog : public QDialog {
    protected:
       Options3DInputDialog(QWidget* parent = nullptr);
       static Options3DInputDialog* current_instance;
+
+      using model_type = Options3DControlSchemeModel;
 
    public:
       static Options3DInputDialog* open(QWidget* parent = nullptr);
@@ -23,22 +31,20 @@ class Options3DInputDialog : public QDialog {
          DK3DToolOptions::Base* tool_options = nullptr;
       } subwidgets;
       struct {
-         QVector<DK3D::Binding> bindings;
-         int selected_binding = -1;
+         model_type* model = nullptr;
       } state;
 
+      DK3D::binds::nodes::input* selectedInputNode() const;
+
    public slots:
-      void setBindings(QVector<DK3D::Binding>);
+      void setBindings(const DK3D::binds::tree&);
 
    protected:
-      void _updateBindList();
-      void _updateBindListRow(int);
-      void _updateBindListButtons();
-      DK3D::Binding* selectedBinding();
+      void _updateBindListButtons(const QModelIndex& target = QModelIndex());
 
    protected slots:
       void bindingSelected();
-      void rebuildToolOptions();
+      void rebuildToolOptions(DK3D::binds::nodes::input* node = nullptr);
 
       void addBind();
       void deleteBind();

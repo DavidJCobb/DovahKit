@@ -5,46 +5,47 @@
 #include <QPushButton>
 #include "DKKeyPickerWidget.h"
 #if !defined(QT_DESIGNER_LIB)
-   #include "../dk3d/BoundInput.h"
+   #include "dk3d/enums/control_type.h"
+   #include "dk3d/enums/input_device_type.h"
+   #include "dk3d/inputs/bound_input.h"
 #else
    namespace DK3D {
-      enum class ControlType {
-         Boolean,
-         Scalar,
-         Vector,
+      enum class control_type {
+         button,
+         scalar,
+         vector,
       };
-      struct BoundInput {};
+      enum class input_device_type {
+         keyboard_mouse,
+         xinput,
+      };
+      namespace inputs {
+         struct bound_input {};
+      }
    }
 #endif
 
 class DKBoundInputWidget : public QWidget {
    Q_OBJECT;
    public:
-      using ControlType = DK3D::ControlType;
-      enum class InputDevice {
-         KeyboardMouse,
-         XInput,
-      };
-
-   public:
       DKBoundInputWidget(QWidget* parent = nullptr);
 
-      inline InputDevice inputDevice() const noexcept { return this->state.inputDevice; }
-      DK3D::BoundInput value() const;
+      inline DK3D::input_device_type inputDevice() const noexcept { return this->state.inputDevice; }
+      DK3D::inputs::bound_input value() const;
 
    public slots:
-      void setInputDevice(InputDevice);
-      void setValue(const DK3D::BoundInput&);
+      void setInputDevice(DK3D::input_device_type);
+      void setValue(const DK3D::inputs::bound_input&);
 
    signals:
-      void valueChanged(const DK3D::BoundInput&);
+      void valueChanged(const DK3D::inputs::bound_input&);
 
    protected:
       static constexpr auto ControlRole = Qt::ItemDataRole::UserRole;
       static constexpr auto AxisRole    = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
 
       struct {
-         InputDevice inputDevice = InputDevice::KeyboardMouse;
+         DK3D::input_device_type inputDevice = DK3D::input_device_type::keyboard_mouse;
       } state;
       struct {
          QComboBox* control_type = nullptr;

@@ -7,8 +7,6 @@
 #include "../helpers/passkey.h"
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "chrono.h"
-#include "Binding.h"
-#include "BoundInput.h"
 #include "InputResult.h"
 #include "OSKeyboardState.h"
 #include "XInputGamepadState.h"
@@ -16,7 +14,7 @@
 #include "devices/keyboard_mouse.h"
 #include "devices/xinput.h"
 #include "enums/axis2D.h"
-#include "enums/InputDevice.h"
+#include "enums/input_device_type.h"
 #include "enums/scalar_control.h"
 #include "enums/vector_control.h"
 #include "inputs/bound_input.h"
@@ -25,13 +23,7 @@
 class DK3DInputHandler : public QObject {
    Q_OBJECT;
    public:
-      using Axis2D        = DK3D::Axis2D;
-      using Binding       = DK3D::Binding;
-      using BoundInput    = DK3D::BoundInput;
-      using InputResult   = DK3D::InputResult;
-      using ScalarControl = DK3D::ScalarControl;
-      using VectorControl = DK3D::VectorControl;
-      using timestamp_t   = DK3D::timestamp_t;
+      using timestamp_t = DK3D::timestamp_t;
 
    protected:
       DK3DInputHandler();
@@ -45,17 +37,17 @@ class DK3DInputHandler : public QObject {
       float   scalarControlValue(DK3D::scalar_control, DK3D::axis2D axis = DK3D::axis2D::x) const;
       QPointF vectorControlValue(DK3D::vector_control) const;
 
-      InputResult inputResultOf(const DK3D::inputs::bound_input&) const;
+      DK3D::InputResult inputResultOf(const DK3D::inputs::bound_input&) const;
 
    public:
-      QVector<Binding> bindingsFor(DK3D::InputDevice) const;
+      DK3D::binds::tree bindingsFor(DK3D::input_device_type) const;
       void viewFocusChange(DKVulkanView* target, bool has_focus);
 
    public slots:
       void setTargetView(DKVulkanView* target);
       DKVulkanCameraUpdate update(DKVulkanView* subject); // TODO: should return something else -- a more complete command list -- in the future
 
-      void setBindingsFor(DK3D::InputDevice, const QVector<Binding>&);
+      void setBindingsFor(DK3D::input_device_type, const DK3D::binds::tree&);
 
    protected slots:
       void ignoreAllHeldKeys(timestamp_t now = DK3D::zero_timestamp);
@@ -70,11 +62,8 @@ class DK3DInputHandler : public QObject {
          timestamp_t last_update = DK3D::zero_timestamp;
       } state;
       struct {
-         QVector<Binding> keyboard;
-         QVector<Binding> gamepad;
-
-         DK3D::binds::tree keyboard_tree = DK3D::binds::tree(DK3D::InputDevice::KeyboardMouse);
-         DK3D::binds::tree gamepad_tree  = DK3D::binds::tree(DK3D::InputDevice::XInput);
+         DK3D::binds::tree keyboard = DK3D::binds::tree(DK3D::input_device_type::keyboard_mouse);
+         DK3D::binds::tree gamepad  = DK3D::binds::tree(DK3D::input_device_type::xinput);
       } binds;
 
    public:

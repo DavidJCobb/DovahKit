@@ -1,8 +1,8 @@
 #pragma once
 #include "_base.h"
-#include "../enums/Axis3D.h"
-#include "../enums/ReferenceFrame.h"
-#include "../enums/Sign.h"
+#include "../enums/axis3D.h"
+#include "../enums/reference_frame.h"
+#include "../enums/sign.h"
 
 namespace DK3D::tools {
    class move_camera : public base {
@@ -20,8 +20,8 @@ namespace DK3D::tools {
          struct options {
             bool also_translate_selection = false;
             struct {
-               ReferenceFrame baseline  = ReferenceFrame::World;
-               ReferenceFrame selection = ReferenceFrame::World;
+               reference_frame baseline  = reference_frame::camera;
+               reference_frame selection = reference_frame::camera;
             } reference_frames;
             struct {
                float x = 0;
@@ -29,10 +29,10 @@ namespace DK3D::tools {
                float z = 0;
             } magnitudes;
             struct {
-               Axis3D input_x = Axis3D::X;
-               Axis3D input_y = Axis3D::Y;
-               Sign   x_sign  = Sign::Positive;
-               Sign   y_sign  = Sign::Negative;
+               axis3D input_x = axis3D::x;
+               axis3D input_y = axis3D::y;
+               sign   x_sign  = sign::positive;
+               sign   y_sign  = sign::negative;
             } non_button;
          };
       public:

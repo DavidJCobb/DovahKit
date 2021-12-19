@@ -1,7 +1,7 @@
 #include "tool_options_base.h"
 
 namespace DK3DToolOptions {
-   void Base::setControlType(DK3D::ControlType ct) {
+   void Base::setControlType(DK3D::control_type ct) {
       if (ct == this->state.controlType)
          return;
       this->state.controlType = ct;

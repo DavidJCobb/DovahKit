@@ -1,8 +1,7 @@
 #pragma once
 #include "_base.h"
-#include "../enums/CameraTurnAxis.h"
-#include "../enums/ReferenceFrame.h"
-#include "../enums/Sign.h"
+#include "../enums/camera_turn_axis.h"
+#include "../enums/sign.h"
 
 namespace DK3D::tools {
    class turn_camera : public base {
@@ -23,10 +22,10 @@ namespace DK3D::tools {
                float pitch = 0;
             } magnitudes;
             struct {
-               CameraTurnAxis input_x = CameraTurnAxis::Yaw;
-               CameraTurnAxis input_y = CameraTurnAxis::Pitch;
-               Sign x_sign = Sign::Positive;
-               Sign y_sign = Sign::Positive;
+               camera_turn_axis input_x = camera_turn_axis::yaw;
+               camera_turn_axis input_y = camera_turn_axis::pitch;
+               sign x_sign = sign::positive;
+               sign y_sign = sign::positive;
             } non_button;
          };
       public:
