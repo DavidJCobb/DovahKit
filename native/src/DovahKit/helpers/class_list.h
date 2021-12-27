@@ -16,6 +16,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include "concepts.h"
+#include "copy_variadic_template_parameters.h"
+#include "tuple_concat.h"
 #include <array>
 #include <concepts>
 #include <tuple>
@@ -29,7 +31,7 @@ namespace cobb {
       template<template<typename T> typename functor> concept IsBreakableForEachFunctor = requires {
          { functor<void>::execute() } -> std::same_as<bool>;
       };
-      template<template<typename T> typename functor> concept IsIndexOfMatchingFunctor = requires {
+      template<template<typename T> typename functor> concept MatchingFunctor = requires {
          { functor<void>::execute() } -> std::same_as<bool>;
       };
    }
@@ -72,10 +74,21 @@ namespace cobb {
          static constexpr size_t size() noexcept { return count; }
 
          using as_tuple = std::tuple<Types...>;
-
          template<size_t n> using nth_type = typename std::tuple_element<n, as_tuple>::type;
 
          template<typename T> static constexpr bool contains = (std::is_same_v<T, Types> || ...);
+
+      protected:
+         template<typename> struct _concat_helper;
+         template<typename... Others> struct _concat_helper<cobb::class_list<Others...>> {
+            using type = cobb::class_list<Types..., Others...>;
+         };
+         template<typename... Others> struct _concat_helper<std::tuple<Others...>> {
+            using type = cobb::class_list<Types..., Others...>;
+         };
+      public:
+         // Concatenate the type lists of two cobb::class_lists, or of a cobb::class_list and a std::tuple.
+         template<typename Other> using concat = _concat_helper<Other>::type;
 
          template<typename T, size_t n = 0>
          static consteval size_t index_of() {
@@ -86,7 +99,7 @@ namespace cobb {
             return -1;
          };
 
-         template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsIndexOfMatchingFunctor<functor>
+         template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::MatchingFunctor<functor>
          static constexpr size_t index_of_matching() {
             if (functor<nth_type<n>>::execute())
                return n;
@@ -95,10 +108,20 @@ namespace cobb {
             return -1;
          }
 
-         template<template<typename T> typename functor> requires class_list_concepts::IsIndexOfMatchingFunctor<functor>
+         template<template<typename T> typename functor> requires class_list_concepts::MatchingFunctor<functor>
          static constexpr bool has_matching() {
             return (index_of_matching<functor>() != (size_t)-1);
          }
+
+      protected:
+         template<typename T, template<typename> typename functor> using _matching_type_or_empty_tuple = std::conditional_t<functor<T>::execute(), std::tuple<T>, std::tuple<>>;
+      public:
+         // Generate a cobb::class_list specialization which includes only classes from this list that match some compile-time functor.
+         template<template<typename T> typename functor> requires class_list_concepts::MatchingFunctor<functor>
+         using all_matching = cobb::copy_variadic_template_parameters<
+            cobb::class_list,
+            cobb::tuple_concat<_matching_type_or_empty_tuple<Types, functor>...>
+         >;
 
          template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsForEachFunctor<functor>
          static constexpr void for_each() {
@@ -140,6 +163,8 @@ namespace cobb {
             return result;
          }
    };
+
+   template<typename Tuple> using class_list_from_tuple = cobb::copy_variadic_template_parameters<cobb::class_list, Tuple>;
 
    // ---
 

@@ -32,6 +32,8 @@ namespace cobb {
    //    and produces a mask containing all of them; allows for compile-time validation 
    //    of the values.
    // 
+   //  - Supports enum-class declarations (compare to QFlags, which does not).
+   // 
    // Limitations:
    // 
    //  - You must manually specify the bitcount to use. If your enum elements start from 
