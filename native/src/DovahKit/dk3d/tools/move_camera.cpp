@@ -24,6 +24,17 @@ namespace {
 }
 
 namespace DK3D::tools {
+   void move_camera::results::scale(double delta_seconds) {
+      this->x *= delta_seconds;
+      this->y *= delta_seconds;
+      this->z *= delta_seconds;
+   }
+   void move_camera::results::merge(const results& from) {
+      this->x += from.x;
+      this->y += from.y;
+      this->z += from.z;
+   }
+
    void move_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
       if (!input.active())
          return;

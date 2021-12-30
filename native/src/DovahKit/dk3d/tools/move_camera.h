@@ -35,6 +35,14 @@ namespace DK3D::tools {
                sign   y_sign  = sign::negative;
             } non_button;
          };
+         struct results {
+            float x = 0;
+            float y = 0;
+            float z = 0;
+
+            void scale(double delta_seconds);
+            void merge(const results& from);
+         };
       public:
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const override;
 

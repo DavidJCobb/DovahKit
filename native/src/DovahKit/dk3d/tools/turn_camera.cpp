@@ -4,6 +4,17 @@
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
 namespace DK3D::tools {
+   void turn_camera::results::scale(double delta_seconds) {
+      this->yaw   *= delta_seconds;
+      this->pitch *= delta_seconds;
+      this->roll  *= delta_seconds;
+   }
+   void turn_camera::results::merge(const results& from) {
+      this->yaw   += from.yaw;
+      this->pitch += from.pitch;
+      this->roll  += from.roll;
+   }
+
    void turn_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
       if (!input.active())
          return;

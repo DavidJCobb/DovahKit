@@ -28,6 +28,14 @@ namespace DK3D::tools {
                sign y_sign = sign::positive;
             } non_button;
          };
+         struct results {
+            float yaw   = 0.0; // per tick
+            float pitch = 0.0; // per tick
+            float roll  = 0.0; // per tick
+
+            void scale(double delta_seconds);
+            void merge(const results& from);
+         };
       public:
          virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const override;
 

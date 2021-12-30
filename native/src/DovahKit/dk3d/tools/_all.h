@@ -2,6 +2,7 @@
 #include <array>
 #include "_base.h"
 #include "../../helpers/class_list.h"
+#include "../chrono.h"
 
 #include "debug_log.h"
 #include "debug_placeholder.h"
@@ -19,7 +20,7 @@ namespace DK3D {
    static_assert(all_tools::size() <= std::numeric_limits<tool_id>::max(), "The DK3D::tool_id type must be large enough to have unique values for all entries in DK3D::all_tools, as well as a sentinel \"no tool\" value.");
 
    namespace impl {
-      template<typename T> struct id_of_tool_by_options {
+      template<typename Desired> struct id_of_tool_by_options {
          //
          // We need to be able to use cobb::class_list::index_of_matching to find 
          // the editor_function class that has a given options type. However, the 
@@ -29,10 +30,10 @@ namespace DK3D {
          // editor function class whose options type is T, then you'd want to 
          // pass (id_of_tool_by_options<T>::functor) to index_of_matching.
          //
-         template<typename argument> struct functor {
+         template<typename Current> struct functor {
             static consteval bool execute() {
-               if constexpr (tools::tool_has_options_member_type<argument>) {
-                  return std::is_same_v<T, argument::options>;
+               if constexpr (tools::tool_has_options_member_type<Current>) {
+                  return std::is_same_v<Desired, Current::options>;
                }
                return false;
             }
@@ -77,6 +78,114 @@ namespace DK3D {
             if (i == tools::id_of_none)
                return nullptr;
             return this->pointers[i];
+         }
+   };
+
+   // --- tool results ---
+
+   namespace impl {
+      template<typename T> concept has_tool_results = requires { typename T::results; };
+      template<typename T> struct has_tool_results_functor {
+         static consteval bool execute() {
+            return has_tool_results<T>;
+         }
+      };
+      template<typename T> struct tool_to_tool_results {
+         using type = T::results;
+      };
+   }
+   using all_tools_with_results = all_tools::all_matching<impl::has_tool_results_functor>; // list of all tool classes with results
+   using all_tool_results = all_tools_with_results::transform<impl::tool_to_tool_results>; // list of all results classes from tools that have them
+
+   namespace impl {
+      template<typename Desired> struct find_tool_with_results {
+         //
+         // We need to be able to use cobb::class_list::index_of_matching to find 
+         // the editor_function class that has a given results type. However, the 
+         // functors we pass to index_of_matching can only be templated on the 
+         // type currently being iterated... so we'll use nested structs along 
+         // with nested templating. If, given some type T, you want to find the 
+         // editor function class whose options type is T, then you'd want to 
+         // pass (id_of_tool_by_options<T>::functor) to index_of_matching.
+         //
+         template<typename Current> struct functor {
+            static consteval bool execute() {
+               if constexpr (tools::tool_has_options_member_type<Current>) {
+                  return std::is_same_v<Desired, Current::results>;
+               }
+               return false;
+            }
+         };
+
+         using tool = all_tools_with_results::get_matching<functor>;
+      };
+   }
+   template<typename Results> using tool_for_results = impl::find_tool_with_results<Results>::tool;
+
+   namespace impl { // compile-time sanity checks
+      template<typename T> struct _tool_has_duplicate_results_struct {
+         template<typename U> struct _inner {
+            static consteval bool execute() {
+               return std::is_same_v<T::results, U::results> && !std::is_same_v<T, U>;
+            }
+         };
+         static consteval bool execute() {
+            return all_tools_with_results::has_matching<_inner>();
+         }
+      };
+      static_assert(!all_tools_with_results::has_matching<_tool_has_duplicate_results_struct>(), "Different tools cannot have the same results type.");
+   }
+
+   class combined_tool_results;
+   namespace impl::_all_tool_results {
+      // ugh, MSVC2019 doesn't support requires expressions...
+      template<typename T> concept can_scale = requires(T x) { { x.scale(0.0) }; };
+      template<typename T> concept can_merge = requires(combined_tool_results& x, const combined_tool_results& y) { { x.merge(std::forward<const combined_tool_results&>(y)) }; };
+   }
+   // Struct containing one member for each tool's results type.
+   class combined_tool_results : public all_tool_results::as_tuple {
+      private:
+         using self_t  = combined_tool_results;
+         using classes = all_tool_results;
+
+         template<typename T> struct _foreach_scale {
+            static void execute(self_t* self, double delta_seconds) {
+               if constexpr (impl::_all_tool_results::can_scale<T>) {
+                  std::get<T>(*self).scale(delta_seconds);
+               }
+            }
+         };
+         template<typename T> struct _foreach_merge {
+            static void execute(self_t* self, const self_t& source) {
+               if constexpr (impl::_all_tool_results::can_merge<T>) {
+                  std::get<T>(*self).merge(std::get<T>(source));
+               }
+            }
+         };
+
+         template<typename T> requires (all_tools_with_results::contains<T> || all_tool_results::contains<T>)
+         using _to_results = std::conditional_t<all_tools_with_results::contains<T>, typename T::results, T>;
+
+      public:
+         using tuple::tuple; // inherit constructor, etc.
+
+         // alternative to std::get which accepts a tool class or a tool::results struct
+         template<typename T> requires (all_tools_with_results::contains<T> || all_tool_results::contains<T>)
+         _to_results<T>& get_member() {
+            return std::get<_to_results<T>>(*this);
+         }
+
+         // alternative to std::get-and-then-assign which accepts a tool class or a tool::results struct
+         template<typename T> requires (all_tools_with_results::contains<T> || all_tool_results::contains<T>)
+         void set_member(const _to_results<T>& v) {
+            std::get<_to_results<T>>(*this) = v;
+         }
+
+         void scale(double delta_seconds) {
+            classes::for_each_with_args<_foreach_scale>(this, delta_seconds);
+         }
+         void merge(const combined_tool_results& merge_from) {
+            classes::for_each_with_args<_foreach_merge>(this, merge_from);
          }
    };
 }

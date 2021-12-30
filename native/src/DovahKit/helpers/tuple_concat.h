@@ -56,14 +56,17 @@ namespace cobb {
                nth_type<0>,
                std::conditional_t<
                   (count % 2 == 0),
-                  recursive_merge_pairs<half_sequence>::type,
-                  two<recursive_merge_pairs<half_sequence>::type, nth_type<count - 1>>::type
+                  typename recursive_merge_pairs<half_sequence>::type,
+                  typename two<typename recursive_merge_pairs<half_sequence>::type, nth_type<count - 1>>::type
                >
             >;
          };
 
          // Final result.
          using type = merge_all::type;
+      };
+      template<> struct arbitrary<> {
+         using type = std::tuple<>;
       };
    }
 

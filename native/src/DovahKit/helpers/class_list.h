@@ -113,6 +113,9 @@ namespace cobb {
             return (index_of_matching<functor>() != (size_t)-1);
          }
 
+         template<template<typename T> typename functor> requires (has_matching<functor>())
+         using get_matching = nth_type<index_of_matching<functor>()>;
+
       protected:
          template<typename T, template<typename> typename functor> using _matching_type_or_empty_tuple = std::conditional_t<functor<T>::execute(), std::tuple<T>, std::tuple<>>;
       public:
@@ -122,6 +125,8 @@ namespace cobb {
             cobb::class_list,
             cobb::tuple_concat<_matching_type_or_empty_tuple<Types, functor>...>
          >;
+
+         template<template<typename T> typename Transform> using transform = cobb::class_list<typename Transform<Types>::type...>;
 
          template<template<typename T> typename functor, size_t n = 0> requires class_list_concepts::IsForEachFunctor<functor>
          static constexpr void for_each() {
