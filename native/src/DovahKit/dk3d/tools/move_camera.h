@@ -44,7 +44,7 @@ namespace DK3D::tools {
             void merge(const results& from);
          };
       public:
-         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const override;
+         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results&) const override;
 
          virtual bool has_options() const { return true; }
    };

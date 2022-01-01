@@ -17,13 +17,6 @@ namespace DK3D {
    }
 
    struct InputResult {
-      enum class Type {
-         None,
-         Boolean,
-         Scalar,
-         Vector,
-      };
-      //
       float x = 0;
       float y = 0;
       control_type      type       = control_type::none;

@@ -4,6 +4,7 @@
 #include "KeyDownState.h"
 #include "bind_tree/nodes/input.h"
 #include "bind_tree/nodes/root.h"
+#include "tools/_results.h"
 
 using namespace DK3D;
 
@@ -424,12 +425,55 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    this->updateAllKeys(now);
    bool has_gamepad = this->gamepad_state.is_connected;
    //
+   DK3D::combined_tool_results instant_results;
+   DK3D::combined_tool_results while_results;
+   this->binds.keyboard.process(instant_results, while_results);
+   this->binds.gamepad.process(instant_results, while_results); // process even if no gamepad, so we can handle implicit key-ups
+   //
+   // The "instant" results are used for "tap" and "hold" button binds, e.g. "tap a key to jump 
+   // the camera 8 units to the left." The "while" results are used for "while-down" button 
+   // binds and for non-button binds, and are scaled by the frame time, e.g. "hold a key to 
+   // move the camera to the left."
+   // 
+   // As such,...
+   // 
+   //  - Tool results for a non-"while" button should be considered "instant" results; the tool 
+   //    should return values that would make sense to apply instantly.
+   // 
+   //  - All other results should be considered "timed" results; the tool should return values 
+   //    in units per second, as we will here scale them by the frame time in seconds.
+   // 
+   // This is generally what you'd want. A paintbrush-style tool, for example, would generally 
+   // produce as its result an intensity value (e.g. hold the right trigger on a controller to 
+   // paint; the amount by which it is held is the intensity of the paint), and for binds that 
+   // apply over time, you'd want that to be intensity per second so that changes in frame rate 
+   // don't cause the tool to paint unevenly.
+   //
+   while_results.scale(elapsed);
+   instant_results.merge(while_results);
+   //
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
-   update.move.speed    = 1.0;
-   this->binds.keyboard.process(update);
-   this->binds.gamepad.process(update); // process even if no gamepad, so we can handle implicit key-ups
-
+   {
+      const auto& data = instant_results.get_member<DK3D::tools::move_camera>();
+      update.move.direction      = { data.x, data.y, data.z };
+      update.move.scale_by_delta = false;
+      //
+      // Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
+      // delta in the code above. This means that we need to turn off scaling in this particular 
+      // step here.
+      //
+      update.move.speed = 1.0 * elapsed; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+   }
+   {
+      const auto& data = instant_results.get_member<DK3D::tools::turn_camera>();
+      update.turn.roll  = data.roll;
+      update.turn.pitch = data.pitch;
+      update.turn.yaw   = data.yaw;
+      update.turn.scale_by_delta = false;
+      //
+      update.turn.speed = glm::radians(90.0F);
+   }
    return update;
 }
 

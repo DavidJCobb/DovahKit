@@ -1,10 +1,11 @@
 #include "move_camera.h"
 #include "_options.h"
+#include "_results.h"
 #include "../InputResult.h"
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
 namespace {
-   void _apply(glm::vec3& out, float input, DK3D::axis3D axis, DK3D::sign sign) {
+   void _apply(DK3D::tools::move_camera::results& out, float input, DK3D::axis3D axis, DK3D::sign sign) {
       using namespace DK3D;
       //
       if (sign == sign::negative)
@@ -35,7 +36,7 @@ namespace DK3D::tools {
       this->z += from.z;
    }
 
-   void move_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
+   void move_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, combined_tool_results& all_results) const {
       if (!input.active())
          return;
       const auto* o = option_union::as<options>(raw_options);
@@ -50,26 +51,21 @@ namespace DK3D::tools {
       // Currently, we always treat movement as camera-relative (comments on DKVulkanCameraUpdate 
       // saying it's world-relative are currently wrong).
       //
-      glm::vec3 move = { o->magnitudes.x, o->magnitudes.y, o->magnitudes.z };
-      camera_update.move.scale_by_delta = true;
+      results res = {
+         .x = o->magnitudes.x,
+         .y = o->magnitudes.y,
+         .z = o->magnitudes.z,
+      };
       switch (input.type) {
          using _ = control_type;
          case _::button:
-            if (input.press_type != button_press_type::while_down) {
-               //
-               // A "while" bind should treat the "movement" option as a speed per second, while 
-               // other binds should simply make the camera jump by that distance per press.
-               //
-               camera_update.move.scale_by_delta = false;
-            }
             break;
          case _::scalar:
          case _::vector:
-            move = glm::vec3();
-            _apply(move, input.x, o->non_button.input_x, o->non_button.x_sign);
-            _apply(move, input.y, o->non_button.input_y, o->non_button.y_sign);
+            _apply(res, input.x, o->non_button.input_x, o->non_button.x_sign);
+            _apply(res, input.y, o->non_button.input_y, o->non_button.y_sign);
             break;
       }
-      camera_update.move.direction = move;
+      all_results.merge_member(res);
    }
 }

@@ -19,6 +19,6 @@ namespace DK3D::tools {
             QString text;
          };
       public:
-         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const override;
+         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results&) const override;
    };
 }

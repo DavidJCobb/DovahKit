@@ -2,10 +2,13 @@
 #include "../enums/input_device_type.h"
 
 struct DKVulkanCameraUpdate;
-namespace DK3D::binds {
-   class node;
-   namespace nodes {
-      class root;
+namespace DK3D {
+   class combined_tool_results;
+   namespace binds {
+      class node;
+      namespace nodes {
+         class root;
+      }
    }
 }
 
@@ -24,6 +27,6 @@ namespace DK3D::binds {
          nodes::root*      root   = nullptr;
          node*             active = nullptr;
 
-         void process(DKVulkanCameraUpdate&);
+         void process(combined_tool_results& instant, combined_tool_results& while_down);
    };
 }

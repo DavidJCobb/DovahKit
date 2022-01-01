@@ -6,6 +6,7 @@
 
 struct DKVulkanCameraUpdate;
 namespace DK3D {
+   class combined_tool_results;
    struct InputResult;
 }
 
@@ -53,7 +54,7 @@ namespace DK3D::tools {
          static constexpr const char* function_name = "unnamed";
          const char* name = function_name;
 
-         virtual void invoke(const InputResult&, const opaque_option_union&, DKVulkanCameraUpdate& camera_update) const = 0;
+         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results& all_results) const = 0;
 
          virtual bool has_options() const { return false; }
          virtual editor_mode_set supported_editor_modes() const { return all_editor_modes; }

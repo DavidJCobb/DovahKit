@@ -3,7 +3,7 @@
 #include "../InputResult.h"
 
 namespace DK3D::tools {
-   void debug_log::invoke(const InputResult& input, const opaque_option_union& raw_options, DKVulkanCameraUpdate& camera_update) const {
+   void debug_log::invoke(const InputResult& input, const opaque_option_union& raw_options, combined_tool_results&) const {
       const auto* o = option_union::as<options>(raw_options);
       if (!o)
          return;

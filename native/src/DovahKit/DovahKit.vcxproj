@@ -674,6 +674,7 @@
     <ClInclude Include="dk3d\InputResult.h" />
     <ClInclude Include="dk3d\KeyDownState.h" />
     <ClInclude Include="dk3d\OSKeyboardState.h" />
+    <ClInclude Include="dk3d\tools\_results.h" />
     <ClInclude Include="dk3d\XInputGamepadState.h" />
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\core\specialized_traceback.h" />
@@ -693,12 +694,15 @@
     <QtMoc Include="editor\DovahKit3DControls.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
+    <ClInclude Include="helpers\copy_variadic_template_parameters.h" />
     <ClInclude Include="helpers\enum_flags.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
+    <ClInclude Include="helpers\tuple_concat.h" />
+    <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />

@@ -36,7 +36,7 @@ namespace DK3D::binds {
       return *this;
    }
    
-   void tree::process(DKVulkanCameraUpdate& camera_update) {
+   void tree::process(combined_tool_results& tap_results, combined_tool_results& while_results) {
       assert(this->root);
       //
       auto*& active = this->active;
@@ -133,7 +133,7 @@ namespace DK3D::binds {
                      InputResult faked;
                      faked.while_has_changed = true;
                      if (input->tool)
-                        input->tool->invoke(faked, input->params, camera_update);
+                        input->tool->invoke(faked, input->params, while_results);
                   } else if (ir.while_has_changed) {
                      //
                      // The key just went up. Send a real key-up to this binding, and then 
@@ -141,7 +141,7 @@ namespace DK3D::binds {
                      // in ancestor nodes  don't also receive the same key-up.
                      //
                      if (input->tool)
-                        input->tool->invoke(ir, input->params, camera_update);
+                        input->tool->invoke(ir, input->params, while_results);
                      ih._markButtonProcessed(ih_passkey_t(), mapping.button);
                   }
                }
@@ -190,8 +190,10 @@ namespace DK3D::binds {
                auto r = ih.inputResultOf(mapping);
                bool a = r.active();
                if (a || r.while_has_changed) {
-                  if (casted->tool)
-                     casted->tool->invoke(r, casted->params, camera_update);
+                  if (casted->tool) {
+                     bool is_tap = (r.type == control_type::button && r.press_type != button_press_type::while_down);
+                     casted->tool->invoke(r, casted->params, is_tap ? tap_results : while_results);
+                  }
                   //
                   // Handle modifier keys:
                   //
