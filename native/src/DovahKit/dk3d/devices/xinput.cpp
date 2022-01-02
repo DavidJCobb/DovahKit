@@ -79,7 +79,7 @@ namespace DK3D::devices {
             //
             // Key was up, last we checked.
             //
-            btn.releases[i] = KeyReleaseType::None;
+            btn.releases[i] = button_release_type::none;
             if (held) {
                //
                // Key has been pressed.
@@ -98,9 +98,9 @@ namespace DK3D::devices {
                float elapsed = elapsed_time(start, now);
                start = zero_timestamp;
                if (elapsed >= DK3D::defaults::boolean_input_hold_threshold) {
-                  btn.releases[i] = KeyReleaseType::Hold;
+                  btn.releases[i] = button_release_type::hold;
                } else {
-                  btn.releases[i] = KeyReleaseType::Tap;
+                  btn.releases[i] = button_release_type::tap;
                }
             }
          }
@@ -120,10 +120,10 @@ namespace DK3D::devices {
       return this->buttons.processed.test(i);
    }
 
-   KeyReleaseType xinput::release_type(const inputs::button& b) const {
+   button_release_type xinput::release_type(const inputs::button& b) const {
       auto i = _button_to_index(b);
       if (i == no_button)
-         return KeyReleaseType::None;
+         return button_release_type::none;
       return this->buttons.releases[i];
    }
 
@@ -145,14 +145,14 @@ namespace DK3D::devices {
       return this->buttons.start[i];
    }
 
-   KeyDownState xinput::key_down_state(const inputs::button& b) const {
+   button_state xinput::key_down_state(const inputs::button& b) const {
       if (!this->is_connected)
-         return KeyDownState();
+         return button_state();
       auto i = _button_to_index(b);
       if (i == no_button)
-         return KeyDownState();
+         return button_state();
       //
-      KeyDownState out;
+      button_state out;
       out.down_when = this->buttons.start[i];
       out.is_down   = (out.down_when != zero_timestamp) && !this->buttons.ignore.test(i);
       if (!out.is_down)

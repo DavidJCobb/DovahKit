@@ -1,9 +1,9 @@
 #pragma once
+#include "enums/button_release_type.h"
 #include "chrono.h"
-#include "InputResult.h"
 
 namespace DK3D {
-   struct KeyDownState {
+   struct button_state {
       //
       // Represents key state change information.
       // 
@@ -17,8 +17,8 @@ namespace DK3D {
       //    A key can be "tapped" or "held." If the key is down, or if the key was not released 
       //    on this specific frame, then (release) is "none."
       //
-      bool           is_down   = false;
-      timestamp_t    down_when = zero_timestamp;
-      KeyReleaseType released  = KeyReleaseType::None;
+      bool        is_down   = false;
+      timestamp_t down_when = zero_timestamp;
+      button_release_type released  = button_release_type::none;
    };
 }

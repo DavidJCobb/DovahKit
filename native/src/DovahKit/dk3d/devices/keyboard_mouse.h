@@ -5,7 +5,7 @@
 #include "helpers/bitfield_array.h"
 #include "dk3d/chrono.h"
 #include "dk3d/InputResult.h"
-#include "dk3d/KeyDownState.h"
+#include "dk3d/button_state.h"
 
 namespace DK3D {
    namespace inputs {
@@ -22,7 +22,7 @@ namespace DK3D::devices {
          struct {
             std::array<timestamp_t, vk_code_count> start;
             std::bitset<vk_code_count> ignore;
-            cobb::bitfield_array<KeyReleaseType, vk_code_count, 2> releases;
+            cobb::bitfield_array<button_release_type, vk_code_count, 2> releases;
             //
             std::bitset<vk_code_count> processed;
          } buttons;
@@ -55,9 +55,9 @@ namespace DK3D::devices {
          void mark_button_processed(const inputs::button&);
          bool is_button_processed(const inputs::button&) const;
 
-         KeyReleaseType release_type(const inputs::button&) const;
+         button_release_type release_type(const inputs::button&) const;
          bool is_down(const inputs::button&, bool even_if_ignored = false) const;
          timestamp_t down_when(const inputs::button&) const;
-         KeyDownState key_down_state(const inputs::button&) const;
+         button_state key_down_state(const inputs::button&) const;
    };
 }

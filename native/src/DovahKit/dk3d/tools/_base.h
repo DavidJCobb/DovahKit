@@ -7,7 +7,7 @@
 struct DKVulkanCameraUpdate;
 namespace DK3D {
    class combined_tool_results;
-   struct InputResult;
+   struct input_result;
 }
 
 namespace DK3D {
@@ -42,6 +42,10 @@ namespace DK3D::tools {
    //
    using opaque_option_union = impl::option_union_base;
 
+   struct compile_time_tool_options {
+      bool always_unordered_results = false; // set to (true) if the order of results within a single frame doesn't matter when merging results
+   };
+
    class base {
       protected:
          base() {}
@@ -51,10 +55,11 @@ namespace DK3D::tools {
          }
 
       public:
+         static constexpr compile_time_tool_options compile_time_options = {};
          static constexpr const char* function_name = "unnamed";
          const char* name = function_name;
 
-         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results& all_results) const = 0;
+         virtual void invoke(const input_result&, const opaque_option_union&, combined_tool_results& all_results) const = 0;
 
          virtual bool has_options() const { return false; }
          virtual editor_mode_set supported_editor_modes() const { return all_editor_modes; }

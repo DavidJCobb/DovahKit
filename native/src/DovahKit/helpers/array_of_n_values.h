@@ -15,20 +15,21 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include <tuple>
+#include <array>
+#include <utility>
 
 namespace cobb {
-   namespace impl::tuple_transform {
-      template<template<typename> typename Transform, typename Tuple> struct exec;
-      template<template<typename> typename Transform, typename... Types> struct exec<Transform, std::tuple<Types...>> {
-         using type = std::tuple<Transform<Types>::type...>;
+   namespace impl {
+      template<size_t Count, typename = std::make_index_sequence<Count>> struct array_of_n_values;
+      template<size_t Count, size_t... Indices> struct array_of_n_values<Count, std::index_sequence<Indices...>> {
+         template<typename T> static consteval std::array<T, Count> value(T v) {
+            return { (Indices, v)... };
+         }
       };
    }
+   template<size_t Count, typename T> consteval std::array<T, Count> array_of_n_values(T v) {
+      return impl::array_of_n_values<Count>::value(v);
+   }
 
-   // Given a std::tuple<A, B> and a transform struct, transform it into some std::tuple<C, D> where C and D are the result 
-   // of running A and B through the transform. The transform should be defined as:
-   //
-   // template<typename T> struct my_transform { using type = some_permutation_of<T>; };
-   //
-   template<template<typename T> typename Transform, typename Tuple> using tuple_transform = impl::tuple_transform::exec<Transform, Tuple>;
+   static constexpr auto foo = array_of_n_values<3>(5);
 }

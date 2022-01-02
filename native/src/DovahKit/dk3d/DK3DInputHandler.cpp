@@ -1,7 +1,7 @@
 #include "DK3DInputHandler.h"
 #include <QApplication>
 #include "../editor/subsystems/DKXInputSubsystem.h"
-#include "KeyDownState.h"
+#include "button_state.h"
 #include "bind_tree/nodes/input.h"
 #include "bind_tree/nodes/root.h"
 #include "tools/_results.h"
@@ -333,19 +333,19 @@ QPointF DK3DInputHandler::vectorControlValue(DK3D::vector_control c) const {
    return { 0, 0 };
 }
 
-DK3D::InputResult DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_input& input) const {
-   DK3D::InputResult result;
+DK3D::input_result DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_input& input) const {
+   DK3D::input_result result;
    if (input.is_button()) {
       bool is_while = (input.button.press_type == DK3D::button_press_type::while_down);
       //
       auto& b = input.button;
-      KeyDownState kds;
+      button_state kds;
       if (b.gamepad != DK3D::inputs::xinput_button::None) {
          kds = this->gamepad_state.key_down_state(b);
       } else {
          kds = this->keyboard_state.key_down_state(b);
       }
-      return InputResult::for_boolean_input(this->state.last_update, input, kds);
+      return input_result::for_button_input(this->state.last_update, input, kds);
    }
    if (input.is_scalar()) {
       result.type = control_type::scalar;

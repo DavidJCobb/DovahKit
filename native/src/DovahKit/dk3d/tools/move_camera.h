@@ -8,6 +8,9 @@ namespace DK3D::tools {
    class move_camera : public base {
       public:
          static constexpr const char* function_name = "move_camera";
+         static constexpr compile_time_tool_options compile_time_options = {
+            .always_unordered_results = true,
+         };
       protected:
          move_camera() { this->setup(this); }
 
@@ -44,7 +47,7 @@ namespace DK3D::tools {
             void merge(const results& from);
          };
       public:
-         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results&) const override;
+         virtual void invoke(const input_result&, const opaque_option_union&, combined_tool_results&) const override;
 
          virtual bool has_options() const { return true; }
    };

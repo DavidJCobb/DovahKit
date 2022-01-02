@@ -1,7 +1,7 @@
 #include "turn_camera.h"
 #include "_options.h"
 #include "_results.h"
-#include "../InputResult.h"
+#include "../input_result.h"
 #include "../../vulkan/data/DKVulkanCameraUpdate.h"
 
 namespace DK3D::tools {
@@ -16,7 +16,7 @@ namespace DK3D::tools {
       this->roll  += from.roll;
    }
 
-   void turn_camera::invoke(const InputResult& input, const opaque_option_union& raw_options, combined_tool_results& all_results) const {
+   void turn_camera::invoke(const input_result& input, const opaque_option_union& raw_options, combined_tool_results& all_results) const {
       if (!input.active())
          return;
       const auto* o = option_union::as<options>(raw_options);

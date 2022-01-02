@@ -19,6 +19,6 @@ namespace DK3D::tools {
             QString text;
          };
       public:
-         virtual void invoke(const InputResult&, const opaque_option_union&, combined_tool_results&) const override;
+         virtual void invoke(const input_result&, const opaque_option_union&, combined_tool_results&) const override;
    };
 }

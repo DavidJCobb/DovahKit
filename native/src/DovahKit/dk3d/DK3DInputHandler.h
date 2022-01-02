@@ -7,7 +7,7 @@
 #include "../helpers/passkey.h"
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "chrono.h"
-#include "InputResult.h"
+#include "input_result.h"
 #include "OSKeyboardState.h"
 #include "XInputGamepadState.h"
 #include "bind_tree/tree.h"
@@ -37,7 +37,7 @@ class DK3DInputHandler : public QObject {
       float   scalarControlValue(DK3D::scalar_control, DK3D::axis2D axis = DK3D::axis2D::x) const;
       QPointF vectorControlValue(DK3D::vector_control) const;
 
-      DK3D::InputResult inputResultOf(const DK3D::inputs::bound_input&) const;
+      DK3D::input_result inputResultOf(const DK3D::inputs::bound_input&) const;
 
    public:
       DK3D::binds::tree bindingsFor(DK3D::input_device_type) const;

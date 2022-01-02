@@ -1,14 +1,14 @@
 #include "debug_log.h"
 #include "_options.h"
-#include "../InputResult.h"
+#include "../input_result.h"
 
 namespace DK3D::tools {
-   void debug_log::invoke(const InputResult& input, const opaque_option_union& raw_options, combined_tool_results&) const {
+   void debug_log::invoke(const input_result& input, const opaque_option_union& raw_options, combined_tool_results&) const {
       const auto* o = option_union::as<options>(raw_options);
       if (!o)
          return;
       if (!input.active()) {
-         if (input.while_has_changed) {
+         if (input.is_button_release()) {
             qDebug("[DK3D::tools::debug_log::invoke] A \"While\" bind has been released. Param was %d.", o->number);
          }
          return;
@@ -16,7 +16,7 @@ namespace DK3D::tools {
       switch (input.type) {
          using _ = control_type;
          case _::button:
-            switch (input.press_type) {
+            switch (input.button.press_type) {
                using _ = button_press_type;
                case _::tap:
                   qDebug("[DK3D::tools::debug_log::invoke] A \"Tap\" bind has been pressed and released. Param was %d.", o->number);
@@ -25,7 +25,7 @@ namespace DK3D::tools {
                   qDebug("[DK3D::tools::debug_log::invoke] A \"Hold\" bind has been pressed and released. Param was %d.", o->number);
                   break;
                case _::while_down:
-                  if (input.while_has_changed)
+                  if (input.button.changed)
                      //
                      // If false, the key is still down; would fire every tick.
                      //

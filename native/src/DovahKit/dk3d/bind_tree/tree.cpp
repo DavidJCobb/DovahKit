@@ -130,11 +130,9 @@ namespace DK3D::binds {
                      // (formerly) shadowed binds to the same key to be able to detect the 
                      // key-down on this frame.
                      //
-                     InputResult faked;
-                     faked.while_has_changed = true;
                      if (input->tool)
-                        input->tool->invoke(faked, input->params, while_results);
-                  } else if (ir.while_has_changed) {
+                        input->tool->invoke(input_result::for_button_release(), input->params, while_results);
+                  } else if (ir.is_button_release()) {
                      //
                      // The key just went up. Send a real key-up to this binding, and then 
                      // mark the key as processed so that (formerly) shadowed "while" binds 
@@ -189,9 +187,9 @@ namespace DK3D::binds {
                }
                auto r = ih.inputResultOf(mapping);
                bool a = r.active();
-               if (a || r.while_has_changed) {
+               if (a || r.button.changed) {
                   if (casted->tool) {
-                     bool is_tap = (r.type == control_type::button && r.press_type != button_press_type::while_down);
+                     bool is_tap = (r.type == control_type::button && r.button.press_type != button_press_type::while_down);
                      casted->tool->invoke(r, casted->params, is_tap ? tap_results : while_results);
                   }
                   //
