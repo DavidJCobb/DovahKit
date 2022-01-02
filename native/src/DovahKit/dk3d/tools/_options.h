@@ -34,7 +34,7 @@ namespace DK3D::tools {
             #pragma region Metaprogramming
             template<typename T> static void _typed_data_destructor(DK3D::tools::option_union& ou) {
                if constexpr (DK3D::tools::tool_has_options_member_type<T>) {
-                  auto* p = (T*)ou.data.data();
+                  auto* p = ou.as<T>();
                   p->~T();
                }
             }

@@ -43,7 +43,7 @@ namespace DK3D::tools {
    using opaque_option_union = impl::option_union_base;
 
    struct compile_time_tool_options {
-      bool always_unordered_results = false; // set to (true) if the order of results within a single frame doesn't matter when merging results
+      bool use_strict_ordering = false; // set to (true) if the order of results within a single frame matters when merging results
    };
 
    class base {

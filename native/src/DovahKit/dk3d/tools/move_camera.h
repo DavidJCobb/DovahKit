@@ -9,7 +9,7 @@ namespace DK3D::tools {
       public:
          static constexpr const char* function_name = "move_camera";
          static constexpr compile_time_tool_options compile_time_options = {
-            .always_unordered_results = true,
+            .use_strict_ordering = false,
          };
       protected:
          move_camera() { this->setup(this); }

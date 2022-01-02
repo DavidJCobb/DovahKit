@@ -14,7 +14,7 @@ namespace DK3D {
       
       template<typename Results> struct merge_requires_timestamp {
          static consteval bool execute() {
-            return can_merge<Results> && (tool_for_results<Results>::compile_time_options.always_unordered_results == false);
+            return can_merge<Results> && (tool_for_results<Results>::compile_time_options.use_strict_ordering == true);
          }
       };
    }
@@ -58,12 +58,9 @@ namespace DK3D {
          // recently is the one that should take precedence.
          // 
          // In order to handle those cases, we need to store timestamps for the relevant results 
-         // and use these timestamps to apply ordering logic when calling tool::results::merge. 
-         // By default, tools are opted into this logic if they have a results type and if that 
-         // results type defines a "merge" method. Tools can opt out of the ordering logic (e.g. 
-         // if the results aren't sensitive to merge order) via their compile_time_tool_options.
+         // and use these timestamps to apply ordering logic when calling tool::results::merge.
          //
-         std::array<timestamp_t, result_types_with_timestamps::count> input_timestamps = cobb::array_of_n_values<result_types_with_timestamps::count>(zero_timestamp); // for "while down" button inputs
+         std::array<timestamp_t, result_types_with_timestamps::count> input_timestamps = cobb::array_of_n_values<result_types_with_timestamps::count>(zero_timestamp);
 
       public:
          // alternative to std::get which accepts a tool class or a tool::results struct
@@ -133,7 +130,7 @@ namespace DK3D {
                std::get<A>(*this) = v;
                return;
             }
-            if constexpr (tool_for_results<A>::compile_time_options.always_unordered_results == true) {
+            if constexpr (tool_for_results<A>::compile_time_options.use_strict_ordering == false) {
                //
                // Results that merge, but for tools that don't care about ordering within 
                // a frame (e.g. because the way that they merge results means that order 
@@ -150,7 +147,10 @@ namespace DK3D {
                this->merge_member(zero_timestamp, v);
                return;
             }
-            this->merge_member(ir.button.down_when, v);
+            if (ir.type == control_type::button && ir.button.press_type == button_press_type::while_down)
+               this->merge_member(ir.button.down_when, v);
+            else
+               this->merge_member(v);
          }
 
          void scale(double delta_seconds) {
