@@ -3,13 +3,12 @@
 #include <bitset>
 #include <vector>
 #include <QObject>
+#include <QPointer>
 #include "../helpers/bitfield_array.h"
 #include "../helpers/passkey.h"
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "chrono.h"
 #include "input_result.h"
-#include "OSKeyboardState.h"
-#include "XInputGamepadState.h"
 #include "bind_tree/tree.h"
 #include "devices/keyboard_mouse.h"
 #include "devices/xinput.h"
@@ -18,6 +17,7 @@
 #include "enums/scalar_control.h"
 #include "enums/vector_control.h"
 #include "inputs/bound_input.h"
+#include "vulkan/data/DKVulkanCameraUpdate.h"
 #include "widgets/DKVulkanView.h"
 
 class DK3DInputHandler : public QObject {

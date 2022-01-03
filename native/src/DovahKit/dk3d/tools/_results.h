@@ -94,13 +94,13 @@ namespace DK3D {
          
          template<typename A> requires (result_types_with_timestamps::contains<A>)
          timestamp_t& timestamp() {
-            return this->input_timestamps[all_mergeable_result_types::index_of<A>()];
+            return this->input_timestamps[result_types_with_timestamps::index_of<A>()];
          }
 
          template<typename A> requires (all_tool_results::contains<A>)
          void merge_member(timestamp_t time, const A& v) {
             if constexpr (result_types_with_timestamps::contains<A>) {
-               auto& ts     = this->input_timestamps[all_mergeable_result_types::index_of<A>()];
+               auto& ts     = this->input_timestamps[result_types_with_timestamps::index_of<A>()];
                auto& stored = std::get<A>(*this);
                if (ts <= time) {
                   // argument results are newer (e.g. if two "while" binds are held concurrently, prefer the more recently pressed of the two)

@@ -113,20 +113,17 @@
     <ClCompile Include="dk3d\bind_tree\nodes\editor_mode.cpp" />
     <ClCompile Include="dk3d\bind_tree\nodes\input.cpp" />
     <ClCompile Include="dk3d\bind_tree\tree.cpp" />
-    <ClCompile Include="dk3d\BoundInput.cpp" />
     <ClCompile Include="dk3d\devices\keyboard_mouse.cpp" />
     <ClCompile Include="dk3d\devices\xinput.cpp" />
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
     <ClCompile Include="dk3d\inputs\bound_input.cpp" />
+    <ClCompile Include="dk3d\input_result.cpp" />
     <ClCompile Include="dk3d\tools\debug_log.cpp" />
     <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
     <ClCompile Include="dk3d\tools\move_camera.cpp" />
     <ClCompile Include="dk3d\tools\turn_camera.cpp" />
-    <ClCompile Include="dk3d\InputResult.cpp" />
-    <ClCompile Include="dk3d\OSKeyboardState.cpp" />
     <ClCompile Include="dk3d\tools\_all.cpp" />
     <ClCompile Include="dk3d\tools\_options.cpp" />
-    <ClCompile Include="dk3d\XInputGamepadState.cpp" />
     <ClCompile Include="dovahscript\api_helpers\load_resource.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
@@ -437,7 +434,6 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
-    <ClCompile Include="editor\DovahKit3DControls.cpp" />
     <ClCompile Include="editor\DovahKitVulkanSubsystem.cpp" />
     <ClCompile Include="editor\form_data_cache.cpp" />
     <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
@@ -548,13 +544,13 @@
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
-    <ClCompile Include="vulkan\DKVulkanCameraController.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
     <ClCompile Include="vulkan\loaded_texture.cpp" />
     <ClCompile Include="vulkan\material.cpp" />
+    <ClCompile Include="vulkan\overlays\fps.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
@@ -638,13 +634,11 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dk3d\Binding.h" />
     <ClInclude Include="dk3d\bind_tree\node.h" />
     <ClInclude Include="dk3d\bind_tree\nodes\editor_mode.h" />
     <ClInclude Include="dk3d\bind_tree\nodes\input.h" />
     <ClInclude Include="dk3d\bind_tree\nodes\root.h" />
     <ClInclude Include="dk3d\bind_tree\tree.h" />
-    <ClInclude Include="dk3d\BoundInput.h" />
     <ClInclude Include="dk3d\chrono.h" />
     <QtMoc Include="widgets\DKKeyPickerWidget.h" />
     <QtMoc Include="dk3d\DK3DInputHandler.h" />
@@ -652,6 +646,7 @@
     <ClInclude Include="dk3d\devices\xinput.h" />
     <ClInclude Include="dk3d\enums\axis2D.h" />
     <ClInclude Include="dk3d\enums\button_press_type.h" />
+    <ClInclude Include="dk3d\enums\button_release_type.h" />
     <ClInclude Include="dk3d\enums\camera_turn_axis.h" />
     <ClInclude Include="dk3d\enums\control_type.h" />
     <ClInclude Include="dk3d\enums\editor_mode.h" />
@@ -662,6 +657,8 @@
     <ClInclude Include="dk3d\inputs\bound_input.h" />
     <ClInclude Include="dk3d\inputs\button.h" />
     <ClInclude Include="dk3d\devices\keyboard_mouse.h" />
+    <ClInclude Include="dk3d\button_state.h" />
+    <ClInclude Include="dk3d\input_result.h" />
     <ClInclude Include="dk3d\tools\debug_log.h" />
     <ClInclude Include="dk3d\tools\debug_placeholder.h" />
     <ClInclude Include="dk3d\tools\move_camera.h" />
@@ -671,11 +668,7 @@
     <ClInclude Include="dk3d\tools\_options.h" />
     <ClInclude Include="dk3d\enums\axis3D.h" />
     <ClInclude Include="dk3d\enums\sign.h" />
-    <ClInclude Include="dk3d\InputResult.h" />
-    <ClInclude Include="dk3d\KeyDownState.h" />
-    <ClInclude Include="dk3d\OSKeyboardState.h" />
     <ClInclude Include="dk3d\tools\_results.h" />
-    <ClInclude Include="dk3d\XInputGamepadState.h" />
     <ClInclude Include="dovahscript\api_helpers\pull_rotation.h" />
     <ClInclude Include="dovahscript\core\specialized_traceback.h" />
     <ClInclude Include="dovahscript\lua_libraries\ui.h" />
@@ -691,8 +684,9 @@
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
-    <QtMoc Include="editor\DovahKit3DControls.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
+    <ClInclude Include="helpers\array_of_n_values.h" />
+    <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />
     <ClInclude Include="helpers\enum_flags.h" />
@@ -729,13 +723,13 @@
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
-    <QtMoc Include="vulkan\DKVulkanCameraController.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\material.h" />
+    <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />
@@ -1364,6 +1358,8 @@
   <ItemGroup>
     <Text Include="dk3d\_docs\keyboard inputs.txt" />
     <Text Include="dk3d\_docs\keyboard shortcuts - guidelines for defaults.txt" />
+    <Text Include="dk3d\_docs\strictly ordered tools.txt" />
+    <Text Include="dk3d\_docs\tools.txt" />
     <Text Include="dovahscript\_docs\abstract.txt" />
     <Text Include="dovahscript\_docs\case studies.txt" />
     <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />
@@ -1382,6 +1378,7 @@
     <Text Include="dovahscript\_docs\zombie wrappers.txt" />
     <Text Include="dovah\form stub addenda.txt" />
     <Text Include="dovah\_docs\asset paths.txt" />
+    <Text Include="dovah\_docs\avenues for further research.txt" />
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
@@ -1421,6 +1418,8 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\impl\form_subclass_components.txt" />
+    <None Include="shaders\overlay-fps.frag" />
+    <None Include="shaders\overlay-fps.vert" />
     <None Include="shaders\shader.frag">
       <FileType>Document</FileType>
     </None>

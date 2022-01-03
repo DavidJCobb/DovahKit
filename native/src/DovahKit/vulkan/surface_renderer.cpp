@@ -39,6 +39,11 @@ namespace {
    static constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
 }
 
+#include "overlays/fps.h"
+namespace {
+   static constexpr bool setup_fps_counter = true; // mainly just used for grouping code, tbh
+}
+
 namespace { // test scene properties
    struct _model {
       using vertex = vulkanDK::vertex;
@@ -211,6 +216,25 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
+      if constexpr (setup_fps_counter) {
+         assert(this->descriptor_set_layouts.size() == overlays::fps::descriptor_set_index);
+         this->descriptor_set_layouts.emplace_back().bindings = { // FPS counter
+            vulkanDK::descriptor_binding{ // uniform buffer object
+               .index              = 0,
+               .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+               .count              = 1,
+               .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+               .immutable_samplers = nullptr,
+            },
+            vulkanDK::descriptor_binding{ // texture sampler
+               .index              = 1,
+               .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+               .count              = 1,
+               .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+               .immutable_samplers = nullptr,
+            },
+         };
+      }
       //
       this->set_widget(widget);
       if (this->handle == VK_NULL_HANDLE) {
@@ -393,6 +417,12 @@ namespace vulkanDK {
          auto  attributes = vertex::getAttributeDescriptions();
          vertex.bindings.push_back(vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      //
+      // FPS counter:
+      //
+      if constexpr (setup_fps_counter) {
+         vulkanDK::overlays::fps::create_material_definitions(*this);
       }
    }
    //
@@ -621,6 +651,10 @@ namespace vulkanDK {
             },
          };
          vkUpdateDescriptorSets(this->logical_device, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+         //
+         if constexpr (setup_fps_counter) {
+            frame.overlays.fps.initialize_descriptor_sets(*this, frame);
+         }
       }
       //
       // Mark textures as synchronized:
@@ -752,6 +786,79 @@ namespace vulkanDK {
                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
             }
          };
+         //
+         // Create FPS counter render pass (in the future: UI render pass):
+         //
+         if constexpr (setup_fps_counter) {
+            auto* rp = new render_pass(*this);
+            this->render_passes.push_back(rp);
+            //
+            rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+               VkAttachmentDescription{ // color
+                  .format         = this->swap_chain.format,
+                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               },
+               VkAttachmentDescription{ // depth
+                  .format         = this->find_depth_format(),
+                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
+               },
+            };
+            rp->subpasses.descriptions = {
+               {  // subpass
+                  .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  .attachments = {
+                     .color = { // there can be multiple color attachments
+                        VkAttachmentReference{
+                           .attachment = 0,
+                           .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                        }
+                     },
+                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                        .attachment = 1,
+                        .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                     },
+                  },
+               },
+            };
+            rp->subpasses.dependencies = {
+               VkSubpassDependency{
+                  //
+                  // Writing to the color attachment image  should be delayed until all operations 
+                  // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+                  // layout) are complete.
+                  //
+                  .srcSubpass      = VK_SUBPASS_EXTERNAL,
+                  .dstSubpass      = 0,
+                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                  .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                  .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+                  .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                  .dependencyFlags = 0,
+               },
+               VkSubpassDependency{
+                  .srcSubpass      = 0, // should be the last subpass in the list
+                  .dstSubpass      = VK_SUBPASS_EXTERNAL,
+                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+                  //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
+                  .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+                  .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                  .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
+                  .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+               }
+            };
+         }
       }
       //
       // (Re)create the render passes within the GPU:
@@ -871,6 +978,19 @@ namespace vulkanDK {
                }
             }
          );
+         //
+         // FPS counter:
+         //
+         if constexpr (setup_fps_counter) {
+            assert(sc.materials.size() == 1);
+            auto& mat = sc.materials.emplace_back();
+            mat.owner = this;
+            mat.setup_layout(
+               {  // Descriptor set layouts
+                  this->descriptor_set_layouts[overlays::fps::descriptor_set_index].handle,
+               }
+            );
+         }
       }
       //
       // Setting up materials' pipeline handles requires knowledge of the final image size 
@@ -891,6 +1011,9 @@ namespace vulkanDK {
       };
       //
       sc.materials[0].setup_handle(this->material_definitions[0], viewport, scissor, this->render_passes[0]->handle, 0);
+      if constexpr (setup_fps_counter) {
+         sc.materials[1].setup_handle(this->material_definitions[1], viewport, scissor, this->render_passes[1]->handle, 0);
+      }
    }
    void surface_renderer::_setup_depth_buffer() {
       auto  extent = this->surface_extent;

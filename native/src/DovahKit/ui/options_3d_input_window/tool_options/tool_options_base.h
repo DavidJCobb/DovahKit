@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include "dk3d/BoundInput.h"
 #include "dk3d/enums/control_type.h"
 #include "dk3d/tools/_base.h"
 

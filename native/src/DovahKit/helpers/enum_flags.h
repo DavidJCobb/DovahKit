@@ -74,6 +74,44 @@ namespace cobb {
             return (void*)((std::intptr_t)this->bytes.data() + byte);
          }
 
+         //
+         // Normally, we handle one byte at a time (except for very large flags masks, wherein we 
+         // use SIMD intrinsics). However, if the bytecount is exactly equal to the size of an x64 
+         // register, why not handle it one register at a time? Some member functions will check 
+         // the (_is_single_register) compile-time constant and, if it's true, they'll use the 
+         // (_data_as_register) accessor to handle the entire flags mask in one go.
+         // 
+         // This should only be done when std::is_constant_evaluated() is false, as it requires 
+         // pointer manipulation and I'm not sure that's constexpr-friendly. (Maybe std::bit_cast 
+         // could work there instead?)
+         //
+         using _register_type = std::conditional_t<bytecount == 1, uint8_t,
+            std::conditional_t<bytecount == 2, uint16_t,
+               std::conditional_t<bytecount == 4, uint32_t,
+                  std::conditional_t<bytecount == 8, uint64_t, void>
+               >
+            >
+         >;
+         static constexpr bool _is_single_register = !std::is_same_v<_register_type, void>; // used for optimizations to skip individual byte handling
+         //
+         inline _register_type& _data_as_register() { return *(_register_type*)this->bytes.data(); }
+         inline const _register_type& _data_as_register() const { return *(_register_type*)this->bytes.data(); }
+         //
+         inline static _register_type _value_as_register(value_type v) {
+            return _register_type(1) << (_register_type)v;
+         }
+         //
+         template<typename... T> requires (_is_single_register && (std::is_same_v<T, value_type> && ...)) _register_type _or_unsigned_to_register(T... v) {
+            return (_value_as_register(v) | ...);
+         }
+         template<typename... T> requires (_is_single_register && (std::is_same_v<T, value_type> && ...)) _register_type _or_to_register(T... v) {
+            if constexpr (std::is_signed_v<underlying_type>) {
+               return (((underlying_type)v >= 0 ? _value_as_register(v) : 0) | ...);
+            } else {
+               return _or_unsigned_to_register(v...);
+            }
+         }
+
       public:
          constexpr enum_flags() {}
          constexpr enum_flags(const enum_flags& o) {
@@ -116,6 +154,11 @@ namespace cobb {
                if (cv < 0)
                   return false;
             }
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  return (_data_as_register() & _value_as_register(v)) != 0;
+               }
+            }
             auto bi = cv / 8;
             auto bb = cv % 8;
             return (this->bytes[bi] & uint8_t(1 << bb)) != 0;
@@ -151,9 +194,15 @@ namespace cobb {
          }
 
          constexpr enum_flags& operator&=(value_type v) {
-            if constexpr (std::is_signed_v< underlying_type>) {
+            if constexpr (std::is_signed_v<underlying_type>) {
                if ((underlying_type)v < 0) {
                   this->clear();
+                  return *this;
+               }
+            }
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() &= _value_as_register(v);
                   return *this;
                }
             }
@@ -231,6 +280,12 @@ namespace cobb {
             if constexpr (std::is_signed_v< underlying_type>) {
                if (cv < 0)
                   return *this;
+            }
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() |= _value_as_register(v);
+                  return *this;
+               }
             }
             auto bi = cv / 8;
             auto bb = cv % 8;
@@ -330,14 +385,56 @@ namespace cobb {
 
          template<typename... T> requires (std::is_same_v<T, value_type> && ...)
          void set(T... v) {
+            if constexpr (sizeof...(T) > 1 && _is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() |= _or_to_register(v...);
+                  return;
+               }
+            }
             (((*this) |= v), ...);
          }
+
          inline bool test(value_type v) const {
             return (*this) & v;
          }
+
          template<typename... T> requires (std::is_same_v<T, value_type> && ...)
          bool test_all_of(T... v) {
+            if constexpr (sizeof...(T) > 1 && _is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _register_type r = _or_to_register(v...);
+                  return (_data_as_register() & r) == r;
+               }
+            }
             return (((*this) & v) && ...);
+         }
+
+         void reset(value_type v) {
+            auto cv = (underlying_type)v;
+            if constexpr (std::is_signed_v< underlying_type>) {
+               if (cv < 0)
+                  return;
+            }
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() &= ~_value_as_register(v);
+                  return;
+               }
+            }
+            auto bi = cv / 8;
+            auto bb = cv % 8;
+            this->bytes[bi] &= ~uint8_t(1 << bb);
+         }
+
+         template<typename... T> requires (std::is_same_v<T, value_type> && ...)
+         void reset_all_of(T... v) {
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() &= ~_or_to_register(v...);
+                  return;
+               }
+            }
+            (this->reset(v), ...);
          }
 
          size_t number_set() const {
@@ -346,6 +443,71 @@ namespace cobb {
                if (test((value_type)i))
                   ++c;
             return c;
+         }
+
+         // set() with compile-time checking for the enum values
+         template<value_type... Values> void set() {
+            static_assert((((underlying_type)Values >= 0) && ...),    "One of the specified values is negative.");
+            static_assert((((underlying_type)Values < count) || ...), "One of the specified values is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() |= _or_to_register(Values...);
+                  return;
+               }
+            }
+            (this->set(Values), ...);
+         }
+
+         // reset() with compile-time checking for the enum values
+         template<value_type Value> void reset() {
+            static_assert(((underlying_type)Value >= 0),    "The specified value is negative.");
+            static_assert(((underlying_type)Value < count), "The specified value is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() &= ~_value_as_register(Value);
+                  return;
+               }
+            }
+            this->reset(Value);
+         }
+
+         // reset_all_of() with compile-time checking for the enum values
+         template<value_type... Values> void reset_all_of() {
+            static_assert((((underlying_type)Values >= 0) && ...),    "One of the specified values is negative.");
+            static_assert((((underlying_type)Values < count) || ...), "One of the specified values is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() &= ~_or_unsigned_to_register(Values...);
+                  return;
+               }
+            }
+            (this->reset(Values), ...);
+         }
+
+         // test() with compile-time checking for the enum value
+         template<value_type Value> bool test() const {
+            static_assert(((underlying_type)Value >= 0),    "The specified value is negative.");
+            static_assert(((underlying_type)Value < count), "The specified value is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _register_type r = _value_as_register(Value);
+                  return (_data_as_register() & r) == r;
+               }
+            }
+            return (*this) & Value;
+         }
+
+         // test_all_of() with compile-time checking for the enum values
+         template<value_type... Values> bool test_all_of() {
+            static_assert((((underlying_type)Values >= 0) && ...),    "One of the specified values is negative.");
+            static_assert((((underlying_type)Values < count) || ...), "One of the specified values is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _register_type r = _or_unsigned_to_register(Values...);
+                  return _data_as_register() & r == r;
+               }
+            }
+            return (((*this) & Values) && ...);
          }
    };
 }

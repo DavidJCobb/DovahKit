@@ -144,7 +144,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Move Camera Up"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::RB,
+                  .gamepad    = inputs::xinput_button::RB,
                   .press_type = DK3D::button_press_type::while_down,
                },
             },
@@ -185,7 +185,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test Tap (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::A,
+                  .gamepad    = inputs::xinput_button::A,
                   .press_type = DK3D::button_press_type::tap,
                },
             },
@@ -196,7 +196,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test Hold (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::B,
+                  .gamepad    = inputs::xinput_button::B,
                   .press_type = DK3D::button_press_type::hold,
                },
             },
@@ -207,7 +207,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test While (shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::X,
+                  .gamepad    = inputs::xinput_button::X,
                   .press_type = DK3D::button_press_type::while_down,
                },
             },
@@ -218,7 +218,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test Tap (not shadowed)"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::Y,
+                  .gamepad    = inputs::xinput_button::Y,
                   .press_type = DK3D::button_press_type::tap,
                },
             },
@@ -231,7 +231,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test Modifier"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::LT,
+                  .gamepad    = inputs::xinput_button::LT,
                   .press_type = DK3D::button_press_type::while_down,
                },
             },
@@ -244,7 +244,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Move Camera Up"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::A,
+                  .gamepad    = inputs::xinput_button::A,
                   .press_type = DK3D::button_press_type::tap,
                },
             },
@@ -255,7 +255,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Move Camera Up"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::B,
+                  .gamepad    = inputs::xinput_button::B,
                   .press_type = DK3D::button_press_type::hold,
                },
             },
@@ -266,7 +266,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Move Camera Up"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = XInputKey::X,
+                  .gamepad    = inputs::xinput_button::X,
                   .press_type = DK3D::button_press_type::while_down,
                },
             },

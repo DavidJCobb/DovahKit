@@ -2,9 +2,10 @@
 #include <array>
 #include <bitset>
 #include <Qt>
+#include <QPoint>
 #include "helpers/bitfield_array.h"
+#include "dk3d/enums/button_release_type.h"
 #include "dk3d/chrono.h"
-#include "dk3d/InputResult.h"
 #include "dk3d/button_state.h"
 
 namespace DK3D {

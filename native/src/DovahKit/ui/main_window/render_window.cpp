@@ -7,7 +7,6 @@
 #include "../../editor/DovahKitVulkanSubsystem.h"
 #include "widgets/DKVulkanView.h"
 #include "../../vulkan/surface_renderer.h"
-#include "../../vulkan/DKVulkanCameraController.h"
 
 namespace {
    static constexpr bool use_new_renderer = true;
@@ -25,7 +24,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    if constexpr (use_new_renderer) {
       view = new DKVulkanView(this);
       view->setInputHandlingEnabled(true);
-      view->setCameraController(new DKVulkanCameraController(view));
       //
       layout->addWidget(view, 1);
       QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {

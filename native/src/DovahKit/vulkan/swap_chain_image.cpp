@@ -44,6 +44,11 @@ namespace vulkanDK {
    void swap_chain_image::setup() {
       this->_setup_shader_parameter_buffers();
       this->_setup_command_buffers();
+      //
+      // Overlays:
+      //
+      this->overlays.fps.setup_shader_parameter_buffers(*this->owner);
+      this->overlays.fps.create_geometry(*this->owner);
    }
    void swap_chain_image::_setup_shader_parameter_buffers() {
       {  // Scene global state, as a uniform buffer object
@@ -56,8 +61,9 @@ namespace vulkanDK {
       }
    }
    void swap_chain_image::_setup_command_buffers() {
-      this->command_buffers.resize(1);
+      this->command_buffers.resize(2);
       this->command_buffers[0] = command_buffer(*this->owner);
+      this->command_buffers[1] = command_buffer(*this->owner); // for FPS counter
       this->command_buffers_invalid = true;
    }
    
@@ -133,6 +139,8 @@ namespace vulkanDK {
       this->image.destroy_view();
       this->image.image = VK_NULL_HANDLE;
       //
+      this->overlays.fps.teardown_atlas();
+      //
       this->current_fence_handle = VK_NULL_HANDLE;
       this->invalidate_all_command_buffers();
    }
@@ -151,6 +159,15 @@ namespace vulkanDK {
          // the right framebuffer at any given moment.
          //
          this->_refill_command_buffers();
+      }
+      {
+         auto& fps = this->overlays.fps;
+         if (fps.needs_atlas_update()) {
+            fps.generate_atlas(*this->owner, *this);
+         }
+         if (fps.needs_geometry_update()) {
+            fps.update_geometry();
+         }
       }
       //
       // Submit our command buffers.
@@ -397,10 +414,10 @@ namespace vulkanDK {
    }
    void swap_chain_image::_refill_command_buffers() {
       const auto& render_passes = this->owner->render_passes;
+      this->command_buffers_invalid = false;
       //
       auto& scene          = this->owner->scene;
       auto  command_buffer = this->command_buffers[0].handle;
-      this->command_buffers_invalid = false;
       //
       vkResetCommandBuffer(command_buffer, 0);
       auto buffer_begin_info = VkCommandBufferBeginInfo{
