@@ -46,7 +46,7 @@ namespace vulkanDK::overlays {
             glm::vec3 pos;
             glm::vec2 uv;
             //
-            static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+            static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
             static VkVertexInputBindingDescription getBindingDescription();
          };
          static constexpr size_t _vib_indices_offset = sizeof(_vertex) * vertex_count;
@@ -112,7 +112,7 @@ namespace vulkanDK::overlays {
          void generate_atlas(surface_renderer&, swap_chain_image&);
          void teardown_atlas();
 
-         void update_geometry();
+         void update_geometry(surface_renderer&);
          void update_geometry(void* mapped_vertex_memory);
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this

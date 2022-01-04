@@ -217,7 +217,7 @@ namespace vulkanDK {
          },
       };
       if constexpr (setup_fps_counter) {
-         assert(this->descriptor_set_layouts.size() == overlays::fps::descriptor_set_index);
+         assert(this->descriptor_set_layouts.size() == 1);
          this->descriptor_set_layouts.emplace_back().bindings = { // FPS counter
             vulkanDK::descriptor_binding{ // uniform buffer object
                .index              = 0,
@@ -797,11 +797,11 @@ namespace vulkanDK {
                VkAttachmentDescription{ // color
                   .format         = this->swap_chain.format,
                   .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
                   .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
                   .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                   .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .initialLayout  = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                   .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                },
                VkAttachmentDescription{ // depth
@@ -987,7 +987,7 @@ namespace vulkanDK {
             mat.owner = this;
             mat.setup_layout(
                {  // Descriptor set layouts
-                  this->descriptor_set_layouts[overlays::fps::descriptor_set_index].handle,
+                  this->descriptor_set_layouts[1].handle,
                }
             );
          }

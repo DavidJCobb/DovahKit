@@ -2,7 +2,7 @@
 
 namespace vulkanDK {
    /*static*/ std::array<VkVertexInputAttributeDescription, 3> vertex::getAttributeDescriptions() {
-      return {
+      return std::array{
          VkVertexInputAttributeDescription{
             .location = 0, // should match the location value in the shader's code
             .binding  = 0,

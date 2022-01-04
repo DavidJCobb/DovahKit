@@ -8,8 +8,8 @@ namespace {
 }
 
 namespace vulkanDK::overlays {
-   /*static*/ std::array<VkVertexInputAttributeDescription, 3> fps::_vertex::getAttributeDescriptions() {
-      return {
+   /*static*/ std::array<VkVertexInputAttributeDescription, 2> fps::_vertex::getAttributeDescriptions() {
+      return std::array{
          VkVertexInputAttributeDescription{
             .location = 0, // should match the location value in the shader's code
             .binding  = 0,
@@ -76,10 +76,10 @@ namespace vulkanDK::overlays {
          sr.shader_modules.push_back(vert);
       }
       if (frag->empty()) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load fragment shader.");
+         throw std::runtime_error("[vulkanDK::overlays::fps::create_material_definitions::create_material_definitions] Failed to load fragment shader.");
       }
       if (vert->empty()) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load vertex shader.");
+         throw std::runtime_error("[vulkanDK::overlays::fps::create_material_definitions::create_material_definitions] Failed to load vertex shader.");
       }
       //
       dfn.stages = {
@@ -115,7 +115,7 @@ namespace vulkanDK::overlays {
       auto buffer_info = VkDescriptorBufferInfo{
          .buffer = this->shader_params.uniform.handle,
          .offset = 0,
-         .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         .range  = sizeof(_shader_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
       };
       //
       auto descriptor_writes = std::array{
@@ -136,7 +136,7 @@ namespace vulkanDK::overlays {
             .dstBinding      = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = 1,
-            .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             .pImageInfo      = &sampler_info,
          },
       };
@@ -246,8 +246,10 @@ namespace vulkanDK::overlays {
          h = (std::max)(h, (uint32_t)digit.height());
       }
       //
-      auto image   = QImage(w, h, QImage::Format::Format_Mono); // TODO: pick a better format
+      auto image   = QImage(w, h, QImage::Format::Format_ARGB32); // TODO: pick a better format
       auto painter = QPainter(&image);
+      painter.setPen(QColor(255, 255, 255));
+      painter.setBrush(QColor(255, 255, 255));
       painter.drawText(this->atlas_info.label, glyph_text_flags, this->style.label);
       //
       int x = this->atlas_info.label.width();
@@ -270,7 +272,6 @@ namespace vulkanDK::overlays {
       uint32_t h = texture.height();
       //
       VkDeviceSize image_size = w * h * 4;
-      assert(image_size == texture.sizeInBytes());
       //
       // We're gonna be setting up our image on a staging buffer, and then transferring that 
       // to the final (non-CPU-writeable) buffer.
@@ -312,7 +313,7 @@ namespace vulkanDK::overlays {
             .dstBinding = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = (uint32_t)infos.size(),
-            .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             .pImageInfo      = infos.data(),
          },
       };
@@ -330,10 +331,15 @@ namespace vulkanDK::overlays {
       this->change_flags.set<change_flag::style>();
    }
 
-   void fps::update_geometry() {
-      auto* memory = this->vertex_and_index_buffer.map_memory();
-      this->update_geometry(memory);
-      this->vertex_and_index_buffer.unmap_memory(memory);
+   void fps::update_geometry(surface_renderer& sr) {
+      auto& vib = this->vertex_and_index_buffer;
+      //
+      auto  staging = sr.create_buffer(vib.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      void* data = staging.map_memory();
+      this->update_geometry(data);
+      staging.unmap_memory(data);
+      //
+      vib.copy_from(staging);
    }
    void fps::update_geometry(void* mapped_vertex_memory) {
       auto* vertices = (_vertex*)mapped_vertex_memory;

@@ -74,11 +74,13 @@ namespace vulkanDK {
       // an extension struct.
       //
       auto layouts = this->owner->descriptor_set_layout_handles();
-      std::vector<uint32_t> variable_counts(layouts.size()); // one count per set; sets with no variable-length array will ignore their respective count
+      // std::vector<uint32_t> variable_counts(layouts.size()); // one count per set; sets with no variable-length array will ignore their respective count
+      std::vector<uint32_t> variable_counts; // one count per set; sets with no variable-length array will ignore their respective count
       for(auto& layout : this->owner->descriptor_set_layouts) {
          auto& bl = layout.bindings;
-         for (size_t i = 0; i < layouts.size(); ++i) {
-            auto& vc = variable_counts[i];
+         //for (size_t i = 0; i < layouts.size(); ++i) {
+            //auto& vc = variable_counts[i];
+            auto& vc = variable_counts.emplace_back(0);
             for (size_t j = 0; j < bl.size(); ++j) {
                auto& binding = bl[j];
                if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT) {
@@ -87,7 +89,7 @@ namespace vulkanDK {
                   vc = binding.count;
                }
             }
-         }
+         //}
       }
       auto variable_count_info = VkDescriptorSetVariableDescriptorCountAllocateInfo{
          .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
@@ -151,6 +153,17 @@ namespace vulkanDK {
       this->_update_shader_global_scene_state();
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
+      {
+         auto& fps = this->overlays.fps;
+         if (fps.needs_atlas_update()) {
+            fps.generate_atlas(*this->owner, *this);
+            this->command_buffers_invalid = true; // TODO: improve; we shouldn't force redraw of scene when UI changes
+         }
+         if (fps.needs_geometry_update()) {
+            fps.update_geometry(*this->owner);
+            this->command_buffers_invalid = true; // TODO: improve; we shouldn't force redraw of scene when UI changes
+         }
+      }
       if (this->command_buffers_invalid) {
          //
          // The command buffer must render to the right framebuffer. Framebuffers are per 
@@ -159,15 +172,6 @@ namespace vulkanDK {
          // the right framebuffer at any given moment.
          //
          this->_refill_command_buffers();
-      }
-      {
-         auto& fps = this->overlays.fps;
-         if (fps.needs_atlas_update()) {
-            fps.generate_atlas(*this->owner, *this);
-         }
-         if (fps.needs_geometry_update()) {
-            fps.update_geometry();
-         }
       }
       //
       // Submit our command buffers.
@@ -416,6 +420,50 @@ namespace vulkanDK {
       const auto& render_passes = this->owner->render_passes;
       this->command_buffers_invalid = false;
       //
+      {  // FPS counter buffer; TODO: separate this code out?
+         auto  command_buffer = this->command_buffers[1].handle;
+         //
+         vkResetCommandBuffer(command_buffer, 0);
+         auto buffer_begin_info = VkCommandBufferBeginInfo{
+            .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            .flags            = 0,
+            .pInheritanceInfo = nullptr,
+         };
+         if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording UI command buffer.");
+         }
+         //
+         auto clear_values = std::array{
+            //
+            // Values here should match the attachments we're using.
+            //
+            VkClearValue{ .color        = {0, 0, 0, 0} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
+            VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+         };
+         auto pass_begin_info = VkRenderPassBeginInfo{
+            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+            .renderPass  = render_passes[1]->handle,
+            .framebuffer = this->framebuffer,
+            .renderArea  = {
+               .offset = { 0, 0 },
+               .extent = this->owner->surface_extent,
+            },
+            .clearValueCount = (uint32_t)clear_values.size(),
+            .pClearValues    = clear_values.data(),
+         };
+         vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+         {
+            const auto& material = this->owner->swap_chain.materials[1]; // TODO: find a better way to retrieve this
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
+            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            this->overlays.fps.draw_call(command_buffer);
+         }
+         vkCmdEndRenderPass(command_buffer);
+         if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+         }
+      }
+      //
       auto& scene          = this->owner->scene;
       auto  command_buffer = this->command_buffers[0].handle;
       //
@@ -454,7 +502,7 @@ namespace vulkanDK {
          // with each new material.
          //
          const auto& material = this->owner->swap_chain.materials[0]; // TODO: find a better way to retrieve this
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, this->descriptor_sets.size(), this->descriptor_sets.data(), 0, nullptr);
+         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, this->descriptor_sets.data(), 0, nullptr);
          vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
          //
          {
