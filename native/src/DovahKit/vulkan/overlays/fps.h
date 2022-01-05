@@ -75,7 +75,8 @@ namespace vulkanDK::overlays {
          struct {
             QFont   font;
             QString label;
-            float   space_between_digits = 0;
+            bool    omit_leading_zeroes  = true;
+            float   space_between_digits = 0; // in pixels
          } style;
          struct {
             QSize size;

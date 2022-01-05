@@ -62,7 +62,7 @@ namespace cobb {
                return 0;
             if (_remainder == 7)
                return 0xFF;
-            return (1 << (_remainder + 1)) - 1;
+            return (1 << _remainder) - 1;
          })();
          
          static constexpr size_t bytecount        = (count / 8) + (_has_remainder ? 1 : 0);
@@ -380,7 +380,7 @@ namespace cobb {
                if ((this->bytes.back() & _remainder_mask) != 0)
                   return false;
             }
-            return false;
+            return true;
          }
 
          template<typename... T> requires (std::is_same_v<T, value_type> && ...)
@@ -495,6 +495,19 @@ namespace cobb {
                }
             }
             return (*this) & Value;
+         }
+
+         // test_any_of() with compile-time checking for the enum values
+         template<value_type... Values> bool test_any_of() {
+            static_assert((((underlying_type)Values >= 0) && ...),    "One of the specified values is negative.");
+            static_assert((((underlying_type)Values < count) || ...), "One of the specified values is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _register_type r = _or_unsigned_to_register(Values...);
+                  return _data_as_register() & r != 0;
+               }
+            }
+            return (((*this) & Values) || ...);
          }
 
          // test_all_of() with compile-time checking for the enum values

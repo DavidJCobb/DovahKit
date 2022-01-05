@@ -5,5 +5,7 @@
         <file>Tamriel-Skyrim.esm.png</file>
         <file>ScreenShot278.bmp</file>
         <file>ScreenShot389.bmp</file>
+        <file>overlay-fps.frag.spv</file>
+        <file>overlay-fps.vert.spv</file>
     </qresource>
 </RCC>

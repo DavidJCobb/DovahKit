@@ -3,8 +3,15 @@
 #include <QResource>
 #include "../surface_renderer.h"
 
+// for testing:
+#include <QImageWriter>
+
 namespace {
    static constexpr int ABSURDLY_LARGE_SIZE = 9999;
+}
+
+namespace {
+   static constexpr bool debug_write_atlas = false;
 }
 
 namespace vulkanDK::overlays {
@@ -14,13 +21,13 @@ namespace vulkanDK::overlays {
             .location = 0, // should match the location value in the shader's code
             .binding  = 0,
             .format   = VK_FORMAT_R32G32B32_SFLOAT, // vec3
-            .offset   = offsetof(vertex, pos),
+            .offset   = offsetof(_vertex, pos),
          },
          VkVertexInputAttributeDescription{ // UVs
             .location = 1,
             .binding  = 0,
             .format   = VK_FORMAT_R32G32_SFLOAT,
-            .offset   = offsetof(vertex, texCoord),
+            .offset   = offsetof(_vertex, uv),
          },
       };
    }
@@ -35,6 +42,7 @@ namespace vulkanDK::overlays {
    fps::fps() {
       this->style.font.setFamily("Lucida Console");
       this->style.label = QLatin1String("FPS: ");
+      this->style.space_between_digits = 1.0F;
    }
 
    void fps::_set_quad_x(qreal x, _vertex* v, const QRect& glyph) {
@@ -42,19 +50,22 @@ namespace vulkanDK::overlays {
       v[1].pos.x = x + glyph.width();
       v[2].pos.x = v[1].pos.x;
       v[3].pos.x = x;
+      //
+      for (int i = 0; i < vertices_per_quad; ++i)
+         v[i].pos.z = 0.0F;
    }
    void fps::_set_quad_pos(QPoint pos, _vertex* v, const QRect& glyph) {
       _set_quad_x(pos.x(), v, glyph);
       v[0].pos.y = pos.y();
       v[1].pos.y = pos.y();
       v[2].pos.y = pos.y() + glyph.height();
-      v[3].pos.y = v[1].pos.y;
+      v[3].pos.y = v[2].pos.y;
    }
    void fps::_set_quad_uv(_vertex* v, const QRect& glyph) {
-      auto x = glyph.x() / this->atlas_info.size.width();
-      auto y = glyph.y() / this->atlas_info.size.height();
-      auto r = glyph.right()  / this->atlas_info.size.width();
-      auto b = glyph.bottom() / this->atlas_info.size.height();
+      auto x = (float)glyph.x() / (float)this->atlas_info.size.width();
+      auto y = (float)glyph.y() / (float)this->atlas_info.size.height();
+      auto r = (float)glyph.right()  / (float)this->atlas_info.size.width();
+      auto b = (float)glyph.bottom() / (float)this->atlas_info.size.height();
       //
       v[0].uv = { x, y };
       v[1].uv = { r, y };
@@ -96,7 +107,21 @@ namespace vulkanDK::overlays {
             .specialization_info = nullptr,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{
+         .enabled = true,
+         .source = {
+            .color = VK_BLEND_FACTOR_SRC_COLOR,
+            .alpha = VK_BLEND_FACTOR_ONE,
+         },
+         .destination = {
+            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+            .alpha = VK_BLEND_FACTOR_ZERO,
+         },
+         .operations = {
+            .color = VK_BLEND_OP_ADD,
+            .alpha = VK_BLEND_OP_ADD,
+         },
+      });
       {
          auto& vertex     = dfn.inputs.vertex;
          auto  attributes = _vertex::getAttributeDescriptions();
@@ -163,16 +188,19 @@ namespace vulkanDK::overlays {
       //
       auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       void* data    = staging.map_memory();
-      memset(data, 0, buffer_size_v);
+      memset(data, 0, buffer_size);
       {
          auto* indices = (uint16_t*)((std::intptr_t)data + buffer_size_v);
          for (size_t i = 0; i < quad_count; ++i) {
-            indices[i * 6 + 0] = i;
-            indices[i * 6 + 1] = i + 1;
-            indices[i * 6 + 2] = i + 2;
-            indices[i * 6 + 3] = i + 2;
-            indices[i * 6 + 4] = i + 3;
-            indices[i * 6 + 5] = i;
+            //
+            // Faces must have a counterclockwise vertex order to be considered "facing the camera."
+            //
+            indices[i * 6 + 0] = (i * vertices_per_quad);
+            indices[i * 6 + 1] = (i * vertices_per_quad) + 3;
+            indices[i * 6 + 2] = (i * vertices_per_quad) + 2;
+            indices[i * 6 + 3] = (i * vertices_per_quad) + 2;
+            indices[i * 6 + 4] = (i * vertices_per_quad) + 1;
+            indices[i * 6 + 5] = (i * vertices_per_quad);
          }
       }
       staging.unmap_memory(data);
@@ -245,8 +273,9 @@ namespace vulkanDK::overlays {
          w += digit.width();
          h = (std::max)(h, (uint32_t)digit.height());
       }
+      this->atlas_info.size = QSize(w, h);
       //
-      auto image   = QImage(w, h, QImage::Format::Format_ARGB32); // TODO: pick a better format
+      auto image   = QImage(w, h, QImage::Format::Format_RGBA8888); // TODO: pick a better format
       auto painter = QPainter(&image);
       painter.setPen(QColor(255, 255, 255));
       painter.setBrush(QColor(255, 255, 255));
@@ -264,6 +293,10 @@ namespace vulkanDK::overlays {
       }
       this->change_flags.reset<change_flag::style>();
       this->change_flags.set<change_flag::atlas>();
+      if constexpr (debug_write_atlas) {
+         auto writer = QImageWriter("test-atlas.png");
+         writer.write(image);
+      }
       return image;
    }
    void fps::generate_atlas(surface_renderer& sr, swap_chain_image& sci) {
@@ -334,7 +367,10 @@ namespace vulkanDK::overlays {
    void fps::update_geometry(surface_renderer& sr) {
       auto& vib = this->vertex_and_index_buffer;
       //
-      auto  staging = sr.create_buffer(vib.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      // We're only going to update the vertices, not the indices, so we'll just use a 
+      // staging buffer with only enough room for the vertices.
+      //
+      auto  staging = sr.create_buffer(_vib_indices_offset, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       void* data = staging.map_memory();
       this->update_geometry(data);
       staging.unmap_memory(data);
@@ -344,7 +380,10 @@ namespace vulkanDK::overlays {
    void fps::update_geometry(void* mapped_vertex_memory) {
       auto* vertices = (_vertex*)mapped_vertex_memory;
       //
-      if (this->change_flags.test<change_flag::atlas>()) {
+      // We're writing to a staging buffer, which is initially blank, so we have to set all 
+      // vertices; we can't only update the ones that need updating. :(
+      //
+      {
          //
          // Initial setup for the "label" quad (i.e. "FPS: ").
          //
@@ -353,14 +392,11 @@ namespace vulkanDK::overlays {
          _set_quad_uv(vertices, glyph);
       }
       //
-      std::array<uint8_t, max_digits> prior;
-      std::array<uint8_t, max_digits> after;
+      std::array<uint8_t, max_digits> digits;
       {
-         auto p = this->last_value;
          auto v = this->value;
-         for (size_t i = 0; i < max_digits; ++i, v /= display_base, p /= display_base) {
-            prior[max_digits - i - 1] = p % display_base;
-            after[max_digits - i - 1] = v % display_base;
+         for (size_t i = 0; i < max_digits; ++i, v /= display_base) {
+            digits[max_digits - i - 1] = v % display_base;
          }
          //
          // If the FPS count exceeds the maximum number that can be displayed with the digit 
@@ -368,58 +404,40 @@ namespace vulkanDK::overlays {
          // a digit count of 5). This is undesired; it'd be cleaner to force all digits to 
          // the highest one (i.e. nines in base-10).
          //
-         if (p > max_visible_value)
-            for (auto& n : prior)
-               n = 9;
          if (v > max_visible_value)
-            for (auto& n : after)
+            for (auto& n : digits)
                n = 9;
       }
       //
-      // Update all digits needing updates. Let's start with the vertex buffer.
+      // Vertices:
       //
-      int  x         = this->atlas_info.label.right();
-      bool displaced = this->change_flags.test(change_flag::positions); // if a digit changes, and the new glyph has a different width, then it will displace all subsequent glyphs
+      int  x      = this->atlas_info.label.right();
+      bool zeroes = this->style.omit_leading_zeroes;
       for (size_t i = 0; i < max_digits; ++i) {
          auto* digit_verts = &vertices[vertices_per_quad + vertices_per_quad * i];
          //
-         const auto& glyph = this->atlas_info.digits[after[i]];
-         if (this->change_flags.test<change_flag::atlas>() || prior[i] != after[i]) {
-            if (!displaced) {
-               const auto& old_glyph = this->atlas_info.digits[prior[i]];
-               if (old_glyph.width() != glyph.width()) {
-                  displaced = true;
-               }
-            }
-            //
-            // Update quad:
-            //
-            _set_quad_pos({ x, 0 }, digit_verts, glyph);
-            _set_quad_uv(digit_verts, glyph);
-         } else if (displaced) {
-            //
-            // This digit has not changed, but one to its left has, and in such a way 
-            // as to require position updates for all subsequent digits.
-            //
-            _set_quad_x(x, digit_verts, glyph);
+         if (digits[i] != 0 || i == max_digits - 1) {
+            zeroes = false;
          }
+         if (zeroes) {
+            //
+            // Do not display leading zeroes.
+            //
+            for (int j = 0; j < vertices_per_quad; ++j) {
+               digit_verts[j].pos = { x, 0, 0 };
+               digit_verts[j].uv  = { 0, 0 };
+            }
+            continue;
+         }
+         const auto& glyph = this->atlas_info.digits[digits[i]];
+         _set_quad_pos({ x, 0 }, digit_verts, glyph);
+         _set_quad_uv(digit_verts, glyph);
+         //
          x += glyph.width();
          x += this->style.space_between_digits;
       }
-      if (this->change_flags.test<change_flag::atlas>()) {
-         //
-         // Initial setup for index buffers.
-         //
-         auto* indices = (uint16_t*)((std::intptr_t)mapped_vertex_memory + _vib_indices_offset);
-         for (size_t i = 0; i < quad_count; ++i) {
-            indices[i * 6 + 0] = i;
-            indices[i * 6 + 1] = i + 1;
-            indices[i * 6 + 2] = i + 2;
-            indices[i * 6 + 3] = i + 2;
-            indices[i * 6 + 4] = i + 3;
-            indices[i * 6 + 5] = i;
-         }
-      }
+      //
+      // And we're done!
       //
       this->change_flags.reset_all_of<change_flag::atlas, change_flag::positions, change_flag::value>();
       this->last_value = this->value;
