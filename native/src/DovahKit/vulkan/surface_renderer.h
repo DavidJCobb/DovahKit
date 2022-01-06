@@ -9,6 +9,7 @@
 #include "descriptor_definitions.h"
 #include "image.h"
 #include "scene.h"
+#include "shader.h"
 #include "swap_chain_image.h"
 //
 #include "widgets/DKVulkanView.h"
@@ -28,6 +29,8 @@ namespace vulkanDK {
       public:
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
+
+         static constexpr shader::id_type main_shader_id = "MainMatl";
 
       protected:
          // renderer events:
@@ -69,13 +72,20 @@ namespace vulkanDK {
             VkFormat       format = VK_FORMAT_UNDEFINED;
             concrete_image depth_buffer; // only one should be needed: we only use it during rendering, not presentation, and we render one frame at a time synched via subpass dependencies
             //
-            std::vector<material> materials;
-            //
             std::vector<swap_chain_image> images;
             std::vector<frame_in_flight>  frames_in_flight;
             //
             size_t current_frame = 0;
          } swap_chain;
+         //
+         std::vector<shader*> shaders;
+         union {
+            std::array<render_pass*, 2> _list = { nullptr, nullptr };
+            struct {
+               render_pass* main;
+               render_pass* ui;
+            };
+         } render_passes_by_name;
          //
          scene scene;
          //
@@ -102,6 +112,9 @@ namespace vulkanDK {
 
          buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
 
+         shader* get_shader(cobb::eight_cc id) const;
+         shader* get_or_create_shader(cobb::eight_cc id);
+
          // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);
          void add_mesh(const QString& texture_path);
@@ -123,7 +136,7 @@ namespace vulkanDK {
          void _setup_raw_pixel_texture_sampler();
          void _teardown_raw_pixel_texture_sampler();
          
-         void _setup_shader_modules();
+         void _setup_shaders();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures
@@ -134,7 +147,6 @@ namespace vulkanDK {
          // Swap chain setup:
          //
          void _setup_swap_chain_instance();
-         void _setup_materials(); // requires extent size
          void _setup_depth_buffer(); // requires extent size
          void _setup_swap_chain_images();
          void _setup_swap_chain_image_frame_data(); // requires descriptor pool

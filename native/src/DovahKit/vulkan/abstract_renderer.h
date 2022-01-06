@@ -31,7 +31,6 @@ namespace vulkanDK {
          //
          std::vector<render_pass*>        render_passes;  // owns
          std::vector<shader_module*>      shader_modules; // owns
-         std::vector<material_definition> material_definitions; // owns
          VkSampler texture_sampler = VK_NULL_HANDLE;
          //
          struct {

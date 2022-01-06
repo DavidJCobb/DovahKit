@@ -11,6 +11,7 @@
 #include "../_vulkan.h"
 #include "../buffer.h"
 #include "../image.h"
+#include "../shader.h"
 
 namespace vulkanDK {
    class surface_renderer;
@@ -35,6 +36,7 @@ namespace vulkanDK::overlays {
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
          static constexpr size_t descriptor_set_index = 1;
+         static constexpr shader::id_type shader_id = "FPSCount";
 
          // Magic numbers:
          static constexpr size_t max_visible_value = cobb::pow((size_t)display_base, max_digits) - 1;
@@ -97,13 +99,14 @@ namespace vulkanDK::overlays {
          //
          buffer vertex_and_index_buffer;
          struct {
-            buffer uniform;
+            shader* instance = nullptr;
+            buffer  uniform;
          } shader_params;
 
       public:
          fps();
 
-         static void create_material_definitions(surface_renderer&);
+         static void setup_shaders(surface_renderer&);
          void initialize_descriptor_sets(surface_renderer&, swap_chain_image&);
          void setup_shader_parameter_buffers(surface_renderer&);
          void create_geometry(surface_renderer&);

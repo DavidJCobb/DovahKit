@@ -41,7 +41,6 @@ namespace vulkanDK {
          }
          list.clear();
       }
-      this->material_definitions.clear();
       {
          auto& list = this->shader_modules;
          for (auto* sm : list) {

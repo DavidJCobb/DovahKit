@@ -175,7 +175,7 @@ namespace vulkanDK {
          }
          if (fps.needs_geometry_update()) {
             fps.update_geometry(*this->owner);
-            needs_re_record = true;
+            //needs_re_record = true;
          }
          //
          if (needs_re_record && !this->command_buffers_invalid) { // refilling all command buffers also refills the buffer for this overlay
@@ -435,7 +435,6 @@ namespace vulkanDK {
       this->invalidate_all_command_buffers();
    }
    void swap_chain_image::_refill_command_buffers() {
-      const auto& render_passes = this->owner->render_passes;
       this->command_buffers_invalid = false;
       //
       this->_refill_fps_overlay_command_buffer();
@@ -462,7 +461,7 @@ namespace vulkanDK {
       };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = render_passes[0]->handle,
+         .renderPass  = this->owner->render_passes_by_name.main->handle,
          .framebuffer = this->framebuffer,
          .renderArea  = {
             .offset = { 0, 0 },
@@ -477,8 +476,10 @@ namespace vulkanDK {
          // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
          // with each new material.
          //
-         const auto& material = this->owner->swap_chain.materials[0]; // TODO: find a better way to retrieve this
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, this->descriptor_sets.data(), 0, nullptr);
+         const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
+         assert(shader);
+         const auto& material = shader->material;
+         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[0], 0, nullptr);
          vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
          //
          {
@@ -513,8 +514,6 @@ namespace vulkanDK {
       }
    }
    void swap_chain_image::_refill_fps_overlay_command_buffer() {
-      const auto& render_passes = this->owner->render_passes;
-      //
       auto command_buffer = this->command_buffers[1].handle;
       //
       vkResetCommandBuffer(command_buffer, 0);
@@ -536,7 +535,7 @@ namespace vulkanDK {
       };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = render_passes[1]->handle,
+         .renderPass  = this->owner->render_passes_by_name.ui->handle,
          .framebuffer = this->framebuffer,
          .renderArea  = {
             .offset = { 0, 0 },
@@ -547,10 +546,13 @@ namespace vulkanDK {
       };
       vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
       {
-         const auto& material = this->owner->swap_chain.materials[1]; // TODO: find a better way to retrieve this
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
-         vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
-         this->overlays.fps.draw_call(command_buffer);
+         const shader* shader = this->owner->get_shader(vulkanDK::overlays::fps::shader_id);
+         if (shader) {
+            const auto& material = shader->material;
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
+            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            this->overlays.fps.draw_call(command_buffer);
+         }
       }
       vkCmdEndRenderPass(command_buffer);
       if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {

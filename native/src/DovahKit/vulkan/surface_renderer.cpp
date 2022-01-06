@@ -394,7 +394,7 @@ namespace vulkanDK {
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->setup_descriptor_set_layouts();
-      this->_setup_shader_modules();
+      this->_setup_shaders();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
       this->_setup_raw_pixel_texture_sampler();
       //
@@ -403,7 +403,22 @@ namespace vulkanDK {
       {  // swap chain
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
          this->_setup_render_passes();               // requires swap chain format
-         this->_setup_materials();                   // requires render pass and extent size
+         {
+            //
+            // TODO: Having to link shaders to render passes here is hella flaky. Of course, we can't link 
+            // them to the render passes until the render passes exist... But could we not create the actual 
+            // render pass wrappers early and then configure them and create the underlying Vulkan objects 
+            // at the time we create the swap chain?
+            //
+            if (auto* s = this->get_shader(main_shader_id)) {
+               s->config.render_pass = this->render_passes_by_name.main;
+            }
+            if (auto* s = this->get_shader(overlays::fps::shader_id)) {
+               s->config.render_pass = this->render_passes_by_name.ui;
+            }
+            for (auto* s : this->shaders)
+               s->setup_pipeline(this->surface_extent);
+         }
          this->_setup_depth_buffer();                // requires extent size
          this->_setup_swap_chain_images();
          this->_setup_framebuffers();                // requires swap chain image count and view handles
@@ -419,52 +434,69 @@ namespace vulkanDK {
       //
       this->_on_renderer_ready();
    }
-   void surface_renderer::_setup_shader_modules() {
-      auto& dfn = this->material_definitions.emplace_back();
-      auto vert_binding    = vertex::getBindingDescription();
-      auto vert_attributes = vertex::getAttributeDescriptions();
-      //
-      shader_module* frag = nullptr;
-      shader_module* vert = nullptr;
-      {
-         frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
-         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-         this->shader_modules.push_back(frag);
-         this->shader_modules.push_back(vert);
-      }
-      if (frag->empty()) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load fragment shader.");
-      }
-      if (vert->empty()) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shader_modules] Failed to load vertex shader.");
-      }
-      //
-      dfn.stages = {
+   void surface_renderer::_setup_shaders() {
+      {  // Material: "MainMatl"
+         auto* s = this->get_or_create_shader(main_shader_id);
+         s->set_layout_info(
+            {  // Descriptor set layouts
+               this->descriptor_set_layouts[0].handle,
+            },
+            {  // Push constants
+               VkPushConstantRange{
+                  .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                  .offset     = 0,
+                  .size       = sizeof(rendered_mesh::push_constant),
+               }
+            }
+         );
+         //
+         auto& dfn = s->definition;
+         //
+         shader_module* frag = nullptr;
+         shader_module* vert = nullptr;
          {
-            .module              = frag,
-            .entry_point_name    = "main",
-            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .specialization_info = nullptr,
-         },
+            frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
+            vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
+            if (frag->empty()) {
+               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
+            }
+            if (vert->empty()) {
+               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
+            }
+            this->shader_modules.push_back(frag);
+            this->shader_modules.push_back(vert);
+         }
+         dfn.stages = {
+            {
+               .module              = frag,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+               .specialization_info = nullptr,
+            },
+            {
+               .module              = vert,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+               .specialization_info = nullptr,
+            },
+         };
+         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
          {
-            .module              = vert,
-            .entry_point_name    = "main",
-            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .specialization_info = nullptr,
-         },
-      };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-      {
-         auto& vertex     = dfn.inputs.vertex;
-         auto  attributes = vertex::getAttributeDescriptions();
-         vertex.bindings.push_back(vertex::getBindingDescription());
-         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+            auto& vertex     = dfn.inputs.vertex;
+            auto  attributes = vertex::getAttributeDescriptions();
+            vertex.bindings.push_back(vertex::getBindingDescription());
+            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+         }
+         //
+         // And be sure to set up the pipeline layout when you're done!
+         //
+         s->setup_pipeline_layout(*this);
       }
       //
       // FPS counter:
       //
       if constexpr (setup_fps_counter) {
-         vulkanDK::overlays::fps::create_material_definitions(*this);
+         vulkanDK::overlays::fps::setup_shaders(*this);
       }
    }
    //
@@ -710,131 +742,126 @@ namespace vulkanDK {
          //
          // Set up our render pass definitions.
          //
-         auto* rp = new render_pass(*this);
-         this->render_passes = { rp };
-         //
-         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
-            VkAttachmentDescription{ // color
-               .format         = this->swap_chain.format,
-               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-               .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-            },
-            VkAttachmentDescription{ // depth
-               .format         = this->find_depth_format(),
-               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
-               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
-            },
-         };
-         rp->subpasses.descriptions = {
-            {  // subpass
-               .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
-               .attachments = {
-                  .color = { // there can be multiple color attachments
-                     VkAttachmentReference{
-                        .attachment = 0,
-                        .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                     }
-                  },
-                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
-                     .attachment = 1,
-                     .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+         {
+            auto* rp = this->render_passes_by_name.main = new render_pass(*this);
+            rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+               VkAttachmentDescription{ // color
+                  .format         = this->swap_chain.format,
+                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               },
+               VkAttachmentDescription{ // depth
+                  .format         = this->find_depth_format(),
+                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
+               },
+            };
+            rp->subpasses.descriptions = {
+               {  // subpass
+                  .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  .attachments = {
+                     .color = { // there can be multiple color attachments
+                        VkAttachmentReference{
+                           .attachment = 0,
+                           .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                        }
+                     },
+                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                        .attachment = 1,
+                        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                     },
                   },
                },
-            },
-         };
-         rp->subpasses.dependencies = {
-            //
-            // A subpass dependency specifies that  certain tasks in the "source" must complete 
-            // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
-            // subpass must always precede (have a lower index than) the "destination" subpass. 
-            // The special subpass index VK_SUBPASS_EXTERNAL  refers to tasks occurring outside 
-            // of the render pass --  the start (source) or end (destination) of a render pass, 
-            // as it were.
-            // 
-            // For a subpass  dependency, a "task" is a  read or write  operation (access mask) 
-            // and the stages in which that operation occurs (stage mask). Because you can list 
-            // multiple stages, many accesses are defined on a per-stage basis (e.g. a specific 
-            // flag for "reading the color attachment,"  rather than a single flag for "read").
-            // 
-            // The start of a subpass  has an implicit  task: transitioning  the target image's 
-            // current layout  to the one specified by the relevant attachment's  initialLayout 
-            // field above. We of course need to ensure that the image in question (typically a 
-            // swap chain image) is actually available (i.e. has been acquired) before any such 
-            // transition is attempted.
-            // 
-            // If you don't specify a first external dependency  -- that is, a dependency whose 
-            // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
-            // settings:
-            // 
-            //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
-            //    .dstSubpass      = /* first subpass the attachment is used in */,
-            //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-            //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-            //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            //    .dependencyFlags = 0,
-            //
-            VkSubpassDependency{
+            };
+            rp->subpasses.dependencies = {
                //
-               // Writing to the color attachment image  should be delayed until all operations 
-               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
-               // layout) are complete.
+               // A subpass dependency specifies that  certain tasks in the "source" must complete 
+               // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
+               // subpass must always precede (have a lower index than) the "destination" subpass. 
+               // The special subpass index VK_SUBPASS_EXTERNAL  refers to tasks occurring outside 
+               // of the render pass --  the start (source) or end (destination) of a render pass, 
+               // as it were.
+               // 
+               // For a subpass  dependency, a "task" is a  read or write  operation (access mask) 
+               // and the stages in which that operation occurs (stage mask). Because you can list 
+               // multiple stages, many accesses are defined on a per-stage basis (e.g. a specific 
+               // flag for "reading the color attachment,"  rather than a single flag for "read").
+               // 
+               // The start of a subpass  has an implicit  task: transitioning  the target image's 
+               // current layout  to the one specified by the relevant attachment's  initialLayout 
+               // field above. We of course need to ensure that the image in question (typically a 
+               // swap chain image) is actually available (i.e. has been acquired) before any such 
+               // transition is attempted.
+               // 
+               // If you don't specify a first external dependency  -- that is, a dependency whose 
+               // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
+               // settings:
+               // 
+               //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               //    .dstSubpass      = /* first subpass the attachment is used in */,
+               //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+               //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+               //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+               //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               //    .dependencyFlags = 0,
                //
-               .srcSubpass      = VK_SUBPASS_EXTERNAL,
-               .dstSubpass      = 0,
-               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
-               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-               .dependencyFlags = 0,
-            },
-            //
-            // If you don't specify a final external dependency  -- that is, a dependency whose 
-            // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
-            // settings:
-            // 
-            //    .srcSubpass      = /* based on the last subpass */,
-            //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
-            //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-            //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-            //    .dependencyFlags = 0,
-            //
-            // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
-            // layout  that the attachment has at the  end of your last subpass, you  will need 
-            // to specify  your own final  external dependency;  the default one  won't be good 
-            // enough. If you're able to rely on semaphores,  though, then the default can work 
-            // even in that case.
-            //
-            VkSubpassDependency{
-               .srcSubpass      = 0, // should be the last subpass in the list
-               .dstSubpass      = VK_SUBPASS_EXTERNAL,
-               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
-               //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
-               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
-               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-               .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
-               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-            }
-         };
-         //
-         // Create FPS counter render pass (in the future: UI render pass):
-         //
-         if constexpr (setup_fps_counter) {
-            auto* rp = new render_pass(*this);
-            this->render_passes.push_back(rp);
-            //
+               VkSubpassDependency{
+                  //
+                  // Writing to the color attachment image  should be delayed until all operations 
+                  // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+                  // layout) are complete.
+                  //
+                  .srcSubpass      = VK_SUBPASS_EXTERNAL,
+                  .dstSubpass      = 0,
+                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                  .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                  .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+                  .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                  .dependencyFlags = 0,
+               },
+               //
+               // If you don't specify a final external dependency  -- that is, a dependency whose 
+               // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
+               // settings:
+               // 
+               //    .srcSubpass      = /* based on the last subpass */,
+               //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+               //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+               //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+               //    .dependencyFlags = 0,
+               //
+               // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
+               // layout  that the attachment has at the  end of your last subpass, you  will need 
+               // to specify  your own final  external dependency;  the default one  won't be good 
+               // enough. If you're able to rely on semaphores,  though, then the default can work 
+               // even in that case.
+               //
+               VkSubpassDependency{
+                  .srcSubpass      = 0, // should be the last subpass in the list
+                  .dstSubpass      = VK_SUBPASS_EXTERNAL,
+                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+                  //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
+                  .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+                  .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                  .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
+                  .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+               }
+            };
+         }
+         {
+            auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
             rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
                VkAttachmentDescription{ // color
                   .format         = this->swap_chain.format,
@@ -901,6 +928,7 @@ namespace vulkanDK {
                }
             };
          }
+         this->render_passes = { this->render_passes_by_name.main, this->render_passes_by_name.ui };
       }
       //
       // (Re)create the render passes within the GPU:
@@ -997,66 +1025,6 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::surface_renderer::_setup_swap_chain_instance] Failed to create swap chain.");
       }
    }
-   void surface_renderer::_setup_materials() {
-      auto& sc = this->swap_chain;
-      if (sc.materials.empty()) {
-         //
-         // Setting up the materials' pipeline layouts can be done at any point after we 
-         // have material definitions loaded and have created handles for our descriptor 
-         // set layouts.
-         //
-         sc.materials.resize(1);
-         //
-         sc.materials[0].owner = this;
-         sc.materials[0].setup_layout(
-            {  // Descriptor set layouts
-               this->descriptor_set_layouts[0].handle,
-            },
-            {  // Push constants
-               VkPushConstantRange{
-                  .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                  .offset     = 0,
-                  .size       = sizeof(rendered_mesh::push_constant),
-               }
-            }
-         );
-         //
-         // FPS counter:
-         //
-         if constexpr (setup_fps_counter) {
-            assert(sc.materials.size() == 1);
-            auto& mat = sc.materials.emplace_back();
-            mat.owner = this;
-            mat.setup_layout(
-               {  // Descriptor set layouts
-                  this->descriptor_set_layouts[1].handle,
-               }
-            );
-         }
-      }
-      //
-      // Setting up materials' pipeline handles requires knowledge of the final image size 
-      // to render to, and so must be re-done every time we rebuild our swap chain in 
-      // response to a resize.
-      //
-      auto viewport = VkViewport{ // describe what part of the framebuffer we should draw to
-         .x        = 0.0,
-         .y        = 0.0,
-         .width    = (float)this->surface_extent.width,
-         .height   = (float)this->surface_extent.height,
-         .minDepth = 0.0, // must be >= 0
-         .maxDepth = 1.0, // must be <= 1
-      };
-      auto scissor = VkRect2D{ // describe what part of the framebuffer we should retain (like a write-mask)
-         .offset = {0, 0},
-         .extent = this->surface_extent,
-      };
-      //
-      sc.materials[0].setup_handle(this->material_definitions[0], viewport, scissor, this->render_passes[0]->handle, 0);
-      if constexpr (setup_fps_counter) {
-         sc.materials[1].setup_handle(this->material_definitions[1], viewport, scissor, this->render_passes[1]->handle, 0);
-      }
-   }
    void surface_renderer::_setup_depth_buffer() {
       auto  extent = this->surface_extent;
       auto  format = this->find_depth_format();
@@ -1125,10 +1093,15 @@ namespace vulkanDK {
       //
       this->scene.teardown();
       this->null_texture.teardown();
+      {
+         auto& list = this->shaders;
+         for (auto* e : list)
+            delete e;
+         list.clear();
+      }
       {  // Swap chain
          auto& sc = this->swap_chain;
          //
-         sc.materials.clear();
          sc.images.clear();
          sc.depth_buffer.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
@@ -1137,6 +1110,8 @@ namespace vulkanDK {
          sc.frames_in_flight.clear();
       }
       this->_teardown_raw_pixel_texture_sampler();
+      for (auto& e : this->render_passes_by_name._list)
+         e = nullptr; // deletion will be handled in abstract_renderer::teardown
       abstract_renderer::teardown(); // tears down the logical device, too
       //
       this->_on_renderer_teardown_complete();
@@ -1151,13 +1126,8 @@ namespace vulkanDK {
       VkFormat sc_format = sc.format;
       size_t   sc_count  = sc.images.size();
       {  // Tear down swap chain state
-         for (auto& m : sc.materials)
-            //
-            // We don't need to completely destroy materials including their pipeline layouts; we 
-            // just need to destroy the pipelines themselves.
-            //
-            m.teardown_handle();
-         //
+         for (auto& s : this->shaders)
+            s->pre_resize();
          for (auto& image : sc.images) {
             image.teardown_descriptor_sets(); // TODO: we don't actually have to free and rebuild these if the descriptor pool itself doesn't need to be rebuilt
             image.teardown();
@@ -1179,14 +1149,20 @@ namespace vulkanDK {
             // The swap chain image format has changed. We need to update our render pass.
             // 
             // NOTE: Remember to stay in synch with _setup_render_passes()!
-            //
-            auto* rp = this->render_passes[0];
-            assert(rp);
-            rp->teardown();
-            rp->attachments[0].format = sc.format;
-            rp->setup();
+            // 
+            if (auto* rp = this->render_passes_by_name.main) {
+               rp->teardown();
+               rp->attachments[0].format = sc.format;
+               rp->setup();
+            }
+            if (auto* rp = this->render_passes_by_name.ui) {
+               rp->teardown();
+               rp->attachments[0].format = sc.format;
+               rp->setup();
+            }
          }
-         this->_setup_materials();    // requires render pass and surface extent
+         for (auto& s : this->shaders)
+            s->post_resize(this->surface_extent);
          this->_setup_depth_buffer(); // requires surface extent
          this->_setup_swap_chain_images();
          if (sc.images.size() != sc_count) {
@@ -1442,6 +1418,22 @@ namespace vulkanDK {
       vkBindBufferMemory(this->logical_device, out.handle, out.memory, 0);
 
       return out;
+   }
+
+   shader* surface_renderer::get_shader(cobb::eight_cc id) const {
+      for (auto* s : this->shaders)
+         if (s->id == id)
+            return s;
+      return nullptr;
+   }
+   shader* surface_renderer::get_or_create_shader(cobb::eight_cc id) {
+      if (auto* s = this->get_shader(id))
+         return s;
+      auto* s = new shader;
+      s->id = id;
+      s->material.owner = this;
+      this->shaders.push_back(s);
+      return s;
    }
 
    #pragma region scene

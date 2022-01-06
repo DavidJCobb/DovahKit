@@ -33,6 +33,23 @@ namespace vulkanDK {
             const VkSpecializationInfo*      specialization_info = nullptr; // can pass parameters to the shader
          };
 
+         static constexpr color_blend default_no_op_blend = {};
+         static constexpr color_blend default_alpha_blend = {
+            .enabled = true,
+            .source = {
+               .color = VK_BLEND_FACTOR_SRC_COLOR,
+               .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
+            },
+            .destination = {
+               .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+               .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+            },
+            .operations = {
+               .color = VK_BLEND_OP_ADD,
+               .alpha = VK_BLEND_OP_ADD,
+            },
+         };
+
       public:
          material_definition();
 

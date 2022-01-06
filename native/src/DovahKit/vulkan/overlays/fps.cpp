@@ -79,26 +79,30 @@ namespace vulkanDK::overlays {
       v[3].uv = { x, b };
    }
 
-   /*static*/ void fps::create_material_definitions(surface_renderer& sr) {
-      auto& dfn = sr.material_definitions.emplace_back();
-      auto vert_binding    = vertex::getBindingDescription();
-      auto vert_attributes = vertex::getAttributeDescriptions();
+   /*static*/ void fps::setup_shaders(surface_renderer& sr) {
+      auto* s = sr.get_or_create_shader(shader_id);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            sr.descriptor_set_layouts[1].handle,
+         }
+      );
+      //
+      auto& dfn = s->definition;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
       {
          frag = new shader_module(sr.logical_device, QResource("shaders/overlay-fps.frag.spv").uncompressedData());
          vert = new shader_module(sr.logical_device, QResource("shaders/overlay-fps.vert.spv").uncompressedData());
+         if (frag->empty()) {
+            throw std::runtime_error("[vulkanDK::overlays::fps::setup_shaders] Failed to load fragment shader.");
+         }
+         if (vert->empty()) {
+            throw std::runtime_error("[vulkanDK::overlays::fps::setup_shaders] Failed to load vertex shader.");
+         }
          sr.shader_modules.push_back(frag);
          sr.shader_modules.push_back(vert);
       }
-      if (frag->empty()) {
-         throw std::runtime_error("[vulkanDK::overlays::fps::create_material_definitions::create_material_definitions] Failed to load fragment shader.");
-      }
-      if (vert->empty()) {
-         throw std::runtime_error("[vulkanDK::overlays::fps::create_material_definitions::create_material_definitions] Failed to load vertex shader.");
-      }
-      //
       dfn.stages = {
          {
             .module              = frag,
@@ -113,27 +117,14 @@ namespace vulkanDK::overlays {
             .specialization_info = nullptr,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{
-         .enabled = true,
-         .source = {
-            .color = VK_BLEND_FACTOR_SRC_COLOR,
-            .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
-         },
-         .destination = {
-            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
-            .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-         },
-         .operations = {
-            .color = VK_BLEND_OP_ADD,
-            .alpha = VK_BLEND_OP_ADD,
-         },
-      });
+      dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend);
       {
          auto& vertex     = dfn.inputs.vertex;
          auto  attributes = _vertex::getAttributeDescriptions();
          vertex.bindings.push_back(_vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
       }
+      s->setup_pipeline_layout(sr);
    }
    void fps::initialize_descriptor_sets(surface_renderer& sr, swap_chain_image& sci) {
       auto sampler_info = VkDescriptorImageInfo{
