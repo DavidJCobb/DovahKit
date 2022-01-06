@@ -9,6 +9,22 @@ namespace vulkanDK {
    class surface_renderer;
 
    struct shader {
+      //
+      // Proper usage:
+      //  - Define your render passes in advance as render_pass wrappers (even if you can't create the VkRenderPass yet)
+      //  - Define your shader objects (these)
+      //     - Set the target render pass to the desired wrapper
+      //     - Set the area override and layout info as appropriate
+      //     - Set up the shader's pipeline layout
+      //  - Create the VkRenderPass
+      //     - ...generally as part of the process of creating your swap chain
+      //  - Set up the shader's pipeline
+      //  - When your view is resized, you'll need to reset your swap chain...
+      //     - We offer pre_resize and post_resize functions to make this a bit clearer. They'll help you...
+      //        - ...tear down the shader's pipeline
+      //        - ...update your render passes (i.e. VkRenderPass) as necessary
+      //        - ...set up the shader's pipeline again
+      //
       public:
          struct area_override_data {
             VkViewport viewport;
@@ -30,6 +46,7 @@ namespace vulkanDK {
             std::vector<VkPushConstantRange>   push_constant_ranges;
          } config;
 
+         void set_render_pass(render_pass*, uint32_t subpass = 0);
          void set_area_override_info(const area_override_data&);
          void set_layout_info(const std::vector<VkDescriptorSetLayout>&, const std::vector<VkPushConstantRange>& pcr = {});
 

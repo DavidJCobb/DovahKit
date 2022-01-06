@@ -394,6 +394,7 @@ namespace vulkanDK {
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->setup_descriptor_set_layouts();
+      this->_define_render_passes();
       this->_setup_shaders();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
       this->_setup_raw_pixel_texture_sampler();
@@ -403,22 +404,8 @@ namespace vulkanDK {
       {  // swap chain
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
          this->_setup_render_passes();               // requires swap chain format
-         {
-            //
-            // TODO: Having to link shaders to render passes here is hella flaky. Of course, we can't link 
-            // them to the render passes until the render passes exist... But could we not create the actual 
-            // render pass wrappers early and then configure them and create the underlying Vulkan objects 
-            // at the time we create the swap chain?
-            //
-            if (auto* s = this->get_shader(main_shader_id)) {
-               s->config.render_pass = this->render_passes_by_name.main;
-            }
-            if (auto* s = this->get_shader(overlays::fps::shader_id)) {
-               s->config.render_pass = this->render_passes_by_name.ui;
-            }
-            for (auto* s : this->shaders)
-               s->setup_pipeline(this->surface_extent);
-         }
+         for (auto* s : this->shaders)
+            s->setup_pipeline(this->surface_extent);
          this->_setup_depth_buffer();                // requires extent size
          this->_setup_swap_chain_images();
          this->_setup_framebuffers();                // requires swap chain image count and view handles
@@ -434,9 +421,199 @@ namespace vulkanDK {
       //
       this->_on_renderer_ready();
    }
+   void surface_renderer::_define_render_passes() {
+      {
+         auto* rp = this->render_passes_by_name.main = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // color
+               .format         = VK_FORMAT_UNDEFINED,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+               .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            },
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
+            },
+         };
+         rp->subpasses.descriptions = {
+            {  // subpass
+               .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = { // there can be multiple color attachments
+                     VkAttachmentReference{
+                        .attachment = 0,
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     }
+                  },
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 1,
+                     .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+         };
+         rp->subpasses.dependencies = {
+            //
+            // A subpass dependency specifies that  certain tasks in the "source" must complete 
+            // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
+            // subpass must always precede (have a lower index than) the "destination" subpass. 
+            // The special subpass index VK_SUBPASS_EXTERNAL  refers to tasks occurring outside 
+            // of the render pass --  the start (source) or end (destination) of a render pass, 
+            // as it were.
+            // 
+            // For a subpass  dependency, a "task" is a  read or write  operation (access mask) 
+            // and the stages in which that operation occurs (stage mask). Because you can list 
+            // multiple stages, many accesses are defined on a per-stage basis (e.g. a specific 
+            // flag for "reading the color attachment,"  rather than a single flag for "read").
+            // 
+            // The start of a subpass  has an implicit  task: transitioning  the target image's 
+            // current layout  to the one specified by the relevant attachment's  initialLayout 
+            // field above. We of course need to ensure that the image in question (typically a 
+            // swap chain image) is actually available (i.e. has been acquired) before any such 
+            // transition is attempted.
+            // 
+            // If you don't specify a first external dependency  -- that is, a dependency whose 
+            // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
+            // settings:
+            // 
+            //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
+            //    .dstSubpass      = /* first subpass the attachment is used in */,
+            //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+            //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+            //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            //    .dependencyFlags = 0,
+            //
+            VkSubpassDependency{
+               //
+               // Writing to the color attachment image  should be delayed until all operations 
+               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+               // layout) are complete.
+               //
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            //
+            // If you don't specify a final external dependency  -- that is, a dependency whose 
+            // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
+            // settings:
+            // 
+            //    .srcSubpass      = /* based on the last subpass */,
+            //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
+            //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
+            //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
+            //    .dependencyFlags = 0,
+            //
+            // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
+            // layout  that the attachment has at the  end of your last subpass, you  will need 
+            // to specify  your own final  external dependency;  the default one  won't be good 
+            // enough. If you're able to rely on semaphores,  though, then the default can work 
+            // even in that case.
+            //
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+               //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
+               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            }
+         };
+      }
+      {
+         auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // color
+               .format         = VK_FORMAT_UNDEFINED,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            },
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
+            },
+         };
+         rp->subpasses.descriptions = {
+            {  // subpass
+               .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = { // there can be multiple color attachments
+                     VkAttachmentReference{
+                        .attachment = 0,
+                        .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     }
+                  },
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 1,
+                     .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+         };
+         rp->subpasses.dependencies = {
+            VkSubpassDependency{
+               //
+               // Writing to the color attachment image  should be delayed until all operations 
+               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+               // layout) are complete.
+               //
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+               //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
+               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            }
+         };
+      }
+      this->render_passes = { this->render_passes_by_name.main, this->render_passes_by_name.ui };
+   }
    void surface_renderer::_setup_shaders() {
       {  // Material: "MainMatl"
          auto* s = this->get_or_create_shader(main_shader_id);
+         s->set_render_pass(this->render_passes_by_name.main);
          s->set_layout_info(
             {  // Descriptor set layouts
                this->descriptor_set_layouts[0].handle,
@@ -738,198 +915,8 @@ namespace vulkanDK {
    }
    //
    void surface_renderer::_setup_render_passes() {
-      if (this->render_passes.empty()) {
-         //
-         // Set up our render pass definitions.
-         //
-         {
-            auto* rp = this->render_passes_by_name.main = new render_pass(*this);
-            rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
-               VkAttachmentDescription{ // color
-                  .format         = this->swap_chain.format,
-                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-                  .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-               },
-               VkAttachmentDescription{ // depth
-                  .format         = this->find_depth_format(),
-                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-                  .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
-                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-                  .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
-               },
-            };
-            rp->subpasses.descriptions = {
-               {  // subpass
-                  .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
-                  .attachments = {
-                     .color = { // there can be multiple color attachments
-                        VkAttachmentReference{
-                           .attachment = 0,
-                           .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                        }
-                     },
-                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
-                        .attachment = 1,
-                        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                     },
-                  },
-               },
-            };
-            rp->subpasses.dependencies = {
-               //
-               // A subpass dependency specifies that  certain tasks in the "source" must complete 
-               // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
-               // subpass must always precede (have a lower index than) the "destination" subpass. 
-               // The special subpass index VK_SUBPASS_EXTERNAL  refers to tasks occurring outside 
-               // of the render pass --  the start (source) or end (destination) of a render pass, 
-               // as it were.
-               // 
-               // For a subpass  dependency, a "task" is a  read or write  operation (access mask) 
-               // and the stages in which that operation occurs (stage mask). Because you can list 
-               // multiple stages, many accesses are defined on a per-stage basis (e.g. a specific 
-               // flag for "reading the color attachment,"  rather than a single flag for "read").
-               // 
-               // The start of a subpass  has an implicit  task: transitioning  the target image's 
-               // current layout  to the one specified by the relevant attachment's  initialLayout 
-               // field above. We of course need to ensure that the image in question (typically a 
-               // swap chain image) is actually available (i.e. has been acquired) before any such 
-               // transition is attempted.
-               // 
-               // If you don't specify a first external dependency  -- that is, a dependency whose 
-               // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
-               // settings:
-               // 
-               //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
-               //    .dstSubpass      = /* first subpass the attachment is used in */,
-               //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-               //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-               //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-               //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-               //    .dependencyFlags = 0,
-               //
-               VkSubpassDependency{
-                  //
-                  // Writing to the color attachment image  should be delayed until all operations 
-                  // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
-                  // layout) are complete.
-                  //
-                  .srcSubpass      = VK_SUBPASS_EXTERNAL,
-                  .dstSubpass      = 0,
-                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-                  .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-                  .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
-                  .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                  .dependencyFlags = 0,
-               },
-               //
-               // If you don't specify a final external dependency  -- that is, a dependency whose 
-               // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
-               // settings:
-               // 
-               //    .srcSubpass      = /* based on the last subpass */,
-               //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
-               //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-               //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-               //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-               //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-               //    .dependencyFlags = 0,
-               //
-               // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
-               // layout  that the attachment has at the  end of your last subpass, you  will need 
-               // to specify  your own final  external dependency;  the default one  won't be good 
-               // enough. If you're able to rely on semaphores,  though, then the default can work 
-               // even in that case.
-               //
-               VkSubpassDependency{
-                  .srcSubpass      = 0, // should be the last subpass in the list
-                  .dstSubpass      = VK_SUBPASS_EXTERNAL,
-                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
-                  //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
-                  .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
-                  .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                  .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
-                  .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-               }
-            };
-         }
-         {
-            auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
-            rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
-               VkAttachmentDescription{ // color
-                  .format         = this->swap_chain.format,
-                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
-                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                  .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-               },
-               VkAttachmentDescription{ // depth
-                  .format         = this->find_depth_format(),
-                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-                  .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
-                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-                  .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
-               },
-            };
-            rp->subpasses.descriptions = {
-               {  // subpass
-                  .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
-                  .attachments = {
-                     .color = { // there can be multiple color attachments
-                        VkAttachmentReference{
-                           .attachment = 0,
-                           .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                        }
-                     },
-                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
-                        .attachment = 1,
-                        .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                     },
-                  },
-               },
-            };
-            rp->subpasses.dependencies = {
-               VkSubpassDependency{
-                  //
-                  // Writing to the color attachment image  should be delayed until all operations 
-                  // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
-                  // layout) are complete.
-                  //
-                  .srcSubpass      = VK_SUBPASS_EXTERNAL,
-                  .dstSubpass      = 0,
-                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-                  .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-                  .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
-                  .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                  .dependencyFlags = 0,
-               },
-               VkSubpassDependency{
-                  .srcSubpass      = 0, // should be the last subpass in the list
-                  .dstSubpass      = VK_SUBPASS_EXTERNAL,
-                  .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
-                  //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
-                  .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
-                  .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                  .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
-                  .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-               }
-            };
-         }
-         this->render_passes = { this->render_passes_by_name.main, this->render_passes_by_name.ui };
-      }
+      this->render_passes_by_name.main->attachments[0].format = this->swap_chain.format;
+      this->render_passes_by_name.ui->attachments[0].format = this->swap_chain.format;
       //
       // (Re)create the render passes within the GPU:
       //
@@ -1338,7 +1325,7 @@ namespace vulkanDK {
       // 
       // See the end of: https://vulkan-tutorial.com/en/Texture_mapping/Images#page_Transition-barrier-masks
       //
-      auto scratch = command_buffer(*this);
+      auto scratch = command_buffer::create_transient(*this);
       //
       auto begin_info = VkCommandBufferBeginInfo{
          .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,

@@ -68,14 +68,23 @@ namespace vulkanDK {
          .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
          .queueFamilyIndex = queue_family_index,
       };
-      if (vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the command pool.");
+      if (vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.persistent) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the persistent command pool.");
+      }
+      //
+      pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+      if (vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.transient) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the transient command pool.");
       }
    }
    void abstract_renderer::teardown_command_pool() {
-      if (this->command_pool != VK_NULL_HANDLE) {
-         vkDestroyCommandPool(this->logical_device, this->command_pool, nullptr);
-         this->command_pool = VK_NULL_HANDLE;
+      if (this->command_pools.persistent != VK_NULL_HANDLE) {
+         vkDestroyCommandPool(this->logical_device, this->command_pools.persistent, nullptr);
+         this->command_pools.persistent = VK_NULL_HANDLE;
+      }
+      if (this->command_pools.transient != VK_NULL_HANDLE) {
+         vkDestroyCommandPool(this->logical_device, this->command_pools.transient, nullptr);
+         this->command_pools.transient = VK_NULL_HANDLE;
       }
    }
 

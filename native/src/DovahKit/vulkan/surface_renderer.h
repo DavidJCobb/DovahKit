@@ -136,7 +136,8 @@ namespace vulkanDK {
          void _setup_raw_pixel_texture_sampler();
          void _teardown_raw_pixel_texture_sampler();
          
-         void _setup_shaders();
+         void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
+         void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

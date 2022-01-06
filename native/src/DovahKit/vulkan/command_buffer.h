@@ -16,6 +16,8 @@ namespace vulkanDK {
          command_buffer(surface_renderer&);
          ~command_buffer();
 
+         static command_buffer create_transient(surface_renderer&);
+
          command_buffer(command_buffer&&) noexcept;
          command_buffer& operator=(command_buffer&&) noexcept;
 

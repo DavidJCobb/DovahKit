@@ -81,6 +81,7 @@ namespace vulkanDK::overlays {
 
    /*static*/ void fps::setup_shaders(surface_renderer& sr) {
       auto* s = sr.get_or_create_shader(shader_id);
+      s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
             sr.descriptor_set_layouts[1].handle,
@@ -323,35 +324,37 @@ namespace vulkanDK::overlays {
       return image;
    }
    void fps::generate_atlas(surface_renderer& sr, swap_chain_image& sci) {
-      QImage   texture = this->generate_atlas();
-      uint32_t w = texture.width();
-      uint32_t h = texture.height();
-      //
-      VkDeviceSize image_size = w * h * 4;
-      //
-      // We're gonna be setting up our image on a staging buffer, and then transferring that 
-      // to the final (non-CPU-writeable) buffer.
-      //
-      auto  staging = sr.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      void* data    = staging.map_memory();
-      memcpy(data, texture.constBits(), image_size);
-      staging.unmap_memory(data);
-      //
-      texture = QImage();
-      //
-      auto& content = this->atlas_info.image;
-      content = concrete_image(sr);
-      content.create_image(
-         w, h,
-         VK_FORMAT_R8G8B8A8_SRGB,
-         VK_IMAGE_TILING_OPTIMAL,
-         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-      );
-      content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-      content.copy_content_from_buffer(staging.handle);
-      content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+      {
+         QImage   texture = this->generate_atlas();
+         uint32_t w = texture.width();
+         uint32_t h = texture.height();
+         //
+         VkDeviceSize image_size = w * h * 4;
+         //
+         // We're gonna be setting up our image on a staging buffer, and then transferring that 
+         // to the final (non-CPU-writeable) buffer.
+         //
+         auto  staging = sr.create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         void* data    = staging.map_memory();
+         memcpy(data, texture.constBits(), image_size);
+         staging.unmap_memory(data);
+         //
+         texture = QImage();
+         //
+         auto& content = this->atlas_info.image;
+         content = concrete_image(sr);
+         content.create_image(
+            w, h,
+            VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+         );
+         content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+         content.copy_content_from_buffer(staging.handle);
+         content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+         content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+      }
       //
       // Update descriptor:
       //

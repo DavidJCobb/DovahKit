@@ -25,12 +25,15 @@ namespace vulkanDK {
          const physical_device* device_info = nullptr;
          VkDevice logical_device = VK_NULL_HANDLE; // subclasses set it up; we tear it down
          //
-         VkCommandPool    command_pool    = VK_NULL_HANDLE;
+         struct {
+            VkCommandPool persistent = VK_NULL_HANDLE;
+            VkCommandPool transient  = VK_NULL_HANDLE;
+         } command_pools;
          VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
          std::vector<descriptor_set_layout> descriptor_set_layouts;
          //
-         std::vector<render_pass*>        render_passes;  // owns
-         std::vector<shader_module*>      shader_modules; // owns
+         std::vector<render_pass*>   render_passes;  // owns
+         std::vector<shader_module*> shader_modules; // owns
          VkSampler texture_sampler = VK_NULL_HANDLE;
          //
          struct {

@@ -10,6 +10,10 @@ namespace vulkanDK {
       }
    }
 
+   void shader::set_render_pass(render_pass* rp, uint32_t subpass) {
+      this->config.render_pass = rp;
+      this->config.subpass     = subpass;
+   }
    void shader::set_area_override_info(const area_override_data& aod) {
       auto& ptr = this->config.area_override;
       if (!ptr)
