@@ -62,6 +62,7 @@ namespace vulkanDK {
          } queues;
          //
          concrete_image null_texture;
+         VkSampler raw_pixel_texture_sampler;
          //
          struct {
             VkSwapchainKHR handle = VK_NULL_HANDLE;
@@ -77,6 +78,10 @@ namespace vulkanDK {
          } swap_chain;
          //
          scene scene;
+         //
+         struct {
+            double last_frame_time = 0.0;
+         } state;
 
          void setup(); // sets up the device and everything below, but not the surface
          void teardown(); // tears down the device and everything below, but not the surface
@@ -108,10 +113,15 @@ namespace vulkanDK {
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
 
+         inline double last_frame_time() const { return this->state.last_frame_time; }
+
       protected:
          void _init_surface(); // on init, and when the HWND changes
          void _init_device();
          void _reset_surface();
+
+         void _setup_raw_pixel_texture_sampler();
+         void _teardown_raw_pixel_texture_sampler();
          
          void _setup_shader_modules();
          //

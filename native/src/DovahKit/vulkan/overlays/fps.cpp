@@ -7,7 +7,8 @@
 #include <QImageWriter>
 
 namespace {
-   static constexpr int ABSURDLY_LARGE_SIZE = 9999;
+   static constexpr int  ABSURDLY_LARGE_SIZE      = 9999;
+   static constexpr bool unnormalized_coordinates = true; // refer to texture sampler's options
 }
 
 namespace {
@@ -62,11 +63,16 @@ namespace vulkanDK::overlays {
       v[3].pos.y = v[2].pos.y;
    }
    void fps::_set_quad_uv(_vertex* v, const QRect& glyph) {
-      auto x = (float)glyph.x() / (float)this->atlas_info.size.width();
-      auto y = (float)glyph.y() / (float)this->atlas_info.size.height();
-      auto r = (float)glyph.right()  / (float)this->atlas_info.size.width();
-      auto b = (float)glyph.bottom() / (float)this->atlas_info.size.height();
-      //
+      auto x = (float)glyph.x();
+      auto y = (float)glyph.y();
+      auto r = x + glyph.width();
+      auto b = y + glyph.height();
+      if constexpr (!unnormalized_coordinates) {
+         x /= (float)this->atlas_info.size.width();
+         y /= (float)this->atlas_info.size.height();
+         r /= (float)this->atlas_info.size.width();
+         b /= (float)this->atlas_info.size.height();
+      }
       v[0].uv = { x, y };
       v[1].uv = { r, y };
       v[2].uv = { r, b };
@@ -111,11 +117,11 @@ namespace vulkanDK::overlays {
          .enabled = true,
          .source = {
             .color = VK_BLEND_FACTOR_SRC_COLOR,
-            .alpha = VK_BLEND_FACTOR_ONE,
+            .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
          },
          .destination = {
             .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
-            .alpha = VK_BLEND_FACTOR_ZERO,
+            .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
          },
          .operations = {
             .color = VK_BLEND_OP_ADD,
@@ -129,11 +135,9 @@ namespace vulkanDK::overlays {
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
       }
    }
-   void fps::setup_texture_sampler() {
-   }
    void fps::initialize_descriptor_sets(surface_renderer& sr, swap_chain_image& sci) {
       auto sampler_info = VkDescriptorImageInfo{
-         .sampler     = sr.texture_sampler,
+         .sampler     = sr.raw_pixel_texture_sampler,
          .imageView   = VK_NULL_HANDLE,
          .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       };
@@ -222,10 +226,34 @@ namespace vulkanDK::overlays {
       this->change_flags.set<change_flag::style>();
    }
    void fps::set_value(value_type v) {
-      if (this->value == v)
-         return;
-      this->value = v;
-      this->change_flags.set<change_flag::value>();
+      if constexpr (show_history_average) {
+         auto& h = this->history;
+         if (h.count == 0) {
+            h.average = v;
+            h.count   = 1;
+         } else if (h.count == std::numeric_limits<decltype(h.count)>::max() - 1) { // overflow imminent
+            h.average = v;
+            h.count   = 1;
+         } else {
+            using average_t = decltype(h.average);
+            //
+            constexpr bool alternate_method = true;
+            if constexpr (alternate_method) {
+               ++h.count;
+               h.average += ((average_t)v - h.average) / h.count;
+            } else {
+               h.average = ((average_t)v + (average_t)h.count * h.average) / (h.count + 1);
+               ++h.count;
+            }
+         }
+      } else {
+         if (this->value == v)
+            return;
+         this->value = v;
+      }
+      if constexpr (!assume_always_redraw) {
+         this->change_flags.set<change_flag::value>();
+      }
    }
    void fps::set_digit_spacing(float ds) {
       if (this->style.space_between_digits == ds)
@@ -238,9 +266,12 @@ namespace vulkanDK::overlays {
       return this->change_flags.test<change_flag::style>();
    }
    bool fps::needs_geometry_update() const {
+      if constexpr (assume_always_redraw) {
+         return true;
+      }
       if (!this->change_flags.empty())
          return true;
-      return this->value != this->last_value;
+      return false;
    }
 
    QImage fps::generate_atlas() {
@@ -277,6 +308,7 @@ namespace vulkanDK::overlays {
       //
       auto image   = QImage(w, h, QImage::Format::Format_RGBA8888); // TODO: pick a better format
       auto painter = QPainter(&image);
+      image.fill(Qt::GlobalColor::transparent);
       painter.setPen(QColor(255, 255, 255));
       painter.setBrush(QColor(255, 255, 255));
       painter.drawText(this->atlas_info.label, glyph_text_flags, this->style.label);
@@ -334,7 +366,7 @@ namespace vulkanDK::overlays {
       //
       auto infos = std::array{
          VkDescriptorImageInfo{
-            .sampler     = sr.texture_sampler,
+            .sampler     = sr.raw_pixel_texture_sampler,
             .imageView   = this->atlas_info.image.view,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
          },
@@ -394,7 +426,12 @@ namespace vulkanDK::overlays {
       //
       std::array<uint8_t, max_digits> digits;
       {
-         auto v = this->value;
+         value_type v;
+         if constexpr (show_history_average) {
+            v = this->history.average;
+         } else {
+            v = this->value;
+         }
          for (size_t i = 0; i < max_digits; ++i, v /= display_base) {
             digits[max_digits - i - 1] = v % display_base;
          }
@@ -411,24 +448,20 @@ namespace vulkanDK::overlays {
       //
       // Vertices:
       //
-      int  x      = this->atlas_info.label.right();
-      bool zeroes = this->style.omit_leading_zeroes;
-      for (size_t i = 0; i < max_digits; ++i) {
+      int    x = this->atlas_info.label.x() + this->atlas_info.label.width(); // this is not the same as QRect::right(), apparently; not sure what's up with that
+      size_t i = 0;
+      if (this->style.omit_leading_zeroes) {
+         for (; i < max_digits - 1; ++i) {
+            if (digits[i] != 0)
+               break;
+         }
+         if (i) {
+            memset(&vertices[vertices_per_quad], 0, sizeof(_vertex) * vertices_per_quad * i);
+         }
+      }
+      for (; i < max_digits; ++i) {
          auto* digit_verts = &vertices[vertices_per_quad + vertices_per_quad * i];
          //
-         if (digits[i] != 0 || i == max_digits - 1) {
-            zeroes = false;
-         }
-         if (zeroes) {
-            //
-            // Do not display leading zeroes.
-            //
-            for (int j = 0; j < vertices_per_quad; ++j) {
-               digit_verts[j].pos = { x, 0, 0 };
-               digit_verts[j].uv  = { 0, 0 };
-            }
-            continue;
-         }
          const auto& glyph = this->atlas_info.digits[digits[i]];
          _set_quad_pos({ x, 0 }, digit_verts, glyph);
          _set_quad_uv(digit_verts, glyph);
@@ -440,7 +473,6 @@ namespace vulkanDK::overlays {
       // And we're done!
       //
       this->change_flags.reset_all_of<change_flag::atlas, change_flag::positions, change_flag::value>();
-      this->last_value = this->value;
    }
    void fps::draw_call(VkCommandBuffer command_buffer) {
       VkDeviceSize offset = 0;

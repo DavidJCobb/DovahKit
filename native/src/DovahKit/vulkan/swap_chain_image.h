@@ -64,5 +64,6 @@ namespace vulkanDK {
          void _update_shader_object_data_buffer();
          void _update_shader_texture_descriptors();
          void _refill_command_buffers();
+         void _refill_fps_overlay_command_buffer();
    };
 }

@@ -1,0 +1,27 @@
+
+== TOFT RECORDS ========================================================================================
+
+You can generate ES[LPM] files that contain TOFT records by...
+
+   1. Load an ESM in the CK.
+
+   2. File -> Details
+
+   3. Ctrl + Shift + O to "Create version of current .esm optimized for 
+      in-game loading"
+
+   4. This generates a file with the name "<$FileName>OPT.esm". Doing this 
+      to Fallout4.esm created a file that xEdit was unable to load, with 
+      several mentions of "TOFT".
+
+Doing this to a custom file is less reliable; per the users I got this lead 
+from:
+
+   I tried putting together a test file together (duplicating a CELL in the CK 
+   and making it its own thing, then converting to an .esm), however when trying 
+   the above in the CK caused it to write ~200MB of zeroes to the end of the file. 
+   Subsequently loading the file again and letting the CK truncate the file, of 
+   course, destroyed the entire thing.
+   I don't actually know of these "OPT" files will load in game, since the only 
+   ones I have so far will more than likely not.
+

@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <QFont>
 #include <QImage>
 #include <QString>
@@ -27,6 +28,9 @@ namespace vulkanDK::overlays {
          // Config:
          static constexpr size_t  max_digits   =  5; // max digits to display
          static constexpr uint8_t display_base = 10; // display numbers in base-10
+         static constexpr size_t  history_size = 10;
+         static constexpr bool    show_history_average = true;
+         static constexpr bool    assume_always_redraw = true; // generally sensible; the FPS will likely change every frame
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
@@ -39,7 +43,8 @@ namespace vulkanDK::overlays {
          static constexpr size_t vertex_count      = quad_count * vertices_per_quad;
          static constexpr size_t index_count       = quad_count * 6;
 
-         using value_type = uint16_t;
+         using value_type = int32_t;
+         static constexpr value_type max_value = std::numeric_limits<value_type>::max();
 
       protected:
          struct _vertex {
@@ -68,8 +73,11 @@ namespace vulkanDK::overlays {
          };
          using change_flags_t = cobb::enum_flags<change_flag, 4>;
 
-         value_type     value        =  0;
-         value_type     last_value   = -1;
+         value_type value = 0;
+         struct {
+            double average = 0.0;
+            size_t count   = 0;
+         } history;
          change_flags_t change_flags = change_flags_t::with_all_set();
          //
          struct {
@@ -96,7 +104,6 @@ namespace vulkanDK::overlays {
          fps();
 
          static void create_material_definitions(surface_renderer&);
-         void setup_texture_sampler();
          void initialize_descriptor_sets(surface_renderer&, swap_chain_image&);
          void setup_shader_parameter_buffers(surface_renderer&);
          void create_geometry(surface_renderer&);

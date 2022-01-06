@@ -155,13 +155,31 @@ namespace vulkanDK {
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       {
          auto& fps = this->overlays.fps;
+         {
+            auto delta = this->owner->last_frame_time();
+            if (delta) {
+               fps.set_value(decltype(delta)(1) / delta);
+            } else {
+               //
+               // Instantaneous frame; dividing would be a division by zero. Just use the 
+               // max possible FPS.
+               //
+               fps.set_value(vulkanDK::overlays::fps::max_value);
+            }
+         }
+         //
+         bool needs_re_record = false;
          if (fps.needs_atlas_update()) {
             fps.generate_atlas(*this->owner, *this);
-            this->command_buffers_invalid = true; // TODO: improve; we shouldn't force redraw of scene when UI changes
+            needs_re_record = true;
          }
          if (fps.needs_geometry_update()) {
             fps.update_geometry(*this->owner);
-            this->command_buffers_invalid = true; // TODO: improve; we shouldn't force redraw of scene when UI changes
+            needs_re_record = true;
+         }
+         //
+         if (needs_re_record && !this->command_buffers_invalid) { // refilling all command buffers also refills the buffer for this overlay
+            this->_refill_fps_overlay_command_buffer();
          }
       }
       if (this->command_buffers_invalid) {
@@ -420,49 +438,7 @@ namespace vulkanDK {
       const auto& render_passes = this->owner->render_passes;
       this->command_buffers_invalid = false;
       //
-      {  // FPS counter buffer; TODO: separate this code out?
-         auto  command_buffer = this->command_buffers[1].handle;
-         //
-         vkResetCommandBuffer(command_buffer, 0);
-         auto buffer_begin_info = VkCommandBufferBeginInfo{
-            .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-            .flags            = 0,
-            .pInheritanceInfo = nullptr,
-         };
-         if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording UI command buffer.");
-         }
-         //
-         auto clear_values = std::array{
-            //
-            // Values here should match the attachments we're using.
-            //
-            VkClearValue{ .color        = {0, 0, 0, 0} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
-            VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
-         };
-         auto pass_begin_info = VkRenderPassBeginInfo{
-            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-            .renderPass  = render_passes[1]->handle,
-            .framebuffer = this->framebuffer,
-            .renderArea  = {
-               .offset = { 0, 0 },
-               .extent = this->owner->surface_extent,
-            },
-            .clearValueCount = (uint32_t)clear_values.size(),
-            .pClearValues    = clear_values.data(),
-         };
-         vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-         {
-            const auto& material = this->owner->swap_chain.materials[1]; // TODO: find a better way to retrieve this
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
-            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
-            this->overlays.fps.draw_call(command_buffer);
-         }
-         vkCmdEndRenderPass(command_buffer);
-         if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
-         }
-      }
+      this->_refill_fps_overlay_command_buffer();
       //
       auto& scene          = this->owner->scene;
       auto  command_buffer = this->command_buffers[0].handle;
@@ -530,6 +506,51 @@ namespace vulkanDK {
             }
             //qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
          }
+      }
+      vkCmdEndRenderPass(command_buffer);
+      if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+      }
+   }
+   void swap_chain_image::_refill_fps_overlay_command_buffer() {
+      const auto& render_passes = this->owner->render_passes;
+      //
+      auto command_buffer = this->command_buffers[1].handle;
+      //
+      vkResetCommandBuffer(command_buffer, 0);
+      auto buffer_begin_info = VkCommandBufferBeginInfo{
+         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+         .flags            = 0,
+         .pInheritanceInfo = nullptr,
+      };
+      if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording UI command buffer.");
+      }
+      //
+      auto clear_values = std::array{
+         //
+         // Values here should match the attachments we're using.
+         //
+         VkClearValue{ .color        = {0, 0, 0, 0} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
+         VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+      };
+      auto pass_begin_info = VkRenderPassBeginInfo{
+         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+         .renderPass  = render_passes[1]->handle,
+         .framebuffer = this->framebuffer,
+         .renderArea  = {
+            .offset = { 0, 0 },
+            .extent = this->owner->surface_extent,
+         },
+         .clearValueCount = (uint32_t)clear_values.size(),
+         .pClearValues    = clear_values.data(),
+      };
+      vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+      {
+         const auto& material = this->owner->swap_chain.materials[1]; // TODO: find a better way to retrieve this
+         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
+         vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+         this->overlays.fps.draw_call(command_buffer);
       }
       vkCmdEndRenderPass(command_buffer);
       if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {

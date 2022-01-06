@@ -1,4 +1,5 @@
 #include "surface_renderer.h"
+#include <chrono>
 #include <QResource> // for loading shaders
 #include "DKVulkanInstance.h"
 #include "frame_in_flight.h"
@@ -99,11 +100,6 @@ namespace { // test scene properties
          ),
       },
    };
-}
-
-namespace vulkanDK {
-   #pragma region swap_chain_image
-   #pragma endregion
 }
 
 namespace vulkanDK {
@@ -346,6 +342,51 @@ namespace vulkanDK {
       }
    }
 
+   void surface_renderer::_setup_raw_pixel_texture_sampler() {
+      //
+      // Shaders wishing to use this texture sampler must be aware:
+      // 
+      //  - coordinates are relative to the texture size (i.e. [0, w], not [0, 1]); this is the meaning 
+      //    of the "unnormalized coordinates" option, and will help avoid artifacts
+      // 
+      //     - this only affects UVs. if you want to display a mesh using screen coordinates (e.g. for 
+      //       UI that remains at a fixed size rather than scaling with the viewport), then your shader 
+      //       will need to be given the viewport size as an input and will need to manually convert 
+      //       vertex positions from screen space to clip space (that is, [-1, 1]). that conversion is 
+      //       done as: (2 * (screen_coord / screen_dimension) - 1.0).
+      // 
+      //  - use GLSL textureLod() to pull color/pixel values given a texture and UVs. the GLSL texture() 
+      //    function is not compatible with unnormalized coordinates
+      //
+      auto sampler_info = VkSamplerCreateInfo{
+         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+         .magFilter        = VK_FILTER_NEAREST,
+         .minFilter        = VK_FILTER_NEAREST, // both filters must be the same for unnormalized coords
+         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_NEAREST, // must be nearest for unnormalized coords, but we want nearest anyway
+         .addressModeU     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+         .addressModeV     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+         .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+         .mipLodBias       = 0.0,
+         .anisotropyEnable = VK_FALSE, // must be false for unnormalized coords, but we want false anyway
+         .maxAnisotropy    = 0.0F,
+         .compareEnable    = VK_FALSE, // must be false for unnormalized coords, but we want false anyway
+         .compareOp        = VK_COMPARE_OP_ALWAYS,
+         .minLod           = 0.0, // must be zero for unnormalized coords
+         .maxLod           = 0.0, // must be zero for unnormalized coords
+         .borderColor      = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK,
+         .unnormalizedCoordinates = VK_TRUE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
+      };
+      if (vkCreateSampler(this->logical_device, &sampler_info, nullptr, &this->raw_pixel_texture_sampler) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
+      }
+   }
+   void surface_renderer::_teardown_raw_pixel_texture_sampler() {
+      if (this->raw_pixel_texture_sampler != VK_NULL_HANDLE) {
+         vkDestroySampler(this->logical_device, this->raw_pixel_texture_sampler, nullptr);
+         this->raw_pixel_texture_sampler = VK_NULL_HANDLE;
+      }
+   }
+
    void surface_renderer::setup() {
       if (this->logical_device == VK_NULL_HANDLE) {
          return;
@@ -355,6 +396,7 @@ namespace vulkanDK {
       this->setup_descriptor_set_layouts();
       this->_setup_shader_modules();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
+      this->_setup_raw_pixel_texture_sampler();
       //
       this->setup_command_pool(this->queues.graphics.index);
       //
@@ -1094,6 +1136,7 @@ namespace vulkanDK {
          //
          sc.frames_in_flight.clear();
       }
+      this->_teardown_raw_pixel_texture_sampler();
       abstract_renderer::teardown(); // tears down the logical device, too
       //
       this->_on_renderer_teardown_complete();
@@ -1200,6 +1243,9 @@ namespace vulkanDK {
       if (!this->widget.visible)
          return;
       //
+      using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
+      auto time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+      //
       // If this frame-in-flight is still being used to render and present another swap 
       // chain image, wait for it to finish. We'll also advance the current frame counter 
       // here.
@@ -1299,6 +1345,10 @@ namespace vulkanDK {
       //
       // Post-draw behavior:
       //
+      auto time_after = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+      {
+         this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(time_after - time_prior).count();
+      }
       this->_execute_pending_scene_deletions();
    }
 
