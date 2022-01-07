@@ -30,8 +30,9 @@ namespace vulkanDK::overlays {
          static constexpr size_t  max_digits   =  5; // max digits to display
          static constexpr uint8_t display_base = 10; // display numbers in base-10
          static constexpr size_t  history_size = 10;
-         static constexpr bool    show_history_average = true;
-         static constexpr bool    assume_always_redraw = true; // generally sensible; the FPS will likely change every frame
+         static constexpr bool    show_history_average      = true;
+         static constexpr bool    assume_always_redraw      = true; // generally sensible; the FPS will likely change every frame
+         static constexpr bool    persistent_staging_buffer = true; // useful when (assume_always_redraw) is (true)
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
@@ -98,9 +99,9 @@ namespace vulkanDK::overlays {
          } atlas_info;
          //
          buffer vertex_and_index_buffer;
+         buffer vi_staging_buffer;
          struct {
-            shader* instance = nullptr;
-            buffer  uniform;
+            buffer uniform;
          } shader_params;
 
       public:
@@ -126,7 +127,7 @@ namespace vulkanDK::overlays {
          void update_geometry(surface_renderer&);
          void update_geometry(void* mapped_vertex_memory);
 
-         // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
-         void draw_call(VkCommandBuffer);
+         void commands_pre_pass(VkCommandBuffer); // rendering commands to execute before entering a render pass
+         void draw_call(VkCommandBuffer); // caller should bind descriptor sets, send necessary push constants, etc., before calling this
    };
 }

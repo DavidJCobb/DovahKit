@@ -7,8 +7,8 @@
 #include <QImageWriter>
 
 namespace {
-   static constexpr int  ABSURDLY_LARGE_SIZE      = 9999;
-   static constexpr bool unnormalized_coordinates = true; // refer to texture sampler's options
+   static constexpr int  ABSURDLY_LARGE_SIZE       = 9999;
+   static constexpr bool unnormalized_coordinates  = true; // refer to texture sampler's options
 }
 
 namespace {
@@ -176,14 +176,15 @@ namespace vulkanDK::overlays {
       this->shader_params.uniform.unmap_memory(data);
    }
    void fps::create_geometry(surface_renderer& sr) {
-      auto& vib = this->vertex_and_index_buffer;
+      auto& vib     = this->vertex_and_index_buffer;
+      auto& staging = this->vi_staging_buffer;
       //
       constexpr VkDeviceSize buffer_size_v = sizeof(_vertex)  * vertex_count;
       constexpr VkDeviceSize buffer_size_i = sizeof(uint16_t) * index_count;
       constexpr VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
       //
-      auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      void* data    = staging.map_memory();
+      staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      void* data = staging.map_memory();
       memset(data, 0, buffer_size);
       {
          auto* indices = (uint16_t*)((std::intptr_t)data + buffer_size_v);
@@ -203,6 +204,15 @@ namespace vulkanDK::overlays {
       //
       vib = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       vib.copy_from(staging);
+      //
+      if constexpr (persistent_staging_buffer) {
+         //
+         // Set up a persistent staging buffer:
+         //
+         staging = sr.create_buffer(_vib_indices_offset, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      } else {
+         staging = buffer(); // destroy
+      }
    }
 
    void fps::set_font(QFont f) {
@@ -391,17 +401,28 @@ namespace vulkanDK::overlays {
    }
 
    void fps::update_geometry(surface_renderer& sr) {
-      auto& vib = this->vertex_and_index_buffer;
+      auto& vib     = this->vertex_and_index_buffer;
+      auto& staging = this->vi_staging_buffer;
       //
       // We're only going to update the vertices, not the indices, so we'll just use a 
       // staging buffer with only enough room for the vertices.
       //
-      auto  staging = sr.create_buffer(_vib_indices_offset, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      if constexpr (!persistent_staging_buffer) {
+         staging = sr.create_buffer(_vib_indices_offset, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      }
       void* data = staging.map_memory();
       this->update_geometry(data);
       staging.unmap_memory(data);
       //
-      vib.copy_from(staging);
+      if constexpr (!persistent_staging_buffer) {
+         vib.copy_from(staging);
+         staging = buffer();
+      } else {
+         //
+         // The buffer-copy is performed along with our draw call, saving us the overhead of 
+         // creating and destroying temporary command buffers (and waiting on the queue submit).
+         //
+      }
    }
    void fps::update_geometry(void* mapped_vertex_memory) {
       auto* vertices = (_vertex*)mapped_vertex_memory;
@@ -426,18 +447,20 @@ namespace vulkanDK::overlays {
          } else {
             v = this->value;
          }
-         for (size_t i = 0; i < max_digits; ++i, v /= display_base) {
-            digits[max_digits - i - 1] = v % display_base;
-         }
-         //
-         // If the FPS count exceeds the maximum number that can be displayed with the digit 
-         // count we have, then the number will be truncated (e.g. "1234567" -> "34567" for 
-         // a digit count of 5). This is undesired; it'd be cleaner to force all digits to 
-         // the highest one (i.e. nines in base-10).
-         //
-         if (v > max_visible_value)
+         if (v > max_visible_value) {
+            //
+            // If the FPS count exceeds the maximum number that can be displayed with the digit 
+            // count we have, then the number will be truncated (e.g. "1234567" -> "34567" for 
+            // a digit count of 5). This is undesired; it'd be cleaner to force all digits to 
+            // the highest one (i.e. nines in base-10).
+            //
             for (auto& n : digits)
                n = 9;
+         } else {
+            for (size_t i = 0; i < max_digits; ++i, (v /= display_base)) {
+               digits[max_digits - i - 1] = v % display_base;
+            }
+         }
       }
       //
       // Vertices:
@@ -468,10 +491,24 @@ namespace vulkanDK::overlays {
       //
       this->change_flags.reset_all_of<change_flag::atlas, change_flag::positions, change_flag::value>();
    }
+
+   void fps::commands_pre_pass(VkCommandBuffer command_buffer) {
+      if constexpr (persistent_staging_buffer) {
+         auto& vib     = this->vertex_and_index_buffer;
+         auto& staging = this->vi_staging_buffer;
+         //
+         auto copy_region = VkBufferCopy{
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size      = staging.size,
+         };
+         vkCmdCopyBuffer(command_buffer, staging.handle, vib.handle, 1, &copy_region);
+      }
+   }
    void fps::draw_call(VkCommandBuffer command_buffer) {
-      VkDeviceSize offset = 0;
-      //
       auto& vib = this->vertex_and_index_buffer;
+      //
+      VkDeviceSize offset = 0;
       vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.handle, &offset);
       vkCmdBindIndexBuffer  (command_buffer, vib.handle, _vib_indices_offset, VK_INDEX_TYPE_UINT16);
       vkCmdDrawIndexed(command_buffer, (uint32_t)index_count, 1, 0, 0, 0);

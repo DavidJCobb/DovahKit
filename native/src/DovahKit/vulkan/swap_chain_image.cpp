@@ -526,6 +526,8 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording UI command buffer.");
       }
       //
+      this->overlays.fps.commands_pre_pass(command_buffer); // commands that must run before vkCmdBeginRenderPass
+      //
       auto clear_values = std::array{
          //
          // Values here should match the attachments we're using.
