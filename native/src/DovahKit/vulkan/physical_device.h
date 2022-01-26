@@ -35,6 +35,15 @@ namespace vulkanDK {
                bool runtime_array  = false;
                bool variable_count = false;
             } descriptor_bindings;
+            struct {
+               VkDeviceSize buffer_image_granularity     = 0;
+               uint32_t     max_allocation_count         = 0;
+               uint32_t     max_total_push_constant_size = 0;
+            } memory;
+            struct {
+               bool  available       = false;
+               float nanosecond_unit = 0; // (timestamp_value * nanosecond_unit) == number of nanoseconds measured
+            } timestamps;
          } support;
 
          std::vector<VkExtensionProperties> extensions() const;

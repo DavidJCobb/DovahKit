@@ -551,6 +551,7 @@
     <ClCompile Include="vulkan\image.cpp" />
     <ClCompile Include="vulkan\loaded_texture.cpp" />
     <ClCompile Include="vulkan\material.cpp" />
+    <ClCompile Include="vulkan\memory_heap.cpp" />
     <ClCompile Include="vulkan\overlays\fps.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
@@ -731,6 +732,7 @@
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\material.h" />
+    <ClInclude Include="vulkan\memory_heap.h" />
     <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />

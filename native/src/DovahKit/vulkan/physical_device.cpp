@@ -46,6 +46,15 @@ namespace vulkanDK {
       sdb.null_handles   = robustness.nullDescriptor;
       sdb.runtime_array  = indexing_features.runtimeDescriptorArray;
       sdb.variable_count = indexing_features.descriptorBindingVariableDescriptorCount;
+      //
+      auto& sm = this->support.memory;
+      sm.buffer_image_granularity     = properties.limits.bufferImageGranularity;
+      sm.max_allocation_count         = properties.limits.maxMemoryAllocationCount;
+      sm.max_total_push_constant_size = properties.limits.maxPushConstantsSize;
+      //
+      auto& sts = this->support.timestamps;
+      sts.available       = properties.limits.timestampComputeAndGraphics == VK_TRUE;
+      sts.nanosecond_unit = properties.limits.timestampPeriod;
    }
    physical_device::~physical_device() {
    }
