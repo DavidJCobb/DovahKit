@@ -4,6 +4,7 @@
 #include "coordinator.h"
 #include "../verify_threading.h"
 #include "../../constants/debugging.h"
+#include "../../constants/qt_graphics.h"
 
 namespace {
    static constexpr int resource_resynchronize_interval = 17; // 1000 / 60 == 16.6ms
@@ -131,7 +132,11 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_log_resource_management)
          qDebug("Creating Lua-managed resource: %p", resource);
       if (!source.isNull()) {
-         resource->content.raster.script = source;
+         auto& image = resource->content.raster.script;
+         image = source;
+         if (image.format() != desired_qt_pixel_format) {
+            image.convertTo(desired_qt_pixel_format);
+         }
          resource->desynchronized = true;
       }
       {

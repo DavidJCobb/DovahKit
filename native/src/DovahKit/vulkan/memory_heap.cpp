@@ -95,11 +95,15 @@ namespace vulkanDK {
             if (vkAllocateMemory(device, &alloc_info, nullptr, &memory) != VK_SUCCESS) {
                throw std::runtime_error("[vulkanDK::memory_heap::pool::create_page] Allocation failed.");
             }
+
+            // TODO: return a page
+
          }
       #pragma endregion
       //
       memory_heap::memory_heap(surface_renderer& sr) : owner(sr) {
          this->buffer_image_granularity = sr.device_info->support.memory.buffer_image_granularity;
+         this->max_allocation_count     = sr.device_info->support.memory.max_allocation_count;
          //
          VkPhysicalDeviceMemoryProperties properties;
          vkGetPhysicalDeviceMemoryProperties(sr.device_info->handle, &properties);
@@ -201,6 +205,7 @@ namespace vulkanDK {
          std::swap(this->owner,   o.owner);
          std::swap(this->_size,   o._size);
          std::swap(this->_offset, o._offset);
+         return *this;
       }
 
       void heap_buffer::copy_from(const buffer& source) {

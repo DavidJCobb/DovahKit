@@ -79,6 +79,7 @@ namespace vulkanDK {
 
          surface_renderer& owner;
          uint32_t          buffer_image_granularity;
+         uint32_t          max_allocation_count;
          std::vector<pool> pools;
 
          inline VkDevice logical_device() const { return this->owner.logical_device; }

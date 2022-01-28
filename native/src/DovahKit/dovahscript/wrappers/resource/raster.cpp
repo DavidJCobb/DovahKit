@@ -29,6 +29,14 @@
 #include <QPainterPath>
 
 namespace {
+   // Control whether vectorized intrinsics are used for the intrinsics filter. On my system, these 
+   // intrinsics actually slow the filter down, likely because we repeatedly switch between vectorized 
+   // and normal operations due to the lack of a std::pow equivalent in vectorized intrinsics as of this 
+   // writing.
+   static constexpr bool use_intrinsics_for_levels_filter = false;
+}
+
+namespace {
    using namespace dovahscript;
    using cls = wrappers::resource::raster;
 
@@ -862,6 +870,155 @@ namespace {
          api_helpers::push_color(L, pixel);
          return 1;
       }
+      int levels(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         //
+         struct {
+            uint8_t in_min  =   0;
+            uint8_t in_max  = 255;
+            uint8_t out_min =   0;
+            uint8_t out_max = 255;
+            float   gamma   = 1.0;
+         } params;
+         //
+         // Get options via an argument table.
+         //
+         lua_settop(L, 2);
+         luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
+         //
+         auto extract_range = [L](const char* key, uint8_t& min, uint8_t& max) {
+            lua_getfield(L, 2, key);
+            if (cobb::lua::istablelike(L, 3)) {
+               int isnum;
+               int value;
+               //
+               // For each range, allow either of these syntaxes or mixing and matching:
+               // 
+               //    { min: 0, max: 255 }
+               //    { 0, 255 }
+               //
+               auto value_keys = std::array{ "min", "max" };
+               auto defaults   = std::array{ 0, 255 };
+               auto indices    = std::array{ 1, 2 };
+               for (size_t i = 0; i < value_keys.size(); ++i) {
+                  auto& write_to = (i == 0 ? min : max);
+                  //
+                  lua_getfield(L, 3, value_keys[i]);
+                  value = lua_tointegerx(L, 4, &isnum);
+                  if (isnum) {
+                     write_to = value;
+                  } else {
+                     lua_geti(L, 3, indices[i]);
+                     value = lua_tointegerx(L, 5, &isnum);
+                     if (isnum) {
+                        write_to = value;
+                     } else {
+                        cobb::lua::warning(L, "options.%s.%s and options.%s[%d] are missing or not (convertible to) integers; assuming %d", key, value_keys[i], indices[i], defaults[i]);
+                     }
+                  }
+                  lua_settop(L, 3);
+               }
+            } else {
+               cobb::lua::warning(L, "options.%s is missing or not a table or userdata; assuming a range from 0 to 255", key);
+            }
+            lua_settop(L, 2);
+         };
+         extract_range("from", params.in_min,  params.in_max);
+         extract_range("to",   params.out_min, params.out_max);
+         lua_getfield(L, 2, "gamma");
+         if (lua_isnumber(L, 3)) {
+            params.gamma = lua_tonumber(L, 3);
+            cobb::lua::argcheck(L, params.gamma >= 0.0, 2, "options.gamma, if specified, cannot be negative");
+            cobb::lua::argcheck(L, params.gamma <= 1.0, 2, "options.gamma, if specified, cannot exceed 1.0");
+         } else {
+            cobb::lua::warning(L, "options.gamma is missing or not (convertible to) a number; assuming 1.0");
+         }
+         lua_settop(L, 2);
+         //
+         // Okay, we got all the options.
+         //
+         if (!self.managed_resource)
+            return 0;
+         self.managed_resource->modify_raster_script_side([&params](QImage& image) {
+            assert(image.format() == desired_qt_pixel_format);
+            float   gamma_rec = 1.0 / params.gamma;
+            float   in_range  = params.in_max - params.in_min;
+            uint8_t out_range = params.out_max - params.out_min;
+            //
+            auto size = image.sizeInBytes();
+            //
+            auto*  data = (uint8_t*)image.scanLine(0);
+            auto   addr = (intptr_t)data;
+            size_t i    = 0;
+            if constexpr (use_intrinsics_for_levels_filter) {
+               if (cobb::cpuinfo::get().extension_support.sse_3) {
+                  __m128i mask_rgb;
+                  __m128i mask_a;
+                  __m128i in_min_128  = _mm_set1_epi8(params.in_min);
+                  __m128i out_min_128 = _mm_set1_epi8(params.out_min);
+                  if constexpr (std::endian::native == std::endian::little) { // little-endian: BGRA; big-endian: ARGB
+                     mask_rgb = _mm_set_epi8(0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00);
+                     mask_a   = _mm_set_epi8(0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF);
+                  } else {
+                     mask_rgb = _mm_set_epi8(0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF);
+                     mask_a   = _mm_set_epi8(0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00);
+                  }
+                  //
+                  for(; i + 15 < size; i += 16) {
+                     auto bytes = _mm_loadu_si128((const __m128i*)(addr + i)); // 16 bytes; 4 ARGB pixels
+                     auto alpha = _mm_and_si128(bytes, mask_a); // preserve alpha
+                     bytes = _mm_subs_epu8(bytes, in_min_128); // "subtract with saturation;" clamps result
+                     _mm_storeu_si128((__m128i*)(addr + i), bytes);
+                     //
+                     // step (in_min) complete
+                     // 
+                     // there's no vectorized intrinsic for std::pow, and converting between uint8_t and float or 
+                     // double within vectorized intrinsics is... not easy. thus, the "store" call above and the 
+                     // use of non-intrinsic math here:
+                     //
+                     for(int j = 0; j < 4; ++j) {
+                        constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
+                        for(int k = 0; k < 3; ++k) {
+                           auto& byte = data[i + (j * 4) + base + k];
+                           byte = std::clamp((int)(std::pow((float)byte / in_range, gamma_rec) * out_range), 0, 255);
+                        }
+                     }
+                     //
+                     // and back to intrinsics:
+                     //
+                     bytes = _mm_loadu_si128((const __m128i*)(addr + i)); // 16 bytes; 4 ARGB pixels
+                     bytes = _mm_adds_epu8(bytes, out_min_128); // "add with saturation;" clamps result
+                     bytes = _mm_and_si128(bytes, mask_rgb);
+                     bytes = _mm_or_si128(bytes, alpha); // restore alpha
+                     _mm_storeu_si128((__m128i*)(addr + i), bytes);
+                  }
+                  //
+                  // And fall through if there are any spare bytes remaining.
+                  //
+               }
+            }
+            for(; i + 3 < size; i += 4) {
+               constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
+               for(int j = 0; j < 3; ++j) {
+                  uint8_t& byte = data[i + j + base];
+                  // color -= in_min
+                  // color /= in_range
+                  // color ** gamma_rec
+                  // color *= out_range
+                  // color += out_min
+                  byte = std::clamp(
+                     (int)(std::powf((float)(byte - params.in_min) / in_range, gamma_rec) * out_range) + params.out_min,
+                     0,
+                     255
+                  );
+               }
+            }
+         });
+         //
+         return 0;
+      }
       int resize(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          //
@@ -1093,6 +1250,7 @@ namespace dovahscript::wrappers::resource {
       { "fill_rgb",     &_methods::fill_rgb },
       { "flip",         &_methods::flip },      // `raster:flip("horizontal")` or `raster:flip("h")` or `raster:flip("vertical")` or `raster:flip("v")` or `raster:flip("both")`
       { "get_pixel",    &_methods::get_pixel },
+      { "levels",       &_methods::levels },
       { "resize",       &_methods::resize },
       { "scale",        &_methods::scale },     // `raster:scale(2.0)` or `raster:scale(2.0, 0.5)` given either one size multiplier, or two (width and height respectively)
       { "set_pixel",    &_methods::set_pixel },
