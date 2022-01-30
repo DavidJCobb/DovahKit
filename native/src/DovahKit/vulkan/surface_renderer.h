@@ -2,6 +2,7 @@
 #include <QPointer>
 #include <QWidget>
 #include "_vulkan.h"
+#include "_memory.h"
 #include "_util.h"
 #include "abstract_renderer.h"
 #include "buffer.h"
@@ -11,6 +12,8 @@
 #include "scene.h"
 #include "shader.h"
 #include "swap_chain_image.h"
+//
+#include "helpers/constexpr_optional_type.h"
 //
 #include "widgets/DKVulkanView.h"
 
@@ -63,6 +66,8 @@ namespace vulkanDK {
             queue graphics;
             queue presentation;
          } queues;
+         //
+         cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
          //
          concrete_image null_texture;
          VkSampler raw_pixel_texture_sampler;

@@ -42,8 +42,6 @@ In order to build a copy of DovahKit suitable for redistribution, with all Qt DL
 2. Go to the Qt Project Settings.
 
 3. Set "Run Deployment Tool" to "Yes." This will run `windeployqt` during the build step, which will copy Qt-related dependencies into the same folder as the compiled EXE. Note that it may not copy the VC Redistributable package.
-   
-When committing to the repo, please refrain from committing an updated project file unless you have changed this setting back to "No" first.
 
 
 ### Working with the Dovahscript engine

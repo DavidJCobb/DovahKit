@@ -24,7 +24,7 @@ The content of DovahKit's help manual, if one exists, is licensed under the Crea
 
 This program and its source code contain text content that has been data-mined from *The Elder Scrolls V: Skyrim*, including the executable-level default values of the game's INI settings and "game setting" forms. Files containing such content have been marked with an appropriate notice. The text content in question is the intellectual property of Bethesda Game Studios and is not made available under any DovahKit-specific licenses. DovahKit's author is operating under the good-faith belief that DovahKit's inclusion of this data-mined text falls under fair use &mdash; that DovahKit as a whole is sufficiently transformative.
 
-[DirectXTex](https://github.com/microsoft/DirectXTex), Lua, and [miniz](https://github.com/richgel999/miniz) are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
+[DirectXTex](https://github.com/microsoft/DirectXTex), Lua, the [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator), and [miniz](https://github.com/richgel999/miniz) are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
 
 The [OpenGL Mathematics Library (GLM)](https://github.com/g-truc/glm) uses a slightly modified variant of the MIT license, listed in the `copying.txt` file in its folder.
 

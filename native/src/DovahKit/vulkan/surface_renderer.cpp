@@ -391,6 +391,15 @@ namespace vulkanDK {
       if (this->logical_device == VK_NULL_HANDLE) {
          return;
       }
+      if constexpr (use_vma_library) {
+         VmaAllocatorCreateInfo allocatorInfo = {};
+         allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+         allocatorInfo.physicalDevice   = this->device_info->handle;
+         allocatorInfo.device           = this->logical_device;
+         allocatorInfo.instance         = this->owner.getHandle();
+         //
+         vmaCreateAllocator(&allocatorInfo, &this->allocator);
+      }
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->setup_descriptor_set_layouts();
@@ -1099,6 +1108,11 @@ namespace vulkanDK {
       this->_teardown_raw_pixel_texture_sampler();
       for (auto& e : this->render_passes_by_name._list)
          e = nullptr; // deletion will be handled in abstract_renderer::teardown
+      //
+      if constexpr (use_vma_library) {
+         vmaDestroyAllocator(this->allocator);
+      }
+      //
       abstract_renderer::teardown(); // tears down the logical device, too
       //
       this->_on_renderer_teardown_complete();
@@ -1370,41 +1384,7 @@ namespace vulkanDK {
    }
 
    buffer surface_renderer::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
-      buffer out = buffer(*this);
-      //
-      auto buffer_info = VkBufferCreateInfo{
-         .sType        = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-         .size         = size,
-         .usage        = usage,
-         .sharingMode  = VK_SHARING_MODE_EXCLUSIVE,
-      };
-      if (vkCreateBuffer(this->logical_device, &buffer_info, nullptr, &out.handle) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::create_buffer] Failed to create vertex buffer.");
-      }
-      //
-      VkMemoryRequirements memRequirements;
-      vkGetBufferMemoryRequirements(this->logical_device, out.handle, &memRequirements);
-      out.size = size; // should be the size of the buffer, not the size of the allocation
-      //
-      // In a real-world application, you wouldn't use vkAllocateMemory for each individual object you wish 
-      // to render, because there's actually a limit on the number of allocations you can make irrespective 
-      // of their total size. Even on high-end hardware, that limit may be in the low thousands, the Vulkan 
-      // tutorial gives 4096 as a plausible limit for  hardware like an NVIDIA GTX 1080. What you'd want to 
-      // do instead, then, is allocate memory in larger blocks and then manually divide those blocks up for 
-      // different objects -- similar to what you'd do when making a block allocator.
-      //
-      auto alloc_info = VkMemoryAllocateInfo{
-         .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-         .allocationSize  = memRequirements.size,
-         .memoryTypeIndex = this->device_info->find_memory_type(memRequirements.memoryTypeBits, properties),
-      };
-      if (vkAllocateMemory(this->logical_device, &alloc_info, nullptr, &out.memory) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::create_buffer] Failed to allocate vertex buffer memory.");
-      }
-
-      vkBindBufferMemory(this->logical_device, out.handle, out.memory, 0);
-
-      return out;
+      return buffer::create(*this, size, usage, properties);
    }
 
    shader* surface_renderer::get_shader(cobb::eight_cc id) const {

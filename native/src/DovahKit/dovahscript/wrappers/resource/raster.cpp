@@ -944,70 +944,61 @@ namespace {
          self.managed_resource->modify_raster_script_side([&params](QImage& image) {
             assert(image.format() == desired_qt_pixel_format);
             float   gamma_rec = 1.0 / params.gamma;
-            float   in_range  = params.in_max - params.in_min;
+            float   in_range  = params.in_max  - params.in_min;
             uint8_t out_range = params.out_max - params.out_min;
             //
-            auto size = image.sizeInBytes();
-            //
-            auto*  data = (uint8_t*)image.scanLine(0);
-            auto   addr = (intptr_t)data;
-            size_t i    = 0;
-            if constexpr (use_intrinsics_for_levels_filter) {
-               if (cobb::cpuinfo::get().extension_support.sse_3) {
-                  __m128i mask_rgb;
-                  __m128i mask_a;
-                  __m128i in_min_128  = _mm_set1_epi8(params.in_min);
-                  __m128i out_min_128 = _mm_set1_epi8(params.out_min);
-                  if constexpr (std::endian::native == std::endian::little) { // little-endian: BGRA; big-endian: ARGB
-                     mask_rgb = _mm_set_epi8(0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00);
-                     mask_a   = _mm_set_epi8(0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF);
-                  } else {
-                     mask_rgb = _mm_set_epi8(0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF);
-                     mask_a   = _mm_set_epi8(0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00);
-                  }
+            auto  size = image.sizeInBytes();
+            auto* data = (uint8_t*)image.scanLine(0);
+            auto  addr = (intptr_t)data;
+            if (size > (256 / 3)) {
+               //
+               // For larger images, use a lookup table. There are 256 possible color values that we need 
+               // to transform, so if a three-channel image had (256 / 3) pixels, we'd do exactly as many 
+               // transforms with a lookup table as without one (albeit with minor overhead incurred from 
+               // using the table).
+               // 
+               // First, let's build the lookup table given the specified Levels parameters.
+               //
+               std::array<uint8_t, 256> lookup_table;
+               for (size_t i = 0; i < 256; ++i)
                   //
-                  for(; i + 15 < size; i += 16) {
-                     auto bytes = _mm_loadu_si128((const __m128i*)(addr + i)); // 16 bytes; 4 ARGB pixels
-                     auto alpha = _mm_and_si128(bytes, mask_a); // preserve alpha
-                     bytes = _mm_subs_epu8(bytes, in_min_128); // "subtract with saturation;" clamps result
-                     _mm_storeu_si128((__m128i*)(addr + i), bytes);
-                     //
-                     // step (in_min) complete
-                     // 
-                     // there's no vectorized intrinsic for std::pow, and converting between uint8_t and float or 
-                     // double within vectorized intrinsics is... not easy. thus, the "store" call above and the 
-                     // use of non-intrinsic math here:
-                     //
-                     for(int j = 0; j < 4; ++j) {
-                        constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
-                        for(int k = 0; k < 3; ++k) {
-                           auto& byte = data[i + (j * 4) + base + k];
-                           byte = std::clamp((int)(std::pow((float)byte / in_range, gamma_rec) * out_range), 0, 255);
-                        }
-                     }
-                     //
-                     // and back to intrinsics:
-                     //
-                     bytes = _mm_loadu_si128((const __m128i*)(addr + i)); // 16 bytes; 4 ARGB pixels
-                     bytes = _mm_adds_epu8(bytes, out_min_128); // "add with saturation;" clamps result
-                     bytes = _mm_and_si128(bytes, mask_rgb);
-                     bytes = _mm_or_si128(bytes, alpha); // restore alpha
-                     _mm_storeu_si128((__m128i*)(addr + i), bytes);
-                  }
-                  //
-                  // And fall through if there are any spare bytes remaining.
-                  //
-               }
-            }
-            for(; i + 3 < size; i += 4) {
-               constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
-               for(int j = 0; j < 3; ++j) {
-                  uint8_t& byte = data[i + j + base];
                   // color -= in_min
                   // color /= in_range
                   // color ** gamma_rec
                   // color *= out_range
                   // color += out_min
+                  //
+                  lookup_table[i] = std::clamp(
+                     (int)(std::powf((float)(i - params.in_min) / in_range, gamma_rec) * out_range) + params.out_min,
+                     0,
+                     255
+                  );
+               //
+               // Now, let's transform the image.
+               //
+               for (size_t i = 0; i + 3 < size; i += 4) {
+                  constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
+                  for (int j = 0; j < 3; ++j) {
+                     uint8_t& byte = data[i + j + base];
+                     byte = lookup_table[byte];
+                  }
+               }
+               return;
+            }
+            //
+            // For smaller images, just transform each pixel individually.
+            //
+            for(size_t i = 0; i + 3 < size; i += 4) {
+               constexpr size_t base = (std::endian::native == std::endian::little) ? 1 : 0; // little-endian: BGRA; big-endian: ARGB
+               for(int j = 0; j < 3; ++j) {
+                  uint8_t& byte = data[i + j + base];
+                  //
+                  // color -= in_min
+                  // color /= in_range
+                  // color ** gamma_rec
+                  // color *= out_range
+                  // color += out_min
+                  //
                   byte = std::clamp(
                      (int)(std::powf((float)(byte - params.in_min) / in_range, gamma_rec) * out_range) + params.out_min,
                      0,

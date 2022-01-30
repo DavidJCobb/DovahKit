@@ -69,6 +69,10 @@ namespace vulkanDK {
             void release(VkDeviceSize offset);
          };
 
+         //
+         // We create one pool for each memory type supported by the device. (The API Vulkan offers to 
+         // query this can only return up to thirty-two types, despite using a uint32_t for the count.)
+         //
          struct pool {
             VkMemoryType type;
             uint32_t     type_index;
@@ -90,6 +94,8 @@ namespace vulkanDK {
 
          heap_buffer create_buffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags);
 
+         size_t allocation_count() const;
+         size_t allocations_remaining() const;
          VkAllocationCallbacks callbacks();
    };
    

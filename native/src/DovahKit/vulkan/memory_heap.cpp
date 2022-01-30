@@ -141,6 +141,9 @@ namespace vulkanDK {
             //
             if constexpr (do_not_share_mappable_pages) {
                if (properties != VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+                  if (!this->allocations_remaining())
+                     throw std::runtime_error("[vulkanDK::memory_heap::create_buffer] Failed to create new page (reached allocation limit).");
+                  //
                   VkDeviceSize offset;
                   auto& page = pool.create_page(this->owner.logical_device);
                   page.mappable = true;
@@ -169,6 +172,8 @@ namespace vulkanDK {
             // This pool is of the right type, but has insufficient pages or insufficient room within 
             // the extant pages. Try creating a new page.
             //
+            if (!this->allocations_remaining())
+               throw std::runtime_error("[vulkanDK::memory_heap::create_buffer] Failed to create new page (reached allocation limit).");
             VkDeviceSize offset;
             auto& page = pool.create_page(this->owner.logical_device);
             if (page.request(requirements, false, this->buffer_image_granularity, offset))
@@ -186,6 +191,24 @@ namespace vulkanDK {
             .pUserData = this,
 
          };
+      }
+
+      size_t memory_heap::allocation_count() const {
+         size_t count = 0;
+         for (auto& pool : this->pools) {
+            for (auto& page : pool.pages) {
+               // std::forward_list has no size member function
+               for (auto& range : page.occupied)
+                  ++count;
+            }
+         }
+         return count;
+      }
+      size_t memory_heap::allocations_remaining() const {
+         auto count = this->allocation_count();
+         if (this->max_allocation_count <= count)
+            return 0;
+         return this->max_allocation_count - count;
       }
    #pragma endregion
    #pragma region heap_buffer

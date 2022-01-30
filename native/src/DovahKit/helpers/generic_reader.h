@@ -17,6 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <type_traits>
 #include "type_traits.h"
 
@@ -80,6 +81,21 @@ namespace cobb {
             } else {
                return this->read(&field, sizeof(T));
             }
+         }
+
+         template<typename S> requires std::convertible_to<S, size_t>
+         bool read_prefixed_string(std::string& field) {
+            S size;
+            if (!this->read(size))
+               return false;
+            field.resize(size);
+            if (size) {
+               if (!this->read(field.data(), size))
+                  return false;
+               if (field.back() == '\00')
+                  field.resize(size - 1);
+            }
+            return true;
          }
          #pragma endregion
 

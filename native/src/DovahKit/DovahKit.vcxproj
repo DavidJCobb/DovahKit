@@ -689,6 +689,7 @@
     <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
+    <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />
@@ -746,6 +747,7 @@
     <ClInclude Include="vulkan\surface_support_info.h" />
     <ClInclude Include="vulkan\swap_chain_image.h" />
     <ClInclude Include="vulkan\vertex.h" />
+    <ClInclude Include="vulkan\_memory.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />
     <QtMoc Include="widgets\DKBoundInputWidget.h" />
@@ -1346,6 +1348,9 @@
     </ProjectReference>
     <ProjectReference Include="..\miniz\miniz.vcxproj">
       <Project>{28161b06-6b94-4a77-84c1-29125df58551}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\VulkanMemoryAllocator\VulkanMemoryAllocator.vcxproj">
+      <Project>{dd1f0256-3911-4a72-9eae-c01aa8c46ca7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
