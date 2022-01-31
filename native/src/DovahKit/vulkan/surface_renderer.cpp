@@ -31,6 +31,10 @@
 #include <glm/gtx/euler_angles.hpp>
 
 namespace {
+   static constexpr bool debug_log_scene_object_lifetimes = false;
+}
+
+namespace {
    const std::vector<const char*> device_extensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
@@ -746,7 +750,7 @@ namespace vulkanDK {
                texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
             }
             if (texture.isNull()) {
-               throw std::runtime_error("[DovahKitVulkanSubsystem][setupTestTexture] Failed to load test image.");
+               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_initial_scene] Failed to load test image.");
             }
             VkDeviceSize image_size = texture.width() * texture.height() * 4;
             assert(image_size == texture.sizeInBytes());
@@ -785,6 +789,7 @@ namespace vulkanDK {
             target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
             //
+            target.life_state = scene_frame_item_state::active;
             target.handled_frames.set_all_out_of_date();
          }
       }
@@ -801,6 +806,9 @@ namespace vulkanDK {
             auto& d   = list_dst[i];
             auto& vib = d.vertex_and_index_buffer;
             d.texture_index = i; // TODO: in the future we'd load objects and textures together, basically; for our simple test, the default 3 objects and their textures load separately
+            {
+               ++this->scene.textures[d.texture_index].refcount;
+            }
             {
                d.anim_state = new mesh_animation_state;
             }
@@ -826,6 +834,7 @@ namespace vulkanDK {
             vib.buffer.copy_from(staging);
             //
             d.shader_params.transform = s.transform;
+            d.life_state = scene_frame_item_state::active;
             d.handled_frames.set_all_out_of_date();
          }
       }
@@ -1317,7 +1326,7 @@ namespace vulkanDK {
             this->handle_resize();
             break;
          default:
-            throw std::runtime_error("[DovahKitVulkanSubsystem][drawFrame] Failed to present swap chain image.");
+            throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to present swap chain image.");
       }
       //
       // Post-draw behavior:
@@ -1411,6 +1420,9 @@ namespace vulkanDK {
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
          if (list[i].path == texture_path) {
+            if constexpr (debug_log_scene_object_lifetimes) {
+               qDebug("[vulkanDK::scene_renderer::add_texture] Reusing texture index %u for texture path <%s>", i, qUtf8Printable(texture_path));
+            }
             return i;
          }
       }
@@ -1448,7 +1460,11 @@ namespace vulkanDK {
          qDebug("Cannot add new rendered textures. Maximum has been reached.");
          return fail;
       }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_texture] Creating new texture at index %u for texture path <%s>", texture_index, qUtf8Printable(texture_path));
+      }
       auto& target = list[texture_index];
+      target.life_state = scene_frame_item_state::active;
       target.w    = w;
       target.h    = h;
       target.path = texture_path;
@@ -1501,6 +1517,9 @@ namespace vulkanDK {
          }
          return;
       }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_mesh] Creating new mesh at index %u with texture index %u.", object_index, texture_index);
+      }
       QSize texture_size = { (int)texture_item.w, (int)texture_item.h }; // just used to size the quad so we maintain aspect ratio
       {  // Create model
          if (!texture_size.isValid())
@@ -1510,11 +1529,16 @@ namespace vulkanDK {
          auto& vib = ro.vertex_and_index_buffer;
          ro.texture_index = texture_index;
          ++texture_item.refcount;
-         texture_item.pending_delete = false;
+         texture_item.life_state = scene_frame_item_state::active;
          //
          glm::vec3 position = {};
-         for (size_t j = 0; j < 3; ++j)
-            position[j] = ((float)rand() / RAND_MAX) * 5.0F - 2.5F;
+         {
+            //constexpr float radius = 5.0F;
+            constexpr float radius = 0.0F;
+            //
+            for (size_t j = 0; j < 3; ++j)
+               position[j] = ((float)rand() / RAND_MAX) * radius - (radius / 2.0F);
+         }
          //
          float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
          ro.data.vertices = {
@@ -1546,6 +1570,7 @@ namespace vulkanDK {
          vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          vib.buffer.copy_from(staging);
          //
+         ro.life_state = scene_frame_item_state::active;
          ro.handled_frames.set_all_out_of_date();
       }
       //
@@ -1556,6 +1581,10 @@ namespace vulkanDK {
       auto& list = this->scene.meshes;
       if (i >= list.size())
          return;
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::remove_mesh] Marking scene mesh %u for delete.", i);
+      }
+      ++this->scene.pending_deletions.meshes;
       auto& item = list[i];
       item.mark_for_delete();
       {
@@ -1564,8 +1593,13 @@ namespace vulkanDK {
             auto& list = this->scene.textures;
             if (ti < list.size()) {
                auto& tex = list[ti];
-               if (--tex.refcount == 0)
+               if (--tex.refcount == 0) {
                   tex.mark_for_delete();
+                  ++this->scene.pending_deletions.textures;
+                  if constexpr (debug_log_scene_object_lifetimes) {
+                     qDebug("[vulkanDK::scene_renderer::remove_mesh] Mesh %u used texture %u which is now unused; marking the texture for delete.", i, ti);
+                  }
+               }
             }
          }
       }
@@ -1581,7 +1615,7 @@ namespace vulkanDK {
          return;
       for (size_t i = size - 1; i >= 0; --i) {
          auto& item = list[i];
-         if (item.empty() || item.pending_delete)
+         if (!item.active())
             continue;
          this->remove_mesh(i);
          return;
@@ -1665,30 +1699,42 @@ namespace vulkanDK {
       auto  ic = this->swap_chain.images.size();
       auto& pd = this->scene.pending_deletions;
       if (pd.meshes) {
-         size_t deleted    = 0;
-         size_t last_alive = 0;
+         size_t deleted    =  0;
+         size_t last_alive = -1;
          auto&  list       = this->scene.meshes;
-         for (auto& item : list) {
-            if (item.pending_delete && item.handled_frames.are_all_up_to_date(ic)) {
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
                item.reset();
                ++deleted;
             } else {
-               ++last_alive;
+               last_alive = i;
+            }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            if (deleted) {
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_deletions] Deleted %u scene meshes.", deleted);
             }
          }
          pd.meshes -= deleted;
          list.resize(last_alive + 1);
       }
       if (pd.textures) {
-         size_t deleted    = 0;
-         size_t last_alive = 0;
+         size_t deleted    =  0;
+         size_t last_alive = -1;
          auto&  list       = this->scene.textures;
-         for (auto& item : list) {
-            if (item.pending_delete && item.handled_frames.are_all_up_to_date(ic)) {
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
                item.reset();
                ++deleted;
             } else {
-               ++last_alive;
+               last_alive = i;
+            }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            if (deleted) {
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_deletions] Deleted %u scene textures.", deleted);
             }
          }
          pd.textures -= deleted;

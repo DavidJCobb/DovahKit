@@ -10,8 +10,15 @@ namespace nifDK {
          using cobb::generic_reader::generic_reader::read;
          using cobb::generic_reader::generic_reader::unchecked_read;
 
-         bool read(file_version&);
-         void unchecked_read(file_version&);
+         bool read(file_version& out) {
+            if (!this->is_in_bounds(4))
+               return false;
+            this->unchecked_read(out);
+            return true;
+         }
+         void unchecked_read(file_version& out) {
+            this->read(&out.value, 4);
+         }
 
          bool read_line_string(std::string& out) {
             uint8_t byte;

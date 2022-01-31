@@ -6,6 +6,7 @@
 #include "helpers/vertex_index_list.h"
 #include "buffer.h"
 #include "vertex.h"
+#include "scene_frame_item.h"
 
 // geometry
 #include "../helpers/vector3.h"
@@ -24,8 +25,8 @@ namespace vulkanDK {
          rendered_mesh() {}
          ~rendered_mesh();
 
-         rendered_mesh(rendered_mesh&&) noexcept = default;
-         rendered_mesh& operator=(rendered_mesh&&) noexcept = default;
+         rendered_mesh(rendered_mesh&&) noexcept;
+         rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
          struct shader_parameters { // pass to the shader via a storage buffer
             glm::mat4 transform;
@@ -54,11 +55,13 @@ namespace vulkanDK {
          int32_t texture_index = -1;
          //
          frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
-         bool pending_delete = false; // unhook the object's vertex-and-index buffer from frames' command buffers; delete it when it's fully unhooked
+         scene_frame_item_state life_state = scene_frame_item_state::empty;
          //
          mesh_animation_state* anim_state = nullptr; // owns
-         
-         inline bool empty() const noexcept { return this->vertex_and_index_buffer.buffer.empty(); }
+
+         inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
+         inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
+         inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
          
          inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
          void set_transform(const glm::mat4&);

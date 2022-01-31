@@ -4,17 +4,13 @@
 #include "_memory.h"
 #include "_util.h"
 
-#include "helpers/constexpr_optional_type.h"
-
 namespace vulkanDK {
    class surface_renderer;
 
    class buffer : no_copy {
       friend class surface_renderer;
       protected:
-         using memory_handle_type = std::conditional_t<use_vma_library, VmaAllocation, VkDeviceMemory>;
-
-         memory_handle_type memory = VK_NULL_HANDLE;
+         VmaAllocation memory = VK_NULL_HANDLE;
 
       public:
          buffer() {}

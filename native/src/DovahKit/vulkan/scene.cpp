@@ -146,7 +146,7 @@ namespace vulkanDK {
       for (auto& mesh : this->meshes) {
          if (!mesh.anim_state)
             continue;
-         if (mesh.pending_delete || mesh.empty())
+         if (!mesh.active())
             continue;
          auto& anim = *mesh.anim_state;
          if (!anim.playing)
@@ -166,7 +166,7 @@ namespace vulkanDK {
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
          auto& item = list[i];
-         if (item.empty() && !item.pending_delete)
+         if (item.empty())
             return i;
       }
       if (size >= config::max_rendered_meshes)
@@ -180,11 +180,9 @@ namespace vulkanDK {
    size_t scene::insert_new_texture() {
       auto& list = this->textures;
       auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item.content.handle == VK_NULL_HANDLE && !item.pending_delete)
+      for (size_t i = 0; i < size; ++i)
+         if (list[i].empty())
             return i;
-      }
       if (size >= config::max_loaded_textures)
          return std::string::npos;
       list.emplace_back();

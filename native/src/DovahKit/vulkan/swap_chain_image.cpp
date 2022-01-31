@@ -8,6 +8,10 @@
 #include "surface_renderer.h"
 #include "config/scene_limits.h"
 
+namespace {
+   static constexpr bool debug_log_scene_object_lifetimes = false;
+}
+
 namespace vulkanDK {
    swap_chain_image::swap_chain_image(surface_renderer& o, size_t i) {
       this->owner = &o;
@@ -282,7 +286,7 @@ namespace vulkanDK {
       //
       auto& ro     = scene.meshes;
       auto  count  = ro.size();
-      assert(count < config::max_rendered_meshes);
+      assert(count <= config::max_rendered_meshes);
       VkDeviceSize size = count * entry_size;
       //
       size_t first_dirty = 0;
@@ -290,9 +294,14 @@ namespace vulkanDK {
       bool   any_dirty   = false;
       if constexpr (map_only_what_is_necessary) {
          for (size_t i = 0; i < count; ++i) {
-            const auto& item = ro[i];
-            if (item.pending_delete || item.empty()) // TODO: could skip the "empty" check if we force the dirty-flags to 0 on empty items and set to -1 when filling them again
-               continue;
+            auto& item = ro[i];
+            switch (item.life_state) {
+               case scene_frame_item_state::empty:
+                  continue;
+               case scene_frame_item_state::pending_delete:
+                  item.handled_frames.set_up_to_date(this->my_index);
+                  continue;
+            }
             if (item.handled_frames.is_up_to_date(this->my_index))
                continue;
             if (!any_dirty) {
@@ -303,9 +312,14 @@ namespace vulkanDK {
          }
       } else {
          for (size_t i = 0; i < count; ++i) {
-            const auto& item = ro[i];
-            if (item.pending_delete || item.empty())
-               continue;
+            auto& item = ro[i];
+            switch (item.life_state) {
+               case scene_frame_item_state::empty:
+                  continue;
+               case scene_frame_item_state::pending_delete:
+                  item.handled_frames.set_up_to_date(this->my_index);
+                  continue;
+            }
             if (item.handled_frames.is_up_to_date(this->my_index))
                continue;
             first_dirty = i;
@@ -324,7 +338,7 @@ namespace vulkanDK {
             data = (entry_type*)buffer.map_memory(offset, length);
             for (size_t i = first_dirty; i <= last_dirty; ++i) {
                auto& item = ro[i];
-               if (item.pending_delete || item.empty())
+               if (!item.active())
                   continue;
                if (item.handled_frames.is_up_to_date(this->my_index))
                   continue;
@@ -338,7 +352,7 @@ namespace vulkanDK {
             data = (entry_type*)buffer.map_memory();
             for (size_t i = first_dirty; i < count; ++i) {
                auto& item = ro[i];
-               if (item.pending_delete || item.empty())
+               if (!item.active())
                   continue;
                if (item.handled_frames.is_up_to_date(this->my_index))
                   continue;
@@ -372,17 +386,20 @@ namespace vulkanDK {
          auto& item = list[i];
          if (item.handled_frames.is_up_to_date(this->my_index))
             continue;
-         if (item.content.handle == VK_NULL_HANDLE) // deleted texture
+         if (item.empty()) // deleted texture
             continue;
-         item.handled_frames.set_up_to_date(this->my_index);
+         item.handled_frames.set_up_to_date(this->my_index); // this is only good for single-threaded; for multi-threaded we're gonna need to do this AFTER the descriptor writes go through
          auto view = item.content.view;
-         if (item.pending_delete) {
-            if (!needs_null_texture) {
+         if (item.pending_delete()) {
+            if (needs_null_texture) {
                view = null_texture.view;
                assert(view != VK_NULL_HANDLE && "Null descriptor handles aren't supported, but we never set up our null texture!");
             } else {
                view = VK_NULL_HANDLE;
             }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            qDebug("[vulkanDK::swap_chain_image::_update_shader_texture_descriptors] Updating scene texture %u (deleted: %u).", i, item.pending_delete());
          }
          //
          if (!writes.empty()) { // group consecutive textures into a single write, when possible
@@ -433,6 +450,9 @@ namespace vulkanDK {
       // be reset and their queue regenerated:
       //
       this->invalidate_all_command_buffers();
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::swap_chain_image::_update_shader_texture_descriptors] Invalidated command buffers.");
+      }
    }
    void swap_chain_image::_refill_command_buffers() {
       this->command_buffers_invalid = false;
@@ -488,7 +508,7 @@ namespace vulkanDK {
                auto& ro  = scene.meshes[j];
                auto& vib = ro.vertex_and_index_buffer;
                //
-               if (ro.empty() || ro.pending_delete)
+               if (!ro.active())
                   continue;
 
                auto pc = rendered_mesh::push_constant{

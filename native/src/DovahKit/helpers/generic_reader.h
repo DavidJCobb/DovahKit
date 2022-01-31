@@ -71,8 +71,9 @@ namespace cobb {
                return false;
             memcpy(buffer, _at(), size);
             this->_position += size;
+            return true;
          }
-         template<typename T> requires (impl::generic_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline bool read(T& field) const {
+         template<typename T> requires (impl::generic_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline bool read(T& field) {
             if constexpr (cobb::is_std_array<T>) {
                constexpr size_t total_size = sizeof(T::value_type) * field.size();
                if (!this->is_in_bounds(total_size))
@@ -104,7 +105,7 @@ namespace cobb {
             memcpy(buffer, _at(), size);
             this->_position += size;
          }
-         template<typename T> requires (impl::generic_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) const {
+         template<typename T> requires (impl::generic_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) {
             if constexpr (cobb::is_std_array<T>) {
                constexpr size_t total_size = sizeof(T::value_type) * field.size();
                return this->unchecked_read(&field, total_size);

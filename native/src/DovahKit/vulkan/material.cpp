@@ -210,7 +210,7 @@ namespace vulkanDK {
          .basePipelineIndex = -1,
       };
       if (vkCreateGraphicsPipelines(this->owner->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->pipeline.handle) != VK_SUCCESS) {
-         throw std::runtime_error("[DovahKitVulkanSubsystem] Failed to create graphics pipeline.");
+         throw std::runtime_error("[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
       }
    }
 

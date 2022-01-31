@@ -9,14 +9,39 @@
 
 namespace vulkanDK {
    rendered_mesh::~rendered_mesh() {
-      if (auto*& p = this->anim_state) {
-         delete p;
-         p = nullptr;
+      this->reset();
+   }
+
+   rendered_mesh::rendered_mesh(rendered_mesh&& o) noexcept {
+      *this = std::move(o);
+   }
+   rendered_mesh& rendered_mesh::operator=(rendered_mesh&& o) noexcept {
+      {
+         auto& tm = this->data;
+         auto& om = o.data;
+         std::swap(tm.vertices, om.vertices);
+         std::swap(tm.indices,  om.indices);
+         tm.bounding_sphere = om.bounding_sphere;
       }
+      {
+         auto& tm = this->vertex_and_index_buffer;
+         auto& om = o.vertex_and_index_buffer;
+         std::swap(tm.buffer,       om.buffer);
+         std::swap(tm.indices_at,   om.indices_at);
+         std::swap(tm.index_count,  om.index_count);
+         std::swap(tm.wide_indices, om.wide_indices);
+      }
+      this->shader_params  = o.shader_params;
+      this->texture_index  = o.texture_index;
+      this->handled_frames = o.handled_frames;
+      std::swap(this->life_state, o.life_state);
+      std::swap(this->anim_state, o.anim_state);
+      //
+      return *this;
    }
 
    void rendered_mesh::_on_shader_parameter_change() {
-      if (this->pending_delete)
+      if (this->pending_delete())
          return;
       this->handled_frames.set_all_out_of_date();
    }
@@ -92,9 +117,7 @@ namespace vulkanDK {
       //
       auto& vib = this->vertex_and_index_buffer;
       //
-      if (this->empty()) // object is deleted
-         return;
-      if (this->pending_delete)
+      if (!this->active())
          return;
       //
       vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.buffer.handle, &offset);
@@ -107,7 +130,7 @@ namespace vulkanDK {
    }
 
    void rendered_mesh::mark_for_delete() {
-      this->pending_delete = true;
+      this->life_state = scene_frame_item_state::pending_delete;
       this->handled_frames.set_all_out_of_date();
    }
    void rendered_mesh::reset() {
@@ -122,6 +145,7 @@ namespace vulkanDK {
          p = nullptr;
       }
       this->handled_frames = frame_dirty_state();
+      this->life_state = scene_frame_item_state::empty;
       //
       this->data.vertices.clear();
       this->data.indices.clear();

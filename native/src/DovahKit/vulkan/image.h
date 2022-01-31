@@ -1,5 +1,6 @@
 #pragma once
 #include "_vulkan.h"
+#include "_memory.h"
 #include "_util.h"
 
 namespace vulkanDK {
@@ -39,10 +40,10 @@ namespace vulkanDK {
          concrete_image(concrete_image&&) noexcept;
          concrete_image& operator=(concrete_image&&) noexcept;
 
-         surface_renderer* owner = nullptr;
-         VkImage        handle = VK_NULL_HANDLE;
-         VkImageView    view   = VK_NULL_HANDLE;
-         VkDeviceMemory memory = VK_NULL_HANDLE;
+         surface_renderer* owner  = nullptr;
+         VkImage           handle = VK_NULL_HANDLE;
+         VkImageView       view   = VK_NULL_HANDLE;
+         VmaAllocation     memory = VK_NULL_HANDLE;
          //
          VkFormat format = VK_FORMAT_UNDEFINED;
          struct {

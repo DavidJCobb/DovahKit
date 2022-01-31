@@ -28,8 +28,8 @@ namespace vulkanDK {
          scene_global_state global_state; // GPU-side state
          //
          struct {
-            size_t meshes   = 0;
-            size_t textures = 0;
+            size_t meshes   = 0; // count
+            size_t textures = 0; // count
          } pending_deletions;
 
          void update_projection(VkExtent2D render_area);

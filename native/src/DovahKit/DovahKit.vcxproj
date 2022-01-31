@@ -435,7 +435,6 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
-    <ClCompile Include="editor\DovahKitVulkanSubsystem.cpp" />
     <ClCompile Include="editor\form_data_cache.cpp" />
     <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
     <ClCompile Include="editor\get_condition_description.cpp" />
@@ -499,6 +498,7 @@
     <ClCompile Include="helpers\windows_ini.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nif\file.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
@@ -551,7 +551,6 @@
     <ClCompile Include="vulkan\image.cpp" />
     <ClCompile Include="vulkan\loaded_texture.cpp" />
     <ClCompile Include="vulkan\material.cpp" />
-    <ClCompile Include="vulkan\memory_heap.cpp" />
     <ClCompile Include="vulkan\overlays\fps.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
@@ -686,7 +685,6 @@
     <ClInclude Include="editor\asset_manager\data\dds.h" />
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
-    <QtMoc Include="editor\DovahKitVulkanSubsystem.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
@@ -703,6 +701,11 @@
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
+    <ClInclude Include="nif\block.h" />
+    <ClInclude Include="nif\file.h" />
+    <ClInclude Include="nif\reader.h" />
+    <ClInclude Include="nif\types\NiMatrix33.h" />
+    <ClInclude Include="nif\types\NiTransform.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
@@ -733,13 +736,13 @@
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\material.h" />
-    <ClInclude Include="vulkan\memory_heap.h" />
     <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />
     <ClInclude Include="vulkan\render_pass.h" />
     <ClInclude Include="vulkan\scene.h" />
+    <ClInclude Include="vulkan\scene_frame_item.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\shader.h" />
     <ClInclude Include="vulkan\shader_module.h" />
