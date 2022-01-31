@@ -1,6 +1,7 @@
 #include "DKVulkanView.h"
 #include <QEvent>
 #include <QMouseEvent>
+#include "../vulkan/data/DKVulkanCameraUpdate.h"
 #include "../vulkan/DKVulkanInstance.h"
 #include "../vulkan/physical_device.h"
 #include "../vulkan/queue_family_info.h"
@@ -109,9 +110,6 @@ void DKVulkanView::resetRenderer() {
    this->renderer->set_physical_device(*pd);
 }
 
-void DKVulkanView::setCameraController(DKVulkanCameraController* c) {
-   this->input_handling.camera = c;
-}
 void DKVulkanView::setInputHandlingEnabled(bool e) {
    if (this->input_handling.enabled == e)
       return;
@@ -124,16 +122,6 @@ void DKVulkanView::setInputHandlingEnabled(bool e) {
 void DKVulkanView::_inputPoll() {
    if (!this->input_handling.enabled || !this->input_handling.focused)
       return;
-   /*//
-   auto* s = this->renderer;
-   auto* c = this->input_handling.camera.data();
-   if (!s)
-      return;
-   if (!c)
-      return;
-   auto update = c->poll();
-   s->scene.adjust_camera(update);
-   //*/
    auto* s = this->renderer;
    if (!s)
       return;

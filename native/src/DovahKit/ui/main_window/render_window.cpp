@@ -4,7 +4,6 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QToolButton>
-#include "../../editor/DovahKitVulkanSubsystem.h"
 #include "widgets/DKVulkanView.h"
 #include "../../vulkan/surface_renderer.h"
 
@@ -19,30 +18,13 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    auto* layout = new QVBoxLayout(this);
    layout->setContentsMargins({ 0, 0, 0, 0 });
    //
-   DKVulkanView* view = nullptr;
+   DKVulkanView* view = new DKVulkanView(this);
+   view->setInputHandlingEnabled(true);
    //
-   if constexpr (use_new_renderer) {
-      view = new DKVulkanView(this);
-      view->setInputHandlingEnabled(true);
-      //
-      layout->addWidget(view, 1);
-      QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {
-         this->status->showMessage(QString("Mesh #%1 clicked.").arg(index), 2000);
-      });
-   } else {
-      auto& vulkan = DovahKitVulkanSubsystem::get();
-      QObject::connect(&vulkan, &DovahKitVulkanSubsystem::ready, this, [this]() {
-         auto& vulkan = DovahKitVulkanSubsystem::get();
-         auto* render = vulkan.renderWindowWidget();
-         if (!render)
-            return;
-         this->layout()->addWidget(render);
-         qDebug("Render window adopted the Vulkan render-window widget.");
-      });
-      QObject::connect(&vulkan, &DovahKitVulkanSubsystem::teardownImminent, this, [this]() {
-         // ...
-      });
-   }
+   layout->addWidget(view, 1);
+   QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {
+      this->status->showMessage(QString("Mesh #%1 clicked.").arg(index), 2000);
+   });
    //
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);
@@ -57,11 +39,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setText(QString("Pause #%1").arg(i));
       button->setCheckable(true);
       QObject::connect(button, &QAbstractButton::toggled, this, [this, view, i](bool checked) {
-         if constexpr (use_new_renderer) {
-            view->surfaceRenderer()->set_animation_paused(i, checked);
-         } else {
-            DovahKitVulkanSubsystem::get().setAnimationPaused(i, checked);
-         }
+         view->surfaceRenderer()->set_animation_paused(i, checked);
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
       //
@@ -75,12 +53,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.png, *.bmp)");
          if (path.isEmpty())
             return;
-         //
-         if constexpr (use_new_renderer) {
-            view->surfaceRenderer()->add_mesh(path);
-         } else {
-            DovahKitVulkanSubsystem::get().addRenderedObject(path);
-         }
+         view->surfaceRenderer()->add_mesh(path);
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileDialogNewFolder));
       //
@@ -90,18 +63,10 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Delete Last Object");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         if constexpr (use_new_renderer) {
-            view->surfaceRenderer()->remove_last_mesh();
-         } else {
-            DovahKitVulkanSubsystem::get().removeRenderedObject();
-         }
+         view->surfaceRenderer()->remove_last_mesh();
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_BrowserStop));
       //
       this->toolbar->addWidget(button);
-   }
-
-   if constexpr (!use_new_renderer) {
-      DovahKitVulkanSubsystem::get().initialize();
    }
 }

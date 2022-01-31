@@ -2,5 +2,5 @@
 #include <glm/glm.hpp>
 
 namespace nifDK {
-   using NiMatrix33 = glm::mat3;
+   using NiMatrix33 = glm::mat3; // mat[col][row]
 }

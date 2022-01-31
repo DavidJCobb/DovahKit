@@ -91,8 +91,14 @@ namespace nifDK {
                std::array<std::string, 2> info;
             } export_data;
          } header;
-         std::vector<block*> blocks; // top-level only
+         std::vector<block*> all_blocks;
 
          void read(void* data, size_t size);
+
+         inline block* block_by_index(int32_t i) const {
+            if (i >= this->all_blocks.size())
+               return nullptr;
+            return this->all_blocks[i];
+         }
    };
 }

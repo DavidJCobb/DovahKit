@@ -1,9 +1,12 @@
 #include "file.h"
 #include "reader.h"
+#include "block.h"
+#include "blocks/_factory.h"
 
 namespace nifDK {
    void file::read(void* data, size_t size) {
-      auto reader = file_reader(data, size);
+      auto reader = file_reader(this, data, size);
+      reader->owner = this;
       //
       uint32_t block_count;
       uint16_t block_type_count;
@@ -54,11 +57,26 @@ namespace nifDK {
       //
       // End of header!
       //
-      std::vector<block*> all_blocks;
+      //
+      this->all_blocks.resize(block_count);
       for (size_t i = 0; i < block_count; ++i) {
+         auto tni = block_type_indices[i];
+         if (tni >= block_type_names.size())
+            return; // TODO: throw or something
+         const auto& tn = block_type_names[tni];
+         this->all_blocks[i] = create_block_of_type(tn);
+      }
+      size_t base   = reader.position();
+      size_t offset = 0;
+      for (size_t i = 0; i < block_count; ++i) {
+         auto* b = this->all_blocks[i];
+         if (!b)
+            continue; // wtf?
+         auto size = block_sizes[i];
+         auto block_reader = file_reader((void*)((std::intptr_t)data + base + offset), size);
+         offset += size;
          //
-         // TODO: read blocks
-         //
+         b->parse(block_reader);
       }
       //
       // TODO: all blocks that aren't children of some other block should be written to the file's "blocks" member

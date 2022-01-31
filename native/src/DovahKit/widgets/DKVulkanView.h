@@ -1,9 +1,6 @@
 #pragma once
 #include <chrono>
 #include <QWidget>
-#include "../vulkan/DKVulkanCameraController.h"
-
-class DKVulkanCameraController;
 
 namespace vulkanDK {
    class surface_renderer;
@@ -31,7 +28,6 @@ class DKVulkanView : public QWidget {
 
       void resetRenderer(); // re-selects a physical device, etc.
 
-      void setCameraController(DKVulkanCameraController*);
       void setInputHandlingEnabled(bool);
 
    signals:
@@ -52,7 +48,6 @@ class DKVulkanView : public QWidget {
       struct {
          bool enabled = false;
          bool focused = false;
-         QPointer<DKVulkanCameraController> camera;
       } input_handling;
 
       void _inputPoll();
