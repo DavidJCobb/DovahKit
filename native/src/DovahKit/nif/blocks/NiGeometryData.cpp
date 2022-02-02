@@ -24,10 +24,14 @@ namespace nifDK::block_types {
             reader.read_vector_contents(this->vertices);
          }
       }
-      if (true) { // TODO: version 20.2.0.7 and user version 2 > 0
-         reader.read(this->flags.vector);
+      if (reader.version() == file_version::from_parts<20, 2, 0, 7>) {
+         if (reader.user_version<2>() > 0) {
+            reader.read(this->flags.vector);
+         }
+         if (reader.user_version<1>() >= 12) {
+            reader.read(this->material_crc);
+         }
       }
-      reader.read(this->material_crc); // TODO: 20.2.0.7 only, user version 12
       //
       reader.read(presence); // Has Normals
       if (presence) {
@@ -45,7 +49,8 @@ namespace nifDK::block_types {
             reader.read_vector_contents(this->bitangents);
          }
       }
-      if (true) { // version 20.3.0.9; user version 1 == 0x20000 or 0x30000
+      bool use_unknown_values = (reader.version() >= file_version::from_parts<20, 3, 0, 9> && (reader.user_version<1>() == 0x20000 || reader.user_version<1>() == 0x30000));
+      if (use_unknown_values) {
          reader.read(presence);
          if (presence) {
             this->unknown_floats.resize(vertex_count);
@@ -53,7 +58,7 @@ namespace nifDK::block_types {
          }
       }
       reader.read(this->bounds);
-      if (true) { // version 20.3.0.9; user version 1 == 0x20000 or 0x30000
+      if (use_unknown_values) {
          reader.read(this->unknown_shorts);
       }
       //

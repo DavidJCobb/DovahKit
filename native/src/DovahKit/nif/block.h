@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include "types/NiTransform.h"
 

@@ -3,17 +3,25 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <glm/glm.hpp>
+#include "helpers/passkey.h"
 #include "helpers/type_traits.h"
+#include "helpers/unreachable.h"
 #include "detailed_notice.h"
 #include "file.h"
 #include "blocks/_factory.h"
 #include "types/Float16.h"
+#include "types/NiMatrix33.h" // this is a using declaration; can't forward-declare those
 
 namespace nifDK {
-   class file;
+   class  file;
+   struct file_version;
 
    struct Float16;
-   struct NiMatrix33;
+   struct NiBound;
+   struct NiColor;
+   struct NiColorA;
+   //struct NiMatrix33; // this is a using declaration; can't forward-declare those
    struct NiTransform;
 
    namespace impl::file_reader {
@@ -25,6 +33,8 @@ namespace nifDK {
 
    class file_reader {
       public:
+         using file_passkey = cobb::passkey<file, file_reader>;
+
          class read_error : public std::runtime_error {
             public:
                read_error(notice_code_t c) : std::runtime_error("NIF-reading error"), code(c) {};
@@ -33,17 +43,26 @@ namespace nifDK {
          };
 
       protected:
-         const void* _data     = nullptr;
-         size_t      _size     = 0;
-         size_t      _position = 0;
+         struct state {
+            const void* data     = nullptr;
+            size_t      size     = 0;
+            size_t      position = 0;
+         };
          //
-         inline const void* _at() const noexcept { return (const void*)((std::intptr_t)this->_data + this->_position); }
+         struct {
+            state current;
+            state backup;
+         } states;
+         int32_t     _block_index = -1;
+         std::string _block_type;
+         struct {
+            uint32_t max_length = 0;
+            std::vector<std::string> list;
+         } string_table;
+         //
+         inline const void* _at() const noexcept { return (const void*)((std::intptr_t)this->data() + this->position()); }
 
          file* subject = nullptr;
-         struct {
-            int32_t current_block = -1;
-            size_t  block_offset  = 0;
-         } state;
          detailed_notice error;
 
          bool _read_ref(void*&);
@@ -67,31 +86,69 @@ namespace nifDK {
             this->unchecked_read(out);
          }
 
+         // using this instead of start/end functions makes it exception-safe
+         struct block_guard {
+            friend class file_reader;
+            protected:
+               block_guard(file_reader&, int32_t block_index, size_t block_size, const std::string& block_type);
+
+               file_reader& owner;
+               int32_t      block_index;
+
+            public:
+               ~block_guard();
+         };
+
       public:
-         file_reader(file* o, const void* d, size_t s) : _data(d), _size(s), subject(o) {}
-
-         inline const void* data() const noexcept { return this->_data; }
-         inline size_t size() const noexcept { return this->_size; }
-         inline size_t position() const noexcept { return this->_position; }
-         inline bool empty() const noexcept { return this->_data == nullptr || this->_size == 0; }
-
-         inline file_version version() const noexcept { return this->subject->header.version; }
-
-         inline const void* data_at(size_t p) const noexcept {
-            if (p > this->_size)
-               return nullptr;
-            if (this->_data == nullptr)
-               return nullptr;
-            return (const void*)((std::intptr_t)this->_data + p);
+         file_reader(file* o, const void* d, size_t s) : subject(o) {
+            this->states.current = { d, s, 0 };
          }
 
-         inline bool at_end() const noexcept { return this->_position == this->_size; }
-         inline bool is_in_bounds(size_t s) const noexcept { return this->_position + s <= this->_size; }
+         inline const void* data() const noexcept { return this->states.current.data; }
+         inline size_t size() const noexcept { return this->states.current.size; }
+         inline size_t position() const noexcept { return this->states.current.position; }
+         inline bool empty() const noexcept { return this->states.current.data == nullptr || this->states.current.size == 0; }
+
+         inline file_version version() const noexcept { return this->subject->header.version; }
+         template<size_t N> requires (N == 1 || N == 2) inline uint32_t user_version() const noexcept {
+            auto& uv = this->subject.header.user_versions;
+            if constexpr (N == 1)
+               return uv.primary;
+            if constexpr (N == 2)
+               return uv.secondary;
+            cobb::unreachable();
+         }
+
+         inline const std::string& block_type() const noexcept { return this->_block_type; }
+         inline int32_t block_index() const noexcept { return this->_block_index; }
+         inline bool is_in_block() const noexcept { return this->block_index() != -1; }
+         inline size_t file_position() const {
+            if (this->is_in_block())
+               return this->states.current.position + this->states.backup.position;
+            return this->position();
+         }
+
+         void read_string_table(file_passkey);
+         inline block_guard enter_block(file_passkey, int32_t bi, size_t size, const std::string& block_type) {
+            return block_guard(*this, bi, size, block_type);
+         }
+
+         inline const void* data_at(size_t p) const noexcept {
+            if (p > this->states.current.size)
+               return nullptr;
+            if (this->states.current.data == nullptr)
+               return nullptr;
+            return (const void*)((std::intptr_t)this->data() + p);
+         }
+
+         inline bool at_end() const noexcept { return this->position() == this->size(); }
+         inline bool is_in_bounds(size_t s) const noexcept { return this->position() + s <= this->size(); }
 
          inline void skip(size_t s) {
-            this->_position += s;
-            if (this->_position >= this->_size)
-               this->_position = this->_size;
+            auto& p = this->states.current.position;
+            p += s;
+            if (p >= this->size())
+               p = this->size();
          }
          void require_size(size_t s) {
             this->_require_size(s);
@@ -112,6 +169,11 @@ namespace nifDK {
             }
          }
 
+         template<int N, typename T, glm::qualifier Q> inline void read(glm::vec<N, T, Q>& out) {
+            this->_require_size(sizeof(T) * N);
+            this->unchecked_read(out);
+         }
+
          template<typename Desired> bool read_ref(Desired*& out) {
             out = nullptr;
             //
@@ -125,6 +187,7 @@ namespace nifDK {
             return true;
          }
 
+         void read_indexed_string(std::string&);
          void read_line_string(std::string& out);
 
          template<typename S> requires std::convertible_to<S, size_t>
@@ -144,14 +207,13 @@ namespace nifDK {
             this->_require_size(size);
             this->unchecked_read(out.data(), size);
          }
-         template<int N, typename F, glm::qualifier Q> void read_vector_contents<glm::vec<N, F, Q>>(std::vector<glm::vec<N, F, Q>>& out) {
+         template<int N, typename F, glm::qualifier Q> void read_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
             auto size = out.size() * (sizeof(F) * N);
             this->_require_size(size);
             this->unchecked_read(out.data(), size);
          }
          
-         template<typename T> void read_half_vector_contents(std::vector<T>&);
-         template<int N, typename F, glm::qualifier Q> void read_half_vector_contents<glm::vec<N, F, Q>>(std::vector<glm::vec<N, F, Q>>& out) {
+         template<int N, typename F, glm::qualifier Q> void read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
             auto size = out.size();
             //
             std::vector<uint16_t> halves(size);
@@ -166,7 +228,7 @@ namespace nifDK {
          #pragma region unchecked_read
          inline bool unchecked_read(void* buffer, size_t size) {
             memcpy(buffer, _at(), size);
-            this->_position += size;
+            this->states.current.position += size;
          }
          template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) {
             if constexpr (cobb::is_std_array<T>) {
@@ -177,17 +239,25 @@ namespace nifDK {
             }
          }
 
+         template<int N, typename T, glm::qualifier Q> inline void unchecked_read(glm::vec<N, T, Q>& out) {
+            if constexpr (sizeof(glm::vec<N, T, Q>) == sizeof(T) * N) {
+               this->unchecked_read(&out, sizeof(T) * N);
+            } else {
+               for (int i = 0; i < N; ++i)
+                  this->unchecked_read(&out[i], sizeof(T));
+            }
+         }
+
          template<typename T> void unchecked_read_vector_contents(std::vector<T>& out) {
             auto size = out.size() * sizeof(T);
             this->unchecked_read(out.data(), size);
          }
-         template<int N, typename F, glm::qualifier Q> void unchecked_read_vector_contents<glm::vec<N, F, Q>>(std::vector<glm::vec<N, F, Q>>& out) {
+         template<int N, typename F, glm::qualifier Q> void unchecked_read_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
             auto size = out.size() * (sizeof(F) * N);
             this->unchecked_read(out.data(), size);
          }
          
-         template<typename T> void unchecked_read_half_vector_contents(std::vector<T>&);
-         template<int N, typename F, glm::qualifier Q> void unchecked_read_half_vector_contents<glm::vec<N, F, Q>>(std::vector<glm::vec<N, F, Q>>& out) {
+         template<int N, typename F, glm::qualifier Q> void unchecked_read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
             auto size = out.size();
             //
             std::vector<uint16_t> halves(size);
@@ -206,6 +276,12 @@ namespace nifDK {
          inline void read(Float16& v) { this->_read<2>(v); }
          void unchecked_read(Float16&);
          //
+         inline void read(NiBound& v) { this->_read<float, 4>(v); }
+         void unchecked_read(NiBound&);
+         inline void read(NiColor& v) { this->_read<3>(v); }
+         void unchecked_read(NiColor&);
+         inline void read(NiColorA& v) { this->_read<4>(v); }
+         void unchecked_read(NiColorA&);
          inline void read(NiMatrix33& v) { this->_read<float, 9>(v); }
          void unchecked_read(NiMatrix33&);
          inline void read(NiTransform& v) { this->_read<float, 3 + 9 + 1>(v); }

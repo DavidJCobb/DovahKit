@@ -14,7 +14,7 @@ namespace nifDK::block_types {
          auto& list = this->materials.list;
          list.resize(count);
          for (uint32_t i = 0; i < count; ++i)
-            reader.read_prefixed_string<uint32_t>(list[i].name);
+            reader.read_indexed_string(list[i].name);
          for (uint32_t i = 0; i < count; ++i)
             reader.read(list[i].extra);
       }

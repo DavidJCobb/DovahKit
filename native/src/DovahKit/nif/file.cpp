@@ -101,11 +101,7 @@ namespace nifDK {
          for (auto& item : block_sizes)
             reader.read(item);
          //
-         reader.read(string_count);
-         reader.read(max_string_length);
-         all_strings.resize(string_count);
-         for (auto& item : all_strings)
-            reader.read_prefixed_string<uint32_t>(item);
+         reader.read_string_table(file_reader::file_passkey());
          //
          reader.read(group_count);
          if (group_count) {
@@ -115,7 +111,6 @@ namespace nifDK {
          }
          //
          // End of header!
-         //
          //
          this->all_blocks.resize(block_count);
          for (size_t i = 0; i < block_count; ++i) {
@@ -131,11 +126,9 @@ namespace nifDK {
             auto* b = this->all_blocks[i];
             if (!b)
                continue; // wtf?
-            auto size = block_sizes[i];
-            auto block_reader = file_reader(this, (void*)((std::intptr_t)data + base + offset), size);
-            offset += size;
-            //
-            b->parse(block_reader);
+            const auto& tn = block_type_names[block_type_indices[i]];
+            auto guard = reader.enter_block(file_reader::file_passkey(), i, block_sizes[i], tn);
+            b->parse(reader);
          }
       } catch (file_reader::read_error& e) {
          //
