@@ -19,10 +19,14 @@ namespace nifDK {
          return ((uint32_t)major << 0x18) | ((uint32_t)minor << 0x10) | ((uint32_t)c << 0x08) | ((uint32_t)d << 0x00);
       })();
 
+      inline std::strong_ordering operator<=>(const file_version& other) const { return this->value <=> other.value; }
+
       inline constexpr uint8_t major() const { return (this->value >> 0x18); }
       inline constexpr uint8_t minor() const { return (this->value >> 0x10); }
       inline constexpr uint8_t patch() const { return (this->value >> 0x08); }
       inline constexpr uint8_t build() const { return (this->value >> 0x00); }
+
+      static file_version from_string(const std::string&);
    };
 
    class file {
@@ -79,12 +83,11 @@ namespace nifDK {
       public:
          struct {
             std::string  format_name;
-            std::string  copyright;
             file_version version;
             endian       endianness = endian::little;
             struct {
                uint32_t primary;
-               uint32_t secondary;
+               uint32_t secondary = 0;
             } user_versions;
             struct {
                std::string creator;

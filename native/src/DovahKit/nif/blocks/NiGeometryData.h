@@ -2,7 +2,7 @@
 #include <array>
 #include "NiObject.h"
 #include "../types/NiBound.h"
-#include "../types/NiColorA.h"
+#include "../types/NiColor.h"
 
 namespace nifDK::block_types {
    class NiGeometryData : public NiObject {
