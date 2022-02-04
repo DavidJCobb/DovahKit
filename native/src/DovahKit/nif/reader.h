@@ -73,18 +73,12 @@ namespace nifDK {
                this->_on_read_failure();
          }
 
-         template<size_t S> inline void _read(auto& out);
-         template<typename T, size_t S = sizeof(T)> inline void _read<S>(T& out) {
-            if (!this->is_in_bounds(S))
-               this->_on_read_failure();
-            this->unchecked_read(out);
-         }
-         template<typename T, size_t S> inline void _read(T& out);
-         template<typename T, size_t S, typename V> inline void _read<T, S>(V& out) {
+         template<typename T, size_t S = sizeof(T), typename V = T> inline void _read(V& out) {
             if (!this->is_in_bounds(S * sizeof(T)))
                this->_on_read_failure();
             this->unchecked_read(out);
          }
+         template<size_t S, typename T> inline void _read(T& out) { this->_read<T, S, T>(out); }
 
          // using this instead of start/end functions makes it exception-safe
          struct block_guard {
@@ -111,7 +105,7 @@ namespace nifDK {
 
          inline file_version version() const noexcept { return this->subject->header.version; }
          template<size_t N> requires (N == 1 || N == 2) inline uint32_t user_version() const noexcept {
-            auto& uv = this->subject.header.user_versions;
+            auto& uv = this->subject->header.user_versions;
             if constexpr (N == 1)
                return uv.primary;
             if constexpr (N == 2)
@@ -132,6 +126,8 @@ namespace nifDK {
          inline block_guard enter_block(file_passkey, int32_t bi, size_t size, const std::string& block_type) {
             return block_guard(*this, bi, size, block_type);
          }
+
+         int32_t index_of_block(block*) const;
 
          inline const void* data_at(size_t p) const noexcept {
             if (p > this->states.current.size)
@@ -161,7 +157,7 @@ namespace nifDK {
          }
          template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void read(T& field) {
             if constexpr (cobb::is_std_array<T>) {
-               constexpr size_t total_size = sizeof(T::value_type) * field.size();
+               size_t total_size = sizeof(T::value_type) * field.size();
                this->_require_size(total_size);
                this->unchecked_read(&field, total_size);
             } else {
@@ -174,13 +170,13 @@ namespace nifDK {
             this->unchecked_read(out);
          }
 
-         template<typename Desired> bool read_ref(Desired*& out) {
+         template<typename Desired> requires std::is_polymorphic_v<Desired> bool read_ref(Desired*& out) {
             out = nullptr;
             //
             void* instance;
             if (!this->_read_ref(instance))
                return false;
-            auto* casted = dynamic_cast<Desired>(instance);
+            Desired* casted = dynamic_cast<Desired*>(instance);
             if (!casted)
                return false;
             out = casted;

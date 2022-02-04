@@ -10,7 +10,7 @@ namespace nifDK::block_types {
       public:
          static constexpr size_t supported_texture_count = 8;
 
-         union {
+         union texture_list {
             std::array<std::string, supported_texture_count> list = {};
             struct {
                std::string diffuse;
@@ -22,7 +22,14 @@ namespace nifDK::block_types {
                std::string subsurface;
                std::string backlighting;
             };
-         } textures;
+
+            ~texture_list() {
+               for (auto& s : this->list)
+                  s.~basic_string();
+            }
+         };
+         
+         texture_list textures;
 
          virtual void parse(file_reader&) override;
    };

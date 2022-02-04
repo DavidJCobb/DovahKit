@@ -1,5 +1,10 @@
 #include "NiGeometry.h"
 #include "../reader.h"
+//
+#include "BSShaderProperty.h"
+#include "NiAlphaProperty.h"
+#include "NiGeometryData.h"
+#include "NiSkinInstance.h"
 
 namespace nifDK::block_types {
    void NiGeometry::parse(file_reader& reader) {

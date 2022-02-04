@@ -1,4 +1,5 @@
 #pragma once
+#include "../file.h"
 #include "NiObject.h"
 
 namespace nifDK::block_types {

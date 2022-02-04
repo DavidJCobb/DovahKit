@@ -1,5 +1,9 @@
 #include "NiNode.h"
+#include "../detailed_notice.h"
+#include "../notice_code_list.h"
 #include "../reader.h"
+
+#include "NiDynamicEffect.h"
 
 namespace nifDK::block_types {
    void NiNode::parse(file_reader& reader) {
@@ -11,8 +15,21 @@ namespace nifDK::block_types {
       //
       reader.read(count);
       this->children.resize(count);
-      for (uint32_t i = 0; i < count; ++i)
+      for (uint32_t i = 0; i < count; ++i) {
          reader.read_ref(this->children[i]);
+         //
+         if (auto* child = this->children[i]) {
+            if (child->parent) {
+               reader.raise_error(detailed_notice{
+                  .code     = notice_code::object_has_multiple_parents,
+                  .relevant = {
+                     .block_indices = { reader.index_of_block(child) },
+                  },
+               });
+            }
+            child->parent = this;
+         }
+      }
       //
       // effects:
       //

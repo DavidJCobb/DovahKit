@@ -30,5 +30,8 @@ namespace nifDK {
             std::string name;
          } block;
       } cause;
+      struct {
+         std::vector<int32_t> block_indices;
+      } relevant;
    };
 }

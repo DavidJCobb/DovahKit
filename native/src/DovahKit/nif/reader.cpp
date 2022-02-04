@@ -6,10 +6,7 @@
 #include "types/NiMatrix33.h"
 #include "types/NiTransform.h"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 
 namespace nifDK {
 
@@ -47,6 +44,15 @@ namespace nifDK {
       this->string_table.list.resize(string_count);
       for (auto& item : this->string_table.list)
          this->read_prefixed_string<uint32_t>(item);
+   }
+
+   int32_t file_reader::index_of_block(block* b) const {
+      auto& list = this->subject->all_blocks;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i)
+         if (list[i] == b)
+            return i;
+      return -1;
    }
 
    void file_reader::raise_error(const detailed_notice& c) {

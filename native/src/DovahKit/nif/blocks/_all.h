@@ -7,6 +7,7 @@
    //
    #include "NiObject.h"
       #include "BSShaderTextureSet.h"
+      #include "NiCollisionObject.h"
       #include "NiExtraData.h"
          #include "BSInvMarker.h"
          #include "NiIntegerExtraData.h"
@@ -15,6 +16,7 @@
       #include "NiGeometryData.h"
       #include "NiObjectNET.h"
          #include "NiAVObject.h"
+            #include "NiDynamicEffect.h"
             #include "NiGeometry.h"
                #include "NiTriBasedGeom.h"
                   #include "NiTriShape.h"
@@ -25,6 +27,8 @@
                #include "BSShaderProperty.h"
                   #include "BSEffectShaderProperty.h"
                   #include "BSLightingShaderProperty.h"
+      #include "NiSkinData.h"
+      #include "NiSkinInstance.h"
 #pragma endregion
 
 namespace nifDK {
@@ -39,6 +43,8 @@ namespace nifDK {
       block_types::BSXFlags,
       block_types::NiAlphaProperty,
       block_types::NiAVObject,
+      block_types::NiCollisionObject,
+      block_types::NiDynamicEffect,
       block_types::NiExtraData,
       block_types::NiGeometry,
       block_types::NiGeometryData,
@@ -48,6 +54,8 @@ namespace nifDK {
       block_types::NiObjectNET,
       block_types::NiProperty,
       block_types::NiShadeProperty,
+      block_types::NiSkinData,
+      block_types::NiSkinInstance,
       block_types::NiStringExtraData,
       block_types::NiTriBasedGeom,
       block_types::NiTriShape//,

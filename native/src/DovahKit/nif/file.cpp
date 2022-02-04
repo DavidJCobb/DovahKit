@@ -1,7 +1,10 @@
 #include "file.h"
+#include "notice_code_list.h"
 #include "reader.h"
+//
 #include "block.h"
 #include "blocks/_factory.h"
+#include "blocks/NiNode.h"
 
 namespace nifDK {
    /*static*/ file_version file_version::from_string(const std::string& s) {
@@ -55,6 +58,14 @@ namespace nifDK {
       if (index != 3)
          return file_version(0); // failed: wrong number of parts (e.g. "2.1.0")
       return file_version(out);
+   }
+
+   file::~file() {
+      this->root_node = nullptr;
+      for (auto* b : this->all_blocks)
+         if (b)
+            delete b;
+      this->all_blocks.clear();
    }
 
    void file::read(void* data, size_t size) {
@@ -115,8 +126,9 @@ namespace nifDK {
          this->all_blocks.resize(block_count);
          for (size_t i = 0; i < block_count; ++i) {
             auto tni = block_type_indices[i];
-            if (tni >= block_type_names.size())
-               return; // TODO: throw or something
+            if (tni >= block_type_names.size()) {
+               reader.throw_error(notice_code::bad_block_typename_index);
+            }
             const auto& tn = block_type_names[tni];
             this->all_blocks[i] = create_block_of_type(tn);
          }
@@ -124,19 +136,81 @@ namespace nifDK {
          size_t offset = 0;
          for (size_t i = 0; i < block_count; ++i) {
             auto* b = this->all_blocks[i];
-            if (!b)
-               continue; // wtf?
+            assert(b);
             const auto& tn = block_type_names[block_type_indices[i]];
             auto guard = reader.enter_block(file_reader::file_passkey(), i, block_sizes[i], tn);
             b->parse(reader);
+         }
+         //
+         // Validity checks for node trees:
+         //
+         {
+            auto& list = this->all_blocks;
+            auto  size = list.size();
+            //
+            block_types::NiNode* root = nullptr;
+            for (size_t i = 0; i < size; ++i) {
+               auto* node = dynamic_cast<block_types::NiNode*>(this->all_blocks[i]);
+               if (!node)
+                  continue;
+               if (node->parent)
+                  continue;
+               if (root) {
+                  reader.throw_error(detailed_notice{
+                     .code  = notice_code::multiple_top_level_nodes,
+                     .flags = detailed_notice::flag::has_cause_block,
+                     .cause = {
+                        .block = {
+                           .index = (int32_t)i,
+                           .name  = node->name,
+                        },
+                     },
+                  });
+               }
+               root = node;
+            }
+            this->root_node = root;
+            //
+            // Got the root, if any, and we know there are no other node trees. Now let's make sure the tree isn't cyclical.
+            //
+            if (root) {
+               std::vector<block_types::NiNode*> seen;
+               root->for_self_and_subtree([this, &seen, &reader](block_types::NiNode* node) {
+                  bool already_seen = (std::find(seen.begin(), seen.end(), node) != seen.end());
+                  if (!already_seen)
+                     return;
+                  //
+                  int32_t block_index = -1;
+                  for (size_t i = 0; i < this->all_blocks.size(); ++i) {
+                     if (this->all_blocks[i] == node) {
+                        block_index = (int32_t)i;
+                        break;
+                     }
+                  }
+                  assert(block_index >= 0);
+                  reader.throw_error(detailed_notice{
+                     .code  = notice_code::cyclical_node_tree,
+                     .flags = detailed_notice::flag::has_cause_block,
+                     .cause = {
+                        .block = {
+                           .index = block_index,
+                           .name  = node->name,
+                        },
+                     },
+                  });
+               });
+            }
          }
       } catch (file_reader::read_error& e) {
          //
          // TODO: report and handle the error
          //
+         #if _DEBUG
+            __debugbreak();
+         #endif
       }
       //
-      // TODO: all blocks that aren't children of some other block should be written to a list of top-level blocks on the file object
+      // I think we're done, at this point
       //
    }
 }

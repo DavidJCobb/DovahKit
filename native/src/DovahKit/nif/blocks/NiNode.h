@@ -12,5 +12,15 @@ namespace nifDK::block_types {
          std::vector<NiDynamicEffect*> effects;
 
          virtual void parse(file_reader&) override;
+
+         template<typename T> void for_self_and_subtree(T lambda) {
+            (lambda)(this);
+            for (auto* child : this->children) {
+               auto* node = dynamic_cast<NiNode*>(child);
+               if (!node)
+                  continue;
+               node->for_self_and_subtree(lambda);
+            }
+         }
    };
 }

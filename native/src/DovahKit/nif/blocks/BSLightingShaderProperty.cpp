@@ -1,6 +1,8 @@
 #include "BSLightingShaderProperty.h"
 #include "../reader.h"
 
+#include "BSShaderTextureSet.h"
+
 namespace nifDK::block_types {
    void BSLightingShaderProperty::parse(file_reader& reader) {
       BSShaderProperty::parse(reader);

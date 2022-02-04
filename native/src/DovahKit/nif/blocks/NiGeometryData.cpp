@@ -1,4 +1,4 @@
-#include "NiGeometryData.h""
+#include "NiGeometryData.h"
 #include "../reader.h"
 #include "../types/Float16.h"
 

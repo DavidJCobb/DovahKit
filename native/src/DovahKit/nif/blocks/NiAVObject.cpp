@@ -22,7 +22,7 @@ namespace nifDK::block_types {
          reader.read(presence);
          if (presence) {
             struct _bounding_volume {
-               enum class shape : uint32_t {
+               enum class shape : int32_t {
                   undefined = -1,
                   sphere    =  0,
                   box       =  1, // OBB, not AABB

@@ -6,6 +6,9 @@
 
 namespace nifDK {
    class block;
+   namespace block_types {
+      class NiNode;
+   }
 
    struct file_version {
       uint32_t value = 0;
@@ -46,41 +49,10 @@ namespace nifDK {
             little = 1,
          };
 
-      //
-      // EXPORTINFO
-      // 
-      // MIN VERSION | DESCRIPTION
-      // ------------+---------------------------------------------------------------------------------------------------------------------
-      // 10.00.01.02 | uint Unknown
-      // --.--.--.-- | ShortString creator
-      // --.--.--.-- | ShortString Export Info 1
-      // --.--.--.-- | ShortString Export Info 2
-      // 
-      // 
-      // HEADER - https://github.com/niftools/nifxml/blob/f265c56482c728c6877e45d5b5993d3bff83670a/nif.xml#L1259
-      // 
-      // MIN VERSION | DESCRIPTION
-      // ------------+---------------------------------------------------------------------------------------------------------------------
-      // --.--.--.-- | "%s File Format, Version %s" ending in "\r\n" or "\n", e.g. "Gamebryo File Format, Version 20.2.0.7\n"
-      // 03.01.??.?? | Copyright string, ending in a line break
-      // --.--.--.-- | little-endian uint32_t version e.g. 07 00 02 14 i.e. 0x14020007 i.e. 20.2.0.7
-      // 20.00.00.04 | EndianType
-      // 10.01.00.00 | little-endian uint32_t User Version (for companies that extend the NIF format)
-      // 03.03.00.13 | little-endian uint32_t Num Blocks
-      // --.--.--.-- | little-endian uint32_t User Version 2 (if (UV >= 10 || UV == 1) && UV != 10.2.0.0)
-      // 30.00.00.02 | uint32_t
-      // --.--.--.-- | ExportInfo (version 10.0.1.2, or ((version 10.1.0.0) && (UV >= 10 || UV == 1))
-      // 10.00.01.00 | uint16_t Num Block Types
-      // 10.00.01.00 | SizedString[Num Block Types] Block Types    -- all block types used in the file are listed here
-      // 10.00.01.00 | BlockTypeIndex[Num Blocks] Block Type Index -- each block's type is listed here
-      // 20.02.00.07 | uint[Num Blocks] -- each block's size?
-      // 20.01.00.03 | uint Num Strings
-      // 20.01.00.03 | uint Max String Length
-      // 20.01.00.03 | SizedString[Num Strings] Strings
-      // 10.00.01.00 | uint Unknown
-      // 
-
       public:
+         file() {}
+         ~file();
+
          struct {
             std::string  format_name;
             file_version version;
@@ -94,7 +66,9 @@ namespace nifDK {
                std::array<std::string, 2> info;
             } export_data;
          } header;
-         std::vector<block*> all_blocks;
+         //
+         std::vector<block*>  all_blocks;
+         block_types::NiNode* root_node = nullptr;
 
          void read(void* data, size_t size);
 
