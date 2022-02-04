@@ -127,10 +127,34 @@ namespace nifDK {
          for (size_t i = 0; i < block_count; ++i) {
             auto tni = block_type_indices[i];
             if (tni >= block_type_names.size()) {
-               reader.throw_error(notice_code::bad_block_typename_index);
+               reader.throw_error(detailed_notice{
+                  .code  = notice_code::bad_block_typename_index,
+                  .flags = detailed_notice::flag::has_cause_block,
+                  .cause = {
+                     .block = {
+                        .index = (int32_t)i,
+                     },
+                  },
+               });
             }
             const auto& tn = block_type_names[tni];
-            this->all_blocks[i] = create_block_of_type(tn);
+            auto* b = this->all_blocks[i] = create_block_of_type(tn);
+            if (!b) {
+               //
+               // This typename is an abstract NetImmerse class; we can't create it at run-time (we may have implemented 
+               // it as an abstract class) and it shouldn't appear in files.
+               //
+               reader.throw_error(detailed_notice{
+                  .code  = notice_code::block_is_abstract_typename,
+                  .flags = detailed_notice::flag::has_cause_block,
+                  .cause = {
+                     .block = {
+                        .index = (int32_t)i,
+                     },
+                     .block_type = tn,
+                  },
+               });
+            }
          }
          size_t base = reader.position();
          size_t offset = 0;

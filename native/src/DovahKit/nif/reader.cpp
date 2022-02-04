@@ -84,7 +84,7 @@ namespace nifDK {
          this->error.flags |= detailed_notice::flag::has_cause_block;
    }
 
-   bool file_reader::_read_ref(void*& out) {
+   bool file_reader::_read_ref(block*& out) {
       out = nullptr;
       if (!this->is_in_bounds(4))
          this->_on_read_failure();

@@ -1,7 +1,9 @@
 #include "NiObjectNET.h"
+#include "../reader.h"
+
 #include "BSLightingShaderProperty.h"
 #include "NiExtraData.h"
-#include "../reader.h"
+#include "NiTimeController.h"
 
 namespace nifDK::block_types {
    void NiObjectNET::parse(file_reader& reader) {

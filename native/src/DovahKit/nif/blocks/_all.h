@@ -29,6 +29,8 @@
                   #include "BSLightingShaderProperty.h"
       #include "NiSkinData.h"
       #include "NiSkinInstance.h"
+      #include "NiSkinPartition.h"
+      #include "NiTimeController.h"
 #pragma endregion
 
 namespace nifDK {
@@ -56,7 +58,9 @@ namespace nifDK {
       block_types::NiShadeProperty,
       block_types::NiSkinData,
       block_types::NiSkinInstance,
+      block_types::NiSkinPartition,
       block_types::NiStringExtraData,
+      block_types::NiTimeController,
       block_types::NiTriBasedGeom,
       block_types::NiTriShape//,
    >;

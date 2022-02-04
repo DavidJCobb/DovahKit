@@ -65,7 +65,7 @@ namespace nifDK {
          file* subject = nullptr;
          detailed_notice error;
 
-         bool _read_ref(void*&);
+         bool _read_ref(block*&);
          void _on_read_failure();
 
          inline void _require_size(size_t s) {
@@ -173,7 +173,7 @@ namespace nifDK {
          template<typename Desired> requires std::is_polymorphic_v<Desired> bool read_ref(Desired*& out) {
             out = nullptr;
             //
-            void* instance;
+            block* instance;
             if (!this->_read_ref(instance))
                return false;
             Desired* casted = dynamic_cast<Desired*>(instance);
@@ -222,16 +222,16 @@ namespace nifDK {
          }
          #pragma endregion
          #pragma region unchecked_read
-         inline bool unchecked_read(void* buffer, size_t size) {
+         inline void unchecked_read(void* buffer, size_t size) {
             memcpy(buffer, _at(), size);
             this->states.current.position += size;
          }
          template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) {
             if constexpr (cobb::is_std_array<T>) {
-               constexpr size_t total_size = sizeof(T::value_type) * field.size();
-               return this->unchecked_read(&field, total_size);
+               size_t total_size = sizeof(T::value_type) * field.size();
+               this->unchecked_read(&field, total_size);
             } else {
-               return this->unchecked_read(&field, sizeof(T));
+               this->unchecked_read(&field, sizeof(T));
             }
          }
 

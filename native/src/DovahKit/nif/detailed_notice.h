@@ -29,6 +29,7 @@ namespace nifDK {
             int32_t     index = -1;
             std::string name;
          } block;
+         std::string block_type;
       } cause;
       struct {
          std::vector<int32_t> block_indices;

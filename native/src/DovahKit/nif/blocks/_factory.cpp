@@ -19,7 +19,11 @@ namespace nifDK {
          static bool execute(const std::string& type_name, block*& out) {
             if constexpr (block_type_has_name<T>) {
                if (type_name == T::type_name) {
-                  out = new T();
+                  if constexpr (std::is_abstract_v<T>) {
+                     out = nullptr;
+                  } else {
+                     out = new T();
+                  }
                   return true;
                }
             }
@@ -35,9 +39,15 @@ namespace nifDK {
    }
    extern block* create_block_of_type(const std::string& type_name) {
       block* out = nullptr;
-      all_block_types::for_each_breakable_with_args<create_block_functor>(type_name, std::forward<block*&>(out));
+      bool matched = all_block_types::for_each_breakable_with_args<create_block_functor>(type_name, std::forward<block*&>(out));
       if (out)
          return out;
+      if (matched) {
+         //
+         // We *found* a matching class, but could not construct it; it's probably abstract.
+         //
+         return nullptr;
+      }
       return new block_types::unknown_block();
    }
 }

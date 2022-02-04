@@ -1,6 +1,8 @@
 #include "NiAVObject.h"
 #include "../reader.h"
 
+#include "NiCollisionObject.h"
+
 namespace nifDK::block_types {
    void NiAVObject::parse(file_reader& reader) {
       NiObjectNET::parse(reader);

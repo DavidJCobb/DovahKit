@@ -14,6 +14,7 @@ namespace nifDK {
          object_has_multiple_parents = 0x00000005,
          cyclical_node_tree          = 0x00000006,
          bad_block_typename_index    = 0x00000007,
+         block_is_abstract_typename  = 0x00000008,
       };
    };
 }
