@@ -27,7 +27,7 @@ namespace nifDK::block_types {
                std::vector<Triangle> triangles;
             } remaster;
 
-            void parse(file_reader&);
+            void read(file_reader&);
          };
 
       public:

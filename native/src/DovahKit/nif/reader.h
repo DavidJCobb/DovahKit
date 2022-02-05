@@ -11,24 +11,20 @@
 #include "file.h"
 #include "blocks/_factory.h"
 #include "types/Float16.h"
-#include "types/NiMatrix33.h" // this is a using declaration; can't forward-declare those
 
 namespace nifDK {
    class  file;
+   class  file_reader;
    struct file_version;
-
-   struct Float16;
-   struct NiBound;
-   struct NiColor;
-   struct NiColorA;
-   //struct NiMatrix33; // this is a using declaration; can't forward-declare those
-   struct NiTransform;
 
    namespace impl::file_reader {
       template<typename T> concept IsLiteral = requires {
          requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
       };
       template<typename T> concept IsLiteralIsh = IsLiteral<T> || (std::is_bounded_array_v<T> && IsLiteral<std::remove_extent_t<T>>);
+
+      template<typename T> concept OffersReaderHook = requires(T& x, ::nifDK::file_reader& fr) { { x.read(fr) }; };
+      template<typename T> concept OffersUncheckedReaderHook = requires(T & x, ::nifDK::file_reader & fr) { { x.unchecked_read(fr) }; };
    }
 
    class file_reader {
@@ -155,13 +151,17 @@ namespace nifDK {
             this->_require_size(size);
             this->unchecked_read(buffer, size);
          }
-         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void read(T& field) {
+         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T> || impl::file_reader::OffersReaderHook<T>) inline void read(T& field) {
+            using namespace impl::file_reader;
+            //
             if constexpr (cobb::is_std_array<T>) {
                size_t total_size = sizeof(T::value_type) * field.size();
                this->_require_size(total_size);
                this->unchecked_read(&field, total_size);
-            } else {
+            } else if constexpr (IsLiteralIsh<T>) {
                this->read(&field, sizeof(T));
+            } else if constexpr (OffersReaderHook<T>) {
+               field.read(*this);
             }
          }
 
@@ -220,18 +220,28 @@ namespace nifDK {
                out[i / N][i % N] = Float16(halves[i]);
             }
          }
+
+         template<int N, typename T, glm::qualifier Q> void read(glm::mat<N, N, T, Q>& out) {
+            constexpr auto total_count = N * N;
+            this->_require_size(sizeof(T) * total_count);
+            this->unchecked_read(out);
+         }
          #pragma endregion
          #pragma region unchecked_read
          inline void unchecked_read(void* buffer, size_t size) {
             memcpy(buffer, _at(), size);
             this->states.current.position += size;
          }
-         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) {
+         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T> || impl::file_reader::OffersReaderHook<T>) inline void unchecked_read(T& field) {
+            using namespace impl::file_reader;
+            //
             if constexpr (cobb::is_std_array<T>) {
                size_t total_size = sizeof(T::value_type) * field.size();
                this->unchecked_read(&field, total_size);
-            } else {
+            } else if constexpr (IsLiteralIsh<T>) {
                this->unchecked_read(&field, sizeof(T));
+            } else if constexpr (OffersReaderHook<T>) {
+               field.unchecked_read(*this);
             }
          }
 
@@ -263,6 +273,18 @@ namespace nifDK {
                out[i / N][i % N] = Float16(halves[i]);
             }
          }
+
+         template<int N, typename T, glm::qualifier Q> void unchecked_read(glm::mat<N, N, T, Q>& out) {
+            constexpr auto total_count = N * N;
+            //
+            if constexpr (sizeof(glm::vec<N, T, Q>) == sizeof(T) * total_count) {
+               this->unchecked_read(&out, sizeof(T) * N);
+            } else {
+               for (int i = 0; i < N; ++i)
+                  for (int j = 0; j < N; ++j)
+                     this->unchecked_read(&out[i][j], sizeof(T));
+            }
+         }
          #pragma endregion
 
          #pragma region reading types
@@ -271,17 +293,6 @@ namespace nifDK {
          //
          inline void read(Float16& v) { this->_read<2>(v); }
          void unchecked_read(Float16&);
-         //
-         inline void read(NiBound& v) { this->_read<float, 4>(v); }
-         void unchecked_read(NiBound&);
-         inline void read(NiColor& v) { this->_read<3>(v); }
-         void unchecked_read(NiColor&);
-         inline void read(NiColorA& v) { this->_read<4>(v); }
-         void unchecked_read(NiColorA&);
-         inline void read(NiMatrix33& v) { this->_read<float, 9>(v); }
-         void unchecked_read(NiMatrix33&);
-         inline void read(NiTransform& v) { this->_read<float, 3 + 9 + 1>(v); }
-         void unchecked_read(NiTransform&);
          #pragma endregion
 
          void raise_error(const detailed_notice&);

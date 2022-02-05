@@ -1,6 +1,8 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include "notice_code_t.h"
 
 namespace nifDK {

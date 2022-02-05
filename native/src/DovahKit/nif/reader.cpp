@@ -148,39 +148,4 @@ namespace nifDK {
    void file_reader::unchecked_read(Float16& out) {
       this->read(&out.value, 2);
    }
-   //
-   void file_reader::unchecked_read(NiBound& v) {
-      this->unchecked_read(v.center);
-      this->unchecked_read(v.radius);
-   }
-   void file_reader::unchecked_read(NiColor& v) {
-      this->unchecked_read(v.r);
-      this->unchecked_read(v.g);
-      this->unchecked_read(v.b);
-   }
-   void file_reader::unchecked_read(NiColorA& v) {
-      this->unchecked_read(v.r);
-      this->unchecked_read(v.g);
-      this->unchecked_read(v.b);
-      this->unchecked_read(v.a);
-   }
-   void file_reader::unchecked_read(NiMatrix33& v) {
-      // in order from top left to bottom left, then top middle to bottom middle, then top right to bottom right
-      this->unchecked_read(v[0][0]);
-      this->unchecked_read(v[0][1]);
-      this->unchecked_read(v[0][2]);
-      this->unchecked_read(v[1][0]);
-      this->unchecked_read(v[1][1]);
-      this->unchecked_read(v[1][2]);
-      this->unchecked_read(v[2][0]);
-      this->unchecked_read(v[2][1]);
-      this->unchecked_read(v[2][2]);
-   }
-   void file_reader::unchecked_read(NiTransform& v) {
-      this->unchecked_read(v.rotation);
-      this->unchecked_read(v.position[0]);
-      this->unchecked_read(v.position[1]);
-      this->unchecked_read(v.position[2]);
-      this->unchecked_read(v.scale);
-   }
 }

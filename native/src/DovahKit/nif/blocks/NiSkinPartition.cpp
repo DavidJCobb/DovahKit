@@ -3,7 +3,7 @@
 #include "../types/Float16.h"
 
 namespace nifDK::block_types {
-   void NiSkinPartition::partition::parse(file_reader& reader) {
+   void NiSkinPartition::partition::read(file_reader& reader) {
       uint16_t count_vert;
       uint16_t count_tri;
       uint16_t count_bone;
@@ -100,7 +100,7 @@ namespace nifDK::block_types {
       }
       this->partitions.resize(count);
       for (uint32_t i = 0; i < count; ++i) {
-         this->partitions[i].parse(reader);
+         reader.read(this->partitions[i]);
       }
    }
 }
