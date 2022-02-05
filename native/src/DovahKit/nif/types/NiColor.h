@@ -1,22 +1,21 @@
 #pragma once
-#include <cstdint>
 
 namespace nifDK {
    class file_reader;
 
    struct NiColor {
-      uint8_t r;
-      uint8_t g;
-      uint8_t b;
+      float r;
+      float g;
+      float b;
 
       void read(file_reader&);
       void unchecked_read(file_reader&);
    };
    struct NiColorA {
-      uint8_t r;
-      uint8_t g;
-      uint8_t b;
-      uint8_t a;
+      float r;
+      float g;
+      float b;
+      float a;
 
       void read(file_reader&);
       void unchecked_read(file_reader&);

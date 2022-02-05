@@ -18,10 +18,14 @@ namespace nifDK::block_types {
       public:
          NiGeometryData* data = nullptr;
          NiSkinInstance* skin = nullptr;
+         struct { // from versions 10.0.1.0 to 20.1.0.3
+            std::string name;
+            int32_t     extra = -1;
+         } shader;
          struct {
             std::vector<material> list;
-            std::optional<std::string> shader; // from versions 10.0.1.0 to 20.1.0.3
             int32_t active = -1;
+            bool    needs_update;
          } materials;
          struct {
             BSShaderProperty* shader = nullptr;

@@ -6,7 +6,6 @@ namespace nifDK::block_types {
       NiProperty::parse(reader);
       //
       uint16_t data;
-      reader.read(this->testing.threshold);
       if (reader.version() <= file_version::from_parts<2, 3, 0, 0>) {
          uint32_t dummy;
          reader.read(dummy);
@@ -22,6 +21,7 @@ namespace nifDK::block_types {
       this->blending.source      = (blend_mode)((data >> 1) & 0b1111);
       this->blending.destination = (blend_mode)((data >> 5) & 0b1111);
       //
+      reader.read(this->testing.threshold);
       this->testing.enabled   = (data & (1 << 9)) != 0;
       this->testing.mode      = (test_mode)((data >> 10) & 0b111);
       this->testing.no_sorter = (data & (1 << 13)) != 0;

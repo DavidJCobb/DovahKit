@@ -35,7 +35,7 @@ namespace nifDK::block_types {
          uint32_t material_crc = 0;
          NiBound bounds;
          std::array<uint16_t, 13> unknown_shorts = {};
-         uint32_t consistency_flags = 0;
+         uint16_t consistency_flags = 0;
          NiObject* additional = nullptr;
 
          virtual void parse(file_reader&) override;

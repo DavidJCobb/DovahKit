@@ -22,7 +22,7 @@ namespace nifDK {
       o.states.current = {
          .data     = (void*)((std::intptr_t)o.states.backup.data + o.states.backup.position),
          .size     = size,
-         .position = o.states.backup.position,
+         .position = 0,
       };
    }
    file_reader::block_guard::~block_guard() {
@@ -112,12 +112,16 @@ namespace nifDK {
          this->read_prefixed_string<uint32_t>(out);
          return;
       }
-      uint32_t index;
+      int32_t index;
       this->read(index);
+      if (index < 0) {
+         out.clear();
+         return;
+      }
       //
       auto& list = this->string_table.list;
       if (index >= list.size())
-         this->raise_error(notice_code::string_index_out_of_bounds);
+         this->throw_error(notice_code::string_index_out_of_bounds);
       out = list[index];
    }
    void file_reader::read_line_string(std::string& out) {

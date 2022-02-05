@@ -4,8 +4,9 @@
 
 namespace nifDK::block_types {
    void NiGeometryData::parse(file_reader& reader) {
-      reader.read(this->group_id);
-      //
+      if (reader.version() >= file_version::from_parts<10, 1, 0, 114>) {
+         reader.read(this->group_id);
+      }
       uint8_t  presence;
       uint8_t  vertex_type = 0;
       uint16_t vertex_count;
@@ -24,10 +25,10 @@ namespace nifDK::block_types {
             reader.read_vector_contents(this->vertices);
          }
       }
+      if (reader.version() >= file_version::from_parts<10, 0, 1, 0>) {
+         reader.read(this->flags.vector); // flag meanings differ if version 20.2.0.7 and user version 2 > 0
+      }
       if (reader.version() == file_version::from_parts<20, 2, 0, 7>) {
-         if (reader.user_version<2>() > 0) {
-            reader.read(this->flags.vector);
-         }
          if (reader.user_version<1>() >= 12) {
             reader.read(this->material_crc);
          }
@@ -37,7 +38,19 @@ namespace nifDK::block_types {
       if (presence) {
          this->normals.resize(vertex_count);
          if (can_use_half_vertices && presence == 6) {
-            reader.read_half_vector_contents(this->normals);
+            //
+            // normals actually use byte-vectors in this case
+            //
+            reader.require_size(vertex_count * 3);
+            uint8_t byte;
+            for (auto& n : this->normals) {
+               reader.unchecked_read(byte);
+               n.x = byte;
+               reader.unchecked_read(byte);
+               n.y = byte;
+               reader.unchecked_read(byte);
+               n.z = byte;
+            }
          } else {
             reader.read_vector_contents(this->normals);
          }
@@ -65,10 +78,29 @@ namespace nifDK::block_types {
       reader.read(presence); // Has Vertex Colors
       if (presence) {
          this->vertex_colors.resize(vertex_count);
-         reader.read_vector_contents(this->vertex_colors);
+         if (can_use_half_vertices && presence == 7) {
+            reader.require_size(vertex_count * 4);
+            uint8_t byte;
+            for (auto& n : this->vertex_colors) {
+               reader.unchecked_read(byte);
+               n.r = (float)byte / 255.0;
+               reader.unchecked_read(byte);
+               n.g = (float)byte / 255.0;
+               reader.unchecked_read(byte);
+               n.b = (float)byte / 255.0;
+               reader.unchecked_read(byte);
+               n.a = (float)byte / 255.0;
+            }
+         } else {
+            reader.read_vector_contents(this->vertex_colors);
+         }
       }
       uint16_t uv_set_count = 0;
-      reader.read(uv_set_count);
+      if (reader.version() <= file_version::from_parts<4, 2, 2, 0>) {
+         reader.read(uv_set_count);
+         bool presence;
+         reader.read(presence); // unused?
+      }
       if (this->flags.vector & vector_flag::has_uv) {
          auto count = (uv_set_count & 63) | 1;
          this->uv_sets.resize(count);

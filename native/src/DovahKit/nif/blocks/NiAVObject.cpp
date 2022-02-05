@@ -11,7 +11,7 @@ namespace nifDK::block_types {
       if (reader.version() <= file_version::from_parts<4, 2, 2, 0>) {
          reader.skip(sizeof(float) * 3); // velocity
       }
-      if (reader.user_version<1>() <= 34) {
+      if (reader.user_version<2>() <= 34) {
          uint32_t count;
          reader.read(count);
          reader.skip(4 * count); // skip NiProperty refs for now; this NIF version is too old for us to care about

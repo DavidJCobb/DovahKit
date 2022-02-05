@@ -3,7 +3,7 @@
 
 namespace nifDK {
    void NiColor::read(file_reader& reader) {
-      reader.require_size(3);
+      reader.require_size(3 * sizeof(float));
       reader.unchecked_read(*this);
    }
    void NiColor::unchecked_read(file_reader& reader) {
@@ -13,7 +13,7 @@ namespace nifDK {
    }
 
    void NiColorA::read(file_reader& reader) {
-      reader.require_size(4);
+      reader.require_size(4 * sizeof(float));
       reader.unchecked_read(*this);
    }
    void NiColorA::unchecked_read(file_reader& reader) {

@@ -36,7 +36,10 @@ namespace nifDK {
          }
       }
       if (desc.has_flag(_::vertex_colors)) {
-         reader.read(this->color);
+         reader.read(this->color.r);
+         reader.read(this->color.g);
+         reader.read(this->color.b);
+         reader.read(this->color.a);
       }
       if (desc.has_flag(_::skinned)) {
          reader.read(this->bones.weights);

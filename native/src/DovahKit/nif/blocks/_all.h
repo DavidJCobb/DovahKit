@@ -14,6 +14,8 @@
             #include "BSXFlags.h"
          #include "NiStringExtraData.h"
       #include "NiGeometryData.h"
+         #include "NiTriBasedGeomData.h"
+            #include "NiTriShapeData.h"
       #include "NiObjectNET.h"
          #include "NiAVObject.h"
             #include "NiDynamicEffect.h"
@@ -21,6 +23,7 @@
                #include "NiTriBasedGeom.h"
                   #include "NiTriShape.h"
             #include "NiNode.h"
+               #include "BSFadeNode.h"
          #include "NiProperty.h"
             #include "NiAlphaProperty.h"
             #include "NiShadeProperty.h"
@@ -38,6 +41,7 @@ namespace nifDK {
       block_types::unknown_block,
       //
       block_types::BSEffectShaderProperty,
+      block_types::BSFadeNode,
       block_types::BSInvMarker,
       block_types::BSLightingShaderProperty,
       block_types::BSShaderProperty,
@@ -62,11 +66,12 @@ namespace nifDK {
       block_types::NiStringExtraData,
       block_types::NiTimeController,
       block_types::NiTriBasedGeom,
-      block_types::NiTriShape//,
+      block_types::NiTriBasedGeomData,
+      block_types::NiTriShape,
+      block_types::NiTriShapeData//,
    >;
 
    template<typename T> concept block_type_has_name = requires {
-      { T::type_name } -> std::same_as<std::string>;
+      { T::type_name } -> std::same_as<const char* const&>;
    };
-
 }
