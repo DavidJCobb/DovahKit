@@ -226,6 +226,7 @@ namespace nifDK {
             }
          }
       } catch (file_reader::read_error& e) {
+         this->results.error = reader.error_details();
          //
          // TODO: report and handle the error
          //

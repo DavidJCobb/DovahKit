@@ -17,9 +17,11 @@
 //
 #include "widgets/DKVulkanView.h"
 
-class DKVulkanInstance;
-
+class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
+namespace nifDK {
+   class file;
+}
 
 namespace vulkanDK {
    class frame_in_flight;
@@ -128,8 +130,11 @@ namespace vulkanDK {
          void set_animation_paused(size_t mesh, bool paused);
          //
          size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
+         //
+         bool add_nif(nifDK::file& model);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
+         void set_camera_position(const glm::vec3& pos);
 
          inline double last_frame_time() const { return this->state.last_frame_time; }
 

@@ -135,6 +135,7 @@ namespace nifDK {
 
          inline bool at_end() const noexcept { return this->position() == this->size(); }
          inline bool is_in_bounds(size_t s) const noexcept { return this->position() + s <= this->size(); }
+         inline const detailed_notice& error_details() const noexcept { return this->error; }
 
          inline void skip(size_t s) {
             auto& p = this->states.current.position;

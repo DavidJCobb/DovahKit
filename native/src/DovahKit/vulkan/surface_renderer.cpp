@@ -30,6 +30,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+// loading NIFs
+#include "nif/file.h"
+#include "nif/blocks/NiGeometry.h"
+#include "nif/blocks/NiGeometryData.h"
+#include "nif/blocks/NiNode.h"
+#include "nif/blocks/NiTriShape.h"
+#include "nif/blocks/NiTriShapeData.h"
+
 namespace {
    static constexpr bool debug_log_scene_object_lifetimes = false;
 }
@@ -839,6 +847,54 @@ namespace vulkanDK {
          }
       }
       //
+      // Scene sky and floor:
+      //
+      {
+         auto ti = this->add_texture(":/shaders/white.png");
+         { // Mesh: floor
+            auto  mi   = this->scene.insert_new_mesh();
+            auto& mesh = this->scene.meshes[mi];
+            auto& vib = mesh.vertex_and_index_buffer;
+            mesh.texture_index = ti;
+            {
+               ++this->scene.textures[ti].refcount;
+            }
+            //
+            {
+               constexpr float size = 99999;
+               mesh.data.vertices = {  // Vertices
+                  {{-size, -size, 0.0}, {4.0f, 0.6f, 0.0f}, {1.0, 0.0}},
+                  {{ size, -size, 0.0}, {4.0f, 0.6f, 0.0f}, {0.0, 0.0}},
+                  {{ size,  size, 0.0}, {4.0f, 0.6f, 0.0f}, {0.0, 1.0}},
+                  {{-size,  size, 0.0}, {4.0f, 0.6f, 0.0f}, {1.0, 1.0}},
+               };
+            }
+            mesh.data.indices  = { 0, 1, 2, 2, 3, 0 };
+            mesh.recalc_bounding_sphere();
+            //
+            VkDeviceSize buffer_size_v;
+            VkDeviceSize buffer_size_i;
+            VkDeviceSize buffer_size;
+            mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
+            //
+            auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            void* data    = staging.map_memory();
+            mesh.setup_vib_data_at(data);
+            staging.unmap_memory(data);
+            //
+            vib.wide_indices = mesh.data.indices.type() == vertex_index_list::value_type::wide;
+            vib.indices_at   = buffer_size_v;
+            vib.index_count  = mesh.data.indices.size();
+            vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.buffer.copy_from(staging);
+            //
+            mesh.shader_params.transform = glm::mat4(1);
+            mesh.life_state = scene_frame_item_state::active;
+            mesh.handled_frames.set_all_out_of_date();
+         }
+      }
+
+      //
       // Done.
       //
    }
@@ -1570,6 +1626,8 @@ namespace vulkanDK {
          vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          vib.buffer.copy_from(staging);
          //
+         if (!ro.anim_state)
+            ro.anim_state = new mesh_animation_state; // for testing: spin the mesh
          ro.life_state = scene_frame_item_state::active;
          ro.handled_frames.set_all_out_of_date();
       }
@@ -1675,6 +1733,160 @@ namespace vulkanDK {
       }
       return nearest;
    }
+   //
+   bool surface_renderer::add_nif(nifDK::file& model) {
+      if (!model.root_node) {
+         qDebug("[surface_renderer::add_nif] Model has no root node.");
+         return false;
+      }
+      size_t mesh_count = model.root_node->count_descendants_of_type<nifDK::block_types::NiGeometry>(); // TODO: there are other mesh types e.g. NiLines
+      {
+         auto available = this->scene.available_mesh_count();
+         if (available < mesh_count) {
+            qDebug("[surface_renderer::add_nif] Not enough mesh slots available for this NIF (%u needed; %u available).", mesh_count, available);
+            return false;
+         }
+      }
+      //
+      size_t texture_index;
+      {
+         texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
+         if (texture_index == std::string::npos) {
+            qDebug("Cannot add new rendered object: failed to add its texture.");
+            return false;
+         }
+         auto& texture_item = this->scene.textures[texture_index];
+         texture_item.life_state = scene_frame_item_state::active;
+      }
+      //
+      auto load_geom = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
+         auto* geom = dynamic_cast<nifDK::block_types::NiTriShape*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
+         if (!geom)
+            return;
+         auto* data = dynamic_cast<nifDK::block_types::NiTriShapeData*>(geom->data);
+         if (!data)
+            return;
+         auto size = data->vertices.size();
+         if (!size || !data->triangles.size())
+            return;
+         qDebug("[surface_renderer::add_nif] Handling geometry: %s...", object->name.data());
+         transform = transform * geom->transform.to_matrix();
+         //
+         auto  mesh_index = this->scene.insert_new_mesh();
+         assert(mesh_index != std::string::npos);
+         auto& mesh       = this->scene.meshes[mesh_index];
+         //
+         mesh.life_state = scene_frame_item_state::active;
+         mesh.shader_params.transform = transform;
+         mesh.texture_index = texture_index;
+         ++this->scene.textures[texture_index].refcount;
+         {  // Vertices
+            mesh.data.vertices.resize(size);
+            auto& vl = data->vertices;
+            auto& cl = data->vertex_colors;
+            auto& ul = data->uv_sets;
+            for (size_t i = 0; i < size; ++i) {
+               auto& vert = mesh.data.vertices[i];
+               vert.pos = data->vertices[i];
+               if (cl.size()) {
+                  vert.color = { cl[i].r, cl[i].g, cl[i].b };
+               } else {
+                  vert.color = { 1.0, 1.0, 1.0 };
+               }
+               if (ul.size()) {
+                  auto& uv = ul[0];
+                  vert.texCoord = uv[i];
+               } else {
+                  vert.texCoord = { 0, 0 };
+               }
+            }
+         }
+         qDebug("[surface_renderer::add_nif] Loaded %u vertices...", size);
+         {  // Triangles
+            auto& list = data->triangles;
+            auto  size = list.size();
+            mesh.data.indices = vertex_index_list(size * 3, uint16_t(0));
+            //
+            auto to = mesh.data.indices.as_thin_range();
+            for (size_t i = 0; i < size; ++i) {
+               auto& tri = list[i];
+               to[(i * 3) + 0] = tri.vertex_indices[0];
+               to[(i * 3) + 1] = tri.vertex_indices[1];
+               to[(i * 3) + 2] = tri.vertex_indices[2];
+            }
+            qDebug("[surface_renderer::add_nif] Loaded %u triangles...", size);
+         }
+         {  // Bounding sphere
+            auto& dst = mesh.data.bounding_sphere;
+            auto& src = data->bounds;
+            dst.center    = src.center;
+            dst.radius_sq = src.radius * src.radius;
+            qDebug("[surface_renderer::add_nif] Loaded NiBound...");
+         }
+         //
+         // Vulkan:
+         //
+         {
+            VkDeviceSize buffer_size_v;
+            VkDeviceSize buffer_size_i;
+            VkDeviceSize buffer_size;
+            mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
+            //
+            auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            void* data    = staging.map_memory();
+            mesh.setup_vib_data_at(data);
+            staging.unmap_memory(data);
+            //
+            auto& vib = mesh.vertex_and_index_buffer;
+            vib.wide_indices = mesh.data.indices.type() == vertex_index_list::value_type::wide;
+            vib.indices_at   = buffer_size_v;
+            vib.index_count  = mesh.data.indices.size();
+            vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vib.buffer.copy_from(staging);
+            //
+            mesh.handled_frames.set_all_out_of_date();
+         }
+         qDebug("[surface_renderer::add_nif] Vulkan setup complete for geometry: %s.", object->name.c_str());
+      };
+      auto functor = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
+         //
+         // Lambdas can't recursively call themselves, in part because they'd have to reference their own 
+         // identifiers (not possible: the auto expression isn't "complete" at parse time, so the type 
+         // is unknown) and in part because those identifiers are in a different scope (lambdas can't 
+         // capture themselves).
+         //
+         auto impl = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform, auto& self) -> void {
+            auto* node = dynamic_cast<nifDK::block_types::NiNode*>(object);
+            if (node) {
+               qDebug("[surface_renderer::add_nif] Handling node: %s...", node->name.data());
+               transform = transform * node->transform.to_matrix();
+               for (auto* child : node->children)
+                  (self)(child, transform, self);
+               qDebug("[surface_renderer::add_nif] Handled node: %s.", node->name.data());
+               return;
+            }
+            load_geom(object, transform);
+         };
+         impl(object, transform, impl);
+      };
+      (functor)(model.root_node, glm::mat4(1));
+      qDebug("[surface_renderer::add_nif] Done processing the NIF.");
+      {
+         auto& tex = this->scene.textures[texture_index];
+         if (tex.refcount == 0) {
+            //
+            // Means this model failed to produce any meshes (AND no other meshes loaded via 
+            // this function did either), so the white.png texture is unused.
+            //
+            qDebug("[surface_renderer::add_nif] Texture is unreferenced; deleting it.");
+            tex.mark_for_delete();
+         }
+      }
+      //
+      for (auto& image : this->swap_chain.images)
+         image.invalidate_all_command_buffers();
+      return true;
+   }
 
    void surface_renderer::move_camera(const glm::vec3& move, const glm::vec3& turn) {
       auto& gs     = this->scene.global_state;
@@ -1693,6 +1905,10 @@ namespace vulkanDK {
       position += glm::inverse(rotation) * move;
       camera = glm::translate(glm::mat4(rotation), position);
       //*/
+   }
+   void surface_renderer::set_camera_position(const glm::vec3& position) {
+      this->scene.camera.position = position;
+      this->scene.update_camera();
    }
 
    void surface_renderer::_execute_pending_scene_deletions() {

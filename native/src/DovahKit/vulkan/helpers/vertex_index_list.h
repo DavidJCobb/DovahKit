@@ -101,6 +101,15 @@ namespace vulkanDK {
                   std::intptr_t address = (std::intptr_t)target._data.untyped + target.size_in_bytes();
                   return const_iterator((const_value_type*)address);
                }
+
+               plain_value_type& operator[](size_t i) {
+                  auto address = (std::intptr_t)target._data.untyped + (sizeof(plain_value_type) * i);
+                  return *(plain_value_type*)address;
+               }
+               const plain_value_type& operator[](size_t i) const {
+                  auto address = (std::intptr_t)target._data.untyped + (sizeof(plain_value_type) * i);
+                  return *(const plain_value_type*)address;
+               }
          };
 
       protected:

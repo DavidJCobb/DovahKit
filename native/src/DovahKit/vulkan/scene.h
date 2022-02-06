@@ -6,6 +6,9 @@
 #include "scene_global_state.h"
 
 struct DKVulkanCameraUpdate;
+namespace nifDK {
+   class file;
+}
 
 namespace vulkanDK {
    class scene {
@@ -41,5 +44,10 @@ namespace vulkanDK {
 
          size_t insert_new_mesh(); // returns std::string::npos on failure
          size_t insert_new_texture(); // returns std::string::npos on failure
+
+      protected:
+         size_t _empty_mesh_slot_count() const;
+      public:
+         size_t available_mesh_count() const;
    };
 }

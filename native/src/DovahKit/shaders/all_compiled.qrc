@@ -7,5 +7,6 @@
         <file>ScreenShot389.bmp</file>
         <file>overlay-fps.frag.spv</file>
         <file>overlay-fps.vert.spv</file>
+        <file>white.png</file>
     </qresource>
 </RCC>

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "detailed_notice.h"
 
 namespace nifDK {
    class block;
@@ -53,6 +54,11 @@ namespace nifDK {
          file() {}
          ~file();
 
+      protected:
+         struct {
+            detailed_notice error;
+         } results;
+      public:
          struct {
             std::string  format_name;
             file_version version;
@@ -71,6 +77,8 @@ namespace nifDK {
          block_types::NiNode* root_node = nullptr;
 
          void read(void* data, size_t size);
+
+         inline const detailed_notice& read_error() const { return this->results.error; }
 
          inline block* block_by_index(int32_t i) const {
             if (i >= this->all_blocks.size())

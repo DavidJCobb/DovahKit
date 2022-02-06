@@ -7,7 +7,7 @@
 
 namespace DovahKitDebug::features {
    /*static*/ void load_nif::execute(QWidget* from) {
-      auto name = QFileDialog::getOpenFileName(from, QObject::tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
+      auto name = QFileDialog::getOpenFileName(from, QObject::tr("Select BSA file", "debug"), "", "NetImmerse Format model (*.nif)");
       if (name.isEmpty())
          return;
       auto file = QFile(name);
@@ -19,6 +19,7 @@ namespace DovahKitDebug::features {
       //
       nifDK::file f;
       f.read((void*)data.constData(), data.size());
+      __debugbreak();
       qDebug() << "load_nif debug tool done";
    }
 }

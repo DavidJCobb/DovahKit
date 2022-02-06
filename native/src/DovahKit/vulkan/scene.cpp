@@ -11,7 +11,18 @@
 #include "config/scene_limits.h"
 #include "data/DKVulkanCameraUpdate.h"
 
+// for NIF support
+#include "nif/file.h"
+#include "nif/blocks/NiNode.h"
+#include "nif/blocks/NiGeometry.h"
+#include "nif/blocks/NiGeometryData.h"
+
 #include <glm/gtx/matrix_decompose.hpp> // for debugging
+
+namespace {
+   constexpr float draw_distance_near = 0.1F;
+   constexpr float draw_distance_far  = 1000.0F;
+}
 
 namespace vulkanDK {
    scene::scene() {
@@ -22,7 +33,7 @@ namespace vulkanDK {
       float aspect = 1.0F;
       if (render_area.height != 0.0)
          aspect = (float)render_area.width / (float)render_area.height;
-      this->global_state.proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, 0.1f, 10.0f);
+      this->global_state.proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
       //
       // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
       // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
@@ -172,9 +183,6 @@ namespace vulkanDK {
       if (size >= config::max_rendered_meshes)
          return std::string::npos;
       list.emplace_back();
-      {
-         list.back().anim_state = new mesh_animation_state; // TODO: this is just for testing purposes
-      }
       return size;
    }
    size_t scene::insert_new_texture() {
@@ -187,5 +195,18 @@ namespace vulkanDK {
          return std::string::npos;
       list.emplace_back();
       return size;
+   }
+
+   size_t scene::_empty_mesh_slot_count() const {
+      auto&  list  = this->meshes;
+      size_t size  = list.size();
+      size_t count = 0;
+      for (auto& item : list)
+         if (item.empty())
+            ++count;
+      return count;
+   }
+   size_t scene::available_mesh_count() const {
+      return config::max_rendered_meshes - (this->meshes.size() - this->_empty_mesh_slot_count());
    }
 }
