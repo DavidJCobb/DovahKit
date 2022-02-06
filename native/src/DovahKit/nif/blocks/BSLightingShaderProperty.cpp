@@ -24,8 +24,11 @@ namespace nifDK::block_types {
       reader.read(this->texture.clamp_mode);
       reader.read(this->material.alpha);
       reader.read(this->material.refraction);
-      reader.read(this->material.glossiness);
-      reader.read(this->material.smoothness);
+      if (reader.user_version<2>() < 130) {
+         reader.read(this->material.glossiness);
+      } else {
+         reader.read(this->material.smoothness);
+      }
       reader.read(this->specular.color);
       reader.read(this->specular.strength);
       if (reader.user_version<2>() < 130) {

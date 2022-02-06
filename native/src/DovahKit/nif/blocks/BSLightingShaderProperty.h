@@ -33,19 +33,25 @@ namespace nifDK::block_types {
             multitexture_landscape_lod_blend,
             fallout_4_dismemberment = 20,
          };
+         enum class texture_clamp_mode : uint32_t {
+            clamp_both     = 0,
+            clamp_u_wrap_v = 1,
+            wrap_u_clamp_v = 2,
+            wrap_both      = 3,
+         };
 
          shader_type type = shader_type::standard; // at data offset 0, i.e. before the contents of NiObjectNET
          std::array<uint32_t, 2> shader_flags = {};
          struct {
             glm::fvec2 uv_offset;
             glm::fvec2 uv_scale;
-            uint8_t    clamp_mode = 3;
+            texture_clamp_mode  clamp_mode = texture_clamp_mode::wrap_both;
             BSShaderTextureSet* paths;
             float env_map_scale;
          } texture;
          struct {
-            NiColorA color;
-            float rgb_mult;
+            NiColor color    = { 0, 0, 0 };
+            float   rgb_mult = 1.0;
          } emissive;
          struct {
             float alpha      =  1.0; // [0, 1]

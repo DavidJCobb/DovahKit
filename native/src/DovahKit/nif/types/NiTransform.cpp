@@ -19,12 +19,18 @@ namespace nifDK {
    }
 
    glm::mat4 NiTransform::to_matrix() const {
-      return glm::scale(
+      glm::mat4 out;
+      for (int c = 0; c < 3; ++c)
+         for (int r = 0; r < 3; ++r)
+            out[c][r] = this->rotation[c][r] * this->scale;
+      out[3] = glm::vec4(this->position, 1.0);
+      return out;
+      /*return glm::scale(
          glm::translate(
             glm::mat4(this->rotation),
             this->position
          ),
          glm::vec3{ this->scale, this->scale, this->scale }
-      );
+      );*/
    }
 }

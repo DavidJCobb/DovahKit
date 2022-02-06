@@ -11,6 +11,7 @@
 #include "vertex.h"
 #include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
+#include "config/use_inverted_depth.h"
 #include "config/validation_layers.h"
 
 // loading textures from files using Qt:
@@ -679,6 +680,9 @@ namespace vulkanDK {
             },
          };
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+         if constexpr (config::use_inverted_depth) {
+            dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+         }
          {
             auto& vertex     = dfn.inputs.vertex;
             auto  attributes = vertex::getAttributeDescriptions();

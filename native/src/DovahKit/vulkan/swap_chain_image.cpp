@@ -7,6 +7,7 @@
 #include "scene_global_state.h"
 #include "surface_renderer.h"
 #include "config/scene_limits.h"
+#include "config/use_inverted_depth.h"
 
 namespace {
    static constexpr bool debug_log_scene_object_lifetimes = false;
@@ -477,7 +478,7 @@ namespace vulkanDK {
          // Values here should match the attachments we're using.
          //
          VkClearValue{ .color        = {0, 0, 0, 1} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
-         VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+         VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
       };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,

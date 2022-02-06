@@ -799,6 +799,7 @@
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
+    <ClInclude Include="vulkan\config\use_inverted_depth.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />

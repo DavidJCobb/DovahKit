@@ -276,10 +276,12 @@ namespace nifDK {
          }
 
          template<int N, typename T, glm::qualifier Q> void unchecked_read(glm::mat<N, N, T, Q>& out) {
-            constexpr auto total_count = N * N;
+            constexpr auto total_count       = N * N;
+            constexpr bool vec_is_right_size = sizeof(glm::vec<N, T, Q>) == sizeof(T) * N;
+            constexpr bool mat_is_right_size = sizeof(glm::mat<N, N, T, Q>) == sizeof(glm::vec<N, T, Q>) * N;
             //
-            if constexpr (sizeof(glm::vec<N, T, Q>) == sizeof(T) * total_count) {
-               this->unchecked_read(&out, sizeof(T) * N);
+            if constexpr (vec_is_right_size && mat_is_right_size) {
+               this->unchecked_read(&out, sizeof(T) * total_count);
             } else {
                for (int i = 0; i < N; ++i)
                   for (int j = 0; j < N; ++j)

@@ -9,6 +9,7 @@
 #include <glm/gtx/norm.hpp>
 //
 #include "config/scene_limits.h"
+#include "config/use_inverted_depth.h"
 #include "data/DKVulkanCameraUpdate.h"
 
 // for NIF support
@@ -33,15 +34,34 @@ namespace vulkanDK {
       float aspect = 1.0F;
       if (render_area.height != 0.0)
          aspect = (float)render_area.width / (float)render_area.height;
-      this->global_state.proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
-      //
-      // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
-      // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
-      // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
-      // considers a "backface" versus a "frontface." You can update the handedness in 
-      // the setupGraphicsPipeline function.
-      //
-      this->global_state.proj[1][1] *= -1;
+      {
+         auto& proj = this->global_state.proj;
+         proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
+         if constexpr (config::use_inverted_depth) {
+            //
+            // Use infinite far plane:
+            //
+            auto f = 1.0F / tan(glm::radians(this->config.vertical_fov_degrees) / 2.0F);
+            auto t = f / aspect;
+            proj = glm::mat4(
+               t, 0, 0, 0,
+               0, f, 0, 0,
+               0, 0, 0, -1,
+               0, 0, draw_distance_near, 0
+            );
+            //
+            // sources: <https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/>
+            //          <https://dev.theomader.com/depth-precision/>
+         }
+         //
+         // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
+         // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
+         // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
+         // considers a "backface" versus a "frontface." You can update the handedness in 
+         // the setupGraphicsPipeline function.
+         //
+         proj[1][1] *= -1;
+      }
    }
    void scene::update_camera() {
       auto& cs = this->camera;
