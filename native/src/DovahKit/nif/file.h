@@ -7,6 +7,7 @@
 
 namespace nifDK {
    class block;
+   class file_reader;
    namespace block_types {
       class NiNode;
    }
@@ -31,6 +32,9 @@ namespace nifDK {
       inline constexpr uint8_t build() const { return (this->value >> 0x00); }
 
       static file_version from_string(const std::string&);
+
+      void read(file_reader&);
+      void unchecked_read(file_reader&);
    };
 
    class file {

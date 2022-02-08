@@ -2,8 +2,8 @@
 #extension GL_EXT_nonuniform_qualifier : require
 
 layout(push_constant) uniform PER_OBJECT {
-	int texture_index;
    int object_index;
+	int texture_index;
 } pushed;
 
 // binding 0 is used by the vertex shader (UBO for camera/view transforms)

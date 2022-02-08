@@ -15,8 +15,8 @@
 //
 
 layout(push_constant) uniform PER_OBJECT {
-	int texture_index;
    int object_index;
+	int texture_index;
 } pushed;
 
 struct ObjectData{

@@ -36,6 +36,20 @@ namespace nifDK {
    }
    #pragma endregion
 
+   void file_reader::read_endianness(file_passkey) {
+      uint8_t v;
+      this->read(v);
+      switch (v) {
+         case 0:
+            this->endianness = std::endian::big;
+            break;
+         case 1:
+            this->endianness = std::endian::little;
+            break;
+         default:
+            this->throw_error(notice_code::unrecognized_endianness);
+      }
+   }
    void file_reader::read_string_table(file_passkey) {
       uint32_t string_count;
       //
@@ -143,13 +157,5 @@ namespace nifDK {
       }
       if (!line)
          this->throw_error(notice_code::stream_ended_early); // no line or null terminator
-   }
-
-   void file_reader::unchecked_read(file_version& out) {
-      this->read(&out.value, 4);
-   }
-   //
-   void file_reader::unchecked_read(Float16& out) {
-      this->read(&out.value, 2);
    }
 }

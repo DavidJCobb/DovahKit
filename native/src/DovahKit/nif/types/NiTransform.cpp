@@ -19,18 +19,28 @@ namespace nifDK {
    }
 
    glm::mat4 NiTransform::to_matrix() const {
-      glm::mat4 out;
-      for (int c = 0; c < 3; ++c)
-         for (int r = 0; r < 3; ++r)
-            out[c][r] = this->rotation[c][r] * this->scale;
-      out[3] = glm::vec4(this->position, 1.0);
+      /*
+      return glm::scale(
+         glm::translate(this->position),
+         glm::vec3(this->scale)
+      ) * glm::mat4(this->rotation);
+      //
+      // This code works, but if we do the math manually, we can take a few shortcuts since we 
+      // know what our data should look like.
+      //
+      // glm::scale just multiplies the first three columns of the first argument by the three 
+      // scalars (one per axis) supplied in the second argument. NiTransform only does uniform 
+      // scaling, so the scalars will all be equivalent; and the input matrix is promoted from 
+      // a 3x3 matrix, so in practice the fourth column will be {0, 0, 0, 1} initially; we can 
+      // just go ahead and multiply the whole matrix by the scalar.
+      //
+      // Next, we apply the translation. In practice,  this literally just replaces the fourth 
+      // column with the translation promoted to a vec4, while changing nothing else.
+      //
+      //*/
+      glm::mat4 out = glm::mat4(this->rotation);
+      out *= this->scale;
+      out[3] = glm::vec4(this->position, 1);
       return out;
-      /*return glm::scale(
-         glm::translate(
-            glm::mat4(this->rotation),
-            this->position
-         ),
-         glm::vec3{ this->scale, this->scale, this->scale }
-      );*/
    }
 }

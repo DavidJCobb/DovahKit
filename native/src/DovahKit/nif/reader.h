@@ -1,12 +1,17 @@
 #pragma once
+#include <bit>
 #include <cassert>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <glm/glm.hpp>
+#include "helpers/byteswap.h"
+#include "helpers/endian.h"
 #include "helpers/passkey.h"
 #include "helpers/type_traits.h"
+#include "helpers/type_traits/is_std_vector.h"
 #include "helpers/unreachable.h"
+#include "helpers/glm/type_traits.h"
 #include "detailed_notice.h"
 #include "file.h"
 #include "blocks/_factory.h"
@@ -25,6 +30,15 @@ namespace nifDK {
 
       template<typename T> concept OffersReaderHook = requires(T& x, ::nifDK::file_reader& fr) { { x.read(fr) }; };
       template<typename T> concept OffersUncheckedReaderHook = requires(T & x, ::nifDK::file_reader & fr) { { x.unchecked_read(fr) }; };
+
+      template<bool checked, typename T> concept OffersHook = (checked ? OffersReaderHook<T> : OffersUncheckedReaderHook<T>);
+
+      template<bool checked, typename T> concept _AllowSimpleCallList = requires {
+         requires cobb::is_std_array<T> || cobb::is_std_vector<T>;
+         typename T::value_type;
+         requires IsLiteralIsh<typename T::value_type> || OffersHook<checked, typename T::value_type> || cobb::glm::is_vec<typename T::value_type> || cobb::glm::is_mat<typename T::value_type>;
+      };
+      template<bool checked, typename T> concept AllowSimpleCall = IsLiteralIsh<T> || _AllowSimpleCallList<checked, T> || OffersHook<checked, T> || cobb::glm::is_vec<T> || cobb::glm::is_mat<T>;
    }
 
    class file_reader {
@@ -45,6 +59,7 @@ namespace nifDK {
             size_t      position = 0;
          };
          //
+         std::endian endianness = std::endian::native;
          struct {
             state current;
             state backup;
@@ -68,13 +83,146 @@ namespace nifDK {
             if (!this->is_in_bounds(s))
                this->_on_read_failure();
          }
-
-         template<typename T, size_t S = sizeof(T), typename V = T> inline void _read(V& out) {
-            if (!this->is_in_bounds(S * sizeof(T)))
-               this->_on_read_failure();
-            this->unchecked_read(out);
+         template<bool checked, typename T> void _fix_endianness(T& v) {
+            using namespace impl::file_reader;
+            //
+            if constexpr (checked ? OffersReaderHook<T> : OffersUncheckedReaderHook<T>)
+               return;
+            if constexpr (sizeof(T) == 1)
+               return;
+            if (this->endianness == std::endian::native)
+               return;
+            //
+            if constexpr (cobb::is_std_array<T> || cobb::is_std_vector<T>) {
+               for (auto& item : v)
+                  _fix_endianness<checked>(item);
+               return;
+            }
+            if constexpr (cobb::glm::is_vec<T>) {
+               for (int i = 0; i < cobb::glm::vec_length<T>; ++i)
+                  v[i] = cobb::byteswap(v[i]);
+               return;
+            }
+            if constexpr (cobb::glm::is_mat<T>) {
+               using traits = cobb::glm::mat_traits<T>;
+               for (int i = 0; i < traits::cols; ++i)
+                  for(int j = 0; j < traits::rows; ++j)
+                     v[i][j] = cobb::byteswap(v[i][j]);
+               return;
+            }
+            if constexpr (IsLiteralIsh<T>) {
+               v = cobb::byteswap(v);
+               return;
+            }
          }
-         template<size_t S, typename T> inline void _read(T& out) { this->_read<T, S, T>(out); }
+         template<bool checked, typename T> void _read_field(T& v) {
+            using namespace impl::file_reader;
+            //
+            if constexpr (checked ? OffersReaderHook<T> : OffersUncheckedReaderHook<T>) {
+               if constexpr (checked) {
+                  v.read(*this);
+               } else {
+                  v.unchecked_read(*this);
+               }
+               //
+               // For this branch, T is a struct that reads its members one by one, and those individual 
+               // reads do endianness fixups. As such, we need to return here to avoid doing an (incorrect) 
+               // endianness fixup on the struct as a whole.
+               //
+               return;
+            }
+            if constexpr (cobb::is_std_array<T> || cobb::is_std_vector<T>) {
+               using V = T::value_type;
+               constexpr bool can_read_in_bulk = ([]() {
+                  if constexpr (cobb::glm::is_vec<V>) {
+                     return cobb::glm::vec_traits<V>::is_contiguous;
+                  }
+                  if constexpr (cobb::glm::is_mat<V>) {
+                     return cobb::glm::mat_traits<V>::is_contiguous;
+                  }
+                  if constexpr (OffersHook<checked, V>) {
+                     return false;
+                  }
+                  return true;
+               })();
+               if constexpr (checked) {
+                  this->_require_size(sizeof(V) * v.size());
+               }
+               if constexpr (can_read_in_bulk) {
+                  this->unchecked_read(v.data(), sizeof(V) * v.size());
+               } else {
+                  if constexpr (OffersHook<checked, V>) {
+                     //
+                     // The item type relies on a hook (i.e. it supplies its own read/unchecked_read functions), 
+                     // so we have to make sure we use the right one by passing the "checked" template parameter.
+                     //
+                     for (auto& item : v)
+                        this->_read_field<checked>(item);
+                  } else {
+                     //
+                     // We already checked the item's size.
+                     //
+                     for (auto& item : v)
+                        this->_read_field<false>(item);
+                  }
+                  //
+                  // Calling _read_field per item will do an endianness fixup per item, so we can and must return 
+                  // here to skip the endianness fixup for the list as a whole.
+                  //
+                  return;
+               }
+               // ...and fall through to endianness check.
+            } else if constexpr (cobb::glm::is_vec<T>) {
+               constexpr auto axes = cobb::glm::vec_length<T>;
+               constexpr auto size = sizeof(T::value_type) * axes;
+               if constexpr (checked) {
+                  this->_require_size(size);
+               }
+               if constexpr (sizeof(T) == size) {
+                  this->unchecked_read(&v, size);
+               } else {
+                  for (int i = 0; i < axes; ++i)
+                     this->unchecked_read(v[i]);
+               }
+               // ...and fall through to endianness check.
+            } else if constexpr (cobb::glm::is_mat<T>) {
+               using traits = cobb::glm::mat_traits<T>;
+               constexpr auto count = traits::size;
+               constexpr auto bytes = sizeof(T::value_type) * count;
+               if constexpr (checked) {
+                  this->_require_size(bytes);
+               }
+               if constexpr (sizeof(T) == bytes) {
+                  this->unchecked_read(&v, bytes);
+               } else {
+                  for (int i = 0; i < traits::cols; ++i)
+                     for (int j = 0; j < traits::rows; ++j)
+                        this->unchecked_read(v[i][j]);
+               }
+               // ...and fall through to endianness check.
+            } else if constexpr (IsLiteralIsh<T>) {
+               if constexpr (checked) {
+                  this->_require_size(sizeof(T));
+               }
+               this->unchecked_read(&v, sizeof(T));
+               // ...and fall through to endianness check.
+            }
+            this->_fix_endianness<checked>(v);
+         }
+
+         template<bool checked, int N, typename F, glm::qualifier Q> void _read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
+            auto size = out.size();
+            //
+            if constexpr (checked) {
+               this->_require_size(size * sizeof(uint16_t));
+            }
+            std::vector<Float16> halves(size);
+            this->_read_field<checked>(halves);
+            for (size_t i = 0; i < size; ++i) {
+               out[i / N][i % N] = halves[i];
+            }
+         }
+
 
          // using this instead of start/end functions makes it exception-safe
          struct block_guard {
@@ -118,6 +266,7 @@ namespace nifDK {
             return this->position();
          }
 
+         void read_endianness(file_passkey);
          void read_string_table(file_passkey);
          inline block_guard enter_block(file_passkey, int32_t bi, size_t size, const std::string& block_type) {
             return block_guard(*this, bi, size, block_type);
@@ -152,23 +301,14 @@ namespace nifDK {
             this->_require_size(size);
             this->unchecked_read(buffer, size);
          }
-         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T> || impl::file_reader::OffersReaderHook<T>) inline void read(T& field) {
-            using namespace impl::file_reader;
-            //
-            if constexpr (cobb::is_std_array<T>) {
-               size_t total_size = sizeof(T::value_type) * field.size();
-               this->_require_size(total_size);
-               this->unchecked_read(&field, total_size);
-            } else if constexpr (IsLiteralIsh<T>) {
-               this->read(&field, sizeof(T));
-            } else if constexpr (OffersReaderHook<T>) {
-               field.read(*this);
-            }
+         template<typename T> requires impl::file_reader::AllowSimpleCall<true, T> inline void read(T& field) {
+            this->_read_field<true>(field);
          }
 
-         template<int N, typename T, glm::qualifier Q> inline void read(glm::vec<N, T, Q>& out) {
-            this->_require_size(sizeof(T) * N);
-            this->unchecked_read(out);
+         // overload to require a specific endianness, overriding the one specified in the file header
+         template<std::endian E, typename T> requires impl::file_reader::IsLiteralIsh<T> inline void read(T& field) {
+            this->_require_size(sizeof(T));
+            this->unchecked_read<E>(field);
          }
 
          template<typename Desired> requires std::is_polymorphic_v<Desired> bool read_ref(Desired*& out) {
@@ -200,32 +340,10 @@ namespace nifDK {
          }
 
          template<typename T> void read_vector_contents(std::vector<T>& out) {
-            auto size = out.size() * sizeof(T);
-            this->_require_size(size);
-            this->unchecked_read(out.data(), size);
+            this->_read_field<true>(out);
          }
-         template<int N, typename F, glm::qualifier Q> void read_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
-            auto size = out.size() * (sizeof(F) * N);
-            this->_require_size(size);
-            this->unchecked_read(out.data(), size);
-         }
-         
          template<int N, typename F, glm::qualifier Q> void read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
-            auto size = out.size();
-            //
-            std::vector<uint16_t> halves(size);
-            this->require_size(size * sizeof(uint16_t));
-            this->unchecked_read(halves.data(), size * sizeof(uint16_t));
-            //
-            for (size_t i = 0; i < size; ++i) {
-               out[i / N][i % N] = Float16(halves[i]);
-            }
-         }
-
-         template<int N, typename T, glm::qualifier Q> void read(glm::mat<N, N, T, Q>& out) {
-            constexpr auto total_count = N * N;
-            this->_require_size(sizeof(T) * total_count);
-            this->unchecked_read(out);
+            this->_read_half_vector_contents<true>(out);
          }
          #pragma endregion
          #pragma region unchecked_read
@@ -233,69 +351,25 @@ namespace nifDK {
             memcpy(buffer, _at(), size);
             this->states.current.position += size;
          }
-         template<typename T> requires (impl::file_reader::IsLiteralIsh<T> || cobb::is_std_array<T> || impl::file_reader::OffersReaderHook<T>) inline void unchecked_read(T& field) {
-            using namespace impl::file_reader;
-            //
-            if constexpr (cobb::is_std_array<T>) {
-               size_t total_size = sizeof(T::value_type) * field.size();
-               this->unchecked_read(&field, total_size);
-            } else if constexpr (IsLiteralIsh<T>) {
-               this->unchecked_read(&field, sizeof(T));
-            } else if constexpr (OffersReaderHook<T>) {
-               field.unchecked_read(*this);
-            }
+         template<typename T> requires impl::file_reader::AllowSimpleCall<false, T> inline void unchecked_read(T& field) {
+            this->_read_field<false>(field);
          }
 
-         template<int N, typename T, glm::qualifier Q> inline void unchecked_read(glm::vec<N, T, Q>& out) {
-            if constexpr (sizeof(glm::vec<N, T, Q>) == sizeof(T) * N) {
-               this->unchecked_read(&out, sizeof(T) * N);
-            } else {
-               for (int i = 0; i < N; ++i)
-                  this->unchecked_read(&out[i], sizeof(T));
+         // overload to require a specific endianness, overriding the one specified in the file header
+         template<std::endian E, typename T> requires impl::file_reader::IsLiteralIsh<T> inline void unchecked_read(T& field) {
+            if constexpr (sizeof(T) == 1 || E == std::endian::native) {
+               return this->unchecked_read(field);
             }
+            this->unchecked_read(field);
+            field = cobb::endian_cast<E>(field);
          }
 
          template<typename T> void unchecked_read_vector_contents(std::vector<T>& out) {
-            auto size = out.size() * sizeof(T);
-            this->unchecked_read(out.data(), size);
+            this->_read_field<false>(out);
          }
-         template<int N, typename F, glm::qualifier Q> void unchecked_read_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
-            auto size = out.size() * (sizeof(F) * N);
-            this->unchecked_read(out.data(), size);
-         }
-         
          template<int N, typename F, glm::qualifier Q> void unchecked_read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
-            auto size = out.size();
-            //
-            std::vector<uint16_t> halves(size);
-            this->unchecked_read(halves.data(), size * sizeof(uint16_t));
-            //
-            for (size_t i = 0; i < size; ++i) {
-               out[i / N][i % N] = Float16(halves[i]);
-            }
+            this->_read_half_vector_contents<false>(out);
          }
-
-         template<int N, typename T, glm::qualifier Q> void unchecked_read(glm::mat<N, N, T, Q>& out) {
-            constexpr auto total_count       = N * N;
-            constexpr bool vec_is_right_size = sizeof(glm::vec<N, T, Q>) == sizeof(T) * N;
-            constexpr bool mat_is_right_size = sizeof(glm::mat<N, N, T, Q>) == sizeof(glm::vec<N, T, Q>) * N;
-            //
-            if constexpr (vec_is_right_size && mat_is_right_size) {
-               this->unchecked_read(&out, sizeof(T) * total_count);
-            } else {
-               for (int i = 0; i < N; ++i)
-                  for (int j = 0; j < N; ++j)
-                     this->unchecked_read(&out[i][j], sizeof(T));
-            }
-         }
-         #pragma endregion
-
-         #pragma region reading types
-         inline void read(file_version& v) { this->_read<4>(v); }
-         void unchecked_read(file_version&);
-         //
-         inline void read(Float16& v) { this->_read<2>(v); }
-         void unchecked_read(Float16&);
          #pragma endregion
 
          void raise_error(const detailed_notice&);

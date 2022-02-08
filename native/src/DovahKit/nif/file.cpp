@@ -59,6 +59,13 @@ namespace nifDK {
          return file_version(0); // failed: wrong number of parts (e.g. "2.1.0")
       return file_version(out);
    }
+   //
+   void file_version::read(file_reader& reader) {
+      reader.read<std::endian::little>(this->value);
+   }
+   void file_version::unchecked_read(file_reader& reader) {
+      reader.unchecked_read<std::endian::little>(this->value);
+   }
 
    file::~file() {
       this->root_node = nullptr;
@@ -91,10 +98,10 @@ namespace nifDK {
             }
          }
          reader.read(this->header.version);
-         reader.read(this->header.endianness);
-         reader.read(this->header.user_versions.primary);
-         reader.read(block_count);
-         reader.read(this->header.user_versions.secondary);
+         reader.read_endianness(file_reader::file_passkey());
+         reader.read<std::endian::little>(this->header.user_versions.primary);
+         reader.read<std::endian::little>(block_count);
+         reader.read<std::endian::little>(this->header.user_versions.secondary);
          reader.read_prefixed_string<uint8_t>(this->header.export_data.creator);
          reader.read_prefixed_string<uint8_t>(this->header.export_data.info[0]);
          reader.read_prefixed_string<uint8_t>(this->header.export_data.info[1]);

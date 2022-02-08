@@ -16,6 +16,7 @@ namespace nifDK {
          bad_block_typename_index     = 0x00000007,
          block_is_abstract_typename   = 0x00000008,
          inconsistent_triangle_counts = 0x00000009,
+         unrecognized_endianness      = 0x0000000A, // endianness specified in file header is not recognized
       };
    };
 }

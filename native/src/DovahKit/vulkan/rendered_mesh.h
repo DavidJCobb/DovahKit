@@ -67,7 +67,7 @@ namespace vulkanDK {
          void set_transform(const glm::mat4&);
 
          // Setup functions:
-         void recalc_bounding_sphere();
+         void recalc_bounding_sphere(); // does not count transforms, though member functions which use it should apply transforms
          //
          size_t total_size_for_setup() const;
          void sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const;

@@ -526,6 +526,7 @@
     <ClCompile Include="nif\reader.cpp" />
     <ClCompile Include="nif\types\BSVertexDataSSE.cpp" />
     <ClCompile Include="nif\types\BSVertexDesc.cpp" />
+    <ClCompile Include="nif\types\Float16.cpp" />
     <ClCompile Include="nif\types\NiBound.cpp" />
     <ClCompile Include="nif\types\NiColor.cpp" />
     <ClCompile Include="nif\types\NiTransform.cpp" />
@@ -718,7 +719,9 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
+    <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
+    <ClInclude Include="helpers\glm\type_traits.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />
@@ -730,6 +733,7 @@
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
+    <ClInclude Include="helpers\type_traits\is_std_vector.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="nif\block.h" />
