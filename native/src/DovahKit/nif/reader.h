@@ -111,6 +111,11 @@ namespace nifDK {
                return;
             }
             if constexpr (IsLiteralIsh<T>) {
+               if constexpr (std::is_bounded_array_v<T>) {
+                  for (size_t i = 0; i < std::extent<T>::value; ++i)
+                     v[i] = cobb::byteswap(v[i]);
+                  return;
+               }
                v = cobb::byteswap(v);
                return;
             }
@@ -119,6 +124,9 @@ namespace nifDK {
             using namespace impl::file_reader;
             //
             if constexpr (checked ? OffersReaderHook<T> : OffersUncheckedReaderHook<T>) {
+               //
+               // Structs can define member functions to handle loading their contents.
+               //
                if constexpr (checked) {
                   v.read(*this);
                } else {
@@ -132,6 +140,13 @@ namespace nifDK {
                return;
             }
             if constexpr (cobb::is_std_array<T> || cobb::is_std_vector<T>) {
+               //
+               // We handle arrays and vectors the same way; we assume that vectors have already been 
+               // expanded to the appropriate size, and we load the items inside. The reason we do this, 
+               // rather than offering a function to load the vector's size and handle that, is because 
+               // there are several cases where a block may have multiple vectors who share a single size 
+               // value (i.e. struct-of-arrays).
+               //
                using V = T::value_type;
                constexpr bool can_read_in_bulk = ([]() {
                   if constexpr (cobb::glm::is_vec<V>) {
@@ -173,6 +188,11 @@ namespace nifDK {
                }
                // ...and fall through to endianness check.
             } else if constexpr (cobb::glm::is_vec<T>) {
+               //
+               // We use some compile-time programming here to make sure we handle GLM structs properly -- 
+               // checking whether the size of the struct is the same as the combined sizes of its members 
+               // (i.e. no padding).
+               //
                constexpr auto axes = cobb::glm::vec_length<T>;
                constexpr auto size = sizeof(T::value_type) * axes;
                if constexpr (checked) {
