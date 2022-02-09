@@ -15,18 +15,22 @@ namespace DK3D::tools {
       // alignment among the classes in the list.
       //
       private:
-         template<typename argument> struct alignof_functor {
-            static constexpr size_t execute(size_t prev) {
-               return std::max(prev, std::alignment_of_v<argument::options>);
-            }
-         };
-         template<typename argument> struct sizeof_functor {
-            static constexpr size_t execute(size_t prev) {
-               return std::max(prev, sizeof(argument::options));
-            }
-         };
-         static constexpr size_t _required_size      = all_tools::for_each_with_previous<sizeof_functor>(size_t(0));
-         static constexpr size_t _required_alignment = all_tools::for_each_with_previous<alignof_functor>(size_t(0));
+         static constexpr size_t _required_size = ([]() {
+            size_t size = 0;
+            all_tools::for_each([&size]<typename argument>() {
+               if constexpr (DK3D::tools::tool_has_options_member_type<argument>)
+                  size = std::max(size, sizeof(argument::options));
+            });
+            return size;
+         })();
+         static constexpr size_t _required_alignment = ([]() {
+            size_t size = 0;
+            all_tools::for_each([&size]<typename argument>() {
+               if constexpr (DK3D::tools::tool_has_options_member_type<argument>)
+                  size = (std::max)(size, std::alignment_of_v<argument::options>);
+            });
+            return size;
+         })();
 
          alignas(_required_alignment) std::array<uint8_t, _required_size> data;
 

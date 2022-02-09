@@ -67,4 +67,7 @@ namespace DK3D::tools {
 
    template<typename T> concept tool_has_options_member_type = requires { typename T::options; requires std::is_base_of_v<base, T>; };
    template<typename T> concept tool_lacks_options_member_type = !tool_has_options_member_type<T> && std::is_base_of_v<base, T>;
+
+   template<typename T> concept tool_has_results_member_type = requires { typename T::results; requires std::is_base_of_v<base, T>; };
+   template<typename T> concept tool_lacks_results_member_type = !tool_has_results_member_type<T> && std::is_base_of_v<base, T>;
 }

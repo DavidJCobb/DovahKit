@@ -41,7 +41,12 @@ namespace DK3D {
       };
    }
    template<typename Options> consteval tool_id id_of_tool_options() {
-      auto i = all_tools::index_of_matching<impl::id_of_tool_by_options<Options>::functor>();
+      constexpr auto i = all_tools::index_of_matching([]<typename Tool>() {
+         if constexpr (tools::tool_has_options_member_type<Tool>) {
+            return std::is_same_v<Options, Tool::options>;
+         }
+         return false;
+      });
       if (i != (decltype(i))-1)
          return i;
       return tools::id_of_none;
@@ -53,8 +58,7 @@ namespace DK3D {
       return id_of_tool_options<T>();
    }
 
-   // can't use a concept here, apparently due to MSVC issues with template template parameters
-   template<typename Options> inline constexpr bool is_tool_options = ([]() { return all_tools::has_matching<impl::id_of_tool_by_options<Options>::functor>(); })();
+   template<typename Options> inline constexpr bool is_tool_options = ([]() { return id_of_tool_options<Options>() != tools::id_of_none; })();
 
    class all_tool_instances {
       public:
@@ -84,55 +88,44 @@ namespace DK3D {
    // --- tool results ---
 
    namespace impl {
-      template<typename T> concept has_tool_results = requires { typename T::results; };
-      template<typename T> struct has_tool_results_functor {
-         static consteval bool execute() {
-            return has_tool_results<T>;
-         }
-      };
       template<typename T> struct tool_to_tool_results {
          using type = T::results;
       };
    }
-   using all_tools_with_results = all_tools::all_matching<impl::has_tool_results_functor>; // list of all tool classes with results
-   using all_tool_results = all_tools_with_results::transform<impl::tool_to_tool_results>; // list of all results classes from tools that have them
-
-   namespace impl {
-      template<typename Desired> struct find_tool_with_results {
-         //
-         // We need to be able to use cobb::class_list::index_of_matching to find 
-         // the editor_function class that has a given results type. However, the 
-         // functors we pass to index_of_matching can only be templated on the 
-         // type currently being iterated... so we'll use nested structs along 
-         // with nested templating. If, given some type T, you want to find the 
-         // editor function class whose options type is T, then you'd want to 
-         // pass (id_of_tool_by_options<T>::functor) to index_of_matching.
-         //
-         template<typename Current> struct functor {
-            static consteval bool execute() {
-               if constexpr (tools::tool_has_options_member_type<Current>) {
-                  return std::is_same_v<Desired, Current::results>;
-               }
-               return false;
-            }
-         };
-
-         using tool = all_tools_with_results::get_matching<functor>;
-      };
-   }
-   template<typename Results> using tool_for_results = impl::find_tool_with_results<Results>::tool;
-
-   namespace impl { // compile-time sanity checks
-      template<typename T> struct _tool_has_duplicate_results_struct {
-         template<typename U> struct _inner {
-            static consteval bool execute() {
-               return std::is_same_v<T::results, U::results> && !std::is_same_v<T, U>;
-            }
-         };
-         static consteval bool execute() {
-            return all_tools_with_results::has_matching<_inner>();
+   using all_tools_with_results = all_tools::all_matching<[]<typename T>() { return tools::tool_has_results_member_type<T>; }>; // list of all tool classes with results
+   using all_tool_results       = all_tools_with_results::transform<impl::tool_to_tool_results>; // list of all results classes from tools that have them
+   
+   #pragma region tool_for_results<Results>
+   template<typename Results> struct tool_for_results_f {
+      template<typename Tool> struct functor {
+         static constexpr bool execute() {
+            return std::is_same_v<Results, Tool::results>;
          }
       };
-      static_assert(!all_tools_with_results::has_matching<_tool_has_duplicate_results_struct>(), "Different tools cannot have the same results type.");
-   }
+      using result = all_tools_with_results::get_matching<functor>;
+   };
+   template<typename Results> using tool_for_results = tool_for_results_f<Results>::result; // workaround MSVC2019 bug with the below code: internal compiler error
+   /*
+   template<typename Results> struct tool_for_results_s {
+      using type = all_tools_with_results::get_matching<[]<typename Tool>() constexpr {
+         return std::is_same_v<Results, Tool::results>;
+      }>;
+   };
+   template<typename Results> using tool_for_results = tool_for_results_s<Results>::type; // workaround MSVC2019 bug with the below code: templated lambdas do not work with templated aliases; fixed in MSVC2022
+   */
+   /*
+   template<typename Results> using tool_for_results = all_tools_with_results::get_matching<[]<typename Tool>() {
+      return std::is_same_v<Results, Tool::results>;
+   }>;
+   */
+   #pragma endregion
+
+   static_assert(
+      !all_tools_with_results::has_matching([]<tools::tool_has_results_member_type T>() constexpr {
+         return all_tools_with_results::for_each_breakable([]<tools::tool_has_results_member_type U>() constexpr {
+            return !std::is_same_v<T, U> && std::is_same_v<T::results, U::results>;
+         });
+      }),
+      "Different tools cannot have the same results type."
+   );
 }

@@ -15,8 +15,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include "type_traits/has_std_size_getter.h"
-#include "type_traits/is_literal.h"
-#include "type_traits/is_std_array.h"
-#include "type_traits/is_std_vector.h"
-#include "type_traits/strip_enum.h"
+#include <type_traits>
+
+namespace cobb {
+   template<typename T> concept is_literal = requires {
+      requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
+   };
+}

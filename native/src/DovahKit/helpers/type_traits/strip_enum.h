@@ -15,8 +15,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include "type_traits/has_std_size_getter.h"
-#include "type_traits/is_literal.h"
-#include "type_traits/is_std_array.h"
-#include "type_traits/is_std_vector.h"
-#include "type_traits/strip_enum.h"
+#include <type_traits>
+
+namespace cobb {
+   template<typename T, bool = std::is_enum_v<T>> struct strip_enum {
+   };
+   template<typename T> struct strip_enum<T, true> {
+      using type = std::underlying_type_t<T>;
+   };
+   template<typename T> struct strip_enum<T, false> {
+      using type = T;
+   };
+   template<typename T> using strip_enum_t = typename strip_enum<T>::type;
+}

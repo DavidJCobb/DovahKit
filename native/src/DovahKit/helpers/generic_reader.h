@@ -19,14 +19,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstring>
 #include <string>
 #include <type_traits>
-#include "type_traits.h"
+#include "type_traits/is_literal.h"
+#include "type_traits/is_std_array.h"
 
 namespace cobb {
    namespace impl::generic_reader {
-      template<typename T> concept IsLiteral = requires {
-         requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
-      };
-      template<typename T> concept IsLiteralIsh = IsLiteral<T> || (std::is_bounded_array_v<T> && IsLiteral<std::remove_extent_t<T>>);
+      template<typename T> concept IsLiteralIsh = cobb::is_literal<T> || (std::is_bounded_array_v<T> && cobb::is_literal<std::remove_extent_t<T>>);
    }
 
    class generic_reader {

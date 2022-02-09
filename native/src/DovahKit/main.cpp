@@ -620,9 +620,6 @@
 //
 //     - Loading NIFs and being able to render them
 //
-//        - Use Qt's 3D drawing APIs for now. We can stress-test them and potentially 
-//          dive into OpenGL or something later.
-//
 //        - The goal isn't to match the game exactly or even all that well. Really, we 
 //          can just throw out all data besides verts, textures, and really basic shader 
 //          properties. All we want is to be able to render the world *well enough* for 

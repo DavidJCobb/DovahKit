@@ -15,8 +15,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
-#include "type_traits/has_std_size_getter.h"
-#include "type_traits/is_literal.h"
-#include "type_traits/is_std_array.h"
-#include "type_traits/is_std_vector.h"
-#include "type_traits/strip_enum.h"
+#include <array>
+#include <type_traits>
+#include <utility>
+
+namespace cobb {
+   template<typename T> concept is_std_array = requires(T x) {
+      typename T::value_type;
+      requires !std::is_array_v<T>;
+      requires std::is_same_v<T, std::array<typename std::tuple_element<0, T>::type, std::tuple_size<T>::value>>;
+   };
+}

@@ -24,7 +24,9 @@ namespace DK3D {
          using self_t  = combined_tool_results;
          using classes = all_tool_results;
 
-         using result_types_with_timestamps = classes::all_matching<impl::_combined_tool_results::merge_requires_timestamp>;
+         using result_types_with_timestamps = classes::all_matching<[]<typename Results>() {
+            return impl::_combined_tool_results::can_merge<Results> && (tool_for_results<Results>::compile_time_options.use_strict_ordering == true);
+         }>;
 
          template<typename T> struct _foreach_scale {
             static void execute(self_t* self, double delta_seconds) {

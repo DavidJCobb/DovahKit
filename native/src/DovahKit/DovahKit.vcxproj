@@ -733,7 +733,11 @@
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
+    <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
+    <ClInclude Include="helpers\type_traits\is_literal.h" />
+    <ClInclude Include="helpers\type_traits\is_std_array.h" />
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
+    <ClInclude Include="helpers\type_traits\strip_enum.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="nif\block.h" />

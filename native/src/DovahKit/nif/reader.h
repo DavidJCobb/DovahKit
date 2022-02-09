@@ -8,7 +8,7 @@
 #include "helpers/byteswap.h"
 #include "helpers/endian.h"
 #include "helpers/passkey.h"
-#include "helpers/type_traits.h"
+#include "helpers/type_traits/is_std_array.h"
 #include "helpers/type_traits/is_std_vector.h"
 #include "helpers/unreachable.h"
 #include "helpers/glm/type_traits.h"

@@ -2,9 +2,11 @@
 #include <array>
 #include <cstdint>
 #include <string>
-#include "../../helpers/memory.h"
-#include "../../helpers/miscellaneous.h"
-#include "../../helpers/type_traits.h"
+#include "helpers/memory.h"
+#include "helpers/miscellaneous.h"
+#include "helpers/type_traits.h"
+#include "helpers/type_traits/is_literal.h"
+#include "helpers/type_traits/is_std_array.h"
 #include "../../core.h"
 #include "../common.h"
 
@@ -18,10 +20,7 @@ namespace dovah {
       class subrecord;
       class record;
 
-      template<typename T> concept IsLiteral = requires {
-         requires (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>);
-      };
-      template<typename T> concept IsLiteralIsh = IsLiteral<T> || (std::is_bounded_array_v<T> && IsLiteral<std::remove_extent_t<T>>);
+      template<typename T> concept IsLiteralIsh = cobb::is_literal<T> || (std::is_bounded_array_v<T> && cobb::is_literal<std::remove_extent_t<T>>);
 
       #pragma region Classes used to read specific elements of an ESP file (e.g. records, subrecords)
       class group {

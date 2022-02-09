@@ -81,14 +81,12 @@ namespace cobb {
       as_bytes bytes;
       if (std::is_constant_evaluated()) {
          auto source = std::bit_cast<as_bytes, T>(v);
-         for (size_t i = 0; i < sizeof(T); ++i) {
-            bytes[i] = source[i];
-         }
+         for (size_t i = 0; i < sizeof(T) / 2; ++i)
+            bytes[i] = source[sizeof(T) - i - 1];
       } else {
          auto* source = (const uint8_t*)&v;
-         for (size_t i = 0; i < sizeof(T); ++i) {
-            bytes[i] = source[i];
-         }
+         for (size_t i = 0; i < sizeof(T) / 2; ++i)
+            bytes[i] = source[sizeof(T) - i - 1];
       }
       return std::bit_cast<T, as_bytes>(bytes);
    }
