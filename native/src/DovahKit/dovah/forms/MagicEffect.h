@@ -12,7 +12,6 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms
 
 namespace dovah::loaded_forms {
    class MagicEffect : public Form {
-      #include "impl/form_subclass_components.txt"
       //
       // Intentionally minimal for now.
       //

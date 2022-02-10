@@ -11,7 +11,6 @@
 
 namespace dovah::loaded_forms {
    class Faction : public Form {
-      #include "impl/form_subclass_components.txt"
       public:
          static constexpr form_type_t form_type = form_type::faction;
          Faction(const constructor_params& c) : Form(form_type, c) {};

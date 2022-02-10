@@ -4,10 +4,18 @@
 #include "../files/tes_file_reading/elements.h"
 #include "../files/tes_file_writing/elements.h"
 #include "factories/construct.h"
+#include "_component_access.h"
 
 namespace dovah::loaded_forms {
    Form::Form(form_type_t ft, const constructor_params& c) : formType(ft), is_working_copy(c.is_working_copy), stub(*c.stub) {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
+   }
+
+   components::papyrus_attachment_data* Form::get_papyrus_data() noexcept {
+      return component_access::get_papyrus_data(this);
+   }
+   components::model* Form::get_model() noexcept {
+      return component_access::get_model(this);
    }
 
    const char* Form::get_editor_id() const noexcept {

@@ -7,7 +7,6 @@
 
 namespace dovah::loaded_forms {
    class Voicetype : public Form {
-      #include "impl/form_subclass_components.txt"
       public:
          struct voicetype_flag {
             voicetype_flag() = delete;

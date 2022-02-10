@@ -192,7 +192,6 @@ namespace dovah::loaded_forms {
    };
 
    class Quest : public Form {
-      #include "impl/form_subclass_components.txt"
       public:
          class Stage;
          class Objective;

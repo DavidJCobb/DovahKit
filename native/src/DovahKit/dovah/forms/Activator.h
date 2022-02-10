@@ -12,7 +12,6 @@
 
 namespace dovah::loaded_forms {
    class Activator : public Form {
-      #include "impl/form_subclass_components.txt"
       public:
          static constexpr form_type_t form_type = form_type::activator;
          Activator(const constructor_params& c) : Form(form_type, c) {};

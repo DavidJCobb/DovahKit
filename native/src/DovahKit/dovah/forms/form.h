@@ -1,7 +1,5 @@
 #pragma once
 #include "../core.h"
-#include "impl/component_templates.h"
-#include "components/papyrus.h" // include needed because MSVC can't recognize a using-declaration as a virtual function's return type if merely forward-declared, apparently
 
 namespace dovah {
    class file_load_order;
@@ -15,6 +13,13 @@ namespace dovah {
    namespace load_order_interfaces {
       class form_load;
       class form_save;
+   }
+   namespace loaded_forms::components {
+      namespace papyrus {
+         class script_data;
+      }
+      class model;
+      using papyrus_attachment_data = papyrus::script_data;
    }
 
    namespace loaded_forms {
@@ -44,7 +49,8 @@ namespace dovah {
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
-            virtual components::papyrus_attachment_data* get_papyrus_data() noexcept { return nullptr; }
+            components::papyrus_attachment_data* get_papyrus_data() noexcept;
+            components::model* get_model() noexcept;
 
             //
             // === Form* Form::clone(form_stub&) =================================================

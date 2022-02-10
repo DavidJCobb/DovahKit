@@ -45,7 +45,7 @@ namespace {
             wrapper out = self;
             assert(out.is_collection);
             out.into_collection(i);
-            return core::subsystems::userdata::get().push(L, out, collection_metatable_key);
+            return core::subsystems::userdata::get().push(L, out, script_wrapper_type::metatable_key);
          }
       }
       return 0;

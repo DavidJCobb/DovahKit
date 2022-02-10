@@ -3,7 +3,6 @@
 
 namespace dovah::loaded_forms {
    class Actor : public ObjectReference {
-      #include "impl/form_subclass_components.txt"
       //
       // Intentionally minimal for now.
       //

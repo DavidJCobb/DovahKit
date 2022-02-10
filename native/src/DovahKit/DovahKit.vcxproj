@@ -416,6 +416,7 @@
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\forms\WordOfPower.cpp" />
     <ClCompile Include="dovah\forms\Worldspace.cpp" />
+    <ClCompile Include="dovah\forms\_component_access.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addenda.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
@@ -711,6 +712,8 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\forms\_all.h" />
+    <ClInclude Include="dovah\forms\_component_access.h" />
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <QtMoc Include="editor\asset_manager\asset_manager.h" />
     <QtMoc Include="editor\asset_manager\asset.h" />
@@ -1186,7 +1189,6 @@
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
-    <ClInclude Include="dovah\forms\impl\component_templates.h" />
     <ClInclude Include="dovah\forms\Landscape.h" />
     <ClInclude Include="dovah\forms\LandTexture.h" />
     <ClInclude Include="dovah\forms\Note.h" />
@@ -1512,7 +1514,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
-    <None Include="dovah\forms\impl\form_subclass_components.txt" />
     <None Include="shaders\overlay-fps.frag" />
     <None Include="shaders\overlay-fps.vert" />
     <None Include="shaders\shader.frag">
