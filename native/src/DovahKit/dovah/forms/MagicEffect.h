@@ -7,11 +7,8 @@
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
 
-#include "../../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for MagicEffect is incomplete.");
-
 namespace dovah::loaded_forms {
-   class MagicEffect : public Form {
+   class MagicEffect : public Form, _IncompleteFormType {
       //
       // Intentionally minimal for now.
       //

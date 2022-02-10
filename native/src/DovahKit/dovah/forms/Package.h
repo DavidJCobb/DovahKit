@@ -4,11 +4,8 @@
 #include "Form.h"
 #include "_common.h"
 
-#include "../../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for Package is incomplete.");
-
 namespace dovah::loaded_forms {
-   class Package : public Form {
+   class Package : public Form, _IncompleteFormType {
       //
       // Intentionally minimal for now.
       //

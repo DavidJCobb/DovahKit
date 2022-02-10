@@ -23,6 +23,15 @@ namespace dovah {
    }
 
    namespace loaded_forms {
+      // Sentinel base class for any forms that aren't fully implemented. This class will prevent DovahKit 
+      // from attempting to construct any such forms while running; it's used as a sentinel for template 
+      // metaprogramming. There are also constexpr bools that can be flipped to trigger static assertion 
+      // failures if any forms inherit from this type, as a way to quickly check if any forms are incomplete 
+      // before shipping a build.
+      // 
+      // The forms in question should always derive from the base Form type first, and then from this.
+      struct _IncompleteFormType {};
+
       class Form {
          friend class form_stub;
          public:

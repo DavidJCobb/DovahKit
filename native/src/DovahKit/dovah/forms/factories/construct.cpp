@@ -1,34 +1,16 @@
 #include "construct.h"
-#include "../Activator.h"
-#include "../Actor.h"
-#include "../Cell.h"
-#include "../Color.h"
-#include "../DefaultObjectManager.h"
-#include "../DialogueBranch.h"
-#include "../Faction.h"
-#include "../FormList.h"
-#include "../Landscape.h"
-#include "../LandTexture.h"
-#include "../Location.h"
-#include "../Note.h"
-#include "../ObjectReference.h"
-#include "../Package.h"
-#include "../Quest.h"
-#include "../Shout.h"
-#include "../TextureSet.h"
-#include "../Topic.h"
-#include "../TopicInfo.h"
-#include "../Voicetype.h"
-#include "../WordOfPower.h"
-#include "../Worldspace.h"
+#include "../_all.h"
 
 namespace {
    using namespace dovah;
-   using _loader_t    = form_loader_function_t;
-   using _construct_t = loaded_forms::Form*(*)(const loaded_forms::Form::constructor_params&);
-}
-namespace {
-   using namespace dovah;
+
+   using _loader_t = form_loader_function_t;
+   using _construct_t = loaded_forms::Form* (*)(const loaded_forms::Form::constructor_params&);
+
+   template<typename T> concept can_construct = requires(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      requires !std::is_base_of_v<loaded_forms::_IncompleteFormType, T>;
+      { T::generate_use_info(record, uib) }; // can generate use info?
+   };
 
    template<typename T> void _load(loaded_forms::Form* instance, tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       ((T*)instance)->load(record, intfc);
@@ -37,62 +19,32 @@ namespace {
       return new T(c);
    }
 
-   struct _handlers {
-      _loader_t    loader     = nullptr;
-      _construct_t constructor = nullptr;
-
-      template<typename T> static _handlers make() {
-         _handlers instance;
-         instance.loader      = _load<T>;
-         instance.constructor = _construct<T>;
-         return instance;
-      }
+   struct function_table_row {
+      _loader_t    load      = nullptr;
+      _construct_t construct = nullptr;
    };
-
-   struct _entry {
-      form_type_t form_type;
-      _handlers   handlers;
-   };
-
-   _entry _builders[] = {
-      { form_type::texture_set,            _handlers::make<loaded_forms::TextureSet>() },
-      { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
-      { form_type::land_texture,           _handlers::make<loaded_forms::LandTexture>() },
-      { form_type::activator,              _handlers::make<loaded_forms::Activator>() },
-      { form_type::note,                   _handlers::make<loaded_forms::Note>() },
-      { form_type::cell,                   _handlers::make<loaded_forms::Cell>() },
-      { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
-      { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },
-      { form_type::worldspace,             _handlers::make<loaded_forms::Worldspace>() },
-      { form_type::land,                   _handlers::make<loaded_forms::Landscape>() },
-      { form_type::topic,                  _handlers::make<loaded_forms::Topic>() },
-      { form_type::topic_info,             _handlers::make<loaded_forms::TopicInfo>() },
-      { form_type::quest,                  _handlers::make<loaded_forms::Quest>() },
-      { form_type::formlist,               _handlers::make<loaded_forms::FormList>() },
-      { form_type::voicetype,              _handlers::make<loaded_forms::Voicetype>() },
-      { form_type::location,               _handlers::make<loaded_forms::Location>() },
-      { form_type::default_object_manager, _handlers::make<loaded_forms::DefaultObjectManager>() },
-      { form_type::dialogue_branch,        _handlers::make<loaded_forms::DialogueBranch>() },
-      { form_type::shout,                  _handlers::make<loaded_forms::Shout>() },
-      { form_type::word_of_power,          _handlers::make<loaded_forms::WordOfPower>() },
-      { form_type::color,                  _handlers::make<loaded_forms::Color>() },
-   };
+   using function_table_t = std::array<function_table_row, form_types.size()>;
+   constexpr auto function_table = ([]() {
+      function_table_t out = {};
+      all_loaded_form_types::for_each([&out]<typename T>() {
+         auto& row = out[T::form_type];
+         if constexpr (can_construct<T>) {
+            row.load      = _load<T>;
+            row.construct = _construct<T>;
+         }
+      });
+      return out;
+   })();
 }
 namespace dovah {
    form_loader_function_t get_form_loader_function(form_type_t ft) noexcept {
-      for (uint32_t i = 0; i < std::extent<decltype(_builders)>::value; i++) {
-         auto& b = _builders[i];
-         if (b.form_type == ft)
-            return b.handlers.loader;
-      }
+      if (auto* f = function_table[ft].load)
+         return f;
       return nullptr;
    }
    loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t ft, const loaded_forms::Form::constructor_params& c) noexcept {
-      for (uint32_t i = 0; i < std::extent<decltype(_builders)>::value; i++) {
-         auto& b = _builders[i];
-         if (b.form_type == ft)
-            return (b.handlers.constructor)(c);
-      }
+      if (auto* f = function_table[ft].construct)
+         return (f)(c);
       return nullptr;
    }
 }
