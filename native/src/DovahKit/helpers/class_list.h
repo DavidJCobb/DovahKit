@@ -140,7 +140,7 @@ namespace cobb {
 
          template<typename lambda> requires is_for_each_lambda_with_bool_result<lambda>
          static constexpr bool for_each_breakable(lambda&& f) {
-            return (... || f.template operator()<Types>());
+            return (f.template operator()<Types>() || ...);
          }
          
          template<typename lambda> requires is_for_each_lambda_with_bool_result<lambda>

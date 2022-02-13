@@ -5,6 +5,25 @@
 
 namespace vulkanDK {
    class surface_renderer;
+   namespace dds {
+      struct header;
+   }
+
+   struct image_metadata {
+      VkImageType           dimensions   = VkImageType::VK_IMAGE_TYPE_2D;
+      VkExtent3D            extent       = { .width = 0, .height = 0, .depth = 1 };
+      VkFormat              format       = VkFormat::VK_FORMAT_UNDEFINED;
+      bool                  is_cubemap   = false;
+      uint32_t              layer_count  = 1; // includes top-level texture, unlike DDS; for cubemaps, this is the total face count (cube count * 6)
+      uint32_t              mipmap_count = 1; // includes top-level texture, unlike DDS
+      VkSampleCountFlagBits samples      = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+      VkSharingMode         sharing      = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+      VkImageTiling         tiling       = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+      VkImageUsageFlags     usage        = 0;
+
+      static image_metadata from_dds_header(const dds::header&);
+      VkImageCreateInfo create_image_info() const;
+   };
 
    class surface_renderer_image_view : no_copy {
       //
@@ -45,13 +64,9 @@ namespace vulkanDK {
          VkImageView       view   = VK_NULL_HANDLE;
          VmaAllocation     memory = VK_NULL_HANDLE;
          //
-         VkFormat format = VK_FORMAT_UNDEFINED;
-         struct {
-            uint32_t w = 0;
-            uint32_t h = 0;
-         } size;
+         image_metadata metadata;
 
-         void create_image(uint32_t w, uint32_t h, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags);
+         void create_image(const image_metadata&, VkMemoryPropertyFlags);
          void create_basic_view(VkFormat, VkImageAspectFlags);
 
          void copy_content_from_buffer(VkBuffer);

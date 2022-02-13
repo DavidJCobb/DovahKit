@@ -54,6 +54,7 @@ namespace cobb {
          static constexpr size_t count = C;
          using value_type      = E;
          using underlying_type = std::underlying_type_t<value_type>;
+
       protected:
          static constexpr size_t    _remainder     = (count % 8);
          static constexpr bool      _has_remainder = (_remainder != 0);

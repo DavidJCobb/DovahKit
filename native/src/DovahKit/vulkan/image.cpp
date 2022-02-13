@@ -5,16 +5,40 @@
 #include "command_buffer.h"
 #include "physical_device.h"
 #include "surface_renderer.h"
+//
+#include "dds/header.h"
 
 namespace {
-   VkResult _create_basic_view(VkDevice device, VkImage& image, VkImageView& view, VkFormat format, VkImageAspectFlags aspect) {
+   VkResult _create_basic_view(VkDevice device, VkImage& image, VkImageView& view, const vulkanDK::image_metadata& meta, VkImageAspectFlags aspect) {
       assert(view == VK_NULL_HANDLE);
+      //
+      VkImageViewType vt;
+      switch (meta.dimensions) {
+         case VK_IMAGE_TYPE_1D:
+            vt = VK_IMAGE_VIEW_TYPE_1D;
+            if (meta.layer_count > 1)
+               vt = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+            break;
+         case VK_IMAGE_TYPE_2D:
+            vt = VK_IMAGE_VIEW_TYPE_2D;
+            if (meta.layer_count > 1)
+               vt = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+            break;
+         case VK_IMAGE_TYPE_3D:
+            vt = VK_IMAGE_VIEW_TYPE_3D;
+            break;
+      }
+      if (meta.is_cubemap) {
+         vt = VK_IMAGE_VIEW_TYPE_CUBE;
+         if (meta.layer_count > 1)
+            vt = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+      }
       //
       auto view_info = VkImageViewCreateInfo{
          .sType      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
          .image      = image,
-         .viewType   = VK_IMAGE_VIEW_TYPE_2D,
-         .format     = format,
+         .viewType   = vt,
+         .format     = meta.format,
          .components = {
             //
             // No color channel mixing/swapping/etc.
@@ -27,9 +51,9 @@ namespace {
          .subresourceRange = { // control what part of the image is accessed
             .aspectMask     = aspect,
             .baseMipLevel   = 0, // don't skip mipmaps
-            .levelCount     = 1, // don't use mipmaps
+            .levelCount     = meta.mipmap_count,
             .baseArrayLayer = 0, // don't skip layers (layers would be useful for stereoscopic 3D, etc.)
-            .layerCount     = 1, // only one layer
+            .layerCount     = meta.layer_count,
          },
       };
       return vkCreateImageView(device, &view_info, nullptr, &view);
@@ -41,6 +65,69 @@ namespace {
 }
 
 namespace vulkanDK {
+   /*static*/ image_metadata image_metadata::from_dds_header(const dds::header& header) {
+      image_metadata out;
+      //
+      bool has_ext = header.has_extended_header();
+      if (has_ext) {
+         switch (header.dx10_header.dimension) {
+            using enum dds::header_extension::resource_dimension;
+            case texture1D:
+               out.dimensions = VK_IMAGE_TYPE_1D;
+               break;
+            case texture2D:
+               out.dimensions = VK_IMAGE_TYPE_2D;
+               break;
+            case texture3D:
+               out.dimensions = VK_IMAGE_TYPE_3D;
+               break;
+         }
+      }
+      //
+      out.extent = {
+         .width  = header.width,
+         .height = header.height,
+         .depth  = (header.flags & dds::header::flag::has_depth) ? header.depth : 1,
+      };
+      out.format     = header.to_vulkan_format();
+      out.is_cubemap = (header.capabilities[1] & dds::header::capabilities_1::is_cubemap);
+      //
+      out.layer_count = 1;
+      if (has_ext)
+         out.layer_count = header.dx10_header.array_size;
+      if (out.is_cubemap)
+         out.layer_count *= 6;
+      //
+      out.mipmap_count = header.mipmap_count + 1;
+      //
+      return out;
+   }
+   VkImageCreateInfo image_metadata::create_image_info() const {
+      uint32_t create_flags = 0;
+      if (this->is_cubemap) {
+         create_flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+      }
+      //
+      auto out = VkImageCreateInfo{
+         .sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+         .flags         = create_flags,
+         .imageType     = this->dimensions,
+         .format        = this->format, // TODO: if I write a function to convert between Qt and Vulkan format enums, we can use potentially any format, though not all cards support all formats
+         .extent        = this->extent,
+         .mipLevels     = this->mipmap_count,
+         .arrayLayers   = this->layer_count,
+         .samples       = this->samples,
+         .tiling        = this->tiling,
+         .usage         = this->usage,
+         .sharingMode   = this->sharing,
+         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      };
+      if (out.extent.depth == 0)
+         out.extent.depth = 1;
+      //
+      return out;
+   }
+
    #pragma region surface_renderer_image_view
    surface_renderer_image_view::surface_renderer_image_view(surface_renderer& o, VkImage i) : owner(&o), image(i) {}
    surface_renderer_image_view::~surface_renderer_image_view() {
@@ -63,7 +150,7 @@ namespace vulkanDK {
    void surface_renderer_image_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto result = _create_basic_view(this->owner->logical_device, this->image, this->view, format, aspect);
+      auto result = _create_basic_view(this->owner->logical_device, this->image, this->view, { .format = format }, aspect);
       if (result != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::surface_renderer_image_view::create_basic_view] Failed to create texture image view.");
       }
@@ -96,29 +183,20 @@ namespace vulkanDK {
       return *this;
    }
 
-   void concrete_image::create_image(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
+   //void concrete_image::create_image(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
+   void concrete_image::create_image(const image_metadata& meta, VkMemoryPropertyFlags properties) {
       assert(this->handle == VK_NULL_HANDLE);
       assert(this->owner);
       auto device = this->owner->logical_device;
       //
-      auto image_info = VkImageCreateInfo{
-         .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-         .flags     = 0,
-         .imageType = VK_IMAGE_TYPE_2D,
-         .format    = format, // TODO: if I write a function to convert between Qt and Vulkan format enums, we can use potentially any format, though not all cards support all formats
-         .extent    = {
-            .width  = w,
-            .height = h,
-            .depth  = 1,
-         },
-         .mipLevels     = 1,
-         .arrayLayers   = 1,
-         .samples       = VK_SAMPLE_COUNT_1_BIT,
-         .tiling        = VK_IMAGE_TILING_OPTIMAL,
-         .usage         = usage,
-         .sharingMode   = VK_SHARING_MODE_EXCLUSIVE,
-         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      };
+      this->metadata = meta;
+      {  // Validate fields. Brace initialization, etc., result in some nested structs having incorrect members if they weren't manually specified (i.e. defaults on the containing struct are skipped).
+         auto& meta = this->metadata;
+         if (meta.extent.depth == 0)
+            meta.extent.depth = 1;
+      }
+      //
+      auto image_info = this->metadata.create_image_info();
       auto alloc_info = VmaAllocationCreateInfo{
          .flags          = 0,
          .usage          = VMA_MEMORY_USAGE_UNKNOWN,
@@ -132,15 +210,11 @@ namespace vulkanDK {
       if (vmaCreateImage(this->owner->allocator, &image_info, &alloc_info, &this->handle, &this->memory, nullptr) != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::concrete_image::create_image] Failed to create image.");
       }
-      //
-      this->format = format;
-      this->size.w = w;
-      this->size.h = h;
    }
    void concrete_image::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, format, aspect);
+      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, this->metadata, aspect);
       if (result != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::concrete_image::create_basic_view] Failed to create texture image view.");
       }
@@ -157,10 +231,10 @@ namespace vulkanDK {
                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
                .mipLevel       = 0,
                .baseArrayLayer = 0,
-               .layerCount     = 1,
+               .layerCount     = this->metadata.layer_count,
             },
             .imageOffset = { 0, 0, 0 },
-            .imageExtent = { this->size.w, this->size.h, 1 },
+            .imageExtent = this->metadata.extent,
          };
          vkCmdCopyBufferToImage(
             scratch_commands.handle,
@@ -189,9 +263,9 @@ namespace vulkanDK {
             .subresourceRange    = {
                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
                .baseMipLevel   = 0,
-               .levelCount     = 1,
+               .levelCount     = this->metadata.mipmap_count,
                .baseArrayLayer = 0,
-               .layerCount     = 1,
+               .layerCount     = this->metadata.layer_count,
             },
          };
          //
@@ -199,7 +273,7 @@ namespace vulkanDK {
          //
          if (new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            if (_format_has_stencil_component(this->format))
+            if (_format_has_stencil_component(this->metadata.format))
                barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
          }
          //
@@ -266,11 +340,9 @@ namespace vulkanDK {
          this->view = VK_NULL_HANDLE;
       }
       vmaDestroyImage(this->owner->allocator, this->handle, this->memory);
-      this->handle = VK_NULL_HANDLE;
-      this->memory = VK_NULL_HANDLE;
-      this->format = VK_FORMAT_UNDEFINED;
-      this->size.w = 0;
-      this->size.h = 0;
+      this->handle   = VK_NULL_HANDLE;
+      this->memory   = VK_NULL_HANDLE;
+      this->metadata = image_metadata();
    }
    #pragma endregion
 }

@@ -577,6 +577,9 @@
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
+    <ClCompile Include="vulkan\dds\header.cpp" />
+    <ClCompile Include="vulkan\dds\pixel_format.cpp" />
+    <ClCompile Include="vulkan\dds\texture.cpp" />
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
@@ -724,6 +727,7 @@
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
+    <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
@@ -813,6 +817,11 @@
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
+    <ClInclude Include="vulkan\dds\load_exception.h" />
+    <ClInclude Include="vulkan\dds\dxgi_format.h" />
+    <ClInclude Include="vulkan\dds\header.h" />
+    <ClInclude Include="vulkan\dds\pixel_format.h" />
+    <ClInclude Include="vulkan\dds\texture.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />

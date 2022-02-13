@@ -57,7 +57,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       auto* button = new QToolButton(this->toolbar);
       button->setText("New Object");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.png, *.bmp)");
+         auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.dds, *.png, *.bmp)");
          if (path.isEmpty())
             return;
          view->surfaceRenderer()->add_mesh(path);

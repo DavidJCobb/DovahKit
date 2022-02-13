@@ -22,6 +22,7 @@
 #include "loaded_texture.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
+#include "dds/texture.h"
 //
 #include <QFile>
 //
@@ -710,10 +711,14 @@ namespace vulkanDK {
       constexpr int w = 4;
       constexpr int h = 4;
       nt.create_image(
-         w, h,
-         VK_FORMAT_R8G8B8A8_SRGB,
-         VK_IMAGE_TILING_OPTIMAL,
-         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         {
+            .extent = {
+               .width  = w,
+               .height = h,
+            },
+            .format = VK_FORMAT_R8G8B8A8_SRGB,
+            .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         },
          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
       //
@@ -784,10 +789,14 @@ namespace vulkanDK {
             //
             target.content = concrete_image(*this);
             target.content.create_image(
-               w, h,
-               VK_FORMAT_R8G8B8A8_SRGB,
-               VK_IMAGE_TILING_OPTIMAL,
-               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+               {
+                  .extent = {
+                     .width  = w,
+                     .height = h,
+                  },
+                  .format = VK_FORMAT_R8G8B8A8_SRGB,
+                  .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+               },
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
             );
             //
@@ -1095,7 +1104,17 @@ namespace vulkanDK {
       auto  format = this->find_depth_format();
       auto& db     = swap_chain.depth_buffer;
       db = concrete_image(*this);
-      db.create_image(extent.width, extent.height, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      db.create_image(
+         {
+            .extent = {
+               .width  = extent.width,
+               .height = extent.height,
+            },
+            .format = format,
+            .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+         }, 
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+      );
       db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
       db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
    }
@@ -1486,6 +1505,77 @@ namespace vulkanDK {
             return i;
          }
       }
+      //
+      if (texture_path.endsWith(".dds", Qt::CaseInsensitive)) {
+         auto file = QFile(texture_path);
+         if (!file.open(QIODevice::ReadOnly)) {
+            qDebug("[vulkanDK::surface_renderer::add_texture] Failed to open test image.");
+            return fail;
+         }
+         auto bytearray = file.readAll();
+         //
+         dds::texture tex;
+         tex.data = bytearray.constData();
+         tex.size = bytearray.size();
+         //
+         if (!tex.read()) {
+            qDebug("[vulkanDK::surface_renderer::add_texture] Failed to read DDS header.");
+            return fail;
+         }
+         if (!tex.pixel_data() || !tex.pixel_data_size()) {
+            qDebug("[vulkanDK::surface_renderer::add_texture] No DDS data available.");
+            return fail;
+         }
+         //
+         // Create scene texture.
+         //
+         auto texture_index = this->scene.insert_new_texture();
+         if (texture_index == std::string::npos) {
+            qDebug("[vulkanDK::scene_renderer::add_texture] Cannot add new rendered textures. Maximum has been reached.");
+            return fail;
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            qDebug("[vulkanDK::scene_renderer::add_texture] Creating new texture at index %u for texture path <%s>", texture_index, qUtf8Printable(texture_path));
+         }
+         auto& target = list[texture_index];
+         target.life_state = scene_frame_item_state::active;
+         target.w    = tex.metadata.width;
+         target.h    = tex.metadata.height;
+         target.path = texture_path;
+         //
+         // Create Vulkan data:
+         //
+         target.content = concrete_image(*this);
+         try {
+            auto& img = target.content;
+            img.metadata = image_metadata::from_dds_header(tex.metadata);
+            img.metadata.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            //
+            img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            {
+               auto  staging = this->create_buffer(tex.pixel_data_size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+               void* data    = staging.map_memory();
+               memcpy(data, tex.pixel_data(), tex.pixel_data_size());
+               staging.unmap_memory(data);
+               //
+               img.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+               img.copy_content_from_buffer(staging.handle);
+               img.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
+            img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
+         } catch (std::runtime_error& e) {
+            qDebug("[vulkanDK::scene_renderer::add_texture] Exception thrown while trying to create a new texture.");
+            target.content.teardown();
+            target.mark_for_delete();
+            return fail;
+         }
+         //
+         // Set scene texture as out of date:
+         //
+         target.handled_frames.set_all_out_of_date();
+         return texture_index;
+      }
+      //
       QImage texture;
       {
          //auto path      = QLatin1Literal("shaders/") + texture_path;
@@ -1544,10 +1634,14 @@ namespace vulkanDK {
       //
       target.content = concrete_image(*this);
       target.content.create_image(
-         w, h,
-         VK_FORMAT_R8G8B8A8_SRGB,
-         VK_IMAGE_TILING_OPTIMAL,
-         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         {
+            .extent = {
+               .width  = w,
+               .height = h,
+            },
+            .format = VK_FORMAT_R8G8B8A8_SRGB,
+            .usage  = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         },
          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
       target.content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -1593,8 +1687,8 @@ namespace vulkanDK {
          //
          glm::vec3 position = {};
          {
-            //constexpr float radius = 5.0F;
-            constexpr float radius = 0.0F;
+            constexpr float radius = 5.0F;
+            //constexpr float radius = 0.0F;
             //
             for (size_t j = 0; j < 3; ++j)
                position[j] = ((float)rand() / RAND_MAX) * radius - (radius / 2.0F);
@@ -1602,9 +1696,9 @@ namespace vulkanDK {
          //
          float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
          ro.data.vertices = {
-            vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0 } },
-            vertex{ {  0.5f, -hfwc, 0.0 }, { 0.0f, 1.0f, 0.0f }, { 0.0, 0.0 } },
-            vertex{ {  0.5f,  hfwc, 0.0 }, { 0.0f, 0.0f, 1.0f }, { 0.0, 1.0 } },
+            vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 0.0 } },
+            vertex{ {  0.5f, -hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 0.0, 0.0 } },
+            vertex{ {  0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 0.0, 1.0 } },
             vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
          };
          ro.data.indices = { 0, 1, 2, 2, 3, 0 };
