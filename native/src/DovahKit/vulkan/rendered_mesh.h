@@ -29,7 +29,10 @@ namespace vulkanDK {
          rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
          struct shader_parameters { // pass to the shader via a storage buffer
-            glm::mat4 transform;
+            alignas(16) glm::mat4 transform;
+            alignas(16) glm::vec3 specular_color    = { 0, 0, 0 };
+            alignas( 4) float     specular_strength = 1.0;
+            alignas( 4) float     specular_exponent = 32;
          };
          struct push_constant {
             int32_t object_index;

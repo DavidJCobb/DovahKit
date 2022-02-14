@@ -280,7 +280,7 @@ namespace vulkanDK {
             .index              = 2,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // texture array
@@ -2161,6 +2161,10 @@ namespace vulkanDK {
                      texture_index = this->add_dds_texture(diffuse.c_str());
                   }
                }
+               //
+               mesh.shader_params.specular_strength = lighting->specular.strength / 1000.0F; // NIF uses 999 for max brightness?
+               mesh.shader_params.specular_color    = { lighting->specular.color.r, lighting->specular.color.g, lighting->specular.color.b };
+               mesh.shader_params.specular_exponent = lighting->material.glossiness;
             } else if (auto* effect = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
                const auto& texture = effect->texture.path;
                if (!texture.empty()) {

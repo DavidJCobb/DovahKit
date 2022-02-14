@@ -20,7 +20,10 @@ layout(push_constant) uniform PER_OBJECT {
 } pushed;
 
 struct ObjectData{
-	mat4 transform;
+	mat4  transform;
+   vec3  specular_color;
+   float specular_strength;
+   float specular_exponent;
 };
 
 layout(std140,binding = 0) uniform UniformBufferObject {
