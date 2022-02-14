@@ -82,10 +82,30 @@ namespace { // test scene properties
    std::array initial_meshes = {
       _model{  // Skyrim texture plane
          {  // Vertices
-            {{-0.5f, -0.395f, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-            {{ 0.5f, -0.395f, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-            {{ 0.5f,  0.395f, 0.0}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-            {{-0.5f,  0.395f, 0.0}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
+            vulkanDK::vertex{
+               .pos    = { -0.5f, -0.395, 0.0 },
+               .color  = { 1, 0, 0 },
+               .uv     = { 1, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, -0.395, 0.0 },
+               .color  = { 0, 1, 0 },
+               .uv     = { 0, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, 0.395, 0.0 },
+               .color  = { 0, 0, 1 },
+               .uv     = { 0, 1 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { -0.5f, 0.395, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 1, 1 },
+               .normal = { 0, 0, 1 },
+            },
          },
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
@@ -95,10 +115,30 @@ namespace { // test scene properties
       },
       _model{  // screenshot of Tolfdir
          {  // Vertices
-            {{-0.5f, -0.28125, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-            {{ 0.5f, -0.28125, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-            {{ 0.5f,  0.28125, 0.0}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-            {{-0.5f,  0.28125, 0.0}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
+            vulkanDK::vertex{
+               .pos    = { -0.5f, -0.28125, 0.0 },
+               .color  = { 1, 0, 0 },
+               .uv     = { 1, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, -0.28125, 0.0 },
+               .color  = { 0, 1, 0 },
+               .uv     = { 0, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, 0.28125, 0.0 },
+               .color  = { 0, 0, 1 },
+               .uv     = { 0, 1 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { -0.5f, 0.28125, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 1, 1 },
+               .normal = { 0, 0, 1 },
+            },
          },
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
@@ -108,10 +148,30 @@ namespace { // test scene properties
       },
       _model{  // screenshot of books
          {  // Vertices
-            {{-0.5f, -0.28125, 0.0}, {1.0f, 0.0f, 0.0f}, {1.0, 0.0}},
-            {{ 0.5f, -0.28125, 0.0}, {0.0f, 1.0f, 0.0f}, {0.0, 0.0}},
-            {{ 0.5f,  0.28125, 0.0}, {0.0f, 0.0f, 1.0f}, {0.0, 1.0}},
-            {{-0.5f,  0.28125, 0.0}, {1.0f, 1.0f, 1.0f}, {1.0, 1.0}},
+            vulkanDK::vertex{
+               .pos    = { -0.5f, -0.28125, 0.0 },
+               .color  = { 1, 0, 0 },
+               .uv     = { 1, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, -0.28125, 0.0 },
+               .color  = { 0, 1, 0 },
+               .uv     = { 0, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { 0.5f, 0.28125, 0.0 },
+               .color  = { 0, 0, 1 },
+               .uv     = { 0, 1 },
+               .normal = { 0, 0, 1 },
+            },
+            vulkanDK::vertex{
+               .pos    = { -0.5f, 0.28125, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 1, 1 },
+               .normal = { 0, 0, 1 },
+            },
          },
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
@@ -202,11 +262,11 @@ namespace vulkanDK {
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
       this->descriptor_set_layouts.resize(1);
       this->descriptor_set_layouts[0].bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // texture sampler
@@ -882,10 +942,30 @@ namespace vulkanDK {
             {
                constexpr float size = 99999;
                mesh.data.vertices = {  // Vertices
-                  {{-size, -size, 0.0}, {4.0f, 0.6f, 0.0f}, {1.0, 0.0}},
-                  {{ size, -size, 0.0}, {4.0f, 0.6f, 0.0f}, {0.0, 0.0}},
-                  {{ size,  size, 0.0}, {4.0f, 0.6f, 0.0f}, {0.0, 1.0}},
-                  {{-size,  size, 0.0}, {4.0f, 0.6f, 0.0f}, {1.0, 1.0}},
+                  {
+                     .pos    = { -size, -size, 0 },
+                     .color  = { 1.0, 0.6, 0.0 },
+                     .uv     = { 1, 0 },
+                     .normal = { 0, 0, 1 },
+                  },
+                  {
+                     .pos    = { size, -size, 0 },
+                     .color  = { 1.0, 0.6, 0.0 },
+                     .uv     = { 0, 0 },
+                     .normal = { 0, 0, 1 },
+                  },
+                  {
+                     .pos    = { size, size, 0 },
+                     .color  = { 1.0, 0.6, 0.0 },
+                     .uv     = { 0, 1 },
+                     .normal = { 0, 0, 1 },
+                  },
+                  {
+                     .pos    = { -size, size, 0 },
+                     .color  = { 1.0, 0.6, 0.0 },
+                     .uv     = { 1, 1 },
+                     .normal = { 0, 0, 1 },
+                  },
                };
             }
             mesh.data.indices  = { 0, 1, 2, 2, 3, 0 };
@@ -1794,10 +1874,30 @@ namespace vulkanDK {
          //
          float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
          ro.data.vertices = {
-            vertex{ { -0.5f, -hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 0.0 } },
-            vertex{ {  0.5f, -hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 0.0, 0.0 } },
-            vertex{ {  0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 0.0, 1.0 } },
-            vertex{ { -0.5f,  hfwc, 0.0 }, { 1.0f, 1.0f, 1.0f }, { 1.0, 1.0 } },
+            vertex{
+               .pos    = { -0.5f, -hfwc, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 1, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vertex{
+               .pos    = { 0.5f, -hfwc, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 0, 0 },
+               .normal = { 0, 0, 1 },
+            },
+            vertex{
+               .pos    = { 0.5f, hfwc, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 0, 1 },
+               .normal = { 0, 0, 1 },
+            },
+            vertex{
+               .pos    = { -0.5f, hfwc, 0.0 },
+               .color  = { 1, 1, 1 },
+               .uv     = { 1, 1 },
+               .normal = { 0, 0, 1 },
+            },
          };
          ro.data.indices = { 0, 1, 2, 2, 3, 0 };
          ro.recalc_bounding_sphere();
@@ -1979,6 +2079,7 @@ namespace vulkanDK {
          {  // Vertices
             mesh.data.vertices.resize(size);
             auto& vl = data->vertices;
+            auto& nl = data->normals;
             auto& cl = data->vertex_colors;
             auto& ul = data->uv_sets;
             for (size_t i = 0; i < size; ++i) {
@@ -1991,9 +2092,14 @@ namespace vulkanDK {
                }
                if (ul.size()) {
                   auto& uv = ul[0];
-                  vert.texCoord = uv[i];
+                  vert.uv = uv[i];
                } else {
-                  vert.texCoord = { 0, 0 };
+                  vert.uv = { 0, 0 };
+               }
+               if (nl.size()) {
+                  vert.normal = nl[i];
+               } else {
+                  vert.normal = { 0, 0, 1 }; // this won't be a good default...
                }
             }
          }

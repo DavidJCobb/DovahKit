@@ -23,9 +23,12 @@ struct ObjectData{
 	mat4 transform;
 };
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(std140,binding = 0) uniform UniformBufferObject {
    mat4 view;
    mat4 proj;
+   vec3 ambient_light_color;
+   vec3 sun_pos;
+   vec3 sun_color;
 } ubo;
 // binding 1 is used by the fragment shader (texture sampler)
 layout(std140,set = 0, binding = 2) readonly buffer ObjectBuffer {
@@ -36,14 +39,22 @@ layout(std140,set = 0, binding = 2) readonly buffer ObjectBuffer {
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inTexCoord;
+layout(location = 3) in vec3 inNormal;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
+layout(location = 0) out VS_OUT {
+   vec3 color;
+   vec2 uv;
+   vec3 normal;
+   vec3 pos_world;
+} vs_out;
 
 void main() {
    mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
    //
-   gl_Position  = ubo.proj * ubo.view * model_transform * vec4(inPosition, 1.0);
-   fragColor    = inColor;
-   fragTexCoord = inTexCoord;
+   gl_Position = ubo.proj * ubo.view * model_transform * vec4(inPosition, 1.0);
+   //
+   vs_out.color     = inColor;
+   vs_out.uv        = inTexCoord;
+   vs_out.normal    = mat3(model_transform) * inNormal; // NOTE: if non-uniform scaling is in use, then you must multiply by the transpose of the inverse of the rotation... but matrix inversions are slow on a GPU
+   vs_out.pos_world = vec3(model_transform * vec4(inPosition, 1.0));
 }

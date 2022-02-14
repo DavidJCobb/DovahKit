@@ -6,18 +6,34 @@ layout(push_constant) uniform PER_OBJECT {
 	int texture_index;
 } pushed;
 
-// binding 0 is used by the vertex shader (UBO for camera/view transforms)
+layout(std140,binding = 0) uniform UniformBufferObject {
+   mat4 view;
+   mat4 proj;
+   vec3 ambient_light_color;
+   vec3 sun_pos;
+   vec3 sun_color;
+} ubo;
 layout(binding = 1) uniform sampler   texSampler;
 // binding 2 is used by the vertex shader (buffer for object data)
 layout(binding = 3) uniform texture2D textures[];
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
+layout(location = 0) in VS_OUT {
+   vec3 color;
+   vec2 uv;
+   vec3 normal;
+   vec3 pos_world;
+} fs_in;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-   //outColor = vec4(fragTexCoord, 0.0, 1.0);
-   outColor  = texture(sampler2D(textures[pushed.texture_index], texSampler), fragTexCoord);
-   outColor *= vec4(fragColor, 1.0);
+   outColor  = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   outColor *= vec4(fs_in.color, 1.0);
+   //
+   vec3  norm    = normalize(fs_in.normal);
+   vec3  sun_dir = normalize(ubo.sun_pos - fs_in.pos_world);
+   float diff    = max(dot(norm, sun_dir), 0.0);
+   vec3  diffuse = diff * ubo.sun_color;
+   //
+   outColor = vec4(ubo.ambient_light_color + diffuse, 1.0) * outColor;
 }
