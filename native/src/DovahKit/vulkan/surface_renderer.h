@@ -124,6 +124,7 @@ namespace vulkanDK {
 
          // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);
+         size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
          void add_mesh(const QString& texture_path);
          void remove_mesh(size_t);
          void remove_last_mesh();

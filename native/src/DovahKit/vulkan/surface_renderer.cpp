@@ -23,7 +23,10 @@
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
 #include "dds/texture.h"
+#include "dovah/files/bsa/bsa_archived_file.h"
+#include "editor/subsystems/assets.h"
 //
+#include <QDir>
 #include <QFile>
 //
 #define GLM_FORCE_RADIANS
@@ -34,6 +37,9 @@
 
 // loading NIFs
 #include "nif/file.h"
+#include "nif/blocks/BSEffectShaderProperty.h"
+#include "nif/blocks/BSLightingShaderProperty.h"
+#include "nif/blocks/BSShaderTextureSet.h"
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 #include "nif/blocks/NiNode.h"
@@ -1652,6 +1658,98 @@ namespace vulkanDK {
       target.handled_frames.set_all_out_of_date();
       return texture_index;
    }
+   size_t surface_renderer::add_dds_texture(QString texture_path) {
+      constexpr size_t fail = std::string::npos;
+      //
+      if (!texture_path.endsWith(".dds", Qt::CaseInsensitive))
+         return fail;
+      //
+      auto& list = this->scene.textures;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         if (list[i].path == texture_path) {
+            if constexpr (debug_log_scene_object_lifetimes) {
+               qDebug("[vulkanDK::scene_renderer::add_dds_texture] Reusing texture index %u for texture path <%s>", i, qUtf8Printable(texture_path));
+            }
+            return i;
+         }
+      }
+      //
+      std::unique_ptr<dovah::bsa_archived_file> file;
+      {
+         texture_path = QDir::cleanPath(texture_path);
+         if (!texture_path.startsWith("textures/")) {
+            qDebug("[vulkanDK::surface_renderer::add_dds_texture] Invalid texture path (doesn't start with textures folder): %s", qUtf8Printable(texture_path));
+            return fail;
+         }
+         std::filesystem::path path = texture_path.toStdWString();
+         file.reset(dovahkit::subsystems::assets::get_or_create().lookup_game_asset(path)); // TODO: switch to `get` once we're sure the asset subsystem is constructed elsewhere
+         if (!file) {
+            qDebug("[vulkanDK::surface_renderer::add_dds_texture] Failed to open texture: %s", qUtf8Printable(texture_path));
+            return fail;
+         }
+      }
+      dds::texture tex;
+      tex.data = file->data();
+      tex.size = file->size();
+      //
+      if (!tex.read()) {
+         qDebug("[vulkanDK::surface_renderer::add_dds_texture] Failed to read DDS header: %s", qUtf8Printable(texture_path));
+         return fail;
+      }
+      if (!tex.pixel_data() || !tex.pixel_data_size()) {
+         qDebug("[vulkanDK::surface_renderer::add_dds_texture] No DDS data available: %s", qUtf8Printable(texture_path));
+         return fail;
+      }
+      //
+      // Create scene texture.
+      //
+      auto texture_index = this->scene.insert_new_texture();
+      if (texture_index == std::string::npos) {
+         qDebug("[vulkanDK::scene_renderer::add_dds_texture] Cannot add new rendered textures. Maximum has been reached.");
+         return fail;
+      }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_dds_texture] Creating new texture at index %u for texture path <%s>", texture_index, qUtf8Printable(texture_path));
+      }
+      auto& target = list[texture_index];
+      target.life_state = scene_frame_item_state::active;
+      target.w    = tex.metadata.width;
+      target.h    = tex.metadata.height;
+      target.path = texture_path;
+      //
+      // Create Vulkan data:
+      //
+      target.content = concrete_image(*this);
+      try {
+         auto& img = target.content;
+         img.metadata = image_metadata::from_dds_header(tex.metadata);
+         img.metadata.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+         //
+         img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+         {
+            auto  staging = this->create_buffer(tex.pixel_data_size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            void* data    = staging.map_memory();
+            memcpy(data, tex.pixel_data(), tex.pixel_data_size());
+            staging.unmap_memory(data);
+            //
+            img.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            img.copy_content_from_buffer(staging.handle);
+            img.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+         }
+         img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
+      } catch (std::runtime_error& e) {
+         qDebug("[vulkanDK::scene_renderer::add_dds_texture] Exception thrown while trying to create a new texture.");
+         target.content.teardown();
+         target.mark_for_delete();
+         return fail;
+      }
+      //
+      // Set scene texture as out of date:
+      //
+      target.handled_frames.set_all_out_of_date();
+      return texture_index;
+   }
    void surface_renderer::add_mesh(const QString& texture_path) {
       size_t texture_index = this->add_texture(texture_path);
       if (texture_index == std::string::npos) {
@@ -1945,6 +2043,29 @@ namespace vulkanDK {
             mesh.handled_frames.set_all_out_of_date();
          }
          qDebug("[surface_renderer::add_nif] Vulkan setup complete for geometry: %s.", object->name.c_str());
+         //
+         // Texture:
+         //
+         if (auto* shader = geom->properties.shader) {
+            size_t texture_index = std::string::npos;
+            if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+               if (auto* textures = lighting->texture.paths) {
+                  const auto& diffuse = textures->textures.diffuse;
+                  if (!diffuse.empty()) {
+                     texture_index = this->add_dds_texture(diffuse.c_str());
+                  }
+               }
+            } else if (auto* effect = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+               const auto& texture = effect->texture.path;
+               if (!texture.empty()) {
+                  texture_index = this->add_dds_texture(texture.c_str());
+               }
+            }
+            if (texture_index != std::string::npos) {
+               mesh.texture_index = texture_index;
+               ++this->scene.textures[texture_index].refcount;
+            }
+         }
       };
       auto functor = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
          //

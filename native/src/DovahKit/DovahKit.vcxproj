@@ -450,6 +450,7 @@
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
+    <ClCompile Include="editor\subsystems\assets.cpp" />
     <ClCompile Include="editor\subsystems\DKXInputSubsystem.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
@@ -724,6 +725,7 @@
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
+    <ClInclude Include="editor\subsystems\assets.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
@@ -738,6 +740,7 @@
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
+    <ClInclude Include="helpers\singleton_ex.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
