@@ -73,7 +73,10 @@ namespace vulkanDK::dds {
       if (this->format.has_four_cc()) {
          switch (this->format.four_cc) {
             case 'DXT1':
-               return VkFormat::VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+               if (this->format.has_channel_a()) {
+                  return VkFormat::VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+               }
+               return VkFormat::VK_FORMAT_BC1_RGB_UNORM_BLOCK;
             case 'DXT2':
                return VkFormat::VK_FORMAT_BC2_UNORM_BLOCK;
             case 'DXT3':
@@ -81,7 +84,7 @@ namespace vulkanDK::dds {
             case 'DXT4':
                return VkFormat::VK_FORMAT_BC3_UNORM_BLOCK;
             case 'DXT5':
-               return VkFormat::VK_FORMAT_BC4_UNORM_BLOCK;
+               return VkFormat::VK_FORMAT_BC3_UNORM_BLOCK;
          }
       }
       //

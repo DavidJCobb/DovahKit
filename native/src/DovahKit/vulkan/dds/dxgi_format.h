@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <limits>
 #include "helpers/enum_flags.h"
 #include "../_vulkan.h"
 
@@ -37,7 +38,7 @@ namespace vulkanDK::dds {
             int_signed_normalized,
             fixed_point_bias_2_8,
             //
-            _unspecified = -1,
+            _unspecified = std::numeric_limits<uint8_t>::max(),
          };
 
          struct color {

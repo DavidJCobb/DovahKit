@@ -65,6 +65,44 @@ namespace {
    static constexpr bool setup_fps_counter = true; // mainly just used for grouping code, tbh
 }
 
+namespace {
+   constexpr std::array<vulkanDK::vertex, 4> _make_quad(float hfwc, bool test_colors) { // height-for-width, centered
+      using namespace vulkanDK;
+      //
+      std::array<vulkanDK::vertex, 4> out = {};
+      for (size_t i = 0; i < out.size(); ++i) {
+         auto& v = out[i];
+         v.color = { 1, 1, 1 };
+         v.uv.x = (i % 3 == 0) ? 1 : 0;
+         v.uv.y = (i > 1)      ? 1 : 0;
+         v.normal    = { 0, 0, 1 };
+         v.tangent   = { 1, 0, 0 };
+         v.bitangent = { 0, 1, 0 };
+         //
+         v.pos.x = (i % 3) ? 0.5 : -0.5;
+         v.pos.y = (i > 1) ? hfwc : -hfwc;
+         v.pos.z = 0;
+      }
+      if (test_colors) {
+         for (size_t i = 0; i < out.size(); ++i) {
+            auto& v = out[i];
+            v.color.r = (i == 0 || i == 3) ? 1 : 0;
+            v.color.g = (i == 1 || i == 3) ? 1 : 0;
+            v.color.b = (i == 2 || i == 3) ? 1 : 0;
+         }
+      }
+      //
+      return out;
+   }
+   constexpr std::vector<vulkanDK::vertex> _make_quad(float hfwc) {
+      std::vector<vulkanDK::vertex> items(4);
+      const auto& arr = _make_quad(hfwc, true);
+      for (size_t i = 0; i < 4; ++i)
+         items[i] = arr[i];
+      return items;
+   }
+}
+
 namespace { // test scene properties
    struct _model {
       using vertex = vulkanDK::vertex;
@@ -81,32 +119,7 @@ namespace { // test scene properties
 
    std::array initial_meshes = {
       _model{  // Skyrim texture plane
-         {  // Vertices
-            vulkanDK::vertex{
-               .pos    = { -0.5f, -0.395, 0.0 },
-               .color  = { 1, 0, 0 },
-               .uv     = { 1, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, -0.395, 0.0 },
-               .color  = { 0, 1, 0 },
-               .uv     = { 0, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, 0.395, 0.0 },
-               .color  = { 0, 0, 1 },
-               .uv     = { 0, 1 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { -0.5f, 0.395, 0.0 },
-               .color  = { 1, 1, 1 },
-               .uv     = { 1, 1 },
-               .normal = { 0, 0, 1 },
-            },
-         },
+         _make_quad(0.395),
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
             glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
@@ -114,32 +127,7 @@ namespace { // test scene properties
          ),
       },
       _model{  // screenshot of Tolfdir
-         {  // Vertices
-            vulkanDK::vertex{
-               .pos    = { -0.5f, -0.28125, 0.0 },
-               .color  = { 1, 0, 0 },
-               .uv     = { 1, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, -0.28125, 0.0 },
-               .color  = { 0, 1, 0 },
-               .uv     = { 0, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, 0.28125, 0.0 },
-               .color  = { 0, 0, 1 },
-               .uv     = { 0, 1 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { -0.5f, 0.28125, 0.0 },
-               .color  = { 1, 1, 1 },
-               .uv     = { 1, 1 },
-               .normal = { 0, 0, 1 },
-            },
-         },
+         _make_quad(0.28125),
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
             glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
@@ -147,32 +135,7 @@ namespace { // test scene properties
          ),
       },
       _model{  // screenshot of books
-         {  // Vertices
-            vulkanDK::vertex{
-               .pos    = { -0.5f, -0.28125, 0.0 },
-               .color  = { 1, 0, 0 },
-               .uv     = { 1, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, -0.28125, 0.0 },
-               .color  = { 0, 1, 0 },
-               .uv     = { 0, 0 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { 0.5f, 0.28125, 0.0 },
-               .color  = { 0, 0, 1 },
-               .uv     = { 0, 1 },
-               .normal = { 0, 0, 1 },
-            },
-            vulkanDK::vertex{
-               .pos    = { -0.5f, 0.28125, 0.0 },
-               .color  = { 1, 1, 1 },
-               .uv     = { 1, 1 },
-               .normal = { 0, 0, 1 },
-            },
-         },
+         _make_quad(0.28125),
          { 0, 1, 2, 2, 3, 0 },
          glm::translate(
             glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
@@ -892,9 +855,9 @@ namespace vulkanDK {
             auto& s   = list_src[i];
             auto& d   = list_dst[i];
             auto& vib = d.vertex_and_index_buffer;
-            d.texture_index = i; // TODO: in the future we'd load objects and textures together, basically; for our simple test, the default 3 objects and their textures load separately
+            d.texture_indices.diffuse = i; // TODO: in the future we'd load objects and textures together, basically; for our simple test, the default 3 objects and their textures load separately
             {
-               ++this->scene.textures[d.texture_index].refcount;
+               ++this->scene.textures[d.texture_indices.diffuse].refcount;
             }
             {
                d.anim_state = new mesh_animation_state;
@@ -934,7 +897,7 @@ namespace vulkanDK {
             auto  mi   = this->scene.insert_new_mesh();
             auto& mesh = this->scene.meshes[mi];
             auto& vib = mesh.vertex_and_index_buffer;
-            mesh.texture_index = ti;
+            mesh.texture_indices.diffuse = ti;
             {
                ++this->scene.textures[ti].refcount;
             }
@@ -946,25 +909,33 @@ namespace vulkanDK {
                      .pos    = { -size, -size, 0 },
                      .color  = { 1.0, 0.6, 0.0 },
                      .uv     = { 1, 0 },
-                     .normal = { 0, 0, 1 },
+                     .normal    = { 0, 0, 1 },
+                     .tangent   = { 1, 0, 0 },
+                     .bitangent = { 0, 1, 0 },
                   },
                   {
                      .pos    = { size, -size, 0 },
                      .color  = { 1.0, 0.6, 0.0 },
                      .uv     = { 0, 0 },
-                     .normal = { 0, 0, 1 },
+                     .normal    = { 0, 0, 1 },
+                     .tangent   = { 1, 0, 0 },
+                     .bitangent = { 0, 1, 0 },
                   },
                   {
                      .pos    = { size, size, 0 },
                      .color  = { 1.0, 0.6, 0.0 },
                      .uv     = { 0, 1 },
-                     .normal = { 0, 0, 1 },
+                     .normal    = { 0, 0, 1 },
+                     .tangent   = { 1, 0, 0 },
+                     .bitangent = { 0, 1, 0 },
                   },
                   {
                      .pos    = { -size, size, 0 },
                      .color  = { 1.0, 0.6, 0.0 },
                      .uv     = { 1, 1 },
-                     .normal = { 0, 0, 1 },
+                     .normal    = { 0, 0, 1 },
+                     .tangent   = { 1, 0, 0 },
+                     .bitangent = { 0, 1, 0 },
                   },
                };
             }
@@ -1859,7 +1830,7 @@ namespace vulkanDK {
          //
          auto& ro  = this->scene.meshes[object_index];
          auto& vib = ro.vertex_and_index_buffer;
-         ro.texture_index = texture_index;
+         ro.texture_indices.diffuse = texture_index;
          ++texture_item.refcount;
          texture_item.life_state = scene_frame_item_state::active;
          //
@@ -1878,25 +1849,33 @@ namespace vulkanDK {
                .pos    = { -0.5f, -hfwc, 0.0 },
                .color  = { 1, 1, 1 },
                .uv     = { 1, 0 },
-               .normal = { 0, 0, 1 },
+               .normal    = { 0, 0, 1 },
+               .tangent   = { 1, 0, 0 },
+               .bitangent = { 0, 1, 0 },
             },
             vertex{
                .pos    = { 0.5f, -hfwc, 0.0 },
                .color  = { 1, 1, 1 },
                .uv     = { 0, 0 },
-               .normal = { 0, 0, 1 },
+               .normal    = { 0, 0, 1 },
+               .tangent   = { 1, 0, 0 },
+               .bitangent = { 0, 1, 0 },
             },
             vertex{
                .pos    = { 0.5f, hfwc, 0.0 },
                .color  = { 1, 1, 1 },
                .uv     = { 0, 1 },
-               .normal = { 0, 0, 1 },
+               .normal    = { 0, 0, 1 },
+               .tangent   = { 1, 0, 0 },
+               .bitangent = { 0, 1, 0 },
             },
             vertex{
                .pos    = { -0.5f, hfwc, 0.0 },
                .color  = { 1, 1, 1 },
                .uv     = { 1, 1 },
-               .normal = { 0, 0, 1 },
+               .normal    = { 0, 0, 1 },
+               .tangent   = { 1, 0, 0 },
+               .bitangent = { 0, 1, 0 },
             },
          };
          ro.data.indices = { 0, 1, 2, 2, 3, 0 };
@@ -1942,9 +1921,10 @@ namespace vulkanDK {
       auto& item = list[i];
       item.mark_for_delete();
       {
-         auto ti = item.texture_index;
-         if (ti >= 0) {
-            auto& list = this->scene.textures;
+         auto& list = this->scene.textures;
+         for (auto& ti : item.texture_indices.list) {
+            if (ti < 0)
+               continue;
             if (ti < list.size()) {
                auto& tex = list[ti];
                if (--tex.refcount == 0) {
@@ -1955,9 +1935,9 @@ namespace vulkanDK {
                   }
                }
             }
+            ti = -1;
          }
       }
-      item.texture_index = -1;
       //
       for (auto& image : this->swap_chain.images)
          image.invalidate_all_command_buffers();
@@ -2074,12 +2054,14 @@ namespace vulkanDK {
          //
          mesh.life_state = scene_frame_item_state::active;
          mesh.shader_params.transform = transform;
-         mesh.texture_index = texture_index;
+         mesh.texture_indices.diffuse = texture_index;
          ++this->scene.textures[texture_index].refcount;
          {  // Vertices
             mesh.data.vertices.resize(size);
             auto& vl = data->vertices;
             auto& nl = data->normals;
+            auto& tl = data->tangents;
+            auto& bl = data->bitangents;
             auto& cl = data->vertex_colors;
             auto& ul = data->uv_sets;
             for (size_t i = 0; i < size; ++i) {
@@ -2098,6 +2080,14 @@ namespace vulkanDK {
                }
                if (nl.size()) {
                   vert.normal = nl[i];
+                  if (tl.size()) {
+                     assert(bl.size());
+                     vert.tangent   = tl[i];
+                     vert.bitangent = bl[i];
+                  } else {
+                     vert.tangent   = { 1, 0, 0 };
+                     vert.bitangent = { 0, 1, 0 };
+                  }
                } else {
                   vert.normal = { 0, 0, 1 }; // this won't be a good default...
                }
@@ -2154,11 +2144,16 @@ namespace vulkanDK {
          //
          if (auto* shader = geom->properties.shader) {
             size_t texture_index = std::string::npos;
+            size_t normals_index = std::string::npos;
             if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
                if (auto* textures = lighting->texture.paths) {
                   const auto& diffuse = textures->textures.diffuse;
+                  const auto& normals = textures->textures.normal;
                   if (!diffuse.empty()) {
                      texture_index = this->add_dds_texture(diffuse.c_str());
+                  }
+                  if (!normals.empty()) {
+                     normals_index = this->add_dds_texture(normals.c_str());
                   }
                }
                //
@@ -2171,10 +2166,12 @@ namespace vulkanDK {
                   texture_index = this->add_dds_texture(texture.c_str());
                }
             }
-            if (texture_index != std::string::npos) {
-               mesh.texture_index = texture_index;
+            mesh.texture_indices.diffuse = texture_index;
+            mesh.texture_indices.normals = normals_index;
+            if (texture_index != std::string::npos)
                ++this->scene.textures[texture_index].refcount;
-            }
+            if (normals_index != std::string::npos)
+               ++this->scene.textures[normals_index].refcount;
          }
       };
       auto functor = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {

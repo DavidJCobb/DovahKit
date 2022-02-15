@@ -31,9 +31,9 @@ namespace vulkanDK {
          std::swap(tm.index_count,  om.index_count);
          std::swap(tm.wide_indices, om.wide_indices);
       }
-      this->shader_params  = o.shader_params;
-      this->texture_index  = o.texture_index;
-      this->handled_frames = o.handled_frames;
+      this->shader_params   = o.shader_params;
+      this->texture_indices = o.texture_indices;
+      this->handled_frames  = o.handled_frames;
       std::swap(this->life_state, o.life_state);
       std::swap(this->anim_state, o.anim_state);
       //
@@ -144,6 +144,7 @@ namespace vulkanDK {
          delete p;
          p = nullptr;
       }
+      this->texture_indices = decltype(texture_indices)();
       this->handled_frames = frame_dirty_state();
       this->life_state = scene_frame_item_state::empty;
       //

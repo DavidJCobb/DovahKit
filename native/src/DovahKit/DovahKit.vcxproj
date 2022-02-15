@@ -847,6 +847,7 @@
     <ClInclude Include="vulkan\surface_support_info.h" />
     <ClInclude Include="vulkan\swap_chain_image.h" />
     <ClInclude Include="vulkan\vertex.h" />
+    <ClInclude Include="vulkan\vertex_metadata.h" />
     <ClInclude Include="vulkan\_memory.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />
@@ -1527,7 +1528,9 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="shaders\overlay-fps.frag" />
+    <None Include="shaders\overlay-fps.frag.spv" />
     <None Include="shaders\overlay-fps.vert" />
+    <None Include="shaders\overlay-fps.vert.spv" />
     <None Include="shaders\shader.frag">
       <FileType>Document</FileType>
     </None>

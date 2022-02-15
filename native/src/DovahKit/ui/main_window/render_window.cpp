@@ -2,11 +2,14 @@
 #include <QBoxLayout>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QMessageBox>
 #include <QStatusBar>
 #include <QStyle>
 #include <QToolButton>
 #include "widgets/DKVulkanView.h"
 #include "../../vulkan/surface_renderer.h"
+
+#include "editor/core.h"
 
 #include "nif/file.h"
 #include "nif/notice_code_t.h"
@@ -104,6 +107,10 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Load NIF...");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         if (!DovahKitCore::get().has_data()) {
+            QMessageBox::critical(this, "Error", "Load data first, so we know where to pull game textures from.");
+            return;
+         }
          auto path = QFileDialog::getOpenFileName(this, "Model", "", "NetImmerse Format model (*.nif)");
          if (path.isEmpty())
             return;
@@ -111,7 +118,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          {
             QFile file(path);
             if (!file.open(QIODevice::ReadOnly)) {
-               qDebug("Failed to open file.");
+               QMessageBox::critical(this, "Error", "Failed to open NIF file.");
                return;
             }
             QByteArray data = file.readAll();
@@ -120,9 +127,11 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             auto& error = model.read_error();
             if (error.code != nifDK::default_notice_code) {
                qDebug("NIF parsing failed with error code %08X.", error.code);
+               QMessageBox::critical(this, "Error", QString("NIF parsing failed with error code %1").arg(error.code, 8, 16, QChar('0')));
                #if _DEBUG
                   __debugbreak();
                #endif
+               return;
             }
          }
          qDebug("NIF parsed. Passing to surface_renderer...");

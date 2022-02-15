@@ -2,6 +2,7 @@
 #include <array>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
+#include "vertex_metadata.h"
 
 namespace vulkanDK {
    struct vertex {
@@ -9,34 +10,19 @@ namespace vulkanDK {
       glm::vec3 color;
       glm::vec2 uv;
       glm::vec3 normal;
+      glm::vec3 tangent;
+      glm::vec3 bitangent;
       //
-      static constexpr std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
-         return std::array{
-            VkVertexInputAttributeDescription{
-               .location = 0, // should match the location value in the shader's code
-               .binding  = 0,
-               .format   = VK_FORMAT_R32G32B32_SFLOAT, // vec3
-               .offset   = offsetof(vertex, pos),
-            },
-            VkVertexInputAttributeDescription{ // vertex color
-               .location = 1,
-               .binding  = 0,
-               .format   = VK_FORMAT_R32G32B32_SFLOAT,
-               .offset   = offsetof(vertex, color),
-            },
-            VkVertexInputAttributeDescription{ // UVs
-               .location = 2,
-               .binding  = 0,
-               .format   = VK_FORMAT_R32G32_SFLOAT,
-               .offset   = offsetof(vertex, uv),
-            },
-            VkVertexInputAttributeDescription{ // normals
-               .location = 3,
-               .binding  = 0,
-               .format   = VK_FORMAT_R32G32B32_SFLOAT, // vec3
-               .offset   = offsetof(vertex, normal),
-            },
-         };
+      static constexpr std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions() {
+         constexpr auto data = vertex_attributes_from_data<
+            vertex_attribute_offset<decltype(pos),       offsetof(vertex, pos)>,
+            vertex_attribute_offset<decltype(color),     offsetof(vertex, color)>,
+            vertex_attribute_offset<decltype(uv),        offsetof(vertex, uv)>,
+            vertex_attribute_offset<decltype(normal),    offsetof(vertex, normal)>,
+            vertex_attribute_offset<decltype(tangent),   offsetof(vertex, tangent)>,
+            vertex_attribute_offset<decltype(bitangent), offsetof(vertex, bitangent)>
+         >(0);
+         return data;
       }
       static constexpr VkVertexInputBindingDescription getBindingDescription() {
          return VkVertexInputBindingDescription{

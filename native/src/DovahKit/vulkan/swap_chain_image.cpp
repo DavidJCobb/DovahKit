@@ -514,7 +514,8 @@ namespace vulkanDK {
 
                auto pc = rendered_mesh::push_constant{
                   .object_index  = (int32_t)j,
-                  .texture_index = (int32_t)ro.texture_index,
+                  .texture_index = (int32_t)ro.texture_indices.diffuse,
+                  .texture_normal_index = (int32_t)ro.texture_indices.normals,
                };
                vkCmdPushConstants(
                   command_buffer,

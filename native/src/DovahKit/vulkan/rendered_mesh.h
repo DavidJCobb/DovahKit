@@ -37,6 +37,7 @@ namespace vulkanDK {
          struct push_constant {
             int32_t object_index;
             int32_t texture_index;
+            int32_t texture_normal_index = -1;
          };
          
          struct {
@@ -55,7 +56,13 @@ namespace vulkanDK {
             bool     wide_indices = false;
          } vertex_and_index_buffer;
          shader_parameters shader_params;
-         int32_t texture_index = -1;
+         union {
+            std::array<int32_t, 2> list = { -1, -1 };
+            struct {
+               int32_t diffuse;
+               int32_t normals;
+            };
+         } texture_indices;
          //
          frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
          scene_frame_item_state life_state = scene_frame_item_state::empty;
