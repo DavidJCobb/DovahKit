@@ -125,22 +125,23 @@ namespace dovah {
       //
       auto pos = this->stream_position;
       //
-      folder.files.reserve(count);
       this->stream_position = folder.offset;
       if (this->header.flags & bsa_header::flag::include_directory_names) {
          uint8_t length;
          this->_read(length);
-         folder.name.reserve(length);
-         this->_read(folder.name);
+         folder.name.resize(length);
+         this->_read(folder.name.data(), folder.name.size());
+         {
+            auto i = folder.name.find('\0');
+            if (i != std::string::npos)
+               folder.name.resize(i);
+         }
          //
          normalize_path_or_path_component(folder.name);
-         //for (auto& c : folder.name)
-         //   c = tolower(c, std::locale());
       }
-      for (uint32_t i = 0; i < count; ++i) {
-         auto& file = folder.files.emplace_back();
+      folder.files.resize(count);
+      for(auto& file : folder.files)
          this->_read(file);
-      }
       //
       this->stream_position = pos;
    }
@@ -176,11 +177,7 @@ namespace dovah {
          this->_read(file.name);
          this->last_filename_offset += (this->stream_position - start);
       }
-      {
-         normalize_path_or_path_component(file.name);
-         //for (auto& c : file.name)
-         //   c = tolower(c, std::locale());
-      }
+      normalize_path_or_path_component(file.name);
       this->stream_position = pos;
       //
       if (file.size() + file.offset > this->mapping.size()) {
@@ -231,10 +228,9 @@ namespace dovah {
          this->needs_endianness_flip = !this->needs_endianness_flip;
       this->filename_blob_offset = this->header.expected_filename_blob_position();
       //
-      for (uint32_t i = 0; i < this->header.folder_count; ++i) {
-         auto& folder = this->folders.emplace_back();
+      this->folders.resize(this->header.folder_count);
+      for (auto& folder : this->folders)
          this->_read(folder);
-      }
    }
    #pragma endregion
 

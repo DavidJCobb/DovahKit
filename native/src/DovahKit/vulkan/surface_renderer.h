@@ -1,6 +1,7 @@
 #pragma once
 #include <QPointer>
 #include <QWidget>
+#include <glm/glm.hpp>
 #include "_vulkan.h"
 #include "_memory.h"
 #include "_util.h"
@@ -21,6 +22,11 @@ class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
 namespace nifDK {
    class file;
+   namespace block_types {
+      class BSShaderProperty;
+      class BSTriShape;
+      class NiGeometry;
+   }
 }
 
 namespace vulkanDK {
@@ -131,7 +137,13 @@ namespace vulkanDK {
          void set_animation_paused(size_t mesh, bool paused);
          //
          size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
-         //
+      
+      protected:
+         void _create_mesh_vib(rendered_mesh&);
+         void _handle_ni_textures(rendered_mesh&, nifDK::block_types::BSShaderProperty*);
+         void add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index);
+         void add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
+      public:
          bool add_nif(nifDK::file& model);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);

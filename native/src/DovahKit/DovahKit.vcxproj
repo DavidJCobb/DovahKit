@@ -500,11 +500,13 @@
     <ClCompile Include="helpers\windows_ini.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nif\blocks\BSDismemberSkinInstance.cpp" />
     <ClCompile Include="nif\blocks\BSEffectShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSInvMarker.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
+    <ClCompile Include="nif\blocks\BSTriShape.cpp" />
     <ClCompile Include="nif\blocks\NiAlphaProperty.cpp" />
     <ClCompile Include="nif\blocks\NiAVObject.cpp" />
     <ClCompile Include="nif\blocks\NiCollisionObject.cpp" />
@@ -526,6 +528,7 @@
     <ClCompile Include="nif\blocks\_factory.cpp" />
     <ClCompile Include="nif\file.cpp" />
     <ClCompile Include="nif\reader.cpp" />
+    <ClCompile Include="nif\types\BodyPartList.cpp" />
     <ClCompile Include="nif\types\BSVertexDataSSE.cpp" />
     <ClCompile Include="nif\types\BSVertexDesc.cpp" />
     <ClCompile Include="nif\types\Float16.cpp" />
@@ -751,12 +754,14 @@
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="nif\block.h" />
+    <ClInclude Include="nif\blocks\BSDismemberSkinInstance.h" />
     <ClInclude Include="nif\blocks\BSEffectShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSFadeNode.h" />
     <ClInclude Include="nif\blocks\BSInvMarker.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderTextureSet.h" />
+    <ClInclude Include="nif\blocks\BSTriShape.h" />
     <ClInclude Include="nif\blocks\BSXFlags.h" />
     <ClInclude Include="nif\blocks\NiAlphaProperty.h" />
     <ClInclude Include="nif\blocks\NiAVObject.h" />
@@ -776,6 +781,8 @@
     <ClInclude Include="nif\detailed_notice.h" />
     <ClInclude Include="nif\notice_code_list.h" />
     <ClInclude Include="nif\notice_code_t.h" />
+    <ClInclude Include="nif\types\BodyPartList.h" />
+    <ClInclude Include="nif\types\BodyPartIndex.h" />
     <ClInclude Include="nif\types\BSVertexDataSSE.h" />
     <ClInclude Include="nif\types\BSVertexDesc.h" />
     <ClInclude Include="nif\types\Float16.h" />

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace nifDK {
    class file_reader;
@@ -19,5 +20,7 @@ namespace nifDK {
 
       void read(file_reader&);
       void unchecked_read(file_reader&);
+
+      void set_from_bytes(uint8_t values[4]);
    };
 }

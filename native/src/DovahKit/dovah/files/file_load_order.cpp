@@ -316,7 +316,7 @@ namespace dovah {
          //
          uint32_t count = 0;
          //
-         auto list = utils::get_ini_defined_bsa_list();
+         auto list = utils::get_ini_defined_bsa_list(this->current_game);
          for (auto& path : list)
             this->archives->insert_archive(count++, path);
          //
@@ -380,7 +380,6 @@ namespace dovah {
                   this->active_file = file;
                }
                if (!file->load(path.c_str())) {
-                  auto fn = header->name;
                   if (!results.error.is_defined()) {
                      results.error.code = notice_code::unknown_error;
                      results.error.set_cause_file(path);

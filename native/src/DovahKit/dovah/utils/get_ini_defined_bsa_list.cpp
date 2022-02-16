@@ -4,7 +4,7 @@
 #include "Shlobj.h"
 
 namespace dovah::utils {
-   std::vector<std::filesystem::path> get_ini_defined_bsa_list() {
+   std::vector<std::filesystem::path> get_ini_defined_bsa_list(game which_game) {
       std::vector<std::filesystem::path> out;
       //
       std::wstring filepath;
@@ -18,7 +18,18 @@ namespace dovah::utils {
       }
       if (filepath.empty())
          return out;
-      filepath += L"\\My Games\\Skyrim\\Skyrim.INI";
+      filepath += L"\\My Games\\";
+      switch (which_game) {
+         case game::skyrim_classic:
+            filepath += L"Skyrim\\";
+            break;
+         case game::skyrim_special:
+            filepath += L"Skyrim Special Edition\\";
+            break;
+         default:
+            return out;
+      }
+      filepath += L"Skyrim.INI";
       //
       std::wstring raw = cobb::read_single_ini_string_setting(filepath.c_str(), L"Archive", L"sResourceArchiveList");
       size_t pos;

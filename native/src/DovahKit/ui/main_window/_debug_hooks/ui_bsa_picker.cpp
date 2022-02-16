@@ -11,8 +11,8 @@ namespace DovahKitDebug::features {
       qDebug("Loading BSAs...");
       dovah::bsa_load_order blo;
       {
+         auto& editor = DovahKitCore::get();
          {
-            auto& editor = DovahKitCore::get();
             auto  path   = std::filesystem::path();
             if (editor.has_data()) {
                editor.get_game_path(path, editor.get_current_game());
@@ -22,7 +22,7 @@ namespace DovahKitDebug::features {
             path.append("Data");
             blo.set_base_path(path);
          }
-         auto list = dovah::utils::get_ini_defined_bsa_list();
+         auto list = dovah::utils::get_ini_defined_bsa_list(editor.get_current_game());
          for (const auto& path : list)
             blo.append_archive(path);
          blo.load_archives();

@@ -71,7 +71,7 @@ namespace nifDK::block_types {
       //
       bool is_remaster = reader.version() >= file_version::from_parts<20, 2, 0, 7> && reader.user_version<2>() == 100;
       if (is_remaster) {
-         this->remaster.vertex_description.parse(reader);
+         this->remaster.vertex_description.read(reader);
          //
          auto& list = this->remaster.triangles;
          list.resize(count_tri);
@@ -91,7 +91,7 @@ namespace nifDK::block_types {
          uint32_t vertex_size;
          reader.read(data_size);
          reader.read(vertex_size);
-         this->remaster.vertex_description.parse(reader);
+         this->remaster.vertex_description.read(reader);
          //
          auto& list = this->remaster.vertices;
          list.resize(vertex_size / data_size);

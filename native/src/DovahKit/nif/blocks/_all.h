@@ -18,6 +18,7 @@
             #include "NiTriShapeData.h"
       #include "NiObjectNET.h"
          #include "NiAVObject.h"
+            #include "BSTriShape.h"
             #include "NiDynamicEffect.h"
             #include "NiGeometry.h"
                #include "NiTriBasedGeom.h"
@@ -32,6 +33,7 @@
                   #include "BSLightingShaderProperty.h"
       #include "NiSkinData.h"
       #include "NiSkinInstance.h"
+         #include "BSDismemberSkinInstance.h"
       #include "NiSkinPartition.h"
       #include "NiTimeController.h"
 #pragma endregion
@@ -40,12 +42,14 @@ namespace nifDK {
    using all_block_types = cobb::class_list<
       block_types::unknown_block,
       //
+      block_types::BSDismemberSkinInstance,
       block_types::BSEffectShaderProperty,
       block_types::BSFadeNode,
       block_types::BSInvMarker,
       block_types::BSLightingShaderProperty,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
+      block_types::BSTriShape,
       block_types::BSXFlags,
       block_types::NiAlphaProperty,
       block_types::NiAVObject,

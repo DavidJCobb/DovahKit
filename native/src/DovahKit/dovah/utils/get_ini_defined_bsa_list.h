@@ -1,7 +1,8 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include "../core.h"
 
 namespace dovah::utils {
-   extern std::vector<std::filesystem::path> get_ini_defined_bsa_list();
+   extern std::vector<std::filesystem::path> get_ini_defined_bsa_list(game);
 }

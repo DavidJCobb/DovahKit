@@ -40,6 +40,7 @@
 #include "nif/blocks/BSEffectShaderProperty.h"
 #include "nif/blocks/BSLightingShaderProperty.h"
 #include "nif/blocks/BSShaderTextureSet.h"
+#include "nif/blocks/BSTriShape.h"
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 #include "nif/blocks/NiNode.h"
@@ -2009,7 +2010,218 @@ namespace vulkanDK {
       }
       return nearest;
    }
-   //
+   
+   namespace {
+      void _ni_triangles_to_mesh_triangles(const std::vector<nifDK::Triangle>& list, rendered_mesh& mesh) {
+         auto  size = list.size();
+         mesh.data.indices = vertex_index_list(size * 3, uint16_t(0));
+         //
+         auto to = mesh.data.indices.as_thin_range();
+         for (size_t i = 0; i < size; ++i) {
+            auto& tri = list[i];
+            to[(i * 3) + 0] = tri.vertex_indices[0];
+            to[(i * 3) + 1] = tri.vertex_indices[1];
+            to[(i * 3) + 2] = tri.vertex_indices[2];
+         }
+      }
+   }
+   void surface_renderer::_create_mesh_vib(rendered_mesh& mesh) {
+      VkDeviceSize buffer_size_v;
+      VkDeviceSize buffer_size_i;
+      VkDeviceSize buffer_size;
+      mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
+      //
+      auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      void* data    = staging.map_memory();
+      mesh.setup_vib_data_at(data);
+      staging.unmap_memory(data);
+      //
+      auto& vib = mesh.vertex_and_index_buffer;
+      vib.wide_indices = mesh.data.indices.type() == vertex_index_list::value_type::wide;
+      vib.indices_at   = buffer_size_v;
+      vib.index_count  = mesh.data.indices.size();
+      vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      vib.buffer.copy_from(staging);
+      //
+      mesh.handled_frames.set_all_out_of_date();
+   }
+   void surface_renderer::_handle_ni_textures(rendered_mesh& mesh, nifDK::block_types::BSShaderProperty* shader) {
+      size_t prior_diffuse = mesh.texture_indices.diffuse;
+      size_t prior_normals = mesh.texture_indices.normals;
+      //
+      size_t texture_index = std::string::npos;
+      size_t normals_index = std::string::npos;
+      if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+         if (auto* textures = lighting->texture.paths) {
+            const auto& diffuse = textures->textures.diffuse;
+            const auto& normals = textures->textures.normal;
+            if (!diffuse.empty()) {
+               texture_index = this->add_dds_texture(diffuse.c_str());
+            }
+            if (!normals.empty()) {
+               normals_index = this->add_dds_texture(normals.c_str());
+            }
+         }
+         //
+         mesh.shader_params.specular_strength = lighting->specular.strength / 1000.0F; // NIF uses 999 for max brightness?
+         mesh.shader_params.specular_color    = { lighting->specular.color.r, lighting->specular.color.g, lighting->specular.color.b };
+         mesh.shader_params.specular_exponent = lighting->material.glossiness;
+      } else if (auto* effect = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+         const auto& texture = effect->texture.path;
+         if (!texture.empty()) {
+            texture_index = this->add_dds_texture(texture.c_str());
+         }
+      }
+      mesh.texture_indices.diffuse = texture_index;
+      mesh.texture_indices.normals = normals_index;
+      if (texture_index != std::string::npos) {
+         ++this->scene.textures[texture_index].refcount;
+         if (prior_diffuse != std::string::npos)
+            --this->scene.textures[prior_diffuse].refcount;
+      }
+      if (normals_index != std::string::npos) {
+         ++this->scene.textures[normals_index].refcount;
+         if (prior_normals != std::string::npos)
+            --this->scene.textures[prior_normals].refcount;
+      }
+   }
+   void surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
+      auto size = data->vertices.size();
+      if (!size || !data->triangles.size())
+         return;
+      qDebug("[surface_renderer::add_BSTriShape_mesh] Handling geometry: %s...", data->name.data());
+      transform = transform * data->transform.to_matrix();
+      //
+      auto  mesh_index = this->scene.insert_new_mesh();
+      assert(mesh_index != std::string::npos);
+      auto& mesh       = this->scene.meshes[mesh_index];
+      //
+      mesh.life_state = scene_frame_item_state::active;
+      mesh.shader_params.transform = transform;
+      mesh.texture_indices.diffuse = fallback_texture_index;
+      ++this->scene.textures[fallback_texture_index].refcount;
+      {  // Vertices
+         mesh.data.vertices.resize(size);
+         auto&       list = data->vertices;
+         const auto& desc = data->vertex_desc;
+         for (size_t i = 0; i < size; ++i) {
+            auto& src = list[i];
+            auto& dst = mesh.data.vertices[i];
+            //
+            dst.pos       = src.vertex;
+            dst.color     = { src.color.r, src.color.g, src.color.b }; // TODO: support RGBA vertex colors
+            dst.normal    = src.normal;
+            dst.tangent   = src.tangent;
+            dst.bitangent = src.bitangent;
+            dst.uv        = src.uv;
+         }
+      }
+      qDebug("[surface_renderer::add_BSTriShape_mesh] Loaded %u vertices...", size);
+      {  // Triangles
+         _ni_triangles_to_mesh_triangles(data->triangles, mesh);
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+      }
+      {  // Bounding sphere
+         auto& dst = mesh.data.bounding_sphere;
+         auto& src = data->bounds;
+         dst.center    = src.center;
+         dst.radius_sq = src.radius * src.radius;
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
+      }
+      //
+      // Vulkan:
+      //
+      this->_create_mesh_vib(mesh);
+      qDebug("[surface_renderer::add_BSTriShape_mesh] Vulkan setup complete for geometry: %s.", data->name.c_str());
+      //
+      // Texture:
+      //
+      if (auto* shader = data->properties.shader) {
+         _handle_ni_textures(mesh, shader);
+      }
+   }
+   void surface_renderer::add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index) {
+      auto* geom = dynamic_cast<nifDK::block_types::NiTriShape*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
+      if (!geom)
+         return;
+      auto* data = dynamic_cast<nifDK::block_types::NiTriShapeData*>(geom->data);
+      if (!data)
+         return;
+      auto size = data->vertices.size();
+      if (!size || !data->triangles.size())
+         return;
+      qDebug("[surface_renderer::add_NiGeometry_mesh] Handling geometry: %s...", object->name.data());
+      transform = transform * geom->transform.to_matrix();
+      //
+      auto  mesh_index = this->scene.insert_new_mesh();
+      assert(mesh_index != std::string::npos);
+      auto& mesh       = this->scene.meshes[mesh_index];
+      //
+      mesh.life_state = scene_frame_item_state::active;
+      mesh.shader_params.transform = transform;
+      mesh.texture_indices.diffuse = fallback_texture_index;
+      ++this->scene.textures[fallback_texture_index].refcount;
+      {  // Vertices
+         mesh.data.vertices.resize(size);
+         auto& vl = data->vertices;
+         auto& nl = data->normals;
+         auto& tl = data->tangents;
+         auto& bl = data->bitangents;
+         auto& cl = data->vertex_colors;
+         auto& ul = data->uv_sets;
+         for (size_t i = 0; i < size; ++i) {
+            auto& vert = mesh.data.vertices[i];
+            vert.pos = data->vertices[i];
+            if (cl.size()) {
+               vert.color = { cl[i].r, cl[i].g, cl[i].b };
+            } else {
+               vert.color = { 1.0, 1.0, 1.0 };
+            }
+            if (ul.size()) {
+               auto& uv = ul[0];
+               vert.uv = uv[i];
+            } else {
+               vert.uv = { 0, 0 };
+            }
+            if (nl.size()) {
+               vert.normal = nl[i];
+               if (tl.size()) {
+                  assert(bl.size());
+                  vert.tangent   = tl[i];
+                  vert.bitangent = bl[i];
+               } else {
+                  vert.tangent   = { 1, 0, 0 };
+                  vert.bitangent = { 0, 1, 0 };
+               }
+            } else {
+               vert.normal = { 0, 0, 1 }; // this won't be a good default...
+            }
+         }
+      }
+      qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", size);
+      {  // Triangles
+         _ni_triangles_to_mesh_triangles(data->triangles, mesh);
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+      }
+      {  // Bounding sphere
+         auto& dst = mesh.data.bounding_sphere;
+         auto& src = data->bounds;
+         dst.center    = src.center;
+         dst.radius_sq = src.radius * src.radius;
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
+      }
+      //
+      // Vulkan:
+      //
+      this->_create_mesh_vib(mesh);
+      qDebug("[surface_renderer::add_NiGeometry_mesh] Vulkan setup complete for geometry: %s.", object->name.c_str());
+      //
+      // Texture:
+      //
+      if (auto* shader = geom->properties.shader) {
+         _handle_ni_textures(mesh, shader);
+      }
+   }
    bool surface_renderer::add_nif(nifDK::file& model) {
       if (!model.root_node) {
          qDebug("[surface_renderer::add_nif] Model has no root node.");
@@ -2035,153 +2247,14 @@ namespace vulkanDK {
          texture_item.life_state = scene_frame_item_state::active;
       }
       //
-      auto load_geom = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
-         auto* geom = dynamic_cast<nifDK::block_types::NiTriShape*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
-         if (!geom)
-            return;
-         auto* data = dynamic_cast<nifDK::block_types::NiTriShapeData*>(geom->data);
-         if (!data)
-            return;
-         auto size = data->vertices.size();
-         if (!size || !data->triangles.size())
-            return;
-         qDebug("[surface_renderer::add_nif] Handling geometry: %s...", object->name.data());
-         transform = transform * geom->transform.to_matrix();
-         //
-         auto  mesh_index = this->scene.insert_new_mesh();
-         assert(mesh_index != std::string::npos);
-         auto& mesh       = this->scene.meshes[mesh_index];
-         //
-         mesh.life_state = scene_frame_item_state::active;
-         mesh.shader_params.transform = transform;
-         mesh.texture_indices.diffuse = texture_index;
-         ++this->scene.textures[texture_index].refcount;
-         {  // Vertices
-            mesh.data.vertices.resize(size);
-            auto& vl = data->vertices;
-            auto& nl = data->normals;
-            auto& tl = data->tangents;
-            auto& bl = data->bitangents;
-            auto& cl = data->vertex_colors;
-            auto& ul = data->uv_sets;
-            for (size_t i = 0; i < size; ++i) {
-               auto& vert = mesh.data.vertices[i];
-               vert.pos = data->vertices[i];
-               if (cl.size()) {
-                  vert.color = { cl[i].r, cl[i].g, cl[i].b };
-               } else {
-                  vert.color = { 1.0, 1.0, 1.0 };
-               }
-               if (ul.size()) {
-                  auto& uv = ul[0];
-                  vert.uv = uv[i];
-               } else {
-                  vert.uv = { 0, 0 };
-               }
-               if (nl.size()) {
-                  vert.normal = nl[i];
-                  if (tl.size()) {
-                     assert(bl.size());
-                     vert.tangent   = tl[i];
-                     vert.bitangent = bl[i];
-                  } else {
-                     vert.tangent   = { 1, 0, 0 };
-                     vert.bitangent = { 0, 1, 0 };
-                  }
-               } else {
-                  vert.normal = { 0, 0, 1 }; // this won't be a good default...
-               }
-            }
-         }
-         qDebug("[surface_renderer::add_nif] Loaded %u vertices...", size);
-         {  // Triangles
-            auto& list = data->triangles;
-            auto  size = list.size();
-            mesh.data.indices = vertex_index_list(size * 3, uint16_t(0));
-            //
-            auto to = mesh.data.indices.as_thin_range();
-            for (size_t i = 0; i < size; ++i) {
-               auto& tri = list[i];
-               to[(i * 3) + 0] = tri.vertex_indices[0];
-               to[(i * 3) + 1] = tri.vertex_indices[1];
-               to[(i * 3) + 2] = tri.vertex_indices[2];
-            }
-            qDebug("[surface_renderer::add_nif] Loaded %u triangles...", size);
-         }
-         {  // Bounding sphere
-            auto& dst = mesh.data.bounding_sphere;
-            auto& src = data->bounds;
-            dst.center    = src.center;
-            dst.radius_sq = src.radius * src.radius;
-            qDebug("[surface_renderer::add_nif] Loaded NiBound...");
-         }
-         //
-         // Vulkan:
-         //
-         {
-            VkDeviceSize buffer_size_v;
-            VkDeviceSize buffer_size_i;
-            VkDeviceSize buffer_size;
-            mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-            //
-            auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            void* data    = staging.map_memory();
-            mesh.setup_vib_data_at(data);
-            staging.unmap_memory(data);
-            //
-            auto& vib = mesh.vertex_and_index_buffer;
-            vib.wide_indices = mesh.data.indices.type() == vertex_index_list::value_type::wide;
-            vib.indices_at   = buffer_size_v;
-            vib.index_count  = mesh.data.indices.size();
-            vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            vib.buffer.copy_from(staging);
-            //
-            mesh.handled_frames.set_all_out_of_date();
-         }
-         qDebug("[surface_renderer::add_nif] Vulkan setup complete for geometry: %s.", object->name.c_str());
-         //
-         // Texture:
-         //
-         if (auto* shader = geom->properties.shader) {
-            size_t texture_index = std::string::npos;
-            size_t normals_index = std::string::npos;
-            if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-               if (auto* textures = lighting->texture.paths) {
-                  const auto& diffuse = textures->textures.diffuse;
-                  const auto& normals = textures->textures.normal;
-                  if (!diffuse.empty()) {
-                     texture_index = this->add_dds_texture(diffuse.c_str());
-                  }
-                  if (!normals.empty()) {
-                     normals_index = this->add_dds_texture(normals.c_str());
-                  }
-               }
-               //
-               mesh.shader_params.specular_strength = lighting->specular.strength / 1000.0F; // NIF uses 999 for max brightness?
-               mesh.shader_params.specular_color    = { lighting->specular.color.r, lighting->specular.color.g, lighting->specular.color.b };
-               mesh.shader_params.specular_exponent = lighting->material.glossiness;
-            } else if (auto* effect = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
-               const auto& texture = effect->texture.path;
-               if (!texture.empty()) {
-                  texture_index = this->add_dds_texture(texture.c_str());
-               }
-            }
-            mesh.texture_indices.diffuse = texture_index;
-            mesh.texture_indices.normals = normals_index;
-            if (texture_index != std::string::npos)
-               ++this->scene.textures[texture_index].refcount;
-            if (normals_index != std::string::npos)
-               ++this->scene.textures[normals_index].refcount;
-         }
-      };
-      auto functor = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
+      auto functor = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
          //
          // Lambdas can't recursively call themselves, in part because they'd have to reference their own 
          // identifiers (not possible: the auto expression isn't "complete" at parse time, so the type 
          // is unknown) and in part because those identifiers are in a different scope (lambdas can't 
          // capture themselves).
          //
-         auto impl = [this, load_geom](nifDK::block_types::NiAVObject* object, glm::mat4 transform, auto& self) -> void {
+         auto impl = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform, auto& self) -> void {
             auto* node = dynamic_cast<nifDK::block_types::NiNode*>(object);
             if (node) {
                qDebug("[surface_renderer::add_nif] Handling node: %s...", node->name.data());
@@ -2191,7 +2264,12 @@ namespace vulkanDK {
                qDebug("[surface_renderer::add_nif] Handled node: %s.", node->name.data());
                return;
             }
-            load_geom(object, transform);
+            if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
+               this->add_NiGeometry_mesh(geom, transform, texture_index);
+            }
+            if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
+               this->add_BSTriShape_mesh(geom, transform, texture_index);
+            }
          };
          impl(object, transform, impl);
       };
