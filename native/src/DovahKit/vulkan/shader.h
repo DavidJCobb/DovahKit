@@ -26,9 +26,13 @@ namespace vulkanDK {
       //        - ...set up the shader's pipeline again
       //
       public:
+         struct area_override_data;
+         using  area_override_resize_handler = void(*)(area_override_data&, VkExtent2D);
          struct area_override_data {
             VkViewport viewport;
             VkRect2D   scissor;
+            //
+            area_override_resize_handler handler = nullptr;
          };
          using id_type = cobb::eight_cc;
       public:

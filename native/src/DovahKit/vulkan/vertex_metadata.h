@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
-#include <tuple>
-#include <utility>
+#include <type_traits>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
 

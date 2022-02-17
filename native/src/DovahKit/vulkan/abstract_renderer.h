@@ -18,6 +18,7 @@ namespace vulkanDK {
 
             void setup(VkDevice, uint32_t);
          };
+
       public:
          abstract_renderer() {}
          ~abstract_renderer();

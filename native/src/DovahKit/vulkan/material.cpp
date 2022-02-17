@@ -32,7 +32,7 @@ namespace vulkanDK {
          .depthBiasConstantFactor = 0.0,
          .depthBiasClamp          = 0.0,
          .depthBiasSlopeFactor    = 0.0,
-         .lineWidth               = 1.0, // line width, e.g. for wireframes
+         .lineWidth               = 1.0, // line width, e.g. for wireframes; must be 1.0 unless the device supports wide lines and you enable that feature
       };
    }
 
@@ -117,6 +117,16 @@ namespace vulkanDK {
          .pVertexAttributeDescriptions    = src.attributes.data(),
       };
    }
+
+   VkPipelineDynamicStateCreateInfo material_definition::dynamic_state_info() const {
+      return VkPipelineDynamicStateCreateInfo{
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+         .pNext = nullptr,
+         .flags = 0,
+         .dynamicStateCount = (uint32_t)this->dynamic_states.size(),
+         .pDynamicStates    = this->dynamic_states.data(),
+      };
+   }
    #pragma endregion
 
    #pragma region material
@@ -170,6 +180,8 @@ namespace vulkanDK {
       //
       auto blends = def.color_blend_attachment_info();
       auto color  = def.color_blend_info(blends);
+      //
+      auto dyn    = def.dynamic_state_info();
 
       auto viewport_create = VkPipelineViewportStateCreateInfo{
          .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -199,7 +211,7 @@ namespace vulkanDK {
          .pMultisampleState   = &def.multisampling,
          .pDepthStencilState  = &depth,
          .pColorBlendState    = &color,
-         .pDynamicState       = nullptr,
+         .pDynamicState       = &dyn,
          //
          .layout = this->pipeline.layout,
          //

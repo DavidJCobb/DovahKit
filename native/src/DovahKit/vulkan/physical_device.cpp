@@ -55,6 +55,16 @@ namespace vulkanDK {
       auto& sts = this->support.timestamps;
       sts.available       = properties.limits.timestampComputeAndGraphics == VK_TRUE;
       sts.nanosecond_unit = properties.limits.timestampPeriod;
+      //
+      {
+         auto& wl = this->support.wide_lines;
+         wl.available         = features.features.wideLines;
+         wl.width_granularity = properties.limits.lineWidthGranularity;
+         wl.width_range = {
+            .minimum = properties.limits.lineWidthRange[0],
+            .maximum = properties.limits.lineWidthRange[1],
+         };
+      }
    }
    physical_device::~physical_device() {
    }

@@ -44,6 +44,14 @@ namespace vulkanDK {
                bool  available       = false;
                float nanosecond_unit = 0; // (timestamp_value * nanosecond_unit) == number of nanoseconds measured
             } timestamps;
+            struct {
+               bool available = false;
+               float width_granularity = 1;
+               struct {
+                  float minimum = 0;
+                  float maximum = 0;
+               } width_range;
+            } wide_lines;
          } support;
 
          std::vector<VkExtensionProperties> extensions() const;

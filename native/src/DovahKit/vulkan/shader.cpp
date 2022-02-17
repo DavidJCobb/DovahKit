@@ -1,6 +1,7 @@
 #include "shader.h"
 #include <stdexcept>
 #include "render_pass.h"
+#include "surface_renderer.h"
 
 namespace vulkanDK {
    shader::~shader() {
@@ -28,6 +29,15 @@ namespace vulkanDK {
    void shader::setup_pipeline_layout(surface_renderer& sr) {
       this->material.owner = &sr;
       this->material.setup_layout(this->config.descriptor_set_layouts, this->config.push_constant_ranges);
+      //
+      {
+         std::string name;
+         name.resize(8);
+         for (size_t i = 0; i < 8; ++i)
+            name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
+         //
+         sr.set_debug_object_name((uint64_t)this->material.pipeline.layout, VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT, name);
+      }
    }
    void shader::setup_pipeline(VkExtent2D view) {
       if (!this->config.render_pass) {
@@ -46,11 +56,21 @@ namespace vulkanDK {
          .offset = {0, 0},
          .extent = view,
       };
-      if (const auto* ao = this->config.area_override) {
+      if (auto* ao = this->config.area_override) {
+         if (ao->handler)
+            (ao->handler)(*ao, view);
          viewport = ao->viewport;
          scissor  = ao->scissor;
       }
       this->material.setup_handle(this->definition, viewport, scissor, this->config.render_pass->handle, this->config.subpass);
+      if (auto* sr = this->material.owner) {
+         std::string name;
+         name.resize(8);
+         for (size_t i = 0; i < 8; ++i)
+            name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
+         //
+         sr->set_debug_object_name((uint64_t)this->material.pipeline.handle, VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT, name);
+      }
    }
 
    void shader::pre_resize() {

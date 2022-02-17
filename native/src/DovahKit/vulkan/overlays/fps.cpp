@@ -3,16 +3,9 @@
 #include <QResource>
 #include "../surface_renderer.h"
 
-// for testing:
-#include <QImageWriter>
-
 namespace {
    static constexpr int  ABSURDLY_LARGE_SIZE       = 9999;
    static constexpr bool unnormalized_coordinates  = true; // refer to texture sampler's options
-}
-
-namespace {
-   static constexpr bool debug_write_atlas = false;
 }
 
 namespace vulkanDK::overlays {
@@ -84,7 +77,7 @@ namespace vulkanDK::overlays {
       s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
-            sr.descriptor_set_layouts[1].handle,
+            sr.descriptor_set_layouts[descriptor_set_index].handle,
          }
       );
       //
@@ -327,10 +320,6 @@ namespace vulkanDK::overlays {
       }
       this->change_flags.reset<change_flag::style>();
       this->change_flags.set<change_flag::atlas>();
-      if constexpr (debug_write_atlas) {
-         auto writer = QImageWriter("test-atlas.png");
-         writer.write(image);
-      }
       return image;
    }
    void fps::generate_atlas(surface_renderer& sr, swap_chain_image& sci) {

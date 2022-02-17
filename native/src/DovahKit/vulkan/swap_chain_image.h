@@ -6,6 +6,7 @@
 #include "command_buffer.h"
 #include "image.h"
 #include "overlays/fps.h"
+#include "overlays/world_axes.h"
 
 namespace vulkanDK {
    class frame_in_flight;
@@ -34,7 +35,8 @@ namespace vulkanDK {
             buffer object_data;
          } shader_params;
          struct {
-            overlays::fps fps;
+            overlays::fps        fps;
+            overlays::world_axes world_axes;
          } overlays;
          //
          VkFence current_fence_handle = VK_NULL_HANDLE;

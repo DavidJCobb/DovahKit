@@ -105,6 +105,10 @@ namespace vulkanDK {
          struct {
             double last_frame_time = 0.0;
          } state;
+         //
+         struct {
+            PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT = nullptr;
+         } api_functions;
 
          void setup(); // sets up the device and everything below, but not the surface
          void teardown(); // tears down the device and everything below, but not the surface
@@ -124,6 +128,7 @@ namespace vulkanDK {
          bool needs_null_texture() const;
 
          buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+         void set_debug_object_name(uint64_t handle, VkDebugReportObjectTypeEXT type, const std::string& name);
 
          shader* get_shader(cobb::eight_cc id) const;
          shader* get_or_create_shader(cobb::eight_cc id);

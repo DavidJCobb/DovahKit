@@ -24,14 +24,22 @@ namespace vulkanDK {
          auto& dst = subpass_descriptions[i];
          //
          subpass_descriptions[i] = VkSubpassDescription{
+            .flags                   = 0,
             .pipelineBindPoint       = src.bind_point,
+            .inputAttachmentCount    = 0,
+            .pInputAttachments       = nullptr,
             .colorAttachmentCount    = (uint32_t)src.attachments.color.size(),
             .pColorAttachments       = src.attachments.color.data(),
+            .pResolveAttachments     = nullptr,
             .pDepthStencilAttachment = &src.attachments.depth_stencil, // subpasses can only use a single depth-and-stencil attachment
+            .preserveAttachmentCount = 0,
+            .pPreserveAttachments    = nullptr,
          };
       }
       auto render_pass_info = VkRenderPassCreateInfo{
          .sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+         .pNext           = nullptr,
+         .flags           = 0,
          .attachmentCount = (uint32_t)this->attachments.size(),
          .pAttachments    = this->attachments.data(),
          .subpassCount    = subpass_desc_count,

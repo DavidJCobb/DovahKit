@@ -224,7 +224,7 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
-      this->descriptor_set_layouts.resize(1);
+      this->descriptor_set_layouts.resize(3);
       this->descriptor_set_layouts[0].bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
             .index              = 0,
@@ -256,25 +256,31 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
-      if constexpr (setup_fps_counter) {
-         assert(this->descriptor_set_layouts.size() == 1);
-         this->descriptor_set_layouts.emplace_back().bindings = { // FPS counter
-            vulkanDK::descriptor_binding{ // uniform buffer object
-               .index              = 0,
-               .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-               .count              = 1,
-               .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-               .immutable_samplers = nullptr,
-            },
-            vulkanDK::descriptor_binding{ // texture sampler
-               .index              = 1,
-               .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-               .count              = 1,
-               .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-               .immutable_samplers = nullptr,
-            },
-         };
-      }
+      this->descriptor_set_layouts[1].bindings = { // FPS counter
+         vulkanDK::descriptor_binding{ // uniform buffer object
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts[2].bindings = { // World axes
+         vulkanDK::descriptor_binding{ // uniform buffer object
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       //
       this->set_widget(widget);
       if (this->handle == VK_NULL_HANDLE) {
@@ -299,6 +305,10 @@ namespace vulkanDK {
       }
    }
    void surface_renderer::_init_device() {
+      {
+         this->api_functions.vkDebugMarkerSetObjectNameEXT = nullptr;
+      }
+      //
       auto  pd_handle  = this->device_info->handle;
       auto& pd_support = this->device_info->support;
       //
@@ -335,6 +345,7 @@ namespace vulkanDK {
       }
       //
       auto deviceFeatures = VkPhysicalDeviceFeatures{
+         .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
          .samplerAnisotropy = pd_support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
       };
       //
@@ -352,18 +363,25 @@ namespace vulkanDK {
          .descriptorBindingVariableDescriptorCount = VK_TRUE,
          .runtimeDescriptorArray                   = VK_TRUE,
       };
+      auto create_ext  = device_extensions;
       auto create_info = VkDeviceCreateInfo{
          .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
          .pNext                   = &indexing_extensions,
          .queueCreateInfoCount    = (uint32_t)queue_infos.size(),
          .pQueueCreateInfos       = queue_infos.data(),
-         .enabledExtensionCount   = (uint32_t)device_extensions.size(),
-         .ppEnabledExtensionNames = device_extensions.data(),
+         .enabledExtensionCount   = (uint32_t)create_ext.size(),
+         .ppEnabledExtensionNames = create_ext.data(),
          .pEnabledFeatures        = &deviceFeatures,
       };
       if (config::enable_validation_layers) {
          create_info.enabledLayerCount   = static_cast<uint32_t>(config::desired_validation_layers.size());
          create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
+         //
+         if (this->device_info->has_extension("VK_EXT_debug_marker")) {
+            create_ext.push_back("VK_EXT_debug_marker");
+            create_info.enabledExtensionCount   = (uint32_t)create_ext.size();
+            create_info.ppEnabledExtensionNames = create_ext.data();
+         }
       } else {
          create_info.enabledLayerCount = 0;
       }
@@ -377,6 +395,12 @@ namespace vulkanDK {
       //
       this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
       this->queues.presentation.setup(this->logical_device, indices.families.presentation);
+      //
+      // Oh, and some niche API functions:
+      //
+      if (this->device_info->has_extension("VK_EXT_debug_marker")) {
+         this->api_functions.vkDebugMarkerSetObjectNameEXT = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetDeviceProcAddr(this->logical_device, "vkDebugMarkerSetObjectNameEXT");
+      }
    }
 
    void surface_renderer::_reset_surface() {
@@ -731,6 +755,7 @@ namespace vulkanDK {
       if constexpr (setup_fps_counter) {
          vulkanDK::overlays::fps::setup_shaders(*this);
       }
+      vulkanDK::overlays::world_axes::setup_shaders(*this);
    }
    //
    void surface_renderer::_create_null_texture() {
@@ -1213,6 +1238,8 @@ namespace vulkanDK {
          auto attachments = std::array{ image.image.view, sc.depth_buffer.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext           = nullptr,
+            .flags           = 0,
             .renderPass      = r_pass,
             .attachmentCount = attachments.size(),
             .pAttachments    = attachments.data(),
@@ -1531,6 +1558,22 @@ namespace vulkanDK {
 
    buffer surface_renderer::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
       return buffer::create(*this, size, usage, properties);
+   }
+   void surface_renderer::set_debug_object_name(uint64_t handle, VkDebugReportObjectTypeEXT type, const std::string& name) {
+      if constexpr (!config::enable_validation_layers) {
+         return;
+      }
+      if (!this->api_functions.vkDebugMarkerSetObjectNameEXT) {
+         return;
+      }
+      auto info = VkDebugMarkerObjectNameInfoEXT{
+         .sType       = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
+         .pNext       = nullptr,
+         .objectType  = type,
+         .object      = handle,
+         .pObjectName = name.c_str(),
+      };
+      (this->api_functions.vkDebugMarkerSetObjectNameEXT)(this->logical_device, &info);
    }
 
    shader* surface_renderer::get_shader(cobb::eight_cc id) const {

@@ -17,6 +17,8 @@ namespace vulkanDK {
    swap_chain_image::swap_chain_image(surface_renderer& o, size_t i) {
       this->owner = &o;
       this->my_index = i;
+      //
+      this->overlays.world_axes.set_owner(o);
    }
    swap_chain_image::~swap_chain_image() {
       this->teardown();
@@ -54,6 +56,10 @@ namespace vulkanDK {
       //
       this->overlays.fps.setup_shader_parameter_buffers(*this->owner);
       this->overlays.fps.create_geometry(*this->owner);
+      //
+      this->overlays.world_axes.set_owner(*this->owner);
+      this->overlays.world_axes.setup_shader_parameter_buffers();
+      this->overlays.world_axes.create_geometry();
    }
    void swap_chain_image::_setup_shader_parameter_buffers() {
       {  // Scene global state, as a uniform buffer object
@@ -131,6 +137,10 @@ namespace vulkanDK {
          default:
             throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets.");
       }
+      //
+      // Update descriptor sets for overlays that only need an initial update:
+      //
+      this->overlays.world_axes.initialize_descriptor_sets(*this);
    }
    void swap_chain_image::teardown_descriptor_sets() {
       vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.size(), this->descriptor_sets.data());
@@ -180,8 +190,10 @@ namespace vulkanDK {
          }
          if (fps.needs_geometry_update()) {
             fps.update_geometry(*this->owner);
-            //needs_re_record = true;
          }
+         //
+         if (!needs_re_record)
+            needs_re_record = this->overlays.world_axes.needs_redraw(); // TODO: separate this from FPS redraw
          //
          if (needs_re_record && !this->command_buffers_invalid) { // refilling all command buffers also refills the buffer for this overlay
             this->_refill_fps_overlay_command_buffer();
@@ -545,10 +557,11 @@ namespace vulkanDK {
          .pInheritanceInfo = nullptr,
       };
       if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording UI command buffer.");
+         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to begin recording UI command buffer.");
       }
       //
       this->overlays.fps.commands_pre_pass(command_buffer); // commands that must run before vkCmdBeginRenderPass
+      this->overlays.world_axes.commands_pre_pass(command_buffer); // commands that must run before vkCmdBeginRenderPass
       //
       auto clear_values = std::array{
          //
@@ -578,9 +591,18 @@ namespace vulkanDK {
             this->overlays.fps.draw_call(command_buffer);
          }
       }
+      {
+         const shader* shader = this->owner->get_shader(vulkanDK::overlays::world_axes::shader_id);
+         if (shader) {
+            const auto& material = shader->material;
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[2], 0, nullptr);
+            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            this->overlays.world_axes.draw_call(command_buffer);
+         }
+      }
       vkCmdEndRenderPass(command_buffer);
       if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to record the UI command buffer.");
       }
    }
 }

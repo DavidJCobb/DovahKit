@@ -77,6 +77,7 @@ namespace vulkanDK {
             VkStencilOpState back  = {};
          } stencil;
          //
+         std::vector<VkDynamicState> dynamic_states; // VkPipelineDynamicStateCreateInfo
          struct {
             struct {
                std::vector<VkVertexInputAttributeDescription> attributes;
@@ -98,6 +99,8 @@ namespace vulkanDK {
          VkPipelineColorBlendStateCreateInfo color_blend_info(const std::vector<VkPipelineColorBlendAttachmentState>&) const;
 
          VkPipelineVertexInputStateCreateInfo vertex_info() const;
+
+         VkPipelineDynamicStateCreateInfo dynamic_state_info() const;
    };
 
    class material : no_copy {
