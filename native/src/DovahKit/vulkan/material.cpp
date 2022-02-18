@@ -185,6 +185,8 @@ namespace vulkanDK {
 
       auto viewport_create = VkPipelineViewportStateCreateInfo{
          .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+         .pNext         = nullptr,
+         .flags         = 0,
          .viewportCount = 1,
          .pViewports    = &viewport,
          .scissorCount  = 1,

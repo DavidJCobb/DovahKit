@@ -1,4 +1,5 @@
 #include "world_axes.h"
+#include <algorithm>
 #include <QPainter>
 #include <QResource>
 #include "../surface_renderer.h"
@@ -19,14 +20,14 @@ namespace vulkanDK::overlays {
    /*static*/ void world_axes::_update_shader_render_area(shader::area_override_data& aod, VkExtent2D extent) {
       aod.viewport = {
          .x        = 0,
-         .y        = 0,
+         .y        = (std::max)(0.0F, (float)extent.height - viewport_h),
          .width    = viewport_w,
          .height   = viewport_h,
          .minDepth = 0.0, // must be >= 0
          .maxDepth = 1.0, // must be <= 1
       };
       aod.scissor = {
-         .offset = { 0, 0 },
+         .offset = { 0, (int32_t)aod.viewport.y },
          .extent = { viewport_w, viewport_h },
       };
    }
@@ -80,9 +81,11 @@ namespace vulkanDK::overlays {
          VkDynamicState::VK_DYNAMIC_STATE_LINE_WIDTH,
       };
       dfn.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-      {
-         s->set_area_override_info({ .handler = &_update_shader_render_area });
+      dfn.rasterization.cullMode    = VK_CULL_MODE_NONE;
+      if (sr.device_info->support.non_solid_polygon_fill_modes) {
+         dfn.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
       }
+      s->set_area_override_info({ .handler = &_update_shader_render_area });
       s->setup_pipeline_layout(sr);
    }
    void world_axes::initialize_descriptor_sets(swap_chain_image& sci) {
@@ -121,7 +124,10 @@ namespace vulkanDK::overlays {
       //
       auto& state = *(_shader_state*) this->shader_params.uniform.map_memory();
       state.view = glm::mat4(1);
-      state.proj = glm::ortho<float>(0, viewport_w, viewport_h, 0, 0, axis_arrow_length * 2.5);
+      {
+         constexpr float halfwidth = axis_arrow_length * 1.5;
+         state.proj = glm::ortho<float>(-halfwidth, halfwidth, halfwidth, -halfwidth, axis_arrow_length * -2, axis_arrow_length * 8);
+      }
       this->shader_params.uniform.unmap_memory(&state);
    }
    void world_axes::create_geometry() {
@@ -142,23 +148,45 @@ namespace vulkanDK::overlays {
          auto* vertices = (_vertex*)data;
          auto* indices  = (uint16_t*)((std::intptr_t)data + buffer_size_v);
          //
-         for (size_t i = 0; i < axis_count; ++i) {
-            auto& start = vertices[(i * axis_count) + 0];
-            auto& end   = vertices[(i * axis_count) + 1];
-            //
-            start.pos  = { 0, 0, 0 };
-            end.pos    = { 0, 0, 0 };
-            end.pos[i] = axis_arrow_length;
-            //
-            start.color    = { 0, 0, 0 };
-            start.color[i] = 1;
-            end.color = start.color;
-            //
-            start.radius = 0;
-            end.radius   = 1;
-            //
-            indices[(i * axis_count) + 0] = (i * axis_count) + 0;
-            indices[(i * axis_count) + 1] = (i * axis_count) + 1;
+         constexpr auto model = std::array{
+            // x:
+            _vertex{
+               .pos    = { 0, 0, 0 },
+               .color  = { 1, 0, 0 },
+               .radius = 0,
+            },
+            _vertex{
+               .pos    = { axis_arrow_length, 0, 0 },
+               .color  = { 1, 0, 0 },
+               .radius = 4,
+            },
+            // y:
+            _vertex{
+               .pos    = { 0, 0, 0 },
+               .color  = { 0, 1, 0 },
+               .radius = 0,
+            },
+            _vertex{
+               .pos    = { 0, axis_arrow_length, 0 },
+               .color  = { 0, 1, 0 },
+               .radius = 4,
+            },
+            // z:
+            _vertex{
+               .pos    = { 0, 0, 0 },
+               .color  = { 0.1, 0.4, 1.0 },
+               .radius = 0,
+            },
+            _vertex{
+               .pos    = { 0, 0, axis_arrow_length },
+               .color  = { 0.1, 0.4, 1.0 },
+               .radius = 4,
+            },
+         };
+         static_assert(model.size() == vertex_count);
+         for (size_t i = 0; i < vertex_count; ++i) {
+            vertices[i] = model[i];
+            indices[i]  = i;
          }
       }
       staging.unmap_memory(data);
@@ -188,7 +216,7 @@ namespace vulkanDK::overlays {
       state.view = glm::inverse(
          glm::translate(
             glm::eulerAngleZ(camera.yaw) * glm::eulerAngleY(camera.roll) * glm::eulerAngleX(camera.pitch),
-            glm::vec3{ 0, 0, -4 }
+            glm::vec3{ 0, 0, axis_arrow_length * 4 }
          )
       );
       this->shader_params.uniform.unmap_memory(&state);

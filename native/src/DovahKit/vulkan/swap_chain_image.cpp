@@ -567,8 +567,8 @@ namespace vulkanDK {
          //
          // Values here should match the attachments we're using.
          //
-         VkClearValue{ .color        = {0, 0, 0, 0} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
-         VkClearValue{ .depthStencil = {1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+         VkClearValue{ .color        = { 0, 0, 0, 0 } },
+         VkClearValue{ .depthStencil = { 1.0, 0 } }, // don't apply inverted depth here; that's per projection matrix
       };
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,

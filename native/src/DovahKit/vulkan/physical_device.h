@@ -26,6 +26,7 @@ namespace vulkanDK {
          struct {
             uint32_t vulkan_api_version = 0;
             //
+            bool     large_points                 = false;
             float    max_anisotropic_filtering    = 0;
             uint32_t max_image_dimension_2D       = 0;          // max texture size
             uint32_t max_vertex_index_for_draw    = 0xFFFFFFFF; // indexed-draw calls cannot use vertex indices higher than this
@@ -45,7 +46,7 @@ namespace vulkanDK {
                float nanosecond_unit = 0; // (timestamp_value * nanosecond_unit) == number of nanoseconds measured
             } timestamps;
             struct {
-               bool available = false;
+               bool  available         = false;
                float width_granularity = 1;
                struct {
                   float minimum = 0;

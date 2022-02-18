@@ -345,7 +345,9 @@ namespace vulkanDK {
       }
       //
       auto deviceFeatures = VkPhysicalDeviceFeatures{
+         .fillModeNonSolid  = pd_support.non_solid_polygon_fill_modes ? VK_TRUE : VK_FALSE,
          .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
+         .largePoints       = pd_support.large_points ? VK_TRUE : VK_FALSE,
          .samplerAnisotropy = pd_support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
       };
       //

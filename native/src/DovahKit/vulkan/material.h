@@ -37,11 +37,11 @@ namespace vulkanDK {
          static constexpr color_blend default_alpha_blend = {
             .enabled = true,
             .source = {
-               .color = VK_BLEND_FACTOR_SRC_COLOR,
+               .color = VK_BLEND_FACTOR_SRC_ALPHA,
                .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
             },
             .destination = {
-               .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+               .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
                .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
             },
             .operations = {
