@@ -8,6 +8,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
 //
+#include "config/is_righthanded.h"
 #include "config/scene_limits.h"
 #include "config/use_inverted_depth.h"
 #include "data/DKVulkanCameraUpdate.h"
@@ -36,7 +37,6 @@ namespace vulkanDK {
          aspect = (float)render_area.width / (float)render_area.height;
       {
          auto& proj = this->global_state.proj;
-         proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
          if constexpr (config::use_inverted_depth) {
             //
             // Use infinite far plane:
@@ -52,25 +52,30 @@ namespace vulkanDK {
             //
             // sources: <https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/>
             //          <https://dev.theomader.com/depth-precision/>
+            //
+         } else {
+            proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
          }
-         //
-         // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
-         // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
-         // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
-         // considers a "backface" versus a "frontface." You can update the handedness in 
-         // the setupGraphicsPipeline function.
-         //
-         proj[1][1] *= -1;
+         if constexpr (config::is_righthanded) {
+            //
+            // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
+            // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
+            // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
+            // considers a "backface" versus a "frontface." You can update the handedness in 
+            // the setupGraphicsPipeline function.
+            //
+            proj[1][1] *= -1;
+         }
       }
    }
    void scene::update_camera() {
       auto& cs = this->camera;
       //
-      // Apply a lefthanded extrinsic ZYX Euler rotation:
+      // Apply a lefthanded ZYX Euler rotation:
       //
-      auto rot = glm::eulerAngleZ(cs.yaw);   // extrinsic ZY(X) = intrinsic XY(Z)
-      rot     *= glm::eulerAngleY(cs.roll);  // extrinsic Z(Y)X = intrinsic X(Y)Z
-      rot     *= glm::eulerAngleX(cs.pitch); // extrinsic (Z)YX = intrinsic (X)YZ
+      auto rot = glm::eulerAngleZ(cs.yaw);
+      rot     *= glm::eulerAngleY(cs.roll);
+      rot     *= glm::eulerAngleX(cs.pitch);
       //
       // Create the final view matrix.
       // 

@@ -1,5 +1,6 @@
 #include "material.h"
 #include <stdexcept>
+#include "config/is_righthanded.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -27,7 +28,7 @@ namespace vulkanDK {
          .rasterizerDiscardEnable = VK_FALSE, // setting this to true basically disables the rasterizer entirely
          .polygonMode             = VK_POLYGON_MODE_FILL,  // fill polygons, or render wireframes or point clouds?
          .cullMode                = VK_CULL_MODE_BACK_BIT, // cull backfaces, frontfaces, or no faces
-         .frontFace               = VK_FRONT_FACE_COUNTER_CLOCKWISE, // specify which vertex order (clockwise or counterclockwise) signifies a face pointing toward us
+         .frontFace               = (config::is_righthanded) ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE, // specify which vertex order (clockwise or counterclockwise) signifies a face pointing toward us
          .depthBiasEnable         = VK_FALSE,
          .depthBiasConstantFactor = 0.0,
          .depthBiasClamp          = 0.0,
