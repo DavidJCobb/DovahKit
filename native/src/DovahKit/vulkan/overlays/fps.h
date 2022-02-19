@@ -36,7 +36,6 @@ namespace vulkanDK::overlays {
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
-         static constexpr size_t descriptor_set_index = 1;
          static constexpr shader::id_type shader_id = "FPSCount";
 
          // Magic numbers:

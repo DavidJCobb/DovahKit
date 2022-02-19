@@ -1,10 +1,14 @@
 #pragma once
+#include <array>
+#include <type_traits>
+#include <vector>
 #include <QPointer>
 #include <QWidget>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
 #include "_memory.h"
 #include "_util.h"
+#include "helpers/debug_helper_typeof.h"
 #include "abstract_renderer.h"
 #include "buffer.h"
 #include "command_buffer.h"
@@ -13,6 +17,7 @@
 #include "scene.h"
 #include "shader.h"
 #include "swap_chain_image.h"
+#include "surface_renderer_descriptor_group.h"
 //
 #include "helpers/constexpr_optional_type.h"
 //
@@ -80,6 +85,7 @@ namespace vulkanDK {
          concrete_image null_texture;
          VkSampler raw_pixel_texture_sampler;
          //
+         descriptor_set_layout_group descriptor_set_layouts;
          struct {
             VkSwapchainKHR handle = VK_NULL_HANDLE;
             VkFormat       format = VK_FORMAT_UNDEFINED;
@@ -129,6 +135,9 @@ namespace vulkanDK {
 
          buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
          void set_debug_object_name(uint64_t handle, VkDebugReportObjectTypeEXT type, const std::string& name);
+         template<typename T> void set_debug_object_name(T handle, const std::string& name) {
+            this->set_debug_object_name((uint64_t)handle, debug_helper_typeof<T>, name);
+         }
 
          shader* get_shader(cobb::eight_cc id) const;
          shader* get_or_create_shader(cobb::eight_cc id);
@@ -180,6 +189,8 @@ namespace vulkanDK {
          void _setup_swap_chain_images();
          void _setup_swap_chain_image_frame_data(); // requires descriptor pool
          void _setup_framebuffers(); // per swap chain image, and requires each swap chain image's view
+         //
+         void _setup_descriptor_pool();
 
          command_buffer _begin_one_time_commands();
          void _end_one_time_commands(command_buffer&);

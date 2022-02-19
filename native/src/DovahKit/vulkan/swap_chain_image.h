@@ -5,6 +5,7 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "image.h"
+#include "surface_renderer_descriptor_group.h"
 #include "overlays/fps.h"
 #include "overlays/world_axes.h"
 
@@ -28,8 +29,8 @@ namespace vulkanDK {
          surface_renderer_image_view image;
          VkFramebuffer framebuffer = VK_NULL_HANDLE;
          //
-         std::vector<VkDescriptorSet> descriptor_sets;
-         std::vector<command_buffer>  command_buffers;
+         descriptor_set_group descriptor_sets;
+         std::vector<command_buffer> command_buffers;
          struct {
             buffer uniform;
             buffer object_data;

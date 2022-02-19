@@ -13,18 +13,11 @@ namespace vulkanDK {
    #pragma endregion
 
    abstract_renderer::~abstract_renderer() {
-      this->teardown();
+      this->start_teardown();
+      this->end_teardown();
    }
 
-   std::vector<VkDescriptorSetLayout> abstract_renderer::descriptor_set_layout_handles() const {
-      std::vector<VkDescriptorSetLayout> list;
-      list.reserve(this->descriptor_set_layouts.size());
-      for (auto& dsl : this->descriptor_set_layouts)
-         list.push_back(dsl.handle);
-      return list;
-   }
-
-   void abstract_renderer::teardown() {
+   void abstract_renderer::start_teardown() {
       if (this->logical_device == VK_NULL_HANDLE)
          return;
       //
@@ -48,18 +41,12 @@ namespace vulkanDK {
          }
          list.clear();
       }
-      for (auto& layout : this->descriptor_set_layouts)
-         layout.teardown();
-      //
+   }
+   void abstract_renderer::end_teardown() {
+      if (this->logical_device == VK_NULL_HANDLE)
+         return;
       vkDestroyDevice(this->logical_device, nullptr);
       this->logical_device = VK_NULL_HANDLE;
-   }
-
-   void abstract_renderer::setup_descriptor_set_layouts() {
-      for (auto& layout : this->descriptor_set_layouts) {
-         layout.set_device(this->logical_device);
-         layout.setup();
-      }
    }
 
    void abstract_renderer::setup_command_pool(uint32_t queue_family_index) {
@@ -88,32 +75,7 @@ namespace vulkanDK {
       }
    }
 
-   void abstract_renderer::setup_descriptor_pool() {
-      std::vector<VkDescriptorPoolSize> sizes;
-      for (auto& dl : this->descriptor_set_layouts) {
-         for (auto& binding : dl.bindings) {
-            auto count = binding.count * this->configuration.image_count;
-            //
-            auto t    = binding.type;
-            bool done = false;
-            for(auto& prior : sizes) {
-               if (prior.type == t) {
-                  prior.descriptorCount += count;
-                  done = true;
-                  break;
-               }
-            }
-            if (done)
-               continue;
-            sizes.emplace_back(VkDescriptorPoolSize{
-               .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-               .descriptorCount = count,
-            });
-         }
-      }
-      //
-      uint32_t total_set_count = this->descriptor_set_layouts.size() * this->configuration.image_count;
-      //
+   void abstract_renderer::setup_descriptor_pool(const std::vector<VkDescriptorPoolSize>& sizes, uint32_t total_set_count) {
       auto pool_info = VkDescriptorPoolCreateInfo{
          .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
          .pNext         = nullptr,

@@ -79,71 +79,14 @@ namespace vulkanDK {
    }
    
    void swap_chain_image::setup_descriptor_sets() {
-      //
-      // Each descriptor set can have a single descriptor binding that acts as a variable-length 
-      // array of descriptors. However, we have to provide suitable maximums for these lists via 
-      // an extension struct.
-      //
-      auto layouts = this->owner->descriptor_set_layout_handles();
-      // std::vector<uint32_t> variable_counts(layouts.size()); // one count per set; sets with no variable-length array will ignore their respective count
-      std::vector<uint32_t> variable_counts; // one count per set; sets with no variable-length array will ignore their respective count
-      for(auto& layout : this->owner->descriptor_set_layouts) {
-         auto& bl = layout.bindings;
-         //for (size_t i = 0; i < layouts.size(); ++i) {
-            //auto& vc = variable_counts[i];
-            auto& vc = variable_counts.emplace_back(0);
-            for (size_t j = 0; j < bl.size(); ++j) {
-               auto& binding = bl[j];
-               if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT) {
-                  assert(vc == 0            && "A descriptor set is not allowed to have multiple variable-length descriptor bindings.");
-                  assert(j == bl.size() - 1 && "If a descriptor set has a variable-length descriptor binding, it must be the last binding in the list.");
-                  vc = binding.count;
-               }
-            }
-         //}
-      }
-      auto variable_count_info = VkDescriptorSetVariableDescriptorCountAllocateInfo{
-         .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
-         .descriptorSetCount = (uint32_t)variable_counts.size(),
-         .pDescriptorCounts  = variable_counts.data(),
-      };
-      auto alloc_info = VkDescriptorSetAllocateInfo{
-         .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-         .pNext              = &variable_count_info,
-         .descriptorPool     = this->owner->descriptor_pool,
-         .descriptorSetCount = (uint32_t)layouts.size(),
-         .pSetLayouts        = layouts.data(),
-      };
-      //
-      this->descriptor_sets.resize(layouts.size());
-      //
-      // WARNING: If the descriptor pool has an inadequate size, vkAllocateDescriptorSets 
-      // MAY fail with an VK_ERROR_POOL_OUT_OF_MEMORY error code... However, some device 
-      // drivers may try to solve the problem internally instead, which means that that 
-      // particular class of error will not fail consistently across all hardware. Beware. 
-      //
-      auto result = vkAllocateDescriptorSets(this->owner->logical_device, &alloc_info, this->descriptor_sets.data());
-      switch (result) {
-         case VK_SUCCESS:
-            break;
-         case VK_ERROR_OUT_OF_POOL_MEMORY:
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets: descriptor pool is too small.");
-         case VK_ERROR_FRAGMENTED_POOL:
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets: descriptor pool is too fragmented.");
-         case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets: insufficient device memory.");
-         case VK_ERROR_OUT_OF_HOST_MEMORY:
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets: insufficient CPU-side memory.");
-         default:
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_setup_descriptor_sets] Failed to allocate descriptor sets.");
-      }
+      this->descriptor_sets.allocate_all(*this->owner);
       //
       // Update descriptor sets for overlays that only need an initial update:
       //
       this->overlays.world_axes.initialize_descriptor_sets(*this);
    }
    void swap_chain_image::teardown_descriptor_sets() {
-      vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.size(), this->descriptor_sets.data());
+      vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.list.size(), this->descriptor_sets.list.data());
    }
 
    void swap_chain_image::teardown() {
@@ -440,7 +383,7 @@ namespace vulkanDK {
       if (writes.empty())
          return;
       //
-      auto& target_set = this->descriptor_sets[0];
+      auto& target_set = this->descriptor_sets.standard;
       //
       std::vector<VkWriteDescriptorSet> write_info(writes.size());
       for (size_t i = 0; i < writes.size(); ++i) {
@@ -512,7 +455,7 @@ namespace vulkanDK {
          const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
          assert(shader);
          const auto& material = shader->material;
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[0], 0, nullptr);
+         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.standard, 0, nullptr);
          vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
          //
          {
@@ -586,7 +529,7 @@ namespace vulkanDK {
          const shader* shader = this->owner->get_shader(vulkanDK::overlays::fps::shader_id);
          if (shader) {
             const auto& material = shader->material;
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[1], 0, nullptr);
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.fps, 0, nullptr);
             vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
             this->overlays.fps.draw_call(command_buffer);
          }
@@ -595,7 +538,7 @@ namespace vulkanDK {
          const shader* shader = this->owner->get_shader(vulkanDK::overlays::world_axes::shader_id);
          if (shader) {
             const auto& material = shader->material;
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets[2], 0, nullptr);
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.world_axes, 0, nullptr);
             vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
             this->overlays.world_axes.draw_call(command_buffer);
          }

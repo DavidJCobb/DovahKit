@@ -224,8 +224,7 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
-      this->descriptor_set_layouts.resize(3);
-      this->descriptor_set_layouts[0].bindings = {
+      this->descriptor_set_layouts.standard.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -256,7 +255,7 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
-      this->descriptor_set_layouts[1].bindings = { // FPS counter
+      this->descriptor_set_layouts.fps.bindings = { // FPS counter
          vulkanDK::descriptor_binding{ // uniform buffer object
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -272,7 +271,7 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
-      this->descriptor_set_layouts[2].bindings = { // World axes
+      this->descriptor_set_layouts.world_axes.bindings = { // World axes
          vulkanDK::descriptor_binding{ // uniform buffer object
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -472,7 +471,7 @@ namespace vulkanDK {
       }
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
-      this->setup_descriptor_set_layouts();
+      this->descriptor_set_layouts.setup_all(*this);
       this->_define_render_passes();
       this->_setup_shaders();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
@@ -488,7 +487,7 @@ namespace vulkanDK {
          this->_setup_depth_buffer();                // requires extent size
          this->_setup_swap_chain_images();
          this->_setup_framebuffers();                // requires swap chain image count and view handles
-         this->setup_descriptor_pool();              // requires swap chain image count
+         this->_setup_descriptor_pool();             // requires swap chain image count
          this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
          for (auto& fif : this->swap_chain.frames_in_flight)
             fif.setup(*this);
@@ -695,7 +694,7 @@ namespace vulkanDK {
          s->set_render_pass(this->render_passes_by_name.main);
          s->set_layout_info(
             {  // Descriptor set layouts
-               this->descriptor_set_layouts[0].handle,
+               this->descriptor_set_layouts.standard.handle,
             },
             {  // Push constants
                VkPushConstantRange{
@@ -794,6 +793,9 @@ namespace vulkanDK {
       }
       //
       nt.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+      //
+      this->set_debug_object_name(nt.handle, "Null Texture");
+      this->set_debug_object_name(nt.view,   "Null Texture View");
    }
    void surface_renderer::_setup_initial_scene() {
       auto device = this->logical_device;
@@ -1034,7 +1036,7 @@ namespace vulkanDK {
          auto descriptor_writes = std::array{
             VkWriteDescriptorSet{ // uniform buffer object
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet           = frame.descriptor_sets[0],
+               .dstSet           = frame.descriptor_sets.standard,
                .dstBinding       = 0, // this should match the binding value in the shader
                .dstArrayElement  = 0, // index of the first descriptor in the raray to update
                .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
@@ -1045,7 +1047,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // texture sampler
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet          = frame.descriptor_sets[0],
+               .dstSet          = frame.descriptor_sets.standard,
                .dstBinding      = 1, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = 1,
@@ -1054,7 +1056,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet           = frame.descriptor_sets[0],
+               .dstSet           = frame.descriptor_sets.standard,
                .dstBinding       = 2, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
@@ -1065,7 +1067,7 @@ namespace vulkanDK {
             },
             VkWriteDescriptorSet{ // texture array
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-               .dstSet          = frame.descriptor_sets[0],
+               .dstSet          = frame.descriptor_sets.standard,
                .dstBinding      = 3, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)texture_infos.size(),
@@ -1094,6 +1096,9 @@ namespace vulkanDK {
       //
       for(auto* rp : this->render_passes)
          rp->setup();
+      //
+      this->set_debug_object_name(this->render_passes_by_name.main->handle, "Render Pass: Main");
+      this->set_debug_object_name(this->render_passes_by_name.ui->handle,   "Render Pass: UI");
    }
    //
    // Swap chain:
@@ -1202,6 +1207,9 @@ namespace vulkanDK {
       );
       db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
       db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+      //
+      this->set_debug_object_name(db.handle, "Depth Buffer Image");
+      this->set_debug_object_name(db.view,   "Depth Buffer Image View");
    }
    void surface_renderer::_setup_swap_chain_images() {
       auto& sc = this->swap_chain;
@@ -1214,7 +1222,6 @@ namespace vulkanDK {
       if (sc.images.size() != image_count) {
          sc.images.resize(image_count);
       }
-      this->configuration.image_count = image_count; // for superclass stuff including descriptor pool sizing
       //
       // Get the image handles and set up image state (descriptor sets, views, etc.):
       //
@@ -1254,6 +1261,15 @@ namespace vulkanDK {
          }
       }
    }
+   //
+   void surface_renderer::_setup_descriptor_pool() {
+      auto  swap_chain_image_count = this->swap_chain.images.size();
+      auto& dsl = this->descriptor_set_layouts;
+      this->setup_descriptor_pool(             // requires swap chain image count
+         dsl.needed_pool_sizes(swap_chain_image_count),
+         dsl.list.size() * swap_chain_image_count
+      );
+   }
 
    void surface_renderer::teardown() {
       this->_on_renderer_teardown_imminent();
@@ -1288,7 +1304,10 @@ namespace vulkanDK {
          vmaDestroyAllocator(this->allocator);
       }
       //
-      abstract_renderer::teardown(); // tears down the logical device, too
+      abstract_renderer::start_teardown();
+      for (auto& layout : this->descriptor_set_layouts.list)
+         layout.teardown();
+      abstract_renderer::end_teardown(); // tears down the logical device
       //
       this->_on_renderer_teardown_complete();
    }
@@ -1347,7 +1366,7 @@ namespace vulkanDK {
             // pool is large enough to hold descriptor sets and descriptors for each image.
             //
             this->teardown_descriptor_pool();
-            this->setup_descriptor_pool();
+            this->_setup_descriptor_pool();
          }
          this->_setup_framebuffers(); // requires surface extent and image view handle
          this->_setup_swap_chain_image_frame_data(); // requires descriptor pool

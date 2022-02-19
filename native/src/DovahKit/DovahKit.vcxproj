@@ -601,6 +601,7 @@
     <ClCompile Include="vulkan\shader.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
+    <ClCompile Include="vulkan\surface_renderer_descriptor_group.cpp" />
     <ClCompile Include="vulkan\surface_support_info.cpp" />
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
@@ -837,6 +838,7 @@
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
+    <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\image.h" />
@@ -854,6 +856,7 @@
     <ClInclude Include="vulkan\shader.h" />
     <ClInclude Include="vulkan\shader_module.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
+    <ClInclude Include="vulkan\surface_renderer_descriptor_group.h" />
     <ClInclude Include="vulkan\surface_support_info.h" />
     <ClInclude Include="vulkan\swap_chain_image.h" />
     <ClInclude Include="vulkan\vertex.h" />

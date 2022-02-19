@@ -31,26 +31,19 @@ namespace vulkanDK {
             VkCommandPool transient  = VK_NULL_HANDLE;
          } command_pools;
          VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
-         std::vector<descriptor_set_layout> descriptor_set_layouts;
          //
          std::vector<render_pass*>   render_passes;  // owns
          std::vector<shader_module*> shader_modules; // owns
          VkSampler texture_sampler = VK_NULL_HANDLE;
-         //
-         struct {
-            uint32_t image_count = 1;
-         } configuration;
 
-         std::vector<VkDescriptorSetLayout> descriptor_set_layout_handles() const;
-
-         void teardown();
-
-         void setup_descriptor_set_layouts();
+         void start_teardown(); // command pool, descriptor pool, etc.
+            // ...and then subclass should tear down its descriptor set layouts...
+         void end_teardown(); // final teardown of the VkDevice
 
          void setup_command_pool(uint32_t queue_family_index);
          void teardown_command_pool();
 
-         void setup_descriptor_pool();
+         void setup_descriptor_pool(const std::vector<VkDescriptorPoolSize>&, uint32_t total_set_count);
          void teardown_descriptor_pool();
 
          void setup_texture_sampler();

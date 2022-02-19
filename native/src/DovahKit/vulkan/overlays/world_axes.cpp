@@ -36,7 +36,7 @@ namespace vulkanDK::overlays {
       s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
-            sr.descriptor_set_layouts[descriptor_set_index].handle,
+            sr.descriptor_set_layouts.world_axes.handle,
          }
       );
       //
@@ -98,7 +98,7 @@ namespace vulkanDK::overlays {
       auto descriptor_writes = std::array{
          VkWriteDescriptorSet{ // uniform buffer object
             .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet           = sci.descriptor_sets[descriptor_set_index],
+            .dstSet           = sci.descriptor_sets.world_axes,
             .dstBinding       = 0, // this should match the binding value in the shader
             .dstArrayElement  = 0, // index of the first descriptor in the raray to update
             .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
