@@ -4,8 +4,10 @@
 
 namespace dovah::loaded_forms {
    namespace {
+      template<typename T> concept _is_model = std::is_same_v<std::remove_reference_t<T>, components::model> || std::is_same_v<std::remove_reference_t<T>, components::model_ts>;
+
       template<typename T> concept has_model = requires(T& x) {
-         { x.model } -> std::same_as<components::model&>;
+         { x.model } -> _is_model;
       };
       template<typename T> concept has_papyrus = requires(T& x) {
          { x.script_data } -> std::same_as<components::papyrus_attachment_data&>;

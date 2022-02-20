@@ -67,7 +67,7 @@ void main() {
       float spec_str    = pow(max(dot(normal, halfway_dir), 0.0), current_object.specular_exponent);
       vec3  specular    = current_object.specular_strength * spec_str * current_object.specular_color;
    #else
-      normal = normalize(fs_in.tangent_space * normal);
+      normal = normalize(normal);
       //
       vec3  sun_dir = normalize(ubo.sun_pos - fs_in.pos_world);
       float diff    = max(dot(normal, sun_dir), 0.0);

@@ -17,6 +17,15 @@
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 
+#include <QBoxLayout>
+#include <QDialog>
+#include <QPushButton>
+#include "dovah/files/bsa/bsa_archived_file.h"
+#include "dovah/form_stub.h"
+#include "dovah/forms/Form.h"
+#include "dovah/forms/components/model.h"
+#include "ui/generic/FormPicker.h"
+
 namespace {
    static constexpr bool use_new_renderer = true;
 }
@@ -136,6 +145,78 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          }
          qDebug("NIF parsed. Passing to surface_renderer...");
          view->surfaceRenderer()->add_nif(model);
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
+      //
+      this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Import base form...");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         if (!DovahKitCore::get().has_data()) {
+            QMessageBox::critical(this, "Error", "Load data first, so we have base forms to import.");
+            return;
+         }
+         auto* dialog = new QDialog(this);
+         auto* layout = new QVBoxLayout(dialog);
+         auto* picker = new FormPicker(dialog);
+         auto* button = new QPushButton("Import", dialog);
+         layout->addWidget(picker);
+         layout->addWidget(button);
+         //picker->setAllowNone(false);
+         {
+            QVector<dovah::form_type_t> types;
+            for (auto& ft : dovah::form_types) {
+               if (dovah::form_type_info::form_type_is_base_form(ft.formType))
+                  types.push_back(ft.formType);
+            }
+            picker->setAllowedFormTypes(types);
+         }
+         //
+         dialog->show();
+         QObject::connect(button, &QPushButton::clicked, this, [view, this, dialog, picker]() {
+            auto* form = picker->formStub();
+            dialog->accept();
+            //
+            if (!form)
+               return;
+            auto loaded = form->load();
+            if (!loaded)
+               return;
+            auto* form_model = loaded->get_model();
+            if (!form_model) {
+               QMessageBox::critical(this, "Error", "This base form type has no model.");
+               return;
+            }
+            if (form_model->model_path.empty()) {
+               QMessageBox::critical(this, "Error", "No model path set for this base form.");
+               return;
+            }
+            nifDK::file model;
+            {
+               std::filesystem::path path = std::string("meshes") + (form_model->model_path[0] == '/' || form_model->model_path[0] == '\\' ? "" : "\\") + form_model->model_path;
+               std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset(path));
+               if (!file) {
+                  QMessageBox::critical(this, "Error", "Failed to open NIF file.");
+                  return;
+               }
+               model.read((void*)file->data(), file->size());
+               //
+               auto& error = model.read_error();
+               if (error.code != nifDK::default_notice_code) {
+                  qDebug("NIF parsing failed with error code %08X.", error.code);
+                  QMessageBox::critical(this, "Error", QString("NIF parsing failed with error code %1").arg(error.code, 8, 16, QChar('0')));
+                  #if _DEBUG
+                  __debugbreak();
+                  #endif
+                  return;
+               }
+            }
+            qDebug("NIF parsed. Passing to surface_renderer...");
+            view->surfaceRenderer()->add_nif(model);
+         });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
       //
