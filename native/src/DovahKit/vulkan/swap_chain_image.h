@@ -32,8 +32,8 @@ namespace vulkanDK {
          descriptor_set_group descriptor_sets;
          std::vector<command_buffer> command_buffers;
          struct {
-            buffer uniform;
-            buffer object_data;
+            buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers
+            buffer object_data; // per-object data which can be updated without having to re-record command buffers
          } shader_params;
          struct {
             overlays::fps        fps;

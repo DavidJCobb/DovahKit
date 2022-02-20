@@ -5,6 +5,8 @@
 #pragma region block types
    #include "unknown.h"
    //
+   // Includes organized by class hierarchy:
+   //
    #include "NiObject.h"
       #include "BSShaderTextureSet.h"
       #include "NiCollisionObject.h"
@@ -16,6 +18,7 @@
       #include "NiGeometryData.h"
          #include "NiTriBasedGeomData.h"
             #include "NiTriShapeData.h"
+      #include "NiInterpolator.h"
       #include "NiObjectNET.h"
          #include "NiAVObject.h"
             #include "BSTriShape.h"
@@ -36,6 +39,10 @@
          #include "BSDismemberSkinInstance.h"
       #include "NiSkinPartition.h"
       #include "NiTimeController.h"
+         #include "NiInterpController.h"
+            #include "NiSingleInterpController.h"
+               #include "NiFloatInterpController.h"
+                  #include "BSLightingShaderPropertyFloatController.h"
 #pragma endregion
 
 namespace nifDK {
@@ -47,6 +54,7 @@ namespace nifDK {
       block_types::BSFadeNode,
       block_types::BSInvMarker,
       block_types::BSLightingShaderProperty,
+      block_types::BSLightingShaderPropertyFloatController,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
       block_types::BSTriShape,
@@ -56,14 +64,18 @@ namespace nifDK {
       block_types::NiCollisionObject,
       block_types::NiDynamicEffect,
       block_types::NiExtraData,
+      block_types::NiFloatInterpController,
       block_types::NiGeometry,
       block_types::NiGeometryData,
       block_types::NiIntegerExtraData,
+      block_types::NiInterpController,
+      block_types::NiInterpolator,
       block_types::NiNode,
       block_types::NiObject,
       block_types::NiObjectNET,
       block_types::NiProperty,
       block_types::NiShadeProperty,
+      block_types::NiSingleInterpController,
       block_types::NiSkinData,
       block_types::NiSkinInstance,
       block_types::NiSkinPartition,

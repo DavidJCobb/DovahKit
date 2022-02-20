@@ -1,6 +1,11 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
 
+#define BLINN_PHONG_MODE_PHONG 0
+#define BLINN_PHONG_MODE_BLINN 1
+//
+#define BLINN_PHONG_MODE BLINN_PHONG_MODE_BLINN
+
 layout(push_constant) uniform PER_OBJECT {
    int object_index;
 	int texture_index;
@@ -36,7 +41,6 @@ layout(location = 0) in VS_OUT {
    vec3 tangent_view_pos;
    vec3 tangent_vert_pos;
 } fs_in;
-#define USE_TANGENT_SPACE_INPUTS 1
 
 layout(location = 0) out vec4 outColor;
 
@@ -49,37 +53,28 @@ void main() {
    vec3 normal = vec3(0, 0, 1);
    if (pushed.texture_normal_index >= 0) {
       normal = texture(sampler2D(textures[pushed.texture_normal_index], texSampler), fs_in.uv).rgb;
-      normal = normal * 2.0 - 1.0;
+      normal = normalize(normal * 2.0 - 1.0);
    }
    //
-   #if USE_TANGENT_SPACE_INPUTS == 1
-      normal = normalize(normal);
-      //
-      vec3  sun_dir = normalize(fs_in.tangent_sun_pos - fs_in.tangent_vert_pos);
-      float diff    = max(dot(sun_dir, normal), 0.0);
-      vec3  diffuse = diff * ubo.sun_color;
-      //
-      // Specular (needs to be done per light source, I guess):
-      //
-      vec3  view_dir    = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
-      vec3  reflect_dir = reflect(-sun_dir, normal);
-      vec3  halfway_dir = normalize(sun_dir + view_dir);
-      float spec_str    = pow(max(dot(normal, halfway_dir), 0.0), current_object.specular_exponent);
-      vec3  specular    = current_object.specular_strength * spec_str * current_object.specular_color;
-   #else
-      normal = normalize(normal);
-      //
-      vec3  sun_dir = normalize(ubo.sun_pos - fs_in.pos_world);
-      float diff    = max(dot(normal, sun_dir), 0.0);
-      vec3  diffuse = diff * ubo.sun_color;
-      //
-      // Specular (needs to be done per light source, I guess):
-      //
-      vec3  view_dir    = normalize(vec3(ubo.view[3]) - fs_in.pos_world); // direction from camera position to fragment position
+   vec3  sun_dir = normalize(fs_in.tangent_sun_pos - fs_in.tangent_vert_pos);
+   float diff    = max(dot(sun_dir, normal), 0.0);
+   vec3  diffuse = diff * ubo.sun_color;
+   //
+   // Specular (needs to be done per light source, I guess):
+   //
+   vec3 view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
+   #if BLINN_PHONG_MODE == BLINN_PHONG_MODE_PHONG
       vec3  reflect_dir = reflect(-sun_dir, normal);
       float spec_str    = pow(max(dot(view_dir, reflect_dir), 0.0), current_object.specular_exponent);
-      vec3  specular    = current_object.specular_strength * spec_str * current_object.specular_color;
+   #else
+      #if BLINN_PHONG_MODE == BLINN_PHONG_MODE_BLINN
+         vec3  halfway_dir = normalize(sun_dir + view_dir);
+         float spec_str    = pow(max(dot(normal, halfway_dir), 0.0), current_object.specular_exponent);
+      #else
+         #error Unrecognized BLINN_PHONG_MODE.
+      #endif
    #endif
+   vec3 specular = current_object.specular_strength * spec_str * current_object.specular_color;
    //
    outColor = vec4(ubo.ambient_light_color + diffuse + specular, 1.0) * outColor;
 }

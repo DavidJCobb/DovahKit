@@ -12,8 +12,13 @@ namespace nifDK::block_types {
       public:
          struct bone {
             struct vertex {
+               static constexpr size_t serialized_size      = 6;
+               static constexpr size_t serialized_size_half = 4;
+
                uint16_t index;
                float    weight = 0.0; // [0, 1]
+               
+               void unchecked_read(file_reader&);
             };
 
             NiTransform transform;

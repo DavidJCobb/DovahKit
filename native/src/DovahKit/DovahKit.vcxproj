@@ -409,6 +409,7 @@
     <ClCompile Include="dovah\forms\ObjectReference.cpp" />
     <ClCompile Include="dovah\forms\Quest.cpp" />
     <ClCompile Include="dovah\forms\Shout.cpp" />
+    <ClCompile Include="dovah\forms\Static.cpp" />
     <ClCompile Include="dovah\forms\structs\color_dword.cpp" />
     <ClCompile Include="dovah\forms\TextureSet.cpp" />
     <ClCompile Include="dovah\forms\Topic.cpp" />
@@ -721,6 +722,7 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\forms\Static.h" />
     <ClInclude Include="dovah\forms\_all.h" />
     <ClInclude Include="dovah\forms\_component_access.h" />
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />

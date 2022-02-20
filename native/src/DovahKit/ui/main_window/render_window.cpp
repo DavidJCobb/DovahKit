@@ -22,7 +22,10 @@
 #include <QPushButton>
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub.h"
+#include "dovah/form_stub_helpers.h"
+#include "dovah/forms/Cell.h"
 #include "dovah/forms/Form.h"
+#include "dovah/forms/ObjectReference.h"
 #include "dovah/forms/components/model.h"
 #include "ui/generic/FormPicker.h"
 
@@ -166,6 +169,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          layout->addWidget(picker);
          layout->addWidget(button);
          //picker->setAllowNone(false);
+         picker->setMinimumWidth(400);
          {
             QVector<dovah::form_type_t> types;
             for (auto& ft : dovah::form_types) {
@@ -183,8 +187,10 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             if (!form)
                return;
             auto loaded = form->load();
-            if (!loaded)
+            if (!loaded) {
+               QMessageBox::critical(this, "Error", "Unable to load this form type.");
                return;
+            }
             auto* form_model = loaded->get_model();
             if (!form_model) {
                QMessageBox::critical(this, "Error", "This base form type has no model.");
@@ -209,13 +215,98 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
                   qDebug("NIF parsing failed with error code %08X.", error.code);
                   QMessageBox::critical(this, "Error", QString("NIF parsing failed with error code %1").arg(error.code, 8, 16, QChar('0')));
                   #if _DEBUG
-                  __debugbreak();
+                     __debugbreak();
                   #endif
                   return;
                }
             }
             qDebug("NIF parsed. Passing to surface_renderer...");
             view->surfaceRenderer()->add_nif(model);
+         });
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
+      //
+      this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Import cell...");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         auto& editor = DovahKitCore::get();
+         if (!editor.has_data()) {
+            QMessageBox::critical(this, "Error", "Load data first, so we have base forms to import.");
+            return;
+         }
+         auto input = QInputDialog::getText(this, "Select cell", "Cell editor ID or form ID");
+         if (input.isEmpty())
+            return;
+         dovah::bare_form_id_t formID = input.toUInt(nullptr, 16);
+         if (!formID) {
+            QMessageBox::critical(this, "Error", "Input was zero or not a form ID.");
+            return;
+         }
+         //
+         auto* cell = editor.get_form_of_probable_type(dovah::form_type::cell, formID);
+         if (!cell) {
+            QMessageBox::critical(this, "Error", "Form doesn't exist.");
+            return;
+         }
+         if (cell->formType != dovah::form_type::cell) {
+            QMessageBox::critical(this, "Error", "Form is not a cell.");
+            return;
+         }
+         //
+         dovah::form_stub_helpers::for_each_child_form(cell, [this, view](dovah::form_stub* stub) {
+            if (stub->formType != dovah::form_type::reference)
+               return false;
+            auto* base = dovah::form_stub_helpers::get_base_form(stub);
+            if (!base)
+               return false;
+            auto loaded_base = base->load();
+            if (!loaded_base)
+               return false;
+            auto* form_model = loaded_base->get_model();
+            if (!form_model || form_model->model_path.empty())
+               return false;
+            //
+            auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (!loaded)
+               return false;
+            nifDK::file model;
+            {
+               std::filesystem::path path = std::string("meshes") + (form_model->model_path[0] == '/' || form_model->model_path[0] == '\\' ? "" : "\\") + form_model->model_path;
+               std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset(path));
+               if (!file) {
+                  qDebug("Failed to open NIF file: <%s>", path.string().c_str());
+                  return false;
+               }
+               model.read((void*)file->data(), file->size());
+               //
+               auto& error = model.read_error();
+               if (error.code != nifDK::default_notice_code) {
+                  qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
+                  return false;
+               }
+            }
+            qDebug("NIF parsed. Passing to surface_renderer...");
+            auto rot = glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z }; // we'll need a handedness flip from righthanded (Skyrim) to lefthanded (OpenGL/GLM).
+            if (fabs(rot.x) > fabs(rot.z))
+               rot.x = -rot.x;
+            else if (fabs(rot.y) > fabs(rot.z))
+               rot.y = -rot.y;
+            else
+               rot.z = -rot.z;
+            view->surfaceRenderer()->add_nif(
+               model,
+               glm::vec3{ loaded->position.x, loaded->position.y, loaded->position.z },
+               rot
+            );
+            //
+            return false;
          });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));

@@ -23,6 +23,7 @@
    #include "ObjectReference.h"
    #include "Package.h"
    #include "Quest.h"
+   #include "Static.h"
    #include "Shout.h"
    #include "TextureSet.h"
    #include "Topic.h"
@@ -51,6 +52,7 @@ namespace dovah {
       loaded_forms::ObjectReference,
       loaded_forms::Package,
       loaded_forms::Quest,
+      loaded_forms::Static,
       loaded_forms::Shout,
       loaded_forms::TextureSet,
       loaded_forms::Topic,
