@@ -37,14 +37,15 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    mat4 view;
    mat4 proj;
    vec3 ambient_light_color;
-   vec3 sun_pos;
+   vec3 sun_dir;
    vec3 sun_color;
 } ubo;
 // binding 1 is used by the fragment shader (texture sampler)
 layout(std140,set = 0, binding = 2) readonly buffer ObjectBuffer {
 	ObjectData objects[];
 } objectBuffer;
-// binding 3 is used by the fragment shader (texture array)
+// binding 3 is used by the fragment shader (light array)
+// binding 4 is used by the fragment shader (texture array)
 
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec3 in_color;
@@ -58,7 +59,7 @@ layout(location = 0) out VS_OUT {
    vec2 uv;
    vec3 pos_world;
    mat3 tangent_space;
-   vec3 tangent_sun_pos;
+   vec3 tangent_sun_dir;
    vec3 tangent_view_pos;
    vec3 tangent_vert_pos;
 } vs_out;
@@ -120,7 +121,7 @@ void main() {
          normalize(vec3(model_transform * vec4(n, 0)))  // NOTE: if non-uniform scaling is in use, then you must multiply by the transpose of the inverse of the rotation... but matrix inversions are slow on a GPU
       ));
    #endif
-   vs_out.tangent_sun_pos  = vs_out.tangent_space * ubo.sun_pos;
+   vs_out.tangent_sun_dir  = vs_out.tangent_space * ubo.sun_dir;
    vs_out.tangent_view_pos = vs_out.tangent_space * vec3(ubo.view[3]);
    vs_out.tangent_vert_pos = vs_out.tangent_space * vec3(model_transform * vec4(in_position, 1.0));
 }

@@ -25,6 +25,11 @@
 
 class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
+namespace dovah {
+   namespace loaded_forms {
+      class ObjectReference;
+   }
+}
 namespace nifDK {
    class file;
    namespace block_types {
@@ -148,6 +153,8 @@ namespace vulkanDK {
          void add_mesh(const QString& texture_path);
          void remove_mesh(size_t);
          void remove_last_mesh();
+         void remove_light(size_t);
+         void remove_last_light();
          void set_animation_paused(size_t mesh, bool paused);
          //
          size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
@@ -159,6 +166,7 @@ namespace vulkanDK {
          void add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0));
+         bool add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);

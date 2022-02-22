@@ -3,6 +3,7 @@
 #include "command_buffer.h"
 #include "frame_in_flight.h"
 #include "render_pass.h"
+#include "rendered_light.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
 #include "surface_renderer.h"
@@ -70,6 +71,14 @@ namespace vulkanDK {
          constexpr VkDeviceSize rosp_buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
          this->shader_params.object_data = this->owner->create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
+      {  // Light data list
+         constexpr VkDeviceSize rlsp_buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
+         this->shader_params.light_data = this->owner->create_buffer(rlsp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         //
+         auto* data = this->shader_params.light_data.map_memory();
+         memset(data, 0, rlsp_buffer_size);
+         this->shader_params.light_data.unmap_memory(data);
+      }
    }
    void swap_chain_image::_setup_command_buffers() {
       this->command_buffers.resize(2);
@@ -109,6 +118,7 @@ namespace vulkanDK {
       this->_hook_to_frame(fif);
       //
       this->_update_shader_global_scene_state();
+      this->_update_shader_lights_data_buffer();
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       {
@@ -230,6 +240,101 @@ namespace vulkanDK {
       void* data = this->shader_params.uniform.map_memory();
       memcpy(data, &state, sizeof(state));
       this->shader_params.uniform.unmap_memory(data);
+   }
+   void swap_chain_image::_update_shader_lights_data_buffer() {
+      using entry_type = rendered_light::shader_parameters;
+      constexpr auto entry_size = sizeof(entry_type);
+
+      constexpr bool map_only_what_is_necessary = true;
+
+      auto& scene  = this->get_scene();
+      auto& buffer = this->shader_params.light_data;
+      //
+      auto& list   = scene.lights;
+      auto  count  = list.size();
+      assert(count <= config::max_lights_in_scene);
+      VkDeviceSize size = count * entry_size;
+      //
+      size_t first_dirty = 0;
+      size_t last_dirty  = 0;
+      bool   any_dirty   = false;
+      if constexpr (map_only_what_is_necessary) {
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = list[i];
+            switch (item.life_state) {
+               case scene_frame_item_state::empty:
+                  continue;
+               //
+               // Unlike with rendered meshes, we actually do want to pass updated data for a 
+               // rendered light that is pending deletion: we want to set its radius and color 
+               // to zero and black. This is to avoid requiring the shader to check an "alive" 
+               // bool on each light and branch; setting the light to zero and black is pretty 
+               // much a branchless no-op.
+               //
+            }
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            if (!any_dirty) {
+               first_dirty = i;
+               any_dirty   = true;
+            }
+            last_dirty = i;
+         }
+      } else {
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = list[i];
+            switch (item.life_state) {
+               case scene_frame_item_state::empty:
+                  continue;
+               case scene_frame_item_state::pending_delete:
+                  item.handled_frames.set_up_to_date(this->my_index);
+                  continue;
+            }
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            first_dirty = i;
+            any_dirty   = true;
+            break;
+         }
+      }
+      //
+      if (any_dirty) {
+         constexpr bool map_only_what_is_necessary = true;
+         //
+         entry_type* data = nullptr;
+         if constexpr (map_only_what_is_necessary) {
+            VkDeviceSize offset = first_dirty * entry_size;
+            VkDeviceSize length = (last_dirty - first_dirty + 1) * entry_size;
+            data = (entry_type*)buffer.map_memory(offset, length);
+            for (size_t i = first_dirty; i <= last_dirty; ++i) {
+               auto& item = list[i];
+               if (!item.active())
+                  continue;
+               if (item.handled_frames.is_up_to_date(this->my_index))
+                  continue;
+               auto& src = list[i].shader_params;
+               auto& dst = data[i - first_dirty];
+               memcpy(&dst, &src, entry_size);
+               //
+               item.handled_frames.set_up_to_date(this->my_index);
+            }
+         } else {
+            data = (entry_type*)buffer.map_memory();
+            for (size_t i = first_dirty; i < count; ++i) {
+               auto& item = list[i];
+               if (!item.active())
+                  continue;
+               if (item.handled_frames.is_up_to_date(this->my_index))
+                  continue;
+               auto& src = list[i].shader_params;
+               auto& dst = data[i];
+               memcpy(&dst, &src, entry_size);
+               //
+               item.handled_frames.set_up_to_date(this->my_index);
+            }
+         }
+         buffer.unmap_memory(data);
+      }
    }
    void swap_chain_image::_update_shader_object_data_buffer() {
       using entry_type = rendered_mesh::shader_parameters;
@@ -393,7 +498,7 @@ namespace vulkanDK {
          write_info[i] = VkWriteDescriptorSet{ // texture array
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet          = target_set,
-            .dstBinding      = 3, // this should match the binding value in the shader
+            .dstBinding      = 4, // this should match the binding value in the shader
             .dstArrayElement = src.start,
             .descriptorCount = (uint32_t)info.size(),
             .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,

@@ -34,6 +34,7 @@ namespace vulkanDK {
          struct {
             buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers
             buffer object_data; // per-object data which can be updated without having to re-record command buffers
+            buffer light_data;  // per-light  data which can be updated without having to re-record command buffers
          } shader_params;
          struct {
             overlays::fps        fps;
@@ -64,6 +65,7 @@ namespace vulkanDK {
          //
          scene& get_scene();
          void _update_shader_global_scene_state();
+         void _update_shader_lights_data_buffer();
          void _update_shader_object_data_buffer();
          void _update_shader_texture_descriptors();
          void _refill_command_buffers();

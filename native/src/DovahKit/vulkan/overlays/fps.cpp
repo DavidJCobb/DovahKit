@@ -102,13 +102,11 @@ namespace vulkanDK::overlays {
             .module              = frag,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .specialization_info = nullptr,
          },
          {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .specialization_info = nullptr,
          },
       };
       dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend);

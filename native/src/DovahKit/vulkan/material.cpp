@@ -41,22 +41,41 @@ namespace vulkanDK {
       this->stages.push_back(s);
    }
 
-   std::vector<VkPipelineShaderStageCreateInfo> material_definition::stage_create_info() const {
-      std::vector<VkPipelineShaderStageCreateInfo> out;
+   material_definition::bundled_stage_create_info material_definition::stage_create_info() const {
+      bundled_stage_create_info out;
       //
       auto  size = this->stages.size();
       auto& list = this->stages;
-      out.resize(size);
+      out.stages.resize(size);
+      for (const auto& item : list) {
+         const auto& info = item.specialization_info;
+         if (info.empty())
+            continue;
+         out.specializations.push_back(VkSpecializationInfo{
+            .mapEntryCount = (uint32_t)info.fields.size(),
+            .pMapEntries   = info.fields.data(),
+            .dataSize      = (uint32_t)info.data.size(),
+            .pData         = info.data.data(),
+         });
+      }
+      //
+      size_t spec = 0;
       for (size_t i = 0; i < size; ++i) {
          auto& stage = list[i];
-         out[i] = VkPipelineShaderStageCreateInfo{
+         auto& item  = out.stages[i];
+         item = VkPipelineShaderStageCreateInfo{
             .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage  = stage.stage,
             .module = stage.module->handle,
             .pName  = stage.entry_point_name,
-            .pSpecializationInfo = stage.specialization_info,
+            .pSpecializationInfo = nullptr,
          };
+         if (!stage.specialization_info.empty()) {
+            item.pSpecializationInfo = &out.specializations[spec];
+            ++spec;
+         }
       }
+      //
       return out;
    }
    //
@@ -204,8 +223,8 @@ namespace vulkanDK {
 
       auto pipeline_info = VkGraphicsPipelineCreateInfo{
          .sType      = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-         .stageCount = (uint32_t)stages.size(),
-         .pStages    = stages.data(), 
+         .stageCount = (uint32_t)stages.stages.size(),
+         .pStages    = stages.stages.data(),
          //
          .pVertexInputState   = &vertex,
          .pInputAssemblyState = &def.inputs.triangles,

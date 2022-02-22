@@ -13,6 +13,8 @@
 #include "config/scene_limits.h"
 #include "config/use_inverted_depth.h"
 #include "config/validation_layers.h"
+#include "helpers/glm_transform_from_beth.h"
+#include "helpers/specialization_map_entry_for_member.h"
 
 // loading textures from files using Qt:
 #include <QBuffer>
@@ -46,6 +48,14 @@
 #include "nif/blocks/NiNode.h"
 #include "nif/blocks/NiTriShape.h"
 #include "nif/blocks/NiTriShapeData.h"
+
+// loading light refs
+#include "dovah/form_stub.h"
+#include "dovah/form_stub_helpers.h"
+#include "dovah/forms/Light.h"
+#include "dovah/forms/ObjectReference.h"
+#include "dovah/forms/components/extra_data/light.h"
+#include "dovah/forms/components/extra_data/radius.h"
 
 namespace {
    static constexpr bool debug_log_scene_object_lifetimes = false;
@@ -239,15 +249,22 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_object::shader_parameters
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters
             .index              = 2,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // texture array
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters
             .index              = 3,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 4,
             .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
             .count              = config::max_loaded_textures,
@@ -721,18 +738,23 @@ namespace vulkanDK {
             this->shader_modules.push_back(frag);
             this->shader_modules.push_back(vert);
          }
+         //
+         struct _specializations {
+            int32_t max_lights = config::max_lights_in_scene;
+         };
+         _specializations spec;
+         //
          dfn.stages = {
             {
                .module              = frag,
                .entry_point_name    = "main",
                .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-               .specialization_info = nullptr,
+               .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
             },
             {
                .module              = vert,
                .entry_point_name    = "main",
                .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-               .specialization_info = nullptr,
             },
          };
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
@@ -1032,6 +1054,11 @@ namespace vulkanDK {
             .offset = 0,
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
+         auto rlsp_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.light_data.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
          //
          auto descriptor_writes = std::array{
             VkWriteDescriptorSet{ // uniform buffer object
@@ -1065,10 +1092,21 @@ namespace vulkanDK {
                .pBufferInfo      = &rosp_buffer_info,
                .pTexelBufferView = nullptr,
             },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.standard,
+               .dstBinding       = 3, // this should match the binding value in the shader
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rlsp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
             VkWriteDescriptorSet{ // texture array
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.standard,
-               .dstBinding      = 3, // this should match the binding value in the shader
+               .dstBinding      = 4, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)texture_infos.size(),
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -1779,6 +1817,7 @@ namespace vulkanDK {
       //
       if (!texture_path.endsWith(".dds", Qt::CaseInsensitive))
          return fail;
+      texture_path = QDir::cleanPath(texture_path).toLower();
       //
       auto& list = this->scene.textures;
       auto  size = list.size();
@@ -1793,7 +1832,6 @@ namespace vulkanDK {
       //
       std::unique_ptr<dovah::bsa_archived_file> file;
       {
-         texture_path = QDir::cleanPath(texture_path);
          if (!texture_path.startsWith("textures/")) {
             qDebug("[vulkanDK::surface_renderer::add_dds_texture] Invalid texture path (doesn't start with textures folder): %s", qUtf8Printable(texture_path));
             return fail;
@@ -2017,6 +2055,30 @@ namespace vulkanDK {
          if (!item.active())
             continue;
          this->remove_mesh(i);
+         return;
+      }
+   }
+   void surface_renderer::remove_light(size_t i) {
+      auto& list = this->scene.lights;
+      if (i >= list.size())
+         return;
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::remove_light] Marking scene light %u for delete.", i);
+      }
+      ++this->scene.pending_deletions.lights;
+      auto& item = list[i];
+      item.mark_for_delete();
+   }
+   void surface_renderer::remove_last_light() {
+      auto& list = this->scene.lights;
+      auto  size = list.size();
+      if (size == 0)
+         return;
+      for (size_t i = size - 1; i >= 0; --i) {
+         auto& item = list[i];
+         if (!item.active())
+            continue;
+         this->remove_light(i);
          return;
       }
    }
@@ -2360,6 +2422,57 @@ namespace vulkanDK {
       return true;
    }
 
+   bool surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
+      auto* base = refr.base_form.get_form_stub();
+      if (!base || base->formType != dovah::form_type::light)
+         return false;
+      auto loaded_base = base->load().ptr_cast<dovah::loaded_forms::Light>();
+      if (!loaded_base)
+         return false;
+      //
+      {
+         switch (loaded_base->light_type) {
+            using enum dovah::loaded_forms::Light::engine_light_type;
+            case omni:
+               break;
+            case omni_shadow: // NOTE: we don't yet support shadowing, nor shadowed point lights
+               break;
+            default:
+               return false; // unsupported light type
+         }
+      }
+      //
+      size_t light_index = this->scene.insert_new_light();
+      if (light_index == std::string::npos) {
+         qDebug("Cannot add new rendered_light; scene limits reached.");
+         return false;
+      }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_light] Creating new light at index %u for [REFR:%08X] with base [LIGH:%08X]%s.", light_index, refr.stub.formID, base->formID, base->get_editor_id());
+      }
+      auto& light = this->scene.lights[light_index];
+      light.life_state = scene_frame_item_state::active;
+      light.handled_frames.set_all_out_of_date();
+      {
+         auto& sp = light.shader_params;
+         sp.fade    = loaded_base->fade;
+         sp.radius  = 128; // default
+         sp.color.r = (float)loaded_base->color.r / 255.0;
+         sp.color.g = (float)loaded_base->color.g / 255.0;
+         sp.color.b = (float)loaded_base->color.b / 255.0;
+         sp.transform = glm_transform_from_beth(refr.position, refr.rotation, 1.0F);
+         //
+         if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
+            sp.fade += ex->fade;
+            // sp.fov += ex->fov;
+         }
+         if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
+            sp.radius = ex->value;
+         }
+      }
+      return true;
+   }
+
    void surface_renderer::move_camera(const glm::vec3& move, const glm::vec3& turn) {
       auto& gs     = this->scene.global_state;
       auto& camera = gs.view;
@@ -2386,6 +2499,27 @@ namespace vulkanDK {
    void surface_renderer::_execute_pending_scene_deletions() {
       auto  ic = this->swap_chain.images.size();
       auto& pd = this->scene.pending_deletions;
+      if (pd.lights) {
+         size_t deleted    =  0;
+         size_t last_alive = -1;
+         auto&  list       = this->scene.lights;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
+               item.reset();
+               ++deleted;
+            } else {
+               last_alive = i;
+            }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            if (deleted) {
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_deletions] Deleted %u scene lights.", deleted);
+            }
+         }
+         pd.lights -= deleted;
+         list.resize(last_alive + 1);
+      }
       if (pd.meshes) {
          size_t deleted    =  0;
          size_t last_alive = -1;

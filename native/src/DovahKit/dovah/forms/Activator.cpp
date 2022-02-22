@@ -111,6 +111,14 @@ namespace dovah::loaded_forms {
             case 'MODS':
                components::model::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
+            case 'DEST': // destruction stage header
+            case 'DSTD': // destruction stage data
+            case 'DMDL': // destruction stage model
+            case 'DMDT': // destruction stage model texture hashes
+            case 'DMDS': // destruction stage model texture swaps
+            case 'DSTF': // destruction stage end marker
+               components::destruction_stage_data::generate_use_info(subrecord, uib);
+               break;
             case 'KSIZ':
             case 'KWDA':
                components::keyword_list::generate_use_info(subrecord, uib);

@@ -403,6 +403,7 @@
     <ClCompile Include="dovah\forms\FormList.cpp" />
     <ClCompile Include="dovah\forms\Landscape.cpp" />
     <ClCompile Include="dovah\forms\LandTexture.cpp" />
+    <ClCompile Include="dovah\forms\Light.cpp" />
     <ClCompile Include="dovah\forms\Location.cpp" />
     <ClCompile Include="dovah\forms\MagicEffect.cpp" />
     <ClCompile Include="dovah\forms\Note.cpp" />
@@ -505,6 +506,7 @@
     <ClCompile Include="nif\blocks\BSEffectShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSInvMarker.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
+    <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp" />
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
@@ -519,6 +521,7 @@
     <ClCompile Include="nif\blocks\NiNode.cpp" />
     <ClCompile Include="nif\blocks\NiObjectNET.cpp" />
     <ClCompile Include="nif\blocks\NiShadeProperty.cpp" />
+    <ClCompile Include="nif\blocks\NiSingleInterpController.cpp" />
     <ClCompile Include="nif\blocks\NiSkinData.cpp" />
     <ClCompile Include="nif\blocks\NiSkinInstance.cpp" />
     <ClCompile Include="nif\blocks\NiSkinPartition.cpp" />
@@ -588,6 +591,7 @@
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
+    <ClCompile Include="vulkan\helpers\glm_transform_from_beth.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
     <ClCompile Include="vulkan\loaded_texture.cpp" />
@@ -596,6 +600,7 @@
     <ClCompile Include="vulkan\overlays\world_axes.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
+    <ClCompile Include="vulkan\rendered_light.cpp" />
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
@@ -722,6 +727,7 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\forms\Light.h" />
     <ClInclude Include="dovah\forms\Static.h" />
     <ClInclude Include="dovah\forms\_all.h" />
     <ClInclude Include="dovah\forms\_component_access.h" />
@@ -763,6 +769,7 @@
     <ClInclude Include="nif\blocks\BSFadeNode.h" />
     <ClInclude Include="nif\blocks\BSInvMarker.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
+    <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h" />
     <ClInclude Include="nif\blocks\BSShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderTextureSet.h" />
     <ClInclude Include="nif\blocks\BSTriShape.h" />
@@ -772,9 +779,13 @@
     <ClInclude Include="nif\blocks\NiCollisionObject.h" />
     <ClInclude Include="nif\blocks\NiDynamicEffect.h" />
     <ClInclude Include="nif\blocks\NiExtraData.h" />
+    <ClInclude Include="nif\blocks\NiFloatInterpController.h" />
     <ClInclude Include="nif\blocks\NiIntegerExtraData.h" />
+    <ClInclude Include="nif\blocks\NiInterpController.h" />
+    <ClInclude Include="nif\blocks\NiInterpolator.h" />
     <ClInclude Include="nif\blocks\NiProperty.h" />
     <ClInclude Include="nif\blocks\NiShadeProperty.h" />
+    <ClInclude Include="nif\blocks\NiSingleInterpController.h" />
     <ClInclude Include="nif\blocks\NiSkinData.h" />
     <ClInclude Include="nif\blocks\NiSkinInstance.h" />
     <ClInclude Include="nif\blocks\NiSkinPartition.h" />
@@ -842,6 +853,8 @@
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
+    <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
+    <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
@@ -850,6 +863,7 @@
     <ClInclude Include="vulkan\overlays\world_axes.h" />
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
+    <ClInclude Include="vulkan\rendered_light.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />
     <ClInclude Include="vulkan\render_pass.h" />
     <ClInclude Include="vulkan\scene.h" />

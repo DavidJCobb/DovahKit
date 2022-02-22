@@ -2,6 +2,7 @@
 #include <chrono>
 #include <vector>
 #include "loaded_texture.h"
+#include "rendered_light.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
 
@@ -16,6 +17,7 @@ namespace vulkanDK {
          scene();
 
          std::chrono::steady_clock::time_point last_update;
+         std::vector<rendered_light> lights;
          std::vector<rendered_mesh>  meshes;
          std::vector<loaded_texture> textures;
          //
@@ -31,6 +33,7 @@ namespace vulkanDK {
          scene_global_state global_state; // GPU-side state
          //
          struct {
+            size_t lights   = 0; // count
             size_t meshes   = 0; // count
             size_t textures = 0; // count
          } pending_deletions;
@@ -42,8 +45,9 @@ namespace vulkanDK {
          void teardown();
          void update(); // anim state, etc.
 
-         size_t insert_new_mesh(); // returns std::string::npos on failure
-         size_t insert_new_texture(); // returns std::string::npos on failure
+         size_t insert_new_light();   // returns index of inserted item, std::string::npos on failure
+         size_t insert_new_mesh();    // returns index of inserted item, std::string::npos on failure
+         size_t insert_new_texture(); // returns index of inserted item, std::string::npos on failure
 
       protected:
          size_t _empty_mesh_slot_count() const;

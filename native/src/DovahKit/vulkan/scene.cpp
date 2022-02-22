@@ -163,6 +163,7 @@ namespace vulkanDK {
    }
 
    void scene::teardown() {
+      this->lights.clear();
       this->meshes.clear();
       this->textures.clear();
    }
@@ -197,6 +198,19 @@ namespace vulkanDK {
       }
    }
 
+   size_t scene::insert_new_light() {
+      auto& list = this->lights;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& item = list[i];
+         if (item.empty())
+            return i;
+      }
+      if (size >= config::max_lights_in_scene)
+         return std::string::npos;
+      list.emplace_back();
+      return size;
+   }
    size_t scene::insert_new_mesh() {
       auto& list = this->meshes;
       auto  size = list.size();

@@ -17,6 +17,7 @@
    #include "FormList.h"
    #include "Landscape.h"
    #include "LandTexture.h"
+   #include "Light.h"
    #include "Location.h"
    #include "MagicEffect.h"
    #include "Note.h"
@@ -47,6 +48,7 @@ namespace dovah {
       loaded_forms::FormList,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
+      loaded_forms::Light,
       loaded_forms::Location,
       loaded_forms::Note,
       loaded_forms::ObjectReference,

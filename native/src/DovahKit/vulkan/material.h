@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 #include <vector>
 #include "_vulkan.h"
 #include "_util.h"
@@ -9,6 +10,39 @@ namespace vulkanDK {
 
    class material_definition {
       public:
+         struct stage_specialization_info {
+            std::vector<std::byte> data;
+            std::vector<VkSpecializationMapEntry> fields;
+
+            inline bool empty() const { return this->data.empty(); }
+
+            stage_specialization_info() {}
+            template<typename T> stage_specialization_info(const T& d, const std::vector<VkSpecializationMapEntry>& f) : fields(f) {
+               this->data.resize(sizeof(T));
+               memcpy(this->data.data(), &d, sizeof(T));
+            };
+
+            template<typename... T> requires (!(std::is_pointer_v<T> || std::is_same_v<T, std::nullptr_t>) && ...)
+            stage_specialization_info(T... values) { // assumes constantIDs starting from 0
+               this->data.resize((sizeof(T) + ...));
+               this->fields.resize(sizeof...(T));
+               //
+               uint32_t i = 0;
+               uint32_t n = 0;
+               auto append = [&i, &n, this]<typename T>(T& v) {
+                  memcpy(n + this->data.data(), &v, sizeof(T));
+                  this->fields[i] = {
+                     .constantID = i,
+                     .offset     = n,
+                     .size       = sizeof(T),
+                  };
+                  ++i;
+                  n += sizeof(T);
+               };
+               (append(values), ...);
+            }
+         };
+
          struct color_blend {
             bool enabled = false;
             struct {
@@ -30,7 +64,7 @@ namespace vulkanDK {
             const char*    entry_point_name = nullptr; // function in the shader to call
             VkPipelineShaderStageCreateFlags flags = {};
             VkShaderStageFlagBits            stage = {};
-            const VkSpecializationInfo*      specialization_info = nullptr; // can pass parameters to the shader
+            stage_specialization_info specialization_info; // can pass parameters to the shader
          };
 
          static constexpr color_blend default_no_op_blend = {};
@@ -91,7 +125,11 @@ namespace vulkanDK {
 
          void add_stage(const stage_info&);
 
-         std::vector<VkPipelineShaderStageCreateInfo> stage_create_info() const;
+         struct bundled_stage_create_info {
+            std::vector<VkSpecializationInfo> specializations;
+            std::vector<VkPipelineShaderStageCreateInfo> stages;
+         };
+         bundled_stage_create_info stage_create_info() const;
 
          VkPipelineDepthStencilStateCreateInfo depth_stencil_info() const;
 
