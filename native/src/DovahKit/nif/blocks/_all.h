@@ -5,7 +5,7 @@
 #pragma region block types
    #include "unknown.h"
    //
-   // Includes organized by class hierarchy:
+   // Includes are organized by class hierarchy:
    //
    #include "NiObject.h"
       #include "BSShaderTextureSet.h"
@@ -25,9 +25,12 @@
             #include "NiDynamicEffect.h"
             #include "NiGeometry.h"
                #include "NiTriBasedGeom.h"
+                  #include "BSLODTriShape.h"
                   #include "NiTriShape.h"
             #include "NiNode.h"
                #include "BSFadeNode.h"
+               #include "BSLeafAnimNode.h"
+               #include "NiSwitchNode.h"
          #include "NiProperty.h"
             #include "NiAlphaProperty.h"
             #include "NiShadeProperty.h"
@@ -53,8 +56,10 @@ namespace nifDK {
       block_types::BSEffectShaderProperty,
       block_types::BSFadeNode,
       block_types::BSInvMarker,
+      block_types::BSLeafAnimNode,
       block_types::BSLightingShaderProperty,
       block_types::BSLightingShaderPropertyFloatController,
+      block_types::BSLODTriShape,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
       block_types::BSTriShape,
@@ -80,6 +85,7 @@ namespace nifDK {
       block_types::NiSkinInstance,
       block_types::NiSkinPartition,
       block_types::NiStringExtraData,
+      block_types::NiSwitchNode,
       block_types::NiTimeController,
       block_types::NiTriBasedGeom,
       block_types::NiTriBasedGeomData,

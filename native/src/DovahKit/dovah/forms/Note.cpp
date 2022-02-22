@@ -253,14 +253,16 @@ namespace dovah::loaded_forms {
          return false;
       auto copy = (Note*)out;
       //
+      copy->script_data.clone_from(this->script_data, *copy);
       copy->model.clone_from(this->model);
-      copy->script_data.clear(*copy);
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
       copy_form_reference_list(*copy, copy->owning_quests, this->owning_quests);
       copy->content.sound.set(*copy, this->content.sound);
       copy->content.speaker.set(*copy, this->content.speaker);
       copy->content.topic.set(*copy, this->content.topic);
+      copy->name = this->name;
+      copy->icon = this->icon;
       //
       return true;
    }
@@ -304,6 +306,8 @@ namespace dovah::loaded_forms {
       this->content.sound.set(*this, nullptr);
       this->content.speaker.set(*this, nullptr);
       this->content.topic.set(*this, nullptr);
+      this->name.reset();
+      this->icon.clear();
    }
    void Note::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->model.sever_outbound_references_to(other, *this);

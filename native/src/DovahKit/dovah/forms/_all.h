@@ -13,6 +13,7 @@
    #include "Container.h"
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
+   #include "Door.h"
    #include "Faction.h"
    #include "Flora.h"
    #include "FormList.h"
@@ -21,6 +22,7 @@
    #include "Light.h"
    #include "Location.h"
    #include "MagicEffect.h"
+   #include "MiscItem.h"
    #include "Note.h"
    #include "ObjectReference.h"
    #include "Package.h"
@@ -43,8 +45,10 @@ namespace dovah {
       loaded_forms::Actor,
       loaded_forms::Cell,
       loaded_forms::Color,
+      loaded_forms::Container,
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
+      loaded_forms::Door,
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::FormList,
@@ -52,6 +56,7 @@ namespace dovah {
       loaded_forms::LandTexture,
       loaded_forms::Light,
       loaded_forms::Location,
+      loaded_forms::MiscItem,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
       loaded_forms::Package,

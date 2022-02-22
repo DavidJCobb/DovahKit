@@ -7,7 +7,7 @@ namespace nifDK::block_types {
    void NiTimeController::parse(file_reader& reader) {
       reader.read_ref(this->next);
       {
-         uint32_t flags = 0;
+         uint16_t flags = 0;
          reader.read(flags);
          this->config.anim_type  = (animation_type)(flags & 1);
          this->config.cycle_type = (cycle_type)((flags >> 1) & 0b11);

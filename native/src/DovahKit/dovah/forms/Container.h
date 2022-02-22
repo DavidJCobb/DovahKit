@@ -5,6 +5,7 @@
 #include "_common.h"
 #include "components/bounds.h"
 #include "components/container.h"
+#include "components/destruction.h"
 #include "components/model.h"
 #include "components/papyrus.h"
 
@@ -27,6 +28,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
          components::model_ts model;
+         components::destruction_stage_data destruction_data; // DEST
          localized_string name; // FULL
          components::container_data inventory;
          container_flags_t container_flags = 0;
@@ -36,6 +38,10 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+
+      protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
          virtual void _clear_impl() noexcept override;
    };

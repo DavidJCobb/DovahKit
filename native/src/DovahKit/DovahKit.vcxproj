@@ -314,6 +314,7 @@
     <ClCompile Include="dovah\data\ini_settings.cpp" />
     <ClCompile Include="dovah\data\story_manager.cpp" />
     <ClCompile Include="dovah\detailed_notice.cpp" />
+    <ClCompile Include="dovah\forms\Door.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
     <ClCompile Include="dovah\files\bsa\threads.cpp" />
@@ -428,6 +429,7 @@
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
+    <ClCompile Include="dovah\forms\MiscItem.cpp" />
     <ClCompile Include="dovah\utils\game_asset_path_validation.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
@@ -730,8 +732,10 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\forms\Door.h" />
     <ClInclude Include="dovah\forms\Flora.h" />
     <ClInclude Include="dovah\forms\Light.h" />
+    <ClInclude Include="dovah\forms\MiscItem.h" />
     <ClInclude Include="dovah\forms\Static.h" />
     <ClInclude Include="dovah\forms\_all.h" />
     <ClInclude Include="dovah\forms\_component_access.h" />
@@ -772,6 +776,7 @@
     <ClInclude Include="nif\blocks\BSEffectShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSFadeNode.h" />
     <ClInclude Include="nif\blocks\BSInvMarker.h" />
+    <ClInclude Include="nif\blocks\BSLeafAnimNode.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h" />
     <ClInclude Include="nif\blocks\BSLODTriShape.h" />

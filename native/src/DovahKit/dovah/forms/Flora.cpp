@@ -70,7 +70,7 @@ namespace dovah::loaded_forms {
             case 'PFIG':
                subrecord.read(this->ingredient);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::ingredient, this->stub, this->ingredient)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::ingredient, form_type::leveled_item }, this->stub, this->ingredient)
                );
                break;
             case 'PFPC':
