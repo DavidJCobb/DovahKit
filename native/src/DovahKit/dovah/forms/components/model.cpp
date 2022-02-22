@@ -70,6 +70,9 @@ namespace dovah::loaded_forms::components {
          case 'MO2S':
          case 'DMDS':
             break;
+         case 'MOSD': // bool?
+         case 'MODD': // identical to MOSD?
+            return true;
          default:
             return false;
       }

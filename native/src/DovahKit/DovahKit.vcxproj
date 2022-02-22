@@ -399,6 +399,7 @@
     <ClCompile Include="dovah\forms\factories\construct.cpp" />
     <ClCompile Include="dovah\forms\factories\hardcoded.cpp" />
     <ClCompile Include="dovah\forms\factories\use_info.cpp" />
+    <ClCompile Include="dovah\forms\Flora.cpp" />
     <ClCompile Include="dovah\forms\form.cpp" />
     <ClCompile Include="dovah\forms\FormList.cpp" />
     <ClCompile Include="dovah\forms\Landscape.cpp" />
@@ -507,6 +508,7 @@
     <ClCompile Include="nif\blocks\BSInvMarker.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp" />
+    <ClCompile Include="nif\blocks\BSLODTriShape.cpp" />
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
@@ -526,6 +528,7 @@
     <ClCompile Include="nif\blocks\NiSkinInstance.cpp" />
     <ClCompile Include="nif\blocks\NiSkinPartition.cpp" />
     <ClCompile Include="nif\blocks\NiStringExtraData.cpp" />
+    <ClCompile Include="nif\blocks\NiSwitchNode.cpp" />
     <ClCompile Include="nif\blocks\NiTimeController.cpp" />
     <ClCompile Include="nif\blocks\NiTriShapeData.cpp" />
     <ClCompile Include="nif\blocks\unknown.cpp" />
@@ -727,6 +730,7 @@
     <QtMoc Include="widgets\widget-models\DKBSACollectionModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKBSABrowseDialog.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="dovah\forms\Flora.h" />
     <ClInclude Include="dovah\forms\Light.h" />
     <ClInclude Include="dovah\forms\Static.h" />
     <ClInclude Include="dovah\forms\_all.h" />
@@ -770,6 +774,7 @@
     <ClInclude Include="nif\blocks\BSInvMarker.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h" />
+    <ClInclude Include="nif\blocks\BSLODTriShape.h" />
     <ClInclude Include="nif\blocks\BSShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderTextureSet.h" />
     <ClInclude Include="nif\blocks\BSTriShape.h" />
@@ -790,6 +795,7 @@
     <ClInclude Include="nif\blocks\NiSkinInstance.h" />
     <ClInclude Include="nif\blocks\NiSkinPartition.h" />
     <ClInclude Include="nif\blocks\NiStringExtraData.h" />
+    <ClInclude Include="nif\blocks\NiSwitchNode.h" />
     <ClInclude Include="nif\blocks\NiTimeController.h" />
     <ClInclude Include="nif\blocks\NiTriBasedGeomData.h" />
     <ClInclude Include="nif\blocks\NiTriShapeData.h" />

@@ -46,6 +46,7 @@
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 #include "nif/blocks/NiNode.h"
+#include "nif/blocks/NiSwitchNode.h"
 #include "nif/blocks/NiTriShape.h"
 #include "nif/blocks/NiTriShapeData.h"
 
@@ -2267,7 +2268,7 @@ namespace vulkanDK {
       }
    }
    void surface_renderer::add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index) {
-      auto* geom = dynamic_cast<nifDK::block_types::NiTriShape*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
+      auto* geom = dynamic_cast<nifDK::block_types::NiTriBasedGeom*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
       if (!geom)
          return;
       auto* data = dynamic_cast<nifDK::block_types::NiTriShapeData*>(geom->data);
@@ -2385,8 +2386,15 @@ namespace vulkanDK {
             if (node) {
                qDebug("[surface_renderer::add_nif] Handling node: %s...", node->name.data());
                transform = transform * node->transform.to_matrix();
-               for (auto* child : node->children)
-                  (self)(child, transform, self);
+               if (auto* sn = dynamic_cast<nifDK::block_types::NiSwitchNode*>(node)) {
+                  qDebug("[surface_renderer::add_nif] This is a NiSwitchNode...");
+                  auto* child = sn->current_child();
+                  if (child)
+                     (self)(child, transform, self);
+               } else {
+                  for (auto* child : node->children)
+                     (self)(child, transform, self);
+               }
                qDebug("[surface_renderer::add_nif] Handled node: %s.", node->name.data());
                return;
             }
@@ -2400,9 +2408,7 @@ namespace vulkanDK {
          impl(object, transform, impl);
       };
       {
-         glm::mat4 transform = glm::eulerAngleXYZ(-rot.x, rot.y, rot.z);
-         transform[3] = glm::vec4(pos, 1);
-         (functor)(model.root_node, transform);
+         (functor)(model.root_node, glm_transform_from_beth(pos, rot, 1.0));
       }
       qDebug("[surface_renderer::add_nif] Done processing the NIF.");
       {
@@ -2456,7 +2462,7 @@ namespace vulkanDK {
       {
          auto& sp = light.shader_params;
          sp.fade    = loaded_base->fade;
-         sp.radius  = 128; // default
+         sp.radius  = loaded_base->radius;
          sp.color.r = (float)loaded_base->color.r / 255.0;
          sp.color.g = (float)loaded_base->color.g / 255.0;
          sp.color.b = (float)loaded_base->color.b / 255.0;
@@ -2467,7 +2473,7 @@ namespace vulkanDK {
             // sp.fov += ex->fov;
          }
          if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
-            sp.radius = ex->value;
+            sp.radius += ex->value;
          }
       }
       return true;

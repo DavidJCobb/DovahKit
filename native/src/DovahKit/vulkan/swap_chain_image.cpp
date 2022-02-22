@@ -245,7 +245,7 @@ namespace vulkanDK {
       using entry_type = rendered_light::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 
-      constexpr bool map_only_what_is_necessary = true;
+      constexpr bool map_only_what_is_necessary = false; // useless in VMA
 
       auto& scene  = this->get_scene();
       auto& buffer = this->shader_params.light_data;
@@ -299,8 +299,6 @@ namespace vulkanDK {
       }
       //
       if (any_dirty) {
-         constexpr bool map_only_what_is_necessary = true;
-         //
          entry_type* data = nullptr;
          if constexpr (map_only_what_is_necessary) {
             VkDeviceSize offset = first_dirty * entry_size;
@@ -340,7 +338,7 @@ namespace vulkanDK {
       using entry_type = rendered_mesh::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 
-      constexpr bool map_only_what_is_necessary = true;
+      constexpr bool map_only_what_is_necessary = false; // useless in VMA
 
       auto& scene  = this->get_scene();
       auto& buffer = this->shader_params.object_data;
@@ -390,8 +388,6 @@ namespace vulkanDK {
       }
       //
       if (any_dirty) {
-         constexpr bool map_only_what_is_necessary = true;
-         //
          entry_type* data = nullptr;
          if constexpr (map_only_what_is_necessary) {
             VkDeviceSize offset = first_dirty * entry_size;

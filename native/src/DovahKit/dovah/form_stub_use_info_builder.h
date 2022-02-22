@@ -67,7 +67,7 @@ namespace dovah {
          void clear_all_prior_use_info() const noexcept; // delete ALL existing use info for the form stub. needed for TopicInfos due to their bizarre partial-record behavior
          //
          // Generic state information, provided for form types that need it:
-         form_id_t extra_form_ids[10];
-         void*     extra_pointer = nullptr;
+         std::array<form_id_t, 10> extra_form_ids = {};
+         void* extra_pointer = nullptr;
    };
 }

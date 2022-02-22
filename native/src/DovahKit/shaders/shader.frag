@@ -82,13 +82,16 @@ computed_light calc_point_light(PointLightData light, vec3 normal, vec3 vert_pos
    vec3  light_pos = fs_in.tangent_space * vec3(light.transform[3]);
    vec3  light_dir = normalize(light_pos - vert_pos);
    float str_diff  = max(dot(light_dir, normal), 0.0); // diffuse strength
-   float str_spec  = calc_specular_strength(normal, light_dir, view_dir, specular_exponent);
    //
    float distance  = length(light_pos - vert_pos);
-   float attenuate = light.fade / (distance * distance);
+   float attenuate = 1.0 - smoothstep(0.0, light.radius, distance);
    //
    str_diff *= attenuate;
-   str_spec *= attenuate;
+   //
+   float str_spec = 0;
+   if (str_diff > 0.0) {
+      str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent) * attenuate;
+   }
    //
    result.diffuse  = str_diff * light.color;
    result.specular = str_spec * light.color;

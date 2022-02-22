@@ -41,7 +41,7 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    vec3 sun_color;
 } ubo;
 // binding 1 is used by the fragment shader (texture sampler)
-layout(std140,set = 0, binding = 2) readonly buffer ObjectBuffer {
+layout(std430,set = 0, binding = 2) readonly buffer ObjectBuffer {
 	ObjectData objects[];
 } objectBuffer;
 // binding 3 is used by the fragment shader (light array)

@@ -14,6 +14,7 @@
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
    #include "Faction.h"
+   #include "Flora.h"
    #include "FormList.h"
    #include "Landscape.h"
    #include "LandTexture.h"
@@ -45,6 +46,7 @@ namespace dovah {
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
       loaded_forms::Faction,
+      loaded_forms::Flora,
       loaded_forms::FormList,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include "Form.h"
+#include "Activator.h"
 #include "_common.h"
 #include "components/bounds.h"
 #include "components/destruction.h"
@@ -11,38 +11,25 @@
 #include "structs/color_dword.h"
 
 namespace dovah::loaded_forms {
-   class Activator : public Form {
+   class Flora : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::activator;
-         Activator(const constructor_params& c) : Form(form_type, c) {};
-
-         struct activator_flag {
-            activator_flag() = delete;
-            enum type : uint16_t {
-               no_displacement    = 0x0001,
-               ignored_by_sandbox = 0x0002,
-            };
-         };
-         using activator_flags_t = std::underlying_type_t<activator_flag::type>;
-
-         struct form_flag : public Form::form_flag {
-            enum : uint32_t {
-               has_tree_lod              = 0x00000040,
-               must_update_anims         = 0x00000100,
-               hide_from_local_map       = 0x00000200,
-               has_distant_lod           = 0x00008000,
-               random_anim_start         = 0x00010000,
-               dangerous                 = 0x00020000, // for water activators only?
-               ignore_object_interaction = 0x00100000,
-               is_marker                 = 0x00800000,
-               obstacle                  = 0x02000000,
-               navmesh_generation_filter = 0x04000000,
-               navmesh_generation_obb    = 0x08000000,
-               child_can_use             = 0x20000000,
-               navmesh_generation_ground = 0x40000000,
-            };
-         };
-
+         //
+         // Technically, FLOR subclasses ACTI; however, it will be a lot simpler and cleaner to represent 
+         // it as its own class, at least for now. Fields that are technically inherited by FLOR yet not 
+         // used in-game or in the CK will be omitted here.
+         //
+         static constexpr form_type_t form_type = form_type::flora;
+         Flora(const constructor_params& c) : Form(form_type, c) {};
+      public:
+         using activator_flag    = Activator::activator_flag;
+         using activator_flags_t = Activator::activator_flags_t;
+         
+         // Fields inherited from Activator:
+         // 
+         //  - Activator::looping_sound (ACTI/SNAM) cannot be defined in game data, because FLOR/SNAM is 
+         //    a different subrecord, and so FLOR never defers to the ACTI subrecord handler for SNAM. As 
+         //    such, ACTI/SNAM is omitted here.
+         //
          components::papyrus_attachment_data script_data; // VMAD
          components::object_bounds bounds; // OBND
          components::model_ts model; // MODL, MODT, MODS
@@ -50,12 +37,22 @@ namespace dovah::loaded_forms {
          components::keyword_list keywords; // KSIZ, KWDA
          localized_string  name;                // FULL
          color_t           marker_color;        // CNAM
-         form_reference_t  looping_sound;       // SNAM; form type is SNDR
          form_reference_t  activation_sound;    // VNAM
          form_reference_t  water_type;          // WNAM
          form_reference_t  interact_keyword;    // KNAM
          localized_string  activation_verb;     // RNAM
          activator_flags_t activator_flags = 0; // FNAM
+         //
+         // Unique fields:
+         //
+         form_reference_t ingredient;    // PFIG
+         form_reference_t harvest_sound; // SNAM; form type SNDR // shadows ACTI/SNAM, so that superclass field will never load
+         struct {
+            uint8_t spring = 100;
+            uint8_t summer = 100;
+            uint8_t autumn = 100;
+            uint8_t winter = 100;
+         } chance_by_season;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
