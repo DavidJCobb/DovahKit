@@ -4,6 +4,7 @@
 #include "../form_stub_helpers.h"
 #include "factories/hardcoded.h"
 #include "components/extra_data/enable_state_parent.h"
+#include "components/extra_data/scale.h"
 #include "components/extra_data/_use_info.h"
 
 namespace dovah::loaded_forms {
@@ -93,6 +94,21 @@ namespace dovah::loaded_forms {
       this->stub.set_parent_form(move_to_cell);
       this->position = position;
       return notice_code::none;
+   }
+   //
+   float ObjectReference::get_scale() const {
+      float scale = 1.0F;
+      if (auto* extra = this->extra_data.lookup<dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale)) {
+         scale = extra->value;
+         if (scale < 0.01F)
+            scale = 0.01F;
+         else if (scale > 100.0F)
+            scale = 100.0F;
+         else
+            scale -= std::fmod(scale, 0.01F);
+         return scale;
+      }
+      return scale;
    }
 
    void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {

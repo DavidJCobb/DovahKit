@@ -165,7 +165,7 @@ namespace vulkanDK {
          void add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index);
          void add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
       public:
-         bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0));
+         bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
          bool add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);

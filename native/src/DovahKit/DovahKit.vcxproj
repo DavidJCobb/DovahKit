@@ -849,6 +849,7 @@
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
+    <ClInclude Include="vulkan\config\handedness.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />

@@ -2349,7 +2349,7 @@ namespace vulkanDK {
          _handle_ni_textures(mesh, shader);
       }
    }
-   bool surface_renderer::add_nif(nifDK::file& model, const glm::vec3& pos, const glm::vec3& rot) {
+   bool surface_renderer::add_nif(nifDK::file& model, const glm::vec3& pos, const glm::vec3& rot, float scale) {
       if (!model.root_node) {
          qDebug("[surface_renderer::add_nif] Model has no root node.");
          return false;
@@ -2408,7 +2408,7 @@ namespace vulkanDK {
          impl(object, transform, impl);
       };
       {
-         (functor)(model.root_node, glm_transform_from_beth(pos, rot, 1.0));
+         (functor)(model.root_node, glm_transform_from_beth(pos, rot, scale));
       }
       qDebug("[surface_renderer::add_nif] Done processing the NIF.");
       {

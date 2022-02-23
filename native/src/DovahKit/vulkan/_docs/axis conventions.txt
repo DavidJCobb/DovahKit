@@ -1,0 +1,27 @@
+
+Euler rotations have a "handedness," which determines whether increasing angles 
+turn an object clockwise  (lefthanded) or counterclockwise  (righthanded). This 
+property only applies to rotations, not to positions.
+
+OpenGL, and therefore GLM and GLSL, assume righthanded rotations while in world 
+space, but then use lefthanded axes in clip space. Vulkan uses righthanded axes 
+throughout,  and therefore requires an axis flip if you  use lefthanded math to 
+create a projection matrix (which GLM will, given that it's meant to create the 
+matrix for OpenGL).
+
+Skyrim's game data  uses lefthanded extrinsic XYZ rotations;  increasing angles 
+turn an object clockwise. Skyrim rotations therefore need a handedness flip for 
+use in our renderer.
+
+ - Swapping any two rotation angles (e.g. std::swap(x, y)) will flip handedness 
+   as a side effect.
+
+ - Negating any one angle will flip handedness  as a side effect. However, this 
+   also changes the rotation itself --  the flipped angle's relationship to the 
+   other two angles, and to the position axes.
+
+ - Negating two angles does not change handedness,  but is equivalent to a 180-
+   degree rotation about the other two angles.
+
+ - Negating all three angles changes  handedness with no other apparent effect, 
+   and is therefore the ideal approach for our situation.

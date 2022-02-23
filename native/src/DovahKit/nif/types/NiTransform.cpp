@@ -20,34 +20,12 @@ namespace nifDK {
    }
 
    glm::mat4 NiTransform::to_matrix() const {
-      //
-      // Skyrim uses righthanded XYZ Euler, where Z+ is upward, Y+ is forward, and X+ is right.
-      //
-      /*
-      return glm::scale(
-         glm::translate(this->position),
-         glm::vec3(this->scale)
-      ) * glm::mat4(this->rotation);
-      //
-      // The above code would work if the rotation were lefthanded. If we do the math by hand, 
-      // we can take a few shortcuts since we know  what our data should look like, and we can 
-      // correct the handedness as well.
-      //
-      // glm::scale just multiplies the first three columns of the first argument by the three 
-      // scalars (one per axis) supplied in the second argument. NiTransform only does uniform 
-      // scaling, so the scalars will all be equivalent; and the input matrix is promoted from 
-      // a 3x3 matrix, so in practice the fourth column will be {0, 0, 0, 1} initially; we can 
-      // just go ahead and multiply the whole matrix by the scalar.
-      //
-      // Next, we apply the translation. In practice,  this literally just replaces the fourth 
-      // column with the translation promoted to a vec4, while changing nothing else.
-      //
-      //*/
       glm::mat4 out = glm::mat4(this->rotation);
-      {  // Handedness fixes
-         //
-         // GLM requires lefthanded matrices, but Skyrim is righthanded XYZ.
-         //
+      out = glm::transpose(out); // GLM is column-major; NiMatrix33 is row-major.
+      //
+      // Skyrim uses lefthanded XYZ Euler, where Z+ is upward, Y+ is forward, and X+ is right.
+      //
+      {
          constexpr float EPSILON = 0.000001;
          //
          // Sadly, there's no quick shortcut. Given separate matrices for X, Y, and Z, you can 
@@ -110,8 +88,33 @@ namespace nifDK {
          // pass them into a GLM function to build a left-handed matrix out of the now left-
          // handed values.
          //
-         out = glm::eulerAngleXYZ(-x, y, z);
+         x = -x;
+         y = -y;
+         z = -z;
+         out = glm::eulerAngleXYZ(x, y, z);
       }
+      /*
+      // Consider:
+      //
+      //   return glm::scale(
+      //      glm::translate(this->position),
+      //      glm::vec3(this->scale)
+      //   ) * glm::mat4(this->rotation);
+      //
+      // The above code would work if the rotation were lefthanded. If we do the math by hand, 
+      // we can take a few shortcuts since we know  what our data should look like, and we can 
+      // correct the handedness as well.
+      //
+      // glm::scale just multiplies the first three columns of the first argument by the three 
+      // scalars (one per axis) supplied in the second argument. NiTransform only does uniform 
+      // scaling, so the scalars will all be equivalent; and the input matrix is promoted from 
+      // a 3x3 matrix, so in practice the fourth column will be {0, 0, 0, 1} initially; we can 
+      // just go ahead and multiply the whole matrix by the scalar.
+      //
+      // Next, we apply the translation. In practice,  this literally just replaces the fourth 
+      // column with the translation promoted to a vec4, while changing nothing else.
+      //
+      //*/
       out *= this->scale;
       out[3] = glm::vec4(this->position, 1);
       return out;

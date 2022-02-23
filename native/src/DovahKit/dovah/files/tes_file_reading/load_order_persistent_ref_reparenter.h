@@ -33,6 +33,8 @@ namespace dovah::tes_file_reading {
       using coord_value_t = int32_t;
       using coordinates_t = std::pair<coord_value_t, coord_value_t>;
 
+      using cached_cell_list = std::vector<form_stub*>;
+
       static constexpr size_t thread_count = 4;
 
       protected:
@@ -45,6 +47,7 @@ namespace dovah::tes_file_reading {
                   uint32_t maximum = 0;
                   uint32_t current = 0;
                } progress;
+               cached_cell_list* cells = nullptr;
          
                static void _thread_handler(worker* instance) {
                   instance->_execute();
@@ -55,6 +58,7 @@ namespace dovah::tes_file_reading {
                worker();
 
                void set_world(form_stub& world) noexcept;
+               void set_cached_cell_list(cached_cell_list&);
                void add_to_queue(form_stub& stub) noexcept;
                void start() noexcept;
                void wait_for() noexcept;
@@ -66,12 +70,12 @@ namespace dovah::tes_file_reading {
          };
 
       protected:
-         load_order_persistent_ref_reparenter() {}
-
+         load_order_persistent_ref_reparenter();
 
          std::unordered_map<form_stub*, coordinates_t> positions;
          std::mutex lock;
          std::array<worker, thread_count> threads = {};
+         cached_cell_list cells_for_current_world;
 
          void _receive(form_stub*, coordinates_t);
 

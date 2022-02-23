@@ -56,6 +56,8 @@ namespace dovah::loaded_forms {
          notice_code_t set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell);
          notice_code_t set_position_and_world(cobb::vector3<float> position, form_stub& parent_world);
 
+         float get_scale() const; // applies in-game precision and range limits; if you want to know the in-ESP value, access the "scale" extra-data yourself
+
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //

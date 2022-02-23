@@ -5,43 +5,32 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-namespace {
-   template<typename T> void _swap_handedness(T& rot) {
-      /*//
-      if (fabs(rot.x) > fabs(rot.z))
-         rot.x = -rot.x;
-      else if (fabs(rot.y) > fabs(rot.z))
-         rot.y = -rot.y;
-      else
-         rot.z = -rot.z;
-      //*/
-      std::swap(rot.x, rot.y);
-   }
-}
-
 namespace vulkanDK {
+   extern glm::vec3 glm_transform_rotation_from_beth(const glm::vec3& rot) {
+      return rot * -1.0F;
+   }
+   extern glm::vec3 glm_transform_rotation_from_beth(const cobb::vector3<float>& rot) {
+      return glm::vec3{ -rot.x, -rot.y, -rot.z };
+   }
+   extern void glm_transform_rotation_from_beth_in_place(glm::vec3& rot) {
+      rot *= -1.0F;
+   }
+
    extern glm::mat4 glm_transform_from_beth(const glm::vec3& pos, glm::vec3 rot, float scale) {
+      glm_transform_rotation_from_beth_in_place(rot);
       //
-      // We'll need a handedness flip from righthanded (Skyrim) to lefthanded (OpenGL/GLM).
-      //
-      _swap_handedness(rot);
-      //
-      glm::mat4 transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
+      glm::mat4 transform;
+      if constexpr (vulkanDK::config::bethesda_rotation_order_zyx) {
+         transform = glm::eulerAngleZYX(rot.x, rot.y, rot.z);
+      } else {
+         transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
+      }
       if (scale != 1.0)
          transform *= scale;
       transform[3] = glm::vec4(pos, 1);
       return transform;
    }
    extern glm::mat4 glm_transform_from_beth(const cobb::vector3<float>& pos, cobb::vector3<float> rot, float scale) {
-      //
-      // We'll need a handedness flip from righthanded (Skyrim) to lefthanded (OpenGL/GLM).
-      //
-      _swap_handedness(rot);
-      //
-      glm::mat4 transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
-      if (scale != 1.0)
-         transform *= scale;
-      transform[3] = glm::vec4(pos.x, pos.y, pos.z, 1);
-      return transform;
+      return glm_transform_from_beth(pos, glm_transform_rotation_from_beth(rot), scale);
    }
 }

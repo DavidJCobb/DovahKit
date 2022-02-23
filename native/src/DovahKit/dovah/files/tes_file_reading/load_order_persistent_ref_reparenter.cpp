@@ -11,6 +11,14 @@
 namespace {
    // Skyrim.esm places 15,196 references into [CELL:00000D74], the persistent cell for [WRLD:0000003C]Tamriel.
    static constexpr int count_to_prepare_for = 15196;
+
+   // For each worldspace, gather relevant child cells into a std::vector before working, for faster searches.
+   static constexpr bool pre_list_world_cells = true;
+
+   struct dummy {
+      dummy() {}
+      template<typename T> dummy(T&) {};
+   };
 }
 
 namespace dovah::tes_file_reading {
@@ -20,10 +28,16 @@ namespace dovah::tes_file_reading {
    }
 
    void load_order_persistent_ref_reparenter::worker::_execute() {
+      using _cell_list = std::conditional_t<pre_list_world_cells, cached_cell_list&, dummy>;
+      if constexpr (pre_list_world_cells) {
+         assert(this->cells != nullptr);
+      }
+      _cell_list my_cells = *this->cells;
+      //
       auto& list = this->queue;
       this->progress.maximum = list.size();
       for (auto* stub : list) {
-         stub->_do_custom_parse(this, [this](form_stub& stub, record& record, dovah::load_order_interfaces::form_load& intfc) {
+         stub->_do_custom_parse(this, [this, &my_cells](form_stub& stub, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;
@@ -37,8 +51,25 @@ namespace dovah::tes_file_reading {
                subrecord.unchecked_read(y);
                break;
             }
+            //
             static_assert(loaded_forms::Cell::side_length == 4096, "If the cell side length isn't 4096, then change these bitshifts into divisions by the side length.");
-            auto* cell = form_stub_helpers::get_worldspace_cell_by_grid(this->world, (int32_t)x >> 0xC, (int32_t)y >> 0xC); // these shifts are division by 4096
+            auto gx = (int32_t)x >> 0xC;
+            auto gy = (int32_t)y >> 0xC;
+            //
+            form_stub* cell;
+            if constexpr (pre_list_world_cells) {
+               cell = nullptr;
+               for (auto* stub : my_cells) {
+                  auto& sg = stub->addenda->grid_coords;
+                  if (sg.x == gx && sg.y == gy) {
+                     cell = stub;
+                     break;
+                  }
+               }
+            } else {
+               cell = form_stub_helpers::get_worldspace_cell_by_grid(this->world, gx, gy); // these shifts are division by 4096
+            }
+            //
             if (cell)
                stub._set_parent_form_one_way(cell);
          });
@@ -53,6 +84,9 @@ namespace dovah::tes_file_reading {
       this->queue.reserve(count_to_prepare_for / thread_count + 1);
       this->progress.current = 0;
       this->progress.maximum = 0;
+   }
+   void load_order_persistent_ref_reparenter::worker::set_cached_cell_list(cached_cell_list& list) {
+      this->cells = &list;
    }
    void load_order_persistent_ref_reparenter::worker::add_to_queue(form_stub& stub) noexcept {
       this->queue.push_back(&stub);
@@ -74,11 +108,19 @@ namespace dovah::tes_file_reading {
    #pragma endregion
 
    #pragma region load_order_persistent_ref_reparenter
+   load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() {
+      this->positions.reserve(count_to_prepare_for);
+   }
+
    void load_order_persistent_ref_reparenter::_receive(form_stub* stub, coordinates_t position) {
       auto guard = std::lock_guard(this->lock);
       this->positions[stub] = position;
    }
    void load_order_persistent_ref_reparenter::execute(file_load_order& flo) {
+      if constexpr (pre_list_world_cells) {
+         for (auto& thread : this->threads)
+            thread.set_cached_cell_list(this->cells_for_current_world);
+      }
       flo.for_each_form_of_type(dovah::form_type::worldspace, [this](dovah::form_stub* world) -> bool {
          auto* addenda = world->addenda;
          if (!addenda)
@@ -87,6 +129,23 @@ namespace dovah::tes_file_reading {
          if (!p_cell)
             return false;
          //
+         if constexpr (pre_list_world_cells) {
+            this->cells_for_current_world.clear();
+            for (auto& pair : world->inbound) {
+               auto& entry = pair.second;
+               if (!(entry.flags & use_info_entry::flag::parent_child))
+                  continue;
+               auto* cell = entry.other;
+               if (!cell || cell->formType != form_type::cell)
+                  continue;
+               assert(cell->get_parent_form() == world && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
+               if (cell == p_cell)
+                  continue;
+               if (!cell->addenda)
+                  continue;
+               this->cells_for_current_world.push_back(cell);
+            }
+         }
          int index = 0;
          for (auto& thread : this->threads) {
             thread.set_world(*world); // also resets thread state
