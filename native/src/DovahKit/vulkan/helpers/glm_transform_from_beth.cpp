@@ -15,22 +15,28 @@ namespace vulkanDK {
    extern void glm_transform_rotation_from_beth_in_place(glm::vec3& rot) {
       rot *= -1.0F;
    }
+   extern void glm_transform_rotation_from_beth_in_place(float& x, float& y, float& z) {
+      x = -x;
+      y = -y;
+      z = -z;
+   }
 
    extern glm::mat4 glm_transform_from_beth(const glm::vec3& pos, glm::vec3 rot, float scale) {
       glm_transform_rotation_from_beth_in_place(rot);
       //
-      glm::mat4 transform;
-      if constexpr (vulkanDK::config::bethesda_rotation_order_zyx) {
-         transform = glm::eulerAngleZYX(rot.x, rot.y, rot.z);
-      } else {
-         transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
-      }
+      glm::mat4 transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
       if (scale != 1.0)
          transform *= scale;
       transform[3] = glm::vec4(pos, 1);
       return transform;
    }
-   extern glm::mat4 glm_transform_from_beth(const cobb::vector3<float>& pos, cobb::vector3<float> rot, float scale) {
-      return glm_transform_from_beth(pos, glm_transform_rotation_from_beth(rot), scale);
+   extern glm::mat4 glm_transform_from_beth(const cobb::vector3<float>& pos, cobb::vector3<float> vr, float scale) {
+      auto rot = glm_transform_rotation_from_beth(vr);
+      //
+      glm::mat4 transform = glm::eulerAngleXYZ(rot.x, rot.y, rot.z);
+      if (scale != 1.0)
+         transform *= scale;
+      transform[3] = glm::vec4(pos.x, pos.y, pos.z, 1);
+      return transform;
    }
 }

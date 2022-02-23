@@ -18,11 +18,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstddef> // std::uintptr_t
 #include <cstdint>
 #include <cstdio>
-//
-#include <windows.h>
-#include <io.h>
-#include <memoryapi.h>
-#include "intrusive_windows_defines.h"
+#include <cstring> // std::memcpy
 
 namespace cobb {
    class mapped_file {
@@ -47,7 +43,7 @@ namespace cobb {
          //
          uint32_t read_from(uint32_t pos, void* buffer, uint32_t size) const noexcept {
             std::uintptr_t addr = (std::uintptr_t)this->_view + pos;
-            memcpy(buffer, (void*)addr, size);
+            std::memcpy(buffer, (void*)addr, size);
             return size;
          }
          uint32_t read_from(uint32_t pos, char* buffer, uint32_t size) const noexcept {
@@ -55,12 +51,12 @@ namespace cobb {
          }
          template<typename T> uint32_t read_from(uint32_t pos, T& field, uint32_t size) const noexcept {
             std::uintptr_t addr = (std::uintptr_t)this->_view + pos;
-            memcpy(&field, (void*)addr, size);
+            std::memcpy(&field, (void*)addr, size);
             return size;
          }
          template<typename T> uint32_t read_from(uint32_t pos, T& field) const noexcept {
             std::uintptr_t addr = (std::uintptr_t)this->_view + pos;
-            memcpy(&field, (void*)addr, sizeof(field));
+            std::memcpy(&field, (void*)addr, sizeof(field));
             return sizeof(field);
          }
          //

@@ -1,4 +1,5 @@
 #include "render_window.h"
+#include "helpers/rotation.h"
 #include <QBoxLayout>
 #include <QFileDialog>
 #include <QInputDialog>
@@ -26,8 +27,10 @@
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/ObjectReference.h"
+#include "dovah/forms/components/extra_data/scale.h"
 #include "dovah/forms/components/model.h"
 #include "ui/generic/FormPicker.h"
+#include "vulkan/helpers/glm_transform_from_beth.h"
 
 namespace {
    static constexpr bool use_new_renderer = true;
@@ -98,17 +101,50 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          glm::fvec3 pos;
          bool ok;
          //
-         pos.x = QInputDialog::getDouble(this, "X", "Input X-coordinate", 0.0, -999999, 999999, 4, &ok);
+         auto& camera = view->surfaceRenderer()->scene.camera;
+         //
+         pos.x = QInputDialog::getDouble(this, "X", "Input X-coordinate", camera.position.x, -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-coordinate", 0.0, -999999, 999999, 4, &ok);
+         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-coordinate", camera.position.y, -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-coordinate", 0.0, -999999, 999999, 4, &ok);
+         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-coordinate", camera.position.z, -999999, 999999, 4, &ok);
          if (!ok)
             return;
          //
          view->surfaceRenderer()->set_camera_position(pos);
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_VistaShield));
+      //
+      this->toolbar->addWidget(button);
+   }
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Set Camera Rotation");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         glm::fvec3 pos;
+         bool ok;
+         //
+         auto& scene  = view->surfaceRenderer()->scene;
+         auto& camera = scene.camera;
+         //
+         pos.x = QInputDialog::getDouble(this, "X", "Input X-rotation (pitch)", cobb::radians_to_degrees(camera.pitch), -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-rotation (roll)", cobb::radians_to_degrees(camera.roll), -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-rotation (yaw)", cobb::radians_to_degrees(camera.yaw), -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         for (int i = 0; i < 3; ++i)
+            pos[i] = cobb::degrees_to_radians(pos[i]);
+         //
+         camera.pitch = pos.x;
+         camera.roll  = pos.y;
+         camera.yaw   = pos.z;
+         scene.update_camera();
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_VistaShield));
       //
@@ -263,6 +299,15 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             auto* base = dovah::form_stub_helpers::get_base_form(stub);
             if (!base)
                return false;
+            //
+            if (base->formType == dovah::form_type::light) {
+               auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+               if (!loaded)
+                  return false;
+               view->surfaceRenderer()->add_light(*loaded);
+               return false;
+            }
+            //
             auto loaded_base = base->load();
             if (!loaded_base)
                return false;
@@ -273,6 +318,9 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
             if (!loaded)
                return false;
+            //
+            float scale = loaded->get_scale();
+            //
             nifDK::file model;
             {
                std::filesystem::path path = std::string("meshes") + (form_model->model_path[0] == '/' || form_model->model_path[0] == '\\' ? "" : "\\") + form_model->model_path;
@@ -293,17 +341,11 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
                }
             }
             qDebug("NIF parsed. Passing to surface_renderer...");
-            auto rot = glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z }; // we'll need a handedness flip from righthanded (Skyrim) to lefthanded (OpenGL/GLM).
-            if (fabs(rot.x) > fabs(rot.z))
-               rot.x = -rot.x;
-            else if (fabs(rot.y) > fabs(rot.z))
-               rot.y = -rot.y;
-            else
-               rot.z = -rot.z;
             view->surfaceRenderer()->add_nif(
                model,
                glm::vec3{ loaded->position.x, loaded->position.y, loaded->position.z },
-               rot
+               glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z },
+               scale
             );
             //
             return false;

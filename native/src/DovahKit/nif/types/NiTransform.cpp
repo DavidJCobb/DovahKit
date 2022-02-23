@@ -1,5 +1,6 @@
 #include "NiTransform.h"
 #include "../reader.h"
+#include "vulkan/helpers/glm_transform_from_beth.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -88,9 +89,7 @@ namespace nifDK {
          // pass them into a GLM function to build a left-handed matrix out of the now left-
          // handed values.
          //
-         x = -x;
-         y = -y;
-         z = -z;
+         vulkanDK::glm_transform_rotation_from_beth_in_place(x, y, z);
          out = glm::eulerAngleXYZ(x, y, z);
       }
       /*

@@ -15,6 +15,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #include "files.h"
+//
+#include <windows.h>
+#include <io.h>
+#include <memoryapi.h>
 #include <sys/stat.h>
 #include "intrusive_windows_defines.h"
 

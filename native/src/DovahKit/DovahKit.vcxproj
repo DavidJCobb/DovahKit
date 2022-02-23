@@ -849,7 +849,6 @@
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
-    <ClInclude Include="vulkan\config\handedness.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
@@ -1563,6 +1562,7 @@
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
+    <Text Include="vulkan\_docs\axis conventions.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
   </ItemGroup>
