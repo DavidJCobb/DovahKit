@@ -40,152 +40,96 @@ namespace {
 }
 
 namespace dovah::tes_file_reading {
-   #pragma region load_order_persistent_ref_reparenter::cached_cell_list
-      #pragma region ...::by_grid
-         form_stub* load_order_persistent_ref_reparenter::cached_cell_list::by_grid::lookup(int32_t gx, int32_t gy) const {
-            if (gx > this->bounds.max.x)
-               return nullptr;
-            if (gy > this->bounds.max.y)
-               return nullptr;
-            if constexpr (pre_listed_cell_grid_can_shrink) {
-               gx -= this->bounds.min.x;
-               gy -= this->bounds.min.y;
-            } else {
-               gx += max_pre_sort_world_grid;
-               gy += max_pre_sort_world_grid;
-            }
-            if (gx < 0 || gy < 0)
-               return nullptr;
-            if constexpr (pre_listed_cell_grid_can_shrink) {
-               auto w = (size_t)(this->bounds.max.x - this->bounds.min.x) + 1;
-               return this->data[(gy * w) + gx];
-            } else {
-               return this->data[(gy * (max_pre_sort_world_grid * 2)) + gx];
-            }
-         }
-      #pragma endregion
-      //
-      form_stub* load_order_persistent_ref_reparenter::cached_cell_list::cell_for_position(float x, float y) const {
+   #pragma region load_order_persistent_ref_reparenter::cell_map
+      form_stub* load_order_persistent_ref_reparenter::cell_map::cell_for_position(float x, float y) {
          static_assert(loaded_forms::Cell::side_length == 4096, "This bit-shift constant won't work.");
          auto gx = _world_coords_to_grid_coords(x);
          auto gy = _world_coords_to_grid_coords(y);
-         if constexpr (!pre_list_world_cells) {
-            return form_stub_helpers::get_worldspace_cell_by_grid(this->world, gx, gy);
+         gx += grid_halfwidth;
+         gy += grid_halfwidth;
+         if (gx > 0 && gx < grid_halfwidth && gy > 0 && gy < grid_halfwidth) {
+            auto& item = this->sorted[gx + (gy * grid_halfwidth * 2)];
+            ++item.count;
+            return item.cell;
          } else {
-            if constexpr (max_pre_sort_world_grid > 0) {
-               auto* cell = this->sorted.lookup(gx, gy);
-               if (cell)
+            gx -= grid_halfwidth;
+            gy -= grid_halfwidth;
+            for (auto& item : this->unsorted) {
+               auto* cell = item.cell;
+               auto& grid = cell->addenda->grid_coords;
+               if (grid.x == gx && grid.y == gy) {
+                  ++item.count;
                   return cell;
-            }
-            for (auto* cell : this->unsorted) {
-               auto& sg = cell->addenda->grid_coords;
-               if (sg.x == gx && sg.y == gy)
-                  return cell;
+               }
             }
          }
          return nullptr;
       }
-      void load_order_persistent_ref_reparenter::cached_cell_list::set_world(form_stub& world) {
+      void load_order_persistent_ref_reparenter::cell_map::set_world(form_stub& world) {
          this->world = &world;
-         if constexpr (pre_list_world_cells) {
-            this->unsorted.clear();
-            if constexpr (max_pre_sort_world_grid > 0) {
-               if constexpr (pre_listed_cell_grid_can_shrink) {
-                  this->sorted.data.reserve(max_pre_sort_world_grid * 2 * max_pre_sort_world_grid * 2);
-               } else {
-                  constexpr size_t axis_size = max_pre_sort_world_grid * 2;
-                  constexpr size_t grid_size = axis_size * axis_size;
-                  //
-                  this->sorted.data.resize(grid_size);
-               }
-            }
+         //
+         this->unsorted.clear();
+         //
+         auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
+         for (auto& pair : world.inbound) {
+            auto& entry = pair.second;
+            if (!(entry.flags & use_info_entry::flag::parent_child))
+               continue;
+            auto* cell = entry.other;
+            if (!cell || cell->formType != form_type::cell)
+               continue;
+            assert((cell->get_parent_form() == &world) && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
+            if (cell == p_cell)
+               continue;
+            if (!cell->addenda)
+               continue;
             //
-            auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
-            for (auto& pair : world.inbound) {
-               auto& entry = pair.second;
-               if (!(entry.flags & use_info_entry::flag::parent_child))
-                  continue;
-               auto* cell = entry.other;
-               if (!cell || cell->formType != form_type::cell)
-                  continue;
-               assert((cell->get_parent_form() == &world) && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
-               if (cell == p_cell)
-                  continue;
-               if (!cell->addenda)
-                  continue;
-               //
-               if constexpr (max_pre_sort_world_grid > 0) {
-                  auto gx = cell->addenda->grid_coords.x;
-                  auto gy = cell->addenda->grid_coords.y;
-                  if constexpr (pre_listed_cell_grid_can_shrink) {
-                     this->unsorted.push_back(cell);
-                     auto& bounds = this->sorted.bounds;
-                     if (by_grid::range::can_represent(gx) && gx >= -max_pre_sort_world_grid && gx <= max_pre_sort_world_grid) {
-                        if (gx < bounds.min.x)
-                           bounds.min.x = gx;
-                        if (gx > bounds.max.x)
-                           bounds.max.x = gx;
-                     }
-                     if (by_grid::range::can_represent(gy) && gy >= -max_pre_sort_world_grid && gy <= max_pre_sort_world_grid) {
-                        if (gy < bounds.min.y)
-                           bounds.min.y = gy;
-                        if (gy > bounds.max.y)
-                           bounds.max.y = gy;
-                     }
-                  } else {
-                     constexpr size_t axis_size = max_pre_sort_world_grid * 2;
-                     constexpr size_t grid_size = axis_size * axis_size;
-                     //
-                     gx += max_pre_sort_world_grid;
-                     gy += max_pre_sort_world_grid;
-                     if (gx >= 0 && gy >= 0) {
-                        if (gx < axis_size && gy < axis_size) {
-                           this->sorted.data[gx + (gy * axis_size)] = cell;
-                           continue;
-                        }
-                     }
-                     this->unsorted.push_back(cell);
-                  }
-               }
+            auto gx = cell->addenda->grid_coords.x;
+            auto gy = cell->addenda->grid_coords.y;
+            gx += grid_halfwidth;
+            gy += grid_halfwidth;
+            constexpr size_t axis_size = grid_halfwidth * 2;
+            constexpr size_t grid_size = axis_size * axis_size;
+            //
+            if (gx > 0 && gx < grid_halfwidth && gy > 0 && gy < grid_halfwidth) {
+               this->sorted[gx + (gy * axis_size)].cell = cell;
+               continue;
             }
-            if constexpr (max_pre_sort_world_grid > 0 && pre_listed_cell_grid_can_shrink) {
-               this->sorted.data.clear();
-               //
-               bool  took_any = false;
-               auto& bounds   = this->sorted.bounds;
-               assert(bounds.max.x >= bounds.min.x);
-               assert(bounds.max.y >= bounds.min.y);
-               //
-               size_t row_size  = (size_t)(bounds.max.x - bounds.min.x) + 1;
-               size_t grid_size = row_size * ((size_t)(bounds.max.y - bounds.min.y) + 1);
-               this->sorted.data.resize(grid_size);
-               //
-               for (auto*& item : this->unsorted) {
-                  auto gx = item->addenda->grid_coords.x;
-                  auto gy = item->addenda->grid_coords.y;
-                  if (gx >= bounds.min.x && gx <= bounds.max.x) {
-                     if (gy >= bounds.min.y && gy <= bounds.max.y) {
-                        took_any = true;
-                        //
-                        gx -= bounds.min.x;
-                        gy -= bounds.min.y;
-                        std::swap(this->sorted.data[gx + (gy * row_size)], item);
-                     }
-                  }
-               }
-               if (took_any) {
-                  std::erase(this->unsorted, nullptr);
-               }
-            }
+            this->unsorted.emplace_back(cell);
          }
       }
-      void load_order_persistent_ref_reparenter::cached_cell_list::clear() {
+      void load_order_persistent_ref_reparenter::cell_map::clear() {
          this->world = nullptr;
-         if constexpr (pre_list_world_cells) {
-            this->unsorted.clear();
-            if constexpr (max_pre_sort_world_grid > 0) {
-               this->sorted.bounds = decltype(by_grid::bounds)();
-               this->sorted.data.clear();
+         this->unsorted.clear();
+         for (auto& item : this->sorted) {
+            item.cell = nullptr;
+            item.refs.clear();
+            item.count = 0;
+         }
+      }
+
+      void load_order_persistent_ref_reparenter::cell_map::take_ref(form_stub* refr, int32_t gx, int32_t gy) {
+         gx += grid_halfwidth;
+         gy += grid_halfwidth;
+         constexpr size_t axis_size = grid_halfwidth * 2;
+         constexpr size_t grid_size = axis_size * axis_size;
+         //
+         if (gx > 0 && gx < grid_halfwidth && gy > 0 && gy < grid_halfwidth) {
+            auto& item = this->sorted[gx + (gy * grid_halfwidth * 2)];
+            item.refs[item.count - 1] = refr;
+            item.count -= 1;
+            return;
+         }
+         //
+         gx -= grid_halfwidth;
+         gy -= grid_halfwidth;
+         for (auto& item : this->unsorted) {
+            auto* cell = item.cell;
+            auto& grid = cell->addenda->grid_coords;
+            if (grid.x == gx && grid.y == gy) {
+               item.refs[item.count - 1] = refr;
+               item.count -= 1;
+               return;
             }
          }
       }
@@ -218,7 +162,9 @@ namespace dovah::tes_file_reading {
             }
             form_stub* cell = this->owner.cells_for_current_world.cell_for_position(x, y);
             if (cell) {
-               item.cell = cell;
+               item.cell   = cell;
+               item.grid_x = cell->addenda->grid_coords.x;
+               item.grid_y = cell->addenda->grid_coords.y;
                stub._set_parent_form_one_way(cell);
             }
          });
@@ -247,26 +193,29 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
-   #pragma region quadrant_bidi_worker
-   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::_execute() {
-      auto& list = this->owner.refs;
-      for (auto& item : list) {
-         auto& grid = item.cell->addenda->grid_coords;
-         if (this->x_pos != (grid.x > 0))
-            continue;
-         if (this->y_pos != (grid.y > 0))
-            continue;
-         item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+   #pragma region bidi_worker
+   void load_order_persistent_ref_reparenter::bidi_worker::_execute() {
+      auto& list = this->owner.cells_for_current_world.sorted;
+      for (size_t i = this->range.start; i < this->range.end; ++i) {
+         auto* cell = list[i].cell;
+         auto& refs = list[i].refs;
+         for (auto* r : refs) {
+            cell->receive_inbound_ref(r, 1, use_info_entry::flag::parent_child);
+         }
       }
    }
-   load_order_persistent_ref_reparenter::quadrant_bidi_worker::quadrant_bidi_worker(load_order_persistent_ref_reparenter& o, bool x_pos, bool y_pos) : owner(o), x_pos(x_pos), y_pos(y_pos) {
+   load_order_persistent_ref_reparenter::bidi_worker::bidi_worker(load_order_persistent_ref_reparenter& o) : owner(o) {
    }
 
-   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::start() {
+   void load_order_persistent_ref_reparenter::bidi_worker::set_range(size_t start, size_t end) {
+      this->range.start = start;
+      this->range.end   = end;
+   }
+   void load_order_persistent_ref_reparenter::bidi_worker::start() {
       assert(!this->is_active());
       this->thread = std::thread(&_thread_handler, this);
    }
-   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::wait_for() {
+   void load_order_persistent_ref_reparenter::bidi_worker::wait_for() {
       if (this->is_active())
          this->thread.join();
    }
@@ -274,14 +223,19 @@ namespace dovah::tes_file_reading {
 
    #pragma region load_order_persistent_ref_reparenter
    load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() :
-      threads{ *this, *this, *this, *this },
-      bidi_workers{{
-         { *this, true,  true  },
-         { *this, true,  false },
-         { *this, false, true  },
-         { *this, false, false },
-      }}
+      threads{ *this, *this, *this, *this,   *this, *this, *this, *this },
+      bidi_workers{ *this, *this, *this, *this,   *this, *this, *this, *this }
    {
+      constexpr size_t grid_size = cell_map::grid_total_size;
+      constexpr size_t list_size = std::tuple_size_v<decltype(bidi_workers)>;
+      constexpr size_t cells_per = grid_size / list_size;
+      for (size_t i = 0; i < list_size - 1; ++i) {
+         this->bidi_workers[i].set_range(i * cells_per, (i + 1) * cells_per);
+      }
+      this->bidi_workers.back().set_range(
+         (list_size - 1) * cells_per,
+         grid_size
+      );
    }
 
    void load_order_persistent_ref_reparenter::clear() {
@@ -332,15 +286,21 @@ namespace dovah::tes_file_reading {
                   this->threads[i].set_range(0, 0);
                }
             } else {
-               size_t per_thread = (count / this->threads.size()) + 1;
+               size_t per_thread = (count / this->threads.size());
                size_t start      = 0;
-               for (size_t i = 0; i < this->threads.size(); ++i) {
+               for (size_t i = 0; i < this->threads.size() - 1; ++i) {
                   auto&  t   = this->threads[i];
                   size_t end = start + per_thread;
                   if (i == this->threads.size() - 1)
-                     end = this->refs.size();
+                     end = count;
                   t.set_range(start, end);
                   start += per_thread;
+               }
+               auto& last = this->threads.back();
+               if (start < count) {
+                  last.set_range(start, count);
+               } else {
+                  last.set_range(0, 0);
                }
             }
          }
@@ -361,8 +321,21 @@ namespace dovah::tes_file_reading {
          // step of the process that cannot be multi-threaded.
          //
          if constexpr (multithreaded_bidirectional_use_info) {
+            for (auto& item : this->cells_for_current_world.unsorted)
+               item.refs.resize(item.count);
+            for (auto& item : this->cells_for_current_world.sorted)
+               item.refs.resize(item.count);
+            //
+            for (auto& item : this->refs) {
+               this->cells_for_current_world.take_ref(item.refr, item.grid_x, item.grid_y);
+            }
+            //
             for (auto& thread : this->bidi_workers)
                thread.start();
+            for (auto& item : this->cells_for_current_world.unsorted) {
+               for(auto& r : item.refs)
+                  item.cell->receive_inbound_ref(r, 1, use_info_entry::flag::parent_child);
+            }
             for (auto& thread : this->bidi_workers)
                thread.wait_for();
          } else {
