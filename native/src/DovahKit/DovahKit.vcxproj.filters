@@ -1662,6 +1662,72 @@
     <ClCompile Include="nif\types\Float16.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\_component_access.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\dds\header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\dds\texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\dds\pixel_format.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\assets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSTriShape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSDismemberSkinInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\types\BodyPartList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\overlays\world_axes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\surface_renderer_descriptor_group.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Static.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\NiSingleInterpController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\helpers\glm_transform_from_beth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\rendered_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSLODTriShape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Flora.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\NiSwitchNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Door.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\MiscItem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\world_position_to_grid_coordinates.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2283,9 +2349,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\Note.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\impl\component_templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h">
@@ -3476,6 +3539,120 @@
     <ClInclude Include="helpers\type_traits\strip_enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\_component_access.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dds\header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dds\dxgi_format.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dds\pixel_format.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dds\texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\generic_reader_ex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dds\load_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\assets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\singleton_ex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\vertex_metadata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSTriShape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSDismemberSkinInstance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\types\BodyPartIndex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\types\BodyPartList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\overlays\world_axes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\config\is_righthanded.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\debug_helper_typeof.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\surface_renderer_descriptor_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Static.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiInterpController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiSingleInterpController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiFloatInterpController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiInterpolator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\rendered_light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSLODTriShape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Flora.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiSwitchNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSLeafAnimNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Door.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\MiscItem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\sorted_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\world_position_to_grid_coordinates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -3991,11 +4168,9 @@
     <Text Include="dk3d\_docs\strictly ordered tools.txt" />
     <Text Include="dk3d\_docs\tools.txt" />
     <Text Include="dovah\_docs\avenues for further research.txt" />
+    <Text Include="vulkan\_docs\axis conventions.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="dovah\forms\impl\form_subclass_components.txt">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
@@ -4005,6 +4180,10 @@
     <None Include="shaders\shader.vert.spv" />
     <None Include="shaders\overlay-fps.vert" />
     <None Include="shaders\overlay-fps.frag" />
+    <None Include="shaders\overlay-fps.frag.spv" />
+    <None Include="shaders\overlay-fps.vert.spv" />
+    <None Include="shaders\overlay-world-axes.vert" />
+    <None Include="shaders\overlay-world-axes.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

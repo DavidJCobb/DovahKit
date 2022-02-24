@@ -16,8 +16,8 @@ namespace dovah::tes_file_reading {
       #endif
       auto& list = this->queue;
       this->progress.maximum = list.size();
-      for (auto it = list.begin(); it != list.end(); ++it) {
-         (*it)->build_outbound_refs(*this);
+      for (auto* stub : list) {
+         stub->build_outbound_refs(*this);
          ++this->progress.current;
          #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
             ftime(&bench_current);
@@ -30,6 +30,7 @@ namespace dovah::tes_file_reading {
             i++;
          #endif
       }
+      list.clear();
       //_DEBUGMSG("[dovah::threaded_load_order_use_info_builder] Thread %08X has finished processing %d forms.", std::this_thread::get_id(), this->queue.size());
    }
    //

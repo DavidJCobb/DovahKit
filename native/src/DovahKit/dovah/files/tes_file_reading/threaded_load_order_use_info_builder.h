@@ -26,6 +26,9 @@ namespace dovah::tes_file_reading {
          void add_to_queue(form_stub* stub) noexcept;
          void start() noexcept;
          void wait_for() noexcept;
+         inline void reserve(size_t s) {
+            this->queue.reserve(s);
+         }
          //
          inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
          float assess_load_progress() const noexcept;

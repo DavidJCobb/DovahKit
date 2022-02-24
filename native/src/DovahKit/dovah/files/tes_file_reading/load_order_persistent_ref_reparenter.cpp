@@ -29,8 +29,6 @@ namespace dovah::tes_file_reading {
       }
       void load_order_persistent_ref_reparenter::world_cell_map::set_world(form_stub& world) {
          this->world = &world;
-         this->unsorted.clear();
-         //
          auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
          for (auto& pair : world.inbound) {
             auto& entry = pair.second;
@@ -70,7 +68,7 @@ namespace dovah::tes_file_reading {
       const auto& cells = this->owner.cells_for_current_world;
       for (size_t i = this->range.start; i < this->range.end; ++i) {
          auto& item = list[i];
-         item.refr->_do_custom_parse(this, [this, &item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
+         item.refr->_do_custom_parse(this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;
@@ -117,9 +115,72 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
+   #pragma region ...::bidi_worker
+   load_order_persistent_ref_reparenter::bidi_worker::bidi_worker(load_order_persistent_ref_reparenter& o, size_t qi, bool xp, bool yp) : owner(o), quartet_index(qi), x_pos(xp), y_pos(yp) {
+   }
+
+   void load_order_persistent_ref_reparenter::bidi_worker::_execute() {
+      constexpr bool use_sign_masking = false;
+      constexpr auto sign_bit_mask    = std::bit_cast<int32_t, uint32_t>(uint32_t(1 << 31));
+      const uint32_t x_mask = this->x_pos ? 0 : sign_bit_mask;
+      const uint32_t y_mask = this->y_pos ? 0 : sign_bit_mask;
+      //
+      const auto& list = this->owner.refs;
+      size_t start;
+      size_t end;
+      if constexpr (bidi_worker_quartet_count == 1) {
+         start = 0;
+         end   = list.size();
+      } else {
+         const size_t refs_per_quartet = list.size() / bidi_worker_quartet_count;
+         start = this->quartet_index * refs_per_quartet;
+         end   = (this->quartet_index == bidi_worker_quartet_count - 1) ? list.size() : start + refs_per_quartet;
+      }
+      //
+      for (size_t i = start; i < end; ++i) {
+         auto& item = list[i];
+         ++this->progress.current;
+         if (!item.cell)
+            continue;
+         if constexpr (use_sign_masking) {
+            if ((item.gx & sign_bit_mask) != x_mask)
+               continue;
+            if ((item.gy & sign_bit_mask) != y_mask)
+               continue;
+         } else {
+            if ((item.gx >= 0) != this->x_pos)
+               continue;
+            if ((item.gy >= 0) != this->y_pos)
+               continue;
+         }
+         item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+      }
+   }
+   //
+   void load_order_persistent_ref_reparenter::bidi_worker::start() noexcept {
+      assert(!this->is_active());
+      this->progress.current = 0;
+      this->progress.maximum = this->owner.refs.size();
+      this->thread = std::thread(load_order_persistent_ref_reparenter::bidi_worker::_thread_handler, this);
+   }
+   void load_order_persistent_ref_reparenter::bidi_worker::wait_for() noexcept {
+      if (this->is_active())
+         this->thread.join();
+   }
+   float load_order_persistent_ref_reparenter::bidi_worker::assess_load_progress() const noexcept {
+      if (!this->progress.maximum)
+         return 0.0F;
+      return (float)this->progress.current / (float)this->progress.maximum;
+   }
+   #pragma endregion
+
    #pragma region load_order_persistent_ref_reparenter
    load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() : 
-      threads{ *this, *this, *this, *this }
+      threads{ *this, *this, *this, *this },
+      bidi_workers{{
+         { *this, 0 },
+         { *this, 1 },
+      }}
    {
       this->refs.reserve(count_to_prepare_for);
    }
@@ -137,7 +198,6 @@ namespace dovah::tes_file_reading {
             return false;
          //
          this->cells_for_current_world.set_world(*world);
-         int index = 0;
          //
          // We need to bidirectionally sever the references from the persistent cell children 
          // to the persistent cell, and then bidirectionally create references from the 
@@ -148,23 +208,43 @@ namespace dovah::tes_file_reading {
          // We'll start by both queuing multi-threaded changes to the cell children, and 
          // one-way-severing the inbound references to the persistent cell.
          //
+         this->refs.reserve(p_cell->inbound.size());
          {
             use_info_list entries_to_keep;
-            for (auto& pair : p_cell->inbound) {
+            auto& src = p_cell->inbound;
+            auto& dst = entries_to_keep;
+            //
+            // Here, we want to do two things:
+            // 
+            //  - Gather up a list of all refs to reparent.
+            // 
+            //  - Sever the inbound connections from  the references to the persistent cell.
+            //
+            // 99% of the time, we will be removing every single element from the persistent 
+            // cell's inbound uses. I can't even think of any circumstance in which any form 
+            // would actually refer to the persistent cell for any reason other than being a 
+            // child REFR of that cell. The default case is removal.
+            // 
+            // That in turn  means that the fastest way to filter the inbound  use map is to 
+            // create a new map, copy the few (usually no) elements we intend to preserve to 
+            // that new map, and then swap the two maps. Extracting and reparenting nodes is 
+            // slightly slower in practice, and  using the "erase" function on the container 
+            // is the slowest approach of all (which makes sense; it would only be faster if 
+            // the default code path was to retain, not remove, elements).
+            //
+            for (auto& pair : src) {
                auto& entry = pair.second;
                if (entry.flags & use_info_entry::flag::parent_child) {
                   auto* child = entry.other;
                   if (child && form_type_info::form_type_is_reference(child->formType)) {
                      this->refs.emplace_back(*child);
-                     index = (index + 1) % this->threads.size();
-                     //
                      if (--entry.refcount == 0)
                         continue;
                   }
                }
-               entries_to_keep[pair.first] = entry;
+               dst[pair.first] = entry;
             }
-            std::swap(p_cell->inbound, entries_to_keep);
+            std::swap(src, dst);
          }
          {
             size_t size = this->refs.size();
@@ -196,13 +276,12 @@ namespace dovah::tes_file_reading {
          // move the child to, and performed a one-way set operation to change the child's 
          // parent.
          // 
-         // Now, we must make those references bidirectional. Unfortunately, this is the 
-         // step of the process that cannot be multi-threaded.
+         // Now, we must make those references bidirectional.
          //
-         for (auto& item : this->refs) {
-            assert(item.cell);
-            item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
-         }
+         for (auto& thread : this->bidi_workers)
+            thread.start();
+         for (auto& thread : this->bidi_workers)
+            thread.wait_for();
          return false;
       });
       this->cells_for_current_world.clear();

@@ -195,9 +195,12 @@ namespace dovah {
       //
       auto& builders = this->use_info_build_threads;
       {
-         auto guard = std::lock_guard(this->use_info_build_threads_lock);
-         for (auto& entry : builders)
+         auto guard     = std::lock_guard(this->use_info_build_threads_lock);
+         auto count_per = this->forms.forms.size() / builders.size();
+         for (auto& entry : builders) {
             entry = new tes_file_reading::threaded_load_order_use_info_builder;
+            entry->reserve(count_per + 1);
+         }
       }
       int which_thread = 0;
       // Inbound first, since we can multi-thread that

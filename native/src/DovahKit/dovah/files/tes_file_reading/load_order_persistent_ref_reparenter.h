@@ -33,6 +33,7 @@ namespace dovah::tes_file_reading {
       using coord_value_t = int32_t;
 
       static constexpr size_t thread_count = 4;
+      static constexpr size_t bidi_worker_quartet_count = 2;
 
       static constexpr uint8_t max_pre_sort_world_grid = 60; // When prefetching cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
       class world_cell_map {
@@ -80,6 +81,63 @@ namespace dovah::tes_file_reading {
                float assess_load_progress() const noexcept;
          };
 
+         class bidi_worker : public basic_reader {
+            //
+            // Given a form A which refers to a form B, and given a one-way outbound reference from A to B, we 
+            // need to make that  reference bidirectional by  making B aware of the inbound  reference from A. 
+            // This can basically only be done thread-safely when we have some way of pre-filtering every B in 
+            // such a way that only one thread will access any given B a a time.
+            // 
+            // For the case of REFRs being reparented to new  exterior CELLs en masse, we can divide the CELLs 
+            // up by their grid quadrant  -- that is, whether their grid X- and  Y-coordinates are positive or 
+            // negative. We can have four threaded workers, one per quadrant, and use the coordinates as a way 
+            // of discerning which worker each cell "belongs" to.
+            //
+            protected:
+               load_order_persistent_ref_reparenter& owner;
+               const size_t quartet_index = 0;
+               const bool x_pos; // which quadrant should this worker handle? (true if positive on this axis)
+               const bool y_pos; // which quadrant should this worker handle? (true if positive on this axis)
+               std::thread thread;
+               struct {
+                  size_t maximum = 0;
+                  size_t current = 0;
+               } progress;
+         
+               static void _thread_handler(bidi_worker* instance) {
+                  instance->_execute();
+               }
+               void _execute();
+
+            public:
+               bidi_worker(load_order_persistent_ref_reparenter&, size_t quartet_index, bool xp, bool yp);
+
+               void start() noexcept;
+               void wait_for() noexcept;
+               
+               inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
+               float assess_load_progress() const noexcept;
+         };
+         struct bidi_worker_quartet {
+            std::array<bidi_worker, 4> workers;
+
+            bidi_worker_quartet(load_order_persistent_ref_reparenter& owner, size_t index) : workers{{
+               { owner, index, true,  true },
+               { owner, index, true,  false },
+               { owner, index, false, true },
+               { owner, index, false, false },
+            }} {};
+
+            inline void start() noexcept {
+               for (auto& w : this->workers)
+                  w.start();
+            }
+            inline void wait_for() noexcept {
+               for (auto& w : this->workers)
+                  w.wait_for();
+            }
+         };
+
          struct ref_entry {
             form_stub* refr = nullptr;
             form_stub* cell = nullptr;
@@ -95,6 +153,7 @@ namespace dovah::tes_file_reading {
 
          std::mutex lock;
          std::array<worker, thread_count> threads;
+         std::array<bidi_worker_quartet, bidi_worker_quartet_count> bidi_workers;
          world_cell_map cells_for_current_world;
          std::vector<ref_entry> refs;
 
