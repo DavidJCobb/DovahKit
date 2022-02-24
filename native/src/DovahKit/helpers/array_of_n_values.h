@@ -30,6 +30,4 @@ namespace cobb {
    template<size_t Count, typename T> consteval std::array<T, Count> array_of_n_values(T v) {
       return impl::array_of_n_values<Count>::value(v);
    }
-
-   static constexpr auto foo = array_of_n_values<3>(5);
 }

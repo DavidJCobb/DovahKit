@@ -762,6 +762,7 @@
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\singleton_ex.h" />
+    <ClInclude Include="helpers\sorted_list.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />

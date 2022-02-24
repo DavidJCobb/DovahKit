@@ -1,8 +1,9 @@
 #pragma once
-#include <atomic>
+#include <limits>
 #include <mutex>
 #include <thread>
 #include <type_traits>
+#include <unordered_map>
 #include "basic_reader.h"
 #include "../../../helpers/singleton.h"
 
@@ -34,68 +35,60 @@ namespace dovah::tes_file_reading {
       using coord_value_t = int32_t;
       using coordinates_t = std::pair<coord_value_t, coord_value_t>;
 
-      static constexpr size_t thread_count = 8;
+      static constexpr size_t thread_count = 4;
 
-      static constexpr bool multithreaded_bidirectional_use_info = true;
-
-      class cell_map {
-         public:
-            static constexpr size_t grid_halfwidth  = 60;
-            static constexpr size_t grid_total_size = (grid_halfwidth * 2) * (grid_halfwidth * 2);
+      // For each worldspace, gather relevant child cells into a std::vector before working, for faster searches.
+      static constexpr bool pre_list_world_cells = true;
+      // When pre-sorting cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
+      static constexpr uint8_t max_pre_sort_world_grid = pre_list_world_cells ? 30 : 0;
+      class cached_cell_list {
          protected:
-            using  cell_list = std::vector<form_stub*>;
-            struct cell_entry {
-               form_stub* cell = nullptr;
-               std::atomic<size_t>     count = 0;
-               std::vector<form_stub*> refs; // only writeable on main thread
+            using cell_list = std::vector<form_stub*>;
+            struct dummy {};
 
-               cell_entry() {}
-               cell_entry(form_stub* c) : cell(c) {}
-               cell_entry(const cell_entry& o) : cell(o.cell), count(o.count.load()), refs(o.refs) {}
-               cell_entry(cell_entry&& o) {
-                  this->count = o.count.load();
-                  this->cell  = o.cell;
-                  std::swap(this->refs, o.refs);
-               }
+            struct by_grid {
+               struct range {
+                  using value_type = int8_t;
+                  value_type x = 0;
+                  value_type y = 0;
+                  //
+                  template<typename T> requires std::is_arithmetic_v<T> static bool can_represent(T v) {
+                     using limits = std::numeric_limits<value_type>;
+                     return v >= std::min(-(int32_t)max_pre_sort_world_grid, (int32_t)limits::min()) && v <= std::min((int32_t)max_pre_sort_world_grid, (int32_t)limits::max());
+                  }
+               };
 
-               cell_entry& operator=(const cell_entry& o) {
-                  this->count = o.count.load();
-                  this->cell  = o.cell;
-                  this->refs  = o.refs;
-                  return *this;
-               }
-               cell_entry& operator=(cell_entry&& o) noexcept {
-                  this->count = o.count.load();
-                  this->cell  = o.cell;
-                  std::swap(this->refs, o.refs);
-                  return *this;
-               }
+               cell_list data;
+               struct {
+                  alignas(range::value_type) range min;
+                  alignas(range::value_type) range max;
+               } bounds;
+
+               form_stub* lookup(int32_t gx, int32_t gy) const;
             };
-         public:
-            form_stub* world = nullptr;
-            std::vector<cell_entry> unsorted;
-            std::array<cell_entry, grid_total_size> sorted;
-            
-            form_stub* cell_for_position(float x, float y); // calling this also increases the relevant cell_entry's count
-            void set_world(form_stub& world);
-            void clear();
+            using sorted_cells   = std::conditional_t<(pre_list_world_cells && max_pre_sort_world_grid > 0), by_grid, dummy>;
+            using unsorted_cells = std::conditional_t<pre_list_world_cells, cell_list, dummy>;
 
-            void take_ref(form_stub* refr, int32_t gx, int32_t gy); // main thread only
+         public:
+            form_stub*     world = nullptr;
+            sorted_cells   sorted;
+            unsorted_cells unsorted;
+            //
+            form_stub* cell_for_position(float x, float y) const;
+            void set_world(form_stub& world);
       };
 
       protected:
          class worker : public basic_reader {
             protected:
-               load_order_persistent_ref_reparenter& owner;
+               form_stub* world = nullptr;
+               std::vector<form_stub*> queue;
                std::thread thread;
-               struct {
-                  size_t start = 0;
-                  size_t end   = 0;
-               } range;
                struct {
                   uint32_t maximum = 0;
                   uint32_t current = 0;
                } progress;
+               cached_cell_list* cells = nullptr;
          
                static void _thread_handler(worker* instance) {
                   instance->_execute();
@@ -103,59 +96,26 @@ namespace dovah::tes_file_reading {
                void _execute();
 
             public:
-               worker(load_order_persistent_ref_reparenter&);
+               worker();
 
-               void set_range(size_t start, size_t end);
-               void start();
-               void wait_for();
+               void set_world(form_stub& world) noexcept;
+               void set_cached_cell_list(cached_cell_list&);
+               void add_to_queue(form_stub& stub) noexcept;
+               void start() noexcept;
+               void wait_for() noexcept;
                
                inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
                float assess_load_progress() const noexcept;
-         };
 
-         class bidi_worker {
-            protected:
-               load_order_persistent_ref_reparenter& owner;
-               std::thread thread;
-               struct {
-                  size_t start = 0;
-                  size_t end   = 0;
-               } range;
-
-               static void _thread_handler(bidi_worker* instance) {
-                  instance->_execute();
-               }
-               void _execute();
-            public:
-               bidi_worker(load_order_persistent_ref_reparenter&);
-
-               void set_range(size_t start, size_t end);
-               void start();
-               void wait_for();
-
-               inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
-         };
-
-         struct reference {
-            form_stub* refr   = nullptr; // persistent REFR
-            form_stub* cell   = nullptr; // cell we've reparented the REFR to
-            int32_t    grid_x = 0;
-            int32_t    grid_y = 0;
-
-            reference() {}
-            reference(form_stub* r) : refr(r) {}
+               inline const std::vector<form_stub*>& view_queue() const noexcept { return this->queue; }
          };
 
       protected:
          load_order_persistent_ref_reparenter();
 
          std::mutex lock;
-         std::array<worker,      thread_count> threads;
-         std::array<bidi_worker, thread_count> bidi_workers;
-         std::vector<reference> refs;
-         cell_map cells_for_current_world;
-
-         void clear();
+         std::array<worker, thread_count> threads = {};
+         cached_cell_list cells_for_current_world;
 
       public:
          static load_order_persistent_ref_reparenter& get() {

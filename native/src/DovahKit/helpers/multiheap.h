@@ -115,7 +115,7 @@ namespace cobb {
                } while (block = block->info.next);
                return false;
             }
-            //
+            
             inline block_t* get_end() noexcept {
                auto* block = this;
                while (block->info.next)
@@ -131,7 +131,7 @@ namespace cobb {
                }
                return count;
             }
-            //
+            
             void prune() noexcept { // removes all empty blocks after this one
                auto* n = this->info.next;
                for (auto* block = n; block; block = n) {
@@ -140,7 +140,7 @@ namespace cobb {
                      delete block;
                }
             }
-            //
+            
             #pragma region Helpers for State::force_destroy_all
             void destroy_elements() noexcept {
                auto& presence = this->info.presence;
@@ -360,8 +360,9 @@ namespace cobb {
       // An interface to multiheap that meets the Allocator named requirement.
       //
       public:
-         using heap_type  = multiheap<T, count_per_block>;
          using value_type = T;
+      public:
+         using heap_type  = multiheap<T, count_per_block>;
          template<typename U> struct rebind {
             using other = typename multiheap_allocator<U, count_per_block>;
          };

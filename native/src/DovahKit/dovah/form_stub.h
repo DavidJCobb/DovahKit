@@ -7,6 +7,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include "helpers/multiheap.h"
 #include "core.h"
 #include "files/common.h"
 
@@ -94,7 +95,12 @@ namespace dovah {
       uint32_t   refcount = 0;
       flags_t    flags    = 0;
    };
-   using use_info_list = std::map<bare_form_id_t, use_info_entry>;
+   using use_info_list = std::map<
+      bare_form_id_t,
+      use_info_entry,
+      std::less<bare_form_id_t>,
+      cobb::multiheap_allocator<std::pair<const bare_form_id_t, use_info_entry>, 64000>
+   >;
    #pragma endregion
 
    class form_stub {
