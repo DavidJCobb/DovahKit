@@ -247,8 +247,41 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
+   #pragma region quadrant_bidi_worker
+   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::_execute() {
+      auto& list = this->owner.refs;
+      for (auto& item : list) {
+         auto& grid = item.cell->addenda->grid_coords;
+         if (this->x_pos != (grid.x > 0))
+            continue;
+         if (this->y_pos != (grid.y > 0))
+            continue;
+         item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+      }
+   }
+   load_order_persistent_ref_reparenter::quadrant_bidi_worker::quadrant_bidi_worker(load_order_persistent_ref_reparenter& o, bool x_pos, bool y_pos) : owner(o), x_pos(x_pos), y_pos(y_pos) {
+   }
+
+   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::start() {
+      assert(!this->is_active());
+      this->thread = std::thread(&_thread_handler, this);
+   }
+   void load_order_persistent_ref_reparenter::quadrant_bidi_worker::wait_for() {
+      if (this->is_active())
+         this->thread.join();
+   }
+   #pragma endregion
+
    #pragma region load_order_persistent_ref_reparenter
-   load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() : threads{ *this, *this, *this, *this } {
+   load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() :
+      threads{ *this, *this, *this, *this },
+      bidi_workers{{
+         { *this, true,  true  },
+         { *this, true,  false },
+         { *this, false, true  },
+         { *this, false, false },
+      }}
+   {
    }
 
    void load_order_persistent_ref_reparenter::clear() {
@@ -327,9 +360,16 @@ namespace dovah::tes_file_reading {
          // Now, we must make those references bidirectional. Unfortunately, this is the 
          // step of the process that cannot be multi-threaded.
          //
-         for (auto& item : this->refs) {
-            assert(item.cell);
-            item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+         if constexpr (multithreaded_bidirectional_use_info) {
+            for (auto& thread : this->bidi_workers)
+               thread.start();
+            for (auto& thread : this->bidi_workers)
+               thread.wait_for();
+         } else {
+            for (auto& item : this->refs) {
+               assert(item.cell);
+               item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+            }
          }
          this->clear();
          return false;
