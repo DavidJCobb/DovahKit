@@ -40,7 +40,10 @@ namespace dovah::tes_file_reading {
       // For each worldspace, gather relevant child cells into a std::vector before working, for faster searches.
       static constexpr bool pre_list_world_cells = true;
       // When pre-sorting cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
-      static constexpr uint8_t max_pre_sort_world_grid = pre_list_world_cells ? 30 : 0;
+      static constexpr uint8_t max_pre_sort_world_grid = pre_list_world_cells ? 64 : 0;
+      //
+      static constexpr bool pre_listed_cell_grid_can_shrink = true;
+      //
       class cached_cell_list {
          protected:
             using cell_list = std::vector<form_stub*>;
@@ -54,7 +57,7 @@ namespace dovah::tes_file_reading {
                   //
                   template<typename T> requires std::is_arithmetic_v<T> static bool can_represent(T v) {
                      using limits = std::numeric_limits<value_type>;
-                     return v >= std::min(-(int32_t)max_pre_sort_world_grid, (int32_t)limits::min()) && v <= std::min((int32_t)max_pre_sort_world_grid, (int32_t)limits::max());
+                     return v >= std::min(-(int32_t)max_pre_sort_world_grid, (int32_t)limits::lowest()) && v <= std::min((int32_t)max_pre_sort_world_grid, (int32_t)limits::max());
                   }
                };
 
@@ -76,19 +79,22 @@ namespace dovah::tes_file_reading {
             //
             form_stub* cell_for_position(float x, float y) const;
             void set_world(form_stub& world);
+            void clear();
       };
 
       protected:
          class worker : public basic_reader {
             protected:
-               form_stub* world = nullptr;
-               std::vector<form_stub*> queue;
+               load_order_persistent_ref_reparenter& owner;
                std::thread thread;
+               struct {
+                  size_t start = 0;
+                  size_t end   = 0;
+               } range;
                struct {
                   uint32_t maximum = 0;
                   uint32_t current = 0;
                } progress;
-               cached_cell_list* cells = nullptr;
          
                static void _thread_handler(worker* instance) {
                   instance->_execute();
@@ -96,26 +102,33 @@ namespace dovah::tes_file_reading {
                void _execute();
 
             public:
-               worker();
+               worker(load_order_persistent_ref_reparenter&);
 
-               void set_world(form_stub& world) noexcept;
-               void set_cached_cell_list(cached_cell_list&);
-               void add_to_queue(form_stub& stub) noexcept;
-               void start() noexcept;
-               void wait_for() noexcept;
+               void set_range(size_t start, size_t end);
+               void start();
+               void wait_for();
                
                inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
                float assess_load_progress() const noexcept;
+         };
 
-               inline const std::vector<form_stub*>& view_queue() const noexcept { return this->queue; }
+         struct reference {
+            form_stub* refr = nullptr; // persistent REFR
+            form_stub* cell = nullptr; // cell we've reparented the REFR to
+
+            reference() {}
+            reference(form_stub* r) : refr(r) {}
          };
 
       protected:
          load_order_persistent_ref_reparenter();
 
          std::mutex lock;
-         std::array<worker, thread_count> threads = {};
+         std::array<worker, thread_count> threads;
+         std::vector<reference> refs;
          cached_cell_list cells_for_current_world;
+
+         void clear();
 
       public:
          static load_order_persistent_ref_reparenter& get() {

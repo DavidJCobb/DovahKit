@@ -11,9 +11,32 @@
 namespace {
    // Skyrim.esm places 15,196 references into [CELL:00000D74], the persistent cell for [WRLD:0000003C]Tamriel.
    static constexpr int count_to_prepare_for = 15196;
+}
 
-   // For each worldspace, gather relevant child cells into a std::vector before working, for faster searches.
-   static constexpr bool pre_list_world_cells = true;
+namespace {
+   int32_t _world_coords_to_grid_coords(float v) {
+      if constexpr (dovah::loaded_forms::Cell::side_length == 4096) {
+         //
+         // If the cell size is 4096, then we can just right-shift by 0xC (sign permitting).
+         //
+         if constexpr (int32_t(-90) >> 2 == -23) {
+            //
+            // Right-shifting a negative number fills  the shifted-in bits with the sign bit 
+            // on this compiler and platform. Bethesda shifts right by 0xC, so we can do the 
+            // same.
+            //
+            return (int32_t)v >> 0xC;
+         } else {
+            if (v >= 0)
+               return (int32_t)v >> 0xC;
+            return ((int32_t)v / dovah::loaded_forms::Cell::side_length) - 1;
+         }
+      }
+      auto out = (int32_t)v / dovah::loaded_forms::Cell::side_length;
+      if (v < 0)
+         --out;
+      return out;
+   }
 }
 
 namespace dovah::tes_file_reading {
@@ -24,18 +47,28 @@ namespace dovah::tes_file_reading {
                return nullptr;
             if (gy > this->bounds.max.y)
                return nullptr;
-            gx -= this->bounds.min.x;
-            gy -= this->bounds.min.y;
+            if constexpr (pre_listed_cell_grid_can_shrink) {
+               gx -= this->bounds.min.x;
+               gy -= this->bounds.min.y;
+            } else {
+               gx += max_pre_sort_world_grid;
+               gy += max_pre_sort_world_grid;
+            }
             if (gx < 0 || gy < 0)
                return nullptr;
-            auto w = (size_t)this->bounds.max.x - this->bounds.min.x;
-            return this->data[(gy * w) + gx];
+            if constexpr (pre_listed_cell_grid_can_shrink) {
+               auto w = (size_t)(this->bounds.max.x - this->bounds.min.x) + 1;
+               return this->data[(gy * w) + gx];
+            } else {
+               return this->data[(gy * (max_pre_sort_world_grid * 2)) + gx];
+            }
          }
       #pragma endregion
       //
       form_stub* load_order_persistent_ref_reparenter::cached_cell_list::cell_for_position(float x, float y) const {
-         auto gx = (int32_t)x / loaded_forms::Cell::side_length;
-         auto gy = (int32_t)y / loaded_forms::Cell::side_length;
+         static_assert(loaded_forms::Cell::side_length == 4096, "This bit-shift constant won't work.");
+         auto gx = _world_coords_to_grid_coords(x);
+         auto gy = _world_coords_to_grid_coords(y);
          if constexpr (!pre_list_world_cells) {
             return form_stub_helpers::get_worldspace_cell_by_grid(this->world, gx, gy);
          } else {
@@ -57,7 +90,14 @@ namespace dovah::tes_file_reading {
          if constexpr (pre_list_world_cells) {
             this->unsorted.clear();
             if constexpr (max_pre_sort_world_grid > 0) {
-               this->sorted.data.reserve(max_pre_sort_world_grid * max_pre_sort_world_grid);
+               if constexpr (pre_listed_cell_grid_can_shrink) {
+                  this->sorted.data.reserve(max_pre_sort_world_grid * 2 * max_pre_sort_world_grid * 2);
+               } else {
+                  constexpr size_t axis_size = max_pre_sort_world_grid * 2;
+                  constexpr size_t grid_size = axis_size * axis_size;
+                  //
+                  this->sorted.data.resize(grid_size);
+               }
             }
             //
             auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
@@ -73,38 +113,52 @@ namespace dovah::tes_file_reading {
                   continue;
                if (!cell->addenda)
                   continue;
-               this->unsorted.push_back(cell);
                //
                if constexpr (max_pre_sort_world_grid > 0) {
-                  auto& bounds = this->sorted.bounds;
-                  auto  gx     = cell->addenda->grid_coords.x;
-                  auto  gy     = cell->addenda->grid_coords.y;
-                  if (by_grid::range::can_represent(gx) && gx >= -max_pre_sort_world_grid && gx <= max_pre_sort_world_grid) {
-                     if (gx < bounds.min.x)
-                        bounds.min.x = gx;
-                     if (gx > bounds.max.x)
-                        bounds.max.x = gx;
-                  }
-                  if (by_grid::range::can_represent(gy) && gy >= -max_pre_sort_world_grid && gy <= max_pre_sort_world_grid) {
-                     if (gy < bounds.min.y)
-                        bounds.min.y = gy;
-                     if (gy > bounds.max.y)
-                        bounds.max.y = gy;
+                  auto gx = cell->addenda->grid_coords.x;
+                  auto gy = cell->addenda->grid_coords.y;
+                  if constexpr (pre_listed_cell_grid_can_shrink) {
+                     this->unsorted.push_back(cell);
+                     auto& bounds = this->sorted.bounds;
+                     if (by_grid::range::can_represent(gx) && gx >= -max_pre_sort_world_grid && gx <= max_pre_sort_world_grid) {
+                        if (gx < bounds.min.x)
+                           bounds.min.x = gx;
+                        if (gx > bounds.max.x)
+                           bounds.max.x = gx;
+                     }
+                     if (by_grid::range::can_represent(gy) && gy >= -max_pre_sort_world_grid && gy <= max_pre_sort_world_grid) {
+                        if (gy < bounds.min.y)
+                           bounds.min.y = gy;
+                        if (gy > bounds.max.y)
+                           bounds.max.y = gy;
+                     }
+                  } else {
+                     constexpr size_t axis_size = max_pre_sort_world_grid * 2;
+                     constexpr size_t grid_size = axis_size * axis_size;
+                     //
+                     gx += max_pre_sort_world_grid;
+                     gy += max_pre_sort_world_grid;
+                     if (gx >= 0 && gy >= 0) {
+                        if (gx < axis_size && gy < axis_size) {
+                           this->sorted.data[gx + (gy * axis_size)] = cell;
+                           continue;
+                        }
+                     }
+                     this->unsorted.push_back(cell);
                   }
                }
             }
-            //
-            if constexpr (max_pre_sort_world_grid > 0) {
+            if constexpr (max_pre_sort_world_grid > 0 && pre_listed_cell_grid_can_shrink) {
                this->sorted.data.clear();
                //
                bool  took_any = false;
                auto& bounds   = this->sorted.bounds;
-               //
-               size_t w    = (size_t)(bounds.max.x - bounds.min.x) + 1;
-               size_t size = w * ((size_t)(bounds.max.y - bounds.min.y) + 1);
                assert(bounds.max.x >= bounds.min.x);
                assert(bounds.max.y >= bounds.min.y);
-               this->sorted.data.resize(size);
+               //
+               size_t row_size  = (size_t)(bounds.max.x - bounds.min.x) + 1;
+               size_t grid_size = row_size * ((size_t)(bounds.max.y - bounds.min.y) + 1);
+               this->sorted.data.resize(grid_size);
                //
                for (auto*& item : this->unsorted) {
                   auto gx = item->addenda->grid_coords.x;
@@ -115,7 +169,7 @@ namespace dovah::tes_file_reading {
                         //
                         gx -= bounds.min.x;
                         gy -= bounds.min.y;
-                        std::swap(this->sorted.data[gx + (gy * w)], item);
+                        std::swap(this->sorted.data[gx + (gy * row_size)], item);
                      }
                   }
                }
@@ -125,18 +179,30 @@ namespace dovah::tes_file_reading {
             }
          }
       }
+      void load_order_persistent_ref_reparenter::cached_cell_list::clear() {
+         this->world = nullptr;
+         if constexpr (pre_list_world_cells) {
+            this->unsorted.clear();
+            if constexpr (max_pre_sort_world_grid > 0) {
+               this->sorted.bounds = decltype(by_grid::bounds)();
+               this->sorted.data.clear();
+            }
+         }
+      }
    #pragma endregion
 
    #pragma region load_order_persistent_ref_reparenter::worker
-   load_order_persistent_ref_reparenter::worker::worker() {
-      this->queue.reserve((count_to_prepare_for / thread_count) + 1);
+   load_order_persistent_ref_reparenter::worker::worker(load_order_persistent_ref_reparenter& o) : owner(o) {
    }
 
    void load_order_persistent_ref_reparenter::worker::_execute() {
-      auto& list = this->queue;
-      this->progress.maximum = list.size();
-      for (auto* stub : list) {
-         stub->_do_custom_parse(this, [this](form_stub& stub, record& record, dovah::load_order_interfaces::form_load& intfc) {
+      auto& list = this->owner.refs;
+      this->progress.maximum = this->range.end - this->range.start;
+      for (size_t i = this->range.start; i < this->range.end; ++i) {
+         auto& item = list[i];
+         auto* stub = item.refr;
+         //
+         stub->_do_custom_parse(this, [this, &item](form_stub& stub, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;
@@ -150,34 +216,27 @@ namespace dovah::tes_file_reading {
                subrecord.unchecked_read(y);
                break;
             }
-            form_stub* cell = this->cells->cell_for_position(x, y);
-            if (cell)
+            form_stub* cell = this->owner.cells_for_current_world.cell_for_position(x, y);
+            if (cell) {
+               item.cell = cell;
                stub._set_parent_form_one_way(cell);
+            }
          });
          ++this->progress.current;
       }
-      this->world = nullptr;
    }
    //
-   void load_order_persistent_ref_reparenter::worker::set_world(form_stub& world) noexcept {
-      this->world = &world;
-      this->queue.clear();
-      this->queue.reserve(count_to_prepare_for / thread_count + 1);
-      this->progress.current = 0;
-      this->progress.maximum = 0;
+   void load_order_persistent_ref_reparenter::worker::set_range(size_t start, size_t end) {
+      this->range.start = start;
+      this->range.end   = end;
    }
-   void load_order_persistent_ref_reparenter::worker::set_cached_cell_list(cached_cell_list& list) {
-      this->cells = &list;
-   }
-   void load_order_persistent_ref_reparenter::worker::add_to_queue(form_stub& stub) noexcept {
-      this->queue.push_back(&stub);
-   }
-   void load_order_persistent_ref_reparenter::worker::start() noexcept {
-      assert(this->world);
+   void load_order_persistent_ref_reparenter::worker::start() {
       assert(!this->is_active());
+      this->progress.current = 0;
+      this->progress.maximum = this->range.end - this->range.start;
       this->thread = std::thread(load_order_persistent_ref_reparenter::worker::_thread_handler, this);
    }
-   void load_order_persistent_ref_reparenter::worker::wait_for() noexcept {
+   void load_order_persistent_ref_reparenter::worker::wait_for() {
       if (this->is_active())
          this->thread.join();
    }
@@ -189,13 +248,15 @@ namespace dovah::tes_file_reading {
    #pragma endregion
 
    #pragma region load_order_persistent_ref_reparenter
-   load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() {}
+   load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() : threads{ *this, *this, *this, *this } {
+   }
+
+   void load_order_persistent_ref_reparenter::clear() {
+      this->cells_for_current_world.clear();
+      this->refs.clear();
+   }
 
    void load_order_persistent_ref_reparenter::execute(file_load_order& flo) {
-      if constexpr (pre_list_world_cells) {
-         for (auto& thread : this->threads)
-            thread.set_cached_cell_list(this->cells_for_current_world);
-      }
       flo.for_each_form_of_type(dovah::form_type::worldspace, [this](dovah::form_stub* world) -> bool {
          auto* addenda = world->addenda;
          if (!addenda)
@@ -205,10 +266,6 @@ namespace dovah::tes_file_reading {
             return false;
          //
          this->cells_for_current_world.set_world(*world);
-         int index = 0;
-         for (auto& thread : this->threads) {
-            thread.set_world(*world); // also resets thread state
-         }
          //
          // We need to bidirectionally sever the references from the persistent cell children 
          // to the persistent cell, and then bidirectionally create references from the 
@@ -226,9 +283,7 @@ namespace dovah::tes_file_reading {
                if (entry.flags & use_info_entry::flag::parent_child) {
                   auto* child = entry.other;
                   if (child && form_type_info::form_type_is_reference(child->formType)) {
-                     this->threads[index].add_to_queue(*child);
-                     index = (index + 1) % this->threads.size();
-                     //
+                     this->refs.push_back(child);
                      if (--entry.refcount == 0)
                         continue;
                   }
@@ -236,6 +291,25 @@ namespace dovah::tes_file_reading {
                entries_to_keep[pair.first] = entry;
             }
             std::swap(p_cell->inbound, entries_to_keep);
+            //
+            size_t count = this->refs.size();
+            if (count <= this->threads.size()) {
+               this->threads[0].set_range(0, count);
+               for (size_t i = 1; i < this->threads.size(); ++i) {
+                  this->threads[i].set_range(0, 0);
+               }
+            } else {
+               size_t per_thread = (count / this->threads.size()) + 1;
+               size_t start      = 0;
+               for (size_t i = 0; i < this->threads.size(); ++i) {
+                  auto&  t   = this->threads[i];
+                  size_t end = start + per_thread;
+                  if (i == this->threads.size() - 1)
+                     end = this->refs.size();
+                  t.set_range(start, end);
+                  start += per_thread;
+               }
+            }
          }
          //
          // So now, the cell children still refer to the persistent cell, but the persistent 
@@ -253,14 +327,11 @@ namespace dovah::tes_file_reading {
          // Now, we must make those references bidirectional. Unfortunately, this is the 
          // step of the process that cannot be multi-threaded.
          //
-         for (auto& thread : this->threads) {
-            auto& queue = thread.view_queue();
-            for (auto* stub : queue) {
-               auto* cell = stub->get_parent_form();
-               assert(cell);
-               cell->receive_inbound_ref(stub, 1, use_info_entry::flag::parent_child);
-            }
+         for (auto& item : this->refs) {
+            assert(item.cell);
+            item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
          }
+         this->clear();
          return false;
       });
    }
