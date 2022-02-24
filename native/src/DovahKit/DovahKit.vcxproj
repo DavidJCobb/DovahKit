@@ -433,6 +433,7 @@
     <ClCompile Include="dovah\utils\game_asset_path_validation.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
+    <ClCompile Include="dovah\utils\world_position_to_grid_coordinates.cpp" />
     <ClCompile Include="editor\asset_manager\asset.cpp" />
     <ClCompile Include="editor\asset_manager\asset_manager.cpp" />
     <ClCompile Include="editor\asset_manager\data\dds.cpp" />
@@ -742,6 +743,7 @@
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <QtMoc Include="editor\asset_manager\asset_manager.h" />
     <QtMoc Include="editor\asset_manager\asset.h" />
+    <ClInclude Include="dovah\utils\world_position_to_grid_coordinates.h" />
     <ClInclude Include="editor\asset_manager\data\dds.h" />
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
@@ -752,6 +754,7 @@
     <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
+    <ClInclude Include="helpers\grid.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />

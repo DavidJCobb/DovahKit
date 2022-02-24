@@ -1,11 +1,9 @@
 #pragma once
-#include <limits>
 #include <mutex>
 #include <thread>
-#include <type_traits>
-#include <unordered_map>
 #include "basic_reader.h"
-#include "../../../helpers/singleton.h"
+#include "helpers/grid.h"
+#include "helpers/singleton.h"
 
 //
 // All of a worldspace's persistent references are encoded as children of the persistent 
@@ -33,62 +31,38 @@ namespace dovah {
 namespace dovah::tes_file_reading {
    class load_order_persistent_ref_reparenter : public cobb::singleton {
       using coord_value_t = int32_t;
-      using coordinates_t = std::pair<coord_value_t, coord_value_t>;
 
       static constexpr size_t thread_count = 4;
 
-      // For each worldspace, gather relevant child cells into a std::vector before working, for faster searches.
-      static constexpr bool pre_list_world_cells = true;
-      // When pre-sorting cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
-      static constexpr uint8_t max_pre_sort_world_grid = pre_list_world_cells ? 30 : 0;
-      class cached_cell_list {
+      static constexpr uint8_t max_pre_sort_world_grid = 60; // When prefetching cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
+      class world_cell_map {
          protected:
             using cell_list = std::vector<form_stub*>;
-            struct dummy {};
-
-            struct by_grid {
-               struct range {
-                  using value_type = int8_t;
-                  value_type x = 0;
-                  value_type y = 0;
-                  //
-                  template<typename T> requires std::is_arithmetic_v<T> static bool can_represent(T v) {
-                     using limits = std::numeric_limits<value_type>;
-                     return v >= std::min(-(int32_t)max_pre_sort_world_grid, (int32_t)limits::min()) && v <= std::min((int32_t)max_pre_sort_world_grid, (int32_t)limits::max());
-                  }
-               };
-
-               cell_list data;
-               struct {
-                  alignas(range::value_type) range min;
-                  alignas(range::value_type) range max;
-               } bounds;
-
-               form_stub* lookup(int32_t gx, int32_t gy) const;
-            };
-            using sorted_cells   = std::conditional_t<(pre_list_world_cells && max_pre_sort_world_grid > 0), by_grid, dummy>;
-            using unsorted_cells = std::conditional_t<pre_list_world_cells, cell_list, dummy>;
-
+            using cell_grid = cobb::centered_square_grid<form_stub*, max_pre_sort_world_grid>;
          public:
-            form_stub*     world = nullptr;
-            sorted_cells   sorted;
-            unsorted_cells unsorted;
-            //
+            form_stub* world = nullptr;
+            cell_list  unsorted;
+            cell_grid  sorted;
+            
             form_stub* cell_for_position(float x, float y) const;
             void set_world(form_stub& world);
+
+            void clear();
       };
 
       protected:
          class worker : public basic_reader {
             protected:
-               form_stub* world = nullptr;
-               std::vector<form_stub*> queue;
+               load_order_persistent_ref_reparenter& owner;
                std::thread thread;
+               struct {
+                  size_t start = 0;
+                  size_t end   = 0;
+               } range;
                struct {
                   uint32_t maximum = 0;
                   uint32_t current = 0;
                } progress;
-               cached_cell_list* cells = nullptr;
          
                static void _thread_handler(worker* instance) {
                   instance->_execute();
@@ -96,26 +70,33 @@ namespace dovah::tes_file_reading {
                void _execute();
 
             public:
-               worker();
+               worker(load_order_persistent_ref_reparenter&);
 
-               void set_world(form_stub& world) noexcept;
-               void set_cached_cell_list(cached_cell_list&);
-               void add_to_queue(form_stub& stub) noexcept;
+               void set_range(size_t start, size_t end);
                void start() noexcept;
                void wait_for() noexcept;
                
                inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
                float assess_load_progress() const noexcept;
+         };
 
-               inline const std::vector<form_stub*>& view_queue() const noexcept { return this->queue; }
+         struct ref_entry {
+            form_stub* refr = nullptr;
+            form_stub* cell = nullptr;
+            int32_t    gx   = 0;
+            int32_t    gy   = 0;
+
+            ref_entry() {}
+            ref_entry(form_stub& refr) : refr(&refr) {}
          };
 
       protected:
          load_order_persistent_ref_reparenter();
 
          std::mutex lock;
-         std::array<worker, thread_count> threads = {};
-         cached_cell_list cells_for_current_world;
+         std::array<worker, thread_count> threads;
+         world_cell_map cells_for_current_world;
+         std::vector<ref_entry> refs;
 
       public:
          static load_order_persistent_ref_reparenter& get() {
