@@ -93,7 +93,7 @@ namespace cobb {
    class rotation_matrix : public matrix<3, 3> {
       public:
          using super_t = matrix<3, 3>;
-         //
+         
          explicit operator axis_angle() const;
          explicit operator euler() const; // assumes lefthanded XYZ extrinsic, like in Skyrim
          explicit operator quaternion() const;
@@ -102,8 +102,8 @@ namespace cobb {
          rotation_matrix(const super_t& m) { memcpy(&this->data, &m.data, sizeof(data)); } // needed for matrix methods that return matrices
          rotation_matrix(super_t&& m) { memcpy(&this->data, &m.data, sizeof(data)); } // needed for matrix methods that return matrices
 
-         double determinant() const noexcept;
-         inline double trace() const noexcept {
+         value_type determinant() const noexcept;
+         inline value_type trace() const noexcept {
             return this->data[0][0] + this->data[1][1] + this->data[2][2];
          }
 
@@ -113,8 +113,8 @@ namespace cobb {
 
          static rotation_matrix construct_from_extrinsic_zyx(double x, double y, double z, bool righthanded);
 
-         template<typename U> std::array<U, 3> operator*(const std::array<U, 3>& vec) const noexcept { // loop-free multiply by column (equivalent to applying (this) to (vec) as a reference frame)
-            static_assert(std::is_arithmetic_v<U>, "cobb::rotation_matrix::operator*(const std::array<U, 3>&) must be used on an array of numbers.");
+         template<typename U> requires std::is_arithmetic_v<U>
+         std::array<U, 3> operator*(const std::array<U, 3>& vec) const noexcept { // loop-free multiply by column (equivalent to applying (this) to (vec) as a reference frame)
             std::array<U, 3> vResult;
             vResult[0] = (this->data[0][0] * vec[0]) + (this->data[0][1] * vec[1]) + (this->data[0][2] * vec[2]);
             vResult[1] = (this->data[1][0] * vec[0]) + (this->data[1][1] * vec[1]) + (this->data[1][2] * vec[2]);
@@ -133,16 +133,16 @@ namespace cobb {
             return result;
          }
 
-         std::array<double, 3> column(int which) const noexcept {
-            std::array<double, 3> out;
+         std::array<value_type, 3> column(int which) const noexcept {
+            std::array<value_type, 3> out;
             out[0] = this->data[0][which];
             out[1] = this->data[1][which];
             out[2] = this->data[2][which];
             return out;
          }
-         inline std::array<double, 3> local_x_axis() const noexcept { return this->column(0); }
-         inline std::array<double, 3> local_y_axis() const noexcept { return this->column(1); }
-         inline std::array<double, 3> local_z_axis() const noexcept { return this->column(2); }
+         inline std::array<value_type, 3> local_x_axis() const noexcept { return this->column(0); }
+         inline std::array<value_type, 3> local_y_axis() const noexcept { return this->column(1); }
+         inline std::array<value_type, 3> local_z_axis() const noexcept { return this->column(2); }
    };
 
    class axis_angle {

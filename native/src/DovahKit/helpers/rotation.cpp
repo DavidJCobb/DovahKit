@@ -93,19 +93,19 @@ namespace {
 }
 namespace cobb {
    #pragma region rotation_matrix
-   double rotation_matrix::determinant() const noexcept {
+   rotation_matrix::value_type rotation_matrix::determinant() const noexcept {
       // [a, b, c,
       //  d, e, f,
       //  g, h, i]
-      double a = this->data[0][0];
-      double b = this->data[0][1];
-      double c = this->data[0][2];
-      double d = this->data[1][0];
-      double e = this->data[1][1];
-      double f = this->data[1][2];
-      double g = this->data[2][0];
-      double h = this->data[2][1];
-      double i = this->data[2][2];
+      value_type a = this->data[0][0];
+      value_type b = this->data[0][1];
+      value_type c = this->data[0][2];
+      value_type d = this->data[1][0];
+      value_type e = this->data[1][1];
+      value_type f = this->data[1][2];
+      value_type g = this->data[2][0];
+      value_type h = this->data[2][1];
+      value_type i = this->data[2][2];
       return (a*e*i) + (b*f*g) + (c*d*h) - (c*e*g) - (b*d*i) - (a*f*h);
    }
 
@@ -121,8 +121,8 @@ namespace cobb {
       //
       rotation_matrix out;
       auto& d = out.data;
-      double c = std::cos(radians);
-      double s = std::sin(radians);
+      value_type c = std::cos(radians);
+      value_type s = std::sin(radians);
       d[0][0] = 1.0F;
       d[0][1] = 0.0F;
       d[0][2] = 0.0F;
@@ -146,8 +146,8 @@ namespace cobb {
       //
       rotation_matrix out;
       auto& d = out.data;
-      double c = std::cos(radians);
-      double s = std::sin(radians);
+      value_type c = std::cos(radians);
+      value_type s = std::sin(radians);
       d[0][0] = c;
       d[0][1] = 0.0F;
       d[0][2] = righthanded ? s : -s;
@@ -171,8 +171,8 @@ namespace cobb {
       //
       rotation_matrix out;
       auto& d = out.data;
-      double c = std::cos(radians);
-      double s = std::sin(radians);
+      value_type c = std::cos(radians);
+      value_type s = std::sin(radians);
       d[0][0] = c;
       d[0][1] = righthanded ? -s : s;
       d[0][2] = 0.0F;

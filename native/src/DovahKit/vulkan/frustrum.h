@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <glm/glm.hpp>
+#include "helpers/glm/type_traits.h"
 
 namespace vulkanDK {
    //
@@ -46,5 +47,22 @@ namespace vulkanDK {
       frustrum() : points({}) {}
 
       inline glm::vec3 center() const { return (this->planes.far.center - this->planes.near.center) * 0.5F; }
+
+      frustrum& operator*=(const glm::mat4& x) {
+         for (auto& item : this->points)
+            item = x * glm::vec4(item, 1.0F);
+         return *this;
+      }
+      frustrum& operator*=(float x) {
+         for (auto& item : this->points)
+            item *= x;
+         return *this;
+      }
+      template<typename T>
+      frustrum operator*(const T& x) const {
+         frustrum out = *this;
+         out *= x;
+         return out;
+      }
    };
 }

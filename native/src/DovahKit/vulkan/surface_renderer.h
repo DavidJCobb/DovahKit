@@ -51,7 +51,8 @@ namespace vulkanDK {
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
 
-         static constexpr shader::id_type main_shader_id = "MainMatl";
+         static constexpr shader::id_type main_shader_id       = "MainMatl";
+         static constexpr shader::id_type sun_shadow_shader_id = "SunShadw";
 
       protected:
          // renderer events:
@@ -95,6 +96,8 @@ namespace vulkanDK {
             VkSwapchainKHR handle = VK_NULL_HANDLE;
             VkFormat       format = VK_FORMAT_UNDEFINED;
             concrete_image depth_buffer; // only one should be needed: we only use it during rendering, not presentation, and we render one frame at a time synched via subpass dependencies
+            concrete_image sun_shadow_buffer;
+            VkSampler      sun_shadow_sampler = VK_NULL_HANDLE;
             //
             std::vector<swap_chain_image> images;
             std::vector<frame_in_flight>  frames_in_flight;
@@ -104,8 +107,9 @@ namespace vulkanDK {
          //
          std::vector<shader*> shaders;
          union {
-            std::array<render_pass*, 2> _list = { nullptr, nullptr };
+            std::array<render_pass*, 3> _list = { nullptr, nullptr, nullptr };
             struct {
+               render_pass* main_shadow;
                render_pass* main;
                render_pass* ui;
             };
@@ -194,6 +198,7 @@ namespace vulkanDK {
          //
          void _setup_swap_chain_instance();
          void _setup_depth_buffer(); // requires extent size
+         void _setup_sun_shadow_buffer();
          void _setup_swap_chain_images();
          void _setup_swap_chain_image_frame_data(); // requires descriptor pool
          void _setup_framebuffers(); // per swap chain image, and requires each swap chain image's view

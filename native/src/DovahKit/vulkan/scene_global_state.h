@@ -26,5 +26,6 @@ namespace vulkanDK {
       alignas(16) glm::vec3 ambient_light_color = { 0, 0, 0 };
       alignas(16) glm::vec3 sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 });
       alignas(16) glm::vec3 sun_color = { 1, 1, 1 };
+      alignas(16) glm::mat4 sun_space = glm::mat4(1);
    };
 }

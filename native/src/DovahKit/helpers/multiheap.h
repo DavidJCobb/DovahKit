@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <mutex>
 #include <thread>
+#include <type_traits>
 #include <vector>
 #include "../helpers/bitset.h"
 
@@ -40,33 +41,35 @@ namespace cobb {
       //
       public:
          using mapped_type = T;
-         static constexpr uint32_t element_size    = sizeof(T);
-         static constexpr uint32_t count_per_block = count_per_block;
+         static constexpr size_t element_alignment = std::alignment_of_v<T>;
+         static constexpr size_t element_size      = sizeof(T);
+         static constexpr size_t stride            = element_size + (element_size % element_alignment);
+         static constexpr size_t count_per_block   = count_per_block;
          
       protected:
          struct block_t;
          struct block_info {
-            block_t* prev      = nullptr;
-            block_t* next      = nullptr;
-            uint32_t remaining = count_per_block; // optimization for large block sizes
-            uint32_t startFrom = 0; // optimization for large block sizes
+            block_t* prev       = nullptr;
+            block_t* next       = nullptr;
+            uint32_t remaining  = count_per_block; // optimization for large block sizes
+            uint32_t start_from = 0;               // optimization for large block sizes
             cobb::bitset<count_per_block> presence;
             //
             inline void on_allocate(uint32_t index) noexcept {
                this->presence.set(index);
                --this->remaining;
-               this->startFrom = index;
+               this->start_from = index;
             }
             inline void on_free(uint32_t index) noexcept {
                this->presence.reset(index);
                ++this->remaining;
-               if (this->startFrom > index)
-                  this->startFrom = index;
+               if (this->start_from > index)
+                  this->start_from = index;
             }
          };
          struct block_t {
             block_info info;
-            uint8_t    buffer[count_per_block * element_size];
+            uint8_t    buffer[count_per_block * stride];
             //
             inline ~block_t() {
                auto* p = this->info.prev;
@@ -82,24 +85,24 @@ namespace cobb {
             void* try_allocate() noexcept { // function to be called on the head block only. allocates a single element
                if (!this->has_free_slots())
                   return nullptr;
-               auto i = this->info.presence.find_first_clear_from(this->info.startFrom);
+               auto i = this->info.presence.find_first_clear_from(this->info.start_from);
                if (i < 0)
                   return nullptr;
-               std::ptrdiff_t start = (std::ptrdiff_t) &this->buffer;
-               std::ptrdiff_t addr  = start + (element_size * i);
+               std::intptr_t start = (std::intptr_t) &this->buffer;
+               std::intptr_t addr  = start + (stride * i);
                this->info.on_allocate(i);
                return (void*)addr;
             }
             bool  try_free(void* mem) noexcept { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
                auto* block = this;
                do {
-                  std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
-                  std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
-                  std::ptrdiff_t b_end   = b_start + sizeof(block->buffer);
+                  std::intptr_t m_addr  = (std::intptr_t)mem;
+                  std::intptr_t b_start = (std::intptr_t) & block->buffer;
+                  std::intptr_t b_end   = b_start + sizeof(block->buffer);
                   if (m_addr >= b_start && m_addr < b_end) {
                      m_addr -= b_start;
-                     uint16_t index = m_addr / sizeof(mapped_type);
-                     assert(m_addr % element_size == 0       && "Cannot free; element is not aligned.");
+                     uint16_t index = m_addr / stride;
+                     assert(m_addr % stride == 0             && "Cannot free; element is not aligned.");
                      assert(block->info.presence.test(index) && "You're freeing something that was already free!");
                      block->info.on_free(index);
                      //
@@ -146,8 +149,8 @@ namespace cobb {
                auto& presence = this->info.presence;
                for (uint32_t i = 0; i < count_per_block; i++) {
                   if (presence.test(i)) {
-                     std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
-                     std::ptrdiff_t addr  = start + (element_size * i);
+                     std::intptr_t start = (std::intptr_t) & this->buffer;
+                     std::intptr_t addr  = start + (stride * i);
                      //
                      auto element = (mapped_type*)addr;
                      element->~mapped_type();
@@ -185,12 +188,12 @@ namespace cobb {
          class State {
             public:
                std::vector<subheap*> subheaps; // nullptr not allowed
-               std::mutex subheapsLock;
-               block_t*   unowned     = nullptr;
-               std::mutex unownedLock;
+               std::mutex subheaps_lock;
+               block_t*   unowned = nullptr;
+               std::mutex unowned_lock;
                
                void register_subheap(subheap& sub) noexcept {
-                  std::lock_guard guard(this->subheapsLock);
+                  std::lock_guard guard(this->subheaps_lock);
                   for (auto*& s : this->subheaps) {
                      if (!s->first) {
                         delete s;
@@ -202,7 +205,7 @@ namespace cobb {
                }
                void take_over_subheap(subheap& sub) noexcept {
                   assert(sub.first && "This subheap was already taken over. How did it get here again?");
-                  std::lock_guard guard_1(this->subheapsLock);
+                  std::lock_guard guard_1(this->subheaps_lock);
                   auto* block = sub.first;
                   block->prune();
                   if (!block->has_any_slots_used()) {
@@ -213,19 +216,28 @@ namespace cobb {
                      if (!block)
                         return;
                   }
-                  std::lock_guard guard_2(this->unownedLock);
+                  std::lock_guard guard_2(this->unowned_lock);
                   if (!this->unowned) {
                      this->unowned = block;
                   } else {
-                     auto* appendTo = this->unowned->get_end();
-                     appendTo->info.next = block;
-                     block->info.prev = appendTo;
+                     auto* append_to = this->unowned->get_end();
+                     append_to->info.next = block;
+                     block->info.prev = append_to;
                   }
                   sub.first = nullptr;
+                  //
+                  // We don't bother deleting (sub), but it's basically "dead" at this point. 
+                  // When a new subheap comes along and registers itself, we'll iterate over 
+                  // our subheap list, see the "dead" (sub) in our subheap vector, and delete 
+                  // and replace it at that time.
+                  //
+                  // Something to look into, perhaps: should (subheap_handle) be made to take 
+                  // ownership of "dead" subheaps and recycle them, instead of its current 
+                  // behavior (always allocate a new subheap)?
                }
                void free(void* mem) noexcept {
                   {
-                     std::lock_guard guard(this->subheapsLock);
+                     std::lock_guard guard(this->subheaps_lock);
                      for (auto* s : this->subheaps) {
                         auto* block = s->first;
                         if (block && block->try_free(mem))
@@ -233,7 +245,7 @@ namespace cobb {
                      }
                   }
                   {
-                     std::lock_guard guard(this->unownedLock);
+                     std::lock_guard guard(this->unowned_lock);
                      if (this->unowned && this->unowned->try_free(mem))
                         return;
                   }
@@ -241,8 +253,8 @@ namespace cobb {
                }
                
                void force_destroy_all() noexcept { // probably risky; i wouldn't recommend calling this ever
-                  std::lock_guard<std::mutex> guard(this->subheapsLock);
-                  std::lock_guard<std::mutex> guard(this->unownedLock);
+                  std::lock_guard<std::mutex> guard(this->subheaps_lock);
+                  std::lock_guard<std::mutex> guard(this->unowned_lock);
                   for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
                      auto last = (*it)->first;
                      if (last) {
@@ -275,9 +287,6 @@ namespace cobb {
             ~subheap_handle() {
                if (!this->data)
                   return;
-               #if _DEBUG
-               //this->data->threadID = std::thread::id();
-               #endif
                multiheap::_get_state().take_over_subheap(*this->data);
                this->data = nullptr; // Don't free (this->data); the heap state owns it.
             }
@@ -295,9 +304,9 @@ namespace cobb {
                // Take the unowned block lists if possible:
                //
                {
-                  std::lock_guard guard(state.unownedLock);
+                  std::lock_guard guard(state.unowned_lock);
                   if (state.unowned) {
-                     std::lock_guard guard(state.subheapsLock); // we've already been registered, so this is necessary
+                     std::lock_guard guard(state.subheaps_lock); // we've already been registered, so this is necessary
                      assert(state.unowned != this->data->first);
                      delete this->data->first;
                      this->data->first = state.unowned;
@@ -388,7 +397,7 @@ namespace cobb {
          // This allocator can only allocate one element at a time, which is what (max_size) is supposed to indicate. 
          // However, MSVC's internal std::_Tree class (used to power std::map and friends) misuses Allocator::max_size, 
          // comparing it to the tree's own size (i.e. treating it as the maximum number of elements that the allocator 
-         // can *store* rather than the maximum that can be allocated at one time). As such, if we actually accurately 
+         // can *store* rather than the maximum that can be allocated in one call). As such, if we actually accurately 
          // indicate the maximum number of elements that we can allocate at one time, we will cause guaranteed crashes 
          // within Microsoft's Common Runtime DLL that are fiendishly difficult to debug.
          //

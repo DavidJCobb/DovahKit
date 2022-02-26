@@ -8,6 +8,7 @@
 #include "scene_global_state.h"
 #include "surface_renderer.h"
 #include "config/scene_limits.h"
+#include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
 
 namespace {
@@ -30,7 +31,7 @@ namespace vulkanDK {
    }
    swap_chain_image& swap_chain_image::operator=(swap_chain_image&& o) noexcept {
       std::swap(this->image,           o.image);
-      std::swap(this->framebuffer,     o.framebuffer);
+      std::swap(this->framebuffers,    o.framebuffers);
       std::swap(this->descriptor_sets, o.descriptor_sets);
       std::swap(this->command_buffers, o.command_buffers);
       std::swap(this->shader_params,   o.shader_params);
@@ -63,15 +64,19 @@ namespace vulkanDK {
       this->overlays.world_axes.create_geometry();
    }
    void swap_chain_image::_setup_shader_parameter_buffers() {
-      {  // Scene global state, as a uniform buffer object
+      {
          constexpr VkDeviceSize buffer_size = sizeof(scene_global_state);
          this->shader_params.uniform = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
-      {  // Object data list
+      {
+         constexpr VkDeviceSize buffer_size = sizeof(scene_shadow_state);
+         this->shader_params.sun_shadows = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      }
+      {
          constexpr VkDeviceSize rosp_buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
          this->shader_params.object_data = this->owner->create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
-      {  // Light data list
+      {
          constexpr VkDeviceSize rlsp_buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
          this->shader_params.light_data = this->owner->create_buffer(rlsp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          //
@@ -81,9 +86,7 @@ namespace vulkanDK {
       }
    }
    void swap_chain_image::_setup_command_buffers() {
-      this->command_buffers.resize(2);
-      this->command_buffers[0] = command_buffer(*this->owner);
-      this->command_buffers[1] = command_buffer(*this->owner); // for FPS counter
+      this->command_buffers.setup(*this->owner);
       this->command_buffers_invalid = true;
    }
    
@@ -93,6 +96,26 @@ namespace vulkanDK {
       // Update descriptor sets for overlays that only need an initial update:
       //
       this->overlays.world_axes.initialize_descriptor_sets(*this);
+      //
+      // Sun shadow texture:
+      //
+      {
+         auto image_info = VkDescriptorImageInfo{
+            .sampler     = this->owner->swap_chain.sun_shadow_sampler,
+            .imageView   = this->owner->swap_chain.sun_shadow_buffer.view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+         };
+         auto write_info = VkWriteDescriptorSet{
+            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet          = this->descriptor_sets.standard,
+            .dstBinding      = 2, // this should match the binding value in the shader
+            .dstArrayElement = 0,
+            .descriptorCount = (uint32_t)1,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .pImageInfo      = &image_info,
+         };
+         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)1, &write_info, 0, nullptr);
+      }
    }
    void swap_chain_image::teardown_descriptor_sets() {
       vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.list.size(), this->descriptor_sets.list.data());
@@ -101,9 +124,15 @@ namespace vulkanDK {
    void swap_chain_image::teardown() {
       if (!this->owner)
          return;
-      if (this->framebuffer != VK_NULL_HANDLE) {
-         vkDestroyFramebuffer(this->owner->logical_device, this->framebuffer, nullptr);
-         this->framebuffer = VK_NULL_HANDLE;
+      {
+         auto destroy_fb = [this](VkFramebuffer& fb) {
+            if (fb != VK_NULL_HANDLE) {
+               vkDestroyFramebuffer(this->owner->logical_device, fb, nullptr);
+               fb = VK_NULL_HANDLE;
+            }
+         };
+         destroy_fb(this->framebuffers.main);
+         destroy_fb(this->framebuffers.sun_shadows);
       }
       this->image.destroy_view();
       this->image.image = VK_NULL_HANDLE;
@@ -183,7 +212,7 @@ namespace vulkanDK {
       //
       std::vector<VkCommandBuffer> cb_handles;
       {
-         auto& list = this->command_buffers;
+         auto& list = this->command_buffers.list;
          auto  size = list.size();
          cb_handles.resize(size);
          for (size_t i = 0; i < size; ++i)
@@ -235,11 +264,22 @@ namespace vulkanDK {
    }
    void swap_chain_image::_update_shader_global_scene_state() {
       auto& scene = this->get_scene();
-      auto& state = scene.global_state;
-      //
-      void* data = this->shader_params.uniform.map_memory();
-      memcpy(data, &state, sizeof(state));
-      this->shader_params.uniform.unmap_memory(data);
+      {
+         auto& src = scene.global_state;
+         auto& dst = this->shader_params.uniform;
+         //
+         void* data = dst.map_memory();
+         memcpy(data, &src, sizeof(src));
+         dst.unmap_memory(data);
+      }
+      {
+         auto& src = scene.shadow_state;
+         auto& dst = this->shader_params.sun_shadows;
+         //
+         void* data = dst.map_memory();
+         memcpy(data, &src, sizeof(src));
+         dst.unmap_memory(data);
+      }
    }
    void swap_chain_image::_update_shader_lights_data_buffer() {
       using entry_type = rendered_light::shader_parameters;
@@ -494,7 +534,7 @@ namespace vulkanDK {
          write_info[i] = VkWriteDescriptorSet{ // texture array
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet          = target_set,
-            .dstBinding      = 4, // this should match the binding value in the shader
+            .dstBinding      = 5, // this should match the binding value in the shader
             .dstArrayElement = src.start,
             .descriptorCount = (uint32_t)info.size(),
             .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -516,50 +556,38 @@ namespace vulkanDK {
       //
       this->_refill_fps_overlay_command_buffer();
       //
-      auto& scene          = this->owner->scene;
-      auto  command_buffer = this->command_buffers[0].handle;
-      //
-      vkResetCommandBuffer(command_buffer, 0);
-      auto buffer_begin_info = VkCommandBufferBeginInfo{
-         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-         .flags            = 0,
-         .pInheritanceInfo = nullptr,
-      };
-      if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer.");
-      }
-      //
-      auto clear_values = std::array{
+      auto& scene = this->owner->scene;
+      {  // Sun shadows
+         auto& command_buffer = this->command_buffers.main_shadow;
+         auto  command_handle = command_buffer.handle;
          //
-         // Values here should match the attachments we're using.
+         command_buffer.reset(0);
+         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
+         }
          //
-         VkClearValue{ .color        = {0, 0, 0, 1} }, // color attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the value to clear with
-         VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
-      };
-      auto pass_begin_info = VkRenderPassBeginInfo{
-         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = this->owner->render_passes_by_name.main->handle,
-         .framebuffer = this->framebuffer,
-         .renderArea  = {
-            .offset = { 0, 0 },
-            .extent = this->owner->surface_extent,
-         },
-         .clearValueCount = (uint32_t)clear_values.size(),
-         .pClearValues    = clear_values.data(),
-      };
-      vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-      {
-         //
-         // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
-         // with each new material.
-         //
-         const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
-         assert(shader);
-         const auto& material = shader->material;
-         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.standard, 0, nullptr);
-         vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
-         //
+         auto clear_values = std::array{
+            VkClearValue{ .depthStencil = { 1.0, 0} },
+         };
+         auto pass_begin_info = VkRenderPassBeginInfo{
+            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+            .renderPass  = this->owner->render_passes_by_name.main_shadow->handle,
+            .framebuffer = this->framebuffers.sun_shadows,
+            .renderArea  = {
+               .offset = { 0, 0 },
+               .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
+            },
+            .clearValueCount = (uint32_t)clear_values.size(),
+            .pClearValues    = clear_values.data(),
+         };
+         vkCmdBeginRenderPass(command_handle, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
          {
+            const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
+            assert(shader);
+            const auto&   material = shader->material;
+            vkCmdBindDescriptorSets(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.sun_shadows, 0, nullptr);
+            vkCmdBindPipeline      (command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            //
             VkDeviceSize offset = 0;
             for (size_t j = 0; j < scene.meshes.size(); ++j) {
                auto& ro  = scene.meshes[j];
@@ -574,25 +602,93 @@ namespace vulkanDK {
                   .texture_normal_index = (int32_t)ro.texture_indices.normals,
                };
                vkCmdPushConstants(
-                  command_buffer,
+                  command_handle,
                   material.pipeline.layout,
-                  VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                  VK_SHADER_STAGE_VERTEX_BIT,
                   0,
                   sizeof(pc),
                   (void*)&pc
                );
-               ro.draw_call(command_buffer);
+               ro.draw_call(command_handle);
             }
-            //qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
+         }
+         vkCmdEndRenderPass(command_handle);
+         if (command_buffer.finish() != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (sun shadows).");
          }
       }
-      vkCmdEndRenderPass(command_buffer);
-      if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+      {  // Scene objects
+         auto& command_buffer = this->command_buffers.main;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer.");
+         }
+         //
+         auto clear_values = std::array{
+            VkClearValue{ .color        = {0, 0, 0, 1} }, // set framebuffer to black
+            VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+         };
+         auto pass_begin_info = VkRenderPassBeginInfo{
+            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+            .renderPass  = this->owner->render_passes_by_name.main->handle,
+            .framebuffer = this->framebuffers.main,
+            .renderArea  = {
+               .offset = { 0, 0 },
+               .extent = this->owner->surface_extent,
+            },
+            .clearValueCount = (uint32_t)clear_values.size(),
+            .pClearValues    = clear_values.data(),
+         };
+         vkCmdBeginRenderPass(command_handle, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+         {
+            //
+            // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
+            // with each new material.
+            //
+            const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
+            assert(shader);
+            const auto& material = shader->material;
+            vkCmdBindDescriptorSets(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.standard, 0, nullptr);
+            vkCmdBindPipeline      (command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            //
+            {
+               VkDeviceSize offset = 0;
+               for (size_t j = 0; j < scene.meshes.size(); ++j) {
+                  auto& ro  = scene.meshes[j];
+                  auto& vib = ro.vertex_and_index_buffer;
+                  //
+                  if (!ro.active())
+                     continue;
+
+                  auto pc = rendered_mesh::push_constant{
+                     .object_index  = (int32_t)j,
+                     .texture_index = (int32_t)ro.texture_indices.diffuse,
+                     .texture_normal_index = (int32_t)ro.texture_indices.normals,
+                  };
+                  vkCmdPushConstants(
+                     command_handle,
+                     material.pipeline.layout,
+                     VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                     0,
+                     sizeof(pc),
+                     (void*)&pc
+                  );
+                  ro.draw_call(command_handle);
+               }
+               //qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
+            }
+         }
+         vkCmdEndRenderPass(command_handle);
+         if (command_buffer.finish() != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+         }
       }
+
    }
    void swap_chain_image::_refill_fps_overlay_command_buffer() {
-      auto command_buffer = this->command_buffers[1].handle;
+      auto command_buffer = this->command_buffers.fps.handle;
       //
       vkResetCommandBuffer(command_buffer, 0);
       auto buffer_begin_info = VkCommandBufferBeginInfo{
@@ -617,7 +713,7 @@ namespace vulkanDK {
       auto pass_begin_info = VkRenderPassBeginInfo{
          .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
          .renderPass  = this->owner->render_passes_by_name.ui->handle,
-         .framebuffer = this->framebuffer,
+         .framebuffer = this->framebuffers.main,
          .renderArea  = {
             .offset = { 0, 0 },
             .extent = this->owner->surface_extent,

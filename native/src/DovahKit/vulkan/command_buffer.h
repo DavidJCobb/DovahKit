@@ -26,6 +26,10 @@ namespace vulkanDK {
          static std::vector<command_buffer> create_in_bulk(VkDevice, VkCommandPool, size_t count);
          static std::vector<command_buffer> create_in_bulk(surface_renderer&, size_t count);
 
+         VkResult reset(VkCommandBufferResetFlags);
+         VkResult top_level_begin(VkCommandBufferUsageFlags);
+         VkResult finish();
+
       protected:
          void _setup();
    };

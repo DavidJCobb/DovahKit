@@ -39,13 +39,15 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    vec3 ambient_light_color;
    vec3 sun_dir;
    vec3 sun_color;
+	mat4 sun_space;
 } ubo;
 // binding 1 is used by the fragment shader (texture sampler)
-layout(std430,set = 0, binding = 2) readonly buffer ObjectBuffer {
+// binding 2 is used by the fragment shader (shadow map)
+layout(std430,set = 0, binding = 3) readonly buffer ObjectBuffer {
 	ObjectData objects[];
 } objectBuffer;
-// binding 3 is used by the fragment shader (light array)
-// binding 4 is used by the fragment shader (texture array)
+// binding 4 is used by the fragment shader (light array)
+// binding 5 is used by the fragment shader (texture array)
 
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec3 in_color;
@@ -62,7 +64,15 @@ layout(location = 0) out VS_OUT {
    vec3 tangent_sun_dir;
    vec3 tangent_view_pos;
    vec3 tangent_vert_pos;
+   vec4 sun_shadow_vert_pos;
 } vs_out;
+
+const mat4 shadow_depth_bias_matrix = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+);
 
 void main() {
    mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
@@ -72,6 +82,7 @@ void main() {
    vs_out.color     = in_color;
    vs_out.uv        = in_uv;
    vs_out.pos_world = vec3(model_transform * vec4(in_position, 1.0));
+   vs_out.sun_shadow_vert_pos = (shadow_depth_bias_matrix * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
    //
    #if !defined(TBN_ORTHOGONALIZE_MODE) || TBN_ORTHOGONALIZE_MODE == TBN_MODE_NONE
       vs_out.tangent_space = transpose(mat3(

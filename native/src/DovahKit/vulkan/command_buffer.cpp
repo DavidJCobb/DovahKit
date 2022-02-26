@@ -53,6 +53,21 @@ namespace vulkanDK {
       return create_in_bulk(sr.logical_device, sr.command_pools.persistent, count);
    }
 
+   VkResult command_buffer::reset(VkCommandBufferResetFlags flags) {
+      return vkResetCommandBuffer(this->handle, flags);
+   }
+   VkResult command_buffer::top_level_begin(VkCommandBufferUsageFlags flags) {
+      auto buffer_begin_info = VkCommandBufferBeginInfo{
+         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+         .flags            = 0,
+         .pInheritanceInfo = nullptr,
+      };
+      return vkBeginCommandBuffer(this->handle, &buffer_begin_info);
+   }
+   VkResult command_buffer::finish() {
+      return vkEndCommandBuffer(this->handle);
+   }
+
    void command_buffer::_setup() {
       auto alloc_info = VkCommandBufferAllocateInfo{
          .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,

@@ -11,6 +11,7 @@
 #include "vertex.h"
 #include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
+#include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
 #include "config/validation_layers.h"
 #include "helpers/glm_transform_from_beth.h"
@@ -235,6 +236,22 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
+      this->descriptor_set_layouts.sun_shadows.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_shadow_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       this->descriptor_set_layouts.standard.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
             .index              = 0,
@@ -250,26 +267,33 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters
+         vulkanDK::descriptor_binding{ // sun shadow map
             .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
             .index              = 3,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // texture array
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
             .index              = 4,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 5,
             .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
             .count              = config::max_loaded_textures,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
       };
@@ -490,6 +514,12 @@ namespace vulkanDK {
       this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->descriptor_set_layouts.setup_all(*this);
+      {
+         auto& dsl = this->descriptor_set_layouts;
+         this->set_debug_object_name(dsl.fps.handle,         "Descriptor Set Layout: FPS");
+         this->set_debug_object_name(dsl.standard.handle,    "Descriptor Set Layout: Main");
+         this->set_debug_object_name(dsl.sun_shadows.handle, "Descriptor Set Layout: Sun Shadows");
+      }
       this->_define_render_passes();
       this->_setup_shaders();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
@@ -498,6 +528,7 @@ namespace vulkanDK {
       this->setup_command_pool(this->queues.graphics.index);
       //
       {  // swap chain
+         this->_setup_sun_shadow_buffer();
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
          this->_setup_render_passes();               // requires swap chain format
          for (auto* s : this->shaders)
@@ -518,6 +549,52 @@ namespace vulkanDK {
       this->_on_renderer_ready();
    }
    void surface_renderer::_define_render_passes() {
+      {
+         auto* rp = this->render_passes_by_name.main_shadow = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+               .finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            },
+         };
+         rp->subpasses.descriptions = {
+            {  // subpass
+               .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 0,
+                     .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+         };
+         rp->subpasses.dependencies = {
+            VkSubpassDependency{
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // wait until the fragment shader
+               .srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            }
+         };
+      }
       {
          auto* rp = this->render_passes_by_name.main = new render_pass(*this);
          rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
@@ -704,9 +781,63 @@ namespace vulkanDK {
             }
          };
       }
-      this->render_passes = { this->render_passes_by_name.main, this->render_passes_by_name.ui };
+      this->render_passes = { this->render_passes_by_name.main_shadow, this->render_passes_by_name.main, this->render_passes_by_name.ui };
    }
    void surface_renderer::_setup_shaders() {
+      {  // Material: "SunShadw"
+         auto* s = this->get_or_create_shader(sun_shadow_shader_id);
+         s->set_render_pass(this->render_passes_by_name.main_shadow);
+         s->set_layout_info(
+            {  // Descriptor set layouts
+               this->descriptor_set_layouts.sun_shadows.handle,
+            },
+            {  // Push constants
+               VkPushConstantRange{
+                  .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                  .offset     = 0,
+                  .size       = sizeof(rendered_mesh::push_constant),
+               }
+            }
+         );
+         auto& dfn = s->definition;
+         //
+         shader_module* frag = nullptr;
+         shader_module* vert = nullptr;
+         {
+            frag = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.frag.spv").uncompressedData());
+            vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
+            if (frag->empty()) {
+               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader (sun shadows).");
+            }
+            if (vert->empty()) {
+               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader (sun shadows).");
+            }
+            this->shader_modules.push_back(frag);
+            this->shader_modules.push_back(vert);
+         }
+         //
+         dfn.stages = {
+            {
+               .module           = frag,
+               .entry_point_name = "main",
+               .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+               .module              = vert,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+            },
+         };
+         dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+         {
+            auto& vertex     = dfn.inputs.vertex;
+            auto  attributes = vertex::getAttributeDescriptions();
+            vertex.bindings.push_back(vertex::getBindingDescription());
+            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+         }
+         s->setup_pipeline_layout(*this);
+      }
       {  // Material: "MainMatl"
          auto* s = this->get_or_create_shader(main_shader_id);
          s->set_render_pass(this->render_passes_by_name.main);
@@ -1045,10 +1176,15 @@ namespace vulkanDK {
       for (size_t i = 0; i < sc.images.size(); ++i) {
          auto& frame = sc.images[i];
          //
-         auto buffer_info = VkDescriptorBufferInfo{
+         auto global_state_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.uniform.handle,
             .offset = 0,
             .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto shadow_state_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.sun_shadows.handle,
+            .offset = 0,
+            .range  = sizeof(scene_shadow_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto rosp_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.object_data.handle,
@@ -1062,6 +1198,34 @@ namespace vulkanDK {
          };
          //
          auto descriptor_writes = std::array{
+            //
+            // Sun shadow render pass:
+            //
+            VkWriteDescriptorSet{ // uniform buffer object
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.sun_shadows,
+               .dstBinding       = 0, // this should match the binding value in the shader
+               .dstArrayElement  = 0, // index of the first descriptor in the raray to update
+               .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
+               .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &shadow_state_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.sun_shadows,
+               .dstBinding       = 1, // this should match the binding value in the shader
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rosp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            //
+            // Main render pass:
+            //
             VkWriteDescriptorSet{ // uniform buffer object
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
@@ -1070,7 +1234,7 @@ namespace vulkanDK {
                .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
                .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                .pImageInfo       = nullptr,
-               .pBufferInfo      = &buffer_info,
+               .pBufferInfo      = &global_state_buffer_info,
                .pTexelBufferView = nullptr,
             },
             VkWriteDescriptorSet{ // texture sampler
@@ -1082,10 +1246,11 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
                .pImageInfo      = &sampler_info,
             },
+            // skip initializing the shadow map here; the swap chain images take care of that themselves
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
-               .dstBinding       = 2, // this should match the binding value in the shader
+               .dstBinding       = 3, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1096,7 +1261,7 @@ namespace vulkanDK {
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
-               .dstBinding       = 3, // this should match the binding value in the shader
+               .dstBinding       = 4, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1107,7 +1272,7 @@ namespace vulkanDK {
             VkWriteDescriptorSet{ // texture array
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.standard,
-               .dstBinding      = 4, // this should match the binding value in the shader
+               .dstBinding      = 5, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)texture_infos.size(),
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -1136,6 +1301,7 @@ namespace vulkanDK {
       for(auto* rp : this->render_passes)
          rp->setup();
       //
+      this->set_debug_object_name(this->render_passes_by_name.main_shadow->handle, "Render Pass: Sun Shadows");
       this->set_debug_object_name(this->render_passes_by_name.main->handle, "Render Pass: Main");
       this->set_debug_object_name(this->render_passes_by_name.ui->handle,   "Render Pass: UI");
    }
@@ -1250,6 +1416,54 @@ namespace vulkanDK {
       this->set_debug_object_name(db.handle, "Depth Buffer Image");
       this->set_debug_object_name(db.view,   "Depth Buffer Image View");
    }
+   void surface_renderer::_setup_sun_shadow_buffer() {
+      auto  format   = this->find_depth_format();
+      auto& framebuf = swap_chain.sun_shadow_buffer;
+      framebuf = concrete_image(*this);
+      framebuf.create_image(
+         {
+            .extent = {
+               .width  = config::sun_shadow_map_resolution_x,
+               .height = config::sun_shadow_map_resolution_y,
+            },
+            .format = format,
+            .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         }, 
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+      );
+      framebuf.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
+      framebuf.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+      //
+      this->set_debug_object_name(framebuf.handle, "Sun Shadow Buffer Image");
+      this->set_debug_object_name(framebuf.view,   "Sun Shadow Buffer Image View");
+      //
+      // Sampler:
+      //
+      const auto& support = this->device_info->support;
+      auto& sampler = this->swap_chain.sun_shadow_sampler;
+      auto  sampler_info = VkSamplerCreateInfo{
+         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+         .magFilter        = VK_FILTER_NEAREST,
+         .minFilter        = VK_FILTER_NEAREST,
+         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+         .addressModeU     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+         .addressModeV     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+         .addressModeW     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+         .mipLodBias       = 0.0,
+         .anisotropyEnable = support.max_anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
+         .maxAnisotropy    = std::min(8.0F, support.max_anisotropic_filtering),
+         .compareEnable    = VK_FALSE,
+         .compareOp        = VK_COMPARE_OP_ALWAYS,
+         .minLod           = 0.0,
+         .maxLod           = 1.0,
+         .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+         .unnormalizedCoordinates = VK_FALSE,
+      };
+      if (vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
+      }
+      this->set_debug_object_name(sampler, "Sun Shadow Texture Sampler");
+   }
    void surface_renderer::_setup_swap_chain_images() {
       auto& sc = this->swap_chain;
       //
@@ -1280,7 +1494,7 @@ namespace vulkanDK {
    void surface_renderer::_setup_framebuffers() {
       auto& sc = this->swap_chain;
       auto extent = this->surface_extent;
-      auto r_pass = this->render_passes[0]->handle;
+      auto r_pass = this->render_passes_by_name.main->handle;
       //
       for (auto& image : sc.images) {
          auto attachments = std::array{ image.image.view, sc.depth_buffer.view };
@@ -1295,8 +1509,30 @@ namespace vulkanDK {
             .height          = extent.height,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffer) != VK_SUCCESS) {
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffers.main) != VK_SUCCESS) {
             throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer.");
+         }
+      }
+      //
+      // TODO: next, we set up the offscreen framebuffers for the shadow map; we only need to rebuild these if the 
+      //       shadow map changes, but since we build them with the main render pass framebuffers, they'll get 
+      //       rebuilt with every surface resize
+      //
+      for (auto& image : sc.images) {
+         auto attachments = std::array{ sc.sun_shadow_buffer.view };
+         auto framebuffer_info = VkFramebufferCreateInfo{
+            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext           = nullptr,
+            .flags           = 0,
+            .renderPass      = this->render_passes_by_name.main_shadow->handle,
+            .attachmentCount = attachments.size(),
+            .pAttachments    = attachments.data(),
+            .width           = config::sun_shadow_map_resolution_x,
+            .height          = config::sun_shadow_map_resolution_y,
+            .layers          = 1,
+         };
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffers.sun_shadows) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (sun shadows).");
          }
       }
    }
@@ -1329,7 +1565,12 @@ namespace vulkanDK {
          auto& sc = this->swap_chain;
          //
          sc.images.clear();
+         if (sc.sun_shadow_sampler != VK_NULL_HANDLE) {
+            vkDestroySampler(this->logical_device, sc.sun_shadow_sampler, nullptr);
+            sc.sun_shadow_sampler = VK_NULL_HANDLE;
+         }
          sc.depth_buffer.teardown();
+         sc.sun_shadow_buffer.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
          //

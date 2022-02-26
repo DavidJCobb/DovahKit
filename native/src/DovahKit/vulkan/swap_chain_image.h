@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <type_traits>
 #include <vector>
 #include "_vulkan.h"
 #include "_util.h"
@@ -18,6 +20,38 @@ namespace vulkanDK {
       protected:
          surface_renderer* owner = nullptr;
          size_t my_index = -1;
+
+         union command_buffer_set {
+            std::array<command_buffer, 3> list;
+            struct {
+               command_buffer main_shadow;
+               command_buffer main;
+               command_buffer fps;
+            };
+
+            command_buffer_set() : list({}) {};
+            ~command_buffer_set() {
+               for (auto& item : list)
+                  item.~command_buffer();
+            }
+
+            command_buffer_set(command_buffer_set&& v) {
+               for (size_t i = 0; i < this->list.size(); ++i)
+                  std::swap(this->list[i], v.list[i]);
+            }
+            command_buffer_set& operator=(command_buffer_set&& v) {
+               for (size_t i = 0; i < this->list.size(); ++i)
+                  std::swap(this->list[i], v.list[i]);
+               return *this;
+            }
+
+            void setup(surface_renderer& sr) {
+               for (auto& item : list)
+                  item = command_buffer(sr);
+            }
+         };
+         static_assert(sizeof(command_buffer_set) == sizeof(command_buffer) * std::tuple_size_v<decltype(command_buffer_set::list)>);
+
       public:
          swap_chain_image() {}
          swap_chain_image(surface_renderer&, size_t my_index);
@@ -27,14 +61,18 @@ namespace vulkanDK {
          swap_chain_image& operator=(swap_chain_image&&) noexcept;
 
          surface_renderer_image_view image;
-         VkFramebuffer framebuffer = VK_NULL_HANDLE;
+         struct {
+            VkFramebuffer main        = VK_NULL_HANDLE;
+            VkFramebuffer sun_shadows = VK_NULL_HANDLE;
+         } framebuffers;
          //
          descriptor_set_group descriptor_sets;
-         std::vector<command_buffer> command_buffers;
+         command_buffer_set   command_buffers;
          struct {
-            buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers
-            buffer object_data; // per-object data which can be updated without having to re-record command buffers
-            buffer light_data;  // per-light  data which can be updated without having to re-record command buffers
+            buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            buffer sun_shadows; // per-scene  data which can be updated without having to re-record command buffers (scene_shadow_state)
+            buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
+            buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
          } shader_params;
          struct {
             overlays::fps        fps;

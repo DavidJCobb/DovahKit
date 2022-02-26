@@ -6,6 +6,7 @@
 #include "rendered_light.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
+#include "scene_shadow_state.h"
 
 struct DKVulkanCameraUpdate;
 namespace nifDK {
@@ -36,6 +37,7 @@ namespace vulkanDK {
             glm::vec3 position = { 0, 0, 0 };
          } camera;
          scene_global_state global_state; // GPU-side state
+         scene_shadow_state shadow_state; // GPU-side state for directional sun's shadows
          //
          struct {
             size_t lights   = 0; // count
@@ -46,6 +48,8 @@ namespace vulkanDK {
          void update_projection(VkExtent2D render_area);
          void update_camera();
          void adjust_camera(const DKVulkanCameraUpdate&);
+
+         void update_sun_shadows();
 
          frustrum get_current_view_frustrum(float near, float far) const;
 
