@@ -207,16 +207,13 @@ namespace vulkanDK::overlays {
    }
 
    void world_axes::commands_pre_pass(VkCommandBuffer command_buffer) {
-      auto& state = *(_shader_state*)this->shader_params.uniform.map_memory();
-      auto& scene = this->owner->scene;
-      //state.view = glm::mat3(scene.global_state.view);
+      auto& state  = *(_shader_state*)this->shader_params.uniform.map_memory();
+      auto& scene  = this->owner->scene;
       auto& camera = scene.camera;
-      state.view = glm::inverse(
-         glm::translate(
-            glm::eulerAngleZ(camera.yaw) * glm::eulerAngleY(camera.roll) * glm::eulerAngleX(camera.pitch),
-            glm::vec3{ 0, 0, axis_arrow_length * 4 }
-         )
-      );
+      state.view = glm::inverse(glm::translate(
+         glm::eulerAngleZYX(-camera.yaw, -camera.roll, -camera.pitch),
+         glm::vec3{ 0, 0, axis_arrow_length * 4 }
+      ));
       this->shader_params.uniform.unmap_memory(&state);
       this->state.last_camera_rotation = { camera.pitch, camera.roll, camera.yaw };
    }

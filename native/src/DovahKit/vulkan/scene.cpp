@@ -35,6 +35,10 @@ namespace vulkanDK {
       float aspect = 1.0F;
       if (render_area.height != 0.0)
          aspect = (float)render_area.width / (float)render_area.height;
+      //
+      this->last_known_view_info.bounds = render_area;
+      this->last_known_view_info.aspect = aspect;
+      //
       {
          auto& proj = this->global_state.proj;
          if constexpr (config::use_inverted_depth) {
@@ -69,17 +73,8 @@ namespace vulkanDK {
       }
    }
    void scene::update_camera() {
-      auto& cs = this->camera;
-      //
-      // Apply a lefthanded ZYX Euler rotation:
-      //
-      auto rot = glm::eulerAngleZ(cs.yaw);
-      rot     *= glm::eulerAngleY(cs.roll);
-      rot     *= glm::eulerAngleX(cs.pitch);
-      //
-      // Create the final view matrix.
-      // 
-      //this->global_state.view = glm::inverse(glm::translate(rot, cs.position));
+      auto& cs  = this->camera;
+      auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
       this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
@@ -108,7 +103,7 @@ namespace vulkanDK {
          float x = turn.pitch * speed;
          //
          auto& cs = this->camera;
-         cs.yaw   -= z; // assume lefthanded (clockwise) input. TODO: do we have to transpose the matrix in (update_camera) to switch handedness?
+         cs.yaw   += z;
          cs.roll  += y;
          cs.pitch += x;
          //
@@ -160,6 +155,53 @@ namespace vulkanDK {
       if (do_move || do_turn) {
          this->update_camera();
       }
+   }
+
+   frustrum scene::get_current_view_frustrum(float near, float far) const {
+      frustrum out;
+      auto& camera     = this->camera;
+      auto  camera_rot = glm::eulerAngleXYZ(camera.yaw, camera.roll, camera.pitch);
+      const auto& camera_up      = camera_rot[2]; // local Z
+      const auto& camera_forward = camera_rot[1]; // local Y
+      const auto& camera_right   = camera_rot[0]; // local X
+      //
+      float w_near;
+      float h_near;
+      float w_far;
+      float h_far;
+      {
+         float two_tan = 2 * tan(this->config.vertical_fov_degrees);
+         h_near = two_tan * near;
+         w_near = h_near  * this->last_known_view_info.aspect;
+         h_far  = two_tan * far;
+         w_far  = h_far   * this->last_known_view_info.aspect;
+         //
+         out.bounds.near = { .w = w_near, .h = h_near };
+         out.bounds.far  = { .w = w_far,  .h = h_far };
+      }
+      {
+         auto x = camera_right * (w_far / 2.0F);
+         auto y = camera_up    * (h_far / 2.0F);
+         //
+         auto& pf = out.planes.far;
+         pf.center = camera.position + glm::vec3(camera_forward * far);
+         pf.upper_left  = pf.center + glm::vec3( y - x);
+         pf.upper_right = pf.center + glm::vec3( y + x);
+         pf.lower_left  = pf.center + glm::vec3(-y - x);
+         pf.lower_right = pf.center + glm::vec3(-y + x);
+      }
+      {
+         auto x = camera_right * (w_near / 2.0F);
+         auto y = camera_up    * (h_near / 2.0F);
+         //
+         auto& pf = out.planes.near;
+         pf.center = camera.position + glm::vec3(camera_forward * near);
+         pf.upper_left  = pf.center + glm::vec3( y - x);
+         pf.upper_right = pf.center + glm::vec3( y + x);
+         pf.lower_left  = pf.center + glm::vec3(-y - x);
+         pf.lower_right = pf.center + glm::vec3(-y + x);
+      }
+      return out;
    }
 
    void scene::teardown() {

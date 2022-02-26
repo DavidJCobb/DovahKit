@@ -79,6 +79,7 @@
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
     <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <QtDeploy>true</QtDeploy>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
     <Import Project="$(QtMsBuild)\qt.props" />
@@ -866,6 +867,7 @@
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
+    <ClInclude Include="vulkan\frustrum.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
