@@ -2772,6 +2772,118 @@ namespace vulkanDK {
          // Vertices:
          //
          {
+            constexpr uint16_t NBL = 0;
+            constexpr uint16_t NTL = 1;
+            constexpr uint16_t NBR = 2;
+            constexpr uint16_t NTR = 3;
+            constexpr uint16_t FBL = 4;
+            constexpr uint16_t FTL = 5;
+            constexpr uint16_t FBR = 6;
+            constexpr uint16_t FTR = 7;
+            //
+            auto& list = mesh.data.vertices;
+            list.resize(8);
+            list[NBL].pos = { -1, -1, -1 }; // near lower left
+            list[NTL].pos = { -1,  1, -1 }; // near upper left
+            list[NBR].pos = {  1, -1, -1 }; // near lower right
+            list[NTR].pos = {  1,  1, -1 }; // near upper right
+            list[FBL].pos = { -1, -1,  1 }; // far  lower left
+            list[FTL].pos = { -1,  1,  1 }; // far  upper left
+            list[FBR].pos = {  1, -1,  1 }; // far  lower right
+            list[FTR].pos = {  1,  1,  1 }; // far  upper right
+            //
+            glm::mat4 undo;
+            if constexpr (config::use_inverted_depth) {
+               constexpr float near =     0.01F;
+               constexpr float far  = 10000.00F;
+               //
+               auto& src = this->scene.global_state.proj;
+               undo = glm::mat4(0);
+               undo[0][0] = src[0][0];
+               undo[1][1] = src[1][1];
+               undo[2][2] = -(far + near) / (far - near);
+               undo[2][3] = -1.0F;
+               undo[3][2] = -(2.0F * far * near) / (far - near);
+               //
+               undo *= this->scene.global_state.view;
+               undo = glm::inverse(undo);
+            } else {
+               undo = glm::inverse(this->scene.global_state.proj * this->scene.global_state.view);
+            }
+            for (size_t i = 0; i < list.size(); ++i) {
+               auto& vert = list[i];
+               vert.normal    = { 0, 0, 1 };
+               vert.tangent   = { 1, 0, 0 };
+               vert.bitangent = { 0, 1, 0 };
+               vert.uv        = { 0, 0 };
+               if (i < 4) {
+                  vert.color = { 0.2, 0.2, 0.2 }; // near color
+               } else {
+                  vert.color = { 0.8, 0.8, 0.8 }; // far color
+               }
+               //
+               auto posw = undo * glm::vec4(vert.pos, 1.0F);
+               vert.pos = posw;
+               vert.pos /= posw.w;
+            }
+            list[NTR].color.r = 1.0;
+            list[NBR].color.r = 1.0;
+            list[NTL].color.g = 1.0;
+            list[NTR].color.g = 1.0;
+            //
+            // Indices:
+            //
+            mesh.data.indices = std::array{
+               // Left:
+               NBL, NTL, FTL,
+               FTL, NTL, NBL, // swap winding for double-sided (TODO: use different shader with double-sided polygons)
+               //
+               FTL, FBL, NBL,
+               NBL, FBL, FTL,
+               //
+               // Right:
+               NBR, NTR, FTR,
+               FTR, NTR, NBR, // swap winding for doubRe-sided (TODO: use different shader with doubRe-sided poRygons)
+               //
+               FTR, FBR, NBR,
+               NBR, FBR, FTR,
+               //
+               // Top:
+               NTL, NTR, FTR,
+               FTR, NTR, NTL,
+               //
+               FTR, FTL, NTL,
+               NTL, FTL, FTR,
+               //
+               // Bottom:
+               NBL, NBR, FBR,
+               FBR, NBR, NBL,
+               //
+               FBR, FBL, NBL,
+               NBL, FBL, FBR,
+            };
+            //
+            mesh.recalc_bounding_sphere();
+            mesh.shader_params.transform = glm::mat4(1.0F);
+         }
+         this->_create_mesh_vib(mesh);
+         qDebug("Camera debug frustrum added.");
+      }
+      if constexpr (false) {
+         auto mesh_index = this->scene.insert_new_mesh();
+         if (mesh_index == std::string::npos) {
+            qDebug("Cannot show debug frustrum (camera). Mesh limit reached.");
+            return;
+         }
+         auto& mesh = this->scene.meshes[mesh_index];
+         //
+         mesh.life_state = scene_frame_item_state::active;
+         mesh.texture_indices.diffuse = texture_index;
+         ++this->scene.textures[texture_index].refcount;
+         //
+         // Vertices:
+         //
+         {
             float distance_near = 0.01F;
             float distance_far  = 10000.0F;
             //
