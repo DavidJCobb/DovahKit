@@ -32,6 +32,11 @@ namespace vulkanDK {
          } planes;
       };
       struct {
+         glm::vec3 up;
+         glm::vec3 forward;
+         glm::vec3 right;
+      } axes;
+      struct {
          struct {
             float w = 0.0F;
             float h = 0.0F;
@@ -40,6 +45,10 @@ namespace vulkanDK {
             float w = 0.0F;
             float h = 0.0F;
          } far;
+         struct {
+            float w = 0.0F;
+            float h = 0.0F;
+         } center;
       } bounds;
 
       static_assert(sizeof(planes) == sizeof(glm::vec3) * (plane::point_count * plane_count), "Sanity-check static assertion: union validity: vec3s are contiguous?");

@@ -10,6 +10,7 @@
 //
 #include "config/is_righthanded.h"
 #include "config/scene_limits.h"
+#include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
 #include "data/DKVulkanCameraUpdate.h"
 
@@ -30,7 +31,11 @@ namespace {
 
 namespace vulkanDK {
    scene::scene() {
-      this->global_state.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+      this->global_state.ambient_light_color = { 0.1, 0.1, 0.1 };
+      this->camera.position = { 2.0F, 2.0F, 2.0F };
+      this->camera.yaw   = glm::radians(-45.0F);
+      this->camera.pitch = glm::radians(-45.0F);
+      this->update_camera();
    }
 
    void scene::update_projection(VkExtent2D render_area) {
@@ -47,13 +52,13 @@ namespace vulkanDK {
             //
             // Use infinite far plane:
             //
-            auto f = 1.0F / tan(glm::radians(this->config.vertical_fov_degrees) / 2.0F);
-            auto t = f / aspect;
+            auto y_scale = 1.0F / tan(glm::radians(this->config.vertical_fov_degrees) / 2.0F);
+            auto x_scale = y_scale / aspect;
             proj = glm::mat4(
-               t, 0, 0, 0,
-               0, f, 0, 0,
-               0, 0, 0, -1,
-               0, 0, draw_distance_near, 0
+               x_scale, 0,       0,  0,
+               0,       y_scale, 0,  0,
+               0,       0,       0, -1,
+               0,       0,       draw_distance_near, 0
             );
             //
             // sources: <https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/>
@@ -80,6 +85,7 @@ namespace vulkanDK {
       auto& cs  = this->camera;
       auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
       this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
+      this->update_sun_shadows();
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
       constexpr float epsilon    = 0.00001;
@@ -162,13 +168,14 @@ namespace vulkanDK {
    }
 
    void scene::update_sun_shadows() {
-      auto f = this->get_current_view_frustrum(0, shadow_draw_distance);
+      auto f = this->get_current_view_frustrum(0.01F, shadow_draw_distance);
       auto f_center = f.center();
       //
       glm::vec3 light_pos  = (this->global_state.sun_dir * -shadow_draw_distance) + f_center;
       glm::mat4 light_view = glm::lookAt(light_pos, f_center, glm::vec3(0, 0, 1));
       //
       f *= light_view;
+      /*//
       glm::vec3 min = {  INFINITY,  INFINITY,  INFINITY };
       glm::vec3 max = { -INFINITY, -INFINITY, -INFINITY };
       for (auto& item : f.points) {
@@ -179,9 +186,16 @@ namespace vulkanDK {
          min.z = std::min(min.z, item.z);
          max.z = std::max(max.z, item.z);
       }
+      glm::mat4 sun_proj = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
+      //*/
+      //
+      float half_w = f.bounds.center.w / 2.0;
+      float half_h = f.bounds.center.h / 2.0;
+      //glm::mat4 sun_proj = glm::ortho(-half_w, half_w, -half_h, half_h, 0.0F, shadow_draw_distance);
+      glm::mat4 sun_proj = glm::ortho(-half_w, half_w, -half_h, half_h, 0.01F, shadow_draw_distance);
+      //*/
       //
       auto& sp = this->shadow_state;
-      glm::mat4 sun_proj = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
       sp.sun_space = sun_proj * light_view;
       //
       this->global_state.sun_space = sp.sun_space;
@@ -190,10 +204,16 @@ namespace vulkanDK {
    frustrum scene::get_current_view_frustrum(float near, float far) const {
       frustrum out;
       auto& camera     = this->camera;
-      auto  camera_rot = glm::eulerAngleXYZ(camera.yaw, camera.roll, camera.pitch);
-      const auto& camera_up      = camera_rot[2]; // local Z
+      auto  camera_rot = glm::eulerAngleXYZ(-camera.yaw, -camera.roll, -camera.pitch);
+      const auto& camera_up      = camera_rot[0]; // local Z
       const auto& camera_forward = camera_rot[1]; // local Y
-      const auto& camera_right   = camera_rot[0]; // local X
+      const auto& camera_right   = camera_rot[2]; // local X
+      {
+         auto& oa = out.axes;
+         oa.up      = camera_up;
+         oa.forward = camera_forward;
+         oa.right   = camera_right;
+      }
       //
       float w_near;
       float h_near;
@@ -208,6 +228,13 @@ namespace vulkanDK {
          //
          out.bounds.near = { .w = w_near, .h = h_near };
          out.bounds.far  = { .w = w_far,  .h = h_far };
+         //
+         {
+            float dist = (far - near) / 2.0F + near;
+            float h    = two_tan * dist;
+            float w    = h * this->last_known_view_info.aspect;
+            out.bounds.center = { .w = w, .h = h };
+         }
       }
       {
          auto x = camera_right * (w_far / 2.0F);

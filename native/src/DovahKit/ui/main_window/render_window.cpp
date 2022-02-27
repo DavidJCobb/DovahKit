@@ -355,4 +355,15 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       //
       this->toolbar->addWidget(button);
    }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Debug frustrums");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         view->surfaceRenderer()->debug_show_frustrums();
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
+      //
+      this->toolbar->addWidget(button);
+   }
 }

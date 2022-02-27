@@ -2743,6 +2743,221 @@ namespace vulkanDK {
       this->scene.update_camera();
    }
 
+   void surface_renderer::debug_show_frustrums() {
+      size_t texture_index;
+      {
+         texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
+         if (texture_index == std::string::npos) {
+            qDebug("Cannot display debug frustrums: failed to add texture.");
+            return;
+         }
+         auto& texture_item = this->scene.textures[texture_index];
+         texture_item.life_state = scene_frame_item_state::active;
+      }
+      //
+      // Show meshes:
+      //
+      if constexpr (true) {
+         auto mesh_index = this->scene.insert_new_mesh();
+         if (mesh_index == std::string::npos) {
+            qDebug("Cannot show debug frustrum (camera). Mesh limit reached.");
+            return;
+         }
+         auto& mesh = this->scene.meshes[mesh_index];
+         //
+         mesh.life_state = scene_frame_item_state::active;
+         mesh.texture_indices.diffuse = texture_index;
+         ++this->scene.textures[texture_index].refcount;
+         //
+         // Vertices:
+         //
+         {
+            float distance_near = 0.01F;
+            float distance_far  = 10000.0F;
+            //
+            float aspect  = this->surface_extent.width / this->surface_extent.height;
+            float y_scale = 1.0F / tan(this->scene.config.vertical_fov_degrees / 2.0F);
+            float x_scale = y_scale / aspect;
+            //
+            float inv_half_w = 2.0F / this->surface_extent.width;  // 2 / n == 1 / (n / 2)
+            float inv_half_h = 2.0F / this->surface_extent.height;
+            //
+            float r_near = ( inv_half_w - distance_near) / x_scale;
+            float r_far  = ( inv_half_w - distance_far)  / x_scale;
+            float l_near = -r_near;
+            float l_far  = -r_far;
+            float t_near = ( inv_half_h - distance_near) / y_scale;
+            float t_far  = ( inv_half_h - distance_far)  / y_scale;
+            float b_near = -t_near;
+            float b_far  = -t_far;
+            //
+            // Define constants for indices; it'll help with vertex index list.
+            // N = Near; F = Far; T, B, L, R = top, bottom, left, right
+            constexpr uint16_t NBL = 0;
+            constexpr uint16_t NTL = 1;
+            constexpr uint16_t NBR = 2;
+            constexpr uint16_t NTR = 3;
+            constexpr uint16_t FBL = 4;
+            constexpr uint16_t FTL = 5;
+            constexpr uint16_t FBR = 6;
+            constexpr uint16_t FTR = 7;
+            //
+            auto& dst = mesh.data.vertices;
+            dst.resize(8);
+            dst[NBL].pos = { l_near, b_near, distance_near }; // near lower left
+            dst[NTL].pos = { l_near, t_near, distance_near }; // near upper left
+            dst[NBR].pos = { r_near, b_near, distance_near }; // near lower right
+            dst[NTR].pos = { r_near, t_near, distance_near }; // near upper right
+            dst[FBL].pos = { l_far,  b_far,  distance_far  }; // far  lower left
+            dst[FTL].pos = { l_far,  t_far,  distance_far  }; // far  upper left
+            dst[FBR].pos = { r_far,  b_far,  distance_far  }; // far  lower right
+            dst[FTR].pos = { r_far,  t_far,  distance_far  }; // far  upper right
+            for (size_t i = 0; i < dst.size(); ++i) {
+               dst[i].normal    = { 0, 0, 1 };
+               dst[i].tangent   = { 1, 0, 0 };
+               dst[i].bitangent = { 0, 1, 0 };
+               dst[i].uv        = { 0, 0 };
+               if (i < 4) {
+                  dst[i].color = { 0.2, 0.2, 0.2 }; // near color
+               } else {
+                  dst[i].color = { 0.8, 0.8, 0.8 }; // far color
+               }
+            }
+            dst[NTR].color.r = 1.0;
+            dst[NBR].color.r = 1.0;
+            dst[NTL].color.g = 1.0;
+            dst[NTR].color.g = 1.0;
+            //
+            // Indices:
+            //
+            mesh.data.indices = std::array{
+               // Left:
+               NBL, NTL, FTL,
+               FTL, NTL, NBL, // swap winding for double-sided (TODO: use different shader with double-sided polygons)
+               //
+               FTL, FBL, NBL,
+               NBL, FBL, FTL,
+               //
+               // Right:
+               NBR, NTR, FTR,
+               FTR, NTR, NBR, // swap winding for doubRe-sided (TODO: use different shader with doubRe-sided poRygons)
+               //
+               FTR, FBR, NBR,
+               NBR, FBR, FTR,
+               //
+               // Top:
+               NTL, NTR, FTR,
+               FTR, NTR, NTL,
+               //
+               FTR, FTL, NTL,
+               NTL, FTL, FTR,
+               //
+               // Bottom:
+               NBL, NBR, FBR,
+               FBR, NBR, NBL,
+               //
+               FBR, FBL, NBL,
+               NBL, FBL, FBR,
+            };
+            mesh.recalc_bounding_sphere();
+            //
+            mesh.shader_params.transform = glm::translate(
+               glm::eulerAngleZYX(-this->scene.camera.yaw, -this->scene.camera.roll, -this->scene.camera.pitch),
+               -this->scene.camera.position
+            );
+         }
+         this->_create_mesh_vib(mesh);
+         qDebug("Camera debug frustrum added.");
+      }
+      if constexpr (false) {  // Camera
+         auto frustrum = this->scene.get_current_view_frustrum(0.01F, 10000.0F);
+         //
+         auto mesh_index = this->scene.insert_new_mesh();
+         if (mesh_index == std::string::npos) {
+            qDebug("Cannot show debug frustrum (camera). Mesh limit reached.");
+            return;
+         }
+         auto& mesh = this->scene.meshes[mesh_index];
+         //
+         mesh.life_state = scene_frame_item_state::active;
+         mesh.texture_indices.diffuse = texture_index;
+         ++this->scene.textures[texture_index].refcount;
+         //
+         {
+            auto& src = frustrum;
+            auto& dst = mesh.data.vertices;
+            dst.resize(8);
+            //
+            // Define constants for indices; it'll help with vertex index list.
+            // N = Near; F = Far; T, B, L, R = top, bottom, left, right
+            constexpr uint16_t NTL = 0;
+            constexpr uint16_t NTR = 1;
+            constexpr uint16_t NBL = 2;
+            constexpr uint16_t NBR = 3;
+            constexpr uint16_t FTL = 4;
+            constexpr uint16_t FTR = 5;
+            constexpr uint16_t FBL = 6;
+            constexpr uint16_t FBR = 7;
+            //
+            dst[0].pos = frustrum.planes.near.upper_left;
+            dst[1].pos = frustrum.planes.near.upper_right;
+            dst[2].pos = frustrum.planes.near.lower_left;
+            dst[3].pos = frustrum.planes.near.lower_right;
+            dst[4].pos = frustrum.planes.far.upper_left;
+            dst[5].pos = frustrum.planes.far.upper_right;
+            dst[6].pos = frustrum.planes.far.lower_left;
+            dst[7].pos = frustrum.planes.far.lower_right;
+            for (size_t i = 0; i < dst.size(); ++i) {
+               dst[i].normal    = { 0, 0, 1 };
+               dst[i].tangent   = { 1, 0, 0 };
+               dst[i].bitangent = { 0, 1, 0 };
+               dst[i].uv        = { 0, 0 };
+               if (i < 4) {
+                  dst[i].color = { 0.2, 0.2, 0.2 };
+               } else {
+                  dst[i].color = { 0.8, 0.8, 0.8 };
+               }
+            }
+            //
+            auto& idx = mesh.data.indices;
+            idx = std::array{
+               // Left tri 1: upper near, lower near, upper far
+               NTL, NBL, FTL,
+               FTL, NBL, NTL, // swap winding order to allow double-sided (TODO: just use a non-backface-culled shader in the future)
+               // Left tri 2: upper far, lower far, lower near
+               FTL, FBL, NBL,
+               NBL, FBL, FTL,
+               // Right tri 1: upper near, lower near, upper far
+               NTR, NBR, FTR,
+               FTR, NBR, NTR,
+               // Right tri 2: upper far, lower far, lower near
+               FTR, FBR, NBR,
+               NBR, FBR, FTR,
+               // Top tri 1: left near, right near, right far
+               NTL, NTR, FTR,
+               FTR, NTR, NTL,
+               // Top tri 2: right far, left far, left near
+               FTR, FTL, NTL,
+               NTL, FTL, FTR,
+               // Bottom tri 1: left near, right near, right far
+               NBL, NBR, FBR,
+               FBR, NBR, NBL,
+               // Bottom tri 2: right far, left far, left near
+               FBR, FBL, NBL,
+               NBL, FBL, FBR,
+            };
+            mesh.recalc_bounding_sphere();
+            mesh.shader_params.transform = glm::eulerAngleXYZ(-this->scene.camera.pitch, -this->scene.camera.roll, -this->scene.camera.yaw);
+         }
+         this->_create_mesh_vib(mesh);
+         qDebug("Camera debug frustrum added.");
+      }
+      {  // Sun shadows (TODO)
+      }
+      for (auto& image : this->swap_chain.images)
+         image.invalidate_all_command_buffers();
+   }
+
    void surface_renderer::_execute_pending_scene_deletions() {
       auto  ic = this->swap_chain.images.size();
       auto& pd = this->scene.pending_deletions;

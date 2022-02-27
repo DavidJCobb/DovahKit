@@ -177,6 +177,8 @@ namespace vulkanDK {
 
          inline double last_frame_time() const { return this->state.last_frame_time; }
 
+         void debug_show_frustrums(); // adds relevant frustrums to the scene as rendered_meshes.
+
       protected:
          void _init_surface(); // on init, and when the HWND changes
          void _init_device();

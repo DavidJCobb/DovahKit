@@ -8,14 +8,17 @@
 
 namespace vulkanDK {
    namespace impl::vertex_index_list {
-      template<typename V, template<typename...> typename T> concept is_list = requires(T<V> x) {
-         typename T<V>::value_type;
-         typename T<V>::size_type;
-         requires std::is_same_v<typename T<V>::value_type, V>;
-         requires std::is_same_v<typename T<V>::size_type,  size_t>;
+      template<typename T> concept is_list = requires(T x) {
+         typename T::value_type;
+         typename T::size_type;
+         requires std::is_same_v<typename T::size_type, size_t>;
          { x.size() } -> std::same_as<size_t>;
-         { x.data() } -> std::same_as<V*>;
-         { x[0] } -> std::same_as<V&>;
+         { x.data() } -> std::same_as<typename T::value_type*>;
+         { x[0] } -> std::same_as<typename T::value_type&>;
+      };
+      template<typename T> concept value_type_is_usable = requires {
+         typename T::value_type;
+         requires std::is_same_v<typename T::value_type, uint16_t> || std::is_same_v<typename T::value_type, uint32_t>;
       };
    }
 
@@ -102,7 +105,7 @@ namespace vulkanDK {
                   return const_iterator((const_value_type*)address);
                }
 
-               plain_value_type& operator[](size_t i) {
+               plain_value_type& operator[](size_t i) requires (!is_const) {
                   auto address = (std::intptr_t)target._data.untyped + (sizeof(plain_value_type) * i);
                   return *(plain_value_type*)address;
                }
@@ -137,26 +140,25 @@ namespace vulkanDK {
          vertex_index_list& operator=(vertex_index_list&&) noexcept;
 
          #pragma region templated constructors
-         template<template<typename> typename T> requires impl::vertex_index_list::is_list<uint16_t, T>
-         vertex_index_list(const T<uint16_t>& list) {
-            this->_type = value_type::thin;
+         template<typename T> requires (impl::vertex_index_list::is_list<T> && impl::vertex_index_list::value_type_is_usable<T>)
+         vertex_index_list(const T& list) {
+            using V = T::value_type;
+            constexpr auto vt = std::is_same_v<V, uint16_t> ? value_type::thin : value_type::wide;
+            //
+            this->_type = vt;
             this->resize(list.size());
-            memcpy(this->_data.thin, list.data(), list.size() * sizeof(uint16_t));
-         }
-         template<template<typename> typename T> requires impl::vertex_index_list::is_list<uint32_t, T>
-         vertex_index_list(const T<uint32_t>& list) {
-            this->_type = value_type::thin;
-            this->resize(list.size());
-            memcpy(this->_data.thin, list.data(), list.size() * sizeof(uint32_t));
+            memcpy(this->_data.thin, list.data(), list.size() * sizeof(V));
          }
 
          // allow assigning some_list<uint16_t> or some_list<uint32_t>
-         template<typename V, template<typename...> typename T> requires impl::vertex_index_list::is_list<V, T> && (std::is_same_v<V, uint16_t> || std::is_same_v<V, uint32_t>)
-         vertex_index_list& operator=(const T<V>& list) {
+         template<typename T> requires (impl::vertex_index_list::is_list<T> && impl::vertex_index_list::value_type_is_usable<T>)
+         vertex_index_list& operator=(const T& list) {
+            using V = T::value_type;
             constexpr auto vt = std::is_same_v<V, uint16_t> ? value_type::thin : value_type::wide;
             //
             if (this->_type != vt || this->_size < list.size()) {
-               delete this->_data.untyped;
+               if (this->_data.untyped)
+                  delete this->_data.untyped;
                this->_data.untyped = nullptr;
                //
                this->_type = vt;
