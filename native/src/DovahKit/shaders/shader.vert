@@ -67,7 +67,8 @@ layout(location = 0) out VS_OUT {
    vec4 sun_shadow_vert_pos;
 } vs_out;
 
-const mat4 shadow_depth_bias_matrix = mat4( 
+// [-1, 1] to [0, 1]
+const mat4 shadow_to_normalized_coords = mat4( 
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
@@ -82,7 +83,7 @@ void main() {
    vs_out.color     = in_color;
    vs_out.uv        = in_uv;
    vs_out.pos_world = vec3(model_transform * vec4(in_position, 1.0));
-   vs_out.sun_shadow_vert_pos = (shadow_depth_bias_matrix * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
+   vs_out.sun_shadow_vert_pos = (shadow_to_normalized_coords * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
    //
    #if !defined(TBN_ORTHOGONALIZE_MODE) || TBN_ORTHOGONALIZE_MODE == TBN_MODE_NONE
       vs_out.tangent_space = transpose(mat3(

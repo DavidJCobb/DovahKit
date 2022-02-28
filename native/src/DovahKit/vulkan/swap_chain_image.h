@@ -70,7 +70,6 @@ namespace vulkanDK {
          command_buffer_set   command_buffers;
          struct {
             buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
-            buffer sun_shadows; // per-scene  data which can be updated without having to re-record command buffers (scene_shadow_state)
             buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
             buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
          } shader_params;

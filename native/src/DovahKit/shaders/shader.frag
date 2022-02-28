@@ -35,7 +35,7 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    vec3 sun_color;
 	mat4 sun_space;
 } ubo;
-layout(binding = 1) uniform sampler   texSampler;
+layout(binding = 1) uniform sampler texSampler;
 layout(binding = 2) uniform sampler2D shadowMap;
 layout(std140,set = 0, binding = 3) readonly buffer ObjectBuffer {
 	ObjectData objects[];
@@ -101,16 +101,20 @@ computed_light calc_point_light(PointLightData light, vec3 normal, vec3 vert_pos
    return result;
 }
 
-float calc_directional_shadow() {
-   vec4 coord      = fs_in.sun_shadow_vert_pos;
-   vec3 proj_coord = coord.xyz / coord.w; // perspective divide
-   
-   coord = coord * 0.5 + 0.5; // to [0, 1]
+float calc_directional_shadow(vec3 normal, vec3 light_dir) {
+   vec3 proj_coord = fs_in.sun_shadow_vert_pos.xyz / fs_in.sun_shadow_vert_pos.w; // perspective divide
 
-   float closest_depth = texture(shadowMap, coord.xy).r;
-   float current_depth = coord.z;
+   float closest_depth = texture(shadowMap, proj_coord.xy).r; // distance from the light to the nearest surface along this angle
+   float current_depth = proj_coord.z;                        // distance from the light to the current vertex
    //
-   float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+   float bias   = max(0.05 * (1.0 - dot(normal, light_dir)), 0.05); // a small offset is needed to prevent self-shadowing
+   float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+   if (proj_coord.z > 1.0)
+      //
+      // Anything too far away for the light to "see" should be considered 
+      // non-shadowed.
+      //
+      shadow = 0.0;
    return shadow;
 }
 
@@ -118,9 +122,9 @@ float calc_directional_shadow() {
 computed_light calc_directional_light(vec3 light_dir, vec3 light_color, vec3 normal, vec3 view_dir, float specular_exponent) {
    computed_light result;
    //
-   light_dir = normalize(-light_dir);
+   light_dir = -normalize(light_dir);
    //
-   float str_diff = max(dot(normal, light_dir) - calc_directional_shadow(), 0.0);
+   float str_diff = max(dot(normal, light_dir) - calc_directional_shadow(normal, light_dir), 0.0);
    float str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent);
    //
    result.diffuse  = str_diff * light_color;

@@ -20,7 +20,12 @@ layout(location = 3) in vec3 in_normal;
 layout(location = 4) in vec3 in_tangent;
 layout(location = 5) in vec3 in_bitangent;
 
-layout (binding = 0) uniform UniformBufferObject {
+layout(std140,binding = 0) uniform UniformBufferObject {
+   mat4 view;
+   mat4 proj;
+   vec3 ambient_light_color;
+   vec3 sun_dir;
+   vec3 sun_color;
 	mat4 sun_space;
 } ubo;
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
@@ -33,5 +38,5 @@ out gl_PerVertex {
 
 void main() {
    mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
-	gl_Position = ubo.sun_space * model_transform * vec4(in_position, 1.0);
+	gl_Position = (ubo.sun_space * model_transform) * vec4(in_position, 1.0);
 }

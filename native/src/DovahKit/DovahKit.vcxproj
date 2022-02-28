@@ -887,7 +887,6 @@
     <ClInclude Include="vulkan\scene.h" />
     <ClInclude Include="vulkan\scene_frame_item.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
-    <ClInclude Include="vulkan\scene_shadow_state.h" />
     <ClInclude Include="vulkan\shader.h" />
     <ClInclude Include="vulkan\shader_module.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
@@ -1588,7 +1587,6 @@
     <None Include="shaders\shader.frag.spv" />
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader.vert.spv" />
-    <None Include="shaders\sun-shadow-depth.frag" />
     <None Include="shaders\sun-shadow-depth.vert" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />

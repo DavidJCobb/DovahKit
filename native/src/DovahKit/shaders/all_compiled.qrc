@@ -10,7 +10,6 @@
         <file>white.png</file>
         <file>overlay-world-axes.frag.spv</file>
         <file>overlay-world-axes.vert.spv</file>
-        <file>sun-shadow-depth.frag.spv</file>
         <file>sun-shadow-depth.vert.spv</file>
     </qresource>
 </RCC>

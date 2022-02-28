@@ -26,7 +26,7 @@ namespace {
    constexpr float draw_distance_near = 0.1F;
    constexpr float draw_distance_far  = 1000.0F;
 
-   constexpr float shadow_draw_distance = 2048.0F;
+   constexpr float shadow_draw_distance = 5000;
 }
 
 namespace vulkanDK {
@@ -168,37 +168,24 @@ namespace vulkanDK {
    }
 
    void scene::update_sun_shadows() {
-      auto f = this->get_current_view_frustrum(0.01F, shadow_draw_distance);
-      auto f_center = f.center();
+      glm::vec3 light_pos  = (this->global_state.sun_dir * -(shadow_draw_distance / 2.0F)) + this->camera.position;
+      glm::mat4 light_view = glm::lookAt(light_pos, this->camera.position, glm::vec3(0, 0, 1));
       //
-      glm::vec3 light_pos  = (this->global_state.sun_dir * -shadow_draw_distance) + f_center;
-      glm::mat4 light_view = glm::lookAt(light_pos, f_center, glm::vec3(0, 0, 1));
-      //
-      f *= light_view;
-      /*//
-      glm::vec3 min = {  INFINITY,  INFINITY,  INFINITY };
-      glm::vec3 max = { -INFINITY, -INFINITY, -INFINITY };
-      for (auto& item : f.points) {
-         min.x = std::min(min.x, item.x);
-         max.x = std::max(max.x, item.x);
-         min.y = std::min(min.y, item.y);
-         max.y = std::max(max.y, item.y);
-         min.z = std::min(min.z, item.z);
-         max.z = std::max(max.z, item.z);
+      float half_w;
+      float half_h;
+      if constexpr (false) {
+         float two_tan = 2 * tan(this->config.vertical_fov_degrees);
+         float dist    = shadow_draw_distance / 2.0F;
+         float h = two_tan * dist;
+         float w = h * this->last_known_view_info.aspect;
+         half_w = w / 2.0F;
+         half_h = h / 2.0F;
+      } else {
+         half_w = half_h = shadow_draw_distance / 2.0F;
       }
-      glm::mat4 sun_proj = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
-      //*/
-      //
-      float half_w = f.bounds.center.w / 2.0;
-      float half_h = f.bounds.center.h / 2.0;
-      //glm::mat4 sun_proj = glm::ortho(-half_w, half_w, -half_h, half_h, 0.0F, shadow_draw_distance);
       glm::mat4 sun_proj = glm::ortho(-half_w, half_w, -half_h, half_h, 0.01F, shadow_draw_distance);
-      //*/
       //
-      auto& sp = this->shadow_state;
-      sp.sun_space = sun_proj * light_view;
-      //
-      this->global_state.sun_space = sp.sun_space;
+      this->global_state.sun_space = sun_proj * light_view;
    }
 
    frustrum scene::get_current_view_frustrum(float near, float far) const {

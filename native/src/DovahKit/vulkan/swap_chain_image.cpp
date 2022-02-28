@@ -69,10 +69,6 @@ namespace vulkanDK {
          this->shader_params.uniform = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
       {
-         constexpr VkDeviceSize buffer_size = sizeof(scene_shadow_state);
-         this->shader_params.sun_shadows = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      }
-      {
          constexpr VkDeviceSize rosp_buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
          this->shader_params.object_data = this->owner->create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
@@ -264,22 +260,12 @@ namespace vulkanDK {
    }
    void swap_chain_image::_update_shader_global_scene_state() {
       auto& scene = this->get_scene();
-      {
-         auto& src = scene.global_state;
-         auto& dst = this->shader_params.uniform;
-         //
-         void* data = dst.map_memory();
-         memcpy(data, &src, sizeof(src));
-         dst.unmap_memory(data);
-      }
-      {
-         auto& src = scene.shadow_state;
-         auto& dst = this->shader_params.sun_shadows;
-         //
-         void* data = dst.map_memory();
-         memcpy(data, &src, sizeof(src));
-         dst.unmap_memory(data);
-      }
+      auto& src   = scene.global_state;
+      auto& dst   = this->shader_params.uniform;
+      //
+      void* data = dst.map_memory();
+      memcpy(data, &src, sizeof(src));
+      dst.unmap_memory(data);
    }
    void swap_chain_image::_update_shader_lights_data_buffer() {
       using entry_type = rendered_light::shader_parameters;
@@ -567,7 +553,7 @@ namespace vulkanDK {
          }
          //
          auto clear_values = std::array{
-            VkClearValue{ .depthStencil = { 1.0, 0} },
+            VkClearValue{ .depthStencil = { 1.0, 0 } },
          };
          auto pass_begin_info = VkRenderPassBeginInfo{
             .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
