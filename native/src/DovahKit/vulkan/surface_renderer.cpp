@@ -2790,14 +2790,14 @@ namespace vulkanDK {
             //
             auto& list = mesh.data.vertices;
             list.resize(8);
-            list[NBL].pos = { -1, -1, -1 }; // near lower left
-            list[NTL].pos = { -1,  1, -1 }; // near upper left
-            list[NBR].pos = {  1, -1, -1 }; // near lower right
-            list[NTR].pos = {  1,  1, -1 }; // near upper right
-            list[FBL].pos = { -1, -1,  1 }; // far  lower left
-            list[FTL].pos = { -1,  1,  1 }; // far  upper left
-            list[FBR].pos = {  1, -1,  1 }; // far  lower right
-            list[FTR].pos = {  1,  1,  1 }; // far  upper right
+            list[NBL].pos = { -1, -1, 0 }; // near lower left  // Vulkan depth is [0, 1], so that's what we need for our Z
+            list[NTL].pos = { -1,  1, 0 }; // near upper left
+            list[NBR].pos = {  1, -1, 0 }; // near lower right
+            list[NTR].pos = {  1,  1, 0 }; // near upper right
+            list[FBL].pos = { -1, -1, 1 }; // far  lower left
+            list[FTL].pos = { -1,  1, 1 }; // far  upper left
+            list[FBR].pos = {  1, -1, 1 }; // far  lower right
+            list[FTR].pos = {  1,  1, 1 }; // far  upper right
             //
             glm::mat4 undo;
             if constexpr (config::use_inverted_depth) {
@@ -2902,14 +2902,14 @@ namespace vulkanDK {
             //
             auto& list = mesh.data.vertices;
             list.resize(8);
-            list[NBL].pos = { -1, -1, -1 }; // near lower left
-            list[NTL].pos = { -1,  1, -1 }; // near upper left
-            list[NBR].pos = {  1, -1, -1 }; // near lower right
-            list[NTR].pos = {  1,  1, -1 }; // near upper right
-            list[FBL].pos = { -1, -1,  1 }; // far  lower left
-            list[FTL].pos = { -1,  1,  1 }; // far  upper left
-            list[FBR].pos = {  1, -1,  1 }; // far  lower right
-            list[FTR].pos = {  1,  1,  1 }; // far  upper right
+            list[NBL].pos = { -1, -1, 0 }; // near lower left  // Vulkan depth is [0, 1], so that's what we need for our Z
+            list[NTL].pos = { -1,  1, 0 }; // near upper left
+            list[NBR].pos = {  1, -1, 0 }; // near lower right
+            list[NTR].pos = {  1,  1, 0 }; // near upper right
+            list[FBL].pos = { -1, -1, 1 }; // far  lower left
+            list[FTL].pos = { -1,  1, 1 }; // far  upper left
+            list[FBR].pos = {  1, -1, 1 }; // far  lower right
+            list[FTR].pos = {  1,  1, 1 }; // far  upper right
             //
             glm::mat4 undo = glm::inverse(this->scene.global_state.sun_space);
             for (size_t i = 0; i < list.size(); ++i) {

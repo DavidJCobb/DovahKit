@@ -26,7 +26,8 @@ namespace {
    constexpr float draw_distance_near = 0.1F;
    constexpr float draw_distance_far  = 1000.0F;
 
-   constexpr float shadow_draw_distance = 5000;
+   constexpr float shadow_draw_distance = 10000; // lateral draw distance for the sun's shadows
+   constexpr float shadow_draw_depth    = 10000; // depth   draw distance for the sun's shadows
 }
 
 namespace vulkanDK {
@@ -168,24 +169,29 @@ namespace vulkanDK {
    }
 
    void scene::update_sun_shadows() {
-      glm::vec3 light_pos  = (this->global_state.sun_dir * -(shadow_draw_distance / 2.0F)) + this->camera.position;
-      glm::mat4 light_view = glm::lookAt(light_pos, this->camera.position, glm::vec3(0, 0, 1));
-      //
-      float half_w;
-      float half_h;
-      if constexpr (false) {
-         float two_tan = 2 * tan(this->config.vertical_fov_degrees);
-         float dist    = shadow_draw_distance / 2.0F;
-         float h = two_tan * dist;
-         float w = h * this->last_known_view_info.aspect;
-         half_w = w / 2.0F;
-         half_h = h / 2.0F;
-      } else {
-         half_w = half_h = shadow_draw_distance / 2.0F;
+      glm::vec3 sun_pos  = (this->global_state.sun_dir * -(shadow_draw_distance / 2.0F)) + this->camera.position;
+      glm::mat4 sun_view = glm::lookAt(sun_pos, this->camera.position, glm::vec3(0, 0, 1));
+      glm::mat4 sun_proj;
+      {
+         constexpr float near = 0.01F;
+         constexpr float far  = shadow_draw_depth;
+         //
+         // GLM relies on preprocessor directives to configure things such as whether to 
+         // use negative-to-positive  or zero-to-one depth,  and what handedness to use. 
+         // However,  those preprocessor directives aren't playing nice,  and I can't be 
+         // bothered to figure out why. Instead, I'll just inline the relevant math.
+         // 
+         // As a bonus, if we were using glm::ortho, we'd have to divide the shadow draw 
+         // distance by two, just to (effectively) multiply it back.  No need, this way.
+         //
+         sun_proj = glm::mat4(1);
+         sun_proj[0][0] =  2.0F / shadow_draw_distance;
+         sun_proj[1][1] =  2.0F / shadow_draw_distance;
+         sun_proj[2][2] = -1.0F / (far - near);
+         sun_proj[3][2] = -near / (far - near);
       }
-      glm::mat4 sun_proj = glm::ortho(-half_w, half_w, -half_h, half_h, 0.01F, shadow_draw_distance);
       //
-      this->global_state.sun_space = sun_proj * light_view;
+      this->global_state.sun_space = sun_proj * sun_view;
    }
 
    frustrum scene::get_current_view_frustrum(float near, float far) const {
