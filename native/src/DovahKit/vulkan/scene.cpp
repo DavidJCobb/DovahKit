@@ -26,8 +26,8 @@ namespace {
    constexpr float draw_distance_near = 0.1F;
    constexpr float draw_distance_far  = 1000.0F;
 
-   constexpr float shadow_draw_distance = 10000; // lateral draw distance for the sun's shadows
-   constexpr float shadow_draw_depth    = 10000; // depth   draw distance for the sun's shadows
+   constexpr float shadow_draw_distance = 7000; // lateral draw distance for the sun's shadows
+   constexpr float shadow_draw_depth    = 7000; // depth   draw distance for the sun's shadows
 }
 
 namespace vulkanDK {
