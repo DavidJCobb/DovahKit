@@ -106,7 +106,11 @@ computed_light calc_point_light(PointLightData light, vec3 normal, vec3 vert_pos
 float calc_directional_shadow(vec3 normal, vec3 light_dir) {
    vec3  proj_coord    = fs_in.sun_shadow_vert_pos.xyz / fs_in.sun_shadow_vert_pos.w; // perspective divide
    float current_depth = proj_coord.z; // distance from the light to the current vertex
-   float bias          = max(0.05 * (1.0 - dot(normal, light_dir)), 0.05); // a small offset is needed to prevent self-shadowing
+   float bias          = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // a small offset is needed to prevent self-shadowing
+
+   // NOTE: A side effect of applying a depth bias is that the "bias" value effectively 
+   //       becomes our minimum possible depth granularity. If bias is 0.005, for example, 
+   //       then two depth values within 0.0049 of each other are impossible to tell apart.
 
    #if USE_SHADOW_PCF
       ivec2 tex_size = textureSize(shadowMap, 0);
