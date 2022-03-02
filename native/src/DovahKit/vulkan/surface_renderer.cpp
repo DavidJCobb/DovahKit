@@ -823,7 +823,11 @@ namespace vulkanDK {
          dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
          dfn.rasterization.depthBiasClamp          = 0.00F;
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-         dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+         if constexpr (config::use_inverted_shadow_map) {
+            dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+         } else {
+            dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+         }
          {
             auto& vertex     = dfn.inputs.vertex;
             auto  attributes = vertex::getAttributeDescriptions();
@@ -2801,6 +2805,10 @@ namespace vulkanDK {
             //
             glm::mat4 undo;
             if constexpr (config::use_inverted_depth) {
+               //
+               // We don't want the frustum to be infinitely long, but inverted depth has no defined 
+               // far plane, so we need to compute an alternate projection matrix with standard depth.
+               //
                constexpr float near =     0.01F;
                constexpr float far  = 10000.00F;
                //

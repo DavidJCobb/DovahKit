@@ -7,6 +7,7 @@
 #define BLINN_PHONG_MODE BLINN_PHONG_MODE_BLINN
 
 #define USE_SHADOW_PCF 1
+#define USE_INVERTED_SHADOW_MAP 1
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
@@ -22,7 +23,7 @@ struct PointLightData {
    float radius;
    float fade;
 };
-struct ObjectData{
+struct ObjectData {
 	mat4  transform;
    vec3  specular_color;
    float specular_strength;
@@ -125,13 +126,22 @@ float calc_directional_shadow(vec3 normal, vec3 light_dir) {
 	   for (int x = -range; x <= range; x++)  {
 		   for (int y = -range; y <= range; y++) {
 			   float pcf_depth = texture(shadowMap, proj_coord.xy + vec2(x * dx, y * dy)).r;
-            shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+            #if USE_INVERTED_SHADOW_MAP == 1
+               shadow += current_depth - bias < pcf_depth ? 1.0 : 0.0;
+            #else
+               shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+            #endif
 		   }
 	   }
 	   shadow /= count;
    #else
       float closest_depth = texture(shadowMap, proj_coord.xy).r; // distance from the light to the nearest surface along this angle
-      float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+      float shadow;
+      #if USE_INVERTED_SHADOW_MAP == 1
+         shadow = current_depth - bias < closest_depth ? 1.0 : 0.0;
+      #else
+         shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+      #endif
    #endif
    //
    {

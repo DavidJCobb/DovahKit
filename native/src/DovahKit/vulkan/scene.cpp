@@ -51,7 +51,7 @@ namespace vulkanDK {
          auto& proj = this->global_state.proj;
          if constexpr (config::use_inverted_depth) {
             //
-            // Use infinite far plane:
+            // Use reversed depth and infinite far plane:
             //
             auto y_scale = 1.0F / tan(glm::radians(this->config.vertical_fov_degrees) / 2.0F);
             auto x_scale = y_scale / aspect;
@@ -189,6 +189,10 @@ namespace vulkanDK {
          sun_proj[1][1] =  2.0F / shadow_draw_distance;
          sun_proj[2][2] = -1.0F / (far - near);
          sun_proj[3][2] = -near / (far - near);
+      }
+      if constexpr (config::use_inverted_shadow_map) {
+         sun_proj[2][2] = -sun_proj[2][2];
+         sun_proj[3][2] = -sun_proj[3][2] + 1.0F;
       }
       //
       this->global_state.sun_space = sun_proj * sun_view;

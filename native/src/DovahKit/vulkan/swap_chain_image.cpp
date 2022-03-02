@@ -553,7 +553,7 @@ namespace vulkanDK {
          }
          //
          auto clear_values = std::array{
-            VkClearValue{ .depthStencil = { 1.0, 0 } },
+            VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
          };
          auto pass_begin_info = VkRenderPassBeginInfo{
             .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
