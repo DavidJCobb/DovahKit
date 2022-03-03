@@ -1672,8 +1672,10 @@ namespace vulkanDK {
       // don't have to update descriptors the same way because we just took care of them 
       // when initializing descriptor sets -- that is, textures are already dealt with.
       //
-      for (auto& mesh : this->scene.meshes)
-         mesh.handled_frames.set_all_out_of_date();
+      for (auto& item : this->scene.meshes)
+         item.handled_frames.set_all_out_of_date();
+      for (auto& item : this->scene.lights)
+         item.handled_frames.set_all_out_of_date();
       //
       // Update surface state:
       //

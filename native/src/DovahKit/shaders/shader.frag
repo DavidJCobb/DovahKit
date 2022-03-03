@@ -7,7 +7,7 @@
 #define BLINN_PHONG_MODE BLINN_PHONG_MODE_BLINN
 
 #define USE_SHADOW_PCF 1
-#define USE_INVERTED_SHADOW_MAP 1
+#define USE_INVERTED_SHADOW_MAP 0
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 

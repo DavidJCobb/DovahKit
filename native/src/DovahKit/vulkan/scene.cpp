@@ -191,6 +191,10 @@ namespace vulkanDK {
          sun_proj[3][2] = -near / (far - near);
       }
       if constexpr (config::use_inverted_shadow_map) {
+         //
+         // The only way to invert an orthographic matrix's depth is to just compute the 
+         // matrix normally and then negate the two depth-related terms.
+         //
          sun_proj[2][2] = -sun_proj[2][2];
          sun_proj[3][2] = -sun_proj[3][2] + 1.0F;
       }
