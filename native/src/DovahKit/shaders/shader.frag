@@ -127,7 +127,7 @@ float calc_directional_shadow(vec3 normal, vec3 light_dir) {
 		   for (int y = -range; y <= range; y++) {
 			   float pcf_depth = texture(shadowMap, proj_coord.xy + vec2(x * dx, y * dy)).r;
             #if USE_INVERTED_SHADOW_MAP == 1
-               shadow += current_depth - bias < pcf_depth ? 1.0 : 0.0;
+               shadow += current_depth + bias < pcf_depth ? 1.0 : 0.0;
             #else
                shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
             #endif
@@ -138,7 +138,7 @@ float calc_directional_shadow(vec3 normal, vec3 light_dir) {
       float closest_depth = texture(shadowMap, proj_coord.xy).r; // distance from the light to the nearest surface along this angle
       float shadow;
       #if USE_INVERTED_SHADOW_MAP == 1
-         shadow = current_depth - bias < closest_depth ? 1.0 : 0.0;
+         shadow = current_depth + bias < closest_depth ? 1.0 : 0.0;
       #else
          shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
       #endif
