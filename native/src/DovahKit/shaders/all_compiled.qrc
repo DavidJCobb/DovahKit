@@ -11,5 +11,6 @@
         <file>overlay-world-axes.frag.spv</file>
         <file>overlay-world-axes.vert.spv</file>
         <file>sun-shadow-depth.vert.spv</file>
+        <file>util-full-screen-triangle.vert.spv</file>
     </qresource>
 </RCC>

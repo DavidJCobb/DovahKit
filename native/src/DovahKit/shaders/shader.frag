@@ -1,13 +1,13 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
 
-#define BLINN_PHONG_MODE_PHONG 0
-#define BLINN_PHONG_MODE_BLINN 1
-//
-#define BLINN_PHONG_MODE BLINN_PHONG_MODE_BLINN
-
-#define USE_SHADOW_PCF 1
-#define USE_INVERTED_SHADOW_MAP 0
+#include "includes/calc_specular_strength.glsl"
+#include "includes/calc_directional_shadow.glsl"
+#include "includes/computed_light.glsl"
+#include "includes/calc_directional_light.glsl"
+#include "includes/point_light.glsl"
+#include "includes/calc_point_light.glsl"
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
@@ -17,12 +17,6 @@ layout(push_constant) uniform PER_OBJECT {
    int texture_normal_index;
 } pushed;
 
-struct PointLightData {
-   mat4  transform;
-   vec3  color;
-   float radius;
-   float fade;
-};
 struct ObjectData {
 	mat4  transform;
    vec3  specular_color;
@@ -44,7 +38,7 @@ layout(std140,set = 0, binding = 3) readonly buffer ObjectBuffer {
 	ObjectData objects[];
 } objectBuffer;
 layout(std140,set = 0, binding = 4) readonly buffer PointLightBuffer {
-	PointLightData lights[MAX_LIGHTS];
+	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
 layout(binding = 5) uniform texture2D textures[];
 
@@ -60,124 +54,6 @@ layout(location = 0) in VS_OUT {
 } fs_in;
 
 layout(location = 0) out vec4 outColor;
-
-// all arguments are in tangent space
-float calc_specular_strength(vec3 normal, vec3 light_dir, vec3 view_dir, float specular_exponent) {
-   #if BLINN_PHONG_MODE == BLINN_PHONG_MODE_PHONG
-      vec3 reflect_dir = reflect(-light_dir, normal);
-      return pow(max(dot(view_dir, reflect_dir), 0.0), specular_exponent);
-   #else
-      #if BLINN_PHONG_MODE == BLINN_PHONG_MODE_BLINN
-         vec3  halfway_dir = normalize(light_dir + view_dir);
-         return pow(max(dot(normal, halfway_dir), 0.0), specular_exponent);
-      #else
-         #error Unrecognized BLINN_PHONG_MODE.
-      #endif
-   #endif
-}
-
-struct computed_light {
-   vec3 diffuse;  // light color and diffuse  strength; multiply the object's diffuse color into this
-   vec3 specular; // light color and specular strength; multiply the object's specular strength and color into this
-};
-
-// inputs except (light) are in tangent space, where applicable
-computed_light calc_point_light(PointLightData light, vec3 normal, vec3 vert_pos, vec3 view_dir, float specular_exponent) {
-   computed_light result;
-   //
-   vec3  light_pos = fs_in.tangent_space * vec3(light.transform[3]);
-   vec3  light_dir = normalize(light_pos - vert_pos);
-   float str_diff  = max(dot(light_dir, normal), 0.0); // diffuse strength
-   //
-   float distance  = length(light_pos - vert_pos);
-   float attenuate = 1.0 - smoothstep(0.0, light.radius, distance);
-   //
-   str_diff *= attenuate;
-   //
-   float str_spec = 0;
-   if (str_diff > 0.0) {
-      str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent) * attenuate;
-   }
-   //
-   result.diffuse  = str_diff * light.color;
-   result.specular = str_spec * light.color;
-   return result;
-}
-
-float calc_directional_shadow(vec3 normal, vec3 light_dir) {
-   vec3  proj_coord    = fs_in.sun_shadow_vert_pos.xyz / fs_in.sun_shadow_vert_pos.w; // perspective divide
-   float current_depth = proj_coord.z; // distance from the light to the current vertex
-   float bias          = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // a small offset is needed to prevent self-shadowing
-
-   // NOTE: A side effect of applying a depth bias is that the "bias" value effectively 
-   //       becomes our minimum possible depth granularity. If bias is 0.005, for example, 
-   //       then two depth values within 0.0049 of each other are impossible to tell apart.
-
-   #if USE_SHADOW_PCF
-      ivec2 tex_size = textureSize(shadowMap, 0);
-	   float scale    = 1.5;
-	   float dx       = scale / float(tex_size.x);
-	   float dy       = scale / float(tex_size.y);
-
-	   const int range = 1; // [-range, range] on each axis
-      const int count = (2 * range + 1) * (2 * range + 1);
-	
-	   float shadow = 0.0;
-	   for (int x = -range; x <= range; x++)  {
-		   for (int y = -range; y <= range; y++) {
-			   float pcf_depth = texture(shadowMap, proj_coord.xy + vec2(x * dx, y * dy)).r;
-            #if USE_INVERTED_SHADOW_MAP == 1
-               shadow += current_depth + bias < pcf_depth ? 1.0 : 0.0;
-            #else
-               shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-            #endif
-		   }
-	   }
-	   shadow /= count;
-   #else
-      float closest_depth = texture(shadowMap, proj_coord.xy).r; // distance from the light to the nearest surface along this angle
-      float shadow;
-      #if USE_INVERTED_SHADOW_MAP == 1
-         shadow = current_depth + bias < closest_depth ? 1.0 : 0.0;
-      #else
-         shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
-      #endif
-   #endif
-   //
-   {
-      float dist_x = (proj_coord.x - 0.5) / 0.5;
-      float dist_y = (proj_coord.y - 0.5) / 0.5;
-      float dist   = sqrt((dist_x * dist_x) + (dist_y * dist_y));
-      //
-      const float fade_start  = 0.8;
-      const float fade_length = 1.0 - fade_start;
-      dist -= fade_start;
-      dist /= fade_length;
-      shadow = max(shadow - max(dist, 0.0), 0.0);
-   }
-   //
-   if (proj_coord.z > 1.0)
-      //
-      // Anything too far away for the light to "see" should be considered 
-      // non-shadowed.
-      //
-      shadow = 0.0;
-   return shadow;
-}
-
-// inputs are in tangent space, where applicable
-computed_light calc_directional_light(vec3 light_dir, vec3 light_color, vec3 normal, vec3 view_dir, float specular_exponent) {
-   computed_light result;
-   //
-   light_dir = -normalize(light_dir);
-   //
-   float str_diff = max(dot(normal, light_dir) - calc_directional_shadow(normal, light_dir), 0.0);
-   float str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent);
-   //
-   result.diffuse  = str_diff * light_color;
-   result.specular = str_spec * light_color;
-   return result;
-}
 
 void main() {
    ObjectData current_object = objectBuffer.objects[pushed.object_index];
@@ -197,32 +73,26 @@ void main() {
    //
    computed_light light_data = calc_directional_light(
       fs_in.tangent_sun_dir,
+      fs_in.sun_shadow_vert_pos,
       ubo.sun_color,
       normal,
       view_dir,
-      current_object.specular_exponent
+      current_object.specular_exponent,
+      shadowMap
    );
    for(int i = 0; i < MAX_LIGHTS; ++i) {
-      computed_light current = calc_point_light(pointLightBuffer.lights[i], normal, fs_in.tangent_vert_pos, view_dir, current_object.specular_exponent);
+      computed_light current = calc_point_light(
+         pointLightBuffer.lights[i],
+         fs_in.tangent_space,
+         normal,
+         fs_in.tangent_vert_pos,
+         view_dir,
+         current_object.specular_exponent
+      );
       light_data.diffuse  += current.diffuse;
       light_data.specular += current.specular;
    }
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
    outColor = vec4(ubo.ambient_light_color + light_data.diffuse + light_data.specular, 1.0) * outColor;
-
-   /*
-   //
-   vec3  sun_dir = normalize(fs_in.tangent_sun_pos - fs_in.tangent_vert_pos);
-   float diff    = max(dot(sun_dir, normal), 0.0);
-   vec3  diffuse = diff * ubo.sun_color;
-   //
-   // Specular (needs to be done per light source, I guess):
-   //
-   vec3  view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
-   float str_spec = calc_specular_strength(normal, sun_dir, view_dir, current_object.specular_exponent);
-   vec3  specular = current_object.specular_strength * str_spec * current_object.specular_color;
-   //
-   outColor = vec4(ubo.ambient_light_color + diffuse + specular, 1.0) * outColor;
-   //*/
 }

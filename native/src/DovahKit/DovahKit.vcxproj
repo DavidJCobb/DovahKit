@@ -834,6 +834,8 @@
     <ClInclude Include="nif\types\NiMatrix33.h" />
     <ClInclude Include="nif\types\NiTransform.h" />
     <ClInclude Include="nif\types\Triangle.h" />
+    <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
+    <ClInclude Include="shaders\includes\point_light.glsl" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
@@ -1575,6 +1577,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="shaders\includes\calc_directional_light.glsl" />
+    <None Include="shaders\includes\calc_directional_shadow.glsl" />
+    <None Include="shaders\includes\calc_point_light.glsl" />
+    <None Include="shaders\includes\computed_light.glsl" />
     <None Include="shaders\overlay-fps.frag" />
     <None Include="shaders\overlay-fps.frag.spv" />
     <None Include="shaders\overlay-fps.vert" />
@@ -1588,6 +1594,7 @@
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader.vert.spv" />
     <None Include="shaders\sun-shadow-depth.vert" />
+    <None Include="shaders\util-full-screen-triangle.vert" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>
