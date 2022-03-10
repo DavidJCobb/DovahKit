@@ -1,0 +1,249 @@
+
+Rendering objects with alpha transparency can be rather tricky. The traditional 
+way to do alpha blending is affected by the order in which objects are handled; 
+it matters which object is "over" and which object is "under." However, getting 
+this information requires some sort of depth sorting, which can be expensive... 
+and can be vulnerable  to nasty edge-cases,  as can be seen  with the painter's 
+algorithm.
+
+Such is the motivation for "order-independent transparency,"  a family of alpha 
+blending techniques which seeks to avoid  the need to depth-sort the objects to 
+be drawn prior to rendering.  Note that OIT techniques don't necessarily try to 
+avoid sorting altogether.
+
+One simple approach [1] to OIT is to  render transparent objects in two sets of 
+draw calls.  The first pass, for color, draws to an "A-buffer" image,  which is 
+used to hold data about each pixel in the final render: the RGBA colors and the 
+depth values for up to N fragments per pixel. The second pass, for compositing, 
+scans the A-buffer, sorts the stored fragments, and blends them. If more than N 
+fragments end up on the same pixel (i.e.  more than N transparent objects cover 
+the same pixel on-screen), then the extra fragments are "tail-blended."
+
+This approach allows per-pixel  sorting within the shader; however, it can only 
+process and store fragments in the order they're  encountered, which means that 
+nearer fragments may be tail-blended  while further fragments are rendered more 
+faithfully.
+
+An alternative to  this approach is blended order-independent  transparency, or 
+BOIT. This technique takes the approach of making the blending operation itself 
+order-independent:  instead of using a traditional alpha blend,  a custom blend 
+function is used and applied to unsorted fragments. McGuire and Louis provide a 
+good overview of the technique [2], describing it mathematically first and then 
+offering snippets  of OpenGL code. I'd like to reproduce some  of the equations 
+here, but this is a plain-text document, so let me define some notation:
+
+   SUM(index, from, to, expression)
+
+      Notation for the capital-sigma notation for mathematical summation.
+
+   MUL(index, from, to, expression)
+
+      Notation for the capital-pi notation  for the product of a sequence (i.e. 
+      the same as SUM, but with multiplication).
+
+The equations we'll be displaying here use the following variables:
+
+   C = RGB color with premultiplied alpha
+   a = alpha component
+
+   n = number of fragments to blend
+
+   C0 = background RGB color that we're rendering onto
+   Cf = final RGB color to render
+   Ci = i-th RGB being rendered
+   ai = i-th alpha value being rendered
+   
+function is used and applied to unsorted fragments. McGuire and Louis provide a 
+When rendering, we end up receiving one fragment at a time, with no way to know 
+in advance how many fragments we'll receive (indeed, our inability to have that 
+information is the  problem we're trying to solve).  However, the equations are 
+written in terms of a known number of fragments N.
+
+Meshkin developed the first approach to BOIT, and used this equation:
+
+   Cf = SUM(i, 1, n, Ci) + C0 * (1 - SUM(ai))
+
+In simpler terms:  each fragment's RGB color components  are added together. We 
+then take the sum of all fragments' alpha values, subtract it from 1 (which may 
+produce a negative value),  multiply that by the background color, and add that 
+to the sum of the fragments'  RGB values. When multiple  fragments are blended, 
+the RGB sums  will likely exceed 1, but the inverted alpha sum will likely fall 
+into the negatives, canceling that excess out to some extent.
+
+This equation is, of course,  quite imperfect,  and can produce very inaccurate 
+colors (though the final alpha transparency  is always correct). This brings us 
+to weighted blended  order-independent transparency (WBOIT),  an improvement on 
+BOIT proposed by McGuire and Louis.
+
+McGuire and Louis start by presenting an improvement on BOIT equations designed 
+by Bavoil and Myers:
+
+   Cf = (SUM(i, 1, n, Ci) / SUM(i, 1, n, ai)) * (1 - MUL(i, 1, n, (1 - ai)))
+      + C0 * MUL(i, 1, n, (1 - ai))
+
+We start by  summing all of the RGB (with premultiplied alpha)  values for each 
+of the fragments, and then dividing that  by the sum of the alpha values. Next, 
+we divide that by  the inverted product of all inverted alpha  values: that is, 
+we invert all of the alpha values,  multiply them together, and then invert the 
+result. This is the "over" color -- all of our transparent objects' combined to 
+one set of RGB values, to be drawn overtop the background.
+
+The "under"  color's RGB, meanwhile,  is scaled by the product of  all inverted 
+alpha values. In pseudocode, we may express this as:
+
+   fragment background; // color
+   fragment inputs[];   // color, vertex position, anything else relevant
+   fragment final;      // color
+
+   float alpha_sum = 0.0;
+   for(auto& c : inputs) {
+      alpha_sum += c.a;
+      final.rgb += c.rgb;
+   }
+   final.rgb /= alpha_sum;
+
+   float inv_alpha_prod = 1.0;
+   for(auto& c : inputs) {
+      inv_alpha_prod *= (1 - c.a);
+   }
+
+   final.rgb      *= 1 - inv_alpha_prod;
+   background.rgb *= inv_alpha_prod;
+   
+This pseudocode isn't even remotely close  to the code we'd use to handle WBOIT 
+because again, we don't have foreknowledge of all fragment colors to blend; our 
+lack of that foreknowledge is what  (W)BOIT is meant to compensate for. Rather, 
+that pseudocode is just an alternative to  mathematical notation for those like 
+me who struggle with it.
+
+Note that the above  is still BOIT, not  WBOIT. We aren't  weighting any of the 
+values. Let's add a placeholder function for weighting, for WBOIT:
+
+   fragment background; // color
+   fragment inputs[];   // color, vertex position, anything else relevant
+   fragment final;      // color
+
+   float function weight(depth, alpha) {
+      // ...
+   }
+
+   float alpha_sum = 0.0;
+   for(auto& c : inputs) {
+      float w = weight(c.depth, c.a);
+      //
+      alpha_sum += w * c.a;
+      final.rgb += w * c.rgb;
+   }
+   final.rgb /= alpha_sum;
+
+   float inv_alpha_prod = 1.0;
+   for(auto& c : inputs) {
+      inv_alpha_prod *= (1 - c.a);
+   }
+
+   final.rgb      *= 1 - inv_alpha_prod;
+   background.rgb *= inv_alpha_prod;
+
+We'll actually define the weighting function later. All we need to know for now 
+is that for each  fragment, it takes  the fragment's  camera-relative depth and 
+the alpha value, and it returns a float  that gets used to scale the fragment's 
+influence on the  "over" color's RGB components. That "weight"  float should be 
+positive, and the depth value should decrease away from the camera.
+
+Remember that blending the fragments'  alpha values in an order-independent way 
+is  easy; the challenge is to compute RGB  components that resemble a  properly 
+ordered blend of each fragment.  The weighting we use  here allows a fragment's 
+depth and alpha to influence its impact on the blended RGB, as a rough but good 
+substitute for ordering.
+
+How, then, do we convert the above into  something we could put into a fragment 
+shader? Well,...
+
+ - We can use two passes:  a color pass  to generate  the "final" (i.e. "over") 
+   color,  and a  composite pass for the modified "background"  (i.e.  "under") 
+   color.
+
+ - Recall that shaders and materials are implemented by way of "pipelines," and 
+   that pipelines can specify built-in  blend functions. Each blend function is 
+   just the  multiplication of the "over"  and "under" colors by some  relevant 
+   value, followed by  the summing of the results. This means  that some of the 
+   summations and products-of-sequences in the equations above could be handled 
+   by the GPU for us by taking advantage of blend functions.
+
+   The more common terms for "over" and "under" are "source" and "destination," 
+   so I'll use those going forward.
+
+ - By using multiple images and multiple passes,  we can control when the blend 
+   functions run and what they run on. We'll use two passes and two images. The 
+   first pass is for color; the second, for compositing. We use the first image 
+   for summing the  RGB and A values for each fragment as  part of the math for 
+   determining our final "over" color,  so we'll call it the "accumulator;" the 
+   second image computes  the A for the final  "under" color,  so we'll call it 
+   the "reveal" image.
+
+ - Recall also that the fragment shader  will run once per fragment; this is in 
+   essence a  looping mechanism. Computations  done in the color  pass fragment 
+   shader will serve as the bodies to the loops in our pseudocode above.
+
+ - During the color pass, our fragment shader will draw to both the accumulator 
+   and reveal images.
+
+   For the accumulator, the shader will return the fragment's weighted RGBA. We 
+   will use VK_BLEND_FACTOR_ONE for both  the source and destination, which has 
+   the effect of summing the color channels. That corresponds to the first loop 
+   in our pseudocode above.
+
+   For the reveal image, the shader will return the fragment's weighted A. Here 
+   we'll use VK_BLEND_FACTOR_ZERO for the source, which prevents the returned A 
+   from being added.  If we use the  VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA  blend 
+   factor for the destination (the preexisting value), then that has the effect 
+   of multiplying it by the A we've returned. Ergo:
+
+      result = (src * 0) + (dst * (1 - src)) = dst * (1 - src)
+   
+   If the reveal image is initialized to all-white (1.0),  then that reproduces 
+   the second  loop in the pseudocode  above, used to get the  `inv_alpha_prod` 
+   variable. That variable, then,  is the color that gets written to the reveal 
+   image's pixels.
+
+ - During the compositing pass, we'll pull the relevant pixel (i.e. color) from 
+   each image and composite them together.
+
+   We'll take the  accumulator color and divide its RGB by its A;  that handles 
+   the division after the first loop in our pseudocode,  and gets us the source 
+   color's final RGB.  We'll also take the reveal color (which is just an alpha 
+   channel)  and use that directly  for the source  color's final A. We'll then 
+   return the source color.
+
+   We'll use  VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA for the source,  which is our 
+   blended color,  and we'll use VK_BLEND_FACTOR_SRC_ALPHA for the destination, 
+   which is the background color.  The former blend  factor handles multiplying 
+   the "final" RGB by `1 - inv_alpha_prod`  at the end of the pseudocode above, 
+   while the latter blend factor  handles multiplying the background RGB by the 
+   `inv_alpha_prod` variable.
+
+ - And now we're done!  We've used a  combination of images,  passes, and blend 
+   functions to implement the formula above.
+
+With the overall process out of the way,  we now need to focus on the specifics 
+of our weighting function.
+
+
+
+
+
+         DON'T FORGET TO WRITE THIS PART
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+[1] The "simple"  approach documented by NVIDIA in a repo meant  to demonstrate 
+several techniques and how to implement them.
+<https://github.com/nvpro-samples/vk_order_independent_transparency>
+
+[2] Weighted Blended Order-Independent Transparency
+<https://jcgt.org/published/0002/02/09/>
