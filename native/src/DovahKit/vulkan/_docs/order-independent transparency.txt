@@ -159,9 +159,11 @@ substitute for ordering.
 How, then, do we convert the above into  something we could put into a fragment 
 shader? Well,...
 
+
  - We can use two passes:  a color pass  to generate  the "final" (i.e. "over") 
    color,  and a  composite pass for the modified "background"  (i.e.  "under") 
    color.
+
 
  - Recall that shaders and materials are implemented by way of "pipelines," and 
    that pipelines can specify built-in  blend functions. Each blend function is 
@@ -173,6 +175,7 @@ shader? Well,...
    The more common terms for "over" and "under" are "source" and "destination," 
    so I'll use those going forward.
 
+
  - By using multiple images and multiple passes,  we can control when the blend 
    functions run and what they run on. We'll use two passes and two images. The 
    first pass is for color; the second, for compositing. We use the first image 
@@ -181,9 +184,13 @@ shader? Well,...
    second image computes  the A for the final  "under" color,  so we'll call it 
    the "reveal" image.
 
+   The "accumulator" will be RGBA, while the "reveal" image will be A-only.
+
+
  - Recall also that the fragment shader  will run once per fragment; this is in 
    essence a  looping mechanism. Computations  done in the color  pass fragment 
    shader will serve as the bodies to the loops in our pseudocode above.
+
 
  - During the color pass, our fragment shader will draw to both the accumulator 
    and reveal images.
@@ -206,6 +213,7 @@ shader? Well,...
    variable. That variable, then,  is the color that gets written to the reveal 
    image's pixels.
 
+
  - During the compositing pass, we'll pull the relevant pixel (i.e. color) from 
    each image and composite them together.
 
@@ -222,8 +230,19 @@ shader? Well,...
    while the latter blend factor  handles multiplying the background RGB by the 
    `inv_alpha_prod` variable.
 
+
  - And now we're done!  We've used a  combination of images,  passes, and blend 
    functions to implement the formula above.
+
+
+As for why we need to use  two intermediate images  before we can composite the 
+transparent objects  into the final render? Well,  it's easy to think of images 
+as, well, images, but in this case it's better to think of a four-channel image 
+as a way of storing  four values per pixel. In our case,  we need to store five 
+values per pixel: the summed RGBA for  all of the translucent fragments we wish 
+to render,  and the product of  their inverted alphas. There's no  way to get a 
+five-channel image,  so we rely on an RGBA image and an A-only  image, and that 
+shouldn't consume much more space than some theoretical RGBAX image.
 
 With the overall process out of the way,  we now need to focus on the specifics 
 of our weighting function.
