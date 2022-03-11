@@ -27,7 +27,7 @@ faithfully.
 An alternative to  this approach is blended order-independent  transparency, or 
 BOIT. This technique takes the approach of making the blending operation itself 
 order-independent:  instead of using a traditional alpha blend,  a custom blend 
-function is used and applied to unsorted fragments. McGuire and Louis provide a 
+function is used and applied to unsorted fragments.  McGuire and Bavoil offer a 
 good overview of the technique [2], describing it mathematically first and then 
 offering snippets  of OpenGL code. I'd like to reproduce some  of the equations 
 here, but this is a plain-text document, so let me define some notation:
@@ -53,7 +53,6 @@ The equations we'll be displaying here use the following variables:
    Ci = i-th RGB being rendered
    ai = i-th alpha value being rendered
    
-function is used and applied to unsorted fragments. McGuire and Louis provide a 
 When rendering, we end up receiving one fragment at a time, with no way to know 
 in advance how many fragments we'll receive (indeed, our inability to have that 
 information is the  problem we're trying to solve).  However, the equations are 
@@ -73,10 +72,10 @@ into the negatives, canceling that excess out to some extent.
 This equation is, of course,  quite imperfect,  and can produce very inaccurate 
 colors (though the final alpha transparency  is always correct). This brings us 
 to weighted blended  order-independent transparency (WBOIT),  an improvement on 
-BOIT proposed by McGuire and Louis.
+BOIT proposed by McGuire and Bavoil.
 
-McGuire and Louis start by presenting an improvement on BOIT equations designed 
-by Bavoil and Myers:
+McGuire and Bavoil  start by presenting an improvement  on older BOIT equations 
+designed by Bavoil and Myers:
 
    Cf = (SUM(i, 1, n, Ci) / SUM(i, 1, n, ai)) * (1 - MUL(i, 1, n, (1 - ai)))
       + C0 * MUL(i, 1, n, (1 - ai))
@@ -156,107 +155,260 @@ ordered blend of each fragment.  The weighting we use  here allows a fragment's
 depth and alpha to influence its impact on the blended RGB, as a rough but good 
 substitute for ordering.
 
+
+=== IMPLEMENTING THIS IN A RENDERER ===========================================
+
 How, then, do we convert the above into  something we could put into a fragment 
-shader? Well,...
+shader? Well,  note first that the above pseudocode is functionally  equivalent 
+to the following rearranged pseudocode:
+
+   fragment background; // color
+   fragment inputs[];   // color, vertex position, anything else relevant
+   fragment final;      // color
+
+   float function weight(depth, alpha) {
+      // ...
+   }
+
+   float alpha_sum      = 0.0;
+   float inv_alpha_prod = 1.0;
+   for(auto& c : inputs) {
+      float w = weight(c.depth, c.a);
+      //
+      alpha_sum += w * c.a;
+      final.rgb += w * c.rgb;
+      //
+      inv_alpha_prod *= (1 - c.a);
+   }
+
+   final.rgb /= alpha_sum;
+   final.rgb      *= 1 - inv_alpha_prod;
+   background.rgb *= inv_alpha_prod;
+
+So for every pixel, we first need to loop over all of the relevant fragments to 
+compute a few values; then, outside of that loop, we need to apply those values 
+and get the final color for the pixel.
+
+Within the loop,  we don't need to know any of the fragments'  indices, nor the 
+total number of fragments  (as shown by my use of  ranged-based for-loop syntax 
+above). Conceptually, this is the same as just running the loop body within the 
+fragment  shader when  drawing the scene; "loop over  all of the  fragments" is 
+really just "run this code for each fragment," which is how our fragment shader 
+would be invoked by default when drawing the whole scene.
+
+Code outside of  the loop is per-pixel rather than per-fragment.  We can handle 
+this by doing a second draw operation:  if we draw a full-screen polygon with a 
+separate shader, then each pixel is  its own fragment, and that shader could be 
+engineered to access  the values computed when we drew  the whole scene as part 
+of our loops.
+
+Accordingly, we can divide our render process as follows:
 
 
- - We can use two passes:  a color pass  to generate  the "final" (i.e. "over") 
-   color,  and a  composite pass for the modified "background"  (i.e.  "under") 
-   color.
+ - We use two passes: first, a color pass to serve as the loop body, wherein we 
+   draw the whole scene; then, a composite pass to serve as the code outside of 
+   the loop, wherein by drawing a full-screen polygon we can take the per-pixel 
+   data computed in the color pass and apply it on a per-pixel basis.
 
 
- - Recall that shaders and materials are implemented by way of "pipelines," and 
-   that pipelines can specify built-in  blend functions. Each blend function is 
-   just the  multiplication of the "over"  and "under" colors by some  relevant 
-   value, followed by  the summing of the results. This means  that some of the 
-   summations and products-of-sequences in the equations above could be handled 
-   by the GPU for us by taking advantage of blend functions.
+ - We need some way  to actually get data from the color pass  to the composite 
+   pass. In practice,  we can render to  two textures: an  RGBA texture for the 
+   "final" color,  and an A-only texture for the "inv_alpha_prod"  variable. We 
+   will call these the "accumulator" texture and the "reveal" texture.
 
-   The more common terms for "over" and "under" are "source" and "destination," 
-   so I'll use those going forward.
+   Why two textures? Well, really, we just need to store five values per pixel, 
+   and a color channel is just a  value per pixel...  but there's no such thing 
+   as an image with five color channels, so we instead use two images: one with 
+   four color channels and another with just the one channel.
 
-
- - By using multiple images and multiple passes,  we can control when the blend 
-   functions run and what they run on. We'll use two passes and two images. The 
-   first pass is for color; the second, for compositing. We use the first image 
-   for summing the  RGB and A values for each fragment as  part of the math for 
-   determining our final "over" color,  so we'll call it the "accumulator;" the 
-   second image computes  the A for the final  "under" color,  so we'll call it 
-   the "reveal" image.
-
-   The "accumulator" will be RGBA, while the "reveal" image will be A-only.
+   The values  that we want  to compute in our loop need  to be initialized  to 
+   different numbers  (0 for the sum; 1 for the multiplication).  We can handle 
+   this by using VkClearValues.
 
 
- - Recall also that the fragment shader  will run once per fragment; this is in 
-   essence a  looping mechanism. Computations  done in the color  pass fragment 
-   shader will serve as the bodies to the loops in our pseudocode above.
+ - There's one more bit of trickery that we can rely on. Hypothetically, during 
+   the color pass,  we could manually read the preexisting  values for a pixel, 
+   compute  the values for the current  fragment, and manually add or  multiply 
+   them in as needed.  However, what if we could get the  GPU to do that for us 
+   with no effort  needed on our part?  What if there were some  operation that 
+   the GPU was really good  at, and that it's going to  have to do anyway, that 
+   we could co-opt for our needs?
+
+   As it happens, there is:  the blend settings for  the shader pipeline. These 
+   control how a  new fragment is drawn overtop the previous  fragments and the 
+   background.
+
+   Every blend  operation involves  multiplying  the "over" and  "under" colors 
+   (more formally called the "source"  and "destination") by some chosen value, 
+   and then adding the results together.  This means that if we get clever with 
+   those values,  we can have the GPU handle the additions  and multiplications 
+   in our color pass (our loop body) for us, with literally no added work.
+
+   Here, we see another  benefit of using  two separate  images: we can specify 
+   different blend settings for each image.
 
 
- - During the color pass, our fragment shader will draw to both the accumulator 
-   and reveal images.
 
-   For the accumulator, the shader will return the fragment's weighted RGBA. We 
-   will use VK_BLEND_FACTOR_ONE for both  the source and destination, which has 
-   the effect of summing the color channels. That corresponds to the first loop 
-   in our pseudocode above.
+==== THE COLOR PASS ===========================================================
 
-   For the reveal image, the shader will return the fragment's weighted A. Here 
-   we'll use VK_BLEND_FACTOR_ZERO for the source, which prevents the returned A 
-   from being added.  If we use the  VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA  blend 
-   factor for the destination (the preexisting value), then that has the effect 
-   of multiplying it by the A we've returned. Ergo:
+So let's start  with our color pass, then. Our fragment shader  will be drawing 
+to two textures, so it'll produce two  outputs: a color for the accumulator and 
+a color for the reveal texture.
 
-      result = (src * 0) + (dst * (1 - src)) = dst * (1 - src)
-   
-   If the reveal image is initialized to all-white (1.0),  then that reproduces 
-   the second  loop in the pseudocode  above, used to get the  `inv_alpha_prod` 
-   variable. That variable, then,  is the color that gets written to the reveal 
-   image's pixels.
+For the accumulator, the shader will return the fragment's weighted RGBA. We'll 
+use VK_BLEND_FACTOR_ONE  for both the source and destination,  which means that 
+the value we return will be added to  the value that's already present. That'll 
+get us summation for free.
 
+For the reveal image,  the shader will return the fragment's  weighted A. Here, 
+we'll use  VK_BLEND_FACTOR_ZERO for  the source, which prevents the  returned A 
+from  being added. We'll also use  VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA for  the 
+destination; because our source is  alpha-only, this means that the destination 
+gets multiplied by one minus the value we've returned:
 
- - During the compositing pass, we'll pull the relevant pixel (i.e. color) from 
-   each image and composite them together.
+   result = (src * 0) + (dst * (1 - src))
+   result = dst * (1 - src)
 
-   We'll take the  accumulator color and divide its RGB by its A;  that handles 
-   the division after the first loop in our pseudocode,  and gets us the source 
-   color's final RGB.  We'll also take the reveal color (which is just an alpha 
-   channel)  and use that directly  for the source  color's final A. We'll then 
-   return the source color.
+If the reveal image is initialized to all-white (1.0), then that reproduces the 
+multiplication loop and computes the "inv_alpha_prod" variable.
 
-   We'll use  VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA for the source,  which is our 
-   blended color,  and we'll use VK_BLEND_FACTOR_SRC_ALPHA for the destination, 
-   which is the background color.  The former blend  factor handles multiplying 
-   the "final" RGB by `1 - inv_alpha_prod`  at the end of the pseudocode above, 
-   while the latter blend factor  handles multiplying the background RGB by the 
-   `inv_alpha_prod` variable.
+These techniques could theoretically be  used for any operation wherein we need 
+to sum or multiply values per-fragment.
 
 
- - And now we're done!  We've used a  combination of images,  passes, and blend 
-   functions to implement the formula above.
+==== THE COMPOSITING PASS =====================================================
 
+With the color pass done, we move onto the compositing pass. We want to use the 
+per-pixel values computed within the  color pass to actually draw to our scene. 
+All we need to do is have a second fragment  shader draw a full-screen polygon; 
+it can sample from the accumulator and reveal textures, with each fragment that 
+it handles effectively corresponding to one on-screen screen pixel.
 
-As for why we need to use  two intermediate images  before we can composite the 
-transparent objects  into the final render? Well,  it's easy to think of images 
-as, well, images, but in this case it's better to think of a four-channel image 
-as a way of storing  four values per pixel. In our case,  we need to store five 
-values per pixel: the summed RGBA for  all of the translucent fragments we wish 
-to render,  and the product of  their inverted alphas. There's no  way to get a 
-five-channel image,  so we rely on an RGBA image and an A-only  image, and that 
-shouldn't consume much more space than some theoretical RGBAX image.
+Within the  compositing pass, there's  only one blend left to  perform: that of 
+the combined transparent  objects onto the preexisting  background. We start by 
+taking  the accumulator color and dividing its RGB by its A; that gives  us the 
+division after the first loop in our pseudocode, and gets us the source color's 
+final RGB. We'll also take the reveal  color (which is just an alpha component) 
+and use that directly for the source color's final A. We then return the source 
+color.
+
+We'll use VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA  for the source color, along with 
+VK_BLEND_FACTOR_SRC_ALPHA for the  destination. The former blend factor handles 
+multiplying  the source color by  (1 - inv_alpha_prod),  and the latter handles 
+multiplying the destination (background) color by (inv_alpha_prod).
+
+And with that, we're done! We've implemented  a commutative (order-independent) 
+blend function, and we've made creative use of intermediate textures and native 
+blend functions to carry out that blend as optimally as possible.
 
 With the overall process out of the way,  we now need to focus on the specifics 
 of our weighting function.
 
 
+==== THE WEIGHT FUNCTION ======================================================
 
+There are a few considerations that go into this.
 
+First: the weight  function is  applied to  the RGB sum and  the A sum, and the 
+former sum is then divided by the latter sum. This means that weights are on an 
+arbitrary scale: mathematically, it doesn't matter how large or small they are, 
+because that  division serves to normalize them. This means that  we can choose 
+the scale that weights exist on based  on whatever technical limitations become 
+relevant.
 
-         DON'T FORGET TO WRITE THIS PART
+Let's start with one technical limitation:  the numeric precision we're limited 
+to when doing  the OIT calculations. If we wanted to, we  could use traditional 
+32-bit floating-point numbers for our  color channels; however, that would mean 
+twenty bytes of OIT  data for every pixel in the render  area. If we use 16-bit 
+floats instead, then we need only ten  bytes of OIT data per pixel; however, we 
+then have less precision and a smaller range of values to work with.
 
+Signed 16-bit floats cover the  range (+/-)65504.  The minimum value above 1 is 
+1.0009765625, or (1 + 1/1024). Between  128 and 256, the epsilon is 0.125, with 
+the epsilon  doubling in  synch with the range  (i.e. between 256 and  512, the 
+epsilon is 0.25). McGuire and Bavoil propose a few equations that are optimized 
+for this range of precision given depth values in the range of [0.1, 500]:
 
+   alpha * std::clamp(
+      10 / (
+         0.00001
+         + std::pow(fabs(depth) /   5, 2)
+         + std::pow(fabs(depth) / 200, 6)
+      ),
+      0.01,
+      3000
+   );
 
+An alternate equation "pushes the knee of the curve," improving quality for any 
+objects near the middle of the depth range  but sacrificing quality for objects 
+at the edges of the range:
 
+   alpha * std::clamp(
+      0.3 / (
+         0.00001
+         + std::pow(fabs(depth) / 200, 4)
+      ),
+      0.01,
+      3000
+   );
 
+The alpha component (in the range [0, 1]) is multiplied in to ensure that a low-
+opacity surface close to the camera  doesn't exert undue influence on the pixel 
+color, overwhelming  the color of more  opaque surfaces in the  distance. Given 
+an alpha of 1.0,  we reach the maximum weight  3000 at any depth up  to roughly 
+(+/-)0.288241, for the first equation; we reach the minimum weight at any depth 
+at or past roughly (+/-)158.095. With the second equation, we reach the maximum 
+weight at any depth up to around (+/-)19.4801; we hit the minimum weight at any 
+depth at or past roughly (+/-)468.069.
+
+Now, you may have a few questions about that:
+
+ - If typical  depths within your renderer  fall within a different  range, how 
+   might you adjust this equation to better compensate?
+
+ - For that matter, how did McGuire and Bavoil design the equation in the first 
+   place? How would we design our own?
+
+The only advice they offer for deriving equations like these is:
+
+ - "Rational polynomial weights"  that  "exhibit slower asymptotic growth"  are 
+   needed because exponential functions would blow past the precision limits of 
+   16-bit floats.
+
+ - The explanation for using the alpha component that I mentioned above.
+
+ - Clamping in general  is needed to prevent overflow and  underflow, which can 
+   occur when the alpha is large and the depth, small.
+
+ - If you draw a log-log graph of McGuire  and Bavoil's equations -- that is, a 
+   graph with logarithmic rather than  linear axes, such that x^2 and x^3 would 
+   render as  straight lines -- then you'll see that they start  off horizontal 
+   and then bent downward with a brief curve, before flattening into a downward 
+   and rightward line. McGuire and Bavoil advise "pushing the knee of the curve 
+   towards the upper right" as a way of improving rendering on objects near the 
+   middle of the depth range, at the  cost of weakening rendering on objects at 
+   the edges of the range. Given an  equation and its log-log-graph equivalent, 
+   do you know how to not only make adjustments to the latter but also backport 
+   those to the former? Because I don't.
+
+Your next question is probably: why is this dilemma relevant?
+
+Recall that the  equations are designed  for a depth range  of [0.1, 500] in an 
+environment that uses 16-bit floating-point values. 500 units may be a moderate 
+or large distance in some renderers,  but it's very short within Skyrim's world 
+scaling; one unit  is closer to an inch than a foot. A cell is 4096  units long 
+on a side, so if our camera  is positioned at the  center of a cell and we want 
+to cover  a range of up to three  cells out, that would be a distance of 10240, 
+or  4096 * 2.5,  which is significantly larger than 500.  How would we create a 
+weighting  function that adequately handles values along this range?  How would 
+we account for 16-bit floating-point  imprecision? No idea. My best guess is to 
+divide the depth values by 20 going in, scaling 10240 down to  512. Would there 
+be issues with granularity? Over how far a range can we stretch these equations 
+before they become unworkable? No idea.
+
+Do we even need to stretch the range? The equations are balanced for [0.1, 500] 
+yet one caps out at 158. I s'pose I won't know until I not only implement WBOIT 
+but also test the renderer in a worldspace.
 
 -------------------------------------------------------------------------------
 
