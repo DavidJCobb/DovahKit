@@ -59,9 +59,9 @@ namespace vulkanDK {
          }
 
       protected:
-         void _set_pipeline_push_constant(const material&, VkShaderStageFlags, size_t size, void* data);
+         void _set_pipeline_push_constant(const material&, VkShaderStageFlags, size_t size, const void* data);
       public:
-         template<typename PC> void set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, PC& data) {
+         template<typename PC> void set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, const PC& data) {
             this->_set_pipeline_push_constant(m, flags, sizeof(PC), &data);
          }
 

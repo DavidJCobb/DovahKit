@@ -61,7 +61,8 @@
 #include "dovah/forms/components/extra_data/radius.h"
 
 namespace {
-   static constexpr bool debug_log_scene_object_lifetimes = false;
+   static constexpr bool debug_log_scene_object_lifetimes   = false;
+   static constexpr bool debug_object_names_fallback_to_log = false; // logs objects' debug names when the relevant extension isn't supported; log spam on window resize; use only when needed
 }
 
 namespace {
@@ -865,8 +866,8 @@ namespace vulkanDK {
                .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-               .initialLayout  = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-               .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             },
             VkAttachmentDescription{ // depth
                .format         = this->find_depth_format(),
@@ -1994,6 +1995,8 @@ namespace vulkanDK {
          }
          this->canvas.color.teardown();
          this->canvas.depth.teardown();
+         this->canvas.oit.accumulator.teardown();
+         this->canvas.oit.reveal.teardown();
          this->canvas.sun_shadow.map.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
@@ -2305,14 +2308,16 @@ namespace vulkanDK {
          return;
       }
       if (!this->api_functions.vkDebugMarkerSetObjectNameEXT) {
-         //qDebug("[surface_renderer::set_debug_object_name] Extension unavailable; name for handle %016jX is %s.", (std::uintmax_t)handle, name.c_str());
-         // getting crashes when using %016jX; just %016X causes int argument truncation; just stringify it manually:
-         QString text = "[surface_renderer::set_debug_object_name] Extension unavailable; name for handle 0x";
-         text += QString::number(handle, 16).leftJustified(16, '0');
-         text += " is ";
-         text += name.c_str();
-         text += ".";
-         qDebug("%s", qUtf8Printable(text));
+         if constexpr (debug_object_names_fallback_to_log) {
+            //qDebug("[surface_renderer::set_debug_object_name] Extension unavailable; name for handle %016jX is %s.", (std::uintmax_t)handle, name.c_str());
+            // getting crashes when using %016jX; just %016X causes int argument truncation; just stringify it manually:
+            QString text = "[surface_renderer::set_debug_object_name] Extension unavailable; name for handle 0x";
+            text += QString::number(handle, 16).leftJustified(16, '0');
+            text += " is ";
+            text += name.c_str();
+            text += ".";
+            qDebug("%s", qUtf8Printable(text));
+         }
          return;
       }
       auto info = VkDebugMarkerObjectNameInfoEXT{

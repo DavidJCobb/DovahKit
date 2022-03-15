@@ -82,6 +82,12 @@ namespace vulkanDK {
    }
    void swap_chain_image::_setup_command_buffers() {
       this->command_buffers.setup(*this->owner);
+      #if _DEBUG
+         this->owner->set_debug_object_name(this->command_buffers.main_shadow.handle, QString("Swap Chain Image %1: Command Buffer: Sun Shadows").arg(this->my_index).toStdString());
+         this->owner->set_debug_object_name(this->command_buffers.main.handle, QString("Swap Chain Image %1: Command Buffer: Main").arg(this->my_index).toStdString());
+         this->owner->set_debug_object_name(this->command_buffers.fps.handle, QString("Swap Chain Image %1: Command Buffer: FPS/UI").arg(this->my_index).toStdString());
+         this->owner->set_debug_object_name(this->command_buffers.finish.handle, QString("Swap Chain Image %1: Command Buffer: Finish").arg(this->my_index).toStdString());
+      #endif
       this->command_buffers_invalid = true;
    }
    
@@ -564,8 +570,6 @@ namespace vulkanDK {
    void swap_chain_image::_refill_command_buffers() {
       this->command_buffers_invalid = false;
       //
-      this->_refill_fps_overlay_command_buffer();
-      //
       auto& scene = this->owner->scene;
       {  // Sun shadows
          auto& command_buffer = this->command_buffers.main_shadow;
@@ -728,6 +732,8 @@ namespace vulkanDK {
             throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
          }
       }
+      //
+      this->_refill_fps_overlay_command_buffer();
       //
       {  // Finish
          auto& command_buffer = this->command_buffers.finish;

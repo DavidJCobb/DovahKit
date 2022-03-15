@@ -94,14 +94,14 @@ namespace vulkanDK {
       vkCmdBindPipeline(this->handle, bind_point, mat.pipeline.handle);
    }
 
-   void command_buffer::_set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, size_t size, void* data) {
+   void command_buffer::_set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, size_t size, const void* data) {
       vkCmdPushConstants(
          this->handle,
          m.pipeline.layout,
          flags,
          0,
          size,
-         (void*)&data
+         data
       );
    }
 
