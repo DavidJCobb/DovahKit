@@ -21,9 +21,12 @@
 //
 
 layout(push_constant) uniform PER_OBJECT {
-   int object_index;
-	int texture_index;
-   int texture_normal_index;
+   int   object_index;
+	int   texture_index;
+   int   texture_normal_index;
+   float alpha_test_threshold;
+   int   alpha_test_operation;
+   bool  enable_alpha_blending;
 } pushed;
 
 struct ObjectData{
@@ -50,14 +53,14 @@ layout(std430,set = 0, binding = 3) readonly buffer ObjectBuffer {
 // binding 5 is used by the fragment shader (texture array)
 
 layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec3 in_color;
+layout(location = 1) in vec4 in_color;
 layout(location = 2) in vec2 in_uv;
 layout(location = 3) in vec3 in_normal;
 layout(location = 4) in vec3 in_tangent;
 layout(location = 5) in vec3 in_bitangent;
 
 layout(location = 0) out VS_OUT {
-   vec3  color;
+   vec4  color;
    vec2  uv;
    vec3  pos_world;
    mat3  tangent_space;

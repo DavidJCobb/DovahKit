@@ -39,14 +39,17 @@ namespace vulkanDK {
 
          struct shader_parameters { // pass to the shader via a storage buffer
             alignas(16) glm::mat4 transform;
-            alignas(16) glm::vec3 specular_color    = { 0, 0, 0 };
-            alignas( 4) float     specular_strength = 1.0;
-            alignas( 4) float     specular_exponent = 32;
+            alignas(16) glm::vec3 specular_color       = { 0, 0, 0 };
+            alignas( 4) float     specular_strength    = 1.0;
+            alignas( 4) float     specular_exponent    = 32;
          };
          struct push_constant {
-            int32_t object_index;
-            int32_t texture_index;
-            int32_t texture_normal_index = -1;
+            alignas(4) int32_t object_index;               // not meaningful on this object; ignored during the render process
+            alignas(4) int32_t texture_index;              // not meaningful on this object; ignored during the render process
+            alignas(4) int32_t texture_normal_index  = -1; // not meaningful on this object; ignored during the render process
+            alignas(4) float   alpha_test_threshold  =  0;
+            alignas(4) int     alpha_test_operation  =  0; // GL_ALWAYS
+            alignas(1) bool    enable_alpha_blending = false;
          };
          
          mesh_flags_t mesh_flags = 0;
@@ -66,6 +69,7 @@ namespace vulkanDK {
             bool     wide_indices = false;
          } vertex_and_index_buffer;
          shader_parameters shader_params;
+         push_constant     push_params;
          union {
             std::array<int32_t, 2> list = { -1, -1 };
             struct {

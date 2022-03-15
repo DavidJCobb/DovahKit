@@ -1,9 +1,12 @@
 #version 450
 
 layout(push_constant) uniform PER_OBJECT {
-   int object_index;
-	int texture_index;
-   int texture_normal_index;
+   int   object_index;
+	int   texture_index;
+   int   texture_normal_index;
+   float alpha_test_threshold;
+   int   alpha_test_operation;
+   bool  enable_alpha_blending;
 } pushed;
 
 struct ObjectData {

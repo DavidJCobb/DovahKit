@@ -45,6 +45,7 @@
 #include "nif/blocks/BSLightingShaderProperty.h"
 #include "nif/blocks/BSShaderTextureSet.h"
 #include "nif/blocks/BSTriShape.h"
+#include "nif/blocks/NiAlphaProperty.h"
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 #include "nif/blocks/NiNode.h"
@@ -92,7 +93,7 @@ namespace {
       std::array<vulkanDK::vertex, 4> out = {};
       for (size_t i = 0; i < out.size(); ++i) {
          auto& v = out[i];
-         v.color = { 1, 1, 1 };
+         v.color = { 1, 1, 1, 1 };
          v.uv.x = (i % 3 == 0) ? 1 : 0;
          v.uv.y = (i > 1)      ? 1 : 0;
          v.normal    = { 0, 0, 1 };
@@ -1403,7 +1404,7 @@ namespace vulkanDK {
                mesh.data.vertices = {  // Vertices
                   {
                      .pos    = { -size, -size, 0 },
-                     .color  = { 1.0, 0.6, 0.0 },
+                     .color  = { 1.0, 0.6, 0.0, 1.0 },
                      .uv     = { 1, 0 },
                      .normal    = { 0, 0, 1 },
                      .tangent   = { 1, 0, 0 },
@@ -1411,7 +1412,7 @@ namespace vulkanDK {
                   },
                   {
                      .pos    = { size, -size, 0 },
-                     .color  = { 1.0, 0.6, 0.0 },
+                     .color  = { 1.0, 0.6, 0.0, 1.0 },
                      .uv     = { 0, 0 },
                      .normal    = { 0, 0, 1 },
                      .tangent   = { 1, 0, 0 },
@@ -1419,7 +1420,7 @@ namespace vulkanDK {
                   },
                   {
                      .pos    = { size, size, 0 },
-                     .color  = { 1.0, 0.6, 0.0 },
+                     .color  = { 1.0, 0.6, 0.0, 1.0 },
                      .uv     = { 0, 1 },
                      .normal    = { 0, 0, 1 },
                      .tangent   = { 1, 0, 0 },
@@ -1427,7 +1428,7 @@ namespace vulkanDK {
                   },
                   {
                      .pos    = { -size, size, 0 },
-                     .color  = { 1.0, 0.6, 0.0 },
+                     .color  = { 1.0, 0.6, 0.0, 1.0 },
                      .uv     = { 1, 1 },
                      .normal    = { 0, 0, 1 },
                      .tangent   = { 1, 0, 0 },
@@ -2639,7 +2640,7 @@ namespace vulkanDK {
          ro.data.vertices = {
             vertex{
                .pos    = { -0.5f, -hfwc, 0.0 },
-               .color  = { 1, 1, 1 },
+               .color  = { 1, 1, 1, 1 },
                .uv     = { 1, 0 },
                .normal    = { 0, 0, 1 },
                .tangent   = { 1, 0, 0 },
@@ -2647,7 +2648,7 @@ namespace vulkanDK {
             },
             vertex{
                .pos    = { 0.5f, -hfwc, 0.0 },
-               .color  = { 1, 1, 1 },
+               .color  = { 1, 1, 1, 1 },
                .uv     = { 0, 0 },
                .normal    = { 0, 0, 1 },
                .tangent   = { 1, 0, 0 },
@@ -2655,7 +2656,7 @@ namespace vulkanDK {
             },
             vertex{
                .pos    = { 0.5f, hfwc, 0.0 },
-               .color  = { 1, 1, 1 },
+               .color  = { 1, 1, 1, 1 },
                .uv     = { 0, 1 },
                .normal    = { 0, 0, 1 },
                .tangent   = { 1, 0, 0 },
@@ -2663,7 +2664,7 @@ namespace vulkanDK {
             },
             vertex{
                .pos    = { -0.5f, hfwc, 0.0 },
-               .color  = { 1, 1, 1 },
+               .color  = { 1, 1, 1, 1 },
                .uv     = { 1, 1 },
                .normal    = { 0, 0, 1 },
                .tangent   = { 1, 0, 0 },
@@ -2915,6 +2916,41 @@ namespace vulkanDK {
       mesh.shader_params.transform = transform;
       mesh.texture_indices.diffuse = fallback_texture_index;
       ++this->scene.textures[fallback_texture_index].refcount;
+      //
+      bool enable_vertex_alpha = false;
+      bool enable_vertex_color = false;
+      {  // Enable alpha
+         if (auto* alpha = data->properties.alpha) {
+            mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
+            //
+            mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
+            mesh.push_params.alpha_test_threshold  = alpha->testing.threshold;
+            mesh.push_params.enable_alpha_blending = alpha->blending.enabled;
+         } else if (auto* shader = data->properties.shader) {
+            //
+            // Test for "Vertex Alpha" shader flag.
+            //
+            if (auto* casted = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            } else if (auto* casted = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            }
+            //
+            if (enable_vertex_alpha) {
+               mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
+            }
+         }
+      }
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto&       list = data->vertices;
@@ -2924,7 +2960,11 @@ namespace vulkanDK {
             auto& dst = mesh.data.vertices[i];
             //
             dst.pos       = src.vertex;
-            dst.color     = { src.color.r, src.color.g, src.color.b }; // TODO: support RGBA vertex colors
+            if (enable_vertex_color) {
+               dst.color = { src.color.r, src.color.g, src.color.b, enable_vertex_alpha ? src.color.a : 1.0 };
+            } else {
+               dst.color = { 1.0, 1.0, 1.0, 1.0 };
+            }
             dst.normal    = src.normal;
             dst.tangent   = src.tangent;
             dst.bitangent = src.bitangent;
@@ -2976,6 +3016,41 @@ namespace vulkanDK {
       mesh.shader_params.transform = transform;
       mesh.texture_indices.diffuse = fallback_texture_index;
       ++this->scene.textures[fallback_texture_index].refcount;
+      //
+      bool enable_vertex_alpha = false;
+      bool enable_vertex_color = false;
+      {  // Enable alpha
+         if (auto* alpha = geom->properties.alpha) {
+            mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
+            //
+            mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
+            mesh.push_params.alpha_test_threshold  = alpha->testing.threshold;
+            mesh.push_params.enable_alpha_blending = alpha->blending.enabled;
+         } else if (auto* shader = geom->properties.shader) {
+            //
+            // Test for "Vertex Alpha" shader flag.
+            //
+            if (auto* casted = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            } else if (auto* casted = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            }
+            //
+            if (enable_vertex_alpha) {
+               mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
+            }
+         }
+      }
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto& vl = data->vertices;
@@ -2987,10 +3062,10 @@ namespace vulkanDK {
          for (size_t i = 0; i < size; ++i) {
             auto& vert = mesh.data.vertices[i];
             vert.pos = data->vertices[i];
-            if (cl.size()) {
-               vert.color = { cl[i].r, cl[i].g, cl[i].b };
+            if (enable_vertex_color && cl.size()) {
+               vert.color = { cl[i].r, cl[i].g, cl[i].b, enable_vertex_alpha ? cl[i].a : 1.0 };
             } else {
-               vert.color = { 1.0, 1.0, 1.0 };
+               vert.color = { 1.0, 1.0, 1.0, 1.0 };
             }
             if (ul.size()) {
                auto& uv = ul[0];
@@ -3268,9 +3343,9 @@ namespace vulkanDK {
                vert.bitangent = { 0, 1, 0 };
                vert.uv        = { 0, 0 };
                if (i < 4) {
-                  vert.color = { 0.2, 0.2, 0.2 }; // near color
+                  vert.color = { 0.2, 0.2, 0.2, 1.0 }; // near color
                } else {
-                  vert.color = { 0.8, 0.8, 0.8 }; // far color
+                  vert.color = { 0.8, 0.8, 0.8, 1.0 }; // far color
                }
                //
                auto posw = undo * glm::vec4(vert.pos, 1.0F);
@@ -3363,9 +3438,9 @@ namespace vulkanDK {
                vert.bitangent = { 0, 1, 0 };
                vert.uv        = { 0, 0 };
                if (i < 4) {
-                  vert.color = { 0.1, 0.1, 0.1 }; // near color
+                  vert.color = { 0.1, 0.1, 0.1, 1.0 }; // near color
                } else {
-                  vert.color = { 0.5, 0.5, 0.5 }; // far color
+                  vert.color = { 0.5, 0.5, 0.5, 1.0 }; // far color
                }
                //
                auto posw = undo * glm::vec4(vert.pos, 1.0F);

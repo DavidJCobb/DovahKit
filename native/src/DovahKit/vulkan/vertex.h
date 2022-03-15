@@ -7,7 +7,7 @@
 namespace vulkanDK {
    struct vertex {
       glm::vec3 pos;
-      glm::vec3 color;
+      glm::vec4 color;
       glm::vec2 uv;
       glm::vec3 normal;
       glm::vec3 tangent;

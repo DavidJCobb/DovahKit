@@ -834,6 +834,7 @@
     <ClInclude Include="nif\reader.h" />
     <ClInclude Include="nif\types\NiMatrix33.h" />
     <ClInclude Include="nif\types\NiTransform.h" />
+    <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h" />
     <ClInclude Include="nif\types\Triangle.h" />
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
     <ClInclude Include="shaders\includes\point_light.glsl" />

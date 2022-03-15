@@ -15,12 +15,18 @@
 #include "../includes/point_light.glsl"
 #include "../includes/calc_point_light.glsl"
 
+// configuration defines:
+// USE_ALPHA == 0 or 1
+
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
 layout(push_constant) uniform PER_OBJECT {
-   int object_index;
-	int texture_index;
-   int texture_normal_index;
+   int   object_index;
+	int   texture_index;
+   int   texture_normal_index;
+   float alpha_test_threshold;
+   int   alpha_test_operation;
+   bool  enable_alpha_blending;
 } pushed;
 
 struct ObjectData {
@@ -49,7 +55,7 @@ layout(std140,set = 0, binding = 4) readonly buffer PointLightBuffer {
 layout(binding = 5) uniform texture2D textures[];
 
 layout(location = 0) in VS_OUT {
-   vec3  color;
+   vec4  color; // vertex color
    vec2  uv;
    vec3  pos_world;
    mat3  tangent_space;
@@ -65,8 +71,42 @@ vec4 calculate_color() {
    //
    ObjectData current_object = objectBuffer.objects[pushed.object_index];
    //
-   color  = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
-   color *= vec4(fs_in.color, 1.0);
+   color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   color *= fs_in.color;
+   #if USE_ALPHA == 0
+      color.a = 1.0;
+   #else
+      float alpha_test = 1.0;
+      switch (pushed.alpha_test_operation) {
+         case 0: // GL_ALWAYS
+            break;
+         case 1: // GL_LESS
+            alpha_test = color.a < pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 2: // GL_EQUAL
+            alpha_test = color.a == pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 3: // GL_LEQUAL
+            alpha_test = color.a <= pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 4: // GL_GREATER
+            alpha_test = color.a > pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 5: // GL_NOTEQUAL
+            alpha_test = color.a != pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 6: // GL_GEQUAL
+            alpha_test = color.a >= pushed.alpha_test_threshold ? 1.0 : 0.0;
+            break;
+         case 7: // GL_NEVER
+            alpha_test = 0.0;
+            break;
+      }
+      if (!pushed.enable_alpha_blending) {
+         color.a = 1.0;
+      }
+      color.a *= alpha_test;
+   #endif
    //
    vec3 normal = vec3(0, 0, 1);
    if (pushed.texture_normal_index >= 0) {
