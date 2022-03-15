@@ -1,4 +1,6 @@
 #include "command_buffer.h"
+#include "material.h"
+#include "render_pass.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -66,6 +68,41 @@ namespace vulkanDK {
    }
    VkResult command_buffer::finish() {
       return vkEndCommandBuffer(this->handle);
+   }
+
+   void command_buffer::_begin_render_pass(
+      VkFramebuffer framebuffer,
+      const VkRect2D render_area,
+      const render_pass& pass,
+      const VkClearValue* clear_values,
+      size_t clear_value_count,
+      VkSubpassContents contents
+   ) {
+      auto pass_begin_info = VkRenderPassBeginInfo{
+         .sType           = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+         .renderPass      = pass.handle,
+         .framebuffer     = framebuffer,
+         .renderArea      = render_area,
+         .clearValueCount = (uint32_t)clear_value_count,
+         .pClearValues    = clear_values,
+      };
+      vkCmdBeginRenderPass(this->handle, &pass_begin_info, contents);
+   }
+
+   void command_buffer::_bind_material_and_descriptors(const material& mat, VkPipelineBindPoint bind_point, uint32_t bind_to, const VkDescriptorSet* sets, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count) {
+      vkCmdBindDescriptorSets(this->handle, bind_point, mat.pipeline.layout, bind_to, (uint32_t)ds_count, sets, (uint32_t)do_count, dynamic_offsets);
+      vkCmdBindPipeline(this->handle, bind_point, mat.pipeline.handle);
+   }
+
+   void command_buffer::_set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, size_t size, void* data) {
+      vkCmdPushConstants(
+         this->handle,
+         m.pipeline.layout,
+         flags,
+         0,
+         size,
+         (void*)&data
+      );
    }
 
    void command_buffer::_setup() {

@@ -29,9 +29,9 @@ namespace vulkanDK {
       this->teardown_texture_sampler();
       {
          auto& list = this->render_passes;
-         for (auto* rp : list) {
-            delete rp;
-         }
+         for (auto* rp : list)
+            if (rp)
+               delete rp;
          list.clear();
       }
       {

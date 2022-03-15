@@ -12,5 +12,7 @@
         <file>overlay-world-axes.vert.spv</file>
         <file>sun-shadow-depth.vert.spv</file>
         <file>util-full-screen-triangle.vert.spv</file>
+        <file>util-oit.frag.spv</file>
+        <file>shader.oit-color.frag.spv</file>
     </qresource>
 </RCC>

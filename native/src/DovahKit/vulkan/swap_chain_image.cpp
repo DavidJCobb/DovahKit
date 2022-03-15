@@ -31,7 +31,6 @@ namespace vulkanDK {
    }
    swap_chain_image& swap_chain_image::operator=(swap_chain_image&& o) noexcept {
       std::swap(this->image,           o.image);
-      std::swap(this->framebuffers,    o.framebuffers);
       std::swap(this->descriptor_sets, o.descriptor_sets);
       std::swap(this->command_buffers, o.command_buffers);
       std::swap(this->shader_params,   o.shader_params);
@@ -97,8 +96,8 @@ namespace vulkanDK {
       //
       {
          auto image_info = VkDescriptorImageInfo{
-            .sampler     = this->owner->swap_chain.sun_shadow_sampler,
-            .imageView   = this->owner->swap_chain.sun_shadow_buffer.view,
+            .sampler     = this->owner->canvas.sun_shadow.sampler,
+            .imageView   = this->owner->canvas.sun_shadow.map.view,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
          };
          auto write_info = VkWriteDescriptorSet{
@@ -112,6 +111,42 @@ namespace vulkanDK {
          };
          vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)1, &write_info, 0, nullptr);
       }
+      //
+      // OIT:
+      //
+      {
+         auto image_info_accumulator = VkDescriptorImageInfo{
+            .sampler     = VK_NULL_HANDLE,
+            .imageView   = this->owner->canvas.oit.accumulator.view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+         };
+         auto image_info_reveal = VkDescriptorImageInfo{
+            .sampler     = VK_NULL_HANDLE,
+            .imageView   = this->owner->canvas.oit.reveal.view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+         };
+         auto write_info = std::array{
+            VkWriteDescriptorSet{
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = this->descriptor_sets.oit_composite,
+               .dstBinding      = 0, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+               .pImageInfo      = &image_info_accumulator,
+            },
+            VkWriteDescriptorSet{
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = this->descriptor_sets.oit_composite,
+               .dstBinding      = 1, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+               .pImageInfo      = &image_info_reveal,
+            },
+         };
+         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      }
    }
    void swap_chain_image::teardown_descriptor_sets() {
       vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.list.size(), this->descriptor_sets.list.data());
@@ -120,18 +155,7 @@ namespace vulkanDK {
    void swap_chain_image::teardown() {
       if (!this->owner)
          return;
-      {
-         auto destroy_fb = [this](VkFramebuffer& fb) {
-            if (fb != VK_NULL_HANDLE) {
-               vkDestroyFramebuffer(this->owner->logical_device, fb, nullptr);
-               fb = VK_NULL_HANDLE;
-            }
-         };
-         destroy_fb(this->framebuffers.main);
-         destroy_fb(this->framebuffers.sun_shadows);
-      }
-      this->image.destroy_view();
-      this->image.image = VK_NULL_HANDLE;
+      this->image.teardown();
       //
       this->overlays.fps.teardown_atlas();
       //
@@ -552,33 +576,28 @@ namespace vulkanDK {
             throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
          }
          //
-         auto clear_values = std::array{
-            VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-         };
-         auto pass_begin_info = VkRenderPassBeginInfo{
-            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-            .renderPass  = this->owner->render_passes_by_name.main_shadow->handle,
-            .framebuffer = this->framebuffers.sun_shadows,
-            .renderArea  = {
+         command_buffer.begin_render_pass(
+            *this->owner->render_passes_by_name.main_shadow,
+            this->owner->canvas.sun_shadow.framebuffer,
+            {
                .offset = { 0, 0 },
                .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
             },
-            .clearValueCount = (uint32_t)clear_values.size(),
-            .pClearValues    = clear_values.data(),
-         };
-         vkCmdBeginRenderPass(command_handle, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+            std::array{
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
          {
             const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
             assert(shader);
             const auto&   material = shader->material;
-            vkCmdBindDescriptorSets(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.sun_shadows, 0, nullptr);
-            vkCmdBindPipeline      (command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
             //
             VkDeviceSize offset = 0;
             for (size_t j = 0; j < scene.meshes.size(); ++j) {
                auto& ro  = scene.meshes[j];
                auto& vib = ro.vertex_and_index_buffer;
-               //
                if (!ro.active())
                   continue;
 
@@ -587,14 +606,7 @@ namespace vulkanDK {
                   .texture_index = (int32_t)ro.texture_indices.diffuse,
                   .texture_normal_index = (int32_t)ro.texture_indices.normals,
                };
-               vkCmdPushConstants(
-                  command_handle,
-                  material.pipeline.layout,
-                  VK_SHADER_STAGE_VERTEX_BIT,
-                  0,
-                  sizeof(pc),
-                  (void*)&pc
-               );
+               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
             }
          }
@@ -603,6 +615,11 @@ namespace vulkanDK {
             throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (sun shadows).");
          }
       }
+      //
+      // Normal objects:
+      //
+      bool can_do_alpha = this->owner->can_do_alpha();
+      //
       {  // Scene objects
          auto& command_buffer = this->command_buffers.main;
          auto  command_handle = command_buffer.handle;
@@ -611,23 +628,21 @@ namespace vulkanDK {
          if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
             throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer.");
          }
+         this->owner->canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
          //
-         auto clear_values = std::array{
-            VkClearValue{ .color        = {0, 0, 0, 1} }, // set framebuffer to black
-            VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} },     // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
-         };
-         auto pass_begin_info = VkRenderPassBeginInfo{
-            .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-            .renderPass  = this->owner->render_passes_by_name.main->handle,
-            .framebuffer = this->framebuffers.main,
-            .renderArea  = {
+         command_buffer.begin_render_pass(
+            *this->owner->render_passes_by_name.main,
+            this->owner->canvas.main_framebuffer,
+            {
                .offset = { 0, 0 },
                .extent = this->owner->surface_extent,
             },
-            .clearValueCount = (uint32_t)clear_values.size(),
-            .pClearValues    = clear_values.data(),
-         };
-         vkCmdBeginRenderPass(command_handle, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+            std::array{
+               VkClearValue{ .color = { 0, 0, 0, 1 } }, // set framebuffer to black
+               VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} }, // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
          {
             //
             // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
@@ -636,98 +651,185 @@ namespace vulkanDK {
             const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
             assert(shader);
             const auto& material = shader->material;
-            vkCmdBindDescriptorSets(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.standard, 0, nullptr);
-            vkCmdBindPipeline      (command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
+            command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
+            for (size_t j = 0; j < scene.meshes.size(); ++j) {
+               auto& ro = scene.meshes[j];
+               auto& vib = ro.vertex_and_index_buffer;
+               if (!ro.active())
+                  continue;
+               if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::can_have_alpha))
+                  continue;
+
+               auto pc = rendered_mesh::push_constant{
+                  .object_index = (int32_t)j,
+                  .texture_index = (int32_t)ro.texture_indices.diffuse,
+                  .texture_normal_index = (int32_t)ro.texture_indices.normals,
+               };
+               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
+               ro.draw_call(command_handle);
+            }
+         }
+         command_buffer.end_render_pass();
+         //
+         if (can_do_alpha) {
+            assert(this->owner->render_passes_by_name.main_oit);
+            //
+            // OIT passes:
+            //
+            command_buffer.begin_render_pass(
+               *this->owner->render_passes_by_name.main_oit,
+               this->owner->canvas.oit.framebuffer,
+               {
+                  .offset = { 0, 0 },
+                  .extent = this->owner->surface_extent,
+               },
+               std::array{
+                  VkClearValue{ .color = { 0, 0, 0, 0 } }, // accumulator
+                  VkClearValue{ .color = { 1, 0, 0, 0 } }, // reveal
+               },
+               VK_SUBPASS_CONTENTS_INLINE
+            );
             {
-               VkDeviceSize offset = 0;
+               const shader* shader = this->owner->get_shader(surface_renderer::main_shader_oit_color_id);
+               assert(shader);
+               const auto& material = shader->material;
+               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
                for (size_t j = 0; j < scene.meshes.size(); ++j) {
-                  auto& ro  = scene.meshes[j];
+                  auto& ro = scene.meshes[j];
                   auto& vib = ro.vertex_and_index_buffer;
-                  //
                   if (!ro.active())
                      continue;
-
+                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::can_have_alpha))
+                     continue;
                   auto pc = rendered_mesh::push_constant{
-                     .object_index  = (int32_t)j,
+                     .object_index = (int32_t)j,
                      .texture_index = (int32_t)ro.texture_indices.diffuse,
                      .texture_normal_index = (int32_t)ro.texture_indices.normals,
                   };
-                  vkCmdPushConstants(
-                     command_handle,
-                     material.pipeline.layout,
-                     VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                     0,
-                     sizeof(pc),
-                     (void*)&pc
-                  );
+                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                   ro.draw_call(command_handle);
                }
-               //qDebug("[vulkanDK::frame_in_flight::_refill_command_buffers] Command buffer: processed %u objects.", scene.meshes.size());
             }
+            vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+            {
+               const shader* shader = this->owner->get_shader(surface_renderer::oit_composite_shader_id);
+               assert(shader);
+               const auto& material = shader->material;
+               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.oit_composite });
+               vkCmdDraw(command_handle, 3, 1, 0, 0);
+            }
+            command_buffer.end_render_pass();
          }
-         vkCmdEndRenderPass(command_handle);
+         //
+         // Done!
+         //
          if (command_buffer.finish() != VK_SUCCESS) {
             throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
          }
       }
+      //
+      {  // Finish
+         auto& command_buffer = this->command_buffers.finish;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (finish).");
+         }
+         //
+         {  // Blit to swap chain image
+            const auto& extent      = this->owner->surface_extent;
+            const auto  blit_region = VkImageBlit{
+               .srcSubresource = {
+                  .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                  .mipLevel       = 0,
+                  .baseArrayLayer = 0,
+                  .layerCount     = 1,
+               },
+               .srcOffsets = {
+                  { .x = 0, .y = 0, .z = 0 },
+                  {
+                     .x = (int32_t)extent.width,
+                     .y = (int32_t)extent.height,
+                     .z = 1,
+                  },
+               },
+               .dstSubresource = {
+                  .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                  .mipLevel       = 0,
+                  .baseArrayLayer = 0,
+                  .layerCount     = 1,
+               },
+               .dstOffsets = {
+                  {.x = 0, .y = 0, .z = 0 },
+                  {
+                     .x = (int32_t)extent.width,
+                     .y = (int32_t)extent.height,
+                     .z = 1,
+                  },
+               },
+            };
 
+            this->owner->canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT);
+            this->image.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
+            vkCmdBlitImage(command_handle,
+               this->owner->canvas.color.handle,
+               this->owner->canvas.color.current.layout,
+               this->image.handle,
+               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+               1, &blit_region,
+               VK_FILTER_NEAREST
+            );
+            this->image.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 0);
+         }
+         this->owner->canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+         if (command_buffer.finish() != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (finish).");
+         }
+      }
    }
    void swap_chain_image::_refill_fps_overlay_command_buffer() {
-      auto command_buffer = this->command_buffers.fps.handle;
+      auto& command_buffer = this->command_buffers.fps;
+      auto  command_handle = command_buffer.handle;
       //
-      vkResetCommandBuffer(command_buffer, 0);
-      auto buffer_begin_info = VkCommandBufferBeginInfo{
-         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-         .flags            = 0,
-         .pInheritanceInfo = nullptr,
-      };
-      if (vkBeginCommandBuffer(command_buffer, &buffer_begin_info) != VK_SUCCESS) {
+      command_buffer.reset(0);
+      if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to begin recording UI command buffer.");
       }
       //
-      this->overlays.fps.commands_pre_pass(command_buffer); // commands that must run before vkCmdBeginRenderPass
-      this->overlays.world_axes.commands_pre_pass(command_buffer); // commands that must run before vkCmdBeginRenderPass
+      this->overlays.fps.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
+      this->overlays.world_axes.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
       //
-      auto clear_values = std::array{
-         //
-         // Values here should match the attachments we're using.
-         //
-         VkClearValue{ .color        = { 0, 0, 0, 0 } },
-         VkClearValue{ .depthStencil = { 1.0, 0 } }, // don't apply inverted depth here; that's per projection matrix
-      };
-      auto pass_begin_info = VkRenderPassBeginInfo{
-         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-         .renderPass  = this->owner->render_passes_by_name.ui->handle,
-         .framebuffer = this->framebuffers.main,
-         .renderArea  = {
+      command_buffer.begin_render_pass(
+         *this->owner->render_passes_by_name.ui,
+         this->owner->canvas.main_framebuffer,
+         {
             .offset = { 0, 0 },
             .extent = this->owner->surface_extent,
          },
-         .clearValueCount = (uint32_t)clear_values.size(),
-         .pClearValues    = clear_values.data(),
-      };
-      vkCmdBeginRenderPass(command_buffer, &pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+         std::array{
+            VkClearValue{ .color        = { 0, 0, 0, 0 } },
+            VkClearValue{ .depthStencil = { 1.0, 0 } }, // don't apply inverted depth here; that's per projection matrix
+         },
+         VK_SUBPASS_CONTENTS_INLINE
+      );
       {
          const shader* shader = this->owner->get_shader(vulkanDK::overlays::fps::shader_id);
          if (shader) {
-            const auto& material = shader->material;
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.fps, 0, nullptr);
-            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
-            this->overlays.fps.draw_call(command_buffer);
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.fps });
+            this->overlays.fps.draw_call(command_handle);
          }
       }
       {
          const shader* shader = this->owner->get_shader(vulkanDK::overlays::world_axes::shader_id);
          if (shader) {
-            const auto& material = shader->material;
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.layout, 0, 1, &this->descriptor_sets.world_axes, 0, nullptr);
-            vkCmdBindPipeline      (command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material.pipeline.handle);
-            this->overlays.world_axes.draw_call(command_buffer);
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.world_axes });
+            this->overlays.world_axes.draw_call(command_handle);
          }
       }
-      vkCmdEndRenderPass(command_buffer);
-      if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+      command_buffer.end_render_pass();
+      if (command_buffer.finish() != VK_SUCCESS) {
          throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to record the UI command buffer.");
       }
    }

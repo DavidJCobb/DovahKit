@@ -22,11 +22,12 @@ namespace vulkanDK {
          size_t my_index = -1;
 
          union command_buffer_set {
-            std::array<command_buffer, 3> list;
+            std::array<command_buffer, 4> list;
             struct {
                command_buffer main_shadow;
                command_buffer main;
                command_buffer fps;
+               command_buffer finish;
             };
 
             command_buffer_set() : list({}) {};
@@ -60,11 +61,7 @@ namespace vulkanDK {
          swap_chain_image(swap_chain_image&&) noexcept;
          swap_chain_image& operator=(swap_chain_image&&) noexcept;
 
-         surface_renderer_image_view image;
-         struct {
-            VkFramebuffer main        = VK_NULL_HANDLE;
-            VkFramebuffer sun_shadows = VK_NULL_HANDLE;
-         } framebuffers;
+         image_and_view image;
          //
          descriptor_set_group descriptor_sets;
          command_buffer_set   command_buffers;

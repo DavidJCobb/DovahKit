@@ -14,6 +14,7 @@
 #include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
 #include "config/validation_layers.h"
+#include "helpers/convert_access_flags_and_pipeline_stages.h"
 #include "helpers/glm_transform_from_beth.h"
 #include "helpers/specialization_map_entry_for_member.h"
 
@@ -76,6 +77,11 @@ namespace {
 #include "overlays/fps.h"
 namespace {
    static constexpr bool setup_fps_counter = true; // mainly just used for grouping code, tbh
+}
+
+namespace {
+   static constexpr VkFormat format_for_oit_accumulator = VK_FORMAT_R16G16B16A16_SFLOAT;
+   static constexpr VkFormat format_for_oit_reveal      = VK_FORMAT_R16_SFLOAT;
 }
 
 namespace {
@@ -236,6 +242,22 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
+      this->descriptor_set_layouts.oit_composite.bindings = {
+         vulkanDK::descriptor_binding{
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       this->descriptor_set_layouts.sun_shadows.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_shadow_state
             .index              = 0,
@@ -386,6 +408,7 @@ namespace vulkanDK {
       }
       //
       auto deviceFeatures = VkPhysicalDeviceFeatures{
+         .independentBlend  = pd_support.independent_blending ? VK_TRUE : VK_FALSE,
          .fillModeNonSolid  = pd_support.non_solid_polygon_fill_modes ? VK_TRUE : VK_FALSE,
          .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
          .largePoints       = pd_support.large_points ? VK_TRUE : VK_FALSE,
@@ -533,9 +556,11 @@ namespace vulkanDK {
          this->_setup_render_passes();               // requires swap chain format
          for (auto* s : this->shaders)
             s->setup_pipeline(this->surface_extent);
+         this->_setup_oit_images();                  // requires extent size
          this->_setup_depth_buffer();                // requires extent size
+         this->_setup_color_buffer();                // requires extent size
          this->_setup_swap_chain_images();
-         this->_setup_framebuffers();                // requires swap chain image count and view handles
+         this->_setup_framebuffers();                // requires extent size
          this->_setup_descriptor_pool();             // requires swap chain image count
          this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
          for (auto& fif : this->swap_chain.frames_in_flight)
@@ -606,7 +631,8 @@ namespace vulkanDK {
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-               .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               //.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // for OIT
             },
             VkAttachmentDescription{ // depth
                .format         = this->find_depth_format(),
@@ -713,6 +739,122 @@ namespace vulkanDK {
             }
          };
       }
+      if (this->can_do_alpha()) {
+         auto* rp = this->render_passes_by_name.main_oit = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // OIT accumulator
+               .format         = format_for_oit_accumulator,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            },
+            VkAttachmentDescription{ // OIT reveal
+               .format         = format_for_oit_reveal,
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            },
+            VkAttachmentDescription{ // color
+               .format         = VK_FORMAT_UNDEFINED,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            },
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
+            },
+         };
+         rp->subpasses.descriptions = {
+            {  // subpass: color pass
+               .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = {
+                     VkAttachmentReference{ // OIT accumulator
+                        .attachment = 0,
+                        .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     },
+                     VkAttachmentReference{ // OIT reveal
+                        .attachment = 1,
+                        .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     }
+                  },
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 3,
+                     .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+            {  // subpass: composite pass
+               .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = {
+                     VkAttachmentReference{ // color
+                        .attachment = 2,
+                        .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     },
+                  },
+                  .input = {
+                     VkAttachmentReference{ // OIT accumulator
+                        .attachment = 0,
+                        .layout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                     },
+                     VkAttachmentReference{ // OIT reveal
+                        .attachment = 1,
+                        .layout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                     }
+                  },
+               },
+            },
+         };
+         rp->subpasses.dependencies = {
+            VkSubpassDependency{
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0,
+               .dstSubpass      = 1,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dependencyFlags = 0,
+            },
+            VkSubpassDependency{ // dependency to transition the images back to optimal
+               .srcSubpass      = 1,
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+         };
+      }
       {
          auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
          rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
@@ -781,151 +923,315 @@ namespace vulkanDK {
             }
          };
       }
-      this->render_passes = { this->render_passes_by_name.main_shadow, this->render_passes_by_name.main, this->render_passes_by_name.ui };
+      this->render_passes = { this->render_passes_by_name.main_shadow, this->render_passes_by_name.main, this->render_passes_by_name.ui, this->render_passes_by_name.main_oit };
+   }
+
+   void surface_renderer::_setup_oit_composite_shader() {
+      auto* s = this->get_or_create_shader(oit_composite_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main_oit, 1);
+      s->set_layout_info({ this->descriptor_set_layouts.oit_composite.handle });
+      //
+      auto& dfn = s->definition;
+      //
+      shader_module* frag = nullptr;
+      shader_module* vert = nullptr;
+      {
+         frag = new shader_module(this->logical_device, QResource("shaders/util-oit.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/util-full-screen-triangle.vert.spv").uncompressedData());
+         if (frag->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
+         }
+         if (vert->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
+         }
+         this->shader_modules.push_back(frag);
+         //
+         this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util-full-screen-triangle.vert.spv)");
+      }
+      //
+      dfn.stages = {
+         {
+            .module           = frag,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module           = vert,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{
+         .source = {
+            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+            .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+         },
+         .destination = {
+            .color = VK_BLEND_FACTOR_SRC_ALPHA,
+            .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
+         },
+      });
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout(*this);
+   }
+   void surface_renderer::_setup_basic_color_shader() {
+      auto* s = this->get_or_create_shader(main_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.standard.handle,
+         },
+         {  // Push constants
+            VkPushConstantRange{
+               .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+               .offset     = 0,
+               .size       = sizeof(rendered_mesh::push_constant),
+            }
+         }
+      );
+      //
+      auto& dfn = s->definition;
+      //
+      shader_module* frag = nullptr;
+      shader_module* vert = nullptr;
+      {
+         frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
+         if (frag->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
+         }
+         if (vert->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
+         }
+         this->shader_modules.push_back(frag);
+         this->shader_modules.push_back(vert);
+         //
+         this->set_debug_object_name(frag->handle, "Shader Module (Basic Color: shader.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Basic Color: shader.vert.spv)");
+      }
+      //
+      struct _specializations {
+         int32_t max_lights = config::max_lights_in_scene;
+      };
+      _specializations spec;
+      //
+      dfn.stages = {
+         {
+            .module              = frag,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+         },
+         {
+            .module              = vert,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      if constexpr (config::use_inverted_depth) {
+         dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      {
+         auto& vertex     = dfn.inputs.vertex;
+         auto  attributes = vertex::getAttributeDescriptions();
+         vertex.bindings.push_back(vertex::getBindingDescription());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout(*this);
+   }
+   void surface_renderer::_setup_basic_wboit_shader() {
+      auto* s = this->get_or_create_shader(main_shader_oit_color_id);
+      s->set_render_pass(this->render_passes_by_name.main_oit, 0);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.standard.handle,
+         },
+         {  // Push constants
+            VkPushConstantRange{
+               .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+               .offset     = 0,
+               .size       = sizeof(rendered_mesh::push_constant),
+            }
+         }
+      );
+      //
+      auto& dfn = s->definition;
+      //
+      shader_module* frag = nullptr;
+      shader_module* vert = nullptr;
+      {
+         frag = new shader_module(this->logical_device, QResource("shaders/shader.oit-color.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
+         if (frag->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
+         }
+         if (vert->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
+         }
+         this->shader_modules.push_back(frag);
+         this->shader_modules.push_back(vert);
+         //
+         this->set_debug_object_name(frag->handle, "Shader Module (Basic WBOIT: shader.oit-color.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Basic WBOIT: shader.vert.spv)");
+      }
+      //
+      struct _specializations {
+         int32_t max_lights = config::max_lights_in_scene;
+      };
+      _specializations spec;
+      //
+      dfn.stages = {
+         {
+            .module              = frag,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+         },
+         {
+            .module              = vert,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{ // accumulator
+         .source = {
+            .color = VK_BLEND_FACTOR_ONE,
+            .alpha = VK_BLEND_FACTOR_ONE,
+         },
+         .destination = {
+            .color = VK_BLEND_FACTOR_ONE,
+            .alpha = VK_BLEND_FACTOR_ONE,
+         },
+         .operations = {
+            .color = VK_BLEND_OP_ADD,
+            .alpha = VK_BLEND_OP_ADD,
+         },
+      });
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{ // reveal
+         .source = {
+            .color = VK_BLEND_FACTOR_ZERO,
+            .alpha = VK_BLEND_FACTOR_ZERO,
+         },
+         .destination = {
+            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+            .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+         },
+         .operations = {
+            .color = VK_BLEND_OP_ADD,
+            .alpha = VK_BLEND_OP_ADD,
+         },
+      });
+      if constexpr (config::use_inverted_depth) {
+         dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      {
+         auto& vertex     = dfn.inputs.vertex;
+         auto  attributes = vertex::getAttributeDescriptions();
+         vertex.bindings.push_back(vertex::getBindingDescription());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout(*this);
+   }
+   void surface_renderer::_setup_sun_shadow_shader() {
+      auto* s = this->get_or_create_shader(sun_shadow_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main_shadow);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.sun_shadows.handle,
+         },
+         {  // Push constants
+            VkPushConstantRange{
+               .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+               .offset     = 0,
+               .size       = sizeof(rendered_mesh::push_constant),
+            }
+         }
+      );
+      auto& dfn = s->definition;
+      //
+      shader_module* vert = nullptr;
+      {
+         vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
+         if (vert->empty()) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader (sun shadows).");
+         }
+         this->shader_modules.push_back(vert);
+         //
+         this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
+      }
+      //
+      dfn.stages = {
+         {
+            .module           = vert,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+      dfn.rasterization.depthBiasEnable         = VK_TRUE;
+      dfn.rasterization.depthBiasConstantFactor = 1.25F;
+      dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
+      dfn.rasterization.depthBiasClamp          = 0.00F;
+      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      if constexpr (config::use_inverted_shadow_map) {
+         dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+      } else {
+         dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+      }
+      {
+         auto& vertex     = dfn.inputs.vertex;
+         auto  attributes = vertex::getAttributeDescriptions();
+         vertex.bindings.push_back(vertex::getBindingDescription());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      s->set_area_override_info({
+         .viewport = {
+            .x        = 0,
+            .y        = 0,
+            .width    = config::sun_shadow_map_resolution_x,
+            .height   = config::sun_shadow_map_resolution_y,
+            .minDepth = 0.0,
+            .maxDepth = 1.0,
+         },
+         .scissor = {
+            .offset = { .x = 0, .y = 0 },
+            .extent = {
+               .width  = config::sun_shadow_map_resolution_x,
+               .height = config::sun_shadow_map_resolution_y,
+            },
+         },
+      });
+      s->setup_pipeline_layout(*this);
    }
    void surface_renderer::_setup_shaders() {
-      {  // Material: "SunShadw"
-         auto* s = this->get_or_create_shader(sun_shadow_shader_id);
-         s->set_render_pass(this->render_passes_by_name.main_shadow);
-         s->set_layout_info(
-            {  // Descriptor set layouts
-               this->descriptor_set_layouts.sun_shadows.handle,
-            },
-            {  // Push constants
-               VkPushConstantRange{
-                  .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                  .offset     = 0,
-                  .size       = sizeof(rendered_mesh::push_constant),
-               }
-            }
-         );
-         auto& dfn = s->definition;
-         //
-         shader_module* vert = nullptr;
-         {
-            vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
-            if (vert->empty()) {
-               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader (sun shadows).");
-            }
-            this->shader_modules.push_back(vert);
-         }
-         //
-         dfn.stages = {
-            {
-               .module           = vert,
-               .entry_point_name = "main",
-               .stage            = VK_SHADER_STAGE_VERTEX_BIT,
-            },
-         };
-         dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
-         dfn.rasterization.depthBiasEnable         = VK_TRUE;
-         dfn.rasterization.depthBiasConstantFactor = 1.25F;
-         dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
-         dfn.rasterization.depthBiasClamp          = 0.00F;
-         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-         if constexpr (config::use_inverted_shadow_map) {
-            dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
-         } else {
-            dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
-         }
-         {
-            auto& vertex     = dfn.inputs.vertex;
-            auto  attributes = vertex::getAttributeDescriptions();
-            vertex.bindings.push_back(vertex::getBindingDescription());
-            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
-         }
-         s->set_area_override_info({
-            .viewport = {
-               .x        = 0,
-               .y        = 0,
-               .width    = config::sun_shadow_map_resolution_x,
-               .height   = config::sun_shadow_map_resolution_y,
-               .minDepth = 0.0,
-               .maxDepth = 1.0,
-            },
-            .scissor = {
-               .offset = { .x = 0, .y = 0 },
-               .extent = {
-                  .width  = config::sun_shadow_map_resolution_x,
-                  .height = config::sun_shadow_map_resolution_y,
-               },
-            },
-         });
-         s->setup_pipeline_layout(*this);
-      }
-      {  // Material: "MainMatl"
-         auto* s = this->get_or_create_shader(main_shader_id);
-         s->set_render_pass(this->render_passes_by_name.main);
-         s->set_layout_info(
-            {  // Descriptor set layouts
-               this->descriptor_set_layouts.standard.handle,
-            },
-            {  // Push constants
-               VkPushConstantRange{
-                  .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                  .offset     = 0,
-                  .size       = sizeof(rendered_mesh::push_constant),
-               }
-            }
-         );
-         //
-         auto& dfn = s->definition;
-         //
-         shader_module* frag = nullptr;
-         shader_module* vert = nullptr;
-         {
-            frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
-            vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-            if (frag->empty()) {
-               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
-            }
-            if (vert->empty()) {
-               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
-            }
-            this->shader_modules.push_back(frag);
-            this->shader_modules.push_back(vert);
-         }
-         //
-         struct _specializations {
-            int32_t max_lights = config::max_lights_in_scene;
-         };
-         _specializations spec;
-         //
-         dfn.stages = {
-            {
-               .module              = frag,
-               .entry_point_name    = "main",
-               .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-               .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
-            },
-            {
-               .module              = vert,
-               .entry_point_name    = "main",
-               .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            },
-         };
-         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-         if constexpr (config::use_inverted_depth) {
-            dfn.depth.comparison = VK_COMPARE_OP_GREATER;
-         }
-         {
-            auto& vertex     = dfn.inputs.vertex;
-            auto  attributes = vertex::getAttributeDescriptions();
-            vertex.bindings.push_back(vertex::getBindingDescription());
-            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
-         }
-         //
-         // And be sure to set up the pipeline layout when you're done!
-         //
-         s->setup_pipeline_layout(*this);
-      }
+      this->_setup_oit_composite_shader();
+      qDebug("[Vulkan] Shader setup: OIT composite");
+      //
+      this->_setup_sun_shadow_shader();
+      qDebug("[Vulkan] Shader setup: Sun Shadow");
+      this->_setup_basic_color_shader();
+      qDebug("[Vulkan] Shader setup: Main");
+      this->_setup_basic_wboit_shader();
+      qDebug("[Vulkan] Shader setup: Main (OIT)");
       //
       // FPS counter:
       //
       if constexpr (setup_fps_counter) {
          vulkanDK::overlays::fps::setup_shaders(*this);
+         qDebug("[Vulkan] Shader setup: FPS");
       }
       vulkanDK::overlays::world_axes::setup_shaders(*this);
+      qDebug("[Vulkan] Shader setup: World Axes");
    }
    //
    void surface_renderer::_create_null_texture() {
@@ -956,9 +1262,7 @@ namespace vulkanDK {
          memset(data, 0, image_size);
          staging.unmap_memory(data);
          //
-         nt.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-         nt.copy_content_from_buffer(staging.handle);
-         nt.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+         nt.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
       }
       //
       nt.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -1015,7 +1319,7 @@ namespace vulkanDK {
             //
             // Now let's create an image:
             //
-            target.content = concrete_image(*this);
+            target.content = owned_image_and_view(*this);
             target.content.create_image(
                {
                   .extent = {
@@ -1027,15 +1331,7 @@ namespace vulkanDK {
                },
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
             );
-            //
-            // Now we need to transfer our image from the staging buffer to the final buffer, 
-            // transitioning its layout to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL as we do. We 
-            // can use VK_IMAGE_LAYOUT_UNDEFINED as the "old layout" because we don't actually 
-            // care about the data (or lack thereof, really) in the freshly-created VkImage.
-            //
-            target.content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            target.content.copy_content_from_buffer(staging.handle);
-            target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            target.content.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
             target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
             //
             target.life_state = scene_frame_item_state::active;
@@ -1304,15 +1600,22 @@ namespace vulkanDK {
    //
    void surface_renderer::_setup_render_passes() {
       this->render_passes_by_name.main->attachments[0].format = this->swap_chain.format;
+      if (auto* rp = this->render_passes_by_name.main_oit) {
+         rp->attachments[2].format = this->swap_chain.format;
+      }
       this->render_passes_by_name.ui->attachments[0].format = this->swap_chain.format;
       //
       // (Re)create the render passes within the GPU:
       //
       for(auto* rp : this->render_passes)
-         rp->setup();
+         if (rp)
+            rp->setup();
       //
       this->set_debug_object_name(this->render_passes_by_name.main_shadow->handle, "Render Pass: Sun Shadows");
       this->set_debug_object_name(this->render_passes_by_name.main->handle, "Render Pass: Main");
+      if (auto* rp = this->render_passes_by_name.main_oit) {
+         this->set_debug_object_name(rp->handle, "Render Pass: Main OIT");
+      }
       this->set_debug_object_name(this->render_passes_by_name.ui->handle,   "Render Pass: UI");
    }
    //
@@ -1375,7 +1678,7 @@ namespace vulkanDK {
          .imageColorSpace  = surfaceFormat.colorSpace,
          .imageExtent      = extent,
          .imageArrayLayers = 1,
-         .imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+         .imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
       };
       //
       std::array<uint32_t, 2> queue_family_indices = { this->queues.graphics.index, this->queues.presentation.index };
@@ -1407,8 +1710,8 @@ namespace vulkanDK {
    void surface_renderer::_setup_depth_buffer() {
       auto  extent = this->surface_extent;
       auto  format = this->find_depth_format();
-      auto& db     = swap_chain.depth_buffer;
-      db = concrete_image(*this);
+      auto& db     = this->canvas.depth;
+      db = owned_image_and_view(*this);
       db.create_image(
          {
             .extent = {
@@ -1421,16 +1724,37 @@ namespace vulkanDK {
          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
       db.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
-      db.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+      db.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
       //
       this->set_debug_object_name(db.handle, "Depth Buffer Image");
       this->set_debug_object_name(db.view,   "Depth Buffer Image View");
    }
+   void surface_renderer::_setup_color_buffer() {
+      auto  extent = this->surface_extent;
+      auto& db     = this->canvas.color;
+      db = owned_image_and_view(*this);
+      db.create_image(
+         {
+            .extent = {
+               .width  = extent.width,
+               .height = extent.height,
+            },
+            .format = this->swap_chain.format,
+            .usage  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+         }, 
+         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+      );
+      db.create_basic_view(this->swap_chain.format, VK_IMAGE_ASPECT_COLOR_BIT);
+      db.transition_layout(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+      //
+      this->set_debug_object_name(db.handle, "Color Buffer Image");
+      this->set_debug_object_name(db.view,   "Color Buffer Image View");
+   }
    void surface_renderer::_setup_sun_shadow_buffer() {
-      auto  format   = this->find_depth_format();
-      auto& framebuf = swap_chain.sun_shadow_buffer;
-      framebuf = concrete_image(*this);
-      framebuf.create_image(
+      auto  format = this->find_depth_format();
+      auto& image  = this->canvas.sun_shadow.map;
+      image = owned_image_and_view(*this);
+      image.create_image(
          {
             .extent = {
                .width  = config::sun_shadow_map_resolution_x,
@@ -1442,16 +1766,16 @@ namespace vulkanDK {
          }, 
          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
-      framebuf.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
-      framebuf.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+      image.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
+      image.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
       //
-      this->set_debug_object_name(framebuf.handle, "Sun Shadow Buffer Image");
-      this->set_debug_object_name(framebuf.view,   "Sun Shadow Buffer Image View");
+      this->set_debug_object_name(image.handle, "Sun Shadow Buffer Image");
+      this->set_debug_object_name(image.view,   "Sun Shadow Buffer Image View");
       //
       // Sampler:
       //
       const auto& support = this->device_info->support;
-      auto& sampler = this->swap_chain.sun_shadow_sampler;
+      auto& sampler = this->canvas.sun_shadow.sampler;
       auto  sampler_info = VkSamplerCreateInfo{
          .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
          .magFilter        = VK_FILTER_NEAREST,
@@ -1475,6 +1799,61 @@ namespace vulkanDK {
       }
       this->set_debug_object_name(sampler, "Sun Shadow Texture Sampler");
    }
+   void surface_renderer::_setup_oit_images() {
+      constexpr auto usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+      //
+      auto extent = this->surface_extent;
+      {
+         constexpr auto format = format_for_oit_accumulator;
+         auto& image = this->canvas.oit.accumulator;
+         image = owned_image_and_view(*this);
+         image.create_image(
+            {
+               .extent = {
+                  .width  = extent.width,
+                  .height = extent.height,
+               },
+               .format = format,
+               .usage  = usage,
+            }, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+         );
+         image.create_basic_view(format, VK_IMAGE_ASPECT_COLOR_BIT);
+         image.transition_layout(
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+         );
+         //
+         this->set_debug_object_name(image.handle, "OIT Accumulator Image");
+         this->set_debug_object_name(image.view,   "OIT Accumulator Image View");
+      }
+      {
+         constexpr auto format = format_for_oit_reveal;
+         auto& image = this->canvas.oit.reveal;
+         image = owned_image_and_view(*this);
+         image.create_image(
+            {
+               .extent = {
+                  .width  = extent.width,
+                  .height = extent.height,
+               },
+               .format = VK_FORMAT_R16_SFLOAT,
+               .usage  = usage,
+            }, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+         );
+         image.create_basic_view(format, VK_IMAGE_ASPECT_COLOR_BIT);
+         image.transition_layout(
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+         );
+         //
+         this->set_debug_object_name(image.handle, "OIT Reveal Image");
+         this->set_debug_object_name(image.view,   "OIT Reveal Image View");
+      }
+   }
    void surface_renderer::_setup_swap_chain_images() {
       auto& sc = this->swap_chain;
       //
@@ -1494,8 +1873,29 @@ namespace vulkanDK {
       for (size_t i = 0; i < image_count; ++i) {
          sc.images[i].setup(*this, i);
          //
-         sc.images[i].image = surface_renderer_image_view(*this, image_handles[i]);
+         auto& sci = sc.images[i].image;
+         sci = image_and_view(*this);
+         sci.handle   = image_handles[i];
+         sci.metadata = image_metadata{
+            .dimensions   = VkImageType::VK_IMAGE_TYPE_2D,
+            .extent       = {
+               .width  = this->surface_extent.width,
+               .height = this->surface_extent.height,
+               .depth  = 1
+            },
+            .format       = sc.format,
+            .is_cubemap   = false,
+            .layer_count  = 1,
+            .mipmap_count = 1,
+            .samples      = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+            .sharing      = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
+            .tiling       = VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
+            .usage        = 0,
+         };
          sc.images[i].image.create_basic_view(sc.format, VK_IMAGE_ASPECT_COLOR_BIT);
+         //
+         this->set_debug_object_name(sci.handle, QString("Swap Chain Image %1").arg(i).toStdString());
+         this->set_debug_object_name(sci.view,   QString("Swap Chain Image View %1").arg(i).toStdString());
       }
    }
    void surface_renderer::_setup_swap_chain_image_frame_data() {
@@ -1503,34 +1903,27 @@ namespace vulkanDK {
          image.setup_descriptor_sets();
    }
    void surface_renderer::_setup_framebuffers() {
-      auto& sc = this->swap_chain;
       auto extent = this->surface_extent;
-      auto r_pass = this->render_passes_by_name.main->handle;
-      //
-      for (auto& image : sc.images) {
-         auto attachments = std::array{ image.image.view, sc.depth_buffer.view };
+      {
+         auto attachments = std::array{ this->canvas.color.view, this->canvas.depth.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext           = nullptr,
             .flags           = 0,
-            .renderPass      = r_pass,
+            .renderPass      = this->render_passes_by_name.main->handle,
             .attachmentCount = attachments.size(),
             .pAttachments    = attachments.data(),
             .width           = extent.width,
             .height          = extent.height,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffers.main) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer.");
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.main_framebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create the main framebuffer.");
          }
+         this->set_debug_object_name(this->canvas.main_framebuffer, "Framebuffer (Main)");
       }
-      //
-      // TODO: next, we set up the offscreen framebuffers for the shadow map; we only need to rebuild these if the 
-      //       shadow map changes, but since we build them with the main render pass framebuffers, they'll get 
-      //       rebuilt with every surface resize
-      //
-      for (auto& image : sc.images) {
-         auto attachments = std::array{ sc.sun_shadow_buffer.view };
+      if (this->canvas.sun_shadow.framebuffer == VK_NULL_HANDLE) { // Sun shadow framebuffer
+         auto attachments = std::array{ this->canvas.sun_shadow.map.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext           = nullptr,
@@ -1542,9 +1935,28 @@ namespace vulkanDK {
             .height          = config::sun_shadow_map_resolution_y,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &image.framebuffers.sun_shadows) != VK_SUCCESS) {
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.sun_shadow.framebuffer) != VK_SUCCESS) {
             throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (sun shadows).");
          }
+         this->set_debug_object_name(this->canvas.sun_shadow.framebuffer, "Framebuffer (Sun Shadows)");
+      }
+      {  // OIT framebuffer
+         auto attachments = std::array{ this->canvas.oit.accumulator.view, this->canvas.oit.reveal.view, this->canvas.color.view, this->canvas.depth.view };
+         auto framebuffer_info = VkFramebufferCreateInfo{
+            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext           = nullptr,
+            .flags           = 0,
+            .renderPass      = this->render_passes_by_name.main_oit->handle,
+            .attachmentCount = attachments.size(),
+            .pAttachments    = attachments.data(),
+            .width           = extent.width,
+            .height          = extent.height,
+            .layers          = 1,
+         };
+         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.oit.framebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (OIT).");
+         }
+         this->set_debug_object_name(this->canvas.oit.framebuffer, "Framebuffer (OIT)");
       }
    }
    //
@@ -1576,12 +1988,13 @@ namespace vulkanDK {
          auto& sc = this->swap_chain;
          //
          sc.images.clear();
-         if (sc.sun_shadow_sampler != VK_NULL_HANDLE) {
-            vkDestroySampler(this->logical_device, sc.sun_shadow_sampler, nullptr);
-            sc.sun_shadow_sampler = VK_NULL_HANDLE;
+         if (this->canvas.sun_shadow.sampler != VK_NULL_HANDLE) {
+            vkDestroySampler(this->logical_device, this->canvas.sun_shadow.sampler, nullptr);
+            this->canvas.sun_shadow.sampler = VK_NULL_HANDLE;
          }
-         sc.depth_buffer.teardown();
-         sc.sun_shadow_buffer.teardown();
+         this->canvas.color.teardown();
+         this->canvas.depth.teardown();
+         this->canvas.sun_shadow.map.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
          //
@@ -1618,9 +2031,19 @@ namespace vulkanDK {
             image.teardown_descriptor_sets(); // TODO: we don't actually have to free and rebuild these if the descriptor pool itself doesn't need to be rebuilt
             image.teardown();
          }
-         sc.depth_buffer.teardown();
+         this->canvas.depth.teardown();
+         this->canvas.color.teardown();
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
+      }
+      {
+         auto& fb = this->canvas.oit.framebuffer;
+         if (fb != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, fb, nullptr);
+            fb = VK_NULL_HANDLE;
+         }
+         this->canvas.oit.accumulator.teardown();
+         this->canvas.oit.reveal.teardown();
       }
       {  // Set up new state
          this->_setup_swap_chain_instance();
@@ -1650,6 +2073,8 @@ namespace vulkanDK {
          for (auto& s : this->shaders)
             s->post_resize(this->surface_extent);
          this->_setup_depth_buffer(); // requires surface extent
+         this->_setup_color_buffer(); // requires surface extent
+         this->_setup_oit_images();
          this->_setup_swap_chain_images();
          if (sc.images.size() != sc_count) {
             //
@@ -1659,7 +2084,7 @@ namespace vulkanDK {
             this->teardown_descriptor_pool();
             this->_setup_descriptor_pool();
          }
-         this->_setup_framebuffers(); // requires surface extent and image view handle
+         this->_setup_framebuffers(); // requires extent size
          this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
          this->_initialize_descriptor_sets();
          //
@@ -1848,7 +2273,9 @@ namespace vulkanDK {
       vkQueueWaitIdle(this->queues.graphics.handle);
    }
 
-
+   bool surface_renderer::can_do_alpha() const {
+      return this->device_info->support.independent_blending;
+   }
    VkExtent2D surface_renderer::desired_surface_size() const {
       QWidget* w = this->widget.pointer;
       if (!w || !w->isVisible())
@@ -1878,6 +2305,14 @@ namespace vulkanDK {
          return;
       }
       if (!this->api_functions.vkDebugMarkerSetObjectNameEXT) {
+         //qDebug("[surface_renderer::set_debug_object_name] Extension unavailable; name for handle %016jX is %s.", (std::uintmax_t)handle, name.c_str());
+         // getting crashes when using %016jX; just %016X causes int argument truncation; just stringify it manually:
+         QString text = "[surface_renderer::set_debug_object_name] Extension unavailable; name for handle 0x";
+         text += QString::number(handle, 16).leftJustified(16, '0');
+         text += " is ";
+         text += name.c_str();
+         text += ".";
+         qDebug("%s", qUtf8Printable(text));
          return;
       }
       auto info = VkDebugMarkerObjectNameInfoEXT{
@@ -1960,7 +2395,7 @@ namespace vulkanDK {
          //
          // Create Vulkan data:
          //
-         target.content = concrete_image(*this);
+         target.content = owned_image_and_view(*this);
          try {
             auto& img = target.content;
             img.metadata = image_metadata::from_dds_header(tex.metadata);
@@ -1973,9 +2408,7 @@ namespace vulkanDK {
                memcpy(data, tex.pixel_data(), tex.pixel_data_size());
                staging.unmap_memory(data);
                //
-               img.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-               img.copy_content_from_buffer(staging.handle);
-               img.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+               img.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
             }
             img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
          } catch (std::runtime_error& e) {
@@ -2047,7 +2480,7 @@ namespace vulkanDK {
       //
       texture = QImage();
       //
-      target.content = concrete_image(*this);
+      target.content = owned_image_and_view(*this);
       target.content.create_image(
          {
             .extent = {
@@ -2059,9 +2492,7 @@ namespace vulkanDK {
          },
          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
       );
-      target.content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-      target.content.copy_content_from_buffer(staging.handle);
-      target.content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      target.content.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
       target.content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
       //
       target.handled_frames.set_all_out_of_date();
@@ -2129,7 +2560,7 @@ namespace vulkanDK {
       //
       // Create Vulkan data:
       //
-      target.content = concrete_image(*this);
+      target.content = owned_image_and_view(*this);
       try {
          auto& img = target.content;
          img.metadata = image_metadata::from_dds_header(tex.metadata);
@@ -2142,9 +2573,7 @@ namespace vulkanDK {
             memcpy(data, tex.pixel_data(), tex.pixel_data_size());
             staging.unmap_memory(data);
             //
-            img.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            img.copy_content_from_buffer(staging.handle);
-            img.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            img.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
          }
          img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
       } catch (std::runtime_error& e) {

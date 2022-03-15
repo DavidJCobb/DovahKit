@@ -2,11 +2,13 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include "buffer.h"
 #include "command_buffer.h"
 #include "physical_device.h"
 #include "surface_renderer.h"
 //
 #include "dds/header.h"
+#include "helpers/convert_access_flags_and_pipeline_stages.h"
 
 namespace {
    VkResult _create_basic_view(VkDevice device, VkImage& image, VkImageView& view, const vulkanDK::image_metadata& meta, VkImageAspectFlags aspect) {
@@ -128,63 +130,119 @@ namespace vulkanDK {
       return out;
    }
 
-   #pragma region surface_renderer_image_view
-   surface_renderer_image_view::surface_renderer_image_view(surface_renderer& o, VkImage i) : owner(&o), image(i) {}
-   surface_renderer_image_view::~surface_renderer_image_view() {
-      this->destroy_view();
+   #pragma region image_and_view
+   image_and_view::~image_and_view() {
+      this->teardown();
    }
 
-
-   surface_renderer_image_view::surface_renderer_image_view(surface_renderer_image_view&& o) noexcept {
-      std::swap(this->owner, o.owner);
-      std::swap(this->image, o.image);
-      std::swap(this->view,  o.view);
+   image_and_view::image_and_view(image_and_view&& other) noexcept {
+      std::swap(this->owner,  other.owner);
+      std::swap(this->handle, other.handle);
+      std::swap(this->view,   other.view);
+      //
+      std::swap(this->metadata, other.metadata);
+      std::swap(this->current,  other.current);
    }
-   surface_renderer_image_view& surface_renderer_image_view::operator=(surface_renderer_image_view&& o) noexcept {
-      std::swap(this->owner, o.owner);
-      std::swap(this->image, o.image);
-      std::swap(this->view,  o.view);
+   image_and_view& image_and_view::operator=(image_and_view&& other) noexcept {
+      std::swap(this->owner,  other.owner);
+      std::swap(this->handle, other.handle);
+      std::swap(this->view,   other.view);
+      //
+      std::swap(this->metadata, other.metadata);
+      std::swap(this->current,  other.current);
+      //
       return *this;
    }
-   
-   void surface_renderer_image_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
+
+   void image_and_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto result = _create_basic_view(this->owner->logical_device, this->image, this->view, { .format = format }, aspect);
+      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, { .format = format }, aspect);
       if (result != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer_image_view::create_basic_view] Failed to create texture image view.");
+         throw std::runtime_error("[vulkanDK::image_and_view::create_basic_view] Failed to create texture image view.");
       }
    }
-   void surface_renderer_image_view::destroy_view() {
+   void image_and_view::destroy_view() {
       if (this->view == VK_NULL_HANDLE)
          return;
       assert(this->owner);
       vkDestroyImageView(this->owner->logical_device, this->view, nullptr);
       this->view = VK_NULL_HANDLE;
    }
-   #pragma endregion
 
-   #pragma region concrete_image
-   concrete_image::~concrete_image() {
+   void image_and_view::transition_layout(VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
+      this->owner->do_single_commands([=](command_buffer& scratch_commands) {
+         this->transition_layout(scratch_commands, aspect, layout, access);
+      });
+   }
+   void image_and_view::transition_layout(command_buffer& cmd, VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
+      this->transition_layout(cmd, aspect, this->current.layout, layout, this->current.access, access);
+   }
+   void image_and_view::transition_layout(command_buffer& cmd, VkImageAspectFlags aspect, VkImageLayout src_layout, VkImageLayout dst_layout, VkAccessFlags src_access, VkAccessFlags dst_access) {
+      auto barrier = VkImageMemoryBarrier{
+         .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+         .srcAccessMask       = src_access,
+         .dstAccessMask       = dst_access,
+         .oldLayout           = src_layout,
+         .newLayout           = dst_layout,
+         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+         .image               = this->handle,
+         .subresourceRange    = {
+            .aspectMask     = aspect,
+            .baseMipLevel   = 0,
+            .levelCount     = VK_REMAINING_MIP_LEVELS,
+            .baseArrayLayer = 0,
+            .layerCount     = VK_REMAINING_ARRAY_LAYERS,
+         },
+      };
+      //
+      auto src_stage = access_flags_to_pipeline_stages(src_access, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+      auto dst_stage = access_flags_to_pipeline_stages(dst_access, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+      vkCmdPipelineBarrier(
+         cmd.handle,
+         src_stage, dst_stage,
+         0,
+         0, nullptr,
+         0, nullptr,
+         1, &barrier
+      );
+      this->current.access = dst_access;
+      this->current.layout = dst_layout;
+   }
+
+   void image_and_view::teardown() {
+      this->destroy_view();
+      this->handle = VK_NULL_HANDLE;
+   }
+   #pragma endregion
+   #pragma region owned_image_and_view
+   owned_image_and_view::~owned_image_and_view() {
       this->teardown();
    }
 
-   concrete_image::concrete_image(concrete_image&& o) noexcept {
-      std::swap(this->owner,  o.owner);
-      std::swap(this->handle, o.handle);
-      std::swap(this->view,   o.view);
-      std::swap(this->memory, o.memory);
+   owned_image_and_view::owned_image_and_view(owned_image_and_view&& other) noexcept {
+      std::swap(this->owner,  other.owner);
+      std::swap(this->handle, other.handle);
+      std::swap(this->view,   other.view);
+      std::swap(this->memory, other.memory);
+      //
+      std::swap(this->metadata, other.metadata);
+      std::swap(this->current,  other.current);
    }
-   concrete_image& concrete_image::operator=(concrete_image&& o) noexcept {
-      std::swap(this->owner,  o.owner);
-      std::swap(this->handle, o.handle);
-      std::swap(this->view,   o.view);
-      std::swap(this->memory, o.memory);
+   owned_image_and_view& owned_image_and_view::operator=(owned_image_and_view&& other) noexcept {
+      std::swap(this->owner,  other.owner);
+      std::swap(this->handle, other.handle);
+      std::swap(this->view,   other.view);
+      std::swap(this->memory, other.memory);
+      //
+      std::swap(this->metadata, other.metadata);
+      std::swap(this->current,  other.current);
+      //
       return *this;
    }
-
-   //void concrete_image::create_image(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
-   void concrete_image::create_image(const image_metadata& meta, VkMemoryPropertyFlags properties) {
+   
+   void owned_image_and_view::create_image(const image_metadata& meta, VkMemoryPropertyFlags properties) {
       assert(this->handle == VK_NULL_HANDLE);
       assert(this->owner);
       auto device = this->owner->logical_device;
@@ -208,130 +266,61 @@ namespace vulkanDK {
          .priority       = 0,
       };
       if (vmaCreateImage(this->owner->allocator, &image_info, &alloc_info, &this->handle, &this->memory, nullptr) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::concrete_image::create_image] Failed to create image.");
+         throw std::runtime_error("[vulkanDK::owned_image_and_view::create_image] Failed to create image.");
       }
    }
-   void concrete_image::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
-      assert(this->view == VK_NULL_HANDLE);
-      assert(this->owner);
-      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, this->metadata, aspect);
-      if (result != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::concrete_image::create_basic_view] Failed to create texture image view.");
-      }
-   }
-
-   void concrete_image::copy_content_from_buffer(VkBuffer buffer) {
+   
+   void owned_image_and_view::copy_content_from_buffer(VkBuffer buffer) {
       assert(this->owner);
       this->owner->do_single_commands([this, buffer](command_buffer& scratch_commands) {
-         auto region = VkBufferImageCopy{
-            .bufferOffset      = 0,
-            .bufferRowLength   = 0, // amount of padding bytes between rows?
-            .bufferImageHeight = 0, // amount of padding bytes... somewhere?
-            .imageSubresource  = {
-               .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-               .mipLevel       = 0,
-               .baseArrayLayer = 0,
-               .layerCount     = this->metadata.layer_count,
-            },
-            .imageOffset = { 0, 0, 0 },
-            .imageExtent = this->metadata.extent,
-         };
-         vkCmdCopyBufferToImage(
-            scratch_commands.handle,
-            buffer,
-            this->handle,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region
-         );
+         this->copy_content_from_buffer(scratch_commands, buffer);
       });
    }
+   void owned_image_and_view::copy_content_from_buffer(command_buffer& cmd, VkBuffer buffer) {
+      auto region = VkBufferImageCopy{
+         .bufferOffset      = 0,
+         .bufferRowLength   = 0, // amount of padding bytes between rows?
+         .bufferImageHeight = 0, // amount of padding bytes... somewhere?
+         .imageSubresource  = {
+            .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel       = 0,
+            .baseArrayLayer = 0,
+            .layerCount     = this->metadata.layer_count,
+         },
+         .imageOffset = { 0, 0, 0 },
+         .imageExtent = this->metadata.extent,
+      };
+      vkCmdCopyBufferToImage(
+         cmd.handle,
+         buffer,
+         this->handle,
+         this->current.layout,
+         1,
+         &region
+      );
+   }
 
-   void concrete_image::transition_layout(VkImageLayout old_layout, VkImageLayout new_layout) {
+   void owned_image_and_view::overwrite_from_staging_buffer(const buffer& staging, VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
       assert(this->owner);
-      assert(this->handle != VK_NULL_HANDLE);
-      this->owner->do_single_commands([this, old_layout, new_layout](command_buffer& scratch_commands) {
-         auto barrier = VkImageMemoryBarrier{
-            .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            .srcAccessMask       = 0,
-            .dstAccessMask       = 0,
-            .oldLayout           = old_layout, // can use VK_IMAGE_LAYOUT_UNDEFINED if you don't care to preserve the image's existing content
-            .newLayout           = new_layout,
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image               = this->handle,
-            .subresourceRange    = {
-               .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-               .baseMipLevel   = 0,
-               .levelCount     = this->metadata.mipmap_count,
-               .baseArrayLayer = 0,
-               .layerCount     = this->metadata.layer_count,
-            },
-         };
-         //
-         // Handle special-case aspect masks:
-         //
-         if (new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            if (_format_has_stencil_component(this->metadata.format))
-               barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-         }
-         //
-         // We need to set up the proper access masks and indicate when (i.e. during what pipeline 
-         // stages) we can read and write. We need to handle different transitions here, so we'll 
-         // need to extend this function as we add more.
-         //
-         VkPipelineStageFlags sourceStage;
-         VkPipelineStageFlags destinationStage;
-         if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      this->owner->do_single_commands([this, &staging, aspect, layout, access](command_buffer& scratch_commands) {
+         {
             //
-            // If we're going from an undefined layout (i.e. we don't care about the image's prior 
-            // content) to a transfer-destination layout, then our transfer writes don't need to 
-            // wait on anything.
+            // We don't care what content was present before, so we'll treat the image layout as 
+            // undefined and switch to a transfer-destination layout for our copy operation.
             // 
-            // Because transfer writes don't need to wait, we can specify an empty access mask and 
-            // use the earliest possible pipeline stage: "top of pipe."
+            // Because transfer writes don't need to wait, the source access mask can be empty; 
+            // based on that, we'll use the earliest pipeline stage: "top of pipe."
             //
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            //
-            sourceStage      = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-         } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-            //
-            // If we're going from a transfer-destination layout to a shader-read-only layout (i.e. 
-            // the fragment shader wants to read the image), then we need to wait on transfer writes.
-            //
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; // wait on transfer writes
-            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;    // we're doing a shader read
-            //
-            sourceStage      = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // do this when processing the fragment shader
-         } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-            //
-            // Transition used when creating a new depth image for our depth buffer.
-            //
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-            //
-            sourceStage      = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-         } else {
-            throw std::invalid_argument("[vulkanDK::concrete_image::transition_layout] Unsupported layout transition!");
+            this->current.access = 0;
+            this->current.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+            this->transition_layout(aspect, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
          }
-
-         vkCmdPipelineBarrier(
-            scratch_commands.handle,
-            sourceStage, destinationStage,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-         );
+         this->copy_content_from_buffer(scratch_commands, staging.handle);
+         this->transition_layout(scratch_commands, aspect, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, access);
       });
    }
 
-   void concrete_image::teardown() {
+   void owned_image_and_view::teardown() {
       if (this->handle == VK_NULL_HANDLE)
          return;
       assert(this->owner);

@@ -57,14 +57,15 @@ layout(location = 4) in vec3 in_tangent;
 layout(location = 5) in vec3 in_bitangent;
 
 layout(location = 0) out VS_OUT {
-   vec3 color;
-   vec2 uv;
-   vec3 pos_world;
-   mat3 tangent_space;
-   vec3 tangent_sun_dir;
-   vec3 tangent_view_pos;
-   vec3 tangent_vert_pos;
-   vec4 sun_shadow_vert_pos;
+   vec3  color;
+   vec2  uv;
+   vec3  pos_world;
+   mat3  tangent_space;
+   vec3  tangent_sun_dir;
+   vec3  tangent_view_pos;
+   vec3  tangent_vert_pos;
+   vec4  sun_shadow_vert_pos;
+   float camera_distance;
 } vs_out;
 
 // [-1, 1] to [0, 1]
@@ -135,5 +136,7 @@ void main() {
    #endif
    vs_out.tangent_sun_dir  = vs_out.tangent_space * ubo.sun_dir;
    vs_out.tangent_view_pos = vs_out.tangent_space * vec3(ubo.view[3]);
-   vs_out.tangent_vert_pos = vs_out.tangent_space * vec3(model_transform * vec4(in_position, 1.0));
+   vs_out.tangent_vert_pos = vs_out.tangent_space * vs_out.pos_world;
+   //
+   vs_out.camera_distance = (ubo.view * vec4(vs_out.pos_world, 1.0)).z;
 }

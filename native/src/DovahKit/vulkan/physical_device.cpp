@@ -35,7 +35,8 @@ namespace vulkanDK {
       //
       this->support.vulkan_api_version = properties.apiVersion;
       //
-      this->support.large_points = features.features.largePoints;
+      this->support.independent_blending = features.features.independentBlend;
+      this->support.large_points         = features.features.largePoints;
       this->support.max_anisotropic_filtering = 0;
       if (features.features.samplerAnisotropy) {
          this->support.max_anisotropic_filtering = properties.limits.maxSamplerAnisotropy;

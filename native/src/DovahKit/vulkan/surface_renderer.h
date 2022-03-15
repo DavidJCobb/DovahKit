@@ -51,8 +51,10 @@ namespace vulkanDK {
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
 
-         static constexpr shader::id_type main_shader_id       = "MainMatl";
-         static constexpr shader::id_type sun_shadow_shader_id = "SunShadw";
+         static constexpr shader::id_type oit_composite_shader_id  = "OITCompo";
+         static constexpr shader::id_type main_shader_id           = "MainMatl";
+         static constexpr shader::id_type main_shader_oit_color_id = "MainOITc";
+         static constexpr shader::id_type sun_shadow_shader_id     = "SunShadw";
 
       protected:
          // renderer events:
@@ -88,16 +90,38 @@ namespace vulkanDK {
          //
          cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
          //
-         concrete_image null_texture;
+         owned_image_and_view null_texture;
          VkSampler raw_pixel_texture_sampler;
          //
          descriptor_set_layout_group descriptor_set_layouts;
          struct {
+            //
+            // These resources can be per-renderer rather  than per-swap chain image because they're 
+            // only used on the GPU during rendering, not presentation, and we render one frame at a 
+            // time synched by subpass dependencies. The only action that the CPU takes with respect 
+            // to these resources is to queue GPU-side actions by way of command buffers.
+            // 
+            // Things that might be accessed or modified on the CPU need to be per-swap chain image, 
+            // because the GPU may still be using those  resources for a frame that's been submitted 
+            // for presentation. That will mainly apply to descriptor sets and their contents.
+            //
+            VkFramebuffer        main_framebuffer = VK_NULL_HANDLE;
+            owned_image_and_view depth;
+            owned_image_and_view color;
+            struct {
+               owned_image_and_view map;
+               VkFramebuffer framebuffer = VK_NULL_HANDLE;
+               VkSampler     sampler     = VK_NULL_HANDLE;
+            } sun_shadow;
+            struct {
+               VkFramebuffer framebuffer = VK_NULL_HANDLE;
+               owned_image_and_view accumulator;
+               owned_image_and_view reveal;
+            } oit;
+         } canvas;
+         struct {
             VkSwapchainKHR handle = VK_NULL_HANDLE;
             VkFormat       format = VK_FORMAT_UNDEFINED;
-            concrete_image depth_buffer; // only one should be needed: we only use it during rendering, not presentation, and we render one frame at a time synched via subpass dependencies
-            concrete_image sun_shadow_buffer;
-            VkSampler      sun_shadow_sampler = VK_NULL_HANDLE;
             //
             std::vector<swap_chain_image> images;
             std::vector<frame_in_flight>  frames_in_flight;
@@ -107,10 +131,11 @@ namespace vulkanDK {
          //
          std::vector<shader*> shaders;
          union {
-            std::array<render_pass*, 3> _list = { nullptr, nullptr, nullptr };
+            std::array<render_pass*, 4> _list = { nullptr, nullptr, nullptr, nullptr };
             struct {
                render_pass* main_shadow;
                render_pass* main;
+               render_pass* main_oit;
                render_pass* ui;
             };
          } render_passes_by_name;
@@ -138,6 +163,7 @@ namespace vulkanDK {
             this->_end_one_time_commands(cb);
          }
 
+         bool can_do_alpha() const;
          VkExtent2D desired_surface_size() const;
          VkFormat find_depth_format() const;
          bool needs_null_texture() const;
@@ -189,6 +215,10 @@ namespace vulkanDK {
          
          void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
          void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
+            void _setup_oit_composite_shader(); // OITCompo
+            void _setup_basic_color_shader();   // MainMatl
+            void _setup_basic_wboit_shader();   // MainOITc
+            void _setup_sun_shadow_shader();    // SunShadw
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures
@@ -200,10 +230,12 @@ namespace vulkanDK {
          //
          void _setup_swap_chain_instance();
          void _setup_depth_buffer(); // requires extent size
+         void _setup_color_buffer(); // requires extent size
          void _setup_sun_shadow_buffer();
+         void _setup_oit_images(); // requires extent size
          void _setup_swap_chain_images();
          void _setup_swap_chain_image_frame_data(); // requires descriptor pool
-         void _setup_framebuffers(); // per swap chain image, and requires each swap chain image's view
+         void _setup_framebuffers(); // requires extent size
          //
          void _setup_descriptor_pool();
 

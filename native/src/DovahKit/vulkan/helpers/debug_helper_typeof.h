@@ -2,10 +2,6 @@
 #include "../_vulkan.h"
 
 namespace vulkanDK {
-   namespace impl::debug_helper_typeof {
-
-   }
-
    template<typename T> constexpr VkDebugReportObjectTypeEXT debug_helper_typeof = ([]() {
       if constexpr (std::is_same_v<T, VkInstance>)
          return VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT;

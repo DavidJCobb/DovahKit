@@ -23,15 +23,19 @@ namespace vulkanDK {
          auto& src = this->subpasses.descriptions[i];
          auto& dst = subpass_descriptions[i];
          //
+         const auto* depth = &src.attachments.depth_stencil; // subpasses can only use a single depth-and-stencil attachment... but may not use one
+         if (src.attachments.depth_stencil.layout == VK_IMAGE_LAYOUT_UNDEFINED)
+            depth = nullptr;
+         //
          subpass_descriptions[i] = VkSubpassDescription{
             .flags                   = 0,
             .pipelineBindPoint       = src.bind_point,
-            .inputAttachmentCount    = 0,
-            .pInputAttachments       = nullptr,
+            .inputAttachmentCount    = (uint32_t)src.attachments.input.size(),
+            .pInputAttachments       = src.attachments.input.data(),
             .colorAttachmentCount    = (uint32_t)src.attachments.color.size(),
             .pColorAttachments       = src.attachments.color.data(),
             .pResolveAttachments     = nullptr,
-            .pDepthStencilAttachment = &src.attachments.depth_stencil, // subpasses can only use a single depth-and-stencil attachment
+            .pDepthStencilAttachment = depth,
             .preserveAttachmentCount = 0,
             .pPreserveAttachments    = nullptr,
          };

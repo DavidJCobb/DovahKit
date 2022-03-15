@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+#include <type_traits>
 #include <vector>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
@@ -28,6 +30,13 @@ namespace vulkanDK {
          rendered_mesh(rendered_mesh&&) noexcept;
          rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
+         struct mesh_flag { // flags applied on the CPU, not within shaders
+            enum type : uint32_t {
+               can_have_alpha = 0x00000001,
+            };
+         };
+         using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
+
          struct shader_parameters { // pass to the shader via a storage buffer
             alignas(16) glm::mat4 transform;
             alignas(16) glm::vec3 specular_color    = { 0, 0, 0 };
@@ -40,6 +49,7 @@ namespace vulkanDK {
             int32_t texture_normal_index = -1;
          };
          
+         mesh_flags_t mesh_flags = 0;
          struct {
             std::vector<vertex> vertices;
             vertex_index_list   indices;

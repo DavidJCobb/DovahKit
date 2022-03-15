@@ -339,7 +339,7 @@ namespace vulkanDK::overlays {
          texture = QImage();
          //
          auto& content = this->atlas_info.image;
-         content = concrete_image(sr);
+         content = owned_image_and_view(sr);
          content.create_image(
             {
                .extent = {
@@ -351,9 +351,9 @@ namespace vulkanDK::overlays {
             },
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
          );
-         content.transition_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+         content.transition_layout(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
          content.copy_content_from_buffer(staging.handle);
-         content.transition_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+         content.transition_layout(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
          content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
       }
       //

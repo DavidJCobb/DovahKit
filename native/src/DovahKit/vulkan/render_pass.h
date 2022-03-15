@@ -13,6 +13,7 @@ namespace vulkanDK {
             struct {
                std::vector<VkAttachmentReference> color;
                VkAttachmentReference depth_stencil;
+               std::vector<VkAttachmentReference> input;
             } attachments;
          };
 

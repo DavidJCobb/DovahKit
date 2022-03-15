@@ -43,6 +43,16 @@ namespace vulkanDK {
       if (!this->config.render_pass) {
          throw std::runtime_error("[vulkanDK::shader::setup_pipeline] No render pass set for this shader.");
       }
+      #if _DEBUG
+      {
+         std::string name;
+         name.resize(8);
+         for (size_t i = 0; i < 8; ++i)
+            name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
+         //
+         qDebug("[vulkanDK::shader::setup_pipeline] Setting up: %s ...", name.c_str());
+      }
+      #endif
       //
       auto viewport = VkViewport{ // describe what part of the framebuffer we should draw to
          .x        = 0.0,

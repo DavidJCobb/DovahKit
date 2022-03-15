@@ -4,6 +4,8 @@
 #include "_util.h"
 
 namespace vulkanDK {
+   class buffer;
+   class command_buffer;
    class surface_renderer;
    namespace dds {
       struct header;
@@ -25,53 +27,54 @@ namespace vulkanDK {
       VkImageCreateInfo create_image_info() const;
    };
 
-   class surface_renderer_image_view : no_copy {
-      //
-      // An image and view with no underlying mapped memory; good for images whose contents 
-      // are not fully under your control, like swap chain images.
-      //
+   class image_and_view : no_copy {
       public:
-         surface_renderer_image_view() {}
-         surface_renderer_image_view(surface_renderer&, VkImage);
-         ~surface_renderer_image_view();
+         image_and_view() {}
+         image_and_view(surface_renderer& sr) : owner(&sr) {}
+         ~image_and_view();
 
-         surface_renderer_image_view(surface_renderer_image_view&&) noexcept;
-         surface_renderer_image_view& operator=(surface_renderer_image_view&&) noexcept;
-
-         surface_renderer* owner = nullptr;
-         VkImage           image = VK_NULL_HANDLE; // either use the constructor with args, or always write to this AND set an (owner) pointer
-         VkImageView       view  = VK_NULL_HANDLE;
-
-         void create_basic_view(VkFormat, VkImageAspectFlags);
-         void destroy_view();
-   };
-
-   class concrete_image : no_copy {
-      //
-      // An image, view, and underlying mapped memory; this is an image whose contents 
-      // you manage and control entirely on your own.
-      //
+         image_and_view(image_and_view&&) noexcept;
+         image_and_view& operator=(image_and_view&&) noexcept;
+         
       public:
-         concrete_image() {} // if you default-construct a concrete image, you MUST replace it with an owned image (constructor with args).
-         concrete_image(surface_renderer& c) : owner(&c) {}
-         ~concrete_image();
-
-         concrete_image(concrete_image&&) noexcept;
-         concrete_image& operator=(concrete_image&&) noexcept;
-
          surface_renderer* owner  = nullptr;
          VkImage           handle = VK_NULL_HANDLE;
          VkImageView       view   = VK_NULL_HANDLE;
-         VmaAllocation     memory = VK_NULL_HANDLE;
-         //
+         struct {
+            VkAccessFlags access = 0;
+            VkImageLayout layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+         } current;
          image_metadata metadata;
 
-         void create_image(const image_metadata&, VkMemoryPropertyFlags);
          void create_basic_view(VkFormat, VkImageAspectFlags);
+         void destroy_view();
+
+         void transition_layout(VkImageAspectFlags, VkImageLayout, VkAccessFlags);
+         void transition_layout(command_buffer&, VkImageAspectFlags, VkImageLayout, VkAccessFlags);
+         void transition_layout(command_buffer&, VkImageAspectFlags, VkImageLayout src_layout, VkImageLayout dst_layout, VkAccessFlags src_access, VkAccessFlags dst_access);
+
+         void teardown();
+   };
+   class owned_image_and_view : public image_and_view {
+      public:
+         owned_image_and_view() {}
+         owned_image_and_view(surface_renderer& sr) : image_and_view(sr) {}
+         ~owned_image_and_view();
+
+         owned_image_and_view(owned_image_and_view&&) noexcept;
+         owned_image_and_view& operator=(owned_image_and_view&&) noexcept;
+
+         image_and_view& operator=(image_and_view&&) noexcept = delete;
+
+      public:
+         VmaAllocation memory = VK_NULL_HANDLE;
+
+         void create_image(const image_metadata&, VkMemoryPropertyFlags);
 
          void copy_content_from_buffer(VkBuffer);
+         void copy_content_from_buffer(command_buffer&, VkBuffer);
 
-         void transition_layout(VkImageLayout old_layout, VkImageLayout new_layout);
+         void overwrite_from_staging_buffer(const buffer&, VkImageAspectFlags, VkImageLayout, VkAccessFlags);
 
          void teardown();
    };

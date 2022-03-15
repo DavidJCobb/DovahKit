@@ -7,7 +7,7 @@
 
 namespace vulkanDK {
    struct loaded_texture {
-      concrete_image content;
+      owned_image_and_view content;
       //
       uint32_t w = 0;
       uint32_t h = 0;

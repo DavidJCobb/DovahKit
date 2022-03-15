@@ -34,7 +34,9 @@ namespace vulkanDK {
             //
             area_override_resize_handler handler = nullptr;
          };
+
          using id_type = cobb::eight_cc;
+
       public:
          ~shader();
 

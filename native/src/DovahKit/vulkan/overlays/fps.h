@@ -94,7 +94,7 @@ namespace vulkanDK::overlays {
             QRect label;
             std::array<QRect, display_base> digits;
             //
-            concrete_image image;
+            owned_image_and_view image;
          } atlas_info;
          //
          buffer vertex_and_index_buffer;

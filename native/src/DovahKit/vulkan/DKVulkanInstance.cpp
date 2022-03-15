@@ -57,8 +57,19 @@ DKVulkanInstance::DKVulkanInstance() {
       .engineVersion      = VK_MAKE_VERSION(1, 0, 0),
       .apiVersion         = VK_API_VERSION_1_1,
    };
+   //
+   const auto debug_validation_feature_list = std::array{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT };
+   VkValidationFeaturesEXT debug_validation_features = {
+      .sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
+      .pNext = nullptr,
+      .enabledValidationFeatureCount  = (uint32_t)debug_validation_feature_list.size(),
+      .pEnabledValidationFeatures     = debug_validation_feature_list.data(),
+      .disabledValidationFeatureCount = 0,
+      .pDisabledValidationFeatures    = nullptr,
+   };
    VkInstanceCreateInfo createInfo = {
       .sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+      .pNext                   = &debug_validation_features,
       .pApplicationInfo        = &appInfo,
       .enabledLayerCount       = 0,
       .enabledExtensionCount   = (uint32_t)extensions.size(),

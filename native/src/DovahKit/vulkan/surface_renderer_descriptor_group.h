@@ -11,8 +11,9 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 4> list = {};
+            std::array<T, 5> list = {};
             struct {
+               T oit_composite;
                T sun_shadows;
                T standard;
                T fps;

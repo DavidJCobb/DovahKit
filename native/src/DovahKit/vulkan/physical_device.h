@@ -26,6 +26,7 @@ namespace vulkanDK {
          struct {
             uint32_t vulkan_api_version = 0;
             //
+            bool     independent_blending         = false;
             bool     large_points                 = false;
             float    max_anisotropic_filtering    = 0;
             uint32_t max_image_dimension_2D       = 0;          // max texture size

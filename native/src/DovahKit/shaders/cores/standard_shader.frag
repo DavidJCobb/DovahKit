@@ -1,13 +1,19 @@
-#version 450
+
+// #include this from a main shader, which defines outputs
+//
+// your shader's main() can return the result of calculate_color() verbatim
+// or
+// your shader can use it in other calculations (e.g. OIT)
+
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : enable
 
-#include "includes/calc_specular_strength.glsl"
-#include "includes/calc_directional_shadow.glsl"
-#include "includes/computed_light.glsl"
-#include "includes/calc_directional_light.glsl"
-#include "includes/point_light.glsl"
-#include "includes/calc_point_light.glsl"
+#include "../includes/calc_specular_strength.glsl"
+#include "../includes/calc_directional_shadow.glsl"
+#include "../includes/computed_light.glsl"
+#include "../includes/calc_directional_light.glsl"
+#include "../includes/point_light.glsl"
+#include "../includes/calc_point_light.glsl"
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
@@ -54,13 +60,13 @@ layout(location = 0) in VS_OUT {
    float camera_distance;
 } fs_in;
 
-layout(location = 0) out vec4 outColor;
-
-void main() {
+vec4 calculate_color() {
+   vec4 color;
+   //
    ObjectData current_object = objectBuffer.objects[pushed.object_index];
    //
-   outColor  = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
-   outColor *= vec4(fs_in.color, 1.0);
+   color  = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   color *= vec4(fs_in.color, 1.0);
    //
    vec3 normal = vec3(0, 0, 1);
    if (pushed.texture_normal_index >= 0) {
@@ -95,5 +101,6 @@ void main() {
    }
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
-   outColor = vec4(ubo.ambient_light_color + light_data.diffuse + light_data.specular, 1.0) * outColor;
+   color = vec4(ubo.ambient_light_color + light_data.diffuse + light_data.specular, 1.0) * color;
+   return color;
 }

@@ -598,6 +598,7 @@
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
+    <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
     <ClCompile Include="vulkan\helpers\glm_transform_from_beth.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
@@ -855,8 +856,10 @@
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
+    <ClInclude Include="vulkan\config\antialiasing.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
+    <ClInclude Include="vulkan\config\order_independent_transparency.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\shadow_maps.h" />
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
@@ -871,6 +874,7 @@
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustrum.h" />
+    <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
@@ -1574,9 +1578,11 @@
     <Text Include="vulkan\_docs\axis conventions.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
+    <Text Include="vulkan\_docs\order-independent transparency.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="shaders\cores\standard_shader.frag" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
@@ -1591,10 +1597,12 @@
       <FileType>Document</FileType>
     </None>
     <None Include="shaders\shader.frag.spv" />
+    <None Include="shaders\shader.oit-color.frag" />
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader.vert.spv" />
     <None Include="shaders\sun-shadow-depth.vert" />
     <None Include="shaders\util-full-screen-triangle.vert" />
+    <None Include="shaders\util-oit.frag" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>
