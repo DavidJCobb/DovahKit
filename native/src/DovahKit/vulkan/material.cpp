@@ -1,7 +1,10 @@
 #include "material.h"
 #include <stdexcept>
 #include "config/is_righthanded.h"
+#include "exceptions.h"
+#include "render_pass.h"
 #include "surface_renderer.h"
+
 
 namespace vulkanDK {
    #pragma region material_definition
@@ -187,7 +190,7 @@ namespace vulkanDK {
          throw std::runtime_error("[vulkanDK::material::setup_layout] Failed to create pipeline layout.");
       }
    }
-   void material::setup_handle(const material_definition& def, VkViewport viewport, VkRect2D scissor, VkRenderPass render_pass_handle, uint32_t subpass) {
+   void material::setup_handle(const material_definition& def, VkViewport viewport, VkRect2D scissor, render_pass& render_pass, uint32_t subpass) {
       if (!this->owner) {
          throw std::logic_error("[vulkanDK::material::setup_handle] Owner required.");
       }
@@ -213,13 +216,18 @@ namespace vulkanDK {
          .pScissors     = &scissor,
       };
 
-      //
-      // TODO: If we take a render_pass& instead of a render pass handle, then we can verify that 
-      // (color) has the right blend count for the specified subpass (it should match the value 
-      // render_pass.subpasses[n].attachments.color.size()).
-      // 
-      // We could also validate that the subpass number itself is valid.
-      //
+      {  // Simple validation for render passes.
+         if (subpass >= render_pass.subpasses.descriptions.size()) {
+            throw vuid_exception(06046, "subpass index out of range");
+         }
+         //
+         const auto& rp_subpass = render_pass.subpasses.descriptions[subpass];
+         if (!rp_subpass.attachments.color.empty()) {
+            if (blends.size() != rp_subpass.attachments.color.size()) {
+               throw vuid_exception(06042, "mismatch between pipeline color blend count and render pass color attachment count");
+            }
+         }
+      }
 
       auto pipeline_info = VkGraphicsPipelineCreateInfo{
          .sType      = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -237,7 +245,7 @@ namespace vulkanDK {
          //
          .layout = this->pipeline.layout,
          //
-         .renderPass = render_pass_handle,
+         .renderPass = render_pass.handle,
          .subpass    = subpass,
          //
          .basePipelineHandle = VK_NULL_HANDLE,

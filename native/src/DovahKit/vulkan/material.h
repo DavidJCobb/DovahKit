@@ -6,6 +6,7 @@
 #include "shader_module.h"
 
 namespace vulkanDK {
+   class render_pass;
    class surface_renderer;
 
    class material_definition {
@@ -161,7 +162,7 @@ namespace vulkanDK {
          } pipeline;
 
          void setup_layout(const std::vector<VkDescriptorSetLayout>&, const std::vector<VkPushConstantRange>& pcr = {});
-         void setup_handle(const material_definition&, VkViewport, VkRect2D scissor, VkRenderPass, uint32_t subpass);
+         void setup_handle(const material_definition&, VkViewport, VkRect2D scissor, render_pass&, uint32_t subpass);
 
          void teardown_handle();
    };

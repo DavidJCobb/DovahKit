@@ -609,12 +609,18 @@ namespace vulkanDK {
             const auto&   material = shader->material;
             command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
             //
+            size_t first_double_sided = std::string::npos;
+            //
             VkDeviceSize offset = 0;
             for (size_t j = 0; j < scene.meshes.size(); ++j) {
                auto& ro  = scene.meshes[j];
                auto& vib = ro.vertex_and_index_buffer;
                if (!ro.active())
                   continue;
+               if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
+                  first_double_sided = j;
+                  continue;
+               }
 
                auto pc = ro.push_params;
                pc.object_index         = (int32_t)j;
@@ -623,6 +629,31 @@ namespace vulkanDK {
                //
                command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
+            }
+            //
+            if (first_double_sided != std::string::npos) {
+               auto* variant = shader->get_variant({
+                  .face_cull_mode = VK_CULL_MODE_NONE,
+               });
+               assert(variant);
+               vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+               //
+               for (size_t j = 0; j < scene.meshes.size(); ++j) {
+                  auto& ro = scene.meshes[j];
+                  auto& vib = ro.vertex_and_index_buffer;
+                  if (!ro.active())
+                     continue;
+                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
+                     continue;
+               
+                  auto pc = ro.push_params;
+                  pc.object_index         = (int32_t)j;
+                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+                  //
+                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT, pc);
+                  ro.draw_call(command_handle);
+               }
             }
          }
          vkCmdEndRenderPass(command_handle);
@@ -668,6 +699,8 @@ namespace vulkanDK {
             const auto& material = shader->material;
             command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
+            size_t first_double_sided = std::string::npos;
+            //
             for (size_t j = 0; j < scene.meshes.size(); ++j) {
                auto& ro = scene.meshes[j];
                auto& vib = ro.vertex_and_index_buffer;
@@ -675,6 +708,10 @@ namespace vulkanDK {
                   continue;
                if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
                   continue;
+               if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
+                  first_double_sided = j;
+                  continue;
+               }
                
                auto pc = ro.push_params;
                pc.object_index         = (int32_t)j;
@@ -683,6 +720,33 @@ namespace vulkanDK {
                //
                command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
+            }
+            //
+            if (first_double_sided != std::string::npos) {
+               auto* variant = shader->get_variant({
+                  .face_cull_mode = VK_CULL_MODE_NONE,
+               });
+               assert(variant);
+               vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+               //
+               for (size_t j = 0; j < scene.meshes.size(); ++j) {
+                  auto& ro = scene.meshes[j];
+                  auto& vib = ro.vertex_and_index_buffer;
+                  if (!ro.active())
+                     continue;
+                  if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
+                     continue;
+                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
+                     continue;
+               
+                  auto pc = ro.push_params;
+                  pc.object_index         = (int32_t)j;
+                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+                  //
+                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
+                  ro.draw_call(command_handle);
+               }
             }
          }
          command_buffer.end_render_pass();
@@ -710,6 +774,9 @@ namespace vulkanDK {
                assert(shader);
                const auto& material = shader->material;
                command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+               //
+               size_t first_double_sided = std::string::npos;
+               //
                for (size_t j = 0; j < scene.meshes.size(); ++j) {
                   auto& ro = scene.meshes[j];
                   auto& vib = ro.vertex_and_index_buffer;
@@ -725,6 +792,33 @@ namespace vulkanDK {
                   //
                   command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                   ro.draw_call(command_handle);
+               }
+               //
+               if (first_double_sided != std::string::npos) {
+                  auto* variant = shader->get_variant({
+                     .face_cull_mode = VK_CULL_MODE_NONE,
+                  });
+                  assert(variant);
+                  vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+                  //
+                  for (size_t j = 0; j < scene.meshes.size(); ++j) {
+                     auto& ro  = scene.meshes[j];
+                     auto& vib = ro.vertex_and_index_buffer;
+                     if (!ro.active())
+                        continue;
+                     if (!(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
+                        continue;
+                     if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
+                        continue;
+               
+                     auto pc = ro.push_params;
+                     pc.object_index         = (int32_t)j;
+                     pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+                     pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+                     //
+                     command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
+                     ro.draw_call(command_handle);
+                  }
                }
             }
             vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);

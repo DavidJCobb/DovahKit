@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <vector>
 #include "helpers/eight_cc.h"
 #include "_vulkan.h"
@@ -37,6 +38,18 @@ namespace vulkanDK {
 
          using id_type = cobb::eight_cc;
 
+         struct variant_definition {
+            std::optional<VkCullModeFlags> face_cull_mode;
+
+            bool operator==(const variant_definition&) const = default;
+         };
+         struct variant : public variant_definition {
+            VkPipeline handle = VK_NULL_HANDLE;
+
+            void setup(shader& owner, VkViewport, VkRect2D scissor, render_pass&, uint32_t subpass);
+            void teardown(shader& owner);
+         };
+
       public:
          ~shader();
 
@@ -51,6 +64,9 @@ namespace vulkanDK {
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts; // handles; not owned
             std::vector<VkPushConstantRange>   push_constant_ranges;
          } config;
+         std::vector<variant> variants;
+
+         surface_renderer* get_owner() const; // requires a material that's been properly set up
 
          void set_render_pass(render_pass*, uint32_t subpass = 0);
          void set_area_override_info(const area_override_data&);
@@ -58,6 +74,9 @@ namespace vulkanDK {
 
          void setup_pipeline_layout(surface_renderer&);
          void setup_pipeline(VkExtent2D);
+
+         void add_variant(const variant_definition&);
+         [[nodiscard]] const variant* get_variant(const variant_definition&) const;
 
          //
          // Setting up materials' pipeline handles requires knowledge of the final image size 

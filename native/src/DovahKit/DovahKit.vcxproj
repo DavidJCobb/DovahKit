@@ -875,6 +875,7 @@
     <ClInclude Include="vulkan\dds\texture.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
+    <ClInclude Include="vulkan\exceptions.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustrum.h" />
     <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />

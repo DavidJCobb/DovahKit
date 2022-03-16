@@ -1013,6 +1013,9 @@ namespace vulkanDK {
             }
          }
       );
+      s->add_variant({ // double-sided shader variant
+         .face_cull_mode = VK_CULL_MODE_NONE,
+      });
       //
       auto& dfn = s->definition;
       //
@@ -1083,6 +1086,9 @@ namespace vulkanDK {
             }
          }
       );
+      s->add_variant({ // double-sided shader variant
+         .face_cull_mode = VK_CULL_MODE_NONE,
+      });
       //
       auto& dfn = s->definition;
       //
@@ -1181,6 +1187,9 @@ namespace vulkanDK {
             }
          }
       );
+      s->add_variant({ // double-sided shader variant
+         .face_cull_mode = VK_CULL_MODE_NONE,
+      });
       auto& dfn = s->definition;
       //
       shader_module* vert = nullptr;
@@ -2886,25 +2895,30 @@ namespace vulkanDK {
             //
             // Skyrim shader flags:
             //
+            bool has_shader_flags = false;
+            std::array<nifDK::SkyrimShaderPropertyFlags, 2> shader_flags;
             if (auto* casted = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
-               }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-                  enable_vertex_color = true;
-               }
+               shader_flags     = casted->shader_flags;
+               has_shader_flags = true;
             } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+               shader_flags     = casted->shader_flags;
+               has_shader_flags = true;
+            }
+            if (has_shader_flags) {
+               //
+               // NOTE: Even with the Vertex Alpha flag enabled, I believe you still need a NiAlphaProperty to 
+               // enable alpha blending in order to see vertex alpha values cause any transparency.
+               //
+               if (shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
                   enable_vertex_alpha = true;
                }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+               if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::double_sided) {
+                  mesh.mesh_flags |= rendered_mesh::mesh_flag::double_sided;
+               }
+               if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
                   enable_vertex_color = true;
                }
             }
-            //
-            // NOTE: Even with the Vertex Alpha flag enabled, I believe you still need a NiAlphaProperty to 
-            // enable alpha blending in order to see vertex alpha values cause any transparency.
-            //
          }
       }
       void _ni_triangles_to_mesh_triangles(const std::vector<nifDK::Triangle>& list, rendered_mesh& mesh) {

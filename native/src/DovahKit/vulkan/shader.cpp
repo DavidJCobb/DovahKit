@@ -1,14 +1,82 @@
 #include "shader.h"
 #include <stdexcept>
+#include "material.h"
 #include "render_pass.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
+   #pragma region shader::variant
+   void shader::variant::setup(shader& owner, VkViewport viewport, VkRect2D scissor, render_pass& render_pass, uint32_t subpass) {
+      const auto& def = owner.definition;
+      //
+      auto stages = def.stage_create_info();
+      auto depth  = def.depth_stencil_info();
+      auto vertex = def.vertex_info();
+      //
+      auto blends = def.color_blend_attachment_info();
+      auto color  = def.color_blend_info(blends);
+      //
+      auto dyn    = def.dynamic_state_info();
+
+      auto viewport_create = VkPipelineViewportStateCreateInfo{
+         .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+         .pNext         = nullptr,
+         .flags         = 0,
+         .viewportCount = 1,
+         .pViewports    = &viewport,
+         .scissorCount  = 1,
+         .pScissors     = &scissor,
+      };
+
+      auto rasterization = def.rasterization;
+      if (this->face_cull_mode.has_value())
+         rasterization.cullMode = this->face_cull_mode.value();
+
+      auto pipeline_info = VkGraphicsPipelineCreateInfo{
+         .sType      = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+         .stageCount = (uint32_t)stages.stages.size(),
+         .pStages    = stages.stages.data(),
+         //
+         .pVertexInputState   = &vertex,
+         .pInputAssemblyState = &def.inputs.triangles,
+         .pViewportState      = &viewport_create,
+         .pRasterizationState = &rasterization,
+         .pMultisampleState   = &def.multisampling,
+         .pDepthStencilState  = &depth,
+         .pColorBlendState    = &color,
+         .pDynamicState       = &dyn,
+         //
+         .layout = owner.material.pipeline.layout,
+         //
+         .renderPass = render_pass.handle,
+         .subpass    = subpass,
+         //
+         .basePipelineHandle = VK_NULL_HANDLE,
+         .basePipelineIndex = -1,
+      };
+      if (vkCreateGraphicsPipelines(owner.get_owner()->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->handle) != VK_SUCCESS) {
+         throw std::runtime_error("[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
+      }
+   }
+   void shader::variant::teardown(shader& owner) {
+      if (this->handle != VK_NULL_HANDLE) {
+         vkDestroyPipeline(owner.get_owner()->logical_device, this->handle, nullptr);
+         this->handle = VK_NULL_HANDLE;
+      }
+   }
+   #pragma endregion
+
    shader::~shader() {
       if (auto*& p = this->config.area_override) {
          delete p;
          p = nullptr;
       }
+      for (auto& item : this->variants)
+         item.teardown(*this);
+   }
+
+   surface_renderer* shader::get_owner() const {
+      return this->material.owner;
    }
 
    void shader::set_render_pass(render_pass* rp, uint32_t subpass) {
@@ -72,8 +140,8 @@ namespace vulkanDK {
          viewport = ao->viewport;
          scissor  = ao->scissor;
       }
-      this->material.setup_handle(this->definition, viewport, scissor, this->config.render_pass->handle, this->config.subpass);
-      if (auto* sr = this->material.owner) {
+      this->material.setup_handle(this->definition, viewport, scissor, *this->config.render_pass, this->config.subpass);
+      if (auto* sr = this->get_owner()) {
          std::string name;
          name.resize(8);
          for (size_t i = 0; i < 8; ++i)
@@ -81,10 +149,26 @@ namespace vulkanDK {
          //
          sr->set_debug_object_name((uint64_t)this->material.pipeline.handle, VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT, name);
       }
+      //
+      for (auto& item : this->variants) {
+         item.setup(*this, viewport, scissor, *this->config.render_pass, this->config.subpass);
+      }
+   }
+
+   void shader::add_variant(const variant_definition& dfn) {
+      this->variants.push_back(variant(dfn));
+   }
+   const shader::variant* shader::get_variant(const variant_definition& dfn) const {
+      for (const auto& item : this->variants)
+         if (item == dfn)
+            return &item;
+      return nullptr;
    }
 
    void shader::pre_resize() {
       this->material.teardown_handle();
+      for (auto& item : this->variants)
+         item.teardown(*this);
    }
    void shader::post_resize(VkExtent2D view) {
       this->setup_pipeline(view);

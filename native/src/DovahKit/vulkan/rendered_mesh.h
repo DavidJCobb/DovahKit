@@ -33,6 +33,7 @@ namespace vulkanDK {
          struct mesh_flag { // flags applied on the CPU, not within shaders
             enum type : uint32_t {
                requires_oit = 0x00000001,
+               double_sided = 0x00000002,
             };
          };
          using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
