@@ -44,7 +44,7 @@ namespace vulkanDK {
          };
 
          struct color_blend {
-            bool enabled = false;
+            bool enabled = true;
             struct {
                VkBlendFactor color = VK_BLEND_FACTOR_ONE;
                VkBlendFactor alpha = VK_BLEND_FACTOR_ONE;

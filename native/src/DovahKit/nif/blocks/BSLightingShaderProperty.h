@@ -1,7 +1,9 @@
 #pragma once
 #include <array>
+#include "helpers/enum_flags.h"
 #include "BSShaderProperty.h"
 #include "../types/NiColor.h"
+#include "../types/SkyrimShaderPropertyFlags.h"
 
 namespace nifDK::block_types {
    class BSShaderTextureSet;
@@ -41,7 +43,7 @@ namespace nifDK::block_types {
          };
 
          shader_type type = shader_type::standard; // at data offset 0, i.e. before the contents of NiObjectNET
-         std::array<uint32_t, 2> shader_flags = {};
+         std::array<SkyrimShaderPropertyFlags, 2> shader_flags = {};
          struct {
             glm::fvec2 uv_offset;
             glm::fvec2 uv_scale;

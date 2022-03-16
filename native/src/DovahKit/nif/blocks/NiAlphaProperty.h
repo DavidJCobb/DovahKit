@@ -30,7 +30,6 @@ namespace nifDK::block_types {
             never,
          };
 
-         uint8_t threshold = 128;
          struct {
             bool       enabled     = false;
             blend_mode source      = blend_mode::source_color;

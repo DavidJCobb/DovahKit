@@ -1,7 +1,7 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 
-#define USE_ALPHA 1
+#define USE_ALPHA_OIT 1
 #include "cores/standard_shader.frag"
 
 layout(location = 0) out vec4  out_accumulator;

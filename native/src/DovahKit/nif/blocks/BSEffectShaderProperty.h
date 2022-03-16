@@ -2,13 +2,14 @@
 #include <array>
 #include "BSShaderProperty.h"
 #include "../types/NiColor.h"
+#include "../types/SkyrimShaderPropertyFlags.h"
 
 namespace nifDK::block_types {
    class BSEffectShaderProperty : public BSShaderProperty {
       public:
          static constexpr const char* const type_name = "BSEffectShaderProperty";
       public:
-         std::array<uint32_t, 2> shader_flags = {};
+         std::array<SkyrimShaderPropertyFlags, 2> shader_flags = {};
          struct {
             glm::fvec2 uv_offset;
             glm::fvec2 uv_scale;

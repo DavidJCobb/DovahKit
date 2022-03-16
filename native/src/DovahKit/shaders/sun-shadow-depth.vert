@@ -6,7 +6,7 @@ layout(push_constant) uniform PER_OBJECT {
    int   texture_normal_index;
    float alpha_test_threshold;
    int   alpha_test_operation;
-   bool  enable_alpha_blending;
+   int   enable_alpha_blending; // VkBool32
 } pushed;
 
 struct ObjectData {

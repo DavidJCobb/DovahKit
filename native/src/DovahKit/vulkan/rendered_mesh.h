@@ -32,7 +32,7 @@ namespace vulkanDK {
 
          struct mesh_flag { // flags applied on the CPU, not within shaders
             enum type : uint32_t {
-               can_have_alpha = 0x00000001,
+               requires_oit = 0x00000001,
             };
          };
          using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
@@ -44,12 +44,12 @@ namespace vulkanDK {
             alignas( 4) float     specular_exponent    = 32;
          };
          struct push_constant {
-            alignas(4) int32_t object_index;               // not meaningful on this object; ignored during the render process
-            alignas(4) int32_t texture_index;              // not meaningful on this object; ignored during the render process
-            alignas(4) int32_t texture_normal_index  = -1; // not meaningful on this object; ignored during the render process
-            alignas(4) float   alpha_test_threshold  =  0;
-            alignas(4) int     alpha_test_operation  =  0; // GL_ALWAYS
-            alignas(1) bool    enable_alpha_blending = false;
+            alignas(4) int32_t  object_index;               // not meaningful on this object; ignored during the render process
+            alignas(4) int32_t  texture_index;              // not meaningful on this object; ignored during the render process
+            alignas(4) int32_t  texture_normal_index  = -1; // not meaningful on this object; ignored during the render process
+            alignas(4) float    alpha_test_threshold  =  0;
+            alignas(4) int      alpha_test_operation  =  0; // GL_ALWAYS
+            alignas(4) VkBool32 enable_alpha_blending = false; // bools in GLSL are uint32_ts in SPIR-V
          };
          
          mesh_flags_t mesh_flags = 0;

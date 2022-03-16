@@ -640,7 +640,7 @@ namespace vulkanDK {
                .format         = this->find_depth_format(),
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
                .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
@@ -952,6 +952,7 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util-full-screen-triangle.vert.spv)");
       }
       //
+      dfn.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
       dfn.stages = {
          {
             .module           = frag,
@@ -974,6 +975,9 @@ namespace vulkanDK {
             .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
          },
       });
+      dfn.depth.testing    = true;
+      dfn.depth.writing    = false;
+      dfn.depth.comparison = VK_COMPARE_OP_ALWAYS;
       //
       // And be sure to set up the pipeline layout when you're done!
       //
@@ -1033,7 +1037,8 @@ namespace vulkanDK {
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      //dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend); // needed for alpha testing to work
       if constexpr (config::use_inverted_depth) {
          dfn.depth.comparison = VK_COMPARE_OP_GREATER;
       }
@@ -1122,7 +1127,7 @@ namespace vulkanDK {
             .alpha = VK_BLEND_FACTOR_ZERO,
          },
          .destination = {
-            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+            .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
             .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
          },
          .operations = {
@@ -1130,6 +1135,8 @@ namespace vulkanDK {
             .alpha = VK_BLEND_OP_ADD,
          },
       });
+      dfn.depth.testing = true;
+      dfn.depth.writing = false;
       if constexpr (config::use_inverted_depth) {
          dfn.depth.comparison = VK_COMPARE_OP_GREATER;
       }
@@ -2901,6 +2908,46 @@ namespace vulkanDK {
             --this->scene.textures[prior_normals].refcount;
       }
    }
+   void _handle_ni_alpha(
+      rendered_mesh& mesh,
+      const nifDK::block_types::NiAlphaProperty* alpha,
+      const nifDK::block_types::BSShaderProperty* shader,
+      bool& enable_vertex_alpha,
+      bool& enable_vertex_color
+   ) {
+      if (alpha) {
+         mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
+         mesh.push_params.alpha_test_threshold  = (float)alpha->testing.threshold / 255.0F;
+         mesh.push_params.enable_alpha_blending = alpha->blending.enabled ? VK_TRUE : VK_FALSE;
+         //
+         if (alpha->blending.enabled)
+            mesh.mesh_flags |= rendered_mesh::mesh_flag::requires_oit;
+      }
+      if (shader) {
+         //
+         // Skyrim shader flags:
+         //
+         if (auto* casted = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+            if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+               enable_vertex_alpha = true;
+            }
+            if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+               enable_vertex_color = true;
+            }
+         } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+            if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+               enable_vertex_alpha = true;
+            }
+            if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+               enable_vertex_color = true;
+            }
+         }
+         //
+         // NOTE: Even with the Vertex Alpha flag enabled, I believe you still need a NiAlphaProperty to 
+         // enable alpha blending in order to see vertex alpha values cause any transparency.
+         //
+      }
+   }
    void surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
       auto size = data->vertices.size();
       if (!size || !data->triangles.size())
@@ -2919,38 +2966,7 @@ namespace vulkanDK {
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
-      {  // Enable alpha
-         if (auto* alpha = data->properties.alpha) {
-            mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
-            //
-            mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
-            mesh.push_params.alpha_test_threshold  = alpha->testing.threshold;
-            mesh.push_params.enable_alpha_blending = alpha->blending.enabled;
-         } else if (auto* shader = data->properties.shader) {
-            //
-            // Test for "Vertex Alpha" shader flag.
-            //
-            if (auto* casted = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
-               }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-                  enable_vertex_color = true;
-               }
-            } else if (auto* casted = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
-               }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-                  enable_vertex_color = true;
-               }
-            }
-            //
-            if (enable_vertex_alpha) {
-               mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
-            }
-         }
-      }
+      _handle_ni_alpha(mesh, data->properties.alpha, data->properties.shader, enable_vertex_alpha, enable_vertex_color);
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto&       list = data->vertices;
@@ -3019,38 +3035,7 @@ namespace vulkanDK {
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
-      {  // Enable alpha
-         if (auto* alpha = geom->properties.alpha) {
-            mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
-            //
-            mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
-            mesh.push_params.alpha_test_threshold  = alpha->testing.threshold;
-            mesh.push_params.enable_alpha_blending = alpha->blending.enabled;
-         } else if (auto* shader = geom->properties.shader) {
-            //
-            // Test for "Vertex Alpha" shader flag.
-            //
-            if (auto* casted = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
-               }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-                  enable_vertex_color = true;
-               }
-            } else if (auto* casted = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
-               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
-               }
-               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-                  enable_vertex_color = true;
-               }
-            }
-            //
-            if (enable_vertex_alpha) {
-               mesh.mesh_flags |= rendered_mesh::mesh_flag::can_have_alpha;
-            }
-         }
-      }
+      _handle_ni_alpha(mesh, geom->properties.alpha, geom->properties.shader, enable_vertex_alpha, enable_vertex_color);
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto& vl = data->vertices;

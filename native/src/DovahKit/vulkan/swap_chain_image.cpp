@@ -605,11 +605,11 @@ namespace vulkanDK {
                if (!ro.active())
                   continue;
 
-               auto pc = rendered_mesh::push_constant{
-                  .object_index  = (int32_t)j,
-                  .texture_index = (int32_t)ro.texture_indices.diffuse,
-                  .texture_normal_index = (int32_t)ro.texture_indices.normals,
-               };
+               auto pc = ro.push_params;
+               pc.object_index         = (int32_t)j;
+               pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+               pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+               //
                command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
             }
@@ -662,14 +662,14 @@ namespace vulkanDK {
                auto& vib = ro.vertex_and_index_buffer;
                if (!ro.active())
                   continue;
-               if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::can_have_alpha))
+               if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
                   continue;
-
-               auto pc = rendered_mesh::push_constant{
-                  .object_index = (int32_t)j,
-                  .texture_index = (int32_t)ro.texture_indices.diffuse,
-                  .texture_normal_index = (int32_t)ro.texture_indices.normals,
-               };
+               
+               auto pc = ro.push_params;
+               pc.object_index         = (int32_t)j;
+               pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+               pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+               //
                command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
             }
@@ -704,13 +704,14 @@ namespace vulkanDK {
                   auto& vib = ro.vertex_and_index_buffer;
                   if (!ro.active())
                      continue;
-                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::can_have_alpha))
+                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
                      continue;
-                  auto pc = rendered_mesh::push_constant{
-                     .object_index = (int32_t)j,
-                     .texture_index = (int32_t)ro.texture_indices.diffuse,
-                     .texture_normal_index = (int32_t)ro.texture_indices.normals,
-                  };
+
+                  auto pc = ro.push_params;
+                  pc.object_index         = (int32_t)j;
+                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+                  //
                   command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                   ro.draw_call(command_handle);
                }

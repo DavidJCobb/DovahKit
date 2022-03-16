@@ -16,7 +16,7 @@
 #include "../includes/calc_point_light.glsl"
 
 // configuration defines:
-// USE_ALPHA == 0 or 1
+// USE_ALPHA_OIT == 0 or 1
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
@@ -26,7 +26,7 @@ layout(push_constant) uniform PER_OBJECT {
    int   texture_normal_index;
    float alpha_test_threshold;
    int   alpha_test_operation;
-   bool  enable_alpha_blending;
+   int   enable_alpha_blending; // VkBool32
 } pushed;
 
 struct ObjectData {
@@ -72,40 +72,48 @@ vec4 calculate_color() {
    ObjectData current_object = objectBuffer.objects[pushed.object_index];
    //
    color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   //
+   switch (pushed.alpha_test_operation) {
+      case 0: // GL_ALWAYS
+         break;
+      case 1: // GL_LESS
+         if (!(color.a < pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 2: // GL_EQUAL
+         if (!(color.a == pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 3: // GL_LEQUAL
+         if (!(color.a <= pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 4: // GL_GREATER
+         if (!(color.a > pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 5: // GL_NOTEQUAL
+         if (!(color.a != pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 6: // GL_GEQUAL
+         if (!(color.a >= pushed.alpha_test_threshold))
+            discard;
+         break;
+      case 7: // GL_NEVER
+         discard;
+   }
    color *= fs_in.color;
-   #if USE_ALPHA == 0
-      color.a = 1.0;
-   #else
-      float alpha_test = 1.0;
-      switch (pushed.alpha_test_operation) {
-         case 0: // GL_ALWAYS
-            break;
-         case 1: // GL_LESS
-            alpha_test = color.a < pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 2: // GL_EQUAL
-            alpha_test = color.a == pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 3: // GL_LEQUAL
-            alpha_test = color.a <= pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 4: // GL_GREATER
-            alpha_test = color.a > pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 5: // GL_NOTEQUAL
-            alpha_test = color.a != pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 6: // GL_GEQUAL
-            alpha_test = color.a >= pushed.alpha_test_threshold ? 1.0 : 0.0;
-            break;
-         case 7: // GL_NEVER
-            alpha_test = 0.0;
-            break;
-      }
-      if (!pushed.enable_alpha_blending) {
+   #if USE_ALPHA_OIT == 1
+      if (pushed.enable_alpha_blending == 0) {
+         //
+         // If alpha blending is disabled, ignore the vertex alpha and the 
+         // texture alpha.
+         //
          color.a = 1.0;
       }
-      color.a *= alpha_test;
+   #else
+      color.a = 1.0;
    #endif
    //
    vec3 normal = vec3(0, 0, 1);
@@ -141,6 +149,6 @@ vec4 calculate_color() {
    }
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
-   color = vec4(ubo.ambient_light_color + light_data.diffuse + light_data.specular, 1.0) * color;
+   color.rgb *= ubo.ambient_light_color + light_data.diffuse + light_data.specular;
    return color;
 }
