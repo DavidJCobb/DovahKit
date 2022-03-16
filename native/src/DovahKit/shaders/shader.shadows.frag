@@ -1,4 +1,8 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
+
+#include "includes/alpha_testing_conditional_discard.glsl"
 
 layout(push_constant) uniform PER_OBJECT {
    int   object_index;
@@ -16,13 +20,6 @@ struct ObjectData {
    float specular_exponent;
 };
 
-layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec3 in_color;
-layout(location = 2) in vec2 in_uv;
-layout(location = 3) in vec3 in_normal;
-layout(location = 4) in vec3 in_tangent;
-layout(location = 5) in vec3 in_bitangent;
-
 layout(std140,binding = 0) uniform UniformBufferObject {
    mat4 view;
    mat4 proj;
@@ -37,13 +34,13 @@ layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 layout(binding = 2) uniform sampler texSampler;
 layout(binding = 3) uniform texture2D textures[];
 
-layout(location = 0) out VS_OUT {
+layout(location = 0) in VS_OUT {
    vec2 uv;
-} vs_out;
+} fs_in;
 
 void main() {
-   mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
+   ObjectData current_object = objectBuffer.objects[pushed.object_index];
    //
-	gl_Position = (ubo.sun_space * model_transform) * vec4(in_position, 1.0);
-   vs_out.uv   = in_uv;
+   vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
 }

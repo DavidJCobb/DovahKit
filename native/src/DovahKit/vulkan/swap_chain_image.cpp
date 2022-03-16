@@ -98,7 +98,7 @@ namespace vulkanDK {
       //
       this->overlays.world_axes.initialize_descriptor_sets(*this);
       //
-      // Sun shadow texture:
+      // Standard render pass: sun shadow texture:
       //
       {
          auto image_info = VkDescriptorImageInfo{
@@ -558,6 +558,17 @@ namespace vulkanDK {
          };
       }
       vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      {
+         //
+         // And sun shadows...
+         //
+         auto& target_set = this->descriptor_sets.sun_shadows;
+         for (auto& item : write_info) {
+            item.dstSet     = target_set;
+            item.dstBinding = 3;
+         }
+         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      }
       //
       // Updating a descriptor set will invalidate any command buffers using it; they must 
       // be reset and their queue regenerated:

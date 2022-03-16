@@ -8,6 +8,7 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : enable
 
+#include "../includes/alpha_testing_conditional_discard.glsl"
 #include "../includes/calc_specular_strength.glsl"
 #include "../includes/calc_directional_shadow.glsl"
 #include "../includes/computed_light.glsl"
@@ -73,36 +74,7 @@ vec4 calculate_color() {
    //
    color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
    //
-   switch (pushed.alpha_test_operation) {
-      case 0: // GL_ALWAYS
-         break;
-      case 1: // GL_LESS
-         if (!(color.a < pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 2: // GL_EQUAL
-         if (!(color.a == pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 3: // GL_LEQUAL
-         if (!(color.a <= pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 4: // GL_GREATER
-         if (!(color.a > pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 5: // GL_NOTEQUAL
-         if (!(color.a != pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 6: // GL_GEQUAL
-         if (!(color.a >= pushed.alpha_test_threshold))
-            discard;
-         break;
-      case 7: // GL_NEVER
-         discard;
-   }
+   alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
    color *= fs_in.color;
    #if USE_ALPHA_OIT == 1
       if (pushed.enable_alpha_blending == 0) {

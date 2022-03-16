@@ -31,6 +31,8 @@ namespace vulkanDK {
          std::swap(tm.index_count,  om.index_count);
          std::swap(tm.wide_indices, om.wide_indices);
       }
+      this->mesh_flags      = o.mesh_flags;
+      this->push_params     = o.push_params;
       this->shader_params   = o.shader_params;
       this->texture_indices = o.texture_indices;
       this->handled_frames  = o.handled_frames;

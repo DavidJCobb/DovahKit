@@ -513,6 +513,7 @@
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp" />
     <ClCompile Include="nif\blocks\BSLODTriShape.cpp" />
+    <ClCompile Include="nif\blocks\BSOrderedNode.cpp" />
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
@@ -786,6 +787,7 @@
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h" />
     <ClInclude Include="nif\blocks\BSLODTriShape.h" />
+    <ClInclude Include="nif\blocks\BSOrderedNode.h" />
     <ClInclude Include="nif\blocks\BSShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderTextureSet.h" />
     <ClInclude Include="nif\blocks\BSTriShape.h" />
@@ -1584,6 +1586,7 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="shaders\cores\standard_shader.frag" />
+    <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
@@ -1593,17 +1596,25 @@
     <None Include="shaders\overlay-fps.vert" />
     <None Include="shaders\overlay-fps.vert.spv" />
     <None Include="shaders\overlay-world-axes.frag" />
+    <None Include="shaders\overlay-world-axes.frag.spv" />
     <None Include="shaders\overlay-world-axes.vert" />
+    <None Include="shaders\overlay-world-axes.vert.spv" />
     <None Include="shaders\shader.frag">
       <FileType>Document</FileType>
     </None>
     <None Include="shaders\shader.frag.spv" />
     <None Include="shaders\shader.oit-color.frag" />
+    <None Include="shaders\shader.oit-color.frag.spv" />
+    <None Include="shaders\shader.shadows.frag" />
+    <None Include="shaders\shader.shadows.frag.spv" />
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader.vert.spv" />
     <None Include="shaders\sun-shadow-depth.vert" />
+    <None Include="shaders\sun-shadow-depth.vert.spv" />
     <None Include="shaders\util-full-screen-triangle.vert" />
+    <None Include="shaders\util-full-screen-triangle.vert.spv" />
     <None Include="shaders\util-oit.frag" />
+    <None Include="shaders\util-oit.frag.spv" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>

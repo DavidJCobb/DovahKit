@@ -30,6 +30,7 @@
             #include "NiNode.h"
                #include "BSFadeNode.h"
                #include "BSLeafAnimNode.h"
+               #include "BSOrderedNode.h"
                #include "NiSwitchNode.h"
          #include "NiProperty.h"
             #include "NiAlphaProperty.h"
@@ -60,6 +61,7 @@ namespace nifDK {
       block_types::BSLightingShaderProperty,
       block_types::BSLightingShaderPropertyFloatController,
       block_types::BSLODTriShape,
+      block_types::BSOrderedNode,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
       block_types::BSTriShape,

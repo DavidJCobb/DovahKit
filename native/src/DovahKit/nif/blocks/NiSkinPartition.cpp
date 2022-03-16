@@ -17,7 +17,7 @@ namespace nifDK::block_types {
       this->bones.resize(count_bone);
       reader.read_vector_contents(this->bones);
       //
-      uint8_t presence = (reader.version() <= file_version::from_parts<10, 1, 0, 0>) ? 1 : 0;
+      uint8_t presence = (reader.version() < file_version::from_parts<10, 1, 0, 0>) ? 1 : 0;
       if (!presence) {
          reader.read(presence);
       }
@@ -25,16 +25,22 @@ namespace nifDK::block_types {
          this->vertex_map.resize(count_vert);
          reader.read_vector_contents(this->vertex_map);
       }
-      this->weights.resize(this->weights_per_vertex * count_vert);
-      if (reader.version() >= file_version::from_parts<20, 3, 1, 1> && presence == 15) {
-         reader.require_size(this->weights.size() * sizeof(uint16_t));
-         for (auto& f : this->weights) {
-            uint16_t half;
-            reader.unchecked_read(half);
-            f = Float16(half);
+      presence = (reader.version() < file_version::from_parts<10, 1, 0, 0>) ? 1 : 0;
+      if (!presence) {
+         reader.read(presence);
+      }
+      if (presence) {
+         this->weights.resize(this->weights_per_vertex * count_vert);
+         if (reader.version() >= file_version::from_parts<20, 3, 1, 1> && presence == 15) {
+            reader.require_size(this->weights.size() * sizeof(uint16_t));
+            for (auto& f : this->weights) {
+               uint16_t half;
+               reader.unchecked_read(half);
+               f = Float16(half);
+            }
+         } else {
+            reader.read_vector_contents(this->weights);
          }
-      } else {
-         reader.read_vector_contents(this->weights);
       }
       //
       bool has_faces = reader.version() < file_version::from_parts<10, 1, 0, 0>;

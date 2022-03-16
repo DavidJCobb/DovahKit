@@ -275,6 +275,21 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
             .immutable_samplers = nullptr,
          },
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 2,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 3,
+            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .count              = config::max_loaded_textures,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
       };
       this->descriptor_set_layouts.standard.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
@@ -1169,14 +1184,17 @@ namespace vulkanDK {
       auto& dfn = s->definition;
       //
       shader_module* vert = nullptr;
+      shader_module* frag = nullptr;
       {
          vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
+         frag = new shader_module(this->logical_device, QResource("shaders/shader.shadows.frag.spv").uncompressedData());
          if (vert->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader (sun shadows).");
+            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader (sun shadows).");
          }
          this->shader_modules.push_back(vert);
          //
          this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: shader.shadows.frag.spv)");
       }
       //
       dfn.stages = {
@@ -1184,6 +1202,11 @@ namespace vulkanDK {
             .module           = vert,
             .entry_point_name = "main",
             .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+         {
+            .module           = frag,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
          },
       };
       dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
@@ -1537,6 +1560,15 @@ namespace vulkanDK {
                .pImageInfo       = nullptr,
                .pBufferInfo      = &rosp_buffer_info,
                .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // texture sampler
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.sun_shadows,
+               .dstBinding      = 2, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = 1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
+               .pImageInfo      = &sampler_info,
             },
             //
             // Main render pass:
@@ -2835,6 +2867,46 @@ namespace vulkanDK {
    }
    
    namespace {
+      void _handle_ni_alpha(
+         rendered_mesh& mesh,
+         const nifDK::block_types::NiAlphaProperty* alpha,
+         const nifDK::block_types::BSShaderProperty* shader,
+         bool& enable_vertex_alpha,
+         bool& enable_vertex_color
+      ) {
+         if (alpha) {
+            mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
+            mesh.push_params.alpha_test_threshold  = (float)alpha->testing.threshold / 255.0F;
+            mesh.push_params.enable_alpha_blending = alpha->blending.enabled ? VK_TRUE : VK_FALSE;
+            //
+            if (alpha->blending.enabled)
+               mesh.mesh_flags |= rendered_mesh::mesh_flag::requires_oit;
+         }
+         if (shader) {
+            //
+            // Skyrim shader flags:
+            //
+            if (auto* casted = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
+               if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
+                  enable_vertex_alpha = true;
+               }
+               if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
+                  enable_vertex_color = true;
+               }
+            }
+            //
+            // NOTE: Even with the Vertex Alpha flag enabled, I believe you still need a NiAlphaProperty to 
+            // enable alpha blending in order to see vertex alpha values cause any transparency.
+            //
+         }
+      }
       void _ni_triangles_to_mesh_triangles(const std::vector<nifDK::Triangle>& list, rendered_mesh& mesh) {
          auto  size = list.size();
          mesh.data.indices = vertex_index_list(size * 3, uint16_t(0));
@@ -2906,46 +2978,6 @@ namespace vulkanDK {
          ++this->scene.textures[normals_index].refcount;
          if (prior_normals != std::string::npos)
             --this->scene.textures[prior_normals].refcount;
-      }
-   }
-   void _handle_ni_alpha(
-      rendered_mesh& mesh,
-      const nifDK::block_types::NiAlphaProperty* alpha,
-      const nifDK::block_types::BSShaderProperty* shader,
-      bool& enable_vertex_alpha,
-      bool& enable_vertex_color
-   ) {
-      if (alpha) {
-         mesh.push_params.alpha_test_operation  = (int)alpha->testing.mode;
-         mesh.push_params.alpha_test_threshold  = (float)alpha->testing.threshold / 255.0F;
-         mesh.push_params.enable_alpha_blending = alpha->blending.enabled ? VK_TRUE : VK_FALSE;
-         //
-         if (alpha->blending.enabled)
-            mesh.mesh_flags |= rendered_mesh::mesh_flag::requires_oit;
-      }
-      if (shader) {
-         //
-         // Skyrim shader flags:
-         //
-         if (auto* casted = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-            if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-               enable_vertex_alpha = true;
-            }
-            if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-               enable_vertex_color = true;
-            }
-         } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
-            if (casted->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-               enable_vertex_alpha = true;
-            }
-            if (casted->shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
-               enable_vertex_color = true;
-            }
-         }
-         //
-         // NOTE: Even with the Vertex Alpha flag enabled, I believe you still need a NiAlphaProperty to 
-         // enable alpha blending in order to see vertex alpha values cause any transparency.
-         //
       }
    }
    void surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
