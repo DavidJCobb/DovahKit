@@ -1,4 +1,5 @@
 #include "surface_renderer_descriptor_group.h"
+#include "exceptions.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -96,15 +97,15 @@ namespace vulkanDK {
          case VK_SUCCESS:
             break;
          case VK_ERROR_OUT_OF_POOL_MEMORY:
-            throw std::runtime_error("[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: descriptor pool is too small.");
+            throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: descriptor pool is too small.");
          case VK_ERROR_FRAGMENTED_POOL:
-            throw std::runtime_error("[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: descriptor pool is too fragmented.");
+            throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: descriptor pool is too fragmented.");
          case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-            throw std::runtime_error("[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: insufficient device memory.");
+            throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: insufficient device memory.");
          case VK_ERROR_OUT_OF_HOST_MEMORY:
-            throw std::runtime_error("[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: insufficient CPU-side memory.");
+            throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets: insufficient CPU-side memory.");
          default:
-            throw std::runtime_error("[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets.");
+            throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets.");
       }
    }
    #pragma endregion

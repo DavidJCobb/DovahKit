@@ -1,5 +1,5 @@
 #include "physical_device.h"
-#include <stdexcept>
+#include "exceptions.h"
 
 namespace vulkanDK {
    physical_device::physical_device(VkPhysicalDevice d) : handle(d) {
@@ -159,7 +159,7 @@ namespace vulkanDK {
             return i;
          }
       }
-      throw std::out_of_range("[vulkanDK::physical_device::find_memory_type] Failed to find suitable memory type.");
+      throw exception("[vulkanDK::physical_device::find_memory_type] Failed to find suitable memory type.");
    }
    VkFormat physical_device::find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const {
       for (VkFormat format : candidates) {

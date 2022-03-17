@@ -1,6 +1,7 @@
 #include "swap_chain_image.h"
 #include <stdexcept>
 #include "command_buffer.h"
+#include "exceptions.h"
 #include "frame_in_flight.h"
 #include "render_pass.h"
 #include "rendered_light.h"
@@ -258,8 +259,8 @@ namespace vulkanDK {
          .pSignalSemaphores    = signal_semaphores.data(),
       };
       vkResetFences(this->owner->logical_device, 1, &fif.fence); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
-      if (vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, fif.fence) != VK_SUCCESS) {
-         throw std::runtime_error("failed to submit draw command buffer!");
+      if (auto result = vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, fif.fence); result != VK_SUCCESS) {
+         throw result_exception(result, "[swap_chain_image::draw] Failed to submit draw command buffer.");
       }
    }
 
@@ -587,8 +588,8 @@ namespace vulkanDK {
          auto  command_handle = command_buffer.handle;
          //
          command_buffer.reset(0);
-         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
          }
          //
          command_buffer.begin_render_pass(
@@ -657,8 +658,8 @@ namespace vulkanDK {
             }
          }
          vkCmdEndRenderPass(command_handle);
-         if (command_buffer.finish() != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (sun shadows).");
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (sun shadows).");
          }
       }
       //
@@ -671,8 +672,8 @@ namespace vulkanDK {
          auto  command_handle = command_buffer.handle;
          //
          command_buffer.reset(0);
-         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer.");
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer.");
          }
          this->owner->canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
          //
@@ -834,8 +835,8 @@ namespace vulkanDK {
          //
          // Done!
          //
-         if (command_buffer.finish() != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer.");
          }
       }
       //
@@ -846,8 +847,8 @@ namespace vulkanDK {
          auto  command_handle = command_buffer.handle;
          //
          command_buffer.reset(0);
-         if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (finish).");
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to begin recording command buffer (finish).");
          }
          //
          {  // Blit to swap chain image
@@ -896,8 +897,8 @@ namespace vulkanDK {
             this->image.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 0);
          }
          this->owner->canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
-         if (command_buffer.finish() != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (finish).");
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_command_buffers] Failed to record a command buffer (finish).");
          }
       }
    }
@@ -906,8 +907,8 @@ namespace vulkanDK {
       auto  command_handle = command_buffer.handle;
       //
       command_buffer.reset(0);
-      if (command_buffer.top_level_begin(0) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to begin recording UI command buffer.");
+      if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to begin recording UI command buffer.");
       }
       //
       this->overlays.fps.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
@@ -941,8 +942,8 @@ namespace vulkanDK {
          }
       }
       command_buffer.end_render_pass();
-      if (command_buffer.finish() != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to record the UI command buffer.");
+      if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::swap_chain_image::_refill_fps_overlay_command_buffer] Failed to record the UI command buffer.");
       }
    }
 }

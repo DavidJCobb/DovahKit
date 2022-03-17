@@ -1,5 +1,6 @@
 #include "shader.h"
 #include <stdexcept>
+#include "exceptions.h"
 #include "material.h"
 #include "render_pass.h"
 #include "surface_renderer.h"
@@ -54,8 +55,8 @@ namespace vulkanDK {
          .basePipelineHandle = VK_NULL_HANDLE,
          .basePipelineIndex = -1,
       };
-      if (vkCreateGraphicsPipelines(owner.get_owner()->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->handle) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
+      if (auto result = vkCreateGraphicsPipelines(owner.get_owner()->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
       }
    }
    void shader::variant::teardown(shader& owner) {
@@ -109,7 +110,7 @@ namespace vulkanDK {
    }
    void shader::setup_pipeline(VkExtent2D view) {
       if (!this->config.render_pass) {
-         throw std::runtime_error("[vulkanDK::shader::setup_pipeline] No render pass set for this shader.");
+         throw std::logic_error("[vulkanDK::shader::setup_pipeline] No render pass set for this shader.");
       }
       #if _DEBUG
       {

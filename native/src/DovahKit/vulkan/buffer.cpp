@@ -1,6 +1,7 @@
 #include "buffer.h"
 #include <algorithm>
 #include "command_buffer.h"
+#include "exceptions.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -50,8 +51,8 @@ namespace vulkanDK {
          .pUserData      = nullptr,
          .priority       = 0,
       };
-      if (vmaCreateBuffer(owner.allocator, &buffer_info, &alloc_info, &out.handle, &out.memory, nullptr) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::buffer::create] Failed to create buffer handle.");
+      if (auto result = vmaCreateBuffer(owner.allocator, &buffer_info, &alloc_info, &out.handle, &out.memory, nullptr); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::buffer::create] Failed to create buffer handle.");
       }
       out.size = size;
       //

@@ -1,6 +1,7 @@
 #include "abstract_renderer.h"
 #include <cassert>
 #include <stdexcept>
+#include "exceptions.h"
 #include "render_pass.h"
 #include "shader_module.h"
 
@@ -55,13 +56,13 @@ namespace vulkanDK {
          .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
          .queueFamilyIndex = queue_family_index,
       };
-      if (vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.persistent) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the persistent command pool.");
+      if (auto result = vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.persistent); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the persistent command pool.");
       }
       //
       pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-      if (vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.transient) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the transient command pool.");
+      if (auto result = vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.transient); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the transient command pool.");
       }
    }
    void abstract_renderer::teardown_command_pool() {
@@ -84,8 +85,8 @@ namespace vulkanDK {
          .poolSizeCount = (uint32_t)sizes.size(),
          .pPoolSizes    = sizes.data(),
       };
-      if (vkCreateDescriptorPool(this->logical_device, &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::abstract_renderer::setup_descriptor_pool] Failed to create the descriptor pool.");
+      if (auto result = vkCreateDescriptorPool(this->logical_device, &pool_info, nullptr, &this->descriptor_pool); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::setup_descriptor_pool] Failed to create the descriptor pool.");
       }
    }
    void abstract_renderer::teardown_descriptor_pool() {
@@ -120,8 +121,8 @@ namespace vulkanDK {
          .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
          .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
       };
-      if (vkCreateSampler(this->logical_device, &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::abstract_renderer::_setup_texture_sampler] Failed to create the texture sampler.");
+      if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &this->texture_sampler); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::_setup_texture_sampler] Failed to create the texture sampler.");
       }
    }
    void abstract_renderer::teardown_texture_sampler() {

@@ -186,8 +186,8 @@ namespace vulkanDK {
          .pushConstantRangeCount = (uint32_t)pcr.size(),
          .pPushConstantRanges    = pcr.data(),
       };
-      if (vkCreatePipelineLayout(this->owner->logical_device, &pipeline_layout_info, nullptr, &this->pipeline.layout) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::material::setup_layout] Failed to create pipeline layout.");
+      if (auto result = vkCreatePipelineLayout(this->owner->logical_device, &pipeline_layout_info, nullptr, &this->pipeline.layout); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::material::setup_layout] Failed to create pipeline layout.");
       }
    }
    void material::setup_handle(const material_definition& def, VkViewport viewport, VkRect2D scissor, render_pass& render_pass, uint32_t subpass) {
@@ -251,8 +251,8 @@ namespace vulkanDK {
          .basePipelineHandle = VK_NULL_HANDLE,
          .basePipelineIndex = -1,
       };
-      if (vkCreateGraphicsPipelines(this->owner->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->pipeline.handle) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
+      if (auto result = vkCreateGraphicsPipelines(this->owner->logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &this->pipeline.handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::material::setup_handle] Failed to create graphics pipeline.");
       }
    }
 

@@ -2,6 +2,7 @@
 #include <chrono>
 #include <QResource> // for loading shaders
 #include "DKVulkanInstance.h"
+#include "exceptions.h"
 #include "frame_in_flight.h"
 #include "material.h"
 #include "physical_device.h"
@@ -469,9 +470,9 @@ namespace vulkanDK {
          create_info.enabledLayerCount = 0;
       }
       //
-      if (vkCreateDevice(pd_handle, &create_info, nullptr, &this->logical_device) != VK_SUCCESS) {
+      if (auto result = vkCreateDevice(pd_handle, &create_info, nullptr, &this->logical_device); result != VK_SUCCESS) {
          // report VK_ERROR_DEVICE_LOST
-         throw std::runtime_error("[vulkanDK::surface_renderer] Failed to create logical device.");
+         throw result_exception(result, "[vulkanDK::surface_renderer] Failed to create logical device.");
       }
       //
       // And lastly, let's get our queues:
@@ -527,8 +528,8 @@ namespace vulkanDK {
          .borderColor      = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK,
          .unnormalizedCoordinates = VK_TRUE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
       };
-      if (vkCreateSampler(this->logical_device, &sampler_info, nullptr, &this->raw_pixel_texture_sampler) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
+      if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &this->raw_pixel_texture_sampler); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
       }
    }
    void surface_renderer::_teardown_raw_pixel_texture_sampler() {
@@ -944,6 +945,15 @@ namespace vulkanDK {
    }
 
    void surface_renderer::_setup_oit_composite_shader() {
+      if (!this->can_do_alpha()) {
+         //
+         // If the device doesn't support the features we need for OIT, then we don't even 
+         // define the render pass, so we also shouldn't load any shaders that rely on it.
+         //
+         return;
+      }
+      assert(this->render_passes_by_name.main_oit != nullptr);
+      //
       auto* s = this->get_or_create_shader(oit_composite_shader_id);
       s->set_render_pass(this->render_passes_by_name.main_oit, 1);
       s->set_layout_info({ this->descriptor_set_layouts.oit_composite.handle });
@@ -955,12 +965,8 @@ namespace vulkanDK {
       {
          frag = new shader_module(this->logical_device, QResource("shaders/util-oit.frag.spv").uncompressedData());
          vert = new shader_module(this->logical_device, QResource("shaders/util-full-screen-triangle.vert.spv").uncompressedData());
-         if (frag->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
-         }
-         if (vert->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
-         }
+         assert(!frag->empty());
+         assert(!vert->empty());
          this->shader_modules.push_back(frag);
          //
          this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
@@ -1024,12 +1030,8 @@ namespace vulkanDK {
       {
          frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
          vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-         if (frag->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
-         }
-         if (vert->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
-         }
+         assert(!frag->empty());
+         assert(!vert->empty());
          this->shader_modules.push_back(frag);
          this->shader_modules.push_back(vert);
          //
@@ -1072,6 +1074,15 @@ namespace vulkanDK {
       s->setup_pipeline_layout(*this);
    }
    void surface_renderer::_setup_basic_wboit_shader() {
+      if (!this->can_do_alpha()) {
+         //
+         // If the device doesn't support the features we need for OIT, then we don't even 
+         // define the render pass, so we also shouldn't load any shaders that rely on it.
+         //
+         return;
+      }
+      assert(this->render_passes_by_name.main_oit != nullptr);
+      //
       auto* s = this->get_or_create_shader(main_shader_oit_color_id);
       s->set_render_pass(this->render_passes_by_name.main_oit, 0);
       s->set_layout_info(
@@ -1097,12 +1108,8 @@ namespace vulkanDK {
       {
          frag = new shader_module(this->logical_device, QResource("shaders/shader.oit-color.frag.spv").uncompressedData());
          vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-         if (frag->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader.");
-         }
-         if (vert->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load vertex shader.");
-         }
+         assert(!frag->empty());
+         assert(!vert->empty());
          this->shader_modules.push_back(frag);
          this->shader_modules.push_back(vert);
          //
@@ -1197,9 +1204,8 @@ namespace vulkanDK {
       {
          vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
          frag = new shader_module(this->logical_device, QResource("shaders/shader.shadows.frag.spv").uncompressedData());
-         if (vert->empty()) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_shaders] Failed to load fragment shader (sun shadows).");
-         }
+         assert(!frag->empty());
+         assert(!vert->empty());
          this->shader_modules.push_back(vert);
          //
          this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
@@ -1340,7 +1346,7 @@ namespace vulkanDK {
                texture = texture.convertToFormat(QImage::Format::Format_RGBA8888);
             }
             if (texture.isNull()) {
-               throw std::runtime_error("[vulkanDK::surface_renderer::_setup_initial_scene] Failed to load test image.");
+               throw exception("[vulkanDK::surface_renderer::_setup_initial_scene] Failed to load test image.");
             }
             VkDeviceSize image_size = texture.width() * texture.height() * 4;
             assert(image_size == texture.sizeInBytes());
@@ -1753,8 +1759,8 @@ namespace vulkanDK {
       create_info.clipped        = VK_TRUE;        // disable rendering of pixels covered (e.g. by other windows); good optimization, but prevents querying the colors of those pixels (e.g. for saving snapshots)
       create_info.oldSwapchain   = VK_NULL_HANDLE; // must be specified when rebuilding a swap chain; keep null for making a new swap chain
       //
-      if (vkCreateSwapchainKHR(this->logical_device, &create_info, nullptr, &sc.handle) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_swap_chain_instance] Failed to create swap chain.");
+      if (auto result = vkCreateSwapchainKHR(this->logical_device, &create_info, nullptr, &sc.handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::surface_renderer::_setup_swap_chain_instance] Failed to create swap chain.");
       }
    }
    void surface_renderer::_setup_depth_buffer() {
@@ -1844,8 +1850,8 @@ namespace vulkanDK {
          .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
          .unnormalizedCoordinates = VK_FALSE,
       };
-      if (vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
+      if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::surface_renderer::_setup_raw_pixel_texture_sampler] Failed to create the raw pixel texture sampler.");
       }
       this->set_debug_object_name(sampler, "Sun Shadow Texture Sampler");
    }
@@ -1954,8 +1960,8 @@ namespace vulkanDK {
    }
    void surface_renderer::_setup_framebuffers() {
       auto extent = this->surface_extent;
-      {
-         auto attachments = std::array{ this->canvas.color.view, this->canvas.depth.view };
+      {  // Main framebuffer
+         auto attachments      = std::array{ this->canvas.color.view, this->canvas.depth.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext           = nullptr,
@@ -1967,13 +1973,13 @@ namespace vulkanDK {
             .height          = extent.height,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.main_framebuffer) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create the main framebuffer.");
+         if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.main_framebuffer); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create the main framebuffer.");
          }
          this->set_debug_object_name(this->canvas.main_framebuffer, "Framebuffer (Main)");
       }
       if (this->canvas.sun_shadow.framebuffer == VK_NULL_HANDLE) { // Sun shadow framebuffer
-         auto attachments = std::array{ this->canvas.sun_shadow.map.view };
+         auto attachments      = std::array{ this->canvas.sun_shadow.map.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext           = nullptr,
@@ -1985,13 +1991,18 @@ namespace vulkanDK {
             .height          = config::sun_shadow_map_resolution_y,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.sun_shadow.framebuffer) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (sun shadows).");
+         if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.sun_shadow.framebuffer); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (sun shadows).");
          }
          this->set_debug_object_name(this->canvas.sun_shadow.framebuffer, "Framebuffer (Sun Shadows)");
       }
-      {  // OIT framebuffer
-         auto attachments = std::array{ this->canvas.oit.accumulator.view, this->canvas.oit.reveal.view, this->canvas.color.view, this->canvas.depth.view };
+      if (this->can_do_alpha()) { // OIT framebuffer
+         //
+         // If the device doesn't support the features we need for OIT, then we don't even 
+         // define the render pass, so we also shouldn't create framebuffers that need it.
+         //
+         assert(this->render_passes_by_name.main_oit != nullptr);
+         auto attachments      = std::array{ this->canvas.oit.accumulator.view, this->canvas.oit.reveal.view, this->canvas.color.view, this->canvas.depth.view };
          auto framebuffer_info = VkFramebufferCreateInfo{
             .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext           = nullptr,
@@ -2003,8 +2014,8 @@ namespace vulkanDK {
             .height          = extent.height,
             .layers          = 1,
          };
-         if (vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.oit.framebuffer) != VK_SUCCESS) {
-            throw std::runtime_error("[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (OIT).");
+         if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.oit.framebuffer); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_framebuffers] Failed to create a framebuffer (OIT).");
          }
          this->set_debug_object_name(this->canvas.oit.framebuffer, "Framebuffer (OIT)");
       }
@@ -2021,6 +2032,14 @@ namespace vulkanDK {
 
    void surface_renderer::teardown() {
       this->_on_renderer_teardown_imminent();
+      if (this->logical_device == VK_NULL_HANDLE) {
+         //
+         // It must be the case that we weren't able to properly set up at all, or else 
+         // some precondition to setup failed  and we're just blindly being called as a 
+         // result of a destructor after not even trying to set up.
+         //
+         return;
+      }
       //
       vkDeviceWaitIdle(this->logical_device); // wait for all draw commands to finish (remember: they're asynch)
       //
@@ -2041,6 +2060,18 @@ namespace vulkanDK {
          if (this->canvas.sun_shadow.sampler != VK_NULL_HANDLE) {
             vkDestroySampler(this->logical_device, this->canvas.sun_shadow.sampler, nullptr);
             this->canvas.sun_shadow.sampler = VK_NULL_HANDLE;
+         }
+         if (auto& handle = this->canvas.main_framebuffer; handle != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+            handle = VK_NULL_HANDLE;
+         }
+         if (auto& handle = this->canvas.sun_shadow.framebuffer; handle != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+            handle = VK_NULL_HANDLE;
+         }
+         if (auto& handle = this->canvas.oit.framebuffer; handle != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+            handle = VK_NULL_HANDLE;
          }
          this->canvas.color.teardown();
          this->canvas.depth.teardown();
@@ -2082,6 +2113,17 @@ namespace vulkanDK {
          for (auto& image : sc.images) {
             image.teardown_descriptor_sets(); // TODO: we don't actually have to free and rebuild these if the descriptor pool itself doesn't need to be rebuilt
             image.teardown();
+         }
+         if (auto& handle = this->canvas.main_framebuffer; handle != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+            handle = VK_NULL_HANDLE;
+         }
+         //
+         // Don't destroy the sun shadow framebuffer; we don't need to resize it with the surface.
+         //
+         if (auto& handle = this->canvas.oit.framebuffer; handle != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+            handle = VK_NULL_HANDLE;
          }
          this->canvas.depth.teardown();
          this->canvas.color.teardown();
@@ -2237,7 +2279,7 @@ namespace vulkanDK {
             this->handle_resize();
             return;
          default:
-            throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
+            throw result_exception(result, "[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
       }
       auto& sci = sc.images[sc_image_index];
       //
@@ -2281,7 +2323,7 @@ namespace vulkanDK {
             this->handle_resize();
             break;
          default:
-            throw std::runtime_error("[vulkanDK::surface_renderer::draw_next_frame] Failed to present swap chain image.");
+            throw result_exception(result, "[vulkanDK::surface_renderer::draw_next_frame] Failed to present swap chain image.");
       }
       //
       // Post-draw behavior:
@@ -2341,7 +2383,7 @@ namespace vulkanDK {
          VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
       );
       if (fmt == VK_FORMAT_UNDEFINED) {
-         throw std::runtime_error("[vulkanDK::surface_renderer::find_depth_format] No format.");
+         throw exception("[vulkanDK::surface_renderer::find_depth_format] No format.");
       }
       return fmt;
    }

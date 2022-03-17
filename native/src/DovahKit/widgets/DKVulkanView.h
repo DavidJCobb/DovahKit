@@ -12,7 +12,7 @@ class DKVulkanView : public QWidget {
       DKVulkanView(QWidget* parent = nullptr);
       ~DKVulkanView();
 
-      virtual QPaintEngine* paintEngine() const override { return nullptr; }
+      virtual QPaintEngine* paintEngine() const override;
 
       inline QString preferredGPUName() const noexcept { return this->preferred_gpu.name; }
       inline bool requireExactGPUMatch() const noexcept { return this->preferred_gpu.exactMatch; }
@@ -37,6 +37,8 @@ class DKVulkanView : public QWidget {
 
       void renderedMeshClicked(size_t);
 
+      void rendererKilledDueToError();
+
    protected:
       vulkanDK::surface_renderer* renderer = nullptr; // owns
       struct {
@@ -49,8 +51,10 @@ class DKVulkanView : public QWidget {
          bool enabled = false;
          bool focused = false;
       } input_handling;
+      bool renderer_killed_due_to_error = false;
 
       void _inputPoll();
+      void _killRendererDueToError();
 
       virtual bool event(QEvent*) override;
       virtual void hideEvent(QHideEvent* event) override;

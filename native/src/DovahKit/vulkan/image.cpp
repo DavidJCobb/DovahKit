@@ -1,9 +1,9 @@
 #include "image.h"
 #include <algorithm>
 #include <cassert>
-#include <stdexcept>
 #include "buffer.h"
 #include "command_buffer.h"
+#include "exceptions.h"
 #include "physical_device.h"
 #include "surface_renderer.h"
 //
@@ -159,7 +159,7 @@ namespace vulkanDK {
       assert(this->owner);
       auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, { .format = format }, aspect);
       if (result != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::image_and_view::create_basic_view] Failed to create texture image view.");
+         throw result_exception(result, "[vulkanDK::image_and_view::create_basic_view] Failed to create texture image view.");
       }
    }
    void image_and_view::destroy_view() {
@@ -265,8 +265,8 @@ namespace vulkanDK {
          .pUserData      = nullptr,
          .priority       = 0,
       };
-      if (vmaCreateImage(this->owner->allocator, &image_info, &alloc_info, &this->handle, &this->memory, nullptr) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::owned_image_and_view::create_image] Failed to create image.");
+      if (auto result = vmaCreateImage(this->owner->allocator, &image_info, &alloc_info, &this->handle, &this->memory, nullptr); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::owned_image_and_view::create_image] Failed to create image.");
       }
    }
    

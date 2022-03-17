@@ -1,4 +1,5 @@
 #include "render_pass.h"
+#include "exceptions.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -51,8 +52,8 @@ namespace vulkanDK {
          .dependencyCount = (uint32_t)this->subpasses.dependencies.size(),
          .pDependencies   = this->subpasses.dependencies.data(),
       };
-      if (vkCreateRenderPass(this->owner.logical_device, &render_pass_info, nullptr, &this->handle) != VK_SUCCESS) {
-         throw std::runtime_error("[vulkanDK::render_pass] Failed to create render pass.");
+      if (auto result = vkCreateRenderPass(this->owner.logical_device, &render_pass_info, nullptr, &this->handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::render_pass] Failed to create render pass.");
       }
    }
    void render_pass::teardown() {

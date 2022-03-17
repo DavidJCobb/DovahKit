@@ -1,5 +1,5 @@
 #include "descriptor_definitions.h"
-#include <stdexcept>
+#include "exceptions.h"
 
 namespace vulkanDK {
    VkDescriptorSetLayoutBinding descriptor_binding::setup_params() const {
@@ -48,8 +48,8 @@ namespace vulkanDK {
          .bindingCount = binding_count,
          .pBindings    = binding_params.data(),
       };
-      if (vkCreateDescriptorSetLayout(this->device, &layout_info, nullptr, &this->handle) != VK_SUCCESS) {
-         throw std::runtime_error("[descriptor_set_layout::apply] Failed to create descriptor set layout.");
+      if (auto result = vkCreateDescriptorSetLayout(this->device, &layout_info, nullptr, &this->handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[descriptor_set_layout::apply] Failed to create descriptor set layout.");
       }
    }
    void descriptor_set_layout::teardown() {

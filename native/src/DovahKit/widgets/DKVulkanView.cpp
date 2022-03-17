@@ -1,12 +1,20 @@
 #include "DKVulkanView.h"
 #include <QEvent>
 #include <QMouseEvent>
+#include <QPainter>
 #include "../vulkan/data/DKVulkanCameraUpdate.h"
 #include "../vulkan/DKVulkanInstance.h"
+#include "../vulkan/exceptions.h"
 #include "../vulkan/physical_device.h"
 #include "../vulkan/queue_family_info.h"
 #include "../vulkan/surface_renderer.h"
 #include "../dk3d/DK3DInputHandler.h"
+
+namespace {
+   constexpr int null_icon_render_bounds = 400;
+   constexpr int null_icon_render_size   = null_icon_render_bounds * 0.66;
+   constexpr int null_icon_line_width    = std::max(10, (int)((float)null_icon_render_bounds * 0.07));
+}
 
 namespace {
    const std::vector<const char*> device_extensions = { // TODO: match this with the extension list we request in logical_device !
@@ -35,6 +43,13 @@ DKVulkanView::~DKVulkanView() {
    }
 }
 
+
+QPaintEngine* DKVulkanView::paintEngine() const {
+   if (this->renderer_killed_due_to_error)
+      return QWidget::paintEngine();
+   return nullptr;
+}
+
 void DKVulkanView::setDesiredFrameDelay(uint ms) {
    this->desired_frame_delay_ms = ms;
    if (this->timerID) {
@@ -54,6 +69,11 @@ void DKVulkanView::resetRenderer() {
       delete this->renderer;
       this->renderer = nullptr;
    }
+   if (this->renderer_killed_due_to_error) {
+      this->setAttribute(Qt::WA_OpaquePaintEvent, true);
+      this->setAttribute(Qt::WA_PaintOnScreen,    true);
+   }
+   this->renderer_killed_due_to_error = false;
    //
    auto& dkvi = DKVulkanInstance::get();
    this->renderer = new vulkanDK::surface_renderer(dkvi, this);
@@ -102,12 +122,17 @@ void DKVulkanView::resetRenderer() {
    }
    if (!pd) {
       qDebug("[DKVulkanView] Failed to find a physical device that supports this surface.");
+      this->_killRendererDueToError();
       return;
    }
    //
    // Found a device. Set up our renderer.
    //
-   this->renderer->set_physical_device(*pd);
+   try {
+      this->renderer->set_physical_device(*pd);
+   } catch (vulkanDK::exception& e) {
+      this->_killRendererDueToError();
+   }
 }
 
 void DKVulkanView::setInputHandlingEnabled(bool e) {
@@ -128,6 +153,16 @@ void DKVulkanView::_inputPoll() {
    auto update = DK3DInputHandler::get().update(this);
    s->scene.adjust_camera(update);
 }
+void DKVulkanView::_killRendererDueToError() {
+   this->renderer_killed_due_to_error = true;
+   if (!this->renderer)
+      return;
+   delete this->renderer;
+   this->renderer = nullptr;
+   this->setAttribute(Qt::WA_OpaquePaintEvent, false);
+   this->setAttribute(Qt::WA_PaintOnScreen,    false);
+   emit this->rendererKilledDueToError();
+}
 
 #pragma region Events
 bool DKVulkanView::event(QEvent* event) {
@@ -147,8 +182,42 @@ void DKVulkanView::hideEvent(QHideEvent* event) {
    }
 }
 void DKVulkanView::paintEvent(QPaintEvent* event) {
-   if (auto* s = this->renderer) {
-      s->_on_repaint();
+   if (!this->renderer) {
+      if (this->renderer_killed_due_to_error) {
+         QPainter painter(this);
+         auto rect = this->contentsRect();
+         //
+         constexpr int  margin    = null_icon_line_width  + 2;
+         constexpr auto halfwidth = null_icon_render_size / 2;
+         //
+         QPointF center = rect.center();
+         auto    length = std::min(rect.width(), rect.height()) - margin;
+         //
+         QColor color = this->palette().color(QPalette::ColorRole::Dark);
+         QPen   pen;
+         pen.setWidth(null_icon_line_width);
+         pen.setColor(color);
+         pen.setCapStyle(Qt::PenCapStyle::FlatCap);
+         //
+         painter.save();
+         painter.setBrush(Qt::NoBrush);
+         painter.setPen(pen);
+         painter.setRenderHints(QPainter::RenderHint::Antialiasing | QPainter::RenderHint::SmoothPixmapTransform, true);
+         painter.translate(center);
+         if (length < null_icon_render_bounds) {
+            auto scale = qreal(length) / null_icon_render_bounds;
+            painter.scale(scale, scale);
+         }
+         painter.drawLine( halfwidth, -halfwidth, -halfwidth,  halfwidth);
+         painter.drawLine(-halfwidth, -halfwidth,  halfwidth,  halfwidth);
+         painter.restore();
+      }
+      return;
+   }
+   try {
+      this->renderer->_on_repaint();
+   } catch (vulkanDK::exception& e) {
+      this->_killRendererDueToError();
    }
 }
 void DKVulkanView::resizeEvent(QResizeEvent* event) {

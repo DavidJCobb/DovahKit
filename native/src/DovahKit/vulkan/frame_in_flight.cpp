@@ -1,6 +1,6 @@
 #include "frame_in_flight.h"
 #include <cassert>
-#include <stdexcept>
+#include "exceptions.h"
 #include "surface_renderer.h"
 
 namespace vulkanDK {
@@ -41,14 +41,14 @@ namespace vulkanDK {
          //
          .flags = VK_FENCE_CREATE_SIGNALED_BIT,
       };
-      if (vkCreateSemaphore(device, &semaphore_info, nullptr, &this->semaphores.image_available) != VK_SUCCESS) {
-         throw std::runtime_error("[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight semaphore (image-available).");
+      if (auto result = vkCreateSemaphore(device, &semaphore_info, nullptr, &this->semaphores.image_available); result != VK_SUCCESS) {
+         throw result_exception(result, "[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight semaphore (image-available).");
       }
-      if (vkCreateSemaphore(device, &semaphore_info, nullptr, &this->semaphores.render_finished) != VK_SUCCESS) {
-         throw std::runtime_error("[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight semaphore (render-finished).");
+      if (auto result = vkCreateSemaphore(device, &semaphore_info, nullptr, &this->semaphores.render_finished); result != VK_SUCCESS) {
+         throw result_exception(result, "[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight semaphore (render-finished).");
       }
-      if (vkCreateFence(device, &fence_info, nullptr, &this->fence) != VK_SUCCESS) {
-         throw std::runtime_error("[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight fence.");
+      if (auto result = vkCreateFence(device, &fence_info, nullptr, &this->fence); result != VK_SUCCESS) {
+         throw result_exception(result, "[frame_in_flight::_setup_semaphores] Failed to create frame-in-flight fence.");
       }
    }
 }
