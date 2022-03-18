@@ -618,6 +618,8 @@ namespace vulkanDK {
                auto& vib = ro.vertex_and_index_buffer;
                if (!ro.active())
                   continue;
+               if (!(ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows))
+                  continue;
                if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
                   first_double_sided = j;
                   continue;
@@ -643,6 +645,8 @@ namespace vulkanDK {
                   auto& ro = scene.meshes[j];
                   auto& vib = ro.vertex_and_index_buffer;
                   if (!ro.active())
+                     continue;
+                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows))
                      continue;
                   if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
                      continue;
@@ -690,6 +694,30 @@ namespace vulkanDK {
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
+         //
+         auto make_push_constant_for = [](const rendered_mesh& ro, size_t object_index) {
+            auto pc = ro.push_params;
+            pc.object_index         = (int32_t)object_index;
+            pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+            pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+            return pc;
+         };
+         //
+         bool last_was_decal   = false;
+         auto set_decal_config = [command_handle, &last_was_decal](const rendered_mesh& ro) {
+            bool current_is_decal = (ro.mesh_flags & rendered_mesh::mesh_flag::is_decal) != 0;
+            if (current_is_decal != last_was_decal) {
+               if (current_is_decal) {
+                  constexpr auto base  = config::use_inverted_depth ? 1.25 : 1.25;
+                  constexpr auto limit = 0.0; // no limit, for now; NOTE: requires a hardware feature
+                  constexpr auto scale = config::use_inverted_depth ? 1.75 : 1.75;
+                  vkCmdSetDepthBias(command_handle, base, limit, scale);
+               } else {
+                  vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
+               }
+               last_was_decal = current_is_decal;
+            }
+         };
          {
             //
             // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
@@ -713,12 +741,10 @@ namespace vulkanDK {
                   first_double_sided = j;
                   continue;
                }
+
+               set_decal_config(ro);
                
-               auto pc = ro.push_params;
-               pc.object_index         = (int32_t)j;
-               pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-               pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-               //
+               auto pc = make_push_constant_for(ro, j);
                command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                ro.draw_call(command_handle);
             }
@@ -739,12 +765,10 @@ namespace vulkanDK {
                      continue;
                   if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
                      continue;
-               
-                  auto pc = ro.push_params;
-                  pc.object_index         = (int32_t)j;
-                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-                  //
+
+                  set_decal_config(ro);
+
+                  auto pc = make_push_constant_for(ro, j);
                   command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                   ro.draw_call(command_handle);
                }
@@ -786,11 +810,9 @@ namespace vulkanDK {
                   if (!(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
                      continue;
 
-                  auto pc = ro.push_params;
-                  pc.object_index         = (int32_t)j;
-                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-                  //
+                  set_decal_config(ro);
+
+                  auto pc = make_push_constant_for(ro, j);
                   command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                   ro.draw_call(command_handle);
                }
@@ -811,12 +833,10 @@ namespace vulkanDK {
                         continue;
                      if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
                         continue;
-               
-                     auto pc = ro.push_params;
-                     pc.object_index         = (int32_t)j;
-                     pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-                     pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-                     //
+
+                     set_decal_config(ro);
+
+                     auto pc = make_push_constant_for(ro, j);
                      command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
                      ro.draw_call(command_handle);
                   }
@@ -831,6 +851,10 @@ namespace vulkanDK {
                vkCmdDraw(command_handle, 3, 1, 0, 0);
             }
             command_buffer.end_render_pass();
+         }
+         //
+         if (last_was_decal) {
+            vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
          }
          //
          // Done!

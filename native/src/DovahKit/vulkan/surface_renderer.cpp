@@ -1062,6 +1062,10 @@ namespace vulkanDK {
       if constexpr (config::use_inverted_depth) {
          dfn.depth.comparison = VK_COMPARE_OP_GREATER;
       }
+      dfn.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
+      dfn.dynamic_states = {
+         VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS, // for decals
+      };
       {
          auto& vertex     = dfn.inputs.vertex;
          auto  attributes = vertex::getAttributeDescriptions();
@@ -1168,6 +1172,10 @@ namespace vulkanDK {
       if constexpr (config::use_inverted_depth) {
          dfn.depth.comparison = VK_COMPARE_OP_GREATER;
       }
+      dfn.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
+      dfn.dynamic_states = {
+         VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS, // for decals
+      };
       {
          auto& vertex     = dfn.inputs.vertex;
          auto  attributes = vertex::getAttributeDescriptions();
@@ -2942,6 +2950,13 @@ namespace vulkanDK {
             if (auto* casted = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(shader)) {
                shader_flags     = casted->shader_flags;
                has_shader_flags = true;
+               //
+               if (casted->material.alpha < 1.0) {
+                  mesh.mesh_flags |= rendered_mesh::mesh_flag::requires_oit;
+                  //
+                  // TODO: pass this alpha value in
+                  //
+               }
             } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
                shader_flags     = casted->shader_flags;
                has_shader_flags = true;
@@ -2954,11 +2969,24 @@ namespace vulkanDK {
                if (shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
                   enable_vertex_alpha = true;
                }
+               if (shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::decal) {
+                  mesh.mesh_flags |= rendered_mesh::mesh_flag::is_decal;
+               }
+               if (!(shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::cast_shadows)) {
+                  mesh.mesh_flags &= ~rendered_mesh::mesh_flag::cast_shadows;
+               }
+               //
                if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::double_sided) {
                   mesh.mesh_flags |= rendered_mesh::mesh_flag::double_sided;
                }
                if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::vertex_colors) {
                   enable_vertex_color = true;
+               }
+               //
+               // For tree meshes, vertex alpha values are co-opted and used for animations:
+               //
+               if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::use_tree_animation) {
+                  enable_vertex_alpha = false;
                }
             }
          }
@@ -3136,7 +3164,15 @@ namespace vulkanDK {
             auto& vert = mesh.data.vertices[i];
             vert.pos = data->vertices[i];
             if (enable_vertex_color && cl.size()) {
-               vert.color = { cl[i].r, cl[i].g, cl[i].b, enable_vertex_alpha ? cl[i].a : 1.0 };
+               if (cl.size()) {
+                  vert.color = { cl[i].r, cl[i].g, cl[i].b, enable_vertex_alpha ? cl[i].a : 1.0 };
+               } else {
+                  //
+                  // If the shader enables vertex colors but the mesh data doesn't actually have any, 
+                  // then color it all black.
+                  //
+                  vert.color = { 0.0, 0.0, 0.0, 1.0 };
+               }
             } else {
                vert.color = { 1.0, 1.0, 1.0, 1.0 };
             }

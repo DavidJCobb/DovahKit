@@ -74,8 +74,8 @@ vec4 calculate_color() {
    //
    color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
    //
-   alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
    color *= fs_in.color;
+   alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
    #if USE_ALPHA_OIT == 1
       if (pushed.enable_alpha_blending == 0) {
          //

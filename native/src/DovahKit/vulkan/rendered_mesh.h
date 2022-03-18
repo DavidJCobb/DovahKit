@@ -34,7 +34,11 @@ namespace vulkanDK {
             enum type : uint32_t {
                requires_oit = 0x00000001,
                double_sided = 0x00000002,
+               cast_shadows = 0x00000004,
+               is_decal     = 0x00000008,
             };
+            //
+            static constexpr uint32_t all_default_flags = cast_shadows;
          };
          using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
 
@@ -53,7 +57,7 @@ namespace vulkanDK {
             alignas(4) VkBool32 enable_alpha_blending = false; // bools in GLSL are uint32_ts in SPIR-V
          };
          
-         mesh_flags_t mesh_flags = 0;
+         mesh_flags_t mesh_flags = mesh_flag::all_default_flags;
          struct {
             std::vector<vertex> vertices;
             vertex_index_list   indices;
