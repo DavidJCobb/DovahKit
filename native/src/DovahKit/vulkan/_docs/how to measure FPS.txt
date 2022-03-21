@@ -1,0 +1,97 @@
+
+How do you write an FPS counter in Vulkan?  It's surprisingly difficult to find 
+a straightforward answer. There are pre-built examples out there, but none that 
+I've seen go into any real detail on what they're measuring, let alone how.
+
+Before we begin, refer to <an overview of the basic render process.txt>.
+
+
+== WHAT ARE WE MEASURING? =====================================================
+
+Given all of the asynchronicity involved, measuring FPS is a rather complicated 
+task. The renderer's frame rate will depend on...
+
+ - How quickly the CPU can record command buffers.
+
+ - How quickly the GPU can execute command buffers.
+
+ - How quickly the GPU, OS, and monitor can present the rendered image.
+
+If our renderer  uses fewer frames in flight than there are  swap chain images, 
+then we can very roughly estimate all of those times by simply tracking, on the 
+CPU, the time  from the end of one frame to the end of the next.  The following 
+events will occur within that timespan:
+
+ - The CPU recording command buffers
+
+ - The CPU sending submit and present calls (basically instant)
+
+ - The CPU doing whatever else it wants to do in its main loop, e.g. processing 
+   the application GUI. This may seem  irrelevant on its surface, but that work 
+   does technically delay the CPU  getting around to drawing the next frame, so 
+   if anything, measuring it is accurate.
+
+ - The CPU waiting  for a frame-in-flight slot becoming available  via a fence, 
+   and therefore waiting on command execution for the previous swap chain image 
+   in that slot.
+
+    - ...and consequently, waiting on any remaining GPU-side work for that swap 
+      chain image, i.e. that previous frame.
+
+Let's visualize that. The top reel here is for the CPU tasks; the middle is for 
+the GPU rendering; and the line on the bottom shows what we're measuring.
+
+   CPU EXECUTION:
+-------------------------------------------------------------------------------
+          |         |       |           |         |         |       |          
+  Record  |  Submit |   CPU |  Wait on  | Record  |  Submit |   CPU |  Wait on 
+  Command |   and   |  Main | Frame-in- | Command |   and   |  Main | Frame-in-
+  Buffers | Present |  Loop |  Flight   | Buffers | Present |  Loop |  Flight  
+          |         |       |           |         |         |       |          
+-------------------------------------------------------------------------------
+
+   GPU COMMAND BUFFER EXECUTION:
+-------------------------------------------------------------------------------
+  Frame A                               | ....... | Frame A
+-------------------------------------------------------------------------------
+......... | Frame B                                                           |
+-------------------------------------------------------------------------------
+
+   MEASUREMENT:
+----------------------------^---------------------------------------^----------
+ ...                        | Measured                              | ...
+-------------------------------------------------------------------------------
+
+Now, there are some nuances to this. Firstly:  there will be frames for which a 
+frame-in-flight  slot is already available. In those cases,  the measurement we 
+take will produce a zero or  near-zero value, measuring  only the time it takes 
+to queue rendering on the CPU (which, if we're reusing command buffers, will be 
+pretty much instant). These cases will occur  very regularly; in my tests, they 
+occurred several times a second. The approach I've  gone with is to simply skip 
+those frames entirely, since they  essentially fail to estimate any of the time 
+taken on the GPU.
+
+
+== WHAT DO WE DO WITH THE MEASUREMENTS? =======================================
+
+Most FPS counter examples I've seen rely on counting frames for one second, but 
+I chose to go with a rolling average updated per frame. This results in numbers 
+that change more rapidly than a value that updates on one-second intervals, but 
+less rapidly than  just blindly displaying the current  frame time. The numbers 
+are just a rough estimate either way, so it really comes down to vibes.
+
+
+== WHAT ABOUT VULKAN TIMESTAMPS? ==============================================
+
+A fairly comprehensive  walkthrough for Vulkan timestamps  can be found in this 
+article:
+
+   https://nikitablack.github.io/post/how_to_use_vulkan_timestamp_queries/
+
+It's a fairly  complex approach, and still only produces an  approximation. The 
+result also only captures the time taken  on the GPU, which means that any CPU-
+side delays that may contribute to the frame rate will go unmeasured.
+
+Ultimately, the CPU-side estimate is good enough for RenderDoc (though they use 
+a per-second average), so it's good enough for me.
+

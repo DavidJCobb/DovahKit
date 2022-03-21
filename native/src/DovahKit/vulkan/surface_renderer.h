@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <chrono>
 #include <type_traits>
 #include <vector>
 #include <QPointer>
@@ -56,6 +57,8 @@ namespace vulkanDK {
          static constexpr shader::id_type main_shader_oit_color_id = "MainOITc";
          static constexpr shader::id_type sun_shadow_shader_id     = "SunShadw";
 
+         using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
+
       protected:
          // renderer events:
          void _on_renderer_ready();
@@ -65,6 +68,13 @@ namespace vulkanDK {
          // widget events:
          void _on_repaint();
          void _on_visibility_change(QSize, bool visible); // or resize
+
+         struct shadow_cast_resources {
+            VkFramebuffer framebuffer = VK_NULL_HANDLE;
+            std::array<owned_image_and_view, 2> maps;
+            std::array<VkSampler, 2> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
+            size_t index = std::string::npos;
+         };
 
       public:
          // APIs
@@ -113,6 +123,7 @@ namespace vulkanDK {
                VkFramebuffer framebuffer = VK_NULL_HANDLE;
                VkSampler     sampler     = VK_NULL_HANDLE;
             } sun_shadow;
+            std::array<shadow_cast_resources, 4> light_shadows;
             struct {
                VkFramebuffer framebuffer = VK_NULL_HANDLE;
                owned_image_and_view accumulator;
@@ -131,9 +142,10 @@ namespace vulkanDK {
          //
          std::vector<shader*> shaders;
          union {
-            std::array<render_pass*, 4> _list = { nullptr, nullptr, nullptr, nullptr };
+            std::array<render_pass*, 5> _list = { nullptr, nullptr, nullptr, nullptr, nullptr };
             struct {
-               render_pass* main_shadow;
+               render_pass* main_shadow; // shadows for the directional sun
+               render_pass* main_shadow_placed; // shadows for placed lights
                render_pass* main;
                render_pass* main_oit;
                render_pass* ui;
@@ -143,6 +155,7 @@ namespace vulkanDK {
          scene scene;
          //
          struct {
+            timestamp_t last_frame_at;
             double last_frame_time = 0.0;
          } state;
          //
@@ -232,6 +245,7 @@ namespace vulkanDK {
          void _setup_depth_buffer(); // requires extent size
          void _setup_color_buffer(); // requires extent size
          void _setup_sun_shadow_buffer();
+         void _setup_light_shadow_resources(); // sets up depth images, samplers, and framebuffers. requires render passes
          void _setup_oit_images(); // requires extent size
          void _setup_swap_chain_images();
          void _setup_swap_chain_image_frame_data(); // requires descriptor pool

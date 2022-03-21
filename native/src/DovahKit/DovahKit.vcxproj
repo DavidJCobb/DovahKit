@@ -1587,11 +1587,16 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="shaders\cores\standard_shader.frag" />
+    <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
     <None Include="shaders\includes\computed_light.glsl" />
+    <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
+    <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
+    <None Include="shaders\includes\scene_global_state.glsl" />
+    <None Include="shaders\includes\standard_vertex_inputs.glsl" />
     <None Include="shaders\overlay-fps.frag" />
     <None Include="shaders\overlay-fps.frag.spv" />
     <None Include="shaders\overlay-fps.vert" />

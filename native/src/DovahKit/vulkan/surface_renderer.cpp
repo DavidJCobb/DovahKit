@@ -1863,6 +1863,89 @@ namespace vulkanDK {
       }
       this->set_debug_object_name(sampler, "Sun Shadow Texture Sampler");
    }
+   void surface_renderer::_setup_light_shadow_resources() {
+      const auto& support = this->device_info->support;
+      const auto  format  = this->find_depth_format();
+      //
+      const vulkanDK::image_metadata metadata = {
+         .extent = {
+            .width  = config::sun_shadow_map_resolution_x,
+            .height = config::sun_shadow_map_resolution_y,
+            .depth  = 1,
+         },
+         .format = format,
+         .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+      };
+      const auto sampler_info = VkSamplerCreateInfo{
+         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+         .magFilter        = VK_FILTER_NEAREST,
+         .minFilter        = VK_FILTER_NEAREST,
+         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+         .addressModeU     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+         .addressModeV     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+         .addressModeW     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+         .mipLodBias       = 0.0,
+         .anisotropyEnable = support.max_anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
+         .maxAnisotropy    = std::min(8.0F, support.max_anisotropic_filtering),
+         .compareEnable    = VK_FALSE,
+         .compareOp        = VK_COMPARE_OP_LESS,
+         .minLod           = 0.0,
+         .maxLod           = 1.0,
+         .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+         .unnormalizedCoordinates = VK_FALSE,
+      };
+      //
+      for (auto& entry : this->canvas.light_shadows) {
+         static_assert(std::tuple_size_v<decltype(shadow_cast_resources::maps)> == std::tuple_size_v<decltype(shadow_cast_resources::samplers)>);
+         for (size_t i = 0; i < entry.maps.size(); ++i) {
+            auto& image   = entry.maps[i];
+            auto& sampler = entry.samplers[i];
+            //
+            image = owned_image_and_view(*this);
+            image.create_image(
+               {
+                  .extent = {
+                     .width  = config::sun_shadow_map_resolution_x,
+                     .height = config::sun_shadow_map_resolution_y,
+                     .depth  = 1,
+                  },
+                  .format = format,
+                  .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+               }, 
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            );
+            image.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
+            image.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+            //
+            this->set_debug_object_name(image.handle, "Light Shadow Buffer Image");
+            this->set_debug_object_name(image.view,   "Light Shadow Buffer Image View");
+            //
+            if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
+               throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create the raw pixel texture sampler.");
+            }
+            this->set_debug_object_name(sampler, "Light Shadow Texture Sampler");
+         }
+         //
+         // Framebuffer:
+         //
+         auto attachments      = std::array{ entry.maps[0].view, entry.maps[1].view };
+         auto framebuffer_info = VkFramebufferCreateInfo{
+            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext           = nullptr,
+            .flags           = 0,
+            .renderPass      = this->render_passes_by_name.main_shadow->handle,
+            .attachmentCount = attachments.size(),
+            .pAttachments    = attachments.data(),
+            .width           = config::sun_shadow_map_resolution_x,
+            .height          = config::sun_shadow_map_resolution_y,
+            .layers          = 1,
+         };
+         if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &entry.framebuffer); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
+         }
+         this->set_debug_object_name(entry.framebuffer, "Framebuffer (Light Shadows)");
+      }
+   }
    void surface_renderer::_setup_oit_images() {
       constexpr auto usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
       //
@@ -2234,8 +2317,10 @@ namespace vulkanDK {
       if (!this->widget.visible)
          return;
       //
-      using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
-      auto time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+      auto& time_prior = this->state.last_frame_at;
+      if (time_prior.time_since_epoch() == timestamp_t::duration::zero()) {
+         time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+      }
       //
       // If this frame-in-flight is still being used to render and present another swap 
       // chain image, wait for it to finish. We'll also advance the current frame counter 
@@ -2339,6 +2424,7 @@ namespace vulkanDK {
       auto time_after = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
       {
          this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(time_after - time_prior).count();
+         this->state.last_frame_at   = time_after;
       }
       this->_execute_pending_scene_deletions();
    }
@@ -2974,6 +3060,9 @@ namespace vulkanDK {
                }
                if (!(shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::cast_shadows)) {
                   mesh.mesh_flags &= ~rendered_mesh::mesh_flag::cast_shadows;
+               }
+               if (!(shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::receive_shadows)) {
+                  mesh.push_params.receive_shadows = VK_FALSE;
                }
                //
                if (shader_flags[1] & nifDK::SkyrimShaderPropertyFlagB::double_sided) {

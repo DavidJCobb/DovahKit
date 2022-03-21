@@ -185,10 +185,9 @@ namespace vulkanDK {
                fps.set_value(decltype(delta)(1) / delta);
             } else {
                //
-               // Instantaneous frame; dividing would be a division by zero. Just use the 
-               // max possible FPS.
+               // Instantaneous frame; dividing would be a  division by zero. Refer to documentation on 
+               // how we measure FPS, but basically, it's best to just skip measuring this frame.
                //
-               fps.set_value(vulkanDK::overlays::fps::max_value);
             }
          }
          //
@@ -708,9 +707,22 @@ namespace vulkanDK {
             bool current_is_decal = (ro.mesh_flags & rendered_mesh::mesh_flag::is_decal) != 0;
             if (current_is_decal != last_was_decal) {
                if (current_is_decal) {
+                  //
+                  // "Depth bias" in Vulkan is functionally equivalent to OpenGL's glPolygonOffset, and 
+                  // can be used to apply a depth offset to triangle-based models when generating the 
+                  // depth buffer and (I believe) when rendering it in general. This can prevent meshes 
+                  // from Z-fighting even when they're coplanar, as would typically be the case for any 
+                  // decal meshes.
+                  //
                   constexpr auto base  = config::use_inverted_depth ? 1.25 : 1.25;
                   constexpr auto limit = 0.0; // no limit, for now; NOTE: requires a hardware feature
                   constexpr auto scale = config::use_inverted_depth ? 1.75 : 1.75;
+                  //
+                  // NOTE: Merely setting the depth bias parameters isn't enough; depth bias must actually 
+                  // be enabled as well. You can enable it when defining the shader, with the parameters 
+                  // set to zero initially; or, if you're using Vulkan 1.3+, you can flag "depth bias is 
+                  // enabled" as a dynamic state parameter and then use vkCmdSetDepthBiasEnable here.
+                  //
                   vkCmdSetDepthBias(command_handle, base, limit, scale);
                } else {
                   vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
@@ -718,6 +730,7 @@ namespace vulkanDK {
                last_was_decal = current_is_decal;
             }
          };
+         vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
          {
             //
             // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 

@@ -21,56 +21,32 @@
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
-layout(push_constant) uniform PER_OBJECT {
-   int   object_index;
-	int   texture_index;
-   int   texture_normal_index;
-   float alpha_test_threshold;
-   int   alpha_test_operation;
-   int   enable_alpha_blending; // VkBool32
-} pushed;
-
-struct ObjectData {
-	mat4  transform;
-   vec3  specular_color;
-   float specular_strength;
-   float specular_exponent;
-};
+#include "../includes/rendered_mesh_push_constant.glsl"
+#include "../includes/rendered_mesh_shader_params.glsl"
+#include "../includes/scene_global_state.glsl"
 
 layout(std140,binding = 0) uniform UniformBufferObject {
-   mat4 view;
-   mat4 proj;
-   vec3 ambient_light_color;
-   vec3 sun_dir;
-   vec3 sun_color;
-	mat4 sun_space;
-} ubo;
+   scene_global_state ubo;
+};
 layout(binding = 1) uniform sampler texSampler;
 layout(binding = 2) uniform sampler2D shadowMap;
 layout(std140,set = 0, binding = 3) readonly buffer ObjectBuffer {
-	ObjectData objects[];
+	rendered_mesh_shader_params objects[];
 } objectBuffer;
 layout(std140,set = 0, binding = 4) readonly buffer PointLightBuffer {
 	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
 layout(binding = 5) uniform texture2D textures[];
 
+#include "standard_shader/fragment_input.glsl"
 layout(location = 0) in VS_OUT {
-   vec4  color; // vertex color
-   vec2  uv;
-   vec3  pos_world;
-   mat3  tangent_space;
-   vec3  tangent_sun_dir;
-   vec3  tangent_view_pos;
-   vec3  tangent_vert_pos;
-   vec4  sun_shadow_vert_pos;
-   float camera_distance;
-} fs_in;
+   fragment_input fs_in;
+};
 
 vec4 calculate_color() {
    vec4 color;
    //
-   ObjectData current_object = objectBuffer.objects[pushed.object_index];
+   rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
    //
    color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
    //
@@ -98,15 +74,26 @@ vec4 calculate_color() {
    //
    vec3 view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
    //
-   computed_light light_data = calc_directional_light(
-      fs_in.tangent_sun_dir,
-      fs_in.sun_shadow_vert_pos,
-      ubo.sun_color,
-      normal,
-      view_dir,
-      current_object.specular_exponent,
-      shadowMap
-   );
+   computed_light light_data;
+   if (pushed.receive_shadows == 0) {
+      light_data = calc_directional_light(
+         fs_in.tangent_sun_dir,
+         ubo.sun_color,
+         normal,
+         view_dir,
+         current_object.specular_exponent
+      );
+   } else {
+      light_data = calc_directional_light_and_shadow(
+         fs_in.tangent_sun_dir,
+         fs_in.sun_shadow_vert_pos,
+         ubo.sun_color,
+         normal,
+         view_dir,
+         current_object.specular_exponent,
+         shadowMap
+      );
+   }
    for(int i = 0; i < MAX_LIGHTS; ++i) {
       computed_light current = calc_point_light(
          pointLightBuffer.lights[i],
@@ -116,6 +103,20 @@ vec4 calculate_color() {
          view_dir,
          current_object.specular_exponent
       );
+      if (false) { // if this light is allowed to cast shadows
+         for(int j = 0; j < 0; ++j) {
+            mat4 shadow_space;
+
+            if (false) {
+               //
+               // This light is currently casting shadows. Run the calcs.
+               //
+
+               //
+               break;
+            }
+         }
+      }
       light_data.diffuse  += current.diffuse;
       light_data.specular += current.specular;
    }

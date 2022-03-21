@@ -225,10 +225,14 @@ namespace vulkanDK::overlays {
             h.average = v;
             h.count   = 1;
          } else if (h.count == std::numeric_limits<decltype(h.count)>::max() - 1) { // overflow imminent
-            h.average = v;
-            h.count   = 1;
+            if (v != max_value) {
+               h.average = v;
+            }
+            h.count = 1;
          } else {
             using average_t = decltype(h.average);
+            //
+            v = std::min(v, (value_type)max_visible_value);
             //
             constexpr bool alternate_method = true;
             if constexpr (alternate_method) {

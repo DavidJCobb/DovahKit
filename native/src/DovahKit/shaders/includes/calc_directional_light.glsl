@@ -9,6 +9,25 @@
 // inputs are in tangent space, where applicable
 computed_light calc_directional_light(
    vec3  light_dir,       // tangent-space light direction
+   vec3  light_color,
+   vec3  normal,          // surface normal
+   vec3  view_dir,        // tangent-space view direction
+   float specular_exponent
+) {
+   computed_light result;
+   //
+   light_dir = -normalize(light_dir);
+   //
+   float str_diff = max(dot(normal, light_dir), 0.0);
+   float str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent);
+   //
+   result.diffuse  = str_diff * light_color;
+   result.specular = str_spec * light_color;
+   return result;
+}
+
+computed_light calc_directional_light_and_shadow(
+   vec3  light_dir,       // tangent-space light direction
    vec4  light_space_pos, // light-space vertex position
    vec3  light_color,
    vec3  normal,          // surface normal

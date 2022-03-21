@@ -1,5 +1,6 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
 
 #define TBN_MODE_NONE     0
 #define TBN_MODE_LAZY     1
@@ -20,56 +21,27 @@
 // they're meant to.
 //
 
-layout(push_constant) uniform PER_OBJECT {
-   int   object_index;
-	int   texture_index;
-   int   texture_normal_index;
-   float alpha_test_threshold;
-   int   alpha_test_operation;
-   int   enable_alpha_blending; // VkBool32
-} pushed;
-
-struct ObjectData{
-	mat4  transform;
-   vec3  specular_color;
-   float specular_strength;
-   float specular_exponent;
-};
+#include "includes/rendered_mesh_push_constant.glsl"
+#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/scene_global_state.glsl"
 
 layout(std140,binding = 0) uniform UniformBufferObject {
-   mat4 view;
-   mat4 proj;
-   vec3 ambient_light_color;
-   vec3 sun_dir;
-   vec3 sun_color;
-	mat4 sun_space;
-} ubo;
+   scene_global_state ubo;
+};
 // binding 1 is used by the fragment shader (texture sampler)
 // binding 2 is used by the fragment shader (shadow map)
 layout(std430,set = 0, binding = 3) readonly buffer ObjectBuffer {
-	ObjectData objects[];
+	rendered_mesh_shader_params objects[];
 } objectBuffer;
 // binding 4 is used by the fragment shader (light array)
 // binding 5 is used by the fragment shader (texture array)
 
-layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec4 in_color;
-layout(location = 2) in vec2 in_uv;
-layout(location = 3) in vec3 in_normal;
-layout(location = 4) in vec3 in_tangent;
-layout(location = 5) in vec3 in_bitangent;
+#include "includes/standard_vertex_inputs.glsl"
 
+#include "cores/standard_shader/fragment_input.glsl"
 layout(location = 0) out VS_OUT {
-   vec4  color;
-   vec2  uv;
-   vec3  pos_world;
-   mat3  tangent_space;
-   vec3  tangent_sun_dir;
-   vec3  tangent_view_pos;
-   vec3  tangent_vert_pos;
-   vec4  sun_shadow_vert_pos;
-   float camera_distance;
-} vs_out;
+   fragment_input vs_out;
+};
 
 // [-1, 1] to [0, 1]
 const mat4 shadow_to_normalized_coords = mat4( 

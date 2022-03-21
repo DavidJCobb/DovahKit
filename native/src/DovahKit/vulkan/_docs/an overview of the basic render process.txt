@@ -1,0 +1,220 @@
+
+Typically,  the way a renderer works is that the CPU queues draw  operations to 
+occur on the GPU, and then the GPU executes those operations asynchronously. In 
+Vulkan,  we record commands, submit them to a queue for execution,  and then we 
+present the final rendered image.
+
+
+== THE PROCESS ================================================================
+
+
+=== GETTING A SWAP CHAIN IMAGE ================================================
+
+There is a difference  between rendering an image and  actually "presenting" it 
+on-screen. In order to smoothly display a  scene, we have to synchronize things 
+with the OS  and with the monitor refresh rate. Vulkan offers an official "swap 
+chain" extension which implements this for us,  exposing a multiple-buffer -- a 
+list of "swap chin images" wherein we request an available image, render to it, 
+and then hand the image back in to be presented.
+
+Requesting an image is an asynchronous operation. We call vkAcquireNextImageKHR 
+and pass in a GPU-side semaphore and a  pointer to an int variable, to serve as 
+an out parameter. The function will return pretty much immediately, setting the 
+int-variable to the  index of the swap chain image we  should use... so why the 
+semaphore?
+
+This function can  provide us with a swap chain image to  use before that image 
+is actually available for use. That's not a bad thing: most of what we'll do to 
+draw a new frame  will be asynchronous, so we can queue up  a ton of operations 
+for this image while it's still unavailable, and we can also specify that those 
+queued operations be delayed (via the  GPU-side semaphore) until the swap chain 
+image actually  is available. This means  that we spend less  time just sitting 
+around and waiting.
+
+
+=== RECORDING COMMANDS ========================================================
+
+For each frame, we'll have at least one  (or optionally more than one) "command 
+buffer." A command buffer is a list of rendering commands that we will queue to 
+execute on the GPU. This includes "draw calls" for objects.
+
+To draw an object, we must submit commands to "bind" the following resources to 
+the command buffer:
+
+ - A render pass, and a framebuffer defining the attachments to render to
+
+ - A pipeline (i.e. shader)
+
+ - Descriptor sets (i.e. resources to be passed to the shader)
+
+ - Optionally a push constant
+
+ - A vertex buffer, optionally alongside an index buffer, for the mesh to draw
+
+Descriptor sets and push constants remain  bound until an incompatible pipeline 
+is bound. Vertex and index buffers remain bound until replaced. This means that 
+we generally  only need to bind resources  when they differ  between one object 
+and the  next. This in turn  means that it's a good  idea to render  objects in 
+different batches based on the resources they require. If, for example, we have 
+a bunch of objects  that use backface culling, but also some  objects that need 
+double-sided polygons (and therefore their own shader), then we would typically 
+
+ - Bind the backface-culling shader.
+
+ - Render the backface-culled objects.
+
+ - Bind the double-sided shader.
+
+ - Render the double-sided objects.
+
+This is more efficient  than rebinding shaders several  times during the render 
+process.
+
+One last thing: command buffers need to be re-recorded if the resources that we 
+bind are altered; however, they don't need to be re-recorded if the contents of 
+those resources are altered. This means, for example, that we need to re-record 
+a command buffer if the objects in the scene change, or if the textures used in 
+the scene change; however, if the contents of a storage buffer change while all 
+other data remains the same, we can just reuse the command buffer.
+
+Transferring data  from the CPU to the  GPU is slow. If we can  reuse a command 
+buffer for a frame, then  we can  avoid having to transfer  a bunch of commands 
+for that frame.
+
+
+=== SUBMITTING COMMANDS =======================================================
+
+We use the  vkQueueSubmit function to  submit a list of command  buffers to the 
+GPU for execution.  The submit operation is asynchronous  by default, so we can 
+also specify  GPU-side semaphores, to faciliate  having our  submission wait on 
+some previous GPU-side operation,  and to facilitate future GPU-side operations 
+waiting on our submission.
+
+This call, then, initiates the actual rendering of a frame.
+
+
+=== PRESENTING IMAGES =========================================================
+
+Presentation, like submission, is asynchronous,  and accepts a list of GPU-side 
+semaphores. We can use  the same semaphores for submission  and presentation to 
+ensure that the GPU presents the swap chain image only after it's finished exec-
+uting our commands and drawing to it. The reason these APIs are asynchronous is 
+so that the CPU can queue up work in whatever manner best serves its own needs, 
+without having to wait on the GPU to finish any one task.
+
+
+== SOME NUANCES ===============================================================
+
+The naive approach  to rendering would be to store all  resources per-renderer, 
+and then render one frame at a time.  We can use a "fence" to make the CPU wait 
+on a GPU-side semaphore,  and we're already using  semaphores to coordinate the 
+submit-and-present process, so we have  what we need for this. However, there's 
+a better option: once we queue the submission and presentation of one frame, we 
+can start rendering the next frame. This will give us some work to do while the 
+first frame is still being presented, so  that by the time it's been presented, 
+we'll be that much closer to having the second frame ready for presentation.
+
+We can take this concept further and be  willing to render multiple frames at a 
+time -- that is, to have multiple "frames in flight." There are some advantages 
+to doing this, particularly when it comes  to how we store the resources needed 
+for rendering. For now,  let's think of each frame in  flight as a "slot" which 
+has two GPU-side semaphores and a fence.
+
+ - The first semaphore  is used when acquiring a swap  chain image, and will be 
+   signalled when the image  becomes available.  Command buffer submission will 
+   wait on this semaphore.
+
+ - The second semaphore is used for  submission, and will be signalled when all 
+   submitted command buffers have finished executing. Presentation will wait on 
+   this semaphore.
+
+ - The fence is used to ensure that the CPU doesn't try to make use of a frame-
+   in-flight that is currently occupied. When we submit our command buffers, we 
+   can also submit a fence to signal;  and we can at any time have the CPU wait 
+   for a fence to become signalled.
+
+This means that the overall render process is something like this:
+
+ - Select a frame-in-flight slot to use.
+
+ - Wait (on the CPU) for its fence to become signalled.
+
+ - Acquire a swap chain image.
+
+ - Record command buffers.
+
+    - These commands should ultimately end up drawing to the swap chain image.
+
+ - Reset the fence for this frame-in-flight.
+
+ - Submit command buffers.
+
+    - Wait (on the GPU) for image acquisition.
+
+    - Pass the fence, to be signalled when submission is complete.
+
+ - Present swap chain image.
+
+    - Wait (on the GPU) for submission to complete.
+
+
+== ON WHAT BASIS DO WE STORE DIFFERENT RESOURCES? =============================
+
+Because rendering  and presentation are asynchronous, we need  to be careful to 
+avoid having the CPU modify  resources while they're  in use by the GPU -- that 
+is, when command buffers have been submitted and are executing. We also want to 
+avoid having the CPU wait on the GPU,  however, so in practice, this means that 
+certain resources will need to be duplicated either across all frames in flight 
+or across all swap chain images. But... which resources?
+
+Let's start with a naive example:
+
+ - Bind shaders
+ - Bind textures and storage buffers as descriptors
+ - Bind a render pass and framebuffer
+ - Produce a depth buffer
+ - Render a basic scene directly to the swap chain image
+ 
+Shaders can be per-renderer, because they're never modified after we load them.
+
+The depth buffer  can also be per-renderer.  Frames are rendered  one a time on 
+the GPU;  the depth buffer is only  used within a frame, and never modified  by 
+the CPU, so there's no concurrency risk here.
+
+Render passes can be per-renderer; however,  because we're rendering everything 
+directly to the  swap chain image,  the framebuffers  need to be per swap chain 
+image. A render pass defines (among other things)  a list of "attachment" slots 
+for images to serve as shader inputs and outputs, while a framebuffer specifies 
+which images should  actually be attached. The command buffer  binds the render 
+pass and the framebuffer.  Rendering to  the swap chain  image requires using a 
+framebuffer  that was  defined to target that swap  chain image,  which in turn 
+means:
+
+ - The command buffer, which uses the framebuffer, now has to be per swap chain 
+   image.
+
+ - If we want to reuse command buffers, then...
+
+    - The descriptor sets have to be per swap chain image.
+    
+This is, again,  to avoid concurrency issues. Modifying a  descriptor set while 
+it's being used by the GPU would cause a lot of problems -- enough that the GPU 
+doesn't even let you do it, by default.
+
+Let's consider a more advanced example, closer to what our renderer does:
+
+ - Bind shaders
+ - Bind textures and storage buffers as descriptors
+ - Bind a render pass and framebuffer
+ - Produce a depth buffer
+ - Render opaque objects to a color image allocated by our application
+ - Render translucent objects to two OIT images allocated by our application
+ - Composite the OIT images onto our color image
+ - Blit from the color image onto the swap chain image
+ 
+This affords us a little more freedom.  As with the depth buffer, our color and 
+OIT images  are only used during rendering, so those can be made  per-renderer. 
+This in turn means that our command buffers can be per frame-in-flight... other 
+than the command buffer used to blit to the swap chain image, anyway. That lets 
+us make the descriptor sets per frame-in-flight as well, since they wouldn't be 
+used by the command buffer that does the final blit.

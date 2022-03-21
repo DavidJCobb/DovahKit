@@ -1,38 +1,17 @@
 #version 450
+#extension GL_GOOGLE_include_directive : enable
 
-layout(push_constant) uniform PER_OBJECT {
-   int   object_index;
-	int   texture_index;
-   int   texture_normal_index;
-   float alpha_test_threshold;
-   int   alpha_test_operation;
-   int   enable_alpha_blending; // VkBool32
-} pushed;
+#include "includes/rendered_mesh_push_constant.glsl"
+#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/scene_global_state.glsl"
 
-struct ObjectData {
-	mat4  transform;
-   vec3  specular_color;
-   float specular_strength;
-   float specular_exponent;
-};
-
-layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec3 in_color;
-layout(location = 2) in vec2 in_uv;
-layout(location = 3) in vec3 in_normal;
-layout(location = 4) in vec3 in_tangent;
-layout(location = 5) in vec3 in_bitangent;
+#include "includes/standard_vertex_inputs.glsl"
 
 layout(std140,binding = 0) uniform UniformBufferObject {
-   mat4 view;
-   mat4 proj;
-   vec3 ambient_light_color;
-   vec3 sun_dir;
-   vec3 sun_color;
-	mat4 sun_space;
-} ubo;
+   scene_global_state ubo;
+};
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
-	ObjectData objects[];
+	rendered_mesh_shader_params objects[];
 } objectBuffer;
 layout(binding = 2) uniform sampler texSampler;
 layout(binding = 3) uniform texture2D textures[];

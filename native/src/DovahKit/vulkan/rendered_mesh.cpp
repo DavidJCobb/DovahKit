@@ -146,6 +146,8 @@ namespace vulkanDK {
          delete p;
          p = nullptr;
       }
+      this->push_params   = {};
+      this->shader_params = {};
       this->texture_indices = decltype(texture_indices)();
       this->handled_frames = frame_dirty_state();
       this->life_state = scene_frame_item_state::empty;
