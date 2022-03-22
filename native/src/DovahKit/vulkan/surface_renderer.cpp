@@ -584,6 +584,7 @@ namespace vulkanDK {
          for (auto& fif : this->swap_chain.frames_in_flight)
             fif.setup_descriptor_sets();
       }
+      this->_setup_light_shadow_resources();
       this->_create_null_texture();
       this->scene.update_projection(this->surface_extent); // requires extent size
       this->_setup_initial_scene();
@@ -617,6 +618,61 @@ namespace vulkanDK {
                },
             },
          };
+         rp->subpasses.dependencies = {
+            VkSubpassDependency{
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
+               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // wait until the fragment shader
+               .srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+            }
+         };
+      }
+      {
+         static constexpr size_t depth_image_count = shadow_caster_count * shadow_cast_resources::depth_images_per;
+         //
+         auto* rp = this->render_passes_by_name.main_shadow_placed = new render_pass(*this);
+         {
+            auto& list = rp->attachments;
+            list.resize(depth_image_count);
+            for(auto& item : list)
+               item = VkAttachmentDescription{
+                  .format         = this->find_depth_format(),
+                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                  .finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+               };
+         }
+         {
+            auto& list = rp->subpasses.descriptions;
+            list.resize(depth_image_count);
+            for (size_t i = 0; i < depth_image_count; ++i) {
+               list[i] = {  // subpass
+                  .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  .attachments = {
+                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                        .attachment = (uint32_t)i,
+                        .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                     },
+                  },
+               };
+            }
+         }
          rp->subpasses.dependencies = {
             VkSubpassDependency{
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
@@ -941,7 +997,13 @@ namespace vulkanDK {
             }
          };
       }
-      this->render_passes = { this->render_passes_by_name.main_shadow, this->render_passes_by_name.main, this->render_passes_by_name.ui, this->render_passes_by_name.main_oit };
+      this->render_passes = {
+         this->render_passes_by_name.main_shadow,
+         this->render_passes_by_name.main_shadow_placed,
+         this->render_passes_by_name.main,
+         this->render_passes_by_name.ui,
+         this->render_passes_by_name.main_oit,
+      };
    }
 
    void surface_renderer::_setup_oit_composite_shader() {
@@ -1909,6 +1971,8 @@ namespace vulkanDK {
       this->set_debug_object_name(sampler, "Sun Shadow Texture Sampler");
    }
    void surface_renderer::_setup_light_shadow_resources() {
+      auto& res_list = this->canvas.light_shadows.resources;
+      //
       const auto& support = this->device_info->support;
       const auto  format  = this->find_depth_format();
       //
@@ -1940,7 +2004,7 @@ namespace vulkanDK {
          .unnormalizedCoordinates = VK_FALSE,
       };
       //
-      for (auto& entry : this->canvas.light_shadows) {
+      for (auto& entry : res_list) {
          static_assert(std::tuple_size_v<decltype(shadow_cast_resources::maps)> == std::tuple_size_v<decltype(shadow_cast_resources::samplers)>);
          for (size_t i = 0; i < entry.maps.size(); ++i) {
             auto& image   = entry.maps[i];
@@ -1970,26 +2034,36 @@ namespace vulkanDK {
             }
             this->set_debug_object_name(sampler, "Light Shadow Texture Sampler");
          }
-         //
-         // Framebuffer:
-         //
-         auto attachments      = std::array{ entry.maps[0].view, entry.maps[1].view };
-         auto framebuffer_info = VkFramebufferCreateInfo{
-            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .pNext           = nullptr,
-            .flags           = 0,
-            .renderPass      = this->render_passes_by_name.main_shadow->handle,
-            .attachmentCount = attachments.size(),
-            .pAttachments    = attachments.data(),
-            .width           = config::sun_shadow_map_resolution_x,
-            .height          = config::sun_shadow_map_resolution_y,
-            .layers          = 1,
-         };
-         if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &entry.framebuffer); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
-         }
-         this->set_debug_object_name(entry.framebuffer, "Framebuffer (Light Shadows)");
       }
+      //
+      // Framebuffer:
+      //
+      auto attachments = std::array{
+         res_list[0].maps[0].view,
+         res_list[0].maps[1].view,
+         res_list[1].maps[0].view,
+         res_list[1].maps[1].view,
+         res_list[2].maps[0].view,
+         res_list[2].maps[1].view,
+         res_list[3].maps[0].view,
+         res_list[3].maps[1].view,
+      };
+      auto framebuffer_info = VkFramebufferCreateInfo{
+         .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+         .pNext           = nullptr,
+         .flags           = 0,
+         .renderPass      = this->render_passes_by_name.main_shadow->handle,
+         .attachmentCount = attachments.size(),
+         .pAttachments    = attachments.data(),
+         .width           = config::sun_shadow_map_resolution_x,
+         .height          = config::sun_shadow_map_resolution_y,
+         .layers          = 1,
+      };
+      static_assert(std::tuple_size_v<decltype(attachments)> == shadow_caster_count * shadow_cast_resources::depth_images_per);
+      if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.light_shadows.framebuffer); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
+      }
+      this->set_debug_object_name(this->canvas.light_shadows.framebuffer, "Framebuffer (Light Shadows)");
    }
    void surface_renderer::_setup_oit_images() {
       constexpr auto usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
@@ -2209,6 +2283,24 @@ namespace vulkanDK {
          if (auto& handle = this->canvas.sun_shadow.framebuffer; handle != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(this->logical_device, handle, nullptr);
             handle = VK_NULL_HANDLE;
+         }
+         {
+            auto& ls = this->canvas.light_shadows;
+            if (auto& handle = ls.framebuffer; handle != VK_NULL_HANDLE) {
+               vkDestroyFramebuffer(this->logical_device, handle, nullptr);
+               handle = VK_NULL_HANDLE;
+            }
+            for (auto& item : ls.resources) {
+               item.light_index = std::string::npos;
+               for (auto& image : item.maps)
+                  image.teardown();
+               for (auto& sampler : item.samplers) {
+                  if (sampler != VK_NULL_HANDLE) {
+                     vkDestroySampler(this->logical_device, sampler, nullptr);
+                     sampler = VK_NULL_HANDLE;
+                  }
+               }
+            }
          }
          if (auto& handle = this->canvas.oit.framebuffer; handle != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(this->logical_device, handle, nullptr);

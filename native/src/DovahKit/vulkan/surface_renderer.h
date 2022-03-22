@@ -62,6 +62,8 @@ namespace vulkanDK {
          static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
          static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+         static constexpr size_t shadow_caster_count = 4;
+
       protected:
          // renderer events:
          void _on_renderer_ready();
@@ -73,10 +75,11 @@ namespace vulkanDK {
          void _on_visibility_change(QSize, bool visible); // or resize
 
          struct shadow_cast_resources {
-            VkFramebuffer framebuffer = VK_NULL_HANDLE;
-            std::array<owned_image_and_view, 2> maps;
-            std::array<VkSampler, 2> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
-            size_t index = std::string::npos;
+            static constexpr size_t depth_images_per = 2;
+
+            size_t light_index = std::string::npos;
+            std::array<owned_image_and_view, depth_images_per> maps;
+            std::array<VkSampler,            depth_images_per> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
          };
 
       public:
@@ -126,7 +129,10 @@ namespace vulkanDK {
                VkFramebuffer framebuffer = VK_NULL_HANDLE;
                VkSampler     sampler     = VK_NULL_HANDLE;
             } sun_shadow;
-            std::array<shadow_cast_resources, 4> light_shadows;
+            struct {
+               VkFramebuffer framebuffer = VK_NULL_HANDLE;
+               std::array<shadow_cast_resources, shadow_caster_count> resources;
+            } light_shadows;
             struct {
                VkFramebuffer framebuffer = VK_NULL_HANDLE;
                owned_image_and_view accumulator;

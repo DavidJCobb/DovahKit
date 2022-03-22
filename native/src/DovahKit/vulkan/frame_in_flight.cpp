@@ -471,6 +471,66 @@ namespace vulkanDK {
          qDebug("[vulkanDK::frame_in_flight::_update_shader_texture_descriptors] Invalidated command buffers.");
       }
    }
+
+   namespace {
+      rendered_mesh::push_constant _make_push_constant_for(const rendered_mesh& ro, size_t object_index) {
+         auto pc = ro.push_params;
+         pc.object_index         = (int32_t)object_index;
+         pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+         pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+         return pc;
+      }
+
+      template<typename Pred, typename Prior> requires requires(const rendered_mesh& ro, Pred&& predicate, Prior&& before_draw) {
+         { predicate(ro) } -> std::same_as<bool>;
+         { before_draw(ro) };
+      }
+      void _draw_objects(scene& scene, command_buffer& command_buffer, const shader& shader, Pred&& predicate, Prior&& before_draw) {
+         auto   command_handle     = command_buffer.handle;
+         auto&  material           = shader.material;
+         size_t first_double_sided = std::string::npos;
+         //
+         for (size_t j = 0; j < scene.meshes.size(); ++j) {
+            auto& ro = scene.meshes[j];
+            if (!ro.active())
+               continue;
+            if (!predicate(ro))
+               continue;
+            if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
+               first_double_sided = j;
+               continue;
+            }
+
+            before_draw(ro);
+
+            command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _make_push_constant_for(ro, j));
+            ro.draw_call(command_handle);
+         }
+         //
+         if (first_double_sided != std::string::npos) {
+            auto* variant = shader.get_variant({
+               .face_cull_mode = VK_CULL_MODE_NONE,
+            });
+            assert(variant);
+            vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+            //
+            for (size_t j = 0; j < scene.meshes.size(); ++j) {
+               auto& ro = scene.meshes[j];
+               if (!ro.active())
+                  continue;
+               if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
+                  continue;
+               if (!predicate(ro))
+                  continue;
+
+               before_draw(ro);
+               
+               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _make_push_constant_for(ro, j));
+               ro.draw_call(command_handle);
+            }
+         }
+      }
+   }
    void frame_in_flight::_refill_command_buffers() {
       this->command_buffers_invalid = false;
       //
@@ -502,62 +562,61 @@ namespace vulkanDK {
             const auto&   material = shader->material;
             command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
             //
-            size_t first_double_sided = std::string::npos;
-            //
-            VkDeviceSize offset = 0;
-            for (size_t j = 0; j < scene.meshes.size(); ++j) {
-               auto& ro  = scene.meshes[j];
-               auto& vib = ro.vertex_and_index_buffer;
-               if (!ro.active())
-                  continue;
-               if (!(ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows))
-                  continue;
-               if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
-                  first_double_sided = j;
-                  continue;
-               }
-
-               auto pc = ro.push_params;
-               pc.object_index         = (int32_t)j;
-               pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-               pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-               //
-               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, pc);
-               ro.draw_call(command_handle);
-            }
-            //
-            if (first_double_sided != std::string::npos) {
-               auto* variant = shader->get_variant({
-                  .face_cull_mode = VK_CULL_MODE_NONE,
-               });
-               assert(variant);
-               vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
-               //
-               for (size_t j = 0; j < scene.meshes.size(); ++j) {
-                  auto& ro = scene.meshes[j];
-                  auto& vib = ro.vertex_and_index_buffer;
-                  if (!ro.active())
-                     continue;
-                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows))
-                     continue;
-                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
-                     continue;
-               
-                  auto pc = ro.push_params;
-                  pc.object_index         = (int32_t)j;
-                  pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-                  pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-                  //
-                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, pc);
-                  ro.draw_call(command_handle);
-               }
-            }
+            _draw_objects(
+               scene, command_buffer, *shader,
+               [](const rendered_mesh& ro) {
+                  return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+               },
+               [](const rendered_mesh& ro) {}
+            );
          }
          vkCmdEndRenderPass(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (sun shadows).");
          }
       }
+      //
+      if (false) {  // Point light shadows
+         auto& command_buffer = this->command_buffers.main_shadow_placed;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (light shadows).");
+         }
+         //
+         command_buffer.begin_render_pass(
+            *this->owner->render_passes_by_name.main_shadow_placed,
+            this->owner->canvas.light_shadows.framebuffer,
+            {
+               .offset = { 0, 0 },
+               .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
+            },
+            std::array{
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
+         {
+            const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
+            assert(shader);
+            const auto&   material = shader->material;
+            command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+            //
+            _draw_objects(
+               scene, command_buffer, *shader,
+               [](const rendered_mesh& ro) {
+                  return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+               },
+               [](const rendered_mesh& ro) {}
+            );
+         }
+         vkCmdEndRenderPass(command_handle);
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (light shadows).");
+         }
+      }
+
       //
       // Normal objects:
       //
@@ -586,14 +645,6 @@ namespace vulkanDK {
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
-         //
-         auto make_push_constant_for = [](const rendered_mesh& ro, size_t object_index) {
-            auto pc = ro.push_params;
-            pc.object_index         = (int32_t)object_index;
-            pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-            pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-            return pc;
-         };
          //
          bool last_was_decal   = false;
          auto set_decal_config = [command_handle, &last_was_decal](const rendered_mesh& ro) {
@@ -634,51 +685,15 @@ namespace vulkanDK {
             const auto& material = shader->material;
             command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
-            size_t first_double_sided = std::string::npos;
-            //
-            for (size_t j = 0; j < scene.meshes.size(); ++j) {
-               auto& ro = scene.meshes[j];
-               auto& vib = ro.vertex_and_index_buffer;
-               if (!ro.active())
-                  continue;
-               if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
-                  continue;
-               if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
-                  first_double_sided = j;
-                  continue;
-               }
-
-               set_decal_config(ro);
-               
-               auto pc = make_push_constant_for(ro, j);
-               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
-               ro.draw_call(command_handle);
-            }
-            //
-            if (first_double_sided != std::string::npos) {
-               auto* variant = shader->get_variant({
-                  .face_cull_mode = VK_CULL_MODE_NONE,
-               });
-               assert(variant);
-               vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
-               //
-               for (size_t j = 0; j < scene.meshes.size(); ++j) {
-                  auto& ro = scene.meshes[j];
-                  auto& vib = ro.vertex_and_index_buffer;
-                  if (!ro.active())
-                     continue;
-                  if (can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
-                     continue;
-                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
-                     continue;
-
+            _draw_objects(
+               scene, command_buffer, *shader,
+               [can_do_alpha](const rendered_mesh& ro) {
+                  return !(can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit));
+               },
+               [&set_decal_config](const rendered_mesh& ro) {
                   set_decal_config(ro);
-
-                  auto pc = make_push_constant_for(ro, j);
-                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
-                  ro.draw_call(command_handle);
                }
-            }
+            );
          }
          command_buffer.end_render_pass();
          //
@@ -706,49 +721,20 @@ namespace vulkanDK {
                const auto& material = shader->material;
                command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
                //
-               size_t first_double_sided = std::string::npos;
-               //
-               for (size_t j = 0; j < scene.meshes.size(); ++j) {
-                  auto& ro = scene.meshes[j];
-                  auto& vib = ro.vertex_and_index_buffer;
-                  if (!ro.active())
-                     continue;
-                  if (!(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
-                     continue;
-
-                  set_decal_config(ro);
-
-                  auto pc = make_push_constant_for(ro, j);
-                  command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
-                  ro.draw_call(command_handle);
-               }
-               //
-               if (first_double_sided != std::string::npos) {
-                  auto* variant = shader->get_variant({
-                     .face_cull_mode = VK_CULL_MODE_NONE,
-                  });
-                  assert(variant);
-                  vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
-                  //
-                  for (size_t j = 0; j < scene.meshes.size(); ++j) {
-                     auto& ro  = scene.meshes[j];
-                     auto& vib = ro.vertex_and_index_buffer;
-                     if (!ro.active())
-                        continue;
-                     if (!(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit))
-                        continue;
-                     if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided))
-                        continue;
-
+               _draw_objects(
+                  scene, command_buffer, *shader,
+                  [](const rendered_mesh& ro) {
+                     return (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit) != 0;
+                  },
+                  [&set_decal_config](const rendered_mesh& ro) {
                      set_decal_config(ro);
-
-                     auto pc = make_push_constant_for(ro, j);
-                     command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, pc);
-                     ro.draw_call(command_handle);
                   }
-               }
+               );
             }
             vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+            //
+            // Compositing:
+            //
             {
                const shader* shader = this->owner->get_shader(surface_renderer::oit_composite_shader_id);
                assert(shader);

@@ -177,7 +177,7 @@ Let's start with a naive example:
  
 Shaders can be per-renderer, because they're never modified after we load them.
 
-The depth buffer  can also be per-renderer.  Frames are rendered  one a time on 
+The depth buffer can also be per-renderer. Frames are rendered one at a time on 
 the GPU;  the depth buffer is only  used within a frame, and never modified  by 
 the CPU, so there's no concurrency risk here.
 

@@ -17,9 +17,10 @@ namespace vulkanDK {
    class frame_in_flight : no_copy {
       protected:
          union command_buffer_set {
-            std::array<command_buffer, 3> list;
+            std::array<command_buffer, 4> list;
             struct {
                command_buffer main_shadow;
+               command_buffer main_shadow_placed;
                command_buffer main;
                command_buffer fps;
             };
@@ -108,6 +109,7 @@ namespace vulkanDK {
          void _update_shader_lights_data_buffer();
          void _update_shader_object_data_buffer();
          void _update_shader_texture_descriptors();
+
          void _refill_command_buffers();
          void _refill_fps_overlay_command_buffer();
    };
