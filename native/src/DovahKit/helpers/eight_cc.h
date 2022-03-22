@@ -30,6 +30,7 @@ namespace cobb {
          union {
             uint64_t value = 0;
             uint32_t halves[2]; // for easier viewing in VS's debugger
+            char     bytes[8];
          };
          //
          eight_cc() {}

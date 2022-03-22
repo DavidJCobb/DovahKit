@@ -95,11 +95,11 @@ namespace cobb {
          }
          #pragma endregion
          #pragma region multiply-by-column operator overload
-         std::array<value_type, m> operator*(const std::array<value_type, n>& vec) const noexcept {
+         std::array<value_type, height> operator*(const std::array<value_type, width>& vec) const noexcept {
             //
-            // This is conceptually equal to multiplying the (m,n) matrix by an (n,1) matrix, producing an (m,1) matrix.
+            // This is conceptually equal to multiplying the (m,n) matrix by an (1,n) matrix, producing an (m,1) matrix.
             //
-            std::array<value_type, m> result;
+            std::array<value_type, height> result;
             for (int i = 0; i < height; ++i) {
                result[i] = 0.0F;
                for (int j = 0; j < width; ++j)
