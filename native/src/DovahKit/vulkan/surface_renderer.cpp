@@ -678,23 +678,25 @@ namespace vulkanDK {
          };
       }
       {
-         static constexpr size_t depth_image_count = shadow_caster_count * shadow_cast_resources::depth_images_per;
+         constexpr size_t depth_image_count = shadow_caster_count * depth_images_per_shadow_caster;
          //
          auto* rp = this->render_passes_by_name.main_shadow_placed = new render_pass(*this);
          {
+            auto desc = VkAttachmentDescription{
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+               .finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            };
+            //
             auto& list = rp->attachments;
             list.resize(depth_image_count);
             for(auto& item : list)
-               item = VkAttachmentDescription{
-                  .format         = this->find_depth_format(),
-                  .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-                  .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-                  .storeOp        = VK_ATTACHMENT_STORE_OP_STORE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
-                  .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                  .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                  .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-                  .finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-               };
+               item = desc;
          }
          {
             auto& list = rp->subpasses.descriptions;
@@ -1385,13 +1387,13 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
       }
       //
-      static_assert(shadow_caster_count                     < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
-      static_assert(shadow_cast_resources::depth_images_per < 10, "The way we generate shader IDs here won't work for 10 or more depth maps per shadow caster.");
+      static_assert(shadow_caster_count            < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
+      static_assert(depth_images_per_shadow_caster < 10, "The way we generate shader IDs here won't work for 10 or more depth maps per shadow caster.");
       for (size_t i = 0; i < shadow_caster_count; ++i) {
          auto id = light_shadow_map_shader_base_id;
          id.bytes[6] = '0' + i;
          //
-         for (size_t j = 0; j < shadow_cast_resources::depth_images_per; ++j) {
+         for (size_t j = 0; j < depth_images_per_shadow_caster; ++j) {
             id.bytes[7] = '0' + j;
             //
             auto* s = this->get_or_create_shader(id);
@@ -2199,8 +2201,7 @@ namespace vulkanDK {
       };
       //
       for (auto& entry : res_list) {
-         static_assert(std::tuple_size_v<decltype(shadow_cast_resources::maps)> == std::tuple_size_v<decltype(shadow_cast_resources::samplers)>);
-         for (size_t i = 0; i < entry.maps.size(); ++i) {
+         for (size_t i = 0; i < depth_images_per_shadow_caster; ++i) {
             auto& image   = entry.maps[i];
             auto& sampler = entry.samplers[i];
             //
@@ -2246,14 +2247,14 @@ namespace vulkanDK {
          .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
          .pNext           = nullptr,
          .flags           = 0,
-         .renderPass      = this->render_passes_by_name.main_shadow->handle,
+         .renderPass      = this->render_passes_by_name.main_shadow_placed->handle,
          .attachmentCount = attachments.size(),
          .pAttachments    = attachments.data(),
          .width           = config::sun_shadow_map_resolution_x,
          .height          = config::sun_shadow_map_resolution_y,
          .layers          = 1,
       };
-      static_assert(std::tuple_size_v<decltype(attachments)> == shadow_caster_count * shadow_cast_resources::depth_images_per);
+      static_assert(std::tuple_size_v<decltype(attachments)> == shadow_caster_count * depth_images_per_shadow_caster);
       if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.light_shadows.framebuffer); result != VK_SUCCESS) {
          throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
       }

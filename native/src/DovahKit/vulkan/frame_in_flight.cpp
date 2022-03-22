@@ -605,20 +605,29 @@ namespace vulkanDK {
             },
             std::array{
                VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
+         //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
             if (scene.global_state.shadow_caster_indices[i] < 0) {
                vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
-               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+               if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass
+                  vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                continue;
             }
             //
             auto id = surface_renderer::light_shadow_map_shader_base_id;
             id.bytes[7] = '0' + i;
             //
-            for (size_t j = 0; j < surface_renderer::depth_images_per_shadow_caster) {
+            for (size_t j = 0; j < surface_renderer::depth_images_per_shadow_caster; ++j) {
                id.bytes[6] = '0' + j;
                //
                const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
@@ -633,7 +642,8 @@ namespace vulkanDK {
                   },
                   [](const rendered_mesh& ro) {}
                );
-               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+               if (i + 1 < surface_renderer::shadow_caster_count || j + 1 < surface_renderer::depth_images_per_shadow_caster) // ensure we don't advance past the last subpass
+                  vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
             }
          }
          vkCmdEndRenderPass(command_handle);

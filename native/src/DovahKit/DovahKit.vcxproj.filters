@@ -1728,6 +1728,12 @@
     <ClCompile Include="dovah\utils\world_position_to_grid_coordinates.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSOrderedNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3653,6 +3659,36 @@
     <ClInclude Include="dovah\utils\world_position_to_grid_coordinates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\frustrum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\config\shadow_maps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\includes\calc_specular_strength.glsl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\includes\point_light.glsl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\config\antialiasing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\config\order_independent_transparency.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSOrderedNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\exceptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4169,6 +4205,9 @@
     <Text Include="dk3d\_docs\tools.txt" />
     <Text Include="dovah\_docs\avenues for further research.txt" />
     <Text Include="vulkan\_docs\axis conventions.txt" />
+    <Text Include="vulkan\_docs\order-independent transparency.txt" />
+    <Text Include="vulkan\_docs\how to measure FPS.txt" />
+    <Text Include="vulkan\_docs\an overview of the basic render process.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -4184,6 +4223,33 @@
     <None Include="shaders\overlay-fps.vert.spv" />
     <None Include="shaders\overlay-world-axes.vert" />
     <None Include="shaders\overlay-world-axes.frag" />
+    <None Include="shaders\sun-shadow-depth.vert" />
+    <None Include="shaders\util-full-screen-triangle.vert" />
+    <None Include="shaders\includes\calc_directional_shadow.glsl" />
+    <None Include="shaders\includes\computed_light.glsl" />
+    <None Include="shaders\includes\calc_directional_light.glsl" />
+    <None Include="shaders\includes\calc_point_light.glsl" />
+    <None Include="shaders\cores\standard_shader.frag" />
+    <None Include="shaders\shader.oit-color.frag" />
+    <None Include="shaders\util-oit.frag" />
+    <None Include="shaders\shader.shadows.frag" />
+    <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
+    <None Include="shaders\overlay-world-axes.frag.spv" />
+    <None Include="shaders\overlay-world-axes.vert.spv" />
+    <None Include="shaders\shader.oit-color.frag.spv" />
+    <None Include="shaders\shader.shadows.frag.spv" />
+    <None Include="shaders\sun-shadow-depth.vert.spv" />
+    <None Include="shaders\util-full-screen-triangle.vert.spv" />
+    <None Include="shaders\util-oit.frag.spv" />
+    <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
+    <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
+    <None Include="shaders\includes\scene_global_state.glsl" />
+    <None Include="shaders\includes\standard_vertex_inputs.glsl" />
+    <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
+    <None Include="shaders\light-shadow-depth.vert" />
+    <None Include="shaders\light-shadow-depth.frag" />
+    <None Include="shaders\light-shadow-depth.frag.spv" />
+    <None Include="shaders\light-shadow-depth.vert.spv" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

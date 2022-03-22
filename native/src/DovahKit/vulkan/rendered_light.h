@@ -15,11 +15,19 @@ namespace vulkanDK {
          rendered_light() {}
          ~rendered_light();
 
+         enum class light_type {
+            omni,
+            omni_shadow,
+            hemi_shadow,
+            spot_shadow,
+         };
+
          struct shader_parameters { // pass to the shader via a storage buffer
-            alignas(16) glm::mat4 transform;
-            alignas(16) glm::vec3 color    = { 0, 0, 0 };
-            alignas( 4) float     radius = 1.0;
-            alignas( 4) float     fade   = 1.0;
+            alignas(16) glm::mat4  transform;
+            alignas(16) glm::vec3  color    = { 0, 0, 0 };
+            alignas( 4) float      radius   = 1.0;
+            alignas( 4) float      fade     = 1.0;
+            alignas( 4) light_type flags    = light_type::omni;
          };
          
          shader_parameters shader_params;

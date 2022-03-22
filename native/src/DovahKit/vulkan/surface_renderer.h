@@ -77,11 +77,9 @@ namespace vulkanDK {
          void _on_visibility_change(QSize, bool visible); // or resize
 
          struct shadow_cast_resources {
-            static constexpr size_t depth_images_per = depth_images_per_shadow_caster;
-
             size_t light_index = std::string::npos;
-            std::array<owned_image_and_view, depth_images_per> maps;
-            std::array<VkSampler,            depth_images_per> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
+            std::array<owned_image_and_view, depth_images_per_shadow_caster> maps;
+            std::array<VkSampler,            depth_images_per_shadow_caster> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
          };
 
       public:
