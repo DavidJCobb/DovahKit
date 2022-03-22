@@ -56,13 +56,15 @@ namespace vulkanDK {
          static constexpr shader::id_type main_shader_id           = "MainMatl";
          static constexpr shader::id_type main_shader_oit_color_id = "MainOITc";
          static constexpr shader::id_type sun_shadow_shader_id     = "SunShadw";
+         static constexpr shader::id_type light_shadow_map_shader_base_id = "ShwMap00";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
          
          static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
          static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-         static constexpr size_t shadow_caster_count = 4;
+         static constexpr size_t shadow_caster_count            = 4;
+         static constexpr size_t depth_images_per_shadow_caster = 2;
 
       protected:
          // renderer events:
@@ -75,7 +77,7 @@ namespace vulkanDK {
          void _on_visibility_change(QSize, bool visible); // or resize
 
          struct shadow_cast_resources {
-            static constexpr size_t depth_images_per = 2;
+            static constexpr size_t depth_images_per = depth_images_per_shadow_caster;
 
             size_t light_index = std::string::npos;
             std::array<owned_image_and_view, depth_images_per> maps;
@@ -241,6 +243,7 @@ namespace vulkanDK {
             void _setup_basic_color_shader();   // MainMatl
             void _setup_basic_wboit_shader();   // MainOITc
             void _setup_sun_shadow_shader();    // SunShadw
+            void _setup_light_shadow_shaders(); // LiteMap0 - LiteMap8
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

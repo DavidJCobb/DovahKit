@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
 
@@ -27,5 +29,11 @@ namespace vulkanDK {
       alignas(16) glm::vec3 sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 }); // vector from sun to world
       alignas(16) glm::vec3 sun_color = { 1, 1, 1 };
       alignas(16) glm::mat4 sun_space = glm::mat4(1);
+      //
+      alignas(16) glm::mat4 shadow_caster_proj_0  = glm::mat4(0);
+      alignas(16) glm::mat4 shadow_caster_proj_1  = glm::mat4(0);
+      alignas(16) glm::mat4 shadow_caster_proj_2  = glm::mat4(0);
+      alignas(16) glm::mat4 shadow_caster_proj_3  = glm::mat4(0);
+      alignas( 4) std::array<int32_t, 4> shadow_caster_indices = { -1, -1, -1, -1 };
    };
 }

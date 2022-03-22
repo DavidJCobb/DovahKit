@@ -15,5 +15,7 @@
         <file>util-oit.frag.spv</file>
         <file>shader.oit-color.frag.spv</file>
         <file>shader.shadows.frag.spv</file>
+        <file>light-shadow-depth.frag.spv</file>
+        <file>light-shadow-depth.vert.spv</file>
     </qresource>
 </RCC>

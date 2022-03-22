@@ -1599,6 +1599,10 @@
     <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
     <None Include="shaders\includes\scene_global_state.glsl" />
     <None Include="shaders\includes\standard_vertex_inputs.glsl" />
+    <None Include="shaders\light-shadow-depth.frag" />
+    <None Include="shaders\light-shadow-depth.frag.spv" />
+    <None Include="shaders\light-shadow-depth.vert" />
+    <None Include="shaders\light-shadow-depth.vert.spv" />
     <None Include="shaders\overlay-fps.frag" />
     <None Include="shaders\overlay-fps.frag.spv" />
     <None Include="shaders\overlay-fps.vert" />

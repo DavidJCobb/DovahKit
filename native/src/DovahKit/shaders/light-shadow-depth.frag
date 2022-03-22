@@ -17,12 +17,15 @@
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
 
-// binding 0 varies between sun shadows and light shadows
+layout(std140,binding = 0) uniform UniformBufferObject {
+   scene_global_state ubo;
+};
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-layout(binding = 2) uniform sampler texSampler;
-layout(binding = 3) uniform texture2D textures[];
+// binding 2: all_rendered_lights (not needed in fragment shader)
+layout(binding = 3) uniform sampler texSampler;
+layout(binding = 4) uniform texture2D textures[];
 
 layout(location = 0) in VS_OUT {
    vec2 uv;

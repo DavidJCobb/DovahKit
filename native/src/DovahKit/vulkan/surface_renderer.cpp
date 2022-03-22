@@ -292,6 +292,44 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
+      this->descriptor_set_layouts.light_shadows.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_shadow_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
+            .index              = 2,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 3,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 4,
+            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .count              = config::max_loaded_textures,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       this->descriptor_set_layouts.standard.bindings = {
          vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
             .index              = 0,
@@ -1332,6 +1370,115 @@ namespace vulkanDK {
       });
       s->setup_pipeline_layout(*this);
    }
+   void surface_renderer::_setup_light_shadow_shaders() {
+      shader_module* frag = nullptr;
+      shader_module* vert = nullptr;
+      {
+         frag = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.vert.spv").uncompressedData());
+         assert(!frag->empty());
+         assert(!vert->empty());
+         this->shader_modules.push_back(frag);
+         this->shader_modules.push_back(vert);
+         //
+         this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
+      }
+      //
+      static_assert(shadow_caster_count                     < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
+      static_assert(shadow_cast_resources::depth_images_per < 10, "The way we generate shader IDs here won't work for 10 or more depth maps per shadow caster.");
+      for (size_t i = 0; i < shadow_caster_count; ++i) {
+         auto id = light_shadow_map_shader_base_id;
+         id.bytes[6] = '0' + i;
+         //
+         for (size_t j = 0; j < shadow_cast_resources::depth_images_per; ++j) {
+            id.bytes[7] = '0' + j;
+            //
+            auto* s = this->get_or_create_shader(id);
+            s->set_render_pass(this->render_passes_by_name.main_shadow_placed);
+            s->set_layout_info(
+               {  // Descriptor set layouts
+                  this->descriptor_set_layouts.light_shadows.handle,
+               },
+               {  // Push constants
+                  VkPushConstantRange{
+                     .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                     .offset     = 0,
+                     .size       = sizeof(rendered_mesh::push_constant),
+                  }
+               }
+            );
+            s->add_variant({ // double-sided shader variant
+               .face_cull_mode = VK_CULL_MODE_NONE,
+            });
+            //
+            auto& dfn = s->definition;
+            //
+            struct _specializations {
+               int32_t caster_index;
+               float   invert_yaw;
+               int32_t max_lights = config::max_lights_in_scene;
+            };
+            _specializations spec = { i, j };
+            //
+            dfn.stages = {
+               {
+                  .module              = frag,
+                  .entry_point_name    = "main",
+                  .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+                  .specialization_info = material_definition::stage_specialization_info(spec.caster_index, spec.invert_yaw, spec.max_lights),
+               },
+               {
+                  .module              = vert,
+                  .entry_point_name    = "main",
+                  .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+               },
+            };
+            if constexpr (config::use_inverted_depth) {
+               dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+            }
+            dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+            dfn.rasterization.depthBiasEnable         = VK_TRUE;
+            dfn.rasterization.depthBiasConstantFactor = 1.25F;
+            dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
+            dfn.rasterization.depthBiasClamp          = 0.00F;
+            dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+            if constexpr (config::use_inverted_shadow_map) {
+               dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+            } else {
+               dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+            }
+            {
+               auto& vertex     = dfn.inputs.vertex;
+               auto  attributes = vertex::getAttributeDescriptions();
+               vertex.bindings.push_back(vertex::getBindingDescription());
+               vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+            }
+            s->set_area_override_info({
+               .viewport = {
+                  .x        = 0,
+                  .y        = 0,
+                  .width    = config::sun_shadow_map_resolution_x,
+                  .height   = config::sun_shadow_map_resolution_y,
+                  .minDepth = 0.0,
+                  .maxDepth = 1.0,
+               },
+               .scissor = {
+                  .offset = { .x = 0, .y = 0 },
+                  .extent = {
+                     .width  = config::sun_shadow_map_resolution_x,
+                     .height = config::sun_shadow_map_resolution_y,
+                  },
+               },
+            });
+            //
+            // And be sure to set up the pipeline layout when you're done!
+            //
+            s->setup_pipeline_layout(*this);
+         }
+      }
+
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
       qDebug("[Vulkan] Shader setup: OIT composite");
@@ -1342,6 +1489,8 @@ namespace vulkanDK {
       qDebug("[Vulkan] Shader setup: Main");
       this->_setup_basic_wboit_shader();
       qDebug("[Vulkan] Shader setup: Main (OIT)");
+      this->_setup_light_shadow_shaders();
+      qDebug("[Vulkan] Shader setup: Light Shadows");
       //
       // FPS counter:
       //
@@ -1651,7 +1800,7 @@ namespace vulkanDK {
                .pBufferInfo      = &global_state_buffer_info,
                .pTexelBufferView = nullptr,
             },
-            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.sun_shadows,
                .dstBinding       = 1, // this should match the binding value in the shader
@@ -1666,6 +1815,51 @@ namespace vulkanDK {
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.sun_shadows,
                .dstBinding      = 2, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = 1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
+               .pImageInfo      = &sampler_info,
+            },
+            //
+            // Light shadow pass:
+            //
+            VkWriteDescriptorSet{ // uniform buffer object
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.light_shadows,
+               .dstBinding       = 0, // this should match the binding value in the shader
+               .dstArrayElement  = 0, // index of the first descriptor in the array to update
+               .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
+               .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &global_state_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.light_shadows,
+               .dstBinding       = 1, // this should match the binding value in the shader
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rosp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.light_shadows,
+               .dstBinding       = 2, // this should match the binding value in the shader
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rlsp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // texture sampler
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.light_shadows,
+               .dstBinding      = 3, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = 1,
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -1703,7 +1897,7 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                .pImageInfo      = &image_info_sun_shadow,
             },
-            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
                .dstBinding       = 3, // this should match the binding value in the shader
@@ -1714,7 +1908,7 @@ namespace vulkanDK {
                .pBufferInfo      = &rosp_buffer_info,
                .pTexelBufferView = nullptr,
             },
-            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
+            VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
                .dstBinding       = 4, // this should match the binding value in the shader

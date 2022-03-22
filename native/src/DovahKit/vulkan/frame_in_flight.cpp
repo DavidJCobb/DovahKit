@@ -462,6 +462,17 @@ namespace vulkanDK {
          }
          vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
       }
+      {
+         //
+         // And light shadows...
+         //
+         auto& target_set = this->descriptor_sets.light_shadows;
+         for (auto& item : write_info) {
+            item.dstSet     = target_set;
+            item.dstBinding = 4;
+         }
+         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      }
       //
       // Updating a descriptor set will invalidate any command buffers using it; they must 
       // be reset and their queue regenerated:
@@ -576,7 +587,7 @@ namespace vulkanDK {
          }
       }
       //
-      if (false) {  // Point light shadows
+      {  // Point light shadows
          auto& command_buffer = this->command_buffers.main_shadow_placed;
          auto  command_handle = command_buffer.handle;
          //
@@ -597,19 +608,33 @@ namespace vulkanDK {
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
-         {
-            const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
-            assert(shader);
-            const auto&   material = shader->material;
-            command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+         for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
+            if (scene.global_state.shadow_caster_indices[i] < 0) {
+               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+               continue;
+            }
             //
-            _draw_objects(
-               scene, command_buffer, *shader,
-               [](const rendered_mesh& ro) {
-                  return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
-               },
-               [](const rendered_mesh& ro) {}
-            );
+            auto id = surface_renderer::light_shadow_map_shader_base_id;
+            id.bytes[7] = '0' + i;
+            //
+            for (size_t j = 0; j < surface_renderer::depth_images_per_shadow_caster) {
+               id.bytes[6] = '0' + j;
+               //
+               const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
+               assert(shader);
+               const auto&   material = shader->material;
+               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+               //
+               _draw_objects(
+                  scene, command_buffer, *shader,
+                  [](const rendered_mesh& ro) {
+                     return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+                  },
+                  [](const rendered_mesh& ro) {}
+               );
+               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+            }
          }
          vkCmdEndRenderPass(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {

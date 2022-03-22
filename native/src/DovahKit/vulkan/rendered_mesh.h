@@ -53,7 +53,7 @@ namespace vulkanDK {
             alignas(4) int32_t  texture_index;              // not meaningful on this object; ignored during the render process
             alignas(4) int32_t  texture_normal_index  = -1; // not meaningful on this object; ignored during the render process
             alignas(4) float    alpha_test_threshold  =  0;
-            alignas(4) int      alpha_test_operation  =  0; // GL_ALWAYS
+            alignas(4) int32_t  alpha_test_operation  =  0; // GL_ALWAYS
             alignas(4) VkBool32 enable_alpha_blending = VK_FALSE; // bools in GLSL are uint32_ts in SPIR-V
             alignas(4) VkBool32 receive_shadows       = VK_TRUE;  // bools in GLSL are uint32_ts in SPIR-V
          };
