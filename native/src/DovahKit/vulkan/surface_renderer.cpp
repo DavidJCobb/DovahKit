@@ -3732,12 +3732,15 @@ namespace vulkanDK {
       if (!loaded_base)
          return false;
       //
+      auto light_type = rendered_light::light_type::omni;
       {
          switch (loaded_base->light_type) {
             using enum dovah::loaded_forms::Light::engine_light_type;
             case omni:
+               light_type = rendered_light::light_type::omni;
                break;
             case omni_shadow: // NOTE: we don't yet support shadowing, nor shadowed point lights
+               light_type = rendered_light::light_type::omni_shadow;
                break;
             default:
                return false; // unsupported light type
@@ -3757,6 +3760,7 @@ namespace vulkanDK {
       light.handled_frames.set_all_out_of_date();
       {
          auto& sp = light.shader_params;
+         sp.type    = light_type;
          sp.fade    = loaded_base->fade;
          sp.radius  = loaded_base->radius;
          sp.color.r = (float)loaded_base->color.r / 255.0;

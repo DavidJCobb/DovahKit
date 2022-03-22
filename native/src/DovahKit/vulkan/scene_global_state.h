@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include "helpers/unreachable.h"
 #include "_vulkan.h"
 
 namespace vulkanDK {
@@ -35,5 +36,15 @@ namespace vulkanDK {
       alignas(16) glm::mat4 shadow_caster_proj_2  = glm::mat4(0);
       alignas(16) glm::mat4 shadow_caster_proj_3  = glm::mat4(0);
       alignas( 4) std::array<int32_t, 4> shadow_caster_indices = { -1, -1, -1, -1 };
+
+      glm::mat4& shadow_caster_proj(int i) noexcept {
+         switch (i) {
+            case 0: return this->shadow_caster_proj_0;
+            case 1: return this->shadow_caster_proj_1;
+            case 2: return this->shadow_caster_proj_2;
+            case 3: return this->shadow_caster_proj_3;
+         }
+         cobb::unreachable();
+      }
    };
 }

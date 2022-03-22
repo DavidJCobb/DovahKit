@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "surface_renderer.h"
 //
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -73,8 +74,7 @@ namespace vulkanDK {
             // GLM was designed for OpenGL, which uses an inverted Y axis. We need to flip the 
             // Y-axis here. Do be aware, however, that this is a 3D flip; vertex order will 
             // change handedness (clockwise/counterclockwise), which will affect what Vulkan 
-            // considers a "backface" versus a "frontface." You can update the handedness in 
-            // the setupGraphicsPipeline function.
+            // considers a "backface" versus a "frontface."
             //
             proj[1][1] *= -1;
          }
@@ -87,6 +87,7 @@ namespace vulkanDK {
       auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
       this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
       this->update_sun_shadows();
+      this->update_light_shadows();
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
       constexpr float epsilon    = 0.00001;
@@ -200,6 +201,83 @@ namespace vulkanDK {
       }
       //
       this->global_state.sun_space = sun_proj * sun_view;
+   }
+   void scene::update_light_shadows() {
+      struct _entry {
+         size_t index    = std::string::npos;
+         float  distance = FLT_MAX;
+         //
+         bool operator>(float d) const {
+            if (index == std::string::npos)
+               return true;
+            return distance > d;
+         }
+      };
+      std::array<_entry, surface_renderer::shadow_caster_count> nearest = {}; // sorted
+      //
+      for (size_t i = 0; i < this->lights.size(); ++i) {
+         auto& light = this->lights[i];
+         if (!light.active())
+            continue;
+         if (!light.can_cast_shadows())
+            continue;
+         //
+         auto distance = glm::distance((glm::vec3)light.transform()[3], this->camera.position);
+         //
+         for (size_t j = 0; j < nearest.size(); ++j) {
+            auto& entry = nearest[j];
+            if (entry > distance) {
+               for (size_t k = nearest.size() - 1; k > j; --k) {
+                  nearest[k] = nearest[k - 1];
+               }
+               nearest[j].index    = i;
+               nearest[j].distance = distance;
+               break;
+            }
+         }
+      }
+      //
+      for (size_t i = 0; i < nearest.size(); ++i) {
+         auto& entry = nearest[i];
+         if (entry.index == std::string::npos) {
+            this->global_state.shadow_caster_indices[i] = -1;
+            continue;
+         }
+         auto& light = this->lights[entry.index];
+         //
+         this->global_state.shadow_caster_indices[i] = entry.index;
+         //
+         auto& proj = this->global_state.shadow_caster_proj(i);
+         float fov  = 90.0F;
+         switch (light.shader_params.type) {
+            using enum rendered_light::light_type;
+            case omni_shadow:
+               [[fallthrough]];
+            case hemi_shadow:
+               fov = glm::radians<float>(179.0F);
+               break;
+            case spot_shadow:
+               // TODO: FOV
+               break;
+         }
+         proj = glm::perspective(
+            fov,
+            (float)config::sun_shadow_map_resolution_x / (float)config::sun_shadow_map_resolution_y,
+            draw_distance_near,
+            light.shader_params.radius
+         );
+         if constexpr (config::use_inverted_depth) {
+            proj = glm::mat4(
+               1.0F,  0.0F,  0.0F,  0.0F,
+               0.0F,  1.0F,  0.0F,  0.0F,
+               0.0F,  0.0F, -1.0F,  1.0F,
+               0.0F,  0.0F,  0.0F,  1.0F
+            ) * proj;
+         }
+         if constexpr (config::is_righthanded) {
+            proj[1][1] *= -1;
+         }
+      }
    }
 
    frustrum scene::get_current_view_frustrum(float near, float far) const {

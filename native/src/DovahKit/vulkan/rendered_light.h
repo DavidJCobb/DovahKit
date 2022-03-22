@@ -27,7 +27,7 @@ namespace vulkanDK {
             alignas(16) glm::vec3  color    = { 0, 0, 0 };
             alignas( 4) float      radius   = 1.0;
             alignas( 4) float      fade     = 1.0;
-            alignas( 4) light_type flags    = light_type::omni;
+            alignas( 4) light_type type     = light_type::omni;
          };
          
          shader_parameters shader_params;
@@ -44,5 +44,16 @@ namespace vulkanDK {
 
          void mark_for_delete();
          void reset();
+
+         inline bool can_cast_shadows() const noexcept {
+            switch (this->shader_params.type) {
+               using enum light_type;
+               case omni_shadow:
+               case hemi_shadow:
+               case spot_shadow:
+                  return true;
+            }
+            return false;
+         }
    };
 }

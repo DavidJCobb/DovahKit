@@ -48,6 +48,7 @@ namespace vulkanDK {
          void adjust_camera(const DKVulkanCameraUpdate&);
 
          void update_sun_shadows();
+         void update_light_shadows();
 
          frustrum get_current_view_frustrum(float near, float far) const;
 
