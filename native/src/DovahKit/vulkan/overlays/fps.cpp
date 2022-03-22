@@ -1,6 +1,7 @@
 #include "fps.h"
 #include <QPainter>
 #include <QResource>
+#include "../frame_in_flight.h"
 #include "../surface_renderer.h"
 
 namespace {
@@ -118,10 +119,10 @@ namespace vulkanDK::overlays {
       }
       s->setup_pipeline_layout(sr);
    }
-   void fps::initialize_descriptor_sets(surface_renderer& sr, swap_chain_image& sci) {
+   void fps::initialize_descriptor_sets(surface_renderer& sr, frame_in_flight& fif) {
       auto sampler_info = VkDescriptorImageInfo{
          .sampler     = sr.raw_pixel_texture_sampler,
-         .imageView   = VK_NULL_HANDLE,
+         .imageView   = this->atlas_info.image.view,
          .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       };
       auto buffer_info = VkDescriptorBufferInfo{
@@ -133,7 +134,7 @@ namespace vulkanDK::overlays {
       auto descriptor_writes = std::array{
          VkWriteDescriptorSet{ // uniform buffer object
             .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet           = sci.descriptor_sets.fps,
+            .dstSet           = fif.descriptor_sets.fps,
             .dstBinding       = 0, // this should match the binding value in the shader
             .dstArrayElement  = 0, // index of the first descriptor in the raray to update
             .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
@@ -144,7 +145,7 @@ namespace vulkanDK::overlays {
          },
          VkWriteDescriptorSet{ // texture sampler
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet          = sci.descriptor_sets.fps,
+            .dstSet          = fif.descriptor_sets.fps,
             .dstBinding      = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = 1,
@@ -271,6 +272,31 @@ namespace vulkanDK::overlays {
       return false;
    }
 
+   void fps::handle_resize(surface_renderer& sr, frame_in_flight& fif) {
+      auto sampler_info = VkDescriptorImageInfo{
+         .sampler     = sr.raw_pixel_texture_sampler,
+         .imageView   = this->atlas_info.image.view,
+         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      };
+      auto descriptor_writes = std::array{
+         VkWriteDescriptorSet{ // texture sampler
+            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet          = fif.descriptor_sets.fps,
+            .dstBinding      = 1, // this should match the binding value in the shader
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .pImageInfo      = &sampler_info,
+         },
+      };
+      vkUpdateDescriptorSets(sr.logical_device, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+      //
+      auto* data = (_shader_state*) this->shader_params.uniform.map_memory();
+      data->view_w = sr.surface_extent.width;
+      data->view_h = sr.surface_extent.height;
+      this->shader_params.uniform.unmap_memory(data);
+   }
+
    QImage fps::generate_atlas() {
       constexpr uint32_t gap_between_glyphs = 2;
       constexpr auto     glyph_text_flags   = Qt::AlignLeft | Qt::AlignAbsolute | Qt::AlignTop;
@@ -324,7 +350,7 @@ namespace vulkanDK::overlays {
       this->change_flags.set<change_flag::atlas>();
       return image;
    }
-   void fps::generate_atlas(surface_renderer& sr, swap_chain_image& sci) {
+   void fps::generate_atlas(surface_renderer& sr, frame_in_flight& fif) {
       {
          QImage   texture = this->generate_atlas();
          uint32_t w = texture.width();
@@ -355,10 +381,15 @@ namespace vulkanDK::overlays {
             },
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
          );
-         content.transition_layout(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
-         content.copy_content_from_buffer(staging.handle);
-         content.transition_layout(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
+         sr.do_single_commands([&content, &staging](command_buffer& scratch_commands) {
+            content.transition_layout(scratch_commands, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
+            content.copy_content_from_buffer(scratch_commands, staging.handle);
+            content.transition_layout(scratch_commands, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
+         });
          content.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+         //
+         sr.set_debug_object_name(content.handle, QString("FPS Counter Atlas Image (FIF %1)").arg(fif.index()).toStdString());
+         sr.set_debug_object_name(content.view,   QString("FPS Counter Atlas Image View(FIF %1)").arg(fif.index()).toStdString());
       }
       //
       // Update descriptor:
@@ -373,7 +404,7 @@ namespace vulkanDK::overlays {
       auto writes = std::array{
          VkWriteDescriptorSet{
             .sType      = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet     = sci.descriptor_sets.fps,
+            .dstSet     = fif.descriptor_sets.fps,
             .dstBinding = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = (uint32_t)infos.size(),

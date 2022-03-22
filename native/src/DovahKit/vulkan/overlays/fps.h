@@ -14,8 +14,8 @@
 #include "../shader.h"
 
 namespace vulkanDK {
+   class frame_in_flight;
    class surface_renderer;
-   class swap_chain_image;
 }
 
 namespace vulkanDK::overlays {
@@ -107,7 +107,7 @@ namespace vulkanDK::overlays {
          fps();
 
          static void setup_shaders(surface_renderer&);
-         void initialize_descriptor_sets(surface_renderer&, swap_chain_image&);
+         void initialize_descriptor_sets(surface_renderer&, frame_in_flight&);
          void setup_shader_parameter_buffers(surface_renderer&);
          void create_geometry(surface_renderer&);
 
@@ -119,8 +119,10 @@ namespace vulkanDK::overlays {
          bool needs_atlas_update() const;
          bool needs_geometry_update() const;
 
+         void handle_resize(surface_renderer&, frame_in_flight&);
+
          QImage generate_atlas();
-         void generate_atlas(surface_renderer&, swap_chain_image&);
+         void generate_atlas(surface_renderer&, frame_in_flight&);
          void teardown_atlas();
 
          void update_geometry(surface_renderer&);

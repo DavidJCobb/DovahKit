@@ -273,7 +273,7 @@ namespace vulkanDK {
             .index              = 1,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // texture sampler
@@ -577,12 +577,12 @@ namespace vulkanDK {
          this->_setup_oit_images();                  // requires extent size
          this->_setup_depth_buffer();                // requires extent size
          this->_setup_color_buffer();                // requires extent size
+         this->_setup_frames_in_flight();
          this->_setup_swap_chain_images();
          this->_setup_framebuffers();                // requires extent size
          this->_setup_descriptor_pool();             // requires swap chain image count
-         this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
          for (auto& fif : this->swap_chain.frames_in_flight)
-            fif.setup(*this);
+            fif.setup_descriptor_sets();
       }
       this->_create_null_texture();
       this->scene.update_projection(this->surface_extent); // requires extent size
@@ -967,6 +967,7 @@ namespace vulkanDK {
          vert = new shader_module(this->logical_device, QResource("shaders/util-full-screen-triangle.vert.spv").uncompressedData());
          assert(!frag->empty());
          assert(!vert->empty());
+         this->shader_modules.push_back(vert);
          this->shader_modules.push_back(frag);
          //
          this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
@@ -1196,7 +1197,7 @@ namespace vulkanDK {
          },
          {  // Push constants
             VkPushConstantRange{
-               .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+               .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                .offset     = 0,
                .size       = sizeof(rendered_mesh::push_constant),
             }
@@ -1215,6 +1216,7 @@ namespace vulkanDK {
          assert(!frag->empty());
          assert(!vert->empty());
          this->shader_modules.push_back(vert);
+         this->shader_modules.push_back(frag);
          //
          this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
          this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: shader.shadows.frag.spv)");
@@ -1538,10 +1540,24 @@ namespace vulkanDK {
          }
       }
       //
-      auto& sc = this->swap_chain;
-      for (size_t i = 0; i < sc.images.size(); ++i) {
-         auto& frame = sc.images[i];
-         //
+      auto image_info_sun_shadow = VkDescriptorImageInfo{
+         .sampler     = this->canvas.sun_shadow.sampler,
+         .imageView   = this->canvas.sun_shadow.map.view,
+         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      };
+      auto image_info_oit_accumulator = VkDescriptorImageInfo{
+         .sampler     = VK_NULL_HANDLE,
+         .imageView   = this->canvas.oit.accumulator.view,
+         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      };
+      auto image_info_oit_reveal = VkDescriptorImageInfo{
+         .sampler     = VK_NULL_HANDLE,
+         .imageView   = this->canvas.oit.reveal.view,
+         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      };
+      //
+      auto& list = this->swap_chain.frames_in_flight;
+      for (auto& frame : list) {
          auto global_state_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.uniform.handle,
             .offset = 0,
@@ -1616,7 +1632,15 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
                .pImageInfo      = &sampler_info,
             },
-            // skip initializing the shadow map here; the swap chain images take care of that themselves
+            VkWriteDescriptorSet{
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.standard,
+               .dstBinding      = 2, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+               .pImageInfo      = &image_info_sun_shadow,
+            },
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
@@ -1648,6 +1672,27 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
                .pImageInfo      = texture_infos.data(),
             },
+            //
+            // OIT composite pass:
+            //
+            VkWriteDescriptorSet{
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.oit_composite,
+               .dstBinding      = 0, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+               .pImageInfo      = &image_info_oit_accumulator,
+            },
+            VkWriteDescriptorSet{
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.oit_composite,
+               .dstBinding      = 1, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)1,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+               .pImageInfo      = &image_info_oit_reveal,
+            },
          };
          vkUpdateDescriptorSets(this->logical_device, (uint32_t)descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
          //
@@ -1659,7 +1704,7 @@ namespace vulkanDK {
       // Mark textures as synchronized:
       //
       for (auto& entry : this->scene.textures)
-         entry.handled_frames.set_all_up_to_date(sc.images.size());
+         entry.handled_frames.set_all_up_to_date(list.size());
    }
    //
    void surface_renderer::_setup_render_passes() {
@@ -2043,11 +2088,16 @@ namespace vulkanDK {
          //
          this->set_debug_object_name(sci.handle, QString("Swap Chain Image %1").arg(i).toStdString());
          this->set_debug_object_name(sci.view,   QString("Swap Chain Image View %1").arg(i).toStdString());
+         //
+         sc.images[i].record_final_blit_command();
       }
    }
-   void surface_renderer::_setup_swap_chain_image_frame_data() {
-      for (auto& image : this->swap_chain.images)
-         image.setup_descriptor_sets();
+   void surface_renderer::_setup_frames_in_flight() {
+      auto& list = this->swap_chain.frames_in_flight;
+      for (size_t i = 0; i < list.size(); ++i) {
+         auto& item = list[i];
+         item.setup(*this, i);
+      }
    }
    void surface_renderer::_setup_framebuffers() {
       auto extent = this->surface_extent;
@@ -2113,11 +2163,11 @@ namespace vulkanDK {
    }
    //
    void surface_renderer::_setup_descriptor_pool() {
-      auto  swap_chain_image_count = this->swap_chain.images.size();
-      auto& dsl = this->descriptor_set_layouts;
-      this->setup_descriptor_pool(             // requires swap chain image count
-         dsl.needed_pool_sizes(swap_chain_image_count),
-         dsl.list.size() * swap_chain_image_count
+      auto  frame_count = this->swap_chain.frames_in_flight.size();
+      auto& dsl         = this->descriptor_set_layouts;
+      this->setup_descriptor_pool(
+         dsl.needed_pool_sizes(frame_count),
+         dsl.list.size() * frame_count
       );
    }
 
@@ -2201,10 +2251,10 @@ namespace vulkanDK {
       {  // Tear down swap chain state
          for (auto& s : this->shaders)
             s->pre_resize();
-         for (auto& image : sc.images) {
-            image.teardown_descriptor_sets(); // TODO: we don't actually have to free and rebuild these if the descriptor pool itself doesn't need to be rebuilt
+         for (auto& image : sc.images)
             image.teardown();
-         }
+         for (auto& fif : sc.frames_in_flight)
+            fif.pre_resize();
          if (auto& handle = this->canvas.main_framebuffer; handle != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(this->logical_device, handle, nullptr);
             handle = VK_NULL_HANDLE;
@@ -2249,6 +2299,11 @@ namespace vulkanDK {
                rp->attachments[0].format = sc.format;
                rp->setup();
             }
+            if (auto* rp = this->render_passes_by_name.main_oit) {
+               rp->teardown();
+               rp->attachments[2].format = sc.format;
+               rp->setup();
+            }
             if (auto* rp = this->render_passes_by_name.ui) {
                rp->teardown();
                rp->attachments[0].format = sc.format;
@@ -2259,19 +2314,12 @@ namespace vulkanDK {
             s->post_resize(this->surface_extent);
          this->_setup_depth_buffer(); // requires surface extent
          this->_setup_color_buffer(); // requires surface extent
-         this->_setup_oit_images();
+         this->_setup_oit_images();   // requires surface extent
+         for (auto& fif : this->swap_chain.frames_in_flight)
+            fif.post_resize();
+         this->_initialize_descriptor_sets(); // need to send the color and depth images back to the FIFs
          this->_setup_swap_chain_images();
-         if (sc.images.size() != sc_count) {
-            //
-            // If the swap chain image count has changed, then we must ensure that the descriptor 
-            // pool is large enough to hold descriptor sets and descriptors for each image.
-            //
-            this->teardown_descriptor_pool();
-            this->_setup_descriptor_pool();
-         }
-         this->_setup_framebuffers(); // requires extent size
-         this->_setup_swap_chain_image_frame_data(); // requires descriptor pool
-         this->_initialize_descriptor_sets();
+         this->_setup_framebuffers(); // requires surface extent
          //
          sc.current_frame = 0;
       }
@@ -2884,7 +2932,7 @@ namespace vulkanDK {
          ro.handled_frames.set_all_out_of_date();
       }
       //
-      for (auto& image : this->swap_chain.images)
+      for (auto& image : this->swap_chain.frames_in_flight)
          image.invalidate_all_command_buffers();
    }
    void surface_renderer::remove_mesh(size_t i) {
@@ -2916,7 +2964,7 @@ namespace vulkanDK {
          }
       }
       //
-      for (auto& image : this->swap_chain.images)
+      for (auto& image : this->swap_chain.frames_in_flight)
          image.invalidate_all_command_buffers();
    }
    void surface_renderer::remove_last_mesh() {
@@ -3384,7 +3432,7 @@ namespace vulkanDK {
          }
       }
       //
-      for (auto& image : this->swap_chain.images)
+      for (auto& image : this->swap_chain.frames_in_flight)
          image.invalidate_all_command_buffers();
       return true;
    }
@@ -3688,7 +3736,7 @@ namespace vulkanDK {
          this->_create_mesh_vib(mesh);
          qDebug("Sun shadow debug frustrum added.");
       }
-      for (auto& image : this->swap_chain.images)
+      for (auto& image : this->swap_chain.frames_in_flight)
          image.invalidate_all_command_buffers();
    }
 

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <QPainter>
 #include <QResource>
+#include "../frame_in_flight.h"
 #include "../surface_renderer.h"
 
 #define GLM_FORCE_RADIANS
@@ -86,7 +87,7 @@ namespace vulkanDK::overlays {
       s->set_area_override_info({ .handler = &_update_shader_render_area });
       s->setup_pipeline_layout(sr);
    }
-   void world_axes::initialize_descriptor_sets(swap_chain_image& sci) {
+   void world_axes::initialize_descriptor_sets(frame_in_flight& fif) {
       auto buffer_info = VkDescriptorBufferInfo{
          .buffer = this->shader_params.uniform.handle,
          .offset = 0,
@@ -96,7 +97,7 @@ namespace vulkanDK::overlays {
       auto descriptor_writes = std::array{
          VkWriteDescriptorSet{ // uniform buffer object
             .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet           = sci.descriptor_sets.world_axes,
+            .dstSet           = fif.descriptor_sets.world_axes,
             .dstBinding       = 0, // this should match the binding value in the shader
             .dstArrayElement  = 0, // index of the first descriptor in the raray to update
             .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
@@ -191,6 +192,11 @@ namespace vulkanDK::overlays {
       //
       vib = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       vib.copy_from(staging);
+   }
+
+   void world_axes::handle_resize(surface_renderer& sr) {
+      auto& sre = this->owner->surface_extent;
+      this->active = (sre.width >= viewport_w) && (sre.height >= viewport_h);
    }
 
    bool world_axes::needs_redraw() const {

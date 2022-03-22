@@ -1579,9 +1579,11 @@
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
+    <Text Include="vulkan\_docs\an overview of the basic render process.txt" />
     <Text Include="vulkan\_docs\axis conventions.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
+    <Text Include="vulkan\_docs\how to measure FPS.txt" />
     <Text Include="vulkan\_docs\order-independent transparency.txt" />
   </ItemGroup>
   <ItemGroup>

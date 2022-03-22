@@ -20,38 +20,8 @@ namespace vulkanDK {
       protected:
          surface_renderer* owner = nullptr;
          size_t my_index = -1;
-
-         union command_buffer_set {
-            std::array<command_buffer, 4> list;
-            struct {
-               command_buffer main_shadow;
-               command_buffer main;
-               command_buffer fps;
-               command_buffer finish;
-            };
-
-            command_buffer_set() : list({}) {};
-            ~command_buffer_set() {
-               for (auto& item : list)
-                  item.~command_buffer();
-            }
-
-            command_buffer_set(command_buffer_set&& v) {
-               for (size_t i = 0; i < this->list.size(); ++i)
-                  std::swap(this->list[i], v.list[i]);
-            }
-            command_buffer_set& operator=(command_buffer_set&& v) {
-               for (size_t i = 0; i < this->list.size(); ++i)
-                  std::swap(this->list[i], v.list[i]);
-               return *this;
-            }
-
-            void setup(surface_renderer& sr) {
-               for (auto& item : list)
-                  item = command_buffer(sr);
-            }
-         };
-         static_assert(sizeof(command_buffer_set) == sizeof(command_buffer) * std::tuple_size_v<decltype(command_buffer_set::list)>);
+         //
+         bool recorded_final_blit_command = false;
 
       public:
          swap_chain_image() {}
@@ -61,48 +31,22 @@ namespace vulkanDK {
          swap_chain_image(swap_chain_image&&) noexcept;
          swap_chain_image& operator=(swap_chain_image&&) noexcept;
 
-         image_and_view image;
-         //
-         descriptor_set_group descriptor_sets;
-         command_buffer_set   command_buffers;
-         struct {
-            buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
-            buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
-            buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
-         } shader_params;
-         struct {
-            overlays::fps        fps;
-            overlays::world_axes world_axes;
-         } overlays;
-         //
          VkFence current_fence_handle = VK_NULL_HANDLE;
-         bool command_buffers_invalid = true;
+         //
+         image_and_view image;
+         command_buffer final_blit_command;
 
-         void setup(surface_renderer&, size_t my_index);
+         void setup(surface_renderer&, size_t my_index); // calls _record_final_blit_command
          void setup();
-         void setup_descriptor_sets();
+         void record_final_blit_command(); // requires surface renderer extent and swap chain image handle
 
-         void teardown_descriptor_sets(); // only need to tear these down if we reuse the descriptor pool; not needed if we also destroy the descriptor pool
+         void handle_resize(); // calls record_final_blit_command
+
          void teardown();
-
          void draw(frame_in_flight&);
 
-         void invalidate_all_command_buffers();
-
       protected:
-         void _setup_shader_parameter_buffers();
-         void _setup_descriptor_sets();
-         void _setup_command_buffers();
-
          // draw steps:
          void _hook_to_frame(frame_in_flight&);
-         //
-         scene& get_scene();
-         void _update_shader_global_scene_state();
-         void _update_shader_lights_data_buffer();
-         void _update_shader_object_data_buffer();
-         void _update_shader_texture_descriptors();
-         void _refill_command_buffers();
-         void _refill_fps_overlay_command_buffer();
    };
 }

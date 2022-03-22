@@ -58,6 +58,9 @@ namespace vulkanDK {
          static constexpr shader::id_type sun_shadow_shader_id     = "SunShadw";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
+         
+         static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+         static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
       protected:
          // renderer events:
@@ -235,21 +238,21 @@ namespace vulkanDK {
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures
-         void _initialize_descriptor_sets();
+         void _initialize_descriptor_sets(); // requires frame_in_flight::setup_descriptor_sets
          //
          void _setup_render_passes(); // requires awareness of the swap chain format; must rebuild if that format has changed
          //
          // Swap chain setup:
          //
          void _setup_swap_chain_instance();
-         void _setup_depth_buffer(); // requires extent size
-         void _setup_color_buffer(); // requires extent size
+         void _setup_depth_buffer(); // requires surface extent
+         void _setup_color_buffer(); // requires surface extent
          void _setup_sun_shadow_buffer();
          void _setup_light_shadow_resources(); // sets up depth images, samplers, and framebuffers. requires render passes
-         void _setup_oit_images(); // requires extent size
+         void _setup_oit_images(); // requires surface extent
          void _setup_swap_chain_images();
-         void _setup_swap_chain_image_frame_data(); // requires descriptor pool
-         void _setup_framebuffers(); // requires extent size
+         void _setup_frames_in_flight();
+         void _setup_framebuffers(); // requires surface extent
          //
          void _setup_descriptor_pool();
 

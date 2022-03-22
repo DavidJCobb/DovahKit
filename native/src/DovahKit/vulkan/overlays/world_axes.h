@@ -15,8 +15,8 @@
 #include "../vertex_metadata.h"
 
 namespace vulkanDK {
+   class frame_in_flight;
    class surface_renderer;
-   class swap_chain_image;
 }
 
 namespace vulkanDK::overlays {
@@ -92,9 +92,11 @@ namespace vulkanDK::overlays {
          void set_owner(surface_renderer&);
 
          static void setup_shaders(surface_renderer&);
-         void initialize_descriptor_sets(swap_chain_image&);
+         void initialize_descriptor_sets(frame_in_flight&);
          void setup_shader_parameter_buffers();
          void create_geometry();
+
+         void handle_resize(surface_renderer&);
 
          bool needs_redraw() const;
 
