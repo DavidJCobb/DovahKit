@@ -65,6 +65,7 @@ namespace vulkanDK {
 
          static constexpr size_t shadow_caster_count            = 4;
          static constexpr size_t depth_images_per_shadow_caster = 2;
+         static constexpr size_t total_shadow_caster_depth_image_count = shadow_caster_count * depth_images_per_shadow_caster;
 
       protected:
          // renderer events:

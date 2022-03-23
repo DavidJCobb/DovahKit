@@ -203,6 +203,8 @@ namespace vulkanDK {
       this->global_state.sun_space = sun_proj * sun_view;
    }
    void scene::update_light_shadows() {
+      this->light_shadows_are_stale = false;
+      //
       struct _entry {
          size_t index    = std::string::npos;
          float  distance = FLT_MAX;
@@ -266,7 +268,7 @@ namespace vulkanDK {
             draw_distance_near,
             light.shader_params.radius
          );
-         if constexpr (config::use_inverted_depth) {
+         if constexpr (config::use_inverted_shadow_map) {
             proj = glm::mat4(
                1.0F,  0.0F,  0.0F,  0.0F,
                0.0F,  1.0F,  0.0F,  0.0F,
@@ -373,6 +375,10 @@ namespace vulkanDK {
          auto t = mesh.transform();
          t = glm::rotate(t, (elapsed / anim.duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
          mesh.set_transform(t);
+      }
+      //
+      if (this->light_shadows_are_stale) {
+         this->update_light_shadows();
       }
    }
 

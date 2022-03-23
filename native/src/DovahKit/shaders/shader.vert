@@ -29,12 +29,13 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    scene_global_state ubo;
 };
 // binding 1 is used by the fragment shader (texture sampler)
-// binding 2 is used by the fragment shader (shadow map)
-layout(std430,set = 0, binding = 3) readonly buffer ObjectBuffer {
+// binding 2 is used by the fragment shader (sun shadow map)
+// binding 3 is used by the fragment shader (light shadow maps)
+layout(std430,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-// binding 4 is used by the fragment shader (light array)
-// binding 5 is used by the fragment shader (texture array)
+// binding 5 is used by the fragment shader (light array)
+// binding 6 is used by the fragment shader (texture array)
 
 #include "includes/standard_vertex_inputs.glsl"
 

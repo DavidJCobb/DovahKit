@@ -42,6 +42,7 @@ namespace vulkanDK {
             size_t meshes   = 0; // count
             size_t textures = 0; // count
          } pending_deletions;
+         bool light_shadows_are_stale = false;
 
          void update_projection(VkExtent2D render_area);
          void update_camera();

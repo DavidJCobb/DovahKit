@@ -20,6 +20,7 @@
 // USE_ALPHA_OIT == 0 or 1
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
+#define SHADOW_CASTER_COUNT 4
 
 #include "../includes/rendered_mesh_push_constant.glsl"
 #include "../includes/rendered_mesh_shader_params.glsl"
@@ -28,15 +29,16 @@ layout (constant_id = 0) const int MAX_LIGHTS = 4;
 layout(std140,binding = 0) uniform UniformBufferObject {
    scene_global_state ubo;
 };
-layout(binding = 1) uniform sampler texSampler;
-layout(binding = 2) uniform sampler2D shadowMap;
-layout(std140,set = 0, binding = 3) readonly buffer ObjectBuffer {
+layout(binding = 1) uniform sampler   default_sampler;
+layout(binding = 2) uniform sampler2D sun_shadow_map;
+layout(binding = 3) uniform sampler2D light_shadow_maps[SHADOW_CASTER_COUNT * 2];
+layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-layout(std140,set = 0, binding = 4) readonly buffer PointLightBuffer {
+layout(std140,set = 0, binding = 5) readonly buffer PointLightBuffer {
 	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
-layout(binding = 5) uniform texture2D textures[];
+layout(binding = 6) uniform texture2D textures[];
 
 #include "standard_shader/fragment_input.glsl"
 layout(location = 0) in VS_OUT {
@@ -48,7 +50,7 @@ vec4 calculate_color() {
    //
    rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
    //
-   color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+   color = texture(sampler2D(textures[pushed.texture_index], default_sampler), fs_in.uv);
    //
    color *= fs_in.color;
    alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
@@ -66,7 +68,7 @@ vec4 calculate_color() {
    //
    vec3 normal = vec3(0, 0, 1);
    if (pushed.texture_normal_index >= 0) {
-      normal = texture(sampler2D(textures[pushed.texture_normal_index], texSampler), fs_in.uv).rgb;
+      normal = texture(sampler2D(textures[pushed.texture_normal_index], default_sampler), fs_in.uv).rgb;
       normal = normalize(normal * 2.0 - 1.0);
    }
    //
@@ -91,7 +93,7 @@ vec4 calculate_color() {
          normal,
          view_dir,
          current_object.specular_exponent,
-         shadowMap
+         sun_shadow_map
       );
    }
    for(int i = 0; i < MAX_LIGHTS; ++i) {
@@ -103,18 +105,26 @@ vec4 calculate_color() {
          view_dir,
          current_object.specular_exponent
       );
-      if (false) { // if this light is allowed to cast shadows
-         for(int j = 0; j < 0; ++j) {
-            mat4 shadow_space;
-
-            if (false) {
-               //
-               // This light is currently casting shadows. Run the calcs.
-               //
-
-               //
-               break;
-            }
+      if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
+         bool is_casting = false;
+         mat4 light_proj;
+         if (ubo.shadow_caster_index_0 == i) {
+            is_casting = true;
+            light_proj = ubo.shadow_caster_proj_0;
+         } else if (ubo.shadow_caster_index_1 == i) {
+            is_casting = true;
+            light_proj = ubo.shadow_caster_proj_1;
+         } else if (ubo.shadow_caster_index_2 == i) {
+            is_casting = true;
+            light_proj = ubo.shadow_caster_proj_2;
+         } else if (ubo.shadow_caster_index_3 == i) {
+            is_casting = true;
+            light_proj = ubo.shadow_caster_proj_3;
+         }
+         if (is_casting) {
+            //
+            // TODO
+            //
          }
       }
       light_data.diffuse  += current.diffuse;

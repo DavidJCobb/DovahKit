@@ -352,22 +352,29 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+         vulkanDK::descriptor_binding{ // light shadow maps
             .index              = 3,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .count              = 8,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
             .index              = 4,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // texture array
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
             .index              = 5,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 6,
             .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
             .count              = config::max_loaded_textures,
@@ -1397,7 +1404,7 @@ namespace vulkanDK {
             id.bytes[7] = '0' + j;
             //
             auto* s = this->get_or_create_shader(id);
-            s->set_render_pass(this->render_passes_by_name.main_shadow_placed);
+            s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i * depth_images_per_shadow_caster + j);
             s->set_layout_info(
                {  // Descriptor set layouts
                   this->descriptor_set_layouts.light_shadows.handle,
@@ -1787,6 +1794,18 @@ namespace vulkanDK {
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          //
+         std::array<VkDescriptorImageInfo, total_shadow_caster_depth_image_count> light_shadow_info;
+         for (size_t i = 0; i < shadow_caster_count; ++i) {
+            auto& entry = this->canvas.light_shadows.resources[i];
+            for (size_t j = 0; j < depth_images_per_shadow_caster; ++j) {
+               light_shadow_info[i * depth_images_per_shadow_caster + j] = VkDescriptorImageInfo{
+                  .sampler     = VK_NULL_HANDLE,
+                  .imageView   = entry.maps[j].view,
+                  .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+               };
+            }
+         }
+         //
          auto descriptor_writes = std::array{
             //
             // Sun shadow render pass:
@@ -1890,7 +1909,7 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
                .pImageInfo      = &sampler_info,
             },
-            VkWriteDescriptorSet{
+            VkWriteDescriptorSet{ // sun shadow map
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.standard,
                .dstBinding      = 2, // this should match the binding value in the shader
@@ -1899,10 +1918,19 @@ namespace vulkanDK {
                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                .pImageInfo      = &image_info_sun_shadow,
             },
+            VkWriteDescriptorSet{ // light shadow maps
+               .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet          = frame.descriptor_sets.standard,
+               .dstBinding      = 3, // this should match the binding value in the shader
+               .dstArrayElement = 0,
+               .descriptorCount = (uint32_t)light_shadow_info.size(),
+               .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+               .pImageInfo      = light_shadow_info.data(),
+            },
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
-               .dstBinding       = 3, // this should match the binding value in the shader
+               .dstBinding       = 4, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1913,7 +1941,7 @@ namespace vulkanDK {
             VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet           = frame.descriptor_sets.standard,
-               .dstBinding       = 4, // this should match the binding value in the shader
+               .dstBinding       = 5, // this should match the binding value in the shader
                .dstArrayElement  = 0,
                .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1924,7 +1952,7 @@ namespace vulkanDK {
             VkWriteDescriptorSet{ // texture array
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.standard,
-               .dstBinding      = 5, // this should match the binding value in the shader
+               .dstBinding      = 6, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)texture_infos.size(),
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -3776,6 +3804,13 @@ namespace vulkanDK {
             sp.radius += ex->value;
          }
       }
+      //
+      if (light.can_cast_shadows()) {
+         this->scene.light_shadows_are_stale = true;
+         for (auto& fif : this->swap_chain.frames_in_flight)
+            fif.invalidate_all_command_buffers();
+      }
+      //
       return true;
    }
 

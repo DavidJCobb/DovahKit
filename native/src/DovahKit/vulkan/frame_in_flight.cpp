@@ -443,7 +443,7 @@ namespace vulkanDK {
          write_info[i] = VkWriteDescriptorSet{ // texture array
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet          = target_set,
-            .dstBinding      = 5, // this should match the binding value in the shader
+            .dstBinding      = 6, // this should match the binding value in the shader
             .dstArrayElement = src.start,
             .descriptorCount = (uint32_t)info.size(),
             .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -617,23 +617,26 @@ namespace vulkanDK {
          );
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
-            if (scene.global_state.shadow_caster_indices[i] < 0) {
+            const auto light_index = scene.global_state.shadow_caster_indices[i];
+            if (light_index < 0 || light_index >= scene.lights.size()) {
                vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass
                   vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                continue;
             }
+            const auto& light = scene.lights[light_index];
             //
             auto id = surface_renderer::light_shadow_map_shader_base_id;
-            id.bytes[7] = '0' + i;
+            id.bytes[6] = '0' + i;
             //
-            for (size_t j = 0; j < surface_renderer::depth_images_per_shadow_caster; ++j) {
-               id.bytes[6] = '0' + j;
-               //
-               const shader* shader   = this->owner->get_shader(surface_renderer::sun_shadow_shader_id);
+            // First depth map:
+            //
+            id.bytes[7] = '0';
+            {
+               const shader* shader   = this->owner->get_shader(id);
                assert(shader);
                const auto&   material = shader->material;
-               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
                //
                _draw_objects(
                   scene, command_buffer, *shader,
@@ -642,9 +645,28 @@ namespace vulkanDK {
                   },
                   [](const rendered_mesh& ro) {}
                );
-               if (i + 1 < surface_renderer::shadow_caster_count || j + 1 < surface_renderer::depth_images_per_shadow_caster) // ensure we don't advance past the last subpass
-                  vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
             }
+            vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
+            //
+            // The second depth map is only relevant for shadow omnis:
+            //
+            id.bytes[7] = '1';
+            if (light.shader_params.type == rendered_light::light_type::omni_shadow) { // Second depth map
+               const shader* shader   = this->owner->get_shader(id);
+               assert(shader);
+               const auto&   material = shader->material;
+               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+               //
+               _draw_objects(
+                  scene, command_buffer, *shader,
+                  [](const rendered_mesh& ro) {
+                     return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+                  },
+                  [](const rendered_mesh& ro) {}
+               );
+            }
+            if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass
+               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
          }
          vkCmdEndRenderPass(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
