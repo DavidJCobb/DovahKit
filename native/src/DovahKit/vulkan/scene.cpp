@@ -242,27 +242,26 @@ namespace vulkanDK {
       for (size_t i = 0; i < nearest.size(); ++i) {
          auto& entry = nearest[i];
          if (entry.index == std::string::npos) {
-            this->global_state.shadow_caster_indices[i] = -1;
+            this->global_state.shadow_caster_index[i] = -1;
             continue;
          }
          auto& light = this->lights[entry.index];
          //
-         this->global_state.shadow_caster_indices[i] = entry.index;
+         this->global_state.shadow_caster_index[i] = entry.index;
          //
-         auto& proj = this->global_state.shadow_caster_proj(i);
          float fov  = 90.0F;
          switch (light.shader_params.type) {
             using enum rendered_light::light_type;
             case omni_shadow:
                [[fallthrough]];
             case hemi_shadow:
-               fov = glm::radians<float>(179.0F);
+               fov = 3.141; // just shy of pi (180deg)
                break;
             case spot_shadow:
                // TODO: FOV
                break;
          }
-         proj = glm::perspective(
+         auto proj = glm::perspective(
             fov,
             (float)config::sun_shadow_map_resolution_x / (float)config::sun_shadow_map_resolution_y,
             draw_distance_near,
@@ -279,6 +278,16 @@ namespace vulkanDK {
          if constexpr (config::is_righthanded) {
             proj[1][1] *= -1;
          }
+         //
+         auto& transform = light.shader_params.transform;
+         auto  view_pos  = transform;
+         view_pos[0][3] = view_pos[1][3] = view_pos[2][3] = 0.0F;
+         view_pos[3] = { 0, 0, 0, 1 };
+         auto  view_neg  = view_pos;
+         view_neg *= glm::eulerAngleZ(glm::radians(180.0F));
+         //
+         this->global_state.shadow_caster_space_pos[i] = proj * glm::translate(glm::inverse(view_pos), -glm::vec3(transform[3]));
+         this->global_state.shadow_caster_space_neg[i] = proj * glm::translate(glm::inverse(view_neg), -glm::vec3(transform[3]));
       }
    }
 

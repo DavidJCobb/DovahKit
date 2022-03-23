@@ -21,6 +21,9 @@
 // they're meant to.
 //
 
+layout (constant_id = 0) const int MAX_LIGHTS = 4;
+
+#include "includes/point_light.glsl"
 #include "includes/rendered_mesh_push_constant.glsl"
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
@@ -34,7 +37,9 @@ layout(std140,binding = 0) uniform UniformBufferObject {
 layout(std430,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-// binding 5 is used by the fragment shader (light array)
+layout(std140,set = 0, binding = 5) readonly buffer PointLightBuffer {
+	point_light lights[MAX_LIGHTS];
+} pointLightBuffer;
 // binding 6 is used by the fragment shader (texture array)
 
 #include "includes/standard_vertex_inputs.glsl"
@@ -61,6 +66,11 @@ void main() {
    vs_out.uv        = in_uv;
    vs_out.pos_world = vec3(model_transform * vec4(in_position, 1.0));
    vs_out.sun_shadow_vert_pos = (shadow_to_normalized_coords * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
+   //
+   for(int i = 0; i < 4; ++i) {
+      vs_out.light_shadow_vert_position_pos[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
+      vs_out.light_shadow_vert_position_neg[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+   }
    //
    #if !defined(TBN_ORTHOGONALIZE_MODE) || TBN_ORTHOGONALIZE_MODE == TBN_MODE_NONE
       vs_out.tangent_space = transpose(mat3(
@@ -113,6 +123,14 @@ void main() {
    vs_out.tangent_sun_dir  = vs_out.tangent_space * ubo.sun_dir;
    vs_out.tangent_view_pos = vs_out.tangent_space * vec3(ubo.view[3]);
    vs_out.tangent_vert_pos = vs_out.tangent_space * vs_out.pos_world;
+   for(int i = 0; i < 4; ++i) {
+      int light_index = ubo.shadow_caster_index[i];
+      if (light_index < 0) {
+         vs_out.tangent_light_dir[i] = vec3(0, 0, 0);
+      } else {
+         vs_out.tangent_light_dir[i] = normalize(vs_out.tangent_space * vec3(pointLightBuffer.lights[light_index].transform[3]));
+      }
+   }
    //
    vs_out.camera_distance = (ubo.view * vec4(vs_out.pos_world, 1.0)).z;
 }

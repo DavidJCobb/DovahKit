@@ -45,6 +45,13 @@ layout(location = 0) in VS_OUT {
    fragment_input fs_in;
 };
 
+const mat4 shadow_to_normalized_coords = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+);
+
 vec4 calculate_color() {
    vec4 color;
    //
@@ -105,30 +112,24 @@ vec4 calculate_color() {
          view_dir,
          current_object.specular_exponent
       );
+      //
+      float shadow = 0.0;
       if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
-         bool is_casting = false;
-         mat4 light_proj;
-         if (ubo.shadow_caster_index_0 == i) {
-            is_casting = true;
-            light_proj = ubo.shadow_caster_proj_0;
-         } else if (ubo.shadow_caster_index_1 == i) {
-            is_casting = true;
-            light_proj = ubo.shadow_caster_proj_1;
-         } else if (ubo.shadow_caster_index_2 == i) {
-            is_casting = true;
-            light_proj = ubo.shadow_caster_proj_2;
-         } else if (ubo.shadow_caster_index_3 == i) {
-            is_casting = true;
-            light_proj = ubo.shadow_caster_proj_3;
-         }
-         if (is_casting) {
-            //
-            // TODO
-            //
+         int caster_index = -1;
+         for(int j = 0; j < 4; ++j) {
+            if (ubo.shadow_caster_index[j] == i) {
+               float shadow_a = calc_directional_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_pos[j], light_shadow_maps[j * 2]);
+               float shadow_b = calc_directional_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_neg[j], light_shadow_maps[j * 2 + 1]);
+               //
+               shadow = (shadow_a + shadow_b) * 0.5;
+               break;
+            }
          }
       }
-      light_data.diffuse  += current.diffuse;
-      light_data.specular += current.specular;
+      shadow = 1.0 - shadow;
+      //
+      light_data.diffuse  += current.diffuse  * shadow;
+      light_data.specular += current.specular * shadow;
    }
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //

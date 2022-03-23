@@ -24,40 +24,17 @@ layout(std140,set = 0, binding = 2) readonly buffer PointLightBuffer {
 // binding 3: texture sampler
 // binding 4: texture array
 
-const mat4 one_eighty_yaw = mat4(
-   -1,  0,  0,  0,
-    0, -1,  0,  0,
-    0,  0,  1,  0,
-    0,  0,  0,  1
-);
-
 layout(location = 0) out VS_OUT {
    vec2 uv;
 } vs_out;
 
 void main() {
    mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
-   mat4 light_space     = mat4(1.0);
-   if (FLIP_YAW != 0) {
-      light_space = one_eighty_yaw;
-   }
-   switch (CASTER_INDEX) {
-      case 0:
-         light_space = light_space * pointLightBuffer.lights[ubo.shadow_caster_index_0].transform;
-         light_space = ubo.shadow_caster_proj_0 * light_space;
-         break;
-      case 1:
-         light_space = light_space * pointLightBuffer.lights[ubo.shadow_caster_index_1].transform;
-         light_space = ubo.shadow_caster_proj_1 * light_space;
-         break;
-      case 2:
-         light_space = light_space * pointLightBuffer.lights[ubo.shadow_caster_index_2].transform;
-         light_space = ubo.shadow_caster_proj_2 * light_space;
-         break;
-      case 3:
-         light_space = light_space * pointLightBuffer.lights[ubo.shadow_caster_index_3].transform;
-         light_space = ubo.shadow_caster_proj_3 * light_space;
-         break;
+   mat4 light_space;
+   if (FLIP_YAW == 0) {
+      light_space = ubo.shadow_caster_space_pos[CASTER_INDEX];
+   } else {
+      light_space = ubo.shadow_caster_space_neg[CASTER_INDEX];
    }
    //
 	gl_Position = (light_space * model_transform) * vec4(in_position, 1.0);

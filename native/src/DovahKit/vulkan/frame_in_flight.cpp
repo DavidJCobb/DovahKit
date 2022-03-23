@@ -617,7 +617,7 @@ namespace vulkanDK {
          );
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
-            const auto light_index = scene.global_state.shadow_caster_indices[i];
+            const auto light_index = scene.global_state.shadow_caster_index[i];
             if (light_index < 0 || light_index >= scene.lights.size()) {
                vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass

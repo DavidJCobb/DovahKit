@@ -80,7 +80,6 @@ namespace vulkanDK {
          struct shadow_cast_resources {
             size_t light_index = std::string::npos;
             std::array<owned_image_and_view, depth_images_per_shadow_caster> maps;
-            std::array<VkSampler,            depth_images_per_shadow_caster> samplers = { VK_NULL_HANDLE, VK_NULL_HANDLE };
          };
 
       public:

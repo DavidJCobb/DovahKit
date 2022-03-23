@@ -354,7 +354,7 @@ namespace vulkanDK {
          },
          vulkanDK::descriptor_binding{ // light shadow maps
             .index              = 3,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             .count              = 8,
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
@@ -1165,6 +1165,7 @@ namespace vulkanDK {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
          },
       };
       //dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
@@ -1247,6 +1248,7 @@ namespace vulkanDK {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
          },
       };
       dfn.color_blending.blends.emplace_back(material_definition::color_blend{ // accumulator
@@ -1435,12 +1437,12 @@ namespace vulkanDK {
                   .module              = frag,
                   .entry_point_name    = "main",
                   .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-                  .specialization_info = material_definition::stage_specialization_info(spec.caster_index, spec.invert_yaw, spec.max_lights),
                },
                {
                   .module              = vert,
                   .entry_point_name    = "main",
                   .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+                  .specialization_info = material_definition::stage_specialization_info(spec.caster_index, spec.invert_yaw, spec.max_lights),
                },
             };
             if constexpr (config::use_inverted_depth) {
@@ -1753,7 +1755,7 @@ namespace vulkanDK {
          texture_infos.resize(size);
          for (size_t i = 0; i < size; ++i) {
             texture_infos[i] = {
-               .sampler     = nullptr,
+               .sampler     = VK_NULL_HANDLE,
                .imageView   = list[i].content.view,
                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             };
@@ -1799,7 +1801,7 @@ namespace vulkanDK {
             auto& entry = this->canvas.light_shadows.resources[i];
             for (size_t j = 0; j < depth_images_per_shadow_caster; ++j) {
                light_shadow_info[i * depth_images_per_shadow_caster + j] = VkDescriptorImageInfo{
-                  .sampler     = VK_NULL_HANDLE,
+                  .sampler     = this->texture_sampler,
                   .imageView   = entry.maps[j].view,
                   .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                };
@@ -1924,7 +1926,7 @@ namespace vulkanDK {
                .dstBinding      = 3, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = (uint32_t)light_shadow_info.size(),
-               .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+               .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                .pImageInfo      = light_shadow_info.data(),
             },
             VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
@@ -2209,29 +2211,10 @@ namespace vulkanDK {
          .format = format,
          .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       };
-      const auto sampler_info = VkSamplerCreateInfo{
-         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-         .magFilter        = VK_FILTER_NEAREST,
-         .minFilter        = VK_FILTER_NEAREST,
-         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-         .addressModeU     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-         .addressModeV     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-         .addressModeW     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-         .mipLodBias       = 0.0,
-         .anisotropyEnable = support.max_anisotropic_filtering > 0.0 ? VK_TRUE : VK_FALSE,
-         .maxAnisotropy    = std::min(8.0F, support.max_anisotropic_filtering),
-         .compareEnable    = VK_FALSE,
-         .compareOp        = VK_COMPARE_OP_LESS,
-         .minLod           = 0.0,
-         .maxLod           = 1.0,
-         .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
-         .unnormalizedCoordinates = VK_FALSE,
-      };
       //
       for (auto& entry : res_list) {
          for (size_t i = 0; i < depth_images_per_shadow_caster; ++i) {
             auto& image   = entry.maps[i];
-            auto& sampler = entry.samplers[i];
             //
             image = owned_image_and_view(*this);
             image.create_image(
@@ -2251,11 +2234,6 @@ namespace vulkanDK {
             //
             this->set_debug_object_name(image.handle, "Light Shadow Buffer Image");
             this->set_debug_object_name(image.view,   "Light Shadow Buffer Image View");
-            //
-            if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
-               throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create the raw pixel texture sampler.");
-            }
-            this->set_debug_object_name(sampler, "Light Shadow Texture Sampler");
          }
       }
       //
@@ -2517,12 +2495,6 @@ namespace vulkanDK {
                item.light_index = std::string::npos;
                for (auto& image : item.maps)
                   image.teardown();
-               for (auto& sampler : item.samplers) {
-                  if (sampler != VK_NULL_HANDLE) {
-                     vkDestroySampler(this->logical_device, sampler, nullptr);
-                     sampler = VK_NULL_HANDLE;
-                  }
-               }
             }
          }
          if (auto& handle = this->canvas.oit.framebuffer; handle != VK_NULL_HANDLE) {
