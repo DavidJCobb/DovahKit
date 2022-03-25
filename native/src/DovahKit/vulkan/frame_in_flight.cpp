@@ -601,7 +601,7 @@ namespace vulkanDK {
             this->owner->canvas.light_shadows.framebuffer,
             {
                .offset = { 0, 0 },
-               .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
+               .extent = { config::light_shadow_map_resolution_x, config::light_shadow_map_resolution_y },
             },
             std::array{
                VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
@@ -673,7 +673,6 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (light shadows).");
          }
       }
-
       //
       // Normal objects:
       //
@@ -737,7 +736,14 @@ namespace vulkanDK {
             // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
             // with each new material.
             //
-            const shader* shader = this->owner->get_shader(surface_renderer::main_shader_id);
+            const shader* shader;
+            if (this->owner->debug.show_shadow_caster_depths == std::string::npos) {
+               shader = this->owner->get_shader(surface_renderer::main_shader_id);
+            } else {
+               cobb::eight_cc id = "DBGLite0";
+               id.bytes[7] += this->owner->debug.show_shadow_caster_depths;
+               shader = this->owner->get_shader(id);
+            }
             assert(shader);
             const auto& material = shader->material;
             command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });

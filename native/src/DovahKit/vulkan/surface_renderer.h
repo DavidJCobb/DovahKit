@@ -171,6 +171,9 @@ namespace vulkanDK {
          struct {
             PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT = nullptr;
          } api_functions;
+         struct {
+            size_t show_shadow_caster_depths = std::string::npos;
+         } debug;
 
          void setup(); // sets up the device and everything below, but not the surface
          void teardown(); // tears down the device and everything below, but not the surface
@@ -226,6 +229,7 @@ namespace vulkanDK {
          inline double last_frame_time() const { return this->state.last_frame_time; }
 
          void debug_show_frustrums(); // adds relevant frustrums to the scene as rendered_meshes.
+         void debug_show_shadow_caster_depth(size_t which = std::string::npos);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes
@@ -242,6 +246,7 @@ namespace vulkanDK {
             void _setup_basic_wboit_shader();   // MainOITc
             void _setup_sun_shadow_shader();    // SunShadw
             void _setup_light_shadow_shaders(); // LiteMap0 - LiteMap8
+            void _setup_light_shadow_debug_shaders(); // DBGLite0 - DBGLite3
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

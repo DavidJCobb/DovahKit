@@ -17,5 +17,6 @@
         <file>shader.shadows.frag.spv</file>
         <file>light-shadow-depth.frag.spv</file>
         <file>light-shadow-depth.vert.spv</file>
+        <file>rendered_mesh/debug-shadow-caster-space.frag.spv</file>
     </qresource>
 </RCC>

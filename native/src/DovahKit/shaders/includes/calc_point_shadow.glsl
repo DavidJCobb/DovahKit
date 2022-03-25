@@ -1,9 +1,9 @@
 
-#define USE_SHADOW_DEPTH_BIAS 1
+#define USE_POINT_SHADOW_DEPTH_BIAS 0
 #define USE_SHADOW_PCF 1
 #define USE_INVERTED_SHADOW_MAP 0
 
-float calc_directional_shadow(
+float calc_point_shadow(
    vec3      normal,          // surface normal
    vec3      light_dir,       // light direction, in surface tangent space
    vec4      light_space_pos, // light-space vertex position
@@ -11,7 +11,7 @@ float calc_directional_shadow(
 ) {
    vec3  proj_coord    = light_space_pos.xyz / light_space_pos.w; // perspective divide
    float current_depth = proj_coord.z; // distance from the light to the current vertex
-   #if USE_SHADOW_DEPTH_BIAS
+   #if USE_POINT_SHADOW_DEPTH_BIAS
       float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // a small offset is needed to prevent self-shadowing
    #else
       const float bias = 0.0;

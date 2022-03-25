@@ -1594,6 +1594,7 @@
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
+    <None Include="shaders\includes\calc_point_shadow.glsl" />
     <None Include="shaders\includes\computed_light.glsl" />
     <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
     <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
@@ -1611,6 +1612,7 @@
     <None Include="shaders\overlay-world-axes.frag.spv" />
     <None Include="shaders\overlay-world-axes.vert" />
     <None Include="shaders\overlay-world-axes.vert.spv" />
+    <None Include="shaders\rendered_mesh\debug-shadow-caster-space.frag" />
     <None Include="shaders\shader.frag">
       <FileType>Document</FileType>
     </None>

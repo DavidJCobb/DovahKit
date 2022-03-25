@@ -1469,16 +1469,16 @@ namespace vulkanDK {
                .viewport = {
                   .x        = 0,
                   .y        = 0,
-                  .width    = config::sun_shadow_map_resolution_x,
-                  .height   = config::sun_shadow_map_resolution_y,
+                  .width    = config::light_shadow_map_resolution_x,
+                  .height   = config::light_shadow_map_resolution_y,
                   .minDepth = 0.0,
                   .maxDepth = 1.0,
                },
                .scissor = {
                   .offset = { .x = 0, .y = 0 },
                   .extent = {
-                     .width  = config::sun_shadow_map_resolution_x,
-                     .height = config::sun_shadow_map_resolution_y,
+                     .width  = config::light_shadow_map_resolution_x,
+                     .height = config::light_shadow_map_resolution_y,
                   },
                },
             });
@@ -1489,6 +1489,78 @@ namespace vulkanDK {
          }
       }
 
+   }
+   void surface_renderer::_setup_light_shadow_debug_shaders() {
+      shader_module* frag = nullptr;
+      shader_module* vert = nullptr;
+      {
+         frag = new shader_module(this->logical_device, QResource("shaders/rendered_mesh/debug-shadow-caster-space.frag.spv").uncompressedData());
+         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
+         assert(!frag->empty());
+         assert(!vert->empty());
+         this->shader_modules.push_back(frag);
+         this->shader_modules.push_back(vert);
+         //
+         this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow Debug: rendered_mesh/debug-shadow-caster-space.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow Debug: shader.vert.spv)");
+      }
+      //
+      for (size_t i = 0; i < shadow_caster_count; ++i) {
+         auto id = cobb::eight_cc("DBGLite0");
+         id.bytes[7] = '0' + i;
+         //
+         auto* s = this->get_or_create_shader(id);
+         s->set_render_pass(this->render_passes_by_name.main);
+         s->set_layout_info(
+            {  // Descriptor set layouts
+               this->descriptor_set_layouts.standard.handle,
+            },
+            {  // Push constants
+               VkPushConstantRange{
+                  .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+                  .offset     = 0,
+                  .size       = sizeof(rendered_mesh::push_constant),
+               }
+            }
+         );
+         s->add_variant({ // double-sided shader variant
+            .face_cull_mode = VK_CULL_MODE_NONE,
+         });
+         //
+         auto& dfn = s->definition;
+         dfn.stages = {
+            {
+               .module              = frag,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+               .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene, (int32_t)i),
+            },
+            {
+               .module              = vert,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+               .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+            },
+         };
+         dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend); // needed for alpha testing to work
+         if constexpr (config::use_inverted_depth) {
+            dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+         }
+         dfn.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
+         dfn.dynamic_states = {
+            VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS, // for decals
+         };
+         {
+            auto& vertex     = dfn.inputs.vertex;
+            auto  attributes = vertex::getAttributeDescriptions();
+            vertex.bindings.push_back(vertex::getBindingDescription());
+            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+         }
+         //
+         // And be sure to set up the pipeline layout when you're done!
+         //
+         s->setup_pipeline_layout(*this);
+      }
    }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
@@ -1502,6 +1574,8 @@ namespace vulkanDK {
       qDebug("[Vulkan] Shader setup: Main (OIT)");
       this->_setup_light_shadow_shaders();
       qDebug("[Vulkan] Shader setup: Light Shadows");
+      this->_setup_light_shadow_debug_shaders();
+      qDebug("[Vulkan] Shader setup: Light Shadow Debug Shaders");
       //
       // FPS counter:
       //
@@ -2204,8 +2278,8 @@ namespace vulkanDK {
       //
       const vulkanDK::image_metadata metadata = {
          .extent = {
-            .width  = config::sun_shadow_map_resolution_x,
-            .height = config::sun_shadow_map_resolution_y,
+            .width  = config::light_shadow_map_resolution_x,
+            .height = config::light_shadow_map_resolution_y,
             .depth  = 1,
          },
          .format = format,
@@ -2220,8 +2294,8 @@ namespace vulkanDK {
             image.create_image(
                {
                   .extent = {
-                     .width  = config::sun_shadow_map_resolution_x,
-                     .height = config::sun_shadow_map_resolution_y,
+                     .width  = config::light_shadow_map_resolution_x,
+                     .height = config::light_shadow_map_resolution_y,
                      .depth  = 1,
                   },
                   .format = format,
@@ -2256,8 +2330,8 @@ namespace vulkanDK {
          .renderPass      = this->render_passes_by_name.main_shadow_placed->handle,
          .attachmentCount = attachments.size(),
          .pAttachments    = attachments.data(),
-         .width           = config::sun_shadow_map_resolution_x,
-         .height          = config::sun_shadow_map_resolution_y,
+         .width           = config::light_shadow_map_resolution_x,
+         .height          = config::light_shadow_map_resolution_y,
          .layers          = 1,
       };
       static_assert(std::tuple_size_v<decltype(attachments)> == shadow_caster_count * depth_images_per_shadow_caster);
@@ -4036,6 +4110,16 @@ namespace vulkanDK {
       }
       for (auto& image : this->swap_chain.frames_in_flight)
          image.invalidate_all_command_buffers();
+   }
+   void surface_renderer::debug_show_shadow_caster_depth(size_t which) {
+      if (this->debug.show_shadow_caster_depths == which)
+         return;
+      if (which != std::string::npos) {
+         assert(which < shadow_caster_count);
+      }
+      this->debug.show_shadow_caster_depths = which;
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
    }
 
    void surface_renderer::_execute_pending_scene_deletions() {

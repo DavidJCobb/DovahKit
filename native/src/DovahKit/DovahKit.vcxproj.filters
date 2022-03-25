@@ -4250,6 +4250,8 @@
     <None Include="shaders\light-shadow-depth.frag" />
     <None Include="shaders\light-shadow-depth.frag.spv" />
     <None Include="shaders\light-shadow-depth.vert.spv" />
+    <None Include="shaders\includes\calc_point_shadow.glsl" />
+    <None Include="shaders\rendered_mesh\debug-shadow-caster-space.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

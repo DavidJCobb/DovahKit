@@ -8,18 +8,7 @@
 //
 #define TBN_ORTHOGONALIZE_MODE TBN_MODE_NONE
 
-//
-// Location sizes:
-//
-//  - most types | 1
-//  - double     | 1
-//  - dvec2      | 1
-//  - dvec3      | 2
-//  - dvec4      | 2
-//
-// Care must be taken to ensure that parameters don't overlap... unless 
-// they're meant to.
-//
+
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
@@ -68,8 +57,23 @@ void main() {
    vs_out.sun_shadow_vert_pos = (shadow_to_normalized_coords * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
    //
    for(int i = 0; i < 4; ++i) {
-      vs_out.light_shadow_vert_position_pos[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
-      vs_out.light_shadow_vert_position_neg[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+      //vs_out.light_shadow_vert_position_pos[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
+      //vs_out.light_shadow_vert_position_neg[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+      //
+      float z;
+      vec4 temp = (ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
+      temp /= temp.w;
+      z = temp.z;
+      temp = shadow_to_normalized_coords * temp;
+      temp.z = z;
+      vs_out.light_shadow_vert_position_pos[i] = temp;
+      //
+      temp = (ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+      temp /= temp.w;
+      z = temp.z;
+      temp = shadow_to_normalized_coords * temp;
+      temp.z = z;
+      vs_out.light_shadow_vert_position_neg[i] = temp;
    }
    //
    #if !defined(TBN_ORTHOGONALIZE_MODE) || TBN_ORTHOGONALIZE_MODE == TBN_MODE_NONE

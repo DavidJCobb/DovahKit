@@ -67,7 +67,7 @@ namespace vulkanDK {
             //          <https://dev.theomader.com/depth-precision/>
             //
          } else {
-            proj = glm::perspective(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
+            proj = glm::perspectiveRH_ZO(glm::radians(this->config.vertical_fov_degrees), aspect, draw_distance_near, draw_distance_far);
          }
          if constexpr (config::is_righthanded) {
             //
@@ -243,13 +243,15 @@ namespace vulkanDK {
          auto& entry = nearest[i];
          if (entry.index == std::string::npos) {
             this->global_state.shadow_caster_index[i] = -1;
+            this->global_state.shadow_caster_space_pos[i] = glm::mat4(1);
+            this->global_state.shadow_caster_space_neg[i] = glm::mat4(1);
             continue;
          }
          auto& light = this->lights[entry.index];
          //
          this->global_state.shadow_caster_index[i] = entry.index;
          //
-         float fov  = 90.0F;
+         float fov = glm::radians(90.0F);
          switch (light.shader_params.type) {
             using enum rendered_light::light_type;
             case omni_shadow:
@@ -261,9 +263,10 @@ namespace vulkanDK {
                // TODO: FOV
                break;
          }
-         auto proj = glm::perspective(
+         glm::mat4 proj;
+         proj = glm::perspectiveRH_ZO(
             fov,
-            (float)config::sun_shadow_map_resolution_x / (float)config::sun_shadow_map_resolution_y,
+            1.0F,
             draw_distance_near,
             light.shader_params.radius
          );
@@ -279,15 +282,38 @@ namespace vulkanDK {
             proj[1][1] *= -1;
          }
          //
-         auto& transform = light.shader_params.transform;
-         auto  view_pos  = transform;
-         view_pos[0][3] = view_pos[1][3] = view_pos[2][3] = 0.0F;
-         view_pos[3] = { 0, 0, 0, 1 };
-         auto  view_neg  = view_pos;
-         view_neg *= glm::eulerAngleZ(glm::radians(180.0F));
-         //
-         this->global_state.shadow_caster_space_pos[i] = proj * glm::translate(glm::inverse(view_pos), -glm::vec3(transform[3]));
-         this->global_state.shadow_caster_space_neg[i] = proj * glm::translate(glm::inverse(view_neg), -glm::vec3(transform[3]));
+         const auto& transform = light.shader_params.transform;
+         const auto  position  = glm::vec3(transform[3]);
+         glm::mat4 view_pos;
+         glm::mat4 view_neg;
+         if constexpr (false) {
+            // blindly copy the light's transform
+            // this is incorrect, because remember: Z is depth. so this produces lights that align the seam vertically
+            view_pos = transform;
+            view_pos[0][3] = view_pos[1][3] = view_pos[2][3] = 0.0F;
+            view_pos[3]    = { 0, 0, 0, 1 };
+            view_neg = view_pos;
+            view_neg *= glm::eulerAngleZ(glm::radians(180.0F));
+            //
+            this->global_state.shadow_caster_space_pos[i] = proj * glm::translate(glm::inverse(view_pos), -position);
+            this->global_state.shadow_caster_space_neg[i] = proj * glm::translate(glm::inverse(view_neg), -position);
+         } else {
+            const auto local_forward = glm::vec3(transform[1]);
+            const auto local_up      = glm::vec3(transform[2]);
+            //
+            view_pos = glm::lookAt(
+               position,
+               position + local_forward,
+               local_up
+            );
+            view_neg = glm::lookAt(
+               position,
+               position - local_forward,
+               local_up
+            );
+            this->global_state.shadow_caster_space_pos[i] = proj * view_pos;
+            this->global_state.shadow_caster_space_neg[i] = proj * view_neg;
+         }
       }
    }
 

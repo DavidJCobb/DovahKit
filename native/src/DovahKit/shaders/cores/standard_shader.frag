@@ -15,6 +15,7 @@
 #include "../includes/calc_directional_light.glsl"
 #include "../includes/point_light.glsl"
 #include "../includes/calc_point_light.glsl"
+#include "../includes/calc_point_shadow.glsl"
 
 // configuration defines:
 // USE_ALPHA_OIT == 0 or 1
@@ -115,11 +116,10 @@ vec4 calculate_color() {
       //
       float shadow = 0.0;
       if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
-         int caster_index = -1;
          for(int j = 0; j < 4; ++j) {
             if (ubo.shadow_caster_index[j] == i) {
-               float shadow_a = calc_directional_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_pos[j], light_shadow_maps[j * 2]);
-               float shadow_b = calc_directional_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_neg[j], light_shadow_maps[j * 2 + 1]);
+               float shadow_a = calc_point_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_pos[j], light_shadow_maps[j * 2]);
+               float shadow_b = calc_point_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_neg[j], light_shadow_maps[j * 2 + 1]);
                //
                shadow = (shadow_a + shadow_b) * 0.5;
                break;
