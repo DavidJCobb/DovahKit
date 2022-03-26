@@ -60,19 +60,14 @@ void main() {
       //vs_out.light_shadow_vert_position_pos[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
       //vs_out.light_shadow_vert_position_neg[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
       //
-      float z;
-      vec4 temp = (ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
+      vec4 temp = ubo.shadow_caster_space_pos[i] * vec4(vs_out.pos_world, 1.0);
       temp /= temp.w;
-      z = temp.z;
       temp = shadow_to_normalized_coords * temp;
-      temp.z = z;
       vs_out.light_shadow_vert_position_pos[i] = temp;
       //
-      temp = (ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+      temp = ubo.shadow_caster_space_neg[i] * vec4(vs_out.pos_world, 1.0);
       temp /= temp.w;
-      z = temp.z;
       temp = shadow_to_normalized_coords * temp;
-      temp.z = z;
       vs_out.light_shadow_vert_position_neg[i] = temp;
    }
    //

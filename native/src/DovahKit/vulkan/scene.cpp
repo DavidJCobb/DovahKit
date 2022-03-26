@@ -301,12 +301,12 @@ namespace vulkanDK {
             const auto local_forward = glm::vec3(transform[1]);
             const auto local_up      = glm::vec3(transform[2]);
             //
-            view_pos = glm::lookAt(
+            view_pos = glm::lookAtLH(
                position,
                position + local_forward,
                local_up
             );
-            view_neg = glm::lookAt(
+            view_neg = glm::lookAtLH(
                position,
                position - local_forward,
                local_up

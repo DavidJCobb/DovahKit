@@ -1345,7 +1345,9 @@ namespace vulkanDK {
             .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
          },
       };
-      dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+      if constexpr (config::sun_shadow_invert_culling) {
+         dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+      }
       dfn.rasterization.depthBiasEnable         = VK_TRUE;
       dfn.rasterization.depthBiasConstantFactor = 1.25F;
       dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
@@ -1448,7 +1450,9 @@ namespace vulkanDK {
             if constexpr (config::use_inverted_depth) {
                dfn.depth.comparison = VK_COMPARE_OP_GREATER;
             }
-            dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+            if constexpr (config::light_shadow_invert_culling) {
+               dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+            }
             dfn.rasterization.depthBiasEnable         = VK_TRUE;
             dfn.rasterization.depthBiasConstantFactor = 1.25F;
             dfn.rasterization.depthBiasSlopeFactor    = 1.75F;

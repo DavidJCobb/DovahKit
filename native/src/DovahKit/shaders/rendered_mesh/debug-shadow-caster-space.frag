@@ -10,6 +10,7 @@
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 layout (constant_id = 1) const int DEBUG_SHADOW_CASTER_INDEX = 0;
 
+#include "../includes/point_light.glsl"
 #include "../includes/rendered_mesh_push_constant.glsl"
 #include "../includes/rendered_mesh_shader_params.glsl"
 #include "../includes/scene_global_state.glsl"
@@ -23,7 +24,9 @@ layout(binding = 1) uniform sampler default_sampler;
 layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-// binding 5: point light list (not used in this shader)
+layout(std140,set = 0, binding = 5) readonly buffer PointLightBuffer {
+	point_light lights[MAX_LIGHTS];
+} pointLightBuffer;
 layout(binding = 6) uniform texture2D textures[];
 
 #include "../cores/standard_shader/fragment_input.glsl"
@@ -51,30 +54,24 @@ vec4 calculate_color() {
       color.a = 1.0;
    #endif
    //
-   vec4  light_space_pos_pos = fs_in.light_shadow_vert_position_pos[DEBUG_SHADOW_CASTER_INDEX];
-   vec4  light_space_pos_neg = fs_in.light_shadow_vert_position_neg[DEBUG_SHADOW_CASTER_INDEX];
-   light_space_pos_pos /= light_space_pos_pos.w;
-   light_space_pos_neg /= light_space_pos_neg.w;
-   float x;
-   float y;
-   float z;
+   if (ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX] < 0) {
+      return vec4(1, 1, 1, 1);
+   }
+   vec3 which;
    {
-      float a = abs(light_space_pos_pos.z);
-      float b = abs(light_space_pos_neg.z);
-      if (a < b) {
-         z = a;
-         x = light_space_pos_pos.x;
-         y = light_space_pos_pos.y;
-      } else {
-         z = b;
-         x = light_space_pos_neg.x;
-         y = light_space_pos_neg.y;
+      vec3 light_forward = vec3(pointLightBuffer.lights[ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX]].transform[1]);
+      vec3 light_pos     = vec3(pointLightBuffer.lights[ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX]].transform[3]);
+      vec3 distance      = fs_in.pos_world - light_pos;
+      if (dot(normalize(light_forward), normalize(distance)) >= 0) { // vectors converging
+         which = vec3(fs_in.light_shadow_vert_position_pos[DEBUG_SHADOW_CASTER_INDEX]);
+      } else { // vectors diverging
+         which = vec3(fs_in.light_shadow_vert_position_neg[DEBUG_SHADOW_CASTER_INDEX]);
       }
    }
    //
-   color.r = (z + x) * 0.5;
-   color.g = (z + y) * 0.5;
-   color.b = z;
+   color.r = which.x;
+   color.g = which.y;
+   color.b = which.z;
    return color;
 }
 
