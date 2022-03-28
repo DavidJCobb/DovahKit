@@ -31,8 +31,6 @@ namespace vulkanDK {
       alignas(16) glm::vec3 sun_color = { 1, 1, 1 };
       alignas(16) glm::mat4 sun_space = glm::mat4(1);
       //
-      alignas(16) std::array<glm::mat4, 4> shadow_caster_space_pos;
-      alignas(16) std::array<glm::mat4, 4> shadow_caster_space_neg;
-      alignas( 4) std::array<int32_t,   4> shadow_caster_index = { -1, -1, -1, -1 };
+      alignas( 4) std::array<int32_t, 4> shadow_caster_index = { -1, -1, -1, -1 };
    };
 }

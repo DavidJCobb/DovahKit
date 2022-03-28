@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "frame_in_flight.h"
 #include "surface_renderer.h"
 //
 #define GLM_FORCE_RADIANS
@@ -87,7 +88,6 @@ namespace vulkanDK {
       auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
       this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
       this->update_sun_shadows();
-      this->update_light_shadows();
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
       constexpr float epsilon    = 0.00001;
@@ -166,6 +166,7 @@ namespace vulkanDK {
       //
       if (do_move || do_turn) {
          this->update_camera();
+         this->mark_light_shadows_dirty();
       }
    }
 
@@ -202,8 +203,12 @@ namespace vulkanDK {
       //
       this->global_state.sun_space = sun_proj * sun_view;
    }
-   void scene::update_light_shadows() {
-      this->light_shadows_are_stale = false;
+
+   void scene::mark_light_shadows_dirty() {
+      this->light_shadow_state.set_all_out_of_date();
+   }
+   void scene::update_light_shadows(frame_in_flight& fif) {
+      this->light_shadow_state.set_up_to_date(fif.index());
       //
       struct _entry {
          size_t index    = std::string::npos;
@@ -239,12 +244,14 @@ namespace vulkanDK {
          }
       }
       //
+      using data_type = std::array<std::array<glm::mat4, 6>, surface_renderer::shadow_caster_count>;
+      data_type& data = *(data_type*)fif.shader_params.light_shadow_data.map_memory();
+      //
       for (size_t i = 0; i < nearest.size(); ++i) {
          auto& entry = nearest[i];
          if (entry.index == std::string::npos) {
             this->global_state.shadow_caster_index[i] = -1;
-            this->global_state.shadow_caster_space_pos[i] = glm::mat4(1);
-            this->global_state.shadow_caster_space_neg[i] = glm::mat4(1);
+            data[i] = { glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1) };
             continue;
          }
          auto& light = this->lights[entry.index];
@@ -284,37 +291,39 @@ namespace vulkanDK {
          //
          const auto& transform = light.shader_params.transform;
          const auto  position  = glm::vec3(transform[3]);
-         glm::mat4 view_pos;
-         glm::mat4 view_neg;
-         if constexpr (false) {
-            // blindly copy the light's transform
-            // this is incorrect, because remember: Z is depth. so this produces lights that align the seam vertically
-            view_pos = transform;
-            view_pos[0][3] = view_pos[1][3] = view_pos[2][3] = 0.0F;
-            view_pos[3]    = { 0, 0, 0, 1 };
-            view_neg = view_pos;
-            view_neg *= glm::eulerAngleZ(glm::radians(180.0F));
+         auto        rotation  = transform;
+         rotation[3] = { 0, 0, 0, 1 };
+         for (int j = 0; j < 6; ++j) {
+            glm::mat4& target = data[i][j];
             //
-            this->global_state.shadow_caster_space_pos[i] = proj * glm::translate(glm::inverse(view_pos), -position);
-            this->global_state.shadow_caster_space_neg[i] = proj * glm::translate(glm::inverse(view_neg), -position);
-         } else {
-            const auto local_forward = glm::vec3(transform[1]);
-            const auto local_up      = glm::vec3(transform[2]);
-            //
-            view_pos = glm::lookAtRH(
-               position,
-               position + local_forward,
-               local_up
-            );
-            view_neg = glm::lookAtRH(
-               position,
-               position - local_forward,
-               local_up
-            );
-            this->global_state.shadow_caster_space_pos[i] = proj * view_pos;
-            this->global_state.shadow_caster_space_neg[i] = proj * view_neg;
+            auto r = glm::mat4(1);
+            switch (j) {
+               case 0: // +X
+                  r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(0, 1, 0));
+                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
+                  break;
+               case 1: // -X
+                  r = glm::rotate(r, glm::radians<float>(-90), glm::fvec3(0, 1, 0));
+                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
+                  break;
+               case 2: // +Y
+                  r = glm::rotate(r, glm::radians<float>(-90), glm::fvec3(1, 0, 0));
+                  break;
+               case 3: // -Y
+                  r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(1, 0, 0));
+                  break;
+               case 4: // +Z
+                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
+                  break;
+               case 5: // -Z
+                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(0, 0, 1));
+                  break;
+            }
+            target    = glm::mat4(r * rotation);
+            target[3] = glm::vec4(position, 1.0F);
          }
       }
+      fif.shader_params.light_shadow_data.unmap_memory(&data);
    }
 
    frustrum scene::get_current_view_frustrum(float near, float far) const {
@@ -410,10 +419,6 @@ namespace vulkanDK {
          auto t = mesh.transform();
          t = glm::rotate(t, (elapsed / anim.duration) * glm::radians(360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
          mesh.set_transform(t);
-      }
-      //
-      if (this->light_shadows_are_stale) {
-         this->update_light_shadows();
       }
    }
 

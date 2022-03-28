@@ -13,6 +13,8 @@ namespace nifDK {
 }
 
 namespace vulkanDK {
+   class frame_in_flight;
+
    class scene {
       public:
          scene();
@@ -42,14 +44,16 @@ namespace vulkanDK {
             size_t meshes   = 0; // count
             size_t textures = 0; // count
          } pending_deletions;
-         bool light_shadows_are_stale = false;
+         frame_dirty_state light_shadow_state;
 
          void update_projection(VkExtent2D render_area);
          void update_camera();
          void adjust_camera(const DKVulkanCameraUpdate&);
 
          void update_sun_shadows();
-         void update_light_shadows();
+
+         void mark_light_shadows_dirty();
+         void update_light_shadows(frame_in_flight&);
 
          frustrum get_current_view_frustrum(float near, float far) const;
 

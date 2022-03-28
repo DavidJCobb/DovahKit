@@ -132,6 +132,7 @@ namespace vulkanDK {
       this->_update_shader_lights_data_buffer();
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
+      this->owner->scene.update_light_shadows(*this);
       {
          auto& fps = this->overlays.fps;
          {
