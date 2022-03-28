@@ -57,18 +57,12 @@ void main() {
    vs_out.sun_shadow_vert_pos = (shadow_to_normalized_coords * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
    //
    for(int i = 0; i < 4; ++i) {
-      //vs_out.light_shadow_vert_position_pos[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_pos[i] * model_transform) * vec4(in_position, 1.0);
-      //vs_out.light_shadow_vert_position_neg[i] = (shadow_to_normalized_coords * ubo.shadow_caster_space_neg[i] * model_transform) * vec4(in_position, 1.0);
+      vs_out.vector_to_light[i] = vec3(0, 0, 0);
       //
-      vec4 temp = ubo.shadow_caster_space_pos[i] * vec4(vs_out.pos_world, 1.0);
-      temp /= temp.w;
-      temp = shadow_to_normalized_coords * temp;
-      vs_out.light_shadow_vert_position_pos[i] = temp;
-      //
-      temp = ubo.shadow_caster_space_neg[i] * vec4(vs_out.pos_world, 1.0);
-      temp /= temp.w;
-      temp = shadow_to_normalized_coords * temp;
-      vs_out.light_shadow_vert_position_neg[i] = temp;
+      int light_index = ubo.shadow_caster_index[i];
+      if (light_index >= 0) {
+         vs_out.vector_to_light[i] = vs_out.pos_world - vec3(pointLightBuffer.lights[light_index].transform[3]);
+      }
    }
    //
    #if !defined(TBN_ORTHOGONALIZE_MODE) || TBN_ORTHOGONALIZE_MODE == TBN_MODE_NONE
@@ -123,10 +117,10 @@ void main() {
    vs_out.tangent_view_pos = vs_out.tangent_space * vec3(ubo.view[3]);
    vs_out.tangent_vert_pos = vs_out.tangent_space * vs_out.pos_world;
    for(int i = 0; i < 4; ++i) {
+      vs_out.tangent_light_dir[i] = vec3(0, 0, 0);
+      //
       int light_index = ubo.shadow_caster_index[i];
-      if (light_index < 0) {
-         vs_out.tangent_light_dir[i] = vec3(0, 0, 0);
-      } else {
+      if (light_index >= 0) {
          vs_out.tangent_light_dir[i] = normalize(vs_out.tangent_space * vec3(pointLightBuffer.lights[light_index].transform[3]));
       }
    }

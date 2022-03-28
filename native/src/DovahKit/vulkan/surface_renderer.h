@@ -63,9 +63,7 @@ namespace vulkanDK {
          static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
          static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-         static constexpr size_t shadow_caster_count            = 4;
-         static constexpr size_t depth_images_per_shadow_caster = 2;
-         static constexpr size_t total_shadow_caster_depth_image_count = shadow_caster_count * depth_images_per_shadow_caster;
+         static constexpr size_t shadow_caster_count = 4;
 
       protected:
          // renderer events:
@@ -79,7 +77,7 @@ namespace vulkanDK {
 
          struct shadow_cast_resources {
             size_t light_index = std::string::npos;
-            std::array<owned_image_and_view, depth_images_per_shadow_caster> maps;
+            owned_image_and_view cubemap;
          };
 
       public:
@@ -131,6 +129,7 @@ namespace vulkanDK {
             } sun_shadow;
             struct {
                VkFramebuffer framebuffer = VK_NULL_HANDLE;
+               VkSampler     sampler     = VK_NULL_HANDLE;
                std::array<shadow_cast_resources, shadow_caster_count> resources;
             } light_shadows;
             struct {

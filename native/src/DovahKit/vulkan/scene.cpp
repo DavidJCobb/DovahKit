@@ -257,7 +257,7 @@ namespace vulkanDK {
             case omni_shadow:
                [[fallthrough]];
             case hemi_shadow:
-               fov = 3.141; // just shy of pi (180deg)
+               fov = glm::radians(170.0F); // just shy of pi (180deg)
                break;
             case spot_shadow:
                // TODO: FOV
@@ -301,12 +301,12 @@ namespace vulkanDK {
             const auto local_forward = glm::vec3(transform[1]);
             const auto local_up      = glm::vec3(transform[2]);
             //
-            view_pos = glm::lookAtLH(
+            view_pos = glm::lookAtRH(
                position,
                position + local_forward,
                local_up
             );
-            view_neg = glm::lookAtLH(
+            view_neg = glm::lookAtRH(
                position,
                position - local_forward,
                local_up

@@ -596,6 +596,9 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (light shadows).");
          }
          //
+         static_assert(false, "TODO: We want to render one cubemap face at a time. This means we should render to an R-only color image and a depth buffer, and then copy from that to a face in our final cubemap.");
+            static_assert(false, "...at least, that's what Sascha Willems' example does. But why do we need an R-only image when we're already doing a depth buffer? Why not just the depth buffer?");
+         static_assert(false, "TODO: If possible, we should use multi-view if enabled; see: https://blog/anishbhobe.site/vulkan-render-to-cubemaps-using-multiview/; else fall back to one face at a time");
          command_buffer.begin_render_pass(
             *this->owner->render_passes_by_name.main_shadow_placed,
             this->owner->canvas.light_shadows.framebuffer,
@@ -615,6 +618,7 @@ namespace vulkanDK {
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
+         static_assert(false, "TODO: update the clear values");
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
             const auto light_index = scene.global_state.shadow_caster_index[i];
@@ -629,44 +633,25 @@ namespace vulkanDK {
             auto id = surface_renderer::light_shadow_map_shader_base_id;
             id.bytes[6] = '0' + i;
             //
-            // First depth map:
-            //
-            id.bytes[7] = '0';
-            {
-               const shader* shader   = this->owner->get_shader(id);
-               assert(shader);
-               const auto&   material = shader->material;
-               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
-               //
-               _draw_objects(
-                  scene, command_buffer, *shader,
-                  [](const rendered_mesh& ro) {
-                     return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
-                  },
-                  [](const rendered_mesh& ro) {}
-               );
+            for (int j = 0; j < 6; ++j) { // for each cubemap face
+               id.bytes[7] = '0' + j;
+               {
+                  const shader* shader   = this->owner->get_shader(id);
+                  assert(shader);
+                  const auto&   material = shader->material;
+                  command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+                  //
+                  _draw_objects(
+                     scene, command_buffer, *shader,
+                     [](const rendered_mesh& ro) {
+                        return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+                     },
+                     [](const rendered_mesh& ro) {}
+                  );
+               }
+               if (j != 5 || i != surface_renderer::shadow_caster_count - 1)
+                  vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
             }
-            vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
-            //
-            // The second depth map is only relevant for shadow omnis:
-            //
-            id.bytes[7] = '1';
-            if (light.shader_params.type == rendered_light::light_type::omni_shadow) { // Second depth map
-               const shader* shader   = this->owner->get_shader(id);
-               assert(shader);
-               const auto&   material = shader->material;
-               command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
-               //
-               _draw_objects(
-                  scene, command_buffer, *shader,
-                  [](const rendered_mesh& ro) {
-                     return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
-                  },
-                  [](const rendered_mesh& ro) {}
-               );
-            }
-            if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass
-               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
          }
          vkCmdEndRenderPass(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {

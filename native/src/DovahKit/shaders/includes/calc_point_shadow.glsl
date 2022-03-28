@@ -4,13 +4,12 @@
 #define USE_INVERTED_SHADOW_MAP 0
 
 float calc_point_shadow(
-   vec3      normal,          // surface normal
-   vec3      light_dir,       // light direction, in surface tangent space
-   vec4      light_space_pos, // light-space vertex position
-   sampler2D shadow_map
+   vec3        normal,          // surface normal
+   vec3        light_dir,       // light direction, in surface tangent space
+   vec3        vector_to_light, // non-normalized vector to the light
+   samplerCube shadow_map
 ) {
-   vec3  proj_coord    = light_space_pos.xyz / light_space_pos.w; // perspective divide
-   float current_depth = proj_coord.z; // distance from the light to the current vertex
+   float distance_to_light = length(vector_to_light);
    #if USE_POINT_SHADOW_DEPTH_BIAS
       float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // a small offset is needed to prevent self-shadowing
    #else
@@ -33,42 +32,24 @@ float calc_point_shadow(
 	   float shadow = 0.0;
 	   for (int x = -range; x <= range; x++)  {
 		   for (int y = -range; y <= range; y++) {
-			   float pcf_depth = texture(shadow_map, proj_coord.xy + vec2(x * dx, y * dy)).r;
+			   float pcf_depth = texture(shadow_map, vector_to_light).r;
             #if USE_INVERTED_SHADOW_MAP == 1
-               shadow += current_depth + bias < pcf_depth ? 1.0 : 0.0;
+               shadow += distance_to_light + bias < pcf_depth ? 1.0 : 0.0;
             #else
-               shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+               shadow += distance_to_light - bias > pcf_depth ? 1.0 : 0.0;
             #endif
 		   }
 	   }
 	   shadow /= count;
    #else
-      float closest_depth = texture(shadow_map, proj_coord.xy).r; // distance from the light to the nearest surface along this angle
+      float closest_depth = texture(shadow_map, vector_to_light).r; // distance from the light to the nearest surface along this angle
       float shadow;
       #if USE_INVERTED_SHADOW_MAP == 1
-         shadow = current_depth + bias < closest_depth ? 1.0 : 0.0;
+         shadow = distance_to_light + bias < closest_depth ? 1.0 : 0.0;
       #else
-         shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+         shadow = distance_to_light - bias > closest_depth ? 1.0 : 0.0;
       #endif
    #endif
    //
-   {
-      float dist_x = (proj_coord.x - 0.5) / 0.5;
-      float dist_y = (proj_coord.y - 0.5) / 0.5;
-      float dist   = sqrt((dist_x * dist_x) + (dist_y * dist_y));
-      //
-      const float fade_start  = 0.8;
-      const float fade_length = 1.0 - fade_start;
-      dist -= fade_start;
-      dist /= fade_length;
-      shadow = max(shadow - max(dist, 0.0), 0.0);
-   }
-   //
-   if (proj_coord.z > 1.0)
-      //
-      // Anything too far away for the light to "see" should be considered 
-      // non-shadowed.
-      //
-      shadow = 0.0;
    return shadow;
 }

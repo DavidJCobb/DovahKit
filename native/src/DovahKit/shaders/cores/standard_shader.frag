@@ -30,9 +30,9 @@ layout (constant_id = 0) const int MAX_LIGHTS = 4;
 layout(std140,binding = 0) uniform UniformBufferObject {
    scene_global_state ubo;
 };
-layout(binding = 1) uniform sampler   default_sampler;
-layout(binding = 2) uniform sampler2D sun_shadow_map;
-layout(binding = 3) uniform sampler2D light_shadow_maps[SHADOW_CASTER_COUNT * 2];
+layout(binding = 1) uniform sampler     default_sampler;
+layout(binding = 2) uniform sampler2D   sun_shadow_map;
+layout(binding = 3) uniform samplerCube light_shadow_maps[SHADOW_CASTER_COUNT];
 layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
@@ -118,10 +118,12 @@ vec4 calculate_color() {
       if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
          for(int j = 0; j < 4; ++j) {
             if (ubo.shadow_caster_index[j] == i) {
-               float shadow_a = calc_point_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_pos[j], light_shadow_maps[j * 2]);
-               float shadow_b = calc_point_shadow(normal, fs_in.tangent_light_dir[j], fs_in.light_shadow_vert_position_neg[j], light_shadow_maps[j * 2 + 1]);
-               //
-               shadow = (shadow_a + shadow_b) * 0.5;
+               float shadow = calc_point_shadow(
+                  normal,
+                  fs_in.tangent_light_dir[j],
+                  fs_in.vector_to_light[j],
+                  light_shadow_maps[j]
+               );
                break;
             }
          }

@@ -314,15 +314,22 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // texture sampler
+         vulkanDK::descriptor_binding{ // storage buffer object: mat4[shadow_caster_count][6]
             .index              = 3,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 4,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // texture array
-            .index              = 4,
+            .index              = 5,
             .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
             .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
             .count              = config::max_loaded_textures,
@@ -685,7 +692,7 @@ namespace vulkanDK {
          };
       }
       {
-         constexpr size_t depth_image_count = shadow_caster_count * depth_images_per_shadow_caster;
+         constexpr size_t depth_image_count = shadow_caster_count * 6; // six faces in a cubemap
          //
          auto* rp = this->render_passes_by_name.main_shadow_placed = new render_pass(*this);
          {
@@ -1398,17 +1405,17 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
       }
       //
-      static_assert(shadow_caster_count            < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
-      static_assert(depth_images_per_shadow_caster < 10, "The way we generate shader IDs here won't work for 10 or more depth maps per shadow caster.");
+      static_assert(shadow_caster_count < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
       for (size_t i = 0; i < shadow_caster_count; ++i) {
          auto id = light_shadow_map_shader_base_id;
          id.bytes[6] = '0' + i;
          //
-         for (size_t j = 0; j < depth_images_per_shadow_caster; ++j) {
+         static_assert(false, "REVIEW THIS");
+         for (size_t j = 0; j < 6; ++j) { // six faces per cubemap? review this. how do we want our shader to render each cubemap face?
             id.bytes[7] = '0' + j;
             //
             auto* s = this->get_or_create_shader(id);
-            s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i * depth_images_per_shadow_caster + j);
+            s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i * 6 + j);
             s->set_layout_info(
                {  // Descriptor set layouts
                   this->descriptor_set_layouts.light_shadows.handle,
@@ -1873,17 +1880,20 @@ namespace vulkanDK {
             .offset = 0,
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
+         auto shad_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.light_shadow_data.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
          //
-         std::array<VkDescriptorImageInfo, total_shadow_caster_depth_image_count> light_shadow_info;
+         std::array<VkDescriptorImageInfo, shadow_caster_count> light_shadow_info;
          for (size_t i = 0; i < shadow_caster_count; ++i) {
             auto& entry = this->canvas.light_shadows.resources[i];
-            for (size_t j = 0; j < depth_images_per_shadow_caster; ++j) {
-               light_shadow_info[i * depth_images_per_shadow_caster + j] = VkDescriptorImageInfo{
-                  .sampler     = this->texture_sampler,
-                  .imageView   = entry.maps[j].view,
-                  .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-               };
-            }
+            light_shadow_info[i] = VkDescriptorImageInfo{
+               .sampler     = this->canvas.light_shadows.sampler,
+               .imageView   = entry.cubemap.view,
+               .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            };
          }
          //
          auto descriptor_writes = std::array{
@@ -1957,10 +1967,21 @@ namespace vulkanDK {
                .pBufferInfo      = &rlsp_buffer_info,
                .pTexelBufferView = nullptr,
             },
+            VkWriteDescriptorSet{ // storage buffer object: mat4[shadow_caster_count][6]
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.light_shadows,
+               .dstBinding       = 3, // this should match the binding value in the shader
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &shad_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
             VkWriteDescriptorSet{ // texture sampler
                .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                .dstSet          = frame.descriptor_sets.light_shadows,
-               .dstBinding      = 3, // this should match the binding value in the shader
+               .dstBinding      = 4, // this should match the binding value in the shader
                .dstArrayElement = 0,
                .descriptorCount = 1,
                .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -2280,52 +2301,65 @@ namespace vulkanDK {
       const auto& support = this->device_info->support;
       const auto  format  = this->find_depth_format();
       //
+      {  // Cubemap sampler
+         const auto& support = this->device_info->support;
+         //
+         auto& sampler = this->canvas.light_shadows.sampler;
+         auto  sampler_info = VkSamplerCreateInfo{
+            .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+            .magFilter        = VK_FILTER_NEAREST,
+            .minFilter        = VK_FILTER_NEAREST,
+            .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+            .addressModeU     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .addressModeV     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .addressModeW     = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .mipLodBias       = 0.0,
+            .anisotropyEnable = VK_FALSE,
+            .maxAnisotropy    = 1.0,
+            .compareEnable    = VK_FALSE,
+            .compareOp        = VK_COMPARE_OP_NEVER,
+            .minLod           = 0.0,
+            .maxLod           = 1.0,
+            .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+            .unnormalizedCoordinates = VK_FALSE,
+         };
+         if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create the raw pixel texture sampler.");
+         }
+         this->set_debug_object_name(sampler, "Light Shadow Texture Sampler");
+      }
+      //
       const vulkanDK::image_metadata metadata = {
          .extent = {
             .width  = config::light_shadow_map_resolution_x,
             .height = config::light_shadow_map_resolution_y,
             .depth  = 1,
          },
-         .format = format,
-         .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         .format      = format,
+         .is_cubemap  = true,
+         .layer_count = 6,
+         .usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       };
       //
       for (auto& entry : res_list) {
-         for (size_t i = 0; i < depth_images_per_shadow_caster; ++i) {
-            auto& image   = entry.maps[i];
-            //
-            image = owned_image_and_view(*this);
-            image.create_image(
-               {
-                  .extent = {
-                     .width  = config::light_shadow_map_resolution_x,
-                     .height = config::light_shadow_map_resolution_y,
-                     .depth  = 1,
-                  },
-                  .format = format,
-                  .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-               }, 
-               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            );
-            image.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
-            image.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
-            //
-            this->set_debug_object_name(image.handle, "Light Shadow Buffer Image");
-            this->set_debug_object_name(image.view,   "Light Shadow Buffer Image View");
-         }
+         auto& image = entry.cubemap;
+         //
+         image = owned_image_and_view(*this);
+         image.create_image(metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+         image.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
+         image.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+         //
+         this->set_debug_object_name(image.handle, "Light Shadow Buffer Image");
+         this->set_debug_object_name(image.view,   "Light Shadow Buffer Image View");
       }
       //
       // Framebuffer:
       //
       auto attachments = std::array{
-         res_list[0].maps[0].view,
-         res_list[0].maps[1].view,
-         res_list[1].maps[0].view,
-         res_list[1].maps[1].view,
-         res_list[2].maps[0].view,
-         res_list[2].maps[1].view,
-         res_list[3].maps[0].view,
-         res_list[3].maps[1].view,
+         res_list[0].cubemap.view,
+         res_list[1].cubemap.view,
+         res_list[2].cubemap.view,
+         res_list[3].cubemap.view,
       };
       auto framebuffer_info = VkFramebufferCreateInfo{
          .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -2338,7 +2372,6 @@ namespace vulkanDK {
          .height          = config::light_shadow_map_resolution_y,
          .layers          = 1,
       };
-      static_assert(std::tuple_size_v<decltype(attachments)> == shadow_caster_count * depth_images_per_shadow_caster);
       if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.light_shadows.framebuffer); result != VK_SUCCESS) {
          throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
       }
@@ -2565,14 +2598,17 @@ namespace vulkanDK {
          }
          {
             auto& ls = this->canvas.light_shadows;
+            if (ls.sampler != VK_NULL_HANDLE) {
+               vkDestroySampler(this->logical_device, ls.sampler, nullptr);
+               ls.sampler = VK_NULL_HANDLE;
+            }
             if (auto& handle = ls.framebuffer; handle != VK_NULL_HANDLE) {
                vkDestroyFramebuffer(this->logical_device, handle, nullptr);
                handle = VK_NULL_HANDLE;
             }
             for (auto& item : ls.resources) {
                item.light_index = std::string::npos;
-               for (auto& image : item.maps)
-                  image.teardown();
+               item.cubemap.teardown();
             }
          }
          if (auto& handle = this->canvas.oit.framebuffer; handle != VK_NULL_HANDLE) {

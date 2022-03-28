@@ -10,7 +10,6 @@ struct fragment_input {
    vec4  sun_shadow_vert_pos;
    float camera_distance;
    //
-   vec4  light_shadow_vert_position_pos[4];
-   vec4  light_shadow_vert_position_neg[4];
+   vec3  vector_to_light[4];
    vec3  tangent_light_dir[4];
 };

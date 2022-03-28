@@ -54,25 +54,29 @@ vec4 calculate_color() {
       color.a = 1.0;
    #endif
    //
+   /*//
    if (ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX] < 0) {
       return vec4(1, 1, 1, 1);
    }
-   vec3 which;
+   vec4 which;
    {
       vec3 light_forward = vec3(pointLightBuffer.lights[ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX]].transform[1]);
       vec3 light_pos     = vec3(pointLightBuffer.lights[ubo.shadow_caster_index[DEBUG_SHADOW_CASTER_INDEX]].transform[3]);
       vec3 distance      = fs_in.pos_world - light_pos;
       if (dot(normalize(light_forward), normalize(distance)) >= 0) { // vectors converging
-         which = vec3(fs_in.light_shadow_vert_position_pos[DEBUG_SHADOW_CASTER_INDEX]);
+         which = fs_in.light_shadow_vert_position_pos[DEBUG_SHADOW_CASTER_INDEX];
       } else { // vectors diverging
-         which = vec3(fs_in.light_shadow_vert_position_neg[DEBUG_SHADOW_CASTER_INDEX]);
+         which = fs_in.light_shadow_vert_position_neg[DEBUG_SHADOW_CASTER_INDEX];
       }
+      which.xyz /= which.w;
    }
    //
    color.r = which.x;
    color.g = which.y;
    color.b = which.z;
    return color;
+   //*/
+   return vec4(0.5, 0.5, 0.5, 1.0);
 }
 
 layout(location = 0) out vec4 out_color;
