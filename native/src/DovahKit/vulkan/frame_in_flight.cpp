@@ -76,16 +76,20 @@ namespace vulkanDK {
          this->shader_params.uniform = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
       {
-         constexpr VkDeviceSize rosp_buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
-         this->shader_params.object_data = this->owner->create_buffer(rosp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
+         this->shader_params.object_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
       {
-         constexpr VkDeviceSize rlsp_buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
-         this->shader_params.light_data = this->owner->create_buffer(rlsp_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         constexpr VkDeviceSize buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
+         this->shader_params.light_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          //
          auto* data = this->shader_params.light_data.map_memory();
-         memset(data, 0, rlsp_buffer_size);
+         memset(data, 0, buffer_size);
          this->shader_params.light_data.unmap_memory(data);
+      }
+      {
+         constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
+         this->shader_params.light_shadow_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
    }
    void frame_in_flight::_setup_command_buffers() {
@@ -470,7 +474,7 @@ namespace vulkanDK {
          auto& target_set = this->descriptor_sets.light_shadows;
          for (auto& item : write_info) {
             item.dstSet     = target_set;
-            item.dstBinding = 4;
+            item.dstBinding = 5;
          }
          vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
       }
@@ -497,7 +501,14 @@ namespace vulkanDK {
          { predicate(ro) } -> std::same_as<bool>;
          { before_draw(ro) };
       }
-      void _draw_objects(scene& scene, command_buffer& command_buffer, const shader& shader, Pred&& predicate, Prior&& before_draw) {
+      void _draw_objects(
+         scene& scene,
+         command_buffer& command_buffer,
+         const shader& shader,
+         Pred&& predicate,
+         Prior&& before_draw,
+         VkShaderStageFlags push_constant_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+      ) {
          auto   command_handle     = command_buffer.handle;
          auto&  material           = shader.material;
          size_t first_double_sided = std::string::npos;
@@ -515,7 +526,7 @@ namespace vulkanDK {
 
             before_draw(ro);
 
-            command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _make_push_constant_for(ro, j));
+            command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, j));
             ro.draw_call(command_handle);
          }
          //
@@ -537,7 +548,7 @@ namespace vulkanDK {
 
                before_draw(ro);
                
-               command_buffer.set_pipeline_push_constant(material, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _make_push_constant_for(ro, j));
+               command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, j));
                ro.draw_call(command_handle);
             }
          }
@@ -597,9 +608,6 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (light shadows).");
          }
          //
-         static_assert(false, "TODO: We want to render one cubemap face at a time. This means we should render to an R-only color image and a depth buffer, and then copy from that to a face in our final cubemap.");
-            static_assert(false, "...at least, that's what Sascha Willems' example does. But why do we need an R-only image when we're already doing a depth buffer? Why not just the depth buffer?");
-         static_assert(false, "TODO: If possible, we should use multi-view if enabled; see: https://blog/anishbhobe.site/vulkan-render-to-cubemaps-using-multiview/; else fall back to one face at a time");
          command_buffer.begin_render_pass(
             *this->owner->render_passes_by_name.main_shadow_placed,
             this->owner->canvas.light_shadows.framebuffer,
@@ -612,19 +620,13 @@ namespace vulkanDK {
                VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
                VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
                VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
-         static_assert(false, "TODO: update the clear values");
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
             const auto light_index = scene.global_state.shadow_caster_index[i];
             if (light_index < 0 || light_index >= scene.lights.size()) {
-               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                if (i + 1 < surface_renderer::shadow_caster_count) // ensure we don't advance past the last subpass
                   vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
                continue;
@@ -632,27 +634,23 @@ namespace vulkanDK {
             const auto& light = scene.lights[light_index];
             //
             auto id = surface_renderer::light_shadow_map_shader_base_id;
-            id.bytes[6] = '0' + i;
+            id.bytes[7] += i;
             //
-            for (int j = 0; j < 6; ++j) { // for each cubemap face
-               id.bytes[7] = '0' + j;
-               {
-                  const shader* shader   = this->owner->get_shader(id);
-                  assert(shader);
-                  const auto&   material = shader->material;
-                  command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
-                  //
-                  _draw_objects(
-                     scene, command_buffer, *shader,
-                     [](const rendered_mesh& ro) {
-                        return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
-                     },
-                     [](const rendered_mesh& ro) {}
-                  );
-               }
-               if (j != 5 || i != surface_renderer::shadow_caster_count - 1)
-                  vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
-            }
+            const shader* shader = this->owner->get_shader(id);
+            assert(shader);
+            const auto& material = shader->material;
+            command_buffer.bind_material_and_descriptors(material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+            //
+            _draw_objects(
+               scene, command_buffer, *shader,
+               [](const rendered_mesh& ro) {
+                  return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+               },
+               [](const rendered_mesh& ro) {}
+            );
+            //
+            if (i != surface_renderer::shadow_caster_count - 1)
+               vkCmdNextSubpass(command_handle, VK_SUBPASS_CONTENTS_INLINE);
          }
          vkCmdEndRenderPass(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {

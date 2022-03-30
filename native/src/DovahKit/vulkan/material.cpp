@@ -217,11 +217,11 @@ namespace vulkanDK {
       };
 
       {  // Simple validation for render passes.
-         if (subpass >= render_pass.subpasses.descriptions.size()) {
+         if (subpass >= render_pass.subpasses.size()) {
             throw vuid_exception(06046, "subpass index out of range");
          }
          //
-         const auto& rp_subpass = render_pass.subpasses.descriptions[subpass];
+         const auto& rp_subpass = render_pass.subpasses[subpass];
          if (!rp_subpass.attachments.color.empty()) {
             if (blends.size() != rp_subpass.attachments.color.size()) {
                throw vuid_exception(06042, "mismatch between pipeline color blend count and render pass color attachment count");

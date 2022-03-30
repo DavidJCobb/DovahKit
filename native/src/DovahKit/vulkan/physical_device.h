@@ -43,6 +43,11 @@ namespace vulkanDK {
                uint32_t     max_total_push_constant_size = 0;
             } memory;
             struct {
+               bool available           = false;
+               bool geometry_shaders    = false;
+               bool tesselation_shaders = false;
+            } multiview;
+            struct {
                bool  available       = false;
                float nanosecond_unit = 0; // (timestamp_value * nanosecond_unit) == number of nanoseconds measured
             } timestamps;

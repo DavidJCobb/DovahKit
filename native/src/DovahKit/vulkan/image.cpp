@@ -32,7 +32,7 @@ namespace {
       }
       if (meta.is_cubemap) {
          vt = VK_IMAGE_VIEW_TYPE_CUBE;
-         if (meta.layer_count > 1)
+         if (meta.layer_count > 6)
             vt = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
       }
       //
@@ -157,7 +157,10 @@ namespace vulkanDK {
    void image_and_view::create_basic_view(VkFormat format, VkImageAspectFlags aspect) {
       assert(this->view == VK_NULL_HANDLE);
       assert(this->owner);
-      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, { .format = format }, aspect);
+      auto meta   = this->metadata;
+      meta.format = format;
+      //
+      auto result = _create_basic_view(this->owner->logical_device, this->handle, this->view, meta, aspect);
       if (result != VK_SUCCESS) {
          throw result_exception(result, "[vulkanDK::image_and_view::create_basic_view] Failed to create texture image view.");
       }

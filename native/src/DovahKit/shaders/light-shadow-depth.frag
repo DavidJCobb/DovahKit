@@ -17,9 +17,7 @@
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
 
-layout(std140,binding = 0) uniform UniformBufferObject {
-   scene_global_state ubo;
-};
+// binding 0: scene_global_state (not needed in fragment shader)
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
@@ -33,13 +31,9 @@ layout(location = 0) in VS_OUT {
    float distance;
 } fs_in;
 
-layout(location = 0) out float out_frag_color;
-
 void main() {
    rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
    //
    vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
    alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
-   //
-   out_frag_color = fs_in.distance;
 }

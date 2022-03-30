@@ -116,7 +116,7 @@ vec4 calculate_color() {
       //
       float shadow = 0.0;
       if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
-         for(int j = 0; j < 4; ++j) {
+         for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
             if (ubo.shadow_caster_index[j] == i) {
                float shadow = calc_point_shadow(
                   normal,

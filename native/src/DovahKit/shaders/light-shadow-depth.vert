@@ -1,5 +1,6 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_multiview : enable
 
 #include "includes/point_light.glsl"
 #include "includes/rendered_mesh_push_constant.glsl"
@@ -9,7 +10,6 @@
 #include "includes/standard_vertex_inputs.glsl"
 
 layout (constant_id = 0) const int CASTER_INDEX = 0;
-layout (constant_id = 1) const int CUBEMAP_FACE = 0;
 layout (constant_id = 2) const int MAX_LIGHTS   = 4;
 
 layout(std140,binding = 0) uniform UniformBufferObject {
@@ -46,7 +46,7 @@ void main() {
          light_pos = pointLightBuffer.lights[light_index].transform[3];
       }
    }
-   mat4 light_space = light_space_matrices[CASTER_INDEX][CUBEMAP_FACE];
+   mat4 light_space = light_space_matrices[CASTER_INDEX][gl_ViewIndex];
    //
 	gl_Position = (light_space * model_transform) * vec4(in_position, 1.0);
    vs_out.uv   = in_uv;

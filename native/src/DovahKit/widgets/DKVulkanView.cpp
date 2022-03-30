@@ -16,13 +16,6 @@ namespace {
    constexpr int null_icon_line_width    = std::max(10, (int)((float)null_icon_render_bounds * 0.07));
 }
 
-namespace {
-   const std::vector<const char*> device_extensions = { // TODO: match this with the extension list we request in logical_device !
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-   };
-}
-
 DKVulkanView::DKVulkanView(QWidget* parent) : QWidget(parent) {
    this->setAttribute(Qt::WA_OpaquePaintEvent, true);
    this->setAttribute(Qt::WA_PaintOnScreen,    true);
@@ -93,7 +86,7 @@ void DKVulkanView::resetRenderer() {
                continue;
          }
       }
-      if (!current->has_extensions(device_extensions))
+      if (!vulkanDK::surface_renderer::device_is_supported(*current))
          continue;
       {
          auto ssi = current->surface_support_details(this->renderer->handle);

@@ -194,6 +194,19 @@ namespace vulkanDK {
    #pragma endregion
 
    #pragma region expose to DKVulkanView
+   /*static*/ bool surface_renderer::device_is_supported(const physical_device& pd) {
+      if (pd.support.vulkan_api_version < VK_API_VERSION_1_1)
+         return false;
+      if (!pd.support.descriptor_bindings.runtime_array)
+         return false;
+      if (!pd.support.descriptor_bindings.variable_count)
+         return false;
+      if (!pd.support.multiview.available)
+         return false;
+      if (!pd.has_extensions(device_extensions))
+         return false;
+      return true;
+   }
    void surface_renderer::set_physical_device(const physical_device& pd) {
       if (this->logical_device != VK_NULL_HANDLE) {
          this->teardown();
@@ -362,7 +375,7 @@ namespace vulkanDK {
          vulkanDK::descriptor_binding{ // light shadow maps
             .index              = 3,
             .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .count              = 8,
+            .count              = shadow_caster_count,
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
@@ -477,17 +490,25 @@ namespace vulkanDK {
          }
       }
       //
-      auto deviceFeatures = VkPhysicalDeviceFeatures{
-         .independentBlend  = pd_support.independent_blending ? VK_TRUE : VK_FALSE,
-         .fillModeNonSolid  = pd_support.non_solid_polygon_fill_modes ? VK_TRUE : VK_FALSE,
-         .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
-         .largePoints       = pd_support.large_points ? VK_TRUE : VK_FALSE,
-         .samplerAnisotropy = pd_support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
+      auto multiview = VkPhysicalDeviceMultiviewFeatures{
+         .sType     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES,
+         .pNext     = nullptr,
+         .multiview = VK_TRUE, // NOTE: failing to enable this here causes validation layers to emit misleading VUID 01091
       };
-      //
+      auto device_features = VkPhysicalDeviceFeatures2{
+         .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+         .pNext    = &multiview,
+         .features = {
+            .independentBlend  = pd_support.independent_blending ? VK_TRUE : VK_FALSE,
+            .fillModeNonSolid  = pd_support.non_solid_polygon_fill_modes ? VK_TRUE : VK_FALSE,
+            .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
+            .largePoints       = pd_support.large_points ? VK_TRUE : VK_FALSE,
+            .samplerAnisotropy = pd_support.max_anisotropic_filtering > 0 ? VK_TRUE : VK_FALSE,
+         },
+      };
       auto robustness_extensions = VkPhysicalDeviceRobustness2FeaturesEXT{
          .sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
-         .pNext               = nullptr,
+         .pNext               = &device_features,
          .robustBufferAccess2 = VK_FALSE,
          .robustImageAccess2  = VK_FALSE,
          .nullDescriptor      = pd_support.descriptor_bindings.null_handles ? VK_TRUE : VK_FALSE,
@@ -507,7 +528,7 @@ namespace vulkanDK {
          .pQueueCreateInfos       = queue_infos.data(),
          .enabledExtensionCount   = (uint32_t)create_ext.size(),
          .ppEnabledExtensionNames = create_ext.data(),
-         .pEnabledFeatures        = &deviceFeatures,
+         .pEnabledFeatures        = nullptr, // specified via device_features, in the pNext chain
       };
       if (config::enable_validation_layers) {
          create_info.enabledLayerCount   = static_cast<uint32_t>(config::desired_validation_layers.size());
@@ -659,7 +680,7 @@ namespace vulkanDK {
                .finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             },
          };
-         rp->subpasses.descriptions = {
+         rp->subpasses = {
             {  // subpass
                .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
                .attachments = {
@@ -670,7 +691,7 @@ namespace vulkanDK {
                },
             },
          };
-         rp->subpasses.dependencies = {
+         rp->subpass_dependencies = {
             VkSubpassDependency{
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
@@ -692,8 +713,6 @@ namespace vulkanDK {
          };
       }
       {
-         constexpr size_t depth_image_count = shadow_caster_count * 6; // six faces in a cubemap
-         //
          auto* rp = this->render_passes_by_name.main_shadow_placed = new render_pass(*this);
          {
             auto desc = VkAttachmentDescription{
@@ -708,14 +727,14 @@ namespace vulkanDK {
             };
             //
             auto& list = rp->attachments;
-            list.resize(depth_image_count);
+            list.resize(shadow_caster_count);
             for(auto& item : list)
                item = desc;
          }
          {
-            auto& list = rp->subpasses.descriptions;
-            list.resize(depth_image_count);
-            for (size_t i = 0; i < depth_image_count; ++i) {
+            auto& list = rp->subpasses;
+            list.resize(shadow_caster_count);
+            for (size_t i = 0; i < shadow_caster_count; ++i) {
                list[i] = {  // subpass
                   .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
                   .attachments = {
@@ -724,10 +743,11 @@ namespace vulkanDK {
                         .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                      },
                   },
+                  .view_mask = 0b00111111,
                };
             }
          }
-         rp->subpasses.dependencies = {
+         rp->subpass_dependencies = {
             VkSubpassDependency{
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
@@ -738,7 +758,7 @@ namespace vulkanDK {
                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
             },
             VkSubpassDependency{
-               .srcSubpass      = 0, // should be the last subpass in the list
+               .srcSubpass      = 3, // should be the last subpass in the list
                .dstSubpass      = VK_SUBPASS_EXTERNAL,
                .srcStageMask    = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
                .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // wait until the fragment shader
@@ -773,7 +793,7 @@ namespace vulkanDK {
                .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
             },
          };
-         rp->subpasses.descriptions = {
+         rp->subpasses = {
             {  // subpass
                .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
                .attachments = {
@@ -790,7 +810,7 @@ namespace vulkanDK {
                },
             },
          };
-         rp->subpasses.dependencies = {
+         rp->subpass_dependencies = {
             //
             // A subpass dependency specifies that  certain tasks in the "source" must complete 
             // before other  tasks in the  "destination" are allowed  to proceed.  The "source" 
@@ -810,18 +830,6 @@ namespace vulkanDK {
             // swap chain image) is actually available (i.e. has been acquired) before any such 
             // transition is attempted.
             // 
-            // If you don't specify a first external dependency  -- that is, a dependency whose 
-            // source is  VK_SUBPASS_EXTERNAL -- then Vulkan  will inject a default  with these 
-            // settings:
-            // 
-            //    .srcSubpass      = VK_SUBPASS_EXTERNAL,
-            //    .dstSubpass      = /* first subpass the attachment is used in */,
-            //    .srcStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-            //    .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            //    .srcAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-            //    .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            //    .dependencyFlags = 0,
-            //
             VkSubpassDependency{
                //
                // Writing to the color attachment image  should be delayed until all operations 
@@ -836,30 +844,10 @@ namespace vulkanDK {
                .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             },
-            //
-            // If you don't specify a final external dependency  -- that is, a dependency whose 
-            // destination  is VK_SUBPASS_EXTERNAL  -- then  Vulkan will inject one  with these 
-            // settings:
-            // 
-            //    .srcSubpass      = /* based on the last subpass */,
-            //    .dstSubpass      = VK_SUBPASS_EXTERNAL,
-            //    .srcStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            //    .dstStageMask    = VK_PIPELINE_STAGE_NONE_KHR,
-            //    .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            //    .dstAccessMask   = VK_ACCESS_NONE_KHR, // means all accesses; same as 0
-            //    .dependencyFlags = 0,
-            //
-            // Typically, if  an attachment's  finalLayout  (specified above)  differs from the 
-            // layout  that the attachment has at the  end of your last subpass, you  will need 
-            // to specify  your own final  external dependency;  the default one  won't be good 
-            // enough. If you're able to rely on semaphores,  though, then the default can work 
-            // even in that case.
-            //
             VkSubpassDependency{
                .srcSubpass      = 0, // should be the last subpass in the list
                .dstSubpass      = VK_SUBPASS_EXTERNAL,
                .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
-               //.dstStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // wait until end of pipeline
                .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
                .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dstAccessMask   = VK_ACCESS_MEMORY_READ_BIT,
@@ -911,7 +899,7 @@ namespace vulkanDK {
                .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
             },
          };
-         rp->subpasses.descriptions = {
+         rp->subpasses = {
             {  // subpass: color pass
                .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
                .attachments = {
@@ -953,7 +941,7 @@ namespace vulkanDK {
                },
             },
          };
-         rp->subpasses.dependencies = {
+         rp->subpass_dependencies = {
             VkSubpassDependency{
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
@@ -1007,7 +995,7 @@ namespace vulkanDK {
                .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // when we finish, don't bother changing the image layout (i.e. "set" it to the layout of the depth-stencil image, which it is)
             },
          };
-         rp->subpasses.descriptions = {
+         rp->subpasses = {
             {  // subpass
                .bind_point  = VK_PIPELINE_BIND_POINT_GRAPHICS,
                .attachments = {
@@ -1024,7 +1012,7 @@ namespace vulkanDK {
                },
             },
          };
-         rp->subpasses.dependencies = {
+         rp->subpass_dependencies = {
             VkSubpassDependency{
                //
                // Writing to the color attachment image  should be delayed until all operations 
@@ -1391,113 +1379,100 @@ namespace vulkanDK {
       s->setup_pipeline_layout(*this);
    }
    void surface_renderer::_setup_light_shadow_shaders() {
-      shader_module* frag = nullptr;
       shader_module* vert = nullptr;
+      shader_module* frag = nullptr;
       {
-         frag = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.frag.spv").uncompressedData());
          vert = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.vert.spv").uncompressedData());
-         assert(!frag->empty());
+         frag = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.frag.spv").uncompressedData());
          assert(!vert->empty());
-         this->shader_modules.push_back(frag);
+         assert(!frag->empty());
          this->shader_modules.push_back(vert);
+         this->shader_modules.push_back(frag);
          //
-         this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.frag.spv)");
          this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.frag.spv)");
       }
       //
       static_assert(shadow_caster_count < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
       for (size_t i = 0; i < shadow_caster_count; ++i) {
          auto id = light_shadow_map_shader_base_id;
-         id.bytes[6] = '0' + i;
+         id.bytes[7] += i;
          //
-         static_assert(false, "REVIEW THIS");
-         for (size_t j = 0; j < 6; ++j) { // six faces per cubemap? review this. how do we want our shader to render each cubemap face?
-            id.bytes[7] = '0' + j;
-            //
-            auto* s = this->get_or_create_shader(id);
-            s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i * 6 + j);
-            s->set_layout_info(
-               {  // Descriptor set layouts
-                  this->descriptor_set_layouts.light_shadows.handle,
-               },
-               {  // Push constants
-                  VkPushConstantRange{
-                     .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                     .offset     = 0,
-                     .size       = sizeof(rendered_mesh::push_constant),
-                  }
+         auto* s = this->get_or_create_shader(id);
+         s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i);
+         s->set_layout_info(
+            {  // Descriptor set layouts
+               this->descriptor_set_layouts.light_shadows.handle,
+            },
+            {  // Push constants
+               VkPushConstantRange{
+                  .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                  .offset     = 0,
+                  .size       = sizeof(rendered_mesh::push_constant),
                }
-            );
-            s->add_variant({ // double-sided shader variant
-               .face_cull_mode = VK_CULL_MODE_NONE,
-            });
-            //
-            auto& dfn = s->definition;
-            //
-            struct _specializations {
-               int32_t caster_index;
-               float   invert_yaw;
-               int32_t max_lights = config::max_lights_in_scene;
-            };
-            _specializations spec = { i, j };
-            //
-            dfn.stages = {
-               {
-                  .module              = frag,
-                  .entry_point_name    = "main",
-                  .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-               },
-               {
-                  .module              = vert,
-                  .entry_point_name    = "main",
-                  .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-                  .specialization_info = material_definition::stage_specialization_info(spec.caster_index, spec.invert_yaw, spec.max_lights),
-               },
-            };
-            if constexpr (config::use_inverted_depth) {
-               dfn.depth.comparison = VK_COMPARE_OP_GREATER;
             }
-            if constexpr (config::light_shadow_invert_culling) {
-               dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
-            }
-            dfn.rasterization.depthBiasEnable         = VK_TRUE;
-            dfn.rasterization.depthBiasConstantFactor = 1.25F;
-            dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
-            dfn.rasterization.depthBiasClamp          = 0.00F;
-            dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-            if constexpr (config::use_inverted_shadow_map) {
-               dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
-            } else {
-               dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
-            }
+         );
+         s->add_variant({ // double-sided shader variant
+            .face_cull_mode = VK_CULL_MODE_NONE,
+         });
+         //
+         auto& dfn = s->definition;
+         dfn.stages = {
             {
-               auto& vertex     = dfn.inputs.vertex;
-               auto  attributes = vertex::getAttributeDescriptions();
-               vertex.bindings.push_back(vertex::getBindingDescription());
-               vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
-            }
-            s->set_area_override_info({
-               .viewport = {
-                  .x        = 0,
-                  .y        = 0,
-                  .width    = config::light_shadow_map_resolution_x,
-                  .height   = config::light_shadow_map_resolution_y,
-                  .minDepth = 0.0,
-                  .maxDepth = 1.0,
-               },
-               .scissor = {
-                  .offset = { .x = 0, .y = 0 },
-                  .extent = {
-                     .width  = config::light_shadow_map_resolution_x,
-                     .height = config::light_shadow_map_resolution_y,
-                  },
-               },
-            });
-            //
-            // And be sure to set up the pipeline layout when you're done!
-            //
-            s->setup_pipeline_layout(*this);
+               .module              = vert,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+               .specialization_info = material_definition::stage_specialization_info((int32_t)i, (int32_t)config::max_lights_in_scene),
+            },
+            {  // Fragment shader needed to discard alpha-tested pixels
+               .module              = frag,
+               .entry_point_name    = "main",
+               .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+         };
+         if constexpr (config::use_inverted_depth) {
+            dfn.depth.comparison = VK_COMPARE_OP_GREATER;
          }
+         if constexpr (config::light_shadow_invert_culling) {
+            dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+         }
+         dfn.rasterization.depthBiasEnable         = VK_TRUE;
+         dfn.rasterization.depthBiasConstantFactor = 1.25F;
+         dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
+         dfn.rasterization.depthBiasClamp          = 0.00F;
+         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+         if constexpr (config::use_inverted_shadow_map) {
+            dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+         } else {
+            dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+         }
+         {
+            auto& vertex     = dfn.inputs.vertex;
+            auto  attributes = vertex::getAttributeDescriptions();
+            vertex.bindings.push_back(vertex::getBindingDescription());
+            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+         }
+         s->set_area_override_info({
+            .viewport = {
+               .x        = 0,
+               .y        = 0,
+               .width    = config::light_shadow_map_resolution_x,
+               .height   = config::light_shadow_map_resolution_y,
+               .minDepth = 0.0,
+               .maxDepth = 1.0,
+            },
+            .scissor = {
+               .offset = { .x = 0, .y = 0 },
+               .extent = {
+                  .width  = config::light_shadow_map_resolution_x,
+                  .height = config::light_shadow_map_resolution_y,
+               },
+            },
+         });
+         //
+         // And be sure to set up the pipeline layout when you're done!
+         //
+         s->setup_pipeline_layout(*this);
       }
 
    }
@@ -2370,7 +2345,7 @@ namespace vulkanDK {
          .pAttachments    = attachments.data(),
          .width           = config::light_shadow_map_resolution_x,
          .height          = config::light_shadow_map_resolution_y,
-         .layers          = 1,
+         .layers          = 1, // for multiview, you must use 1 rather than the actual layer count
       };
       if (auto result = vkCreateFramebuffer(this->logical_device, &framebuffer_info, nullptr, &this->canvas.light_shadows.framebuffer); result != VK_SUCCESS) {
          throw result_exception(result, "[vulkanDK::surface_renderer::_setup_light_shadow_resources] Failed to create a framebuffer (light shadows).");
@@ -3892,7 +3867,7 @@ namespace vulkanDK {
       }
       //
       if (light.can_cast_shadows()) {
-         this->scene.light_shadows_are_stale = true;
+         this->scene.mark_light_shadows_dirty();
          for (auto& fif : this->swap_chain.frames_in_flight)
             fif.invalidate_all_command_buffers();
       }

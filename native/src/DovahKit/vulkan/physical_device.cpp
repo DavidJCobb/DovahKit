@@ -19,9 +19,13 @@ namespace vulkanDK {
          .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
          .pNext = &indexing_features,
       };
+      auto multiview = VkPhysicalDeviceMultiviewFeatures{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES,
+         .pNext = &robustness,
+      };
       auto features = VkPhysicalDeviceFeatures2{
          .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-         .pNext = &robustness,
+         .pNext = &multiview,
       };
       VkPhysicalDeviceProperties properties{};
       vkGetPhysicalDeviceProperties(d, &properties);
@@ -45,29 +49,33 @@ namespace vulkanDK {
       this->support.max_vertex_index_for_draw    = properties.limits.maxDrawIndexedIndexValue;
       this->support.non_solid_polygon_fill_modes = features.features.fillModeNonSolid;
       //
-      auto& sdb = this->support.descriptor_bindings;
-      sdb.null_handles   = robustness.nullDescriptor;
-      sdb.runtime_array  = indexing_features.runtimeDescriptorArray;
-      sdb.variable_count = indexing_features.descriptorBindingVariableDescriptorCount;
-      //
-      auto& sm = this->support.memory;
-      sm.buffer_image_granularity     = properties.limits.bufferImageGranularity;
-      sm.max_allocation_count         = properties.limits.maxMemoryAllocationCount;
-      sm.max_total_push_constant_size = properties.limits.maxPushConstantsSize;
-      //
-      auto& sts = this->support.timestamps;
-      sts.available       = properties.limits.timestampComputeAndGraphics == VK_TRUE;
-      sts.nanosecond_unit = properties.limits.timestampPeriod;
-      //
-      {
-         auto& wl = this->support.wide_lines;
-         wl.available         = features.features.wideLines;
-         wl.width_granularity = properties.limits.lineWidthGranularity;
-         wl.width_range = {
+      this->support.descriptor_bindings = {
+         .null_handles   = robustness.nullDescriptor == VK_TRUE,
+         .runtime_array  = indexing_features.runtimeDescriptorArray == VK_TRUE,
+         .variable_count = indexing_features.descriptorBindingVariableDescriptorCount == VK_TRUE,
+      };
+      this->support.memory = {
+         .buffer_image_granularity     = properties.limits.bufferImageGranularity,
+         .max_allocation_count         = properties.limits.maxMemoryAllocationCount,
+         .max_total_push_constant_size = properties.limits.maxPushConstantsSize,
+      };
+      this->support.multiview = {
+         .available           = multiview.multiview == VK_TRUE,
+         .geometry_shaders    = multiview.multiviewGeometryShader == VK_TRUE,
+         .tesselation_shaders = multiview.multiviewTessellationShader == VK_TRUE,
+      };
+      this->support.timestamps = {
+         .available       = properties.limits.timestampComputeAndGraphics == VK_TRUE,
+         .nanosecond_unit = properties.limits.timestampPeriod,
+      };
+      this->support.wide_lines = {
+         .available         = features.features.wideLines == VK_TRUE,
+         .width_granularity = properties.limits.lineWidthGranularity,
+         .width_range = {
             .minimum = properties.limits.lineWidthRange[0],
             .maximum = properties.limits.lineWidthRange[1],
-         };
-      }
+         },
+      };
    }
    physical_device::~physical_device() {
    }

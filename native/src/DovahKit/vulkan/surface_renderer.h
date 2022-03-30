@@ -52,11 +52,11 @@ namespace vulkanDK {
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
 
-         static constexpr shader::id_type oit_composite_shader_id  = "OITCompo";
-         static constexpr shader::id_type main_shader_id           = "MainMatl";
-         static constexpr shader::id_type main_shader_oit_color_id = "MainOITc";
-         static constexpr shader::id_type sun_shadow_shader_id     = "SunShadw";
-         static constexpr shader::id_type light_shadow_map_shader_base_id = "ShwMap00";
+         static constexpr shader::id_type oit_composite_shader_id    = "OITCompo";
+         static constexpr shader::id_type main_shader_id             = "MainMatl";
+         static constexpr shader::id_type main_shader_oit_color_id   = "MainOITc";
+         static constexpr shader::id_type sun_shadow_shader_id       = "SunShadw";
+         static constexpr shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
          
@@ -82,6 +82,7 @@ namespace vulkanDK {
 
       public:
          // APIs
+         static bool device_is_supported(const physical_device&);
          void set_physical_device(const physical_device&);
          void set_widget(DKVulkanView*);
          void update_widget_id();

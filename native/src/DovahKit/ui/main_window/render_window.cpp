@@ -1,6 +1,7 @@
 #include "render_window.h"
 #include "helpers/rotation.h"
 #include <QBoxLayout>
+#include <QComboBox>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
@@ -365,5 +366,20 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
       //
       this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* widget = new QComboBox(this->toolbar);
+      widget->addItem("Standard Shader", -1);
+      widget->addItem("Caster 0",  0);
+      widget->addItem("Caster 1",  1);
+      widget->addItem("Caster 2",  2);
+      widget->addItem("Caster 3",  3);
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, view, widget]() {
+         auto i = widget->currentData().toInt();
+         view->surfaceRenderer()->debug_show_shadow_caster_depth(i == -1 ? std::string::npos : (size_t)i);
+      });
+      //
+      this->toolbar->addWidget(widget);
    }
 }
