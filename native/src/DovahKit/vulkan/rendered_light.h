@@ -28,7 +28,9 @@ namespace vulkanDK {
             alignas( 4) float      radius   = 1.0;
             alignas( 4) float      fade     = 1.0;
             alignas( 4) light_type type     = light_type::omni;
+            alignas( 4) uint32_t   pad[2];
          };
+         static_assert(sizeof(shader_parameters) % 16 == 0, "GLSL's std430 layout requires that this struct be 16-byte-aligned, including within arrays; we need padding to line C++ up.");
          
          shader_parameters shader_params;
          //

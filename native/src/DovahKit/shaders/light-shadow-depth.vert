@@ -18,10 +18,10 @@ layout(std140,binding = 0) uniform UniformBufferObject {
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-layout(std140,set = 0, binding = 2) readonly buffer PointLightBuffer {
+layout(std430,set = 0, binding = 2) readonly buffer PointLightBuffer {
 	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
-layout(std140,set = 0, binding = 3) readonly buffer LightViewProjMatrices {
+layout(std430,set = 0, binding = 3) readonly buffer LightViewProjMatrices {
    mat4 light_space_matrices[4][6];
 };
 // binding 4: texture sampler

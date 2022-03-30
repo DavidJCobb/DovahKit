@@ -26,7 +26,7 @@ layout(std140,binding = 0) uniform UniformBufferObject {
 layout(std430,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-layout(std140,set = 0, binding = 5) readonly buffer PointLightBuffer {
+layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
 	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
 // binding 6 is used by the fragment shader (texture array)
@@ -61,7 +61,8 @@ void main() {
       //
       int light_index = ubo.shadow_caster_index[i];
       if (light_index >= 0) {
-         vs_out.vector_to_light[i] = vs_out.pos_world - vec3(pointLightBuffer.lights[light_index].transform[3]);
+         vs_out.vector_to_light[i]      = vs_out.pos_world - vec3(pointLightBuffer.lights[light_index].transform[3]);
+         vs_out.light_distance_ratio[i] = length(vs_out.vector_to_light[i]) / pointLightBuffer.lights[light_index].radius;
       }
    }
    //

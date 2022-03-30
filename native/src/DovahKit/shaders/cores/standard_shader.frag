@@ -36,7 +36,7 @@ layout(binding = 3) uniform samplerCube light_shadow_maps[SHADOW_CASTER_COUNT];
 layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
-layout(std140,set = 0, binding = 5) readonly buffer PointLightBuffer {
+layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
 	point_light lights[MAX_LIGHTS];
 } pointLightBuffer;
 layout(binding = 6) uniform texture2D textures[];
@@ -121,6 +121,7 @@ vec4 calculate_color() {
                float shadow = calc_point_shadow(
                   normal,
                   fs_in.tangent_light_dir[j],
+                  fs_in.light_distance_ratio[j],
                   fs_in.vector_to_light[j],
                   light_shadow_maps[j]
                );

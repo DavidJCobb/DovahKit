@@ -264,7 +264,7 @@ namespace vulkanDK {
             case omni_shadow:
                [[fallthrough]];
             case hemi_shadow:
-               fov = glm::radians(170.0F); // just shy of pi (180deg)
+               fov = glm::radians(90.0F);
                break;
             case spot_shadow:
                // TODO: FOV
@@ -296,7 +296,7 @@ namespace vulkanDK {
          for (int j = 0; j < 6; ++j) {
             glm::mat4& target = data[i][j];
             //
-            auto r = glm::mat4(1);
+            auto r = rotation;
             switch (j) {
                case 0: // +X
                   r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(0, 1, 0));
@@ -319,8 +319,9 @@ namespace vulkanDK {
                   r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(0, 0, 1));
                   break;
             }
-            target    = glm::mat4(r * rotation);
-            target[3] = glm::vec4(position, 1.0F);
+            //target    = rotation;
+            //target[3] = -glm::vec4(position, 1.0F);
+            target = proj * glm::translate(glm::inverse(r), -position);
          }
       }
       fif.shader_params.light_shadow_data.unmap_memory(&data);
