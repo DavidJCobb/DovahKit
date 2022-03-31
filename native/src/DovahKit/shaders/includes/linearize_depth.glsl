@@ -7,8 +7,11 @@
 // at the exact center between the near and far planes will not necessarily produce 
 // a depth buffer value of 0.5. This function linearizes depth buffer values.
 //
+// Changing the numerator of this fraction to (near * far) would give you an estimate 
+// of the original Z-distance instead.
+//
 float linearize_depth(float depth, float near, float far) {
-   return (near * far) / (far + depth * (near - far));
+   return near / (far + depth * (near - far));
 }
 
 #endif // include guard
