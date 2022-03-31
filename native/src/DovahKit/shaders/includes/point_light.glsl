@@ -1,4 +1,7 @@
 
+#ifndef included_point_light // include guard
+#define included_point_light
+
 struct point_light {
    mat4  transform;
    vec3  color;
@@ -16,3 +19,5 @@ bool point_light_can_cast_shadows(point_light l) {
    }
    return false;
 }
+
+#endif // include guard

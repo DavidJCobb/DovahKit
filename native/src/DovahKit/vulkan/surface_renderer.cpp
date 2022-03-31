@@ -1348,7 +1348,7 @@ namespace vulkanDK {
       dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
       dfn.rasterization.depthBiasClamp          = 0.00F;
       dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-      if constexpr (config::use_inverted_shadow_map) {
+      if constexpr (config::sun_shadow_invert_depth) {
          dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
       } else {
          dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
@@ -1441,7 +1441,7 @@ namespace vulkanDK {
          dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
          dfn.rasterization.depthBiasClamp          = 0.00F;
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-         if constexpr (config::use_inverted_shadow_map) {
+         if constexpr (config::light_shadow_invert_depth) {
             dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
          } else {
             dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;

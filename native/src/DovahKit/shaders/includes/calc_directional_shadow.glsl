@@ -1,4 +1,7 @@
 
+#ifndef included_calc_directional_shadow // include guard
+#define included_calc_directional_shadow
+
 #define USE_SHADOW_DEPTH_BIAS 1
 #define USE_SHADOW_PCF 1
 #define USE_INVERTED_SHADOW_MAP 0
@@ -72,3 +75,5 @@ float calc_directional_shadow(
       shadow = 0.0;
    return shadow;
 }
+
+#endif // include guard

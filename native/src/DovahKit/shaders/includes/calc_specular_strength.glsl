@@ -1,4 +1,7 @@
 
+#ifndef included_calc_specular_strength // include guard
+#define included_calc_specular_strength
+
 #define BLINN_PHONG_MODE_PHONG 0
 #define BLINN_PHONG_MODE_BLINN 1
 //
@@ -18,3 +21,5 @@ float calc_specular_strength(vec3 normal, vec3 light_dir, vec3 view_dir, float s
       #endif
    #endif
 }
+
+#endif // include guard

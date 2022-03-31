@@ -575,7 +575,7 @@ namespace vulkanDK {
                .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
             },
             std::array{
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::sun_shadow_invert_depth ? 0.0 : 1.0, 0 } },
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
@@ -616,10 +616,10 @@ namespace vulkanDK {
                .extent = { config::light_shadow_map_resolution_x, config::light_shadow_map_resolution_y },
             },
             std::array{
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
-               VkClearValue{ .depthStencil = { config::use_inverted_shadow_map ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
             },
             VK_SUBPASS_CONTENTS_INLINE
          );

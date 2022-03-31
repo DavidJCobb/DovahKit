@@ -1,10 +1,6 @@
 
-// you must include the following files from your shader
-// we can't include them here because GLSLC (GLSL to SPIR-V) requires a Google extension 
-// for includes, and Google apparently didn't see any point in implementing #pragma once
-//
-//  - calc_directional_shadow.glsl
-//  - computed_light.glsl
+#include "calc_directional_shadow.glsl"
+#include "computed_light.glsl"
 
 // inputs are in tangent space, where applicable
 computed_light calc_directional_light(

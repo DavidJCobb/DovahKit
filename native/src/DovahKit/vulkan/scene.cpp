@@ -192,7 +192,7 @@ namespace vulkanDK {
          sun_proj[2][2] = -1.0F / (far - near);
          sun_proj[3][2] = -near / (far - near);
       }
-      if constexpr (config::use_inverted_shadow_map) {
+      if constexpr (config::sun_shadow_invert_depth) {
          //
          // The only way to invert an orthographic matrix's depth is to just compute the 
          // matrix normally and then negate the two depth-related terms.
@@ -214,13 +214,13 @@ namespace vulkanDK {
          size_t index    = std::string::npos;
          float  distance = FLT_MAX;
          //
-         bool operator>(float d) const {
+         bool operator>(float d) const noexcept {
             if (index == std::string::npos)
                return true;
             return distance > d;
          }
       };
-      std::array<_entry, surface_renderer::shadow_caster_count> nearest = {}; // sorted
+      std::array<_entry, surface_renderer::shadow_caster_count> nearest = { _entry(), _entry(), _entry(), _entry() }; // sorted
       //
       for (size_t i = 0; i < this->lights.size(); ++i) {
          auto& light = this->lights[i];
@@ -254,7 +254,9 @@ namespace vulkanDK {
             data[i] = { glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1) };
             continue;
          }
+         assert(entry.index <= this->lights.size());
          auto& light = this->lights[entry.index];
+         assert(light.active());
          //
          this->global_state.shadow_caster_index[i] = entry.index;
          //
@@ -274,16 +276,40 @@ namespace vulkanDK {
          proj = glm::perspectiveRH_ZO(
             fov,
             1.0F,
-            draw_distance_near,
+            1.0F,
             light.shader_params.radius
          );
-         if constexpr (config::use_inverted_shadow_map) {
-            proj = glm::mat4(
-               1.0F,  0.0F,  0.0F,  0.0F,
-               0.0F,  1.0F,  0.0F,  0.0F,
-               0.0F,  0.0F, -1.0F,  1.0F,
-               0.0F,  0.0F,  0.0F,  1.0F
-            ) * proj;
+         if constexpr (config::light_shadow_invert_depth) {
+            constexpr bool infinite_depth = false;
+
+            constexpr float aspect = 1.0F;
+            auto y_scale = 1.0F / tan(fov / 2.0F);
+            auto x_scale = y_scale / aspect;
+            //
+            if constexpr (infinite_depth) {
+               proj = glm::mat4(
+                  x_scale, 0,       0,  0,
+                  0,       y_scale, 0,  0,
+                  0,       0,       0, -1,
+                  0,       0,       draw_distance_near, 0
+               );
+            } else {
+               float a = draw_distance_near / (light.shader_params.radius - draw_distance_near);
+               float b = (light.shader_params.radius * draw_distance_near) / (light.shader_params.radius - draw_distance_near);
+               proj = glm::mat4(
+                  x_scale, 0,       0,  0,
+                  0,       y_scale, 0,  0,
+                  0,       0,       a, -1,
+                  0,       0,       b,  0
+               );
+            }
+         } else {
+            proj = glm::perspectiveRH_ZO(
+               fov,
+               1.0F,
+               1.0F,
+               light.shader_params.radius
+            );
          }
          if constexpr (config::is_righthanded) {
             proj[1][1] *= -1;

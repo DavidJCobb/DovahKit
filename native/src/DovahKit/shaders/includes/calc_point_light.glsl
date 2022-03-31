@@ -1,11 +1,7 @@
 
-// you must include the following files from your shader
-// we can't include them here because GLSLC (GLSL to SPIR-V) requires a Google extension 
-// for includes, and Google apparently didn't see any point in implementing #pragma once
-//
-//  - calc_specular_strength.glsl
-//  - computed_light.glsl
-//  - point_light.glsl
+#include "calc_specular_strength.glsl"
+#include "computed_light.glsl"
+#include "point_light.glsl"
 
 // inputs except (light) are in tangent space, where applicable
 computed_light calc_point_light(

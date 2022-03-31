@@ -1596,6 +1596,7 @@
     <None Include="shaders\includes\calc_point_light.glsl" />
     <None Include="shaders\includes\calc_point_shadow.glsl" />
     <None Include="shaders\includes\computed_light.glsl" />
+    <None Include="shaders\includes\linearize_depth.glsl" />
     <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
     <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
     <None Include="shaders\includes\scene_global_state.glsl" />
