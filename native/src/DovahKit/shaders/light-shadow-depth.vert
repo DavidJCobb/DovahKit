@@ -39,16 +39,18 @@ out gl_PerVertex {
 void main() {
    mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
    //
-   vec4 light_pos;
+   vec4  light_pos;
+   float light_radius = 1;
    {
       int light_index = ubo.shadow_caster_index[CASTER_INDEX];
       if (light_index >= 0) {
-         light_pos = pointLightBuffer.lights[light_index].transform[3];
+         light_pos    = pointLightBuffer.lights[light_index].transform[3];
+         light_radius = pointLightBuffer.lights[light_index].radius;
       }
    }
    mat4 light_space = light_space_matrices[CASTER_INDEX][gl_ViewIndex];
    //
 	gl_Position = (light_space * model_transform) * vec4(in_position, 1.0);
    vs_out.uv   = in_uv;
-   vs_out.distance = length((model_transform) * vec4(in_position, 1.0) - light_pos);
+   vs_out.distance = length((model_transform) * vec4(in_position, 1.0) - light_pos) / light_radius;
 }

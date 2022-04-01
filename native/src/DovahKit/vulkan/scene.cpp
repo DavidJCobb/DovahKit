@@ -273,12 +273,6 @@ namespace vulkanDK {
                break;
          }
          glm::mat4 proj;
-         proj = glm::perspectiveRH_ZO(
-            fov,
-            1.0F,
-            1.0F,
-            light.shader_params.radius
-         );
          if constexpr (config::light_shadow_invert_depth) {
             constexpr bool infinite_depth = false;
 
@@ -317,12 +311,10 @@ namespace vulkanDK {
          //
          const auto& transform = light.shader_params.transform;
          const auto  position  = glm::vec3(transform[3]);
-         auto        rotation  = transform;
-         rotation[3] = { 0, 0, 0, 1 };
          for (int j = 0; j < 6; ++j) {
             glm::mat4& target = data[i][j];
             //
-            auto r = rotation;
+            auto r = glm::mat4(1);
             switch (j) {
                case 0: // +X
                   r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(0, 1, 0));
@@ -345,8 +337,6 @@ namespace vulkanDK {
                   r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(0, 0, 1));
                   break;
             }
-            //target    = rotation;
-            //target[3] = -glm::vec4(position, 1.0F);
             target = proj * glm::translate(glm::inverse(r), -position);
          }
       }

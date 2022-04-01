@@ -716,7 +716,7 @@ namespace vulkanDK {
          auto* rp = this->render_passes_by_name.main_shadow_placed = new render_pass(*this);
          {
             auto desc = VkAttachmentDescription{
-               .format         = this->find_depth_format(),
+               .format         = VK_FORMAT_R32_SFLOAT,
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
                .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
                .storeOp        = VK_ATTACHMENT_STORE_OP_STORE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
@@ -738,9 +738,11 @@ namespace vulkanDK {
                list[i] = {  // subpass
                   .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
                   .attachments = {
-                     .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
-                        .attachment = (uint32_t)i,
-                        .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                     .color = {
+                        VkAttachmentReference{
+                           .attachment = (uint32_t)i,
+                           .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                        },
                      },
                   },
                   .view_mask = 0b00111111,
@@ -751,21 +753,12 @@ namespace vulkanDK {
             VkSubpassDependency{
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
-               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-               .dstStageMask    = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT,
-               .dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcAccessMask   = 0,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
             },
-            VkSubpassDependency{
-               .srcSubpass      = 3, // should be the last subpass in the list
-               .dstSubpass      = VK_SUBPASS_EXTERNAL,
-               .srcStageMask    = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // should be the destination of the last dependency?
-               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // wait until the fragment shader
-               .srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-               .dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
-               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-            }
          };
       }
       {
@@ -1430,9 +1423,6 @@ namespace vulkanDK {
                .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
             },
          };
-         if constexpr (config::use_inverted_depth) {
-            dfn.depth.comparison = VK_COMPARE_OP_GREATER;
-         }
          if constexpr (config::light_shadow_invert_culling) {
             dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
          }
@@ -1440,12 +1430,23 @@ namespace vulkanDK {
          dfn.rasterization.depthBiasConstantFactor = 1.25F;
          dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
          dfn.rasterization.depthBiasClamp          = 0.00F;
+         /*//
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
          if constexpr (config::light_shadow_invert_depth) {
             dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
          } else {
             dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
          }
+         //*/
+         dfn.color_blending.blends.emplace_back(material_definition::color_blend{
+            .enabled = true,
+            .operations = {
+               .color = config::light_shadow_invert_depth ? VK_BLEND_OP_MAX : VK_BLEND_OP_MIN,
+               .alpha = config::light_shadow_invert_depth ? VK_BLEND_OP_MAX : VK_BLEND_OP_MIN,
+            },
+         });
+         dfn.depth.comparison = VK_COMPARE_OP_ALWAYS;
+         //
          {
             auto& vertex     = dfn.inputs.vertex;
             auto  attributes = vertex::getAttributeDescriptions();
@@ -2274,7 +2275,8 @@ namespace vulkanDK {
       auto& res_list = this->canvas.light_shadows.resources;
       //
       const auto& support = this->device_info->support;
-      const auto  format  = this->find_depth_format();
+      const auto  aspect  = VK_IMAGE_ASPECT_COLOR_BIT;
+      const auto  format  = VK_FORMAT_R32_SFLOAT;
       //
       {  // Cubemap sampler
          const auto& support = this->device_info->support;
@@ -2313,7 +2315,7 @@ namespace vulkanDK {
          .format      = format,
          .is_cubemap  = true,
          .layer_count = 6,
-         .usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+         .usage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       };
       //
       for (auto& entry : res_list) {
@@ -2321,8 +2323,8 @@ namespace vulkanDK {
          //
          image = owned_image_and_view(*this);
          image.create_image(metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-         image.create_basic_view(format, VK_IMAGE_ASPECT_DEPTH_BIT);
-         image.transition_layout(VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+         image.create_basic_view(format, aspect);
+         image.transition_layout(aspect, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
          //
          this->set_debug_object_name(image.handle, "Light Shadow Buffer Image");
          this->set_debug_object_name(image.view,   "Light Shadow Buffer Image View");

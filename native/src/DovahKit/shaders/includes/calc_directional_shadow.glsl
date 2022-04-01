@@ -6,6 +6,7 @@
 #define USE_SHADOW_PCF 1
 #define USE_INVERTED_SHADOW_MAP 0
 
+// shadow values range from 0 (bright) to 1 (shadowed)
 float calc_directional_shadow(
    vec3      normal,          // surface normal
    vec3      light_dir,       // light direction, in surface tangent space

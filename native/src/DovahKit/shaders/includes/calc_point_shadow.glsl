@@ -4,6 +4,7 @@
 
 #include "linearize_depth.glsl"
 
+// shadow values range from 0 (bright) to 1 (shadowed)
 float calc_point_shadow(
    vec3        normal,               // surface normal
    vec3        light_dir,            // light direction, in surface tangent space
@@ -22,11 +23,7 @@ float calc_point_shadow(
    //       becomes our minimum possible depth granularity. If bias is 0.005, for example, 
    //       then two depth values within 0.0049 of each other are impossible to tell apart.
    
-   float closest_depth = linearize_depth(
-      texture(shadow_map, vector_to_light).r, // non-linearized distance from the light to the nearest surface along this angle
-      0.1,
-      light_radius
-   );
+   float closest_depth = texture(shadow_map, vector_to_light).r;
    float shadow;
    #if USE_INVERTED_POINT_SHADOW_MAP == 1
       shadow = light_distance_ratio + bias < closest_depth ? 1.0 : 0.0;

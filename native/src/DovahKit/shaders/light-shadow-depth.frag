@@ -31,9 +31,14 @@ layout(location = 0) in VS_OUT {
    float distance;
 } fs_in;
 
+layout(location = 0) out float out_color;
+
 void main() {
-   rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
-   //
-   vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
-   alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
+   if (pushed.alpha_test_operation != 0) { // != GL_ALWAYS
+      rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
+      //
+      vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
+      alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
+   }
+   out_color = fs_in.distance;
 }
