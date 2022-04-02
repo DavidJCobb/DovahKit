@@ -14,6 +14,7 @@
 #include "config/scene_limits.h"
 #include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
+#include "helpers/cubemap_helpers.h"
 #include "data/DKVulkanCameraUpdate.h"
 
 // for NIF support
@@ -298,48 +299,26 @@ namespace vulkanDK {
                );
             }
          } else {
-            proj = glm::perspectiveRH_ZO(
-               fov,
-               1.0F,
-               1.0F,
-               light.shader_params.radius
-            );
+            constexpr auto aspect = 1.0F;
+            constexpr auto near   = 1.0F;
+            //
+            // Even though cubemaps are lefthanded, we need a righthanded perspective matrix in order 
+            // to get the cubemap faces to face the right directions.
+            //
+            proj = glm::perspectiveRH_ZO(fov, aspect, near, light.shader_params.radius);
          }
-         /*// Cubemaps are lefthanded, I guess
-         if constexpr (config::is_righthanded) {
+         if constexpr (!cubemaps_are_lefthanded) {
             proj[1][1] *= -1;
          }
-         //*/
          //
          const auto& transform = light.shader_params.transform;
          const auto  position  = glm::vec3(transform[3]);
          for (int j = 0; j < 6; ++j) {
             glm::mat4& target = data[i][j];
             //
-            auto r = glm::mat4(1);
-            switch (j) {
-               case 0: // +X
-                  r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(0, 1, 0));
-                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
-                  break;
-               case 1: // -X
-                  r = glm::rotate(r, glm::radians<float>(-90), glm::fvec3(0, 1, 0));
-                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
-                  break;
-               case 2: // +Y
-                  r = glm::rotate(r, glm::radians<float>(-90), glm::fvec3(1, 0, 0));
-                  break;
-               case 3: // -Y
-                  r = glm::rotate(r, glm::radians<float>( 90), glm::fvec3(1, 0, 0));
-                  break;
-               case 4: // +Z
-                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(1, 0, 0));
-                  break;
-               case 5: // -Z
-                  r = glm::rotate(r, glm::radians<float>(180), glm::fvec3(0, 0, 1));
-                  break;
-            }
+            auto r = common_cubemap_faces[j];
             target = proj * glm::translate(glm::inverse(r), -position);
+            target = proj * glm::translate(r, -position);
          }
       }
       fif.shader_params.light_shadow_data.unmap_memory(&data);

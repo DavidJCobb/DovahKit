@@ -16,6 +16,7 @@
 #include "config/use_inverted_depth.h"
 #include "config/validation_layers.h"
 #include "helpers/convert_access_flags_and_pipeline_stages.h"
+#include "helpers/cubemap_helpers.h"
 #include "helpers/glm_transform_from_beth.h"
 #include "helpers/specialization_map_entry_for_member.h"
 
@@ -1430,6 +1431,7 @@ namespace vulkanDK {
          dfn.rasterization.depthBiasConstantFactor = 1.25F;
          dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
          dfn.rasterization.depthBiasClamp          = 0.00F;
+         dfn.rasterization.frontFace               = cubemaps_are_lefthanded ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE; // cubemaps are lefthanded in Vulakn, borrowing OpenGL conventions
          /*//
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
          if constexpr (config::light_shadow_invert_depth) {

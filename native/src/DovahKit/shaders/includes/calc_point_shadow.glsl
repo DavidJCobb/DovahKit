@@ -1,5 +1,5 @@
 
-#define USE_POINT_SHADOW_DEPTH_BIAS 0
+#define USE_POINT_SHADOW_DEPTH_BIAS 1
 #define USE_INVERTED_POINT_SHADOW_MAP 0
 
 #include "linearize_depth.glsl"
