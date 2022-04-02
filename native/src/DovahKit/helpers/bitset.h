@@ -1,7 +1,10 @@
 #pragma once
+#include <bit>
 #include <cstdint>
+#include <intrin.h>
 #include <limits>
 #include <type_traits>
+#include "cpuinfo.h"
 
 namespace cobb {
    template<uint32_t count> class bitset {
@@ -128,11 +131,7 @@ namespace cobb {
             for (uint32_t i = 0; i < undershoot_cc; i++) {
                auto chunk = this->data[i];
                if (chunk != all_bits_set) {
-                  for (uint8_t j = 0; j < bits_per_chunk; j++) {
-                     if ((chunk & (1 << j)) == 0) {
-                        return i * bits_per_chunk + j;
-                     }
-                  }
+                  return (i * bits_per_chunk) + std::countr_one(chunk);
                }
             }
             if constexpr (has_partial_chunk) {
@@ -144,11 +143,11 @@ namespace cobb {
                //
                auto chunk = this->data[chunk_count - 1];
                if (chunk != partial_chunk_max) {
-                  for (uint8_t j = 0; j < bits_in_partial; j++) {
-                     if ((chunk & (1 << j)) == 0) {
-                        return (chunk_count - 1) * bits_per_chunk + j;
-                     }
-                  }
+                  constexpr auto _offset = (chunk_count - 1) * bits_per_chunk;
+                  auto j = std::countr_one(chunk);
+                  if (j >= bits_in_partial)
+                     return -1;
+                  return _offset + j;
                }
             }
             return -1;
@@ -161,19 +160,18 @@ namespace cobb {
             //
             uint32_t ci = index / bits_per_chunk; // chunks to skip
             uint8_t  bi = index % bits_per_chunk; // bits   to skip
-            for (uint32_t i = ci; i < undershoot_cc; i++) {
+            {
+               auto chunk = this->data[ci] | ((chunk_type(1) << bi) - 1);
+               if (chunk != all_bits_set) {
+                  return (ci * bits_per_chunk) + std::countr_one(chunk);
+               }
+            }
+            uint32_t i = ci + 1;
+            for (; i < undershoot_cc; ++i) {
                auto chunk = this->data[i];
                if (chunk != all_bits_set) {
-                  //
-                  // We'll clear (bi) after the first chunk, so it only gets used once.
-                  //
-                  for (uint8_t j = bi; j < bits_per_chunk; j++) {
-                     if ((chunk & (1 << j)) == 0) {
-                        return i * bits_per_chunk + j;
-                     }
-                  }
+                  return (i * bits_per_chunk) + std::countr_one(chunk);
                }
-               bi = 0; // only skip bits in the first chunk we look at
             }
             if constexpr (has_partial_chunk) {
                //
@@ -183,12 +181,14 @@ namespace cobb {
                // indices past the end of our set.
                //
                auto chunk = this->data[chunk_count - 1];
+               if (ci == undershoot_cc)
+                  chunk |= ((1 << ((chunk_type)bi + 1)) - 1);
                if (chunk != partial_chunk_max) {
-                  for (uint8_t j = bi; j < bits_in_partial; j++) {
-                     if ((chunk & (1 << j)) == 0) {
-                        return (chunk_count - 1) * bits_per_chunk + j;
-                     }
-                  }
+                  constexpr auto _offset = (chunk_count - 1) * bits_per_chunk;
+                  auto j = std::countr_one(chunk);
+                  if (j >= bits_in_partial)
+                     return -1;
+                  return _offset + j;
                }
             }
             return -1;

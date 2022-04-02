@@ -9,7 +9,6 @@ float calc_point_shadow(
    vec3        normal,               // surface normal
    vec3        light_dir,            // light direction, in surface tangent space
    float       light_distance_ratio, // distance to light / light radius
-   float       light_radius,
    vec3        vector_to_light,      // non-normalized vector to the light
    samplerCube shadow_map
 ) {

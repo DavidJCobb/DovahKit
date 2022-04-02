@@ -58,7 +58,7 @@ namespace cobb {
             inline void on_allocate(uint32_t index) noexcept {
                this->presence.set(index);
                --this->remaining;
-               this->start_from = index;
+               this->start_from = index + 1;
             }
             inline void on_free(uint32_t index) noexcept {
                this->presence.reset(index);
@@ -80,9 +80,9 @@ namespace cobb {
                   n->info.prev = p;
             }
             //
-            inline bool has_free_slots()     const noexcept { return this->info.remaining; };
+            inline bool has_free_slots()     const noexcept { return this->info.remaining != 0; };
             inline bool has_any_slots_used() const noexcept { return this->info.remaining < count_per_block; }
-            void* try_allocate() noexcept { // function to be called on the head block only. allocates a single element
+            void* try_allocate() { // function to be called on the head block only. allocates a single element
                if (!this->has_free_slots())
                   return nullptr;
                auto i = this->info.presence.find_first_clear_from(this->info.start_from);
@@ -93,7 +93,7 @@ namespace cobb {
                this->info.on_allocate(i);
                return (void*)addr;
             }
-            bool  try_free(void* mem) noexcept { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
+            bool try_free(void* mem) { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
                auto* block = this;
                do {
                   std::intptr_t m_addr  = (std::intptr_t)mem;
@@ -326,7 +326,7 @@ namespace cobb {
          }
          
       public:
-         static void* allocate() noexcept {
+         static void* allocate() {
             auto t = multiheap::_get_subheap();
             assert(t        && "Failed to get/create subheap?");
             assert(t->first && "The subheap has no block?");
@@ -353,13 +353,13 @@ namespace cobb {
             }
             return out;
          }
-         static void free(void* mem) noexcept {
+         static void free(void* mem) {
             multiheap::_get_state().free(mem);
          }
          //
          // Call destructors on every element in the heap, and then free them all. Obviously you should 
          // only use this when you're sure that nothing is using those elements anymore.
-         static void force_destroy_all() noexcept {
+         static void force_destroy_all() {
             multiheap::_get_state().force_destroy_all();
          }
    };

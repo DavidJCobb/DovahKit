@@ -311,14 +311,9 @@ namespace vulkanDK {
             proj[1][1] *= -1;
          }
          //
-         const auto& transform = light.shader_params.transform;
-         const auto  position  = glm::vec3(transform[3]);
+         const auto inv_position = -glm::vec3(light.shader_params.transform[3]);
          for (int j = 0; j < 6; ++j) {
-            glm::mat4& target = data[i][j];
-            //
-            auto r = common_cubemap_faces[j];
-            target = proj * glm::translate(glm::inverse(r), -position);
-            target = proj * glm::translate(r, -position);
+            data[i][j] = proj * glm::translate(common_cubemap_views[j], inv_position);
          }
       }
       fif.shader_params.light_shadow_data.unmap_memory(&data);

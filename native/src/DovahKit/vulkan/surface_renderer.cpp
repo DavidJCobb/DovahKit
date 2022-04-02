@@ -1432,14 +1432,6 @@ namespace vulkanDK {
          dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
          dfn.rasterization.depthBiasClamp          = 0.00F;
          dfn.rasterization.frontFace               = cubemaps_are_lefthanded ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE; // cubemaps are lefthanded in Vulakn, borrowing OpenGL conventions
-         /*//
-         dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-         if constexpr (config::light_shadow_invert_depth) {
-            dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
-         } else {
-            dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
-         }
-         //*/
          dfn.color_blending.blends.emplace_back(material_definition::color_blend{
             .enabled = true,
             .operations = {

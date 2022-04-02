@@ -122,7 +122,6 @@ vec4 calculate_color() {
                   normal,
                   fs_in.tangent_light_dir[j],
                   fs_in.light_distance_ratio[j],
-                  pointLightBuffer.lights[i].radius,
                   fs_in.vector_to_light[j],
                   light_shadow_maps[j]
                );
