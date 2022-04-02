@@ -305,9 +305,11 @@ namespace vulkanDK {
                light.shader_params.radius
             );
          }
+         /*// Cubemaps are lefthanded, I guess
          if constexpr (config::is_righthanded) {
             proj[1][1] *= -1;
          }
+         //*/
          //
          const auto& transform = light.shader_params.transform;
          const auto  position  = glm::vec3(transform[3]);
