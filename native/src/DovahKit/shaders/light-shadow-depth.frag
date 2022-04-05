@@ -26,9 +26,7 @@
 #include "includes/scene_global_state.glsl"
 
 // binding 0: scene_global_state (not needed in fragment shader)
-layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params objects[];
-} objectBuffer;
+// binding 1: rendered_mesh_shader_params[] (not needed in fragment shader)
 // binding 2: all_rendered_lights  (not needed in fragment shader)
 // binding 3: light space matrices (not needed in fragment shader)
 layout(binding = 4) uniform sampler texSampler;
@@ -43,8 +41,6 @@ layout(location = 0) out float out_color;
 
 void main() {
    if (pushed.alpha_test_operation != 0) { // != GL_ALWAYS
-      rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
-      //
       vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
       alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
    }

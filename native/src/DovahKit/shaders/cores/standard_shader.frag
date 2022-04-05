@@ -38,11 +38,11 @@ layout(binding = 1) uniform sampler     default_sampler;
 layout(binding = 2) uniform sampler2D   sun_shadow_map;
 layout(binding = 3) uniform samplerCube light_shadow_maps[SHADOW_CASTER_COUNT];
 layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params objects[];
-} objectBuffer;
+	rendered_mesh_shader_params scene_meshes[];
+};
 layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
-	rendered_light_shader_params lights[MAX_LIGHTS];
-} pointLightBuffer;
+	rendered_light_shader_params scene_lights[MAX_LIGHTS];
+};
 layout(binding = 6) uniform texture2D textures[];
 
 #include "standard_shader/fragment_input.glsl"
@@ -60,7 +60,7 @@ const mat4 shadow_to_normalized_coords = mat4(
 vec4 calculate_color() {
    vec4 color;
    //
-   rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
+   rendered_mesh_shader_params current_object = scene_meshes[pushed.object_index];
    //
    color = texture(sampler2D(textures[pushed.texture_index], default_sampler), fs_in.uv);
    //
@@ -126,7 +126,7 @@ vec4 calculate_color() {
       #endif
          for(int i = 0; i < MAX_LIGHTS; ++i) {
             computed_light current = calc_point_light(
-               pointLightBuffer.lights[i],
+               scene_lights[i],
                fs_in.tangent_space,
                normal,
                fs_in.tangent_vert_pos,
@@ -135,7 +135,7 @@ vec4 calculate_color() {
             );
             //
             float shadow = 0.0;
-            if (rendered_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
+            if (rendered_light_can_cast_shadows(scene_lights[i])) { // if this light is allowed to cast shadows
                for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
                   if (ubo.shadow_caster_index[j] == i) {
                      #if EMULATE_OMNI_LIGHT_SHADOW_SEAM
@@ -147,9 +147,9 @@ vec4 calculate_color() {
                         // impossible.) This results in a seam -- a gap where there are no shadows.
                         //
                         {
-                           vec4  light_space_vert = normalize(pointLightBuffer.lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
+                           vec4  light_space_vert = normalize(scene_lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
                            float yaw_offset       = atan(light_space_vert.y, light_space_vert.x);
-                           int   light_type       = pointLightBuffer.lights[i].type;
+                           int   light_type       = scene_lights[i].type;
                            //
                            if (light_type == RENDERED_LIGHT_TYPE_OMNI_SHADOW) {
                               //
@@ -195,7 +195,7 @@ vec4 calculate_color() {
       } else {
          for(int i = 0; i < MAX_LIGHTS; ++i) {
             computed_light current = calc_point_light(
-               pointLightBuffer.lights[i],
+               scene_lights[i],
                fs_in.tangent_space,
                normal,
                fs_in.tangent_vert_pos,

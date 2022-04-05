@@ -16,11 +16,11 @@ layout(std140,binding = 0) uniform UniformBufferObject {
    scene_global_state ubo;
 };
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params objects[];
-} objectBuffer;
+	rendered_mesh_shader_params scene_meshes[];
+};
 layout(std430,set = 0, binding = 2) readonly buffer PointLightBuffer {
-	rendered_light_shader_params lights[MAX_LIGHTS];
-} pointLightBuffer;
+	rendered_light_shader_params scene_lights[MAX_LIGHTS];
+};
 layout(std430,set = 0, binding = 3) readonly buffer LightViewProjMatrices {
    mat4 light_space_matrices[4][6];
 };
@@ -37,15 +37,15 @@ out gl_PerVertex {
 };
 
 void main() {
-   mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
+   mat4 model_transform = scene_meshes[pushed.object_index].transform;
    //
    vec4  light_pos;
    float light_radius = 1;
    {
       int light_index = ubo.shadow_caster_index[CASTER_INDEX];
       if (light_index >= 0) {
-         light_pos    = pointLightBuffer.lights[light_index].transform[3];
-         light_radius = pointLightBuffer.lights[light_index].radius;
+         light_pos    = scene_lights[light_index].transform[3];
+         light_radius = scene_lights[light_index].radius;
       }
    }
    mat4 light_space = light_space_matrices[CASTER_INDEX][gl_ViewIndex];

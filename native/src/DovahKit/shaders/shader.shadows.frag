@@ -18,9 +18,7 @@
 #include "includes/scene_global_state.glsl"
 
 // binding 0 varies between sun shadows and light shadows
-layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params objects[];
-} objectBuffer;
+// binding 1: rendered_mesh_shader_params[] (not used here)
 layout(binding = 2) uniform sampler texSampler;
 layout(binding = 3) uniform texture2D textures[];
 
@@ -29,8 +27,6 @@ layout(location = 0) in VS_OUT {
 } fs_in;
 
 void main() {
-   rendered_mesh_shader_params current_object = objectBuffer.objects[pushed.object_index];
-   //
    vec4 color = texture(sampler2D(textures[pushed.texture_index], texSampler), fs_in.uv);
    alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
 }
