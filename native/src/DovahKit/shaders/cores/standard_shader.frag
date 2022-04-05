@@ -11,12 +11,15 @@
 #define PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS 0
 #define EMULATE_OMNI_LIGHT_SHADOW_SEAM 1
 
+#include "../includes/rendered_light_shader_params.glsl"
+#include "../includes/rendered_mesh_shader_params.glsl"
+#include "../includes/scene_global_state.glsl"
+
 #include "../includes/alpha_testing_conditional_discard.glsl"
 #include "../includes/calc_specular_strength.glsl"
 #include "../includes/calc_directional_shadow.glsl"
 #include "../includes/computed_light.glsl"
 #include "../includes/calc_directional_light.glsl"
-#include "../includes/point_light.glsl"
 #include "../includes/calc_point_light.glsl"
 #include "../includes/calc_point_shadow.glsl"
 
@@ -27,8 +30,6 @@ layout (constant_id = 0) const int MAX_LIGHTS = 4;
 #define SHADOW_CASTER_COUNT 4
 
 #include "../includes/rendered_mesh_push_constant.glsl"
-#include "../includes/rendered_mesh_shader_params.glsl"
-#include "../includes/scene_global_state.glsl"
 
 layout(std140,binding = 0) uniform UniformBufferObject {
    scene_global_state ubo;
@@ -40,7 +41,7 @@ layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
 layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
-	point_light lights[MAX_LIGHTS];
+	rendered_light_shader_params lights[MAX_LIGHTS];
 } pointLightBuffer;
 layout(binding = 6) uniform texture2D textures[];
 
@@ -134,7 +135,7 @@ vec4 calculate_color() {
             );
             //
             float shadow = 0.0;
-            if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
+            if (rendered_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
                for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
                   if (ubo.shadow_caster_index[j] == i) {
                      #if EMULATE_OMNI_LIGHT_SHADOW_SEAM

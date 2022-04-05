@@ -1,11 +1,11 @@
 
 #include "calc_specular_strength.glsl"
 #include "computed_light.glsl"
-#include "point_light.glsl"
+#include "rendered_light_shader_params.glsl"
 
 // inputs except (light) are in tangent space, where applicable
 computed_light calc_point_light(
-   point_light light,
+   rendered_light_shader_params light,
    mat3  tangent_space,
    vec3  normal,          // surface normal
    vec3  light_space_pos, // light-space vertex position

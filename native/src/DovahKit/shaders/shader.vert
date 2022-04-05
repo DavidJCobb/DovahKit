@@ -12,7 +12,7 @@
 
 layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
-#include "includes/point_light.glsl"
+#include "includes/rendered_light_shader_params.glsl"
 #include "includes/rendered_mesh_push_constant.glsl"
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
@@ -27,7 +27,7 @@ layout(std430,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
 layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
-	point_light lights[MAX_LIGHTS];
+	rendered_light_shader_params lights[MAX_LIGHTS];
 } pointLightBuffer;
 // binding 6 is used by the fragment shader (texture array)
 

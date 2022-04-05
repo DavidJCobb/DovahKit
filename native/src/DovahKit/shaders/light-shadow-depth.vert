@@ -2,7 +2,7 @@
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_multiview : enable
 
-#include "includes/point_light.glsl"
+#include "includes/rendered_light_shader_params.glsl"
 #include "includes/rendered_mesh_push_constant.glsl"
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
@@ -19,7 +19,7 @@ layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params objects[];
 } objectBuffer;
 layout(std430,set = 0, binding = 2) readonly buffer PointLightBuffer {
-	point_light lights[MAX_LIGHTS];
+	rendered_light_shader_params lights[MAX_LIGHTS];
 } pointLightBuffer;
 layout(std430,set = 0, binding = 3) readonly buffer LightViewProjMatrices {
    mat4 light_space_matrices[4][6];
