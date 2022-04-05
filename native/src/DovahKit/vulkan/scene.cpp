@@ -261,24 +261,14 @@ namespace vulkanDK {
          //
          this->global_state.shadow_caster_index[i] = entry.index;
          //
-         float fov = glm::radians(90.0F);
-         switch (light.shader_params.type) {
-            using enum rendered_light::light_type;
-            case omni_shadow:
-               [[fallthrough]];
-            case hemi_shadow:
-               fov = glm::radians(90.0F);
-               break;
-            case spot_shadow:
-               // TODO: FOV
-               break;
-         }
+         constexpr float cubemap_view_fov = glm::radians(90.0F);
+         //
          glm::mat4 proj;
          if constexpr (config::light_shadow_invert_depth) {
             constexpr bool infinite_depth = false;
 
             constexpr float aspect = 1.0F;
-            auto y_scale = 1.0F / tan(fov / 2.0F);
+            auto y_scale = 1.0F / tan(cubemap_view_fov / 2.0F);
             auto x_scale = y_scale / aspect;
             //
             if constexpr (infinite_depth) {
@@ -305,7 +295,7 @@ namespace vulkanDK {
             // Even though cubemaps are lefthanded, we need a righthanded perspective matrix in order 
             // to get the cubemap faces to face the right directions.
             //
-            proj = glm::perspectiveRH_ZO(fov, aspect, near, light.shader_params.radius);
+            proj = glm::perspectiveRH_ZO(cubemap_view_fov, aspect, near, light.shader_params.radius);
          }
          if constexpr (!cubemaps_are_lefthanded) {
             proj[1][1] *= -1;

@@ -11,11 +11,16 @@ struct point_light {
    int   type; // rendered_light::light_type enum in C++
 };
 
+#define RENDERED_LIGHT_TYPE_OMNI        0
+#define RENDERED_LIGHT_TYPE_OMNI_SHADOW 1
+#define RENDERED_LIGHT_TYPE_HEMI_SHADOW 2
+#define RENDERED_LIGHT_TYPE_SPOT_SHADOW 3
+
 bool point_light_can_cast_shadows(point_light l) {
    switch (l.type) {
-      case 1: // omni_shadow
-      case 2: // hemi_shadow
-      case 3: // spot_shadow
+      case RENDERED_LIGHT_TYPE_OMNI_SHADOW:
+      case RENDERED_LIGHT_TYPE_HEMI_SHADOW:
+      case RENDERED_LIGHT_TYPE_SPOT_SHADOW:
          return true;
    }
    return false;

@@ -57,16 +57,12 @@ void main() {
    vs_out.sun_shadow_vert_pos = (shadow_to_normalized_coords * ubo.sun_space * model_transform) * vec4(in_position, 1.0);
    //
    for(int i = 0; i < 4; ++i) {
-      vs_out.vector_to_light[i]  = vec3(0, 0, 0);
-      vs_out.light_yaw_offset[i] = 0;
+      vs_out.vector_to_light[i] = vec3(0, 0, 0);
       //
       int light_index = ubo.shadow_caster_index[i];
       if (light_index >= 0) {
          vs_out.vector_to_light[i]      = vs_out.pos_world - vec3(pointLightBuffer.lights[light_index].transform[3]);
          vs_out.light_distance_ratio[i] = length(vs_out.vector_to_light[i]) / pointLightBuffer.lights[light_index].radius;
-         //
-         vec4 light_space_vert = normalize(pointLightBuffer.lights[light_index].transform_inv * vec4(vs_out.pos_world, 1.0));
-         vs_out.light_yaw_offset[i] = atan(light_space_vert.y, light_space_vert.x);
       }
    }
    //

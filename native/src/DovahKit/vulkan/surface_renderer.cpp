@@ -3845,6 +3845,9 @@ namespace vulkanDK {
             case omni_shadow: // NOTE: we don't yet support shadowing, nor shadowed point lights
                params.type = rendered_light::light_type::omni_shadow;
                break;
+            case hemi_shadow:
+               params.type = rendered_light::light_type::hemi_shadow;
+               break;
             default:
                return false; // unsupported light type
          }

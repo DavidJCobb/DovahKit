@@ -13,5 +13,4 @@ struct fragment_input {
    vec3  vector_to_light[4];
    float light_distance_ratio[4];
    vec3  tangent_light_dir[4];
-   float light_yaw_offset[4];
 };

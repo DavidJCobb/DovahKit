@@ -432,7 +432,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             .color     = { 1.0F, 0.2F, 0.2F },
             .radius    = 1024.0F,
             .fade      = 1.0F,
-            .type      = vulkanDK::rendered_light::light_type::omni_shadow,
+            .type      = vulkanDK::rendered_light::light_type::hemi_shadow,
          });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));

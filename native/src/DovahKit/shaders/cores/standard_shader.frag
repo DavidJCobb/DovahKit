@@ -10,7 +10,6 @@
 
 #define PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS 0
 #define EMULATE_OMNI_LIGHT_SHADOW_SEAM 1
-#define DO_OMNI_LIGHT_SHADOW_SEAM_MATH_HERE 1
 
 #include "../includes/alpha_testing_conditional_discard.glsl"
 #include "../includes/calc_specular_strength.glsl"
@@ -146,19 +145,31 @@ vec4 calculate_color() {
                         // stitched together. (GPUs use rectilinear projection; 180-degree FOVs and above are mathematically 
                         // impossible.) This results in a seam -- a gap where there are no shadows.
                         //
-                        #if DO_OMNI_LIGHT_SHADOW_SEAM_MATH_HERE
-                           {
-                              vec4  light_space_vert = normalize(pointLightBuffer.lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
-                              float yaw_offset       = atan(light_space_vert.y, light_space_vert.x);
+                        {
+                           vec4  light_space_vert = normalize(pointLightBuffer.lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
+                           float yaw_offset       = atan(light_space_vert.y, light_space_vert.x);
+                           int   light_type       = pointLightBuffer.lights[i].type;
+                           //
+                           if (light_type == RENDERED_LIGHT_TYPE_OMNI_SHADOW) {
+                              //
+                              // Omni-shadow lights cast light and shadows in all directions. However, due to Bethesda's 
+                              // approach to rendering them, there is a seam in the shadow no wider than one degree. The 
+                              // seam follows the light's local YZ plane, i.e. it is a ring that reaches forward, back, 
+                              // up, and down (all light-relative directions).
+                              //
                               if (abs(abs(yaw_offset) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
                                  break;
                               }
+                           } else if (light_type == RENDERED_LIGHT_TYPE_HEMI_SHADOW) {
+                              //
+                              // Hemi lights cast light in all directions, but cast shadows only over a 179-degree range 
+                              // on the local +X side, spanning from local -Y to local +Y.
+                              //
+                              if (abs(yaw_offset) > radians(89)) {
+                                 break;
+                              }
                            }
-                        #else
-                           if (abs(abs(fs_in.light_yaw_offset[j]) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
-                              break;
-                           }
-                        #endif
+                        }
                      #endif
                      //
                      // Compute shadows:
