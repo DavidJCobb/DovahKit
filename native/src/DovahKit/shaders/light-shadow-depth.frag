@@ -3,12 +3,20 @@
 #extension GL_GOOGLE_include_directive : enable
 
 //
-// This shader produces no outputs. Its sole purpose is to discard fragments that are
-// made transparent by a model's RGBA texture, when the model uses alpha testing, so 
-// that those fragments don't affect the depth buffer.
-//
-// The corresponding vertex shader is sun-shadow-depth.vert; the same descriptors are 
+// The corresponding vertex shader is  sun-shadow-depth.vert;  the same descriptors are 
 // used for both.
+//
+// This shader produces a linear depth value,  and is meant to be used with a MIN blend 
+// mode.  Its purpose is to work around  a problem with using a depth buffer:  the math 
+// needed for a typical view/projection matrix to get meshes onto the right "on-screen" 
+// positions will not also produce linear depth,  or useful depth values in general. In 
+// my tests, values were often in the range [0.999, 1.000] or, with inverted depth, the 
+// range [0.000, 0.001]. Maybe a mathematician could design a projection matrix that'll 
+// produce correct "on-screen" XY-coordinates  as well as usable Z-coordinates, but I'm 
+// not a mathematician.
+//
+// So, we just use a color attachment with  one channel whose pixels are, functionally, 
+// just depth values normalized to [0, 1].
 //
 
 #include "includes/alpha_testing_conditional_discard.glsl"

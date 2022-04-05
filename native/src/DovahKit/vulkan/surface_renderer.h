@@ -222,6 +222,7 @@ namespace vulkanDK {
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
          bool add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
+         bool add_light(const rendered_light::shader_parameters&);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);

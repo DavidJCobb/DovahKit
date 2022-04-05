@@ -12,7 +12,8 @@ namespace vulkanDK {
    }
    //
    void rendered_light::set_transform(const glm::mat4& in) {
-      this->shader_params.transform = in;
+      this->shader_params.transform     = in;
+      this->shader_params.transform_inv = glm::inverse(in);
       this->_on_shader_parameter_change();
    }
 

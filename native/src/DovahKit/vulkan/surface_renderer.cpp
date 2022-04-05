@@ -3817,50 +3817,57 @@ namespace vulkanDK {
       if (!loaded_base)
          return false;
       //
-      auto light_type = rendered_light::light_type::omni;
+      rendered_light::shader_parameters params = {
+         .transform = glm_transform_from_beth(refr.position, refr.rotation, 1.0F),
+         .color     = {
+            (float)loaded_base->color.r / 255.0,
+            (float)loaded_base->color.g / 255.0,
+            (float)loaded_base->color.b / 255.0,
+         },
+         .radius = (float)loaded_base->radius,
+         .fade   = loaded_base->fade,
+      };
+      if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
+         params.fade += ex->fade;
+         // sp.fov += ex->fov;
+      }
+      if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
+         params.radius += ex->value;
+      }
+      //
+      params.type = rendered_light::light_type::omni;
       {
          switch (loaded_base->light_type) {
             using enum dovah::loaded_forms::Light::engine_light_type;
             case omni:
-               light_type = rendered_light::light_type::omni;
+               params.type = rendered_light::light_type::omni;
                break;
             case omni_shadow: // NOTE: we don't yet support shadowing, nor shadowed point lights
-               light_type = rendered_light::light_type::omni_shadow;
+               params.type = rendered_light::light_type::omni_shadow;
                break;
             default:
                return false; // unsupported light type
          }
       }
-      //
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_light] Attempting to spawn new light for [REFR:%08X] with base [LIGH:%08X]%s...", refr.stub.formID, base->formID, base->get_editor_id());
+      }
+      return this->add_light(params);
+   }
+   bool surface_renderer::add_light(const rendered_light::shader_parameters& in) {
       size_t light_index = this->scene.insert_new_light();
       if (light_index == std::string::npos) {
-         qDebug("Cannot add new rendered_light; scene limits reached.");
+         qDebug("[vulkanDK::scene_renderer::add_light] Cannot add new rendered_light; scene limits reached.");
          return false;
       }
       if constexpr (debug_log_scene_object_lifetimes) {
-         qDebug("[vulkanDK::scene_renderer::add_light] Creating new light at index %u for [REFR:%08X] with base [LIGH:%08X]%s.", light_index, refr.stub.formID, base->formID, base->get_editor_id());
+         qDebug("[vulkanDK::scene_renderer::add_light] Creating new light at index %u.", light_index);
       }
       auto& light = this->scene.lights[light_index];
       light.life_state = scene_frame_item_state::active;
       light.handled_frames.set_all_out_of_date();
-      {
-         auto& sp = light.shader_params;
-         sp.type    = light_type;
-         sp.fade    = loaded_base->fade;
-         sp.radius  = loaded_base->radius;
-         sp.color.r = (float)loaded_base->color.r / 255.0;
-         sp.color.g = (float)loaded_base->color.g / 255.0;
-         sp.color.b = (float)loaded_base->color.b / 255.0;
-         sp.transform = glm_transform_from_beth(refr.position, refr.rotation, 1.0F);
-         //
-         if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
-            sp.fade += ex->fade;
-            // sp.fov += ex->fov;
-         }
-         if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
-            sp.radius += ex->value;
-         }
-      }
+      light.shader_params = in;
+      light.set_transform(in.transform); // so that transform_inv is valid
       //
       if (light.can_cast_shadows()) {
          this->scene.mark_light_shadows_dirty();

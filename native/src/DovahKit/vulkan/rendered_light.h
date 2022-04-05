@@ -24,6 +24,7 @@ namespace vulkanDK {
 
          struct shader_parameters { // pass to the shader via a storage buffer
             alignas(16) glm::mat4  transform;
+            alignas(16) glm::mat4  transform_inv;
             alignas(16) glm::vec3  color    = { 0, 0, 0 };
             alignas( 4) float      radius   = 1.0;
             alignas( 4) float      fade     = 1.0;

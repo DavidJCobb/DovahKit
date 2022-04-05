@@ -8,6 +8,10 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : enable
 
+#define PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS 0
+#define EMULATE_OMNI_LIGHT_SHADOW_SEAM 1
+#define DO_OMNI_LIGHT_SHADOW_SEAM_MATH_HERE 1
+
 #include "../includes/alpha_testing_conditional_discard.glsl"
 #include "../includes/calc_specular_strength.glsl"
 #include "../includes/calc_directional_shadow.glsl"
@@ -104,36 +108,97 @@ vec4 calculate_color() {
          sun_shadow_map
       );
    }
-   for(int i = 0; i < MAX_LIGHTS; ++i) {
-      computed_light current = calc_point_light(
-         pointLightBuffer.lights[i],
-         fs_in.tangent_space,
-         normal,
-         fs_in.tangent_vert_pos,
-         view_dir,
-         current_object.specular_exponent
-      );
-      //
-      float shadow = 0.0;
-      if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
-         for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
-            if (ubo.shadow_caster_index[j] == i) {
-               shadow = calc_point_shadow(
-                  normal,
-                  fs_in.tangent_light_dir[j],
-                  fs_in.light_distance_ratio[j],
-                  fs_in.vector_to_light[j],
-                  light_shadow_maps[j]
-               );
-               break;
+   //
+   // Point lights
+   //
+   {
+      #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
+      bool any_casters = false;
+      for(int i = 0; i < SHADOW_CASTER_COUNT; ++i) {
+         if (ubo.shadow_caster_index[i] < 0)
+            continue;
+         if (fs_in.light_distance_ratio[i] > 1)
+            continue;
+         any_casters = true;
+         break;
+      }
+      if (any_casters) {
+      #endif
+         for(int i = 0; i < MAX_LIGHTS; ++i) {
+            computed_light current = calc_point_light(
+               pointLightBuffer.lights[i],
+               fs_in.tangent_space,
+               normal,
+               fs_in.tangent_vert_pos,
+               view_dir,
+               current_object.specular_exponent
+            );
+            //
+            float shadow = 0.0;
+            if (point_light_can_cast_shadows(pointLightBuffer.lights[i])) { // if this light is allowed to cast shadows
+               for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
+                  if (ubo.shadow_caster_index[j] == i) {
+                     #if EMULATE_OMNI_LIGHT_SHADOW_SEAM
+                        //
+                        // Emulate Bethesda's shadow seams.
+                        //
+                        // Bethesda doesn't use cubemap shadows; to reduce VRAM usage, they use two 179-degree-FOV shadow maps 
+                        // stitched together. (GPUs use rectilinear projection; 180-degree FOVs and above are mathematically 
+                        // impossible.) This results in a seam -- a gap where there are no shadows.
+                        //
+                        #if DO_OMNI_LIGHT_SHADOW_SEAM_MATH_HERE
+                           {
+                              vec4  light_space_vert = normalize(pointLightBuffer.lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
+                              float yaw_offset       = atan(light_space_vert.y, light_space_vert.x);
+                              if (abs(abs(yaw_offset) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
+                                 break;
+                              }
+                           }
+                        #else
+                           if (abs(abs(fs_in.light_yaw_offset[j]) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
+                              break;
+                           }
+                        #endif
+                     #endif
+                     //
+                     // Compute shadows:
+                     //
+                     shadow = calc_point_shadow(
+                        normal,
+                        fs_in.tangent_light_dir[j],
+                        fs_in.light_distance_ratio[j],
+                        fs_in.vector_to_light[j],
+                        light_shadow_maps[j]
+                     );
+                     break;
+                  }
+               }
             }
+            shadow = 1.0 - shadow;
+            //
+            light_data.diffuse  += current.diffuse  * shadow;
+            light_data.specular += current.specular * shadow;
+         }
+      #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
+      } else {
+         for(int i = 0; i < MAX_LIGHTS; ++i) {
+            computed_light current = calc_point_light(
+               pointLightBuffer.lights[i],
+               fs_in.tangent_space,
+               normal,
+               fs_in.tangent_vert_pos,
+               view_dir,
+               current_object.specular_exponent
+            );
+            light_data.diffuse  += current.diffuse;
+            light_data.specular += current.specular;
          }
       }
-      shadow = 1.0 - shadow;
-      //
-      light_data.diffuse  += current.diffuse  * shadow;
-      light_data.specular += current.specular * shadow;
+      #endif
    }
+   //
+   // Lights and shadows done.
+   //
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
    color.rgb *= ubo.ambient_light_color + light_data.diffuse + light_data.specular;

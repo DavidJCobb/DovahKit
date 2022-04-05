@@ -4,6 +4,7 @@
 
 struct point_light {
    mat4  transform;
+   mat4  transform_inv;
    vec3  color;
    float radius;
    float fade;

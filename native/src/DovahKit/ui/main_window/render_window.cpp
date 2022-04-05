@@ -9,6 +9,7 @@
 #include <QStyle>
 #include <QToolButton>
 #include "widgets/DKVulkanView.h"
+#include "../../vulkan/rendered_light.h"
 #include "../../vulkan/surface_renderer.h"
 
 #include "editor/core.h"
@@ -381,5 +382,61 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       //
       this->toolbar->addWidget(widget);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Spawn shadow-caster debug scene");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         auto* sr = view->surfaceRenderer();
+         //
+         nifDK::file model;
+         {
+            std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset("meshes/dungeons/genkit/genkitrmcorin01.nif"));
+            if (!file) {
+               qDebug("Failed to open NIF file");
+               return;
+            }
+            model.read((void*)file->data(), file->size());
+            //
+            auto& error = model.read_error();
+            if (error.code != nifDK::default_notice_code) {
+               qDebug("Failed to parse NIF file\n - Error code %08X.", error.code);
+               #if _DEBUG
+                  __debugbreak();
+               #endif
+               return;
+            }
+         }
+         constexpr auto model_size = 256.0F;
+         for (int j = 0; j < 2; ++j) {
+            for (int i = 0; i < 4; ++i) {
+               constexpr auto rotations = std::array{ 270, 180, 0, 90 };
+               auto x = model_size * (i % 2) - (model_size / 2);
+               auto y = model_size * (i / 2) - (model_size / 2);
+               if (j) {
+                  x *= 2;
+                  y *= 2;
+               }
+               sr->add_nif(
+                  model,
+                  glm::vec3{ x, y, j ? 1.0F : ((model_size / 2) + 1.0F) },
+                  glm::vec3{ 0, 0, glm::radians<float>(rotations[i]) },
+                  j ? 2.0 : 1.0
+               );
+            }
+         }
+         //
+         sr->add_light(vulkanDK::rendered_light::shader_parameters{
+            .transform = vulkanDK::glm_transform_from_beth(glm::fvec3{ 0, 0, 256 }, glm::fvec3{ 0, 0, 0 }, 1.0F),
+            .color     = { 1.0F, 0.2F, 0.2F },
+            .radius    = 1024.0F,
+            .fade      = 1.0F,
+            .type      = vulkanDK::rendered_light::light_type::omni_shadow,
+         });
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
+      //
+      this->toolbar->addWidget(button);
    }
 }
