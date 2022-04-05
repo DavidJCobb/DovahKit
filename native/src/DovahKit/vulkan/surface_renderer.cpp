@@ -3824,9 +3824,10 @@ namespace vulkanDK {
             (float)loaded_base->color.g / 255.0,
             (float)loaded_base->color.b / 255.0,
          },
-         .fade   = loaded_base->fade,
-         .fov    = loaded_base->fov,
-         .radius = (float)loaded_base->radius,
+         .fade    = loaded_base->fade,
+         .falloff = loaded_base->falloff_exponent,
+         .fov     = loaded_base->fov,
+         .radius  = (float)loaded_base->radius,
       };
       if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
          params.fade += ex->fade;

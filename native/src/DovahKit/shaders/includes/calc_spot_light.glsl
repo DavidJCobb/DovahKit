@@ -22,23 +22,18 @@ computed_light calc_spot_light(
    float attenuate = clamp(1.0 - distance / (light.radius + 16), 0.0, 1.0);
    attenuate *= attenuate;
    //
-   float intensity = 1.0;
-   {
-      /*
-      float a = atan(tangent_light_dir.z, tangent_light_dir.x);
-      float b = atan(tangent_light_dir.y, tangent_light_dir.x);
-      a = abs(a) / (light.fov / 2);
-      b = abs(b) / (light.fov / 2);
-      intensity -= (a + b) * 0.5;
-      */
-      intensity = acos(
+   float intensity = 1.0 - clamp(
+      acos(
          dot(
             normalize(tangent_space * vec3(light.transform[0])), // light-relative +X to tangent space
             -tangent_light_dir
          )
-      ) / (light.fov / 2);
-   }
-   attenuate *= 1.0 - clamp(intensity, 0.0, 1.0);
+      ) / (light.fov / 2),
+      0.0,
+      1.0
+   );
+   intensity = pow(intensity, light.falloff);
+   attenuate *= intensity;
    //
    computed_light result = calc_base_light(
       tangent_light_dir,
