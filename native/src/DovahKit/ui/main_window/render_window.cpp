@@ -430,9 +430,10 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          sr->add_light(vulkanDK::rendered_light::shader_parameters{
             .transform = vulkanDK::glm_transform_from_beth(glm::fvec3{ 0, 0, 256 }, glm::fvec3{ 0, 0, 0 }, 1.0F),
             .color     = { 1.0F, 0.2F, 0.2F },
-            .radius    = 1024.0F,
             .fade      = 1.0F,
-            .type      = vulkanDK::rendered_light::light_type::hemi_shadow,
+            .fov       = glm::radians(90.0F),
+            .radius    = 1024.0F,
+            .type      = vulkanDK::rendered_light::light_type::spot_shadow,
          });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));

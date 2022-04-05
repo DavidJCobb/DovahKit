@@ -22,6 +22,7 @@
 #include "../includes/calc_directional_light.glsl"
 #include "../includes/calc_point_light.glsl"
 #include "../includes/calc_point_shadow.glsl"
+#include "../includes/calc_spot_light.glsl"
 
 // configuration defines:
 // USE_ALPHA_OIT == 0 or 1
@@ -86,7 +87,7 @@ vec4 calculate_color() {
    //
    // Apply all lights in the scene:
    //
-   vec3 view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
+   vec3 tangent_view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
    //
    computed_light light_data;
    if (pushed.receive_shadows == 0) {
@@ -94,7 +95,7 @@ vec4 calculate_color() {
          fs_in.tangent_sun_dir,
          ubo.sun_color,
          normal,
-         view_dir,
+         tangent_view_dir,
          current_object.specular_exponent
       );
    } else {
@@ -103,7 +104,7 @@ vec4 calculate_color() {
          fs_in.sun_shadow_vert_pos,
          ubo.sun_color,
          normal,
-         view_dir,
+         tangent_view_dir,
          current_object.specular_exponent,
          sun_shadow_map
       );
@@ -125,53 +126,70 @@ vec4 calculate_color() {
       if (any_casters) {
       #endif
          for(int i = 0; i < MAX_LIGHTS; ++i) {
-            computed_light current = calc_point_light(
-               scene_lights[i],
-               fs_in.tangent_space,
-               normal,
-               fs_in.tangent_vert_pos,
-               view_dir,
-               current_object.specular_exponent
-            );
+            int light_type = scene_lights[i].type;
+            //
+            computed_light current;
+            if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
+               current = calc_spot_light(
+                  scene_lights[i],
+                  fs_in.tangent_space,
+                  normal,
+                  fs_in.tangent_vert_pos,
+                  tangent_view_dir,
+                  current_object.specular_exponent
+               );
+            } else {
+               current = calc_point_light(
+                  scene_lights[i],
+                  fs_in.tangent_space,
+                  normal,
+                  fs_in.tangent_vert_pos,
+                  tangent_view_dir,
+                  current_object.specular_exponent
+               );
+            }
             //
             float shadow = 0.0;
             if (rendered_light_can_cast_shadows(scene_lights[i])) { // if this light is allowed to cast shadows
                for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
                   if (ubo.shadow_caster_index[j] == i) {
-                     #if EMULATE_OMNI_LIGHT_SHADOW_SEAM
+                     {
+                        vec3  light_direction = normalize(fs_in.light_space_pos[j]);
+                        float yaw_offset      = atan(light_direction.y, light_direction.x);
+                        int   light_type      = scene_lights[i].type;
                         //
-                        // Emulate Bethesda's shadow seams.
-                        //
-                        // Bethesda doesn't use cubemap shadows; to reduce VRAM usage, they use two 179-degree-FOV shadow maps 
-                        // stitched together. (GPUs use rectilinear projection; 180-degree FOVs and above are mathematically 
-                        // impossible.) This results in a seam -- a gap where there are no shadows.
-                        //
-                        {
-                           vec4  light_space_vert = normalize(scene_lights[i].transform_inv * vec4(fs_in.pos_world, 1.0));
-                           float yaw_offset       = atan(light_space_vert.y, light_space_vert.x);
-                           int   light_type       = scene_lights[i].type;
+                        if (light_type == RENDERED_LIGHT_TYPE_OMNI_SHADOW) {
                            //
-                           if (light_type == RENDERED_LIGHT_TYPE_OMNI_SHADOW) {
+                           // Omni-shadow lights cast light and shadows in all directions. However, due to Bethesda's 
+                           // approach to rendering them, there is a seam in the shadow no wider than one degree. The 
+                           // seam follows the light's local YZ plane, i.e. it is a ring that reaches forward, back, 
+                           // up, and down (all light-relative directions).
+                           //
+                           #if EMULATE_OMNI_LIGHT_SHADOW_SEAM
                               //
-                              // Omni-shadow lights cast light and shadows in all directions. However, due to Bethesda's 
-                              // approach to rendering them, there is a seam in the shadow no wider than one degree. The 
-                              // seam follows the light's local YZ plane, i.e. it is a ring that reaches forward, back, 
-                              // up, and down (all light-relative directions).
+                              // Bethesda doesn't use cubemap shadows; to reduce VRAM usage, they use two 179-degree-FOV 
+                              // shadow maps stitched together. (GPUs use rectilinear projection; 180-degree FOVs and 
+                              // above are mathematically impossible.) This results in a seam -- a gap where there are 
+                              // no shadows.
                               //
                               if (abs(abs(yaw_offset) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
                                  break;
                               }
-                           } else if (light_type == RENDERED_LIGHT_TYPE_HEMI_SHADOW) {
-                              //
-                              // Hemi lights cast light in all directions, but cast shadows only over a 179-degree range 
-                              // on the local +X side, spanning from local -Y to local +Y.
-                              //
-                              if (abs(yaw_offset) > radians(89)) {
-                                 break;
-                              }
+                           #endif
+                        } else if (light_type == RENDERED_LIGHT_TYPE_HEMI_SHADOW) {
+                           //
+                           // Hemi lights cast light in all directions, but cast shadows only over a 179-degree range 
+                           // on the local +X side, spanning from local -Y to local +Y.
+                           //
+                           if (abs(yaw_offset) > radians(89)) {
+                              break;
                            }
+                        } else if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
+                           //
+                           // TODO
+                           //
                         }
-                     #endif
+                     }
                      //
                      // Compute shadows:
                      //
@@ -194,17 +212,28 @@ vec4 calculate_color() {
       #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
       } else {
          for(int i = 0; i < MAX_LIGHTS; ++i) {
-            computed_light current = calc_point_light(
-               scene_lights[i],
-               fs_in.tangent_space,
-               normal,
-               fs_in.tangent_vert_pos,
-               view_dir,
-               current_object.specular_exponent
-            );
-            light_data.diffuse  += current.diffuse;
-            light_data.specular += current.specular;
-         }
+            int light_type = scene_lights[i].type;
+            //
+            computed_light current;
+            if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
+               current = calc_spot_light(
+                  scene_lights[i],
+                  fs_in.tangent_space,
+                  normal,
+                  fs_in.tangent_vert_pos,
+                  tangent_view_dir,
+                  current_object.specular_exponent
+               );
+            } else {
+               current = calc_point_light(
+                  scene_lights[i],
+                  fs_in.tangent_space,
+                  normal,
+                  fs_in.tangent_vert_pos,
+                  tangent_view_dir,
+                  current_object.specular_exponent
+               );
+            }
       }
       #endif
    }

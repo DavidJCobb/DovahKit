@@ -24,11 +24,11 @@ layout(std140,binding = 0) uniform UniformBufferObject {
 // binding 2 is used by the fragment shader (sun shadow map)
 // binding 3 is used by the fragment shader (light shadow maps)
 layout(std430,set = 0, binding = 4) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params objects[];
-} objectBuffer;
+	rendered_mesh_shader_params scene_meshes[];
+};
 layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
-	rendered_light_shader_params lights[MAX_LIGHTS];
-} pointLightBuffer;
+	rendered_light_shader_params scene_lights[MAX_LIGHTS];
+};
 // binding 6 is used by the fragment shader (texture array)
 
 #include "includes/standard_vertex_inputs.glsl"
@@ -47,7 +47,7 @@ const mat4 shadow_to_normalized_coords = mat4(
 );
 
 void main() {
-   mat4 model_transform = objectBuffer.objects[pushed.object_index].transform;
+   mat4 model_transform = scene_meshes[pushed.object_index].transform;
    //
    gl_Position = ubo.proj * ubo.view * model_transform * vec4(in_position, 1.0);
    //
@@ -58,11 +58,13 @@ void main() {
    //
    for(int i = 0; i < 4; ++i) {
       vs_out.vector_to_light[i] = vec3(0, 0, 0);
+      vs_out.light_space_pos[i] = vs_out.pos_world;
       //
       int light_index = ubo.shadow_caster_index[i];
       if (light_index >= 0) {
-         vs_out.vector_to_light[i]      = vs_out.pos_world - vec3(pointLightBuffer.lights[light_index].transform[3]);
-         vs_out.light_distance_ratio[i] = length(vs_out.vector_to_light[i]) / pointLightBuffer.lights[light_index].radius;
+         vs_out.vector_to_light[i]      = vs_out.pos_world - vec3(scene_lights[light_index].transform[3]);
+         vs_out.light_distance_ratio[i] = length(vs_out.vector_to_light[i]) / scene_lights[light_index].radius;
+         vs_out.light_space_pos[i]      = vec3(scene_lights[i].transform_inv * vec4(vs_out.pos_world, 1.0));
       }
    }
    //
@@ -122,7 +124,7 @@ void main() {
       //
       int light_index = ubo.shadow_caster_index[i];
       if (light_index >= 0) {
-         vs_out.tangent_light_dir[i] = normalize(vs_out.tangent_space * vec3(pointLightBuffer.lights[light_index].transform[3]));
+         vs_out.tangent_light_dir[i] = normalize(vs_out.tangent_space * vec3(scene_lights[light_index].transform[3]));
       }
    }
    //

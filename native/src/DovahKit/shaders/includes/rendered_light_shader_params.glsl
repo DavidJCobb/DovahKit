@@ -6,8 +6,9 @@ struct rendered_light_shader_params {
    mat4  transform;
    mat4  transform_inv;
    vec3  color;
-   float radius;
    float fade;
+   float fov;
+   float radius;
    int   type; // rendered_light::light_type enum in C++
 };
 

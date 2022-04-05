@@ -3824,12 +3824,13 @@ namespace vulkanDK {
             (float)loaded_base->color.g / 255.0,
             (float)loaded_base->color.b / 255.0,
          },
-         .radius = (float)loaded_base->radius,
          .fade   = loaded_base->fade,
+         .fov    = loaded_base->fov,
+         .radius = (float)loaded_base->radius,
       };
       if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
          params.fade += ex->fade;
-         // sp.fov += ex->fov;
+         params.fov  += ex->fov;
       }
       if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
          params.radius += ex->value;
@@ -3847,6 +3848,10 @@ namespace vulkanDK {
                break;
             case hemi_shadow:
                params.type = rendered_light::light_type::hemi_shadow;
+               break;
+            case spot: // Bethesda's spot lights always cast shadows
+            case spot_shadow:
+               params.type = rendered_light::light_type::spot_shadow;
                break;
             default:
                return false; // unsupported light type

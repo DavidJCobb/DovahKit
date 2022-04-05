@@ -2,8 +2,6 @@
 #define USE_POINT_SHADOW_DEPTH_BIAS 1
 #define USE_INVERTED_POINT_SHADOW_MAP 0
 
-#include "linearize_depth.glsl"
-
 // shadow values range from 0 (bright) to 1 (shadowed)
 float calc_point_shadow(
    vec3        normal,               // surface normal

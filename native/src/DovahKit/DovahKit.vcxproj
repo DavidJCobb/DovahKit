@@ -839,7 +839,7 @@
     <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h" />
     <ClInclude Include="nif\types\Triangle.h" />
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
-    <ClInclude Include="shaders\includes\point_light.glsl" />
+    <ClInclude Include="shaders\includes\rendered_light_shader_params.glsl" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
@@ -1592,12 +1592,13 @@
     <None Include="shaders\cores\standard_shader.frag" />
     <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
+    <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
     <None Include="shaders\includes\calc_point_shadow.glsl" />
+    <None Include="shaders\includes\calc_spot_light.glsl" />
     <None Include="shaders\includes\computed_light.glsl" />
-    <None Include="shaders\includes\linearize_depth.glsl" />
     <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
     <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
     <None Include="shaders\includes\scene_global_state.glsl" />
