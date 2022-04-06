@@ -3399,14 +3399,14 @@ namespace vulkanDK {
       {
          auto viewport = glm::vec4( 0, 0, this->surface_extent.width, this->surface_extent.height );
          //
-         eye_position = glm::unProject(
-            glm::vec3{ x, y, 0.0 },
+         eye_position = glm::unProjectZO(
+            glm::vec3{ x, y, config::use_inverted_depth ? 1.0 : 0.0 },
             this->scene.global_state.view,
             this->scene.global_state.proj,
             viewport
          );
-         eye_endpoint = glm::unProject(
-            glm::vec3{ x, y, 1.0 },
+         eye_endpoint = glm::unProjectZO(
+            glm::vec3{ x, y, config::use_inverted_depth ? 0.5 : 1.0 }, // don't use 0.0 for inverted far, because when we invert depth, we also push the far plane to infinity
             this->scene.global_state.view,
             this->scene.global_state.proj,
             viewport

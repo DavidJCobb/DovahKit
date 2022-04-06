@@ -64,6 +64,10 @@ namespace vulkanDK {
             vertex_index_list   indices;
             //
             struct {
+               glm::vec3 min = { 0.0, 0.0, 0.0 };
+               glm::vec3 max = { 0.0, 0.0, 0.0 };
+            } bounding_box;
+            struct {
                glm::vec3 center    = { 0.0, 0.0, 0.0 };
                float     radius_sq = 0.0F; // radius squared is faster for many calculations
             } bounding_sphere;
@@ -109,11 +113,9 @@ namespace vulkanDK {
          void mark_for_delete();
          void reset();
 
-         // Object-local raycasts
-         bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const; // ray direction must be normalized
-         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const; // ray direction must be normalized
-
-         // World-local raycast
+         // World-relative raycasts (uses the mesh's transform):
+         bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const;
+         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
          bool ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const;
    };
 }

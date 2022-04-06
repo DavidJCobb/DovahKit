@@ -7,6 +7,59 @@
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
 
+namespace {
+   bool ray_intersects_obb(
+      const glm::vec3& ray_origin,
+      const glm::vec3& ray_direction,
+      const glm::vec3& local_aabb_min,
+      const glm::vec3& local_aabb_max,
+      const glm::mat4& transform,
+      float& distance
+   ) {
+      // http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
+      glm::vec3 world_pos = transform[3];
+      glm::vec3 delta     = world_pos - ray_origin;
+      //
+      float greatest_min = 0.0F;
+      float smallest_max  = std::numeric_limits<float>::max();
+      for (int i = 0; i < 3; ++i) {
+         glm::vec3 axis = transform[i];
+         float e = glm::dot(axis, delta);
+         float f = glm::dot(ray_direction, axis);
+         if (fabs(f) > std::numeric_limits<float>::epsilon()) {
+            //
+            // For the current axis, compute both ray/plane intersections; e.g. for the X-axis, 
+            // compute the intersections with the YZ plane.
+            //
+            float behind = (e + local_aabb_min[i]) / f;
+            float ahead  = (e + local_aabb_max[i]) / f;
+            if (behind > ahead){
+               std::swap(behind, ahead);
+            }
+            //
+            if (smallest_max > ahead)
+               smallest_max = ahead;
+            if (greatest_min < behind)
+               greatest_min = behind;
+            //
+            // If the nearest "far" intersection is ever closer than the nearest "near" 
+            // intersection, then there is no intersection.
+            //
+            if (smallest_max < greatest_min)
+               return false;
+         } else {
+            //
+            // Ray is parallel to the AABB.
+            //
+            if (-e + local_aabb_min[i] > 0.0f || -e + local_aabb_max[i] < 0.0f)
+               return false;
+         }
+      }
+      distance = greatest_min;
+      return true;
+   }
+}
+
 namespace vulkanDK {
    rendered_mesh::~rendered_mesh() {
       this->reset();
@@ -85,12 +138,17 @@ namespace vulkanDK {
          y.consider(v.pos.y);
          z.consider(v.pos.z);
       }
+      this->data.bounding_box = {
+         .min = { x.min, y.min, z.min },
+         .max = { x.max, y.max, z.max },
+      };
+      this->data.bounding_sphere = {
+         .center    = { x.center(), y.center(), z.center() },
+         .radius_sq = 0.0,
+      };
       //
       auto& bs = this->data.bounding_sphere;
-      bs.center    = { x.center(), y.center(), z.center() };
-      bs.radius_sq = 0.0;
       for (auto& v : this->data.vertices) {
-         //float radius_sq = std::pow(v.pos.x - bs.center.x, 2) + std::pow(v.pos.y - bs.center.y, 2) + std::pow(v.pos.z - bs.center.z, 2);
          float radius_sq = glm::distance2(bs.center, v.pos);
          bs.radius_sq = std::max(bs.radius_sq, radius_sq);
       }
@@ -160,18 +218,15 @@ namespace vulkanDK {
    bool rendered_mesh::ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const {
       constexpr float epsilon = 0.0001;
       auto& bound  = this->data.bounding_sphere;
-      auto  center = glm::vec3(
-         (  // Have to convert the bounding sphere center to a transformation matrix; matrix-by-vector is, evidently, something else, and not something we can use
-            glm::translate(glm::mat4(1), bound.center) * this->transform()
-         )[3] // bottom row of a transformation matrix is the translation
-      );
+      auto  center = glm::vec3(this->transform() * glm::vec4(bound.center, 1.0F));
+      auto  scale  = glm::length(this->transform()[0]); // X-scale; Y-scale would be the length of column 1; Z-scale, column 2
       //
       // Line/sphere intersection check:
       //
       ray_direction.normalize();
       //
       auto gap   = ray_origin - center;
-      auto delta = std::pow(ray_direction.dot(gap), 2) - (gap.length_sq() - bound.radius_sq);
+      auto delta = std::pow(ray_direction.dot(gap), 2) - (gap.length_sq() - (bound.radius_sq * scale));
       //
       // Cases:
       // 
@@ -194,13 +249,17 @@ namespace vulkanDK {
       hit_distance = std::numeric_limits<float>::max();
       for (size_t i = 0; i + 2 < list.size(); i += 3) {
          std::array<uint32_t, 3> indices = list.triangle_from(i);
+         glm::vec3 a = this->transform() * glm::vec4(vert[indices[0]].pos, 1.0F);
+         glm::vec3 b = this->transform() * glm::vec4(vert[indices[1]].pos, 1.0F);
+         glm::vec3 c = this->transform() * glm::vec4(vert[indices[2]].pos, 1.0F);
+         //
          float distance;
          bool  result = glm::intersectRayTriangle(
             ray_origin,
             ray_direction,
-            vert[indices[0]].pos,
-            vert[indices[1]].pos,
-            vert[indices[2]].pos,
+            a,
+            b,
+            c,
             bary_position,
             distance
          );
@@ -211,17 +270,20 @@ namespace vulkanDK {
       }
       return hits;
    }
-
    bool rendered_mesh::ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const {
       if (this->empty())
          return false;
       if (!this->ray_intersects_bounding_sphere(ray_origin, ray_direction))
          return false;
-      auto mt = glm::inverse(this->transform()); // world -> local instead of local -> world
-      auto local_ray_origin    = glm::vec3(mt * glm::vec4(ray_origin,  1));
-      mt[3] = { 0, 0, 0, 0 }; // exclude position from next transform; only do rotation (and scale i guess)
-      auto local_ray_direction = glm::vec3(mt * glm::vec4(ray_direction, 1));
-      //
-      return this->ray_intersects_shape(local_ray_origin, local_ray_direction, hit_distance);
+      if (this->data.bounding_sphere.radius_sq > (10000 * 10000)) {
+         //
+         // Massive triangles can cause ray/triangle intersection checks to behave 
+         // erratically and produce both false positives and false negatives. Let's 
+         // be a little more certain before we resort to trying them.
+         //
+         if (!ray_intersects_obb(ray_origin, ray_direction, this->data.bounding_box.min, this->data.bounding_box.max, this->transform(), hit_distance))
+            return false;
+      }
+      return this->ray_intersects_shape(ray_origin, ray_direction, hit_distance);
    }
 }
