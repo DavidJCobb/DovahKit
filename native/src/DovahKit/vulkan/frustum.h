@@ -5,9 +5,9 @@
 
 namespace vulkanDK {
    //
-   // Information about a view frustrum.
+   // Information about a view frustum.
    //
-   struct frustrum {
+   struct frustum {
       static constexpr size_t plane_count = 2;
 
       union plane {
@@ -53,23 +53,23 @@ namespace vulkanDK {
 
       static_assert(sizeof(planes) == sizeof(glm::vec3) * (plane::point_count * plane_count), "Sanity-check static assertion: union validity: vec3s are contiguous?");
 
-      frustrum() : points({}) {}
+      frustum() : points({}) {}
 
       inline glm::vec3 center() const { return (this->planes.far.center - this->planes.near.center) * 0.5F; }
 
-      frustrum& operator*=(const glm::mat4& x) {
+      frustum& operator*=(const glm::mat4& x) {
          for (auto& item : this->points)
             item = x * glm::vec4(item, 1.0F);
          return *this;
       }
-      frustrum& operator*=(float x) {
+      frustum& operator*=(float x) {
          for (auto& item : this->points)
             item *= x;
          return *this;
       }
       template<typename T>
-      frustrum operator*(const T& x) const {
-         frustrum out = *this;
+      frustum operator*(const T& x) const {
+         frustum out = *this;
          out *= x;
          return out;
       }

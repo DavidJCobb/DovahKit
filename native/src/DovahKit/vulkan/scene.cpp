@@ -15,6 +15,7 @@
 #include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
 #include "helpers/cubemap_helpers.h"
+#include "helpers/extract_frustum_normals.h"
 #include "data/DKVulkanCameraUpdate.h"
 
 // for NIF support
@@ -245,6 +246,8 @@ namespace vulkanDK {
          }
       }
       //
+      // Write shadow view/projection matrices:
+      //
       using data_type = std::array<std::array<glm::mat4, 6>, surface_renderer::shadow_caster_count>;
       data_type& data = *(data_type*)fif.shader_params.light_shadow_data.map_memory();
       //
@@ -309,8 +312,8 @@ namespace vulkanDK {
       fif.shader_params.light_shadow_data.unmap_memory(&data);
    }
 
-   frustrum scene::get_current_view_frustrum(float near, float far) const {
-      frustrum out;
+   frustum scene::get_current_view_frustum(float near, float far) const {
+      frustum out;
       auto& camera     = this->camera;
       auto  camera_rot = glm::eulerAngleXYZ(-camera.yaw, -camera.roll, -camera.pitch);
       const auto& camera_up      = camera_rot[0]; // local Z

@@ -39,16 +39,38 @@ namespace vulkanDK {
       //
       this->support.vulkan_api_version = properties.apiVersion;
       //
-      this->support.independent_blending = features.features.independentBlend;
-      this->support.large_points         = features.features.largePoints;
-      this->support.max_anisotropic_filtering = 0;
-      if (features.features.samplerAnisotropy) {
+      this->support.independent_blending         = features.features.independentBlend == VK_TRUE;
+      this->support.indirect_draw_first_instance = features.features.drawIndirectFirstInstance == VK_TRUE;
+      this->support.large_points                 = features.features.largePoints == VK_TRUE;
+      this->support.max_anisotropic_filtering    = 0;
+      if (features.features.samplerAnisotropy == VK_TRUE) {
          this->support.max_anisotropic_filtering = properties.limits.maxSamplerAnisotropy;
       }
-      this->support.max_image_dimension_2D       = properties.limits.maxImageDimension2D;
+      this->support.max_image_dimension_2D = properties.limits.maxImageDimension2D;
+      if (features.features.multiDrawIndirect == VK_TRUE) {
+         this->support.max_indirect_draw_count = properties.limits.maxDrawIndirectCount;
+      }
       this->support.max_vertex_index_for_draw    = properties.limits.maxDrawIndexedIndexValue;
-      this->support.non_solid_polygon_fill_modes = features.features.fillModeNonSolid;
+      this->support.non_solid_polygon_fill_modes = features.features.fillModeNonSolid == VK_TRUE;
       //
+      this->support.compute = {
+         .max_invocations_per_workgroup = properties.limits.maxComputeWorkGroupInvocations,
+         .max_shared_memory_size        = properties.limits.maxComputeSharedMemorySize,
+         .per_axis = {
+            .x = {
+               .max_workgroups     = properties.limits.maxComputeWorkGroupCount[0],
+               .max_workgroup_size = properties.limits.maxComputeWorkGroupSize[0],
+            },
+            .y = {
+               .max_workgroups     = properties.limits.maxComputeWorkGroupCount[1],
+               .max_workgroup_size = properties.limits.maxComputeWorkGroupSize[1],
+            },
+            .z = {
+               .max_workgroups     = properties.limits.maxComputeWorkGroupCount[2],
+               .max_workgroup_size = properties.limits.maxComputeWorkGroupSize[2],
+            },
+         },
+      };
       this->support.descriptor_bindings = {
          .null_handles   = robustness.nullDescriptor == VK_TRUE,
          .runtime_array  = indexing_features.runtimeDescriptorArray == VK_TRUE,

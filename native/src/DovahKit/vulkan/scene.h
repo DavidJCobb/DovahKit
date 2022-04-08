@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 #include <vector>
-#include "frustrum.h"
+#include "frustum.h"
 #include "loaded_texture.h"
 #include "rendered_light.h"
 #include "rendered_mesh.h"
@@ -55,7 +55,7 @@ namespace vulkanDK {
          void mark_light_shadows_dirty();
          void update_light_shadows(frame_in_flight&);
 
-         frustrum get_current_view_frustrum(float near, float far) const;
+         frustum get_current_view_frustum(float near, float far) const;
 
          void teardown();
          void update(); // anim state, etc.

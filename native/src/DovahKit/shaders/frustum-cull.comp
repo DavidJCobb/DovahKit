@@ -1,0 +1,63 @@
+#version 450
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
+
+#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/scene_global_state.glsl"
+
+struct frustum_plane_normals {
+	//
+	// These are inward-facing surface normals for the faces of the frustum pyramid.
+	//
+	vec4 left;
+	vec4 right;
+	vec4 top;
+	vec4 bottom;
+};
+
+struct VkDrawIndexedIndirectCommand {
+   uint indexCount;
+   uint instanceCount;
+   uint firstIndex;
+   uint vertexOffset;
+   uint firstInstance;
+};
+
+layout(std140,binding = 0) uniform UniformBufferObject {
+   scene_global_state ubo;
+};
+layout(std430,binding = 1) readonly buffer FrustumBuffer {
+	frustum_plane_normals frustum;
+};
+layout(std430,binding = 2) readonly buffer ObjectBuffer {
+	rendered_mesh_shader_params scene_meshes[];
+};
+layout(std430,binding = 3) readonly buffer ObjectIndexBuffer {
+	uint mesh_indices[];
+};
+layout(std430,binding = 4) writeonly buffer DrawCommandBuffer {
+	VkDrawIndexedIndirectCommand indirect_draws[];
+};
+
+bool frustum_check(vec4 position, float radius) {
+	for (int i = 0; i < 4; i++) {
+		if (dot(pos, frustum[i]) + radius < 0.0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void main() {
+	uint index = gl_globalInvocationID.x + gl_globalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x;
+	uint mesh  = mesh_indices[index];
+	if (mesh < 0)
+		return;
+	//
+	vec4 pos = vec4(scene_meshes[mesh].pos.xyz, 1.0);
+	if (frustum_check(pos, 1.0)) {
+		indirect_draws[index].instanceCount = 1;
+	} else {
+		indirect_draws[index].instanceCount = 0;
+	}
+}

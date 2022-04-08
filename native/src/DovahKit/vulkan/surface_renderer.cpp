@@ -1836,7 +1836,7 @@ namespace vulkanDK {
       auto& list = this->swap_chain.frames_in_flight;
       for (auto& frame : list) {
          auto global_state_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.uniform.handle,
+            .buffer = frame.shader_params.scene_data.handle,
             .offset = 0,
             .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };

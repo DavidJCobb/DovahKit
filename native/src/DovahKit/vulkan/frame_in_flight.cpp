@@ -5,12 +5,21 @@
 #include "config/scene_limits.h"
 #include "config/shadow_maps.h"
 #include "config/use_inverted_depth.h"
+#include "helpers/extract_frustum_normals.h"
 
 namespace {
    static constexpr bool debug_log_scene_object_lifetimes = false;
 }
 
 namespace vulkanDK {
+   void frame_in_flight::indirect_draw_buffers::setup(surface_renderer& sr) {
+      constexpr VkDeviceSize params_size  = sizeof(VkDrawIndexedIndirectCommand) * config::max_rendered_meshes;
+      constexpr VkDeviceSize indices_size = sizeof(uint32_t) * config::max_rendered_meshes;
+      this->params       = sr.create_buffer(params_size,  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      this->mesh_indices = sr.create_buffer(indices_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+   }
+
+
    frame_in_flight::~frame_in_flight() {
       if (!this->owner) {
          assert(this->fence == VK_NULL_HANDLE);
@@ -72,8 +81,16 @@ namespace vulkanDK {
    }
    void frame_in_flight::_setup_shader_parameter_buffers() {
       {
+         constexpr VkDeviceSize buffer_size = sizeof(float) * config::max_rendered_meshes;
+         this->shader_params.bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      }
+      {
+         constexpr VkDeviceSize buffer_size = sizeof(glm::vec4) * 4;
+         this->shader_frustums.main = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      }
+      {
          constexpr VkDeviceSize buffer_size = sizeof(scene_global_state);
-         this->shader_params.uniform = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->shader_params.scene_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
       {
          constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
@@ -90,6 +107,24 @@ namespace vulkanDK {
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
          this->shader_params.light_shadow_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      }
+      //
+      // Indirect draw params:
+      //
+      this->indirect_draw_commands.main.setup(*this->owner);
+      this->indirect_draw_commands.main_oit.setup(*this->owner);
+      this->indirect_draw_commands.sun_shadows.setup(*this->owner);
+      for (auto& item : this->indirect_draw_commands.shadow_casters)
+         item.setup(*this->owner);
+      //
+      // Frustums:
+      //
+      {
+         constexpr VkDeviceSize buffer_size = sizeof(glm::vec4) * 4;
+         auto& sf = this->shader_frustums;
+         //
+         sf.main = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         sf.sun  = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       }
    }
    void frame_in_flight::_setup_command_buffers() {
@@ -189,11 +224,28 @@ namespace vulkanDK {
    void frame_in_flight::_update_shader_global_scene_state() {
       auto& scene = this->get_scene();
       auto& src   = scene.global_state;
-      auto& dst   = this->shader_params.uniform;
+      auto& dst   = this->shader_params.scene_data;
       //
       void* data = dst.map_memory();
       memcpy(data, &src, sizeof(src));
       dst.unmap_memory(data);
+      //
+      // Frustums:
+      //
+      {
+         auto& buffer  = this->shader_frustums.main;
+         auto* frustum = buffer.map_memory();
+         auto  normals = extract_frustum_normals(scene.global_state.proj * scene.global_state.view);
+         memcpy(frustum, &normals, sizeof(normals));
+         buffer.unmap_memory(frustum);
+      }
+      {
+         auto& buffer  = this->shader_frustums.sun;
+         auto* frustum = buffer.map_memory();
+         auto  normals = extract_frustum_normals(scene.global_state.sun_space);
+         memcpy(frustum, &normals, sizeof(normals));
+         buffer.unmap_memory(frustum);
+      }
    }
    void frame_in_flight::_update_shader_lights_data_buffer() {
       using entry_type = rendered_light::shader_parameters;
@@ -292,10 +344,7 @@ namespace vulkanDK {
       using entry_type = rendered_mesh::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 
-      constexpr bool map_only_what_is_necessary = false; // useless in VMA
-
       auto& scene  = this->get_scene();
-      auto& buffer = this->shader_params.object_data;
       //
       auto& ro     = scene.meshes;
       auto  count  = ro.size();
@@ -303,78 +352,46 @@ namespace vulkanDK {
       VkDeviceSize size = count * entry_size;
       //
       size_t first_dirty = 0;
-      size_t last_dirty  = 0;
       bool   any_dirty   = false;
-      if constexpr (map_only_what_is_necessary) {
-         for (size_t i = 0; i < count; ++i) {
-            auto& item = ro[i];
-            switch (item.life_state) {
-               case scene_frame_item_state::empty:
-                  continue;
-               case scene_frame_item_state::pending_delete:
-                  item.handled_frames.set_up_to_date(this->my_index);
-                  continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
+      for (size_t i = 0; i < count; ++i) {
+         auto& item = ro[i];
+         switch (item.life_state) {
+            case scene_frame_item_state::empty:
                continue;
-            if (!any_dirty) {
-               first_dirty = i;
-               any_dirty   = true;
-            }
-            last_dirty = i;
-         }
-      } else {
-         for (size_t i = 0; i < count; ++i) {
-            auto& item = ro[i];
-            switch (item.life_state) {
-               case scene_frame_item_state::empty:
-                  continue;
-               case scene_frame_item_state::pending_delete:
-                  item.handled_frames.set_up_to_date(this->my_index);
-                  continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
+            case scene_frame_item_state::pending_delete:
+               item.handled_frames.set_up_to_date(this->my_index);
                continue;
-            first_dirty = i;
-            any_dirty   = true;
-            break;
          }
+         if (item.handled_frames.is_up_to_date(this->my_index))
+            continue;
+         first_dirty = i;
+         any_dirty   = true;
+         break;
       }
       //
       if (any_dirty) {
-         entry_type* data = nullptr;
-         if constexpr (map_only_what_is_necessary) {
-            VkDeviceSize offset = first_dirty * entry_size;
-            VkDeviceSize length = (last_dirty - first_dirty + 1) * entry_size;
-            data = (entry_type*)buffer.map_memory(offset, length);
-            for (size_t i = first_dirty; i <= last_dirty; ++i) {
-               auto& item = ro[i];
-               if (!item.active())
-                  continue;
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               auto& src = ro[i].shader_params;
-               auto& dst = data[i - first_dirty];
-               memcpy(&dst, &src, entry_size);
-               //
-               item.handled_frames.set_up_to_date(this->my_index);
-            }
-         } else {
-            data = (entry_type*)buffer.map_memory();
-            for (size_t i = first_dirty; i < count; ++i) {
-               auto& item = ro[i];
-               if (!item.active())
-                  continue;
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               auto& src = ro[i].shader_params;
-               auto& dst = data[i];
-               memcpy(&dst, &src, entry_size);
-               //
-               item.handled_frames.set_up_to_date(this->my_index);
-            }
+         //
+         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
+         //       only map the parts we need to update.
+         //
+         auto* bounds = (float*)this->shader_params.bounds.map_memory();
+         auto* params = (entry_type*)this->shader_params.object_data.map_memory();
+         for (size_t i = first_dirty; i < count; ++i) {
+            auto& item = ro[i];
+            if (!item.active())
+               continue;
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            auto& src = item.shader_params;
+            auto& dst = params[i];
+            memcpy(&dst, &src, entry_size);
+            //
+            bounds[i] = item.data.bounding_sphere.radius_sq;
+            //
+            item.handled_frames.set_up_to_date(this->my_index);
          }
-         buffer.unmap_memory(data);
+         this->shader_params.bounds.unmap_memory(bounds);
+         this->shader_params.object_data.unmap_memory(params);
       }
    }
    void frame_in_flight::_update_shader_texture_descriptors() {
@@ -496,6 +513,41 @@ namespace vulkanDK {
          pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
          return pc;
       }
+      
+      template<typename Pred> requires requires(const rendered_mesh& ro, Pred&& predicate) {
+         { predicate(ro) } -> std::same_as<bool>;
+      }
+      void _prep_indirect_draws(
+         const scene& scene,
+         frame_in_flight::indirect_draw_buffers& idb,
+         Pred&& predicate
+      ) {
+         auto* params  = (VkDrawIndexedIndirectCommand*)idb.params.map_memory();
+         auto* indices = (uint32_t*)idb.mesh_indices.map_memory();
+         size_t i = 0; // index into scene mesh array
+         size_t j = 0; // index into indirect draw parameter arrays
+         for (; i < scene.meshes.size(); ++i) {
+            auto& ro = scene.meshes[i];
+            if (!ro.active())
+               continue;
+            if (!predicate(ro))
+               continue;
+            params[j] = VkDrawIndexedIndirectCommand{
+               .indexCount    = ro.vertex_and_index_buffer.index_count,
+               .instanceCount = 1,
+               .firstIndex    = 0,
+               .vertexOffset  = 0,
+               .firstInstance = 0,
+            };
+            indices[j] = i;
+            ++j;
+         }
+         for (; j < config::max_rendered_meshes; ++j) {
+            indices[j] = -1;
+         }
+         idb.params.unmap_memory(params);
+         idb.mesh_indices.unmap_memory(indices);
+      }
 
       template<typename Pred, typename Prior> requires requires(const rendered_mesh& ro, Pred&& predicate, Prior&& before_draw) {
          { predicate(ro) } -> std::same_as<bool>;
@@ -553,11 +605,120 @@ namespace vulkanDK {
             }
          }
       }
+
+      template<typename Pred, typename Prior> requires requires(const rendered_mesh& ro, Pred&& predicate, Prior&& before_draw) {
+         { predicate(ro) } -> std::same_as<bool>;
+         { before_draw(ro) };
+      }
+      void _draw_objects_indirect(
+         scene& scene,
+         command_buffer& command_buffer,
+         frame_in_flight::indirect_draw_buffers& indirect_buffer,
+         const shader& shader,
+         Pred&& predicate,
+         Prior&& before_draw,
+         VkShaderStageFlags push_constant_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+      ) {
+         auto   command_handle     = command_buffer.handle;
+         auto&  material           = shader.material;
+         size_t first_double_sided = std::string::npos;
+         //
+         size_t draw_index = 0;
+         for (size_t j = 0; j < scene.meshes.size(); ++j) {
+            auto& ro = scene.meshes[j];
+            if (!ro.active())
+               continue;
+            if (!predicate(ro))
+               continue;
+            if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
+               first_double_sided = j;
+            } else {
+               before_draw(ro);
+               //
+               command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, j));
+               vkCmdDrawIndexedIndirect(
+                  command_handle,
+                  indirect_buffer.params.handle,
+                  sizeof(VkDrawIndexedIndirectCommand) * draw_index,
+                  1,
+                  sizeof(VkDrawIndexedIndirectCommand)
+               );
+            }
+            ++draw_index;
+         }
+         //
+         if (first_double_sided != std::string::npos) {
+            auto* variant = shader.get_variant({
+               .face_cull_mode = VK_CULL_MODE_NONE,
+            });
+            assert(variant);
+            vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+            //
+            for (size_t j = 0; j < scene.meshes.size(); ++j) {
+               auto& ro = scene.meshes[j];
+               if (!ro.active())
+                  continue;
+               if (!predicate(ro))
+                  continue;
+               if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided)) {
+                  continue;
+               } else {
+                  before_draw(ro);
+                  //
+                  command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, j));
+                  vkCmdDrawIndexedIndirect(
+                     command_handle,
+                     indirect_buffer.params.handle,
+                     sizeof(VkDrawIndexedIndirectCommand) * draw_index,
+                     1,
+                     sizeof(VkDrawIndexedIndirectCommand)
+                  );
+               }
+               ++draw_index;
+            }
+         }
+      }
    }
    void frame_in_flight::_refill_command_buffers() {
       this->command_buffers_invalid = false;
       //
       auto& scene = this->owner->scene;
+      {  // Prep indirect draws.
+         bool can_do_alpha = this->owner->can_do_alpha();
+         //
+         _prep_indirect_draws( // sun
+            scene,
+            this->indirect_draw_commands.sun_shadows,
+            [](const rendered_mesh& ro) {
+               return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+            }
+         );
+         for (auto& caster : this->indirect_draw_commands.shadow_casters) {
+            _prep_indirect_draws( // sun
+               scene,
+               caster,
+               [](const rendered_mesh& ro) {
+                  return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+               }
+            );
+         }
+         _prep_indirect_draws( // main
+            scene,
+            this->indirect_draw_commands.main,
+            [can_do_alpha](const rendered_mesh& ro) {
+               return !(can_do_alpha && (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit));
+            }
+         );
+         if (can_do_alpha) {
+            _prep_indirect_draws( // main OIT
+               scene,
+               this->indirect_draw_commands.main_oit,
+               [](const rendered_mesh& ro) {
+                  return (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit) != 0;
+               }
+            );
+         }
+      }
       {  // Sun shadows
          auto& command_buffer = this->command_buffers.main_shadow;
          auto  command_handle = command_buffer.handle;

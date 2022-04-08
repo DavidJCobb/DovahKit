@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <string>
 #include <vector>
 #include "_vulkan.h"
@@ -7,6 +8,11 @@
 
 namespace vulkanDK {
    class physical_device : only_heap_allocate {
+      public:
+         struct compute_axis_limits {
+            uint32_t max_workgroups     = 0;
+            uint32_t max_workgroup_size = 0;
+         };
       public:
          physical_device(VkPhysicalDevice);
          ~physical_device();
@@ -27,11 +33,22 @@ namespace vulkanDK {
             uint32_t vulkan_api_version = 0;
             //
             bool     independent_blending         = false;
+            bool     indirect_draw_first_instance = false;
             bool     large_points                 = false;
             float    max_anisotropic_filtering    = 0;
+            uint32_t max_indirect_draw_count      = 0;
             uint32_t max_image_dimension_2D       = 0;          // max texture size
             uint32_t max_vertex_index_for_draw    = 0xFFFFFFFF; // indexed-draw calls cannot use vertex indices higher than this
             bool     non_solid_polygon_fill_modes = false;      // are VK_POLYGON_MODE_POINT and VK_POLYGON_MODE_LINE (wireframe) supported?
+            struct {
+               uint32_t max_invocations_per_workgroup = 0; // X, Y, and Z sizes multiplied together must not exceed this
+               uint32_t max_shared_memory_size        = 0; // split across all variables with the `Workgroup` storage class
+               struct {
+                  compute_axis_limits x;
+                  compute_axis_limits y;
+                  compute_axis_limits z;
+               } per_axis;
+            } compute;
             struct {
                bool null_handles   = false;
                bool runtime_array  = false;

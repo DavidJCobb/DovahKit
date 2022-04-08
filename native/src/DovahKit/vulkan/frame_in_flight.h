@@ -2,6 +2,7 @@
 #include <vector>
 #include "_vulkan.h"
 #include "_util.h"
+#include "config/scene_limits.h"
 #include "buffer.h"
 #include "command_buffer.h"
 #include "surface_renderer_descriptor_group.h"
@@ -48,6 +49,13 @@ namespace vulkanDK {
          };
          static_assert(sizeof(command_buffer_set) == sizeof(command_buffer) * std::tuple_size_v<decltype(command_buffer_set::list)>);
 
+         struct indirect_draw_buffers {
+            buffer params;
+            buffer mesh_indices;
+
+            void setup(surface_renderer&);
+         };
+
       public:
          frame_in_flight() {}
          ~frame_in_flight();
@@ -69,10 +77,25 @@ namespace vulkanDK {
          descriptor_set_group descriptor_sets;
          command_buffer_set   command_buffers;
          struct {
-            buffer uniform;     // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            indirect_draw_buffers main;
+            indirect_draw_buffers main_oit;
+            indirect_draw_buffers sun_shadows;
+            std::array<indirect_draw_buffers, config::max_active_shadow_casters> shadow_casters;
+         } indirect_draw_commands;
+         struct {
+            //
+            // Each frustum is defined by four vec4s which are the inward-facing surface normals of 
+            // the left, right, top, and bottom faces of the frustum.
+            //
+            buffer main;
+            buffer sun;
+         } shader_frustums;
+         struct {
+            buffer bounds;      // per-object bounding sphere radii
             buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
             buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
             buffer light_shadow_data;
+            buffer scene_data;  // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
          } shader_params;
          struct {
             overlays::fps        fps;

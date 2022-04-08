@@ -600,6 +600,7 @@
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
+    <ClCompile Include="vulkan\helpers\extract_frustum_normals.cpp" />
     <ClCompile Include="vulkan\helpers\glm_transform_from_beth.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
@@ -877,10 +878,11 @@
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\exceptions.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
-    <ClInclude Include="vulkan\frustrum.h" />
+    <ClInclude Include="vulkan\frustum.h" />
     <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />
     <ClInclude Include="vulkan\helpers\cubemap_helpers.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
+    <ClInclude Include="vulkan\helpers\extract_frustum_normals.h" />
     <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
     <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
@@ -1591,6 +1593,7 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="shaders\cores\standard_shader.frag" />
     <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
+    <None Include="shaders\frustum-cull.comp" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />

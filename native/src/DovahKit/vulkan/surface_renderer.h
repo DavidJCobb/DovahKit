@@ -10,6 +10,7 @@
 #include "_memory.h"
 #include "_util.h"
 #include "helpers/debug_helper_typeof.h"
+#include "config/scene_limits.h"
 #include "abstract_renderer.h"
 #include "buffer.h"
 #include "command_buffer.h"
@@ -63,7 +64,7 @@ namespace vulkanDK {
          static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
          static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-         static constexpr size_t shadow_caster_count = 4;
+         static constexpr size_t shadow_caster_count = config::max_active_shadow_casters;
 
       protected:
          // renderer events:

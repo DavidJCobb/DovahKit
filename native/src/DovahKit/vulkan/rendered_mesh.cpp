@@ -152,6 +152,7 @@ namespace vulkanDK {
          float radius_sq = glm::distance2(bs.center, v.pos);
          bs.radius_sq = std::max(bs.radius_sq, radius_sq);
       }
+      this->shader_params.bounding_sphere_radius = sqrt(bs.radius_sq);
    }
    //
    size_t rendered_mesh::total_size_for_setup() const {
@@ -187,6 +188,15 @@ namespace vulkanDK {
          vkCmdBindIndexBuffer(command_buffer, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT16);
       }
       vkCmdDrawIndexed(command_buffer, (uint32_t)vib.index_count, 1, 0, 0, 0);
+   }
+   VkDrawIndexedIndirectCommand rendered_mesh::make_indirect_draw_command() const {
+      return VkDrawIndexedIndirectCommand{
+         .indexCount    = this->vertex_and_index_buffer.index_count,
+         .instanceCount = 1,
+         .firstIndex    = 0,
+         .vertexOffset  = 0,
+         .firstInstance = 0,
+      };
    }
 
    void rendered_mesh::mark_for_delete() {

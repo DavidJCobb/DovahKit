@@ -44,9 +44,12 @@ namespace vulkanDK {
 
          struct shader_parameters { // pass to the shader via a storage buffer
             alignas(16) glm::mat4 transform;
-            alignas(16) glm::vec3 specular_color       = { 0, 0, 0 };
-            alignas( 4) float     specular_strength    = 1.0;
-            alignas( 4) float     specular_exponent    = 32;
+            //
+            alignas(16) glm::vec3 specular_color    = { 0, 0, 0 };
+            alignas( 4) float     specular_strength = 1.0;
+            alignas( 4) float     specular_exponent = 32;
+            //
+            alignas( 4) float     bounding_sphere_radius = 0;
          };
          struct push_constant {
             alignas(4) int32_t  object_index;               // not meaningful on this object; ignored during the render process
@@ -109,6 +112,7 @@ namespace vulkanDK {
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
+         VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
 
          void mark_for_delete();
          void reset();
