@@ -593,6 +593,7 @@
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
+    <ClCompile Include="vulkan\compute_shader.cpp" />
     <ClCompile Include="vulkan\dds\header.cpp" />
     <ClCompile Include="vulkan\dds\pixel_format.cpp" />
     <ClCompile Include="vulkan\dds\texture.cpp" />
@@ -860,6 +861,7 @@
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
+    <ClInclude Include="vulkan\compute_shader.h" />
     <ClInclude Include="vulkan\config\antialiasing.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
@@ -893,6 +895,7 @@
     <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\overlays\world_axes.h" />
     <ClInclude Include="vulkan\physical_device.h" />
+    <ClInclude Include="vulkan\pipeline_stage_info.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
     <ClInclude Include="vulkan\rendered_light.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />

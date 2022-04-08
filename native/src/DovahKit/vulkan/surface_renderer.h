@@ -42,6 +42,7 @@ namespace nifDK {
 }
 
 namespace vulkanDK {
+   class compute_shader;
    class frame_in_flight;
    class render_pass;
    class shader_module;
@@ -57,6 +58,7 @@ namespace vulkanDK {
          static constexpr shader::id_type main_shader_id             = "MainMatl";
          static constexpr shader::id_type main_shader_oit_color_id   = "MainOITc";
          static constexpr shader::id_type sun_shadow_shader_id       = "SunShadw";
+         static constexpr shader::id_type frustum_cull_shader_id     = "CullFstm";
          static constexpr shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
@@ -100,6 +102,7 @@ namespace vulkanDK {
          //
          VkExtent2D surface_extent; // last extent we set ourselves up for
          struct {
+            queue compute;
             queue graphics;
             queue presentation;
          } queues;
@@ -151,6 +154,7 @@ namespace vulkanDK {
          } swap_chain;
          //
          std::vector<shader*> shaders;
+         std::vector<compute_shader*> compute_shaders;
          union {
             std::array<render_pass*, 5> _list = { nullptr, nullptr, nullptr, nullptr, nullptr };
             struct {
@@ -170,7 +174,7 @@ namespace vulkanDK {
          } state;
          //
          struct {
-            PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT = nullptr;
+            PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
          } api_functions;
          struct {
             size_t show_shadow_caster_depths = std::string::npos;
@@ -195,13 +199,16 @@ namespace vulkanDK {
          bool needs_null_texture() const;
 
          buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
-         void set_debug_object_name(uint64_t handle, VkDebugReportObjectTypeEXT type, const std::string& name);
+         void set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name);
          template<typename T> void set_debug_object_name(T handle, const std::string& name) {
             this->set_debug_object_name((uint64_t)handle, debug_helper_typeof<T>, name);
          }
 
          shader* get_shader(cobb::eight_cc id) const;
          shader* get_or_create_shader(cobb::eight_cc id);
+
+         compute_shader* create_compute_shader(cobb::eight_cc id);
+         compute_shader* get_compute_shader(cobb::eight_cc id) const;
 
          // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);
@@ -249,6 +256,7 @@ namespace vulkanDK {
             void _setup_sun_shadow_shader();    // SunShadw
             void _setup_light_shadow_shaders(); // LiteMap0 - LiteMap8
             void _setup_light_shadow_debug_shaders(); // DBGLite0 - DBGLite3
+            void _setup_frustum_cull_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

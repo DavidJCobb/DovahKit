@@ -5,5 +5,6 @@ struct rendered_mesh_shader_params {
    float specular_strength;
    float specular_exponent;
    //
+   vec3  bounding_sphere_center;
    float bounding_sphere_radius;
 };

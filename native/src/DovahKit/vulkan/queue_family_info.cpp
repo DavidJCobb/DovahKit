@@ -14,6 +14,9 @@ namespace vulkanDK {
          if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             this->set(this->families.graphics, i);
          }
+         if (family.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+            this->set(this->families.compute, i);
+         }
          {  // Can this device render to our render window widget?
             VkBool32 support = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(pd.handle, i, s, &support);

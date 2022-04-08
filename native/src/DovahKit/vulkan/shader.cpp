@@ -105,7 +105,7 @@ namespace vulkanDK {
          for (size_t i = 0; i < 8; ++i)
             name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
          //
-         sr.set_debug_object_name((uint64_t)this->material.pipeline.layout, VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT, name);
+         sr.set_debug_object_name(this->material.pipeline.layout, name);
       }
    }
    void shader::setup_pipeline(VkExtent2D view) {
@@ -148,7 +148,7 @@ namespace vulkanDK {
          for (size_t i = 0; i < 8; ++i)
             name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
          //
-         sr->set_debug_object_name((uint64_t)this->material.pipeline.handle, VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT, name);
+         sr->set_debug_object_name(this->material.pipeline.handle, name);
       }
       //
       for (auto& item : this->variants) {

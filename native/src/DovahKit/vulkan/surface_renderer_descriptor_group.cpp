@@ -22,11 +22,11 @@ namespace vulkanDK {
          out[i] = this->list[i].handle;
       return out;
    }
-   std::vector<VkDescriptorPoolSize> descriptor_set_layout_group::needed_pool_sizes(size_t swap_chain_image_count) const {
+   std::vector<VkDescriptorPoolSize> descriptor_set_layout_group::needed_pool_sizes(size_t fif_count) const {
       std::vector<VkDescriptorPoolSize> sizes;
       for (auto& dl : this->list) {
          for (auto& binding : dl.bindings) {
-            auto count = binding.count * swap_chain_image_count;
+            auto count = binding.count * fif_count;
             //
             auto t    = binding.type;
             bool done = false;

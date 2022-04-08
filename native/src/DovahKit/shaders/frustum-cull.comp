@@ -1,18 +1,20 @@
 #version 450
+#pragma shader_stage(compute)
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : enable
 
+layout (local_size_x = 16) in;
+
 #include "includes/rendered_mesh_shader_params.glsl"
 #include "includes/scene_global_state.glsl"
+
+layout (constant_id = 0) const int MESH_COUNT = 100;
 
 struct frustum_plane_normals {
 	//
 	// These are inward-facing surface normals for the faces of the frustum pyramid.
 	//
-	vec4 left;
-	vec4 right;
-	vec4 top;
-	vec4 bottom;
+	vec4 normals[4]; // left, right, top, bottom
 };
 
 struct VkDrawIndexedIndirectCommand {
@@ -23,25 +25,22 @@ struct VkDrawIndexedIndirectCommand {
    uint firstInstance;
 };
 
-layout(std140,binding = 0) uniform UniformBufferObject {
-   scene_global_state ubo;
-};
-layout(std430,binding = 1) readonly buffer FrustumBuffer {
+layout(std430,binding = 0) readonly buffer FrustumBuffer {
 	frustum_plane_normals frustum;
 };
-layout(std430,binding = 2) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params scene_meshes[];
+layout(std430,binding = 1) readonly buffer ObjectBuffer {
+	rendered_mesh_shader_params scene_meshes[MESH_COUNT];
 };
-layout(std430,binding = 3) readonly buffer ObjectIndexBuffer {
-	uint mesh_indices[];
+layout(std430,binding = 2) readonly buffer ObjectIndexBuffer {
+	int mesh_indices[MESH_COUNT];
 };
-layout(std430,binding = 4) writeonly buffer DrawCommandBuffer {
-	VkDrawIndexedIndirectCommand indirect_draws[];
+layout(std430,binding = 3) writeonly buffer DrawCommandBuffer {
+	VkDrawIndexedIndirectCommand indirect_draws[MESH_COUNT];
 };
 
 bool frustum_check(vec4 position, float radius) {
 	for (int i = 0; i < 4; i++) {
-		if (dot(pos, frustum[i]) + radius < 0.0) {
+		if (dot(position, frustum.normals[i]) + radius < 0.0) {
 			return false;
 		}
 	}
@@ -49,13 +48,17 @@ bool frustum_check(vec4 position, float radius) {
 }
 
 void main() {
-	uint index = gl_globalInvocationID.x + gl_globalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x;
-	uint mesh  = mesh_indices[index];
-	if (mesh < 0)
+	uint index = gl_GlobalInvocationID.x;
+	if (index >= MESH_COUNT)
 		return;
+	int mesh = mesh_indices[index];
+	if (mesh < 0) {
+		indirect_draws[index].instanceCount = 0;
+		return;
+	}
 	//
-	vec4 pos = vec4(scene_meshes[mesh].pos.xyz, 1.0);
-	if (frustum_check(pos, 1.0)) {
+	vec4 pos = vec4(scene_meshes[mesh].bounding_sphere_center, 1.0);
+	if (frustum_check(pos, scene_meshes[mesh].bounding_sphere_radius)) {
 		indirect_draws[index].instanceCount = 1;
 	} else {
 		indirect_draws[index].instanceCount = 0;

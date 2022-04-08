@@ -6,6 +6,7 @@
 #include "_util.h"
 #include "buffer.h"
 #include "command_buffer.h"
+#include "frame_in_flight.h"
 #include "image.h"
 #include "surface_renderer_descriptor_group.h"
 #include "overlays/fps.h"
@@ -31,7 +32,7 @@ namespace vulkanDK {
          swap_chain_image(swap_chain_image&&) noexcept;
          swap_chain_image& operator=(swap_chain_image&&) noexcept;
 
-         VkFence current_fence_handle = VK_NULL_HANDLE;
+         frame_in_flight_fence_set current_fence_handles;
          //
          image_and_view image;
          command_buffer final_blit_command;

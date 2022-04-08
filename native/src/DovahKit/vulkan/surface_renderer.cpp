@@ -2,6 +2,7 @@
 #include <chrono>
 #include <QResource> // for loading shaders
 #include "DKVulkanInstance.h"
+#include "compute_shader.h"
 #include "exceptions.h"
 #include "frame_in_flight.h"
 #include "material.h"
@@ -259,6 +260,38 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
+      this->descriptor_set_layouts.compute_frustum_culling_main.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: glm::vec4[4][] (frustum normal vectors)
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: uint32_t[] (mesh indices)
+            .index              = 2,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: VkDrawIndexedIndirectCommand[]
+            .index              = 3,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.compute_frustum_culling_sun.bindings = this->descriptor_set_layouts.compute_frustum_culling_main.bindings;
+      //
       this->descriptor_set_layouts.oit_composite.bindings = {
          vulkanDK::descriptor_binding{
             .index              = 0,
@@ -453,7 +486,7 @@ namespace vulkanDK {
    }
    void surface_renderer::_init_device() {
       {
-         this->api_functions.vkDebugMarkerSetObjectNameEXT = nullptr;
+         this->api_functions.vkSetDebugUtilsObjectNameEXT = nullptr;
       }
       //
       auto  pd_handle  = this->device_info->handle;
@@ -551,13 +584,14 @@ namespace vulkanDK {
       //
       // And lastly, let's get our queues:
       //
+      this->queues.compute.setup     (this->logical_device, indices.families.compute);
       this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
       this->queues.presentation.setup(this->logical_device, indices.families.presentation);
       //
       // Oh, and some niche API functions:
       //
       if (this->device_info->has_extension("VK_EXT_debug_marker")) {
-         this->api_functions.vkDebugMarkerSetObjectNameEXT = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetDeviceProcAddr(this->logical_device, "vkDebugMarkerSetObjectNameEXT");
+         this->api_functions.vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(this->logical_device, "vkSetDebugUtilsObjectNameEXT");
       }
    }
 
@@ -1543,6 +1577,29 @@ namespace vulkanDK {
          s->setup_pipeline_layout(*this);
       }
    }
+   void surface_renderer::_setup_frustum_cull_shader() {
+      auto* s = this->create_compute_shader(frustum_cull_shader_id);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.compute_frustum_culling_main.handle,
+         }
+      );
+      shader_module* comp = nullptr;
+      {
+         comp = new shader_module(this->logical_device, QResource("shaders/frustum-cull.comp.spv").uncompressedData());
+         assert(!comp->empty());
+         this->shader_modules.push_back(comp);
+         //
+         this->set_debug_object_name(comp->handle, "Shader Module (Frustum Cull: frustum-cull.comp.spv)");
+      }
+      s->config.stage = pipeline_stage_info{
+         .module              = comp,
+         .entry_point_name    = "main",
+         .stage               = VK_SHADER_STAGE_COMPUTE_BIT,
+         .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_rendered_meshes),
+      };
+      s->setup(*this);
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
       qDebug("[Vulkan] Shader setup: OIT composite");
@@ -1557,6 +1614,8 @@ namespace vulkanDK {
       qDebug("[Vulkan] Shader setup: Light Shadows");
       this->_setup_light_shadow_debug_shaders();
       qDebug("[Vulkan] Shader setup: Light Shadow Debug Shaders");
+      this->_setup_frustum_cull_shader();
+      qDebug("[Vulkan] Shader setup: Frustum Culling");
       //
       // FPS counter:
       //
@@ -1835,6 +1894,38 @@ namespace vulkanDK {
       //
       auto& list = this->swap_chain.frames_in_flight;
       for (auto& frame : list) {
+         auto frustum_main_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_frustums.main.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto frustum_sun_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_frustums.sun.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         //
+         auto culling_mesh_params_main_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.main.params.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto culling_mesh_indices_main_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.main.mesh_indices.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto culling_mesh_params_sun_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.sun_shadows.params.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto culling_mesh_indices_sun_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.sun_shadows.mesh_indices.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         //
          auto global_state_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.scene_data.handle,
             .offset = 0,
@@ -1867,6 +1958,100 @@ namespace vulkanDK {
          }
          //
          auto descriptor_writes = std::array{
+            //
+            // Compute: frustum culling: main:
+            //
+            VkWriteDescriptorSet{ // storage buffer object: frustum plane normals
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_main,
+               .dstBinding       = 0,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &frustum_main_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_main,
+               .dstBinding       = 1,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rosp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: object index buffer
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_main,
+               .dstBinding       = 2,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &culling_mesh_indices_main_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: object index buffer
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_main,
+               .dstBinding       = 3,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &culling_mesh_params_main_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            //
+            // Compute: frustum culling: sun:
+            //
+            VkWriteDescriptorSet{ // storage buffer object: frustum plane normals
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_sun,
+               .dstBinding       = 0,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &frustum_sun_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_sun,
+               .dstBinding       = 1,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &rosp_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: object index buffer
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_sun,
+               .dstBinding       = 2,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &culling_mesh_indices_sun_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
+            VkWriteDescriptorSet{ // storage buffer object: object index buffer
+               .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+               .dstSet           = frame.descriptor_sets.compute_frustum_culling_sun,
+               .dstBinding       = 3,
+               .dstArrayElement  = 0,
+               .descriptorCount  = 1,
+               .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+               .pImageInfo       = nullptr,
+               .pBufferInfo      = &culling_mesh_params_sun_buffer_info,
+               .pTexelBufferView = nullptr,
+            },
             //
             // Sun shadow render pass:
             //
@@ -2539,7 +2724,9 @@ namespace vulkanDK {
          return;
       }
       //
-      vkDeviceWaitIdle(this->logical_device); // wait for all draw commands to finish (remember: they're asynch)
+      if (auto result = vkDeviceWaitIdle(this->logical_device); result != VK_SUCCESS) {
+         throw result_exception(result, "[surface_renderer::teardown] Device-wait failed.");
+      }
       //
       // Ensure all child objects belonging to the instance are destroyed.
       //
@@ -2547,6 +2734,12 @@ namespace vulkanDK {
       this->null_texture.teardown();
       {
          auto& list = this->shaders;
+         for (auto* e : list)
+            delete e;
+         list.clear();
+      }
+      {
+         auto& list = this->compute_shaders;
          for (auto* e : list)
             delete e;
          list.clear();
@@ -2616,7 +2809,9 @@ namespace vulkanDK {
       auto  device = this->logical_device;
       auto& sc     = this->swap_chain;
       //
-      vkDeviceWaitIdle(device); // wait for all pending GPU-side commands to finish
+      if (auto result = vkDeviceWaitIdle(device); result != VK_SUCCESS) {
+         throw result_exception(result, "[surface_renderer::handle_resize] Device-wait failed.");
+      }
       //
       VkFormat sc_format = sc.format;
       size_t   sc_count  = sc.images.size();
@@ -2748,7 +2943,7 @@ namespace vulkanDK {
       //
       auto& fif = sc.frames_in_flight[sc.current_frame];
       sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
-      vkWaitForFences(this->logical_device, 1, &fif.fence, VK_TRUE, no_timeout);
+      fif.fences.wait_on_all(this->logical_device);
       //
       // Next, let's acquire a swap chain image to use for this frame.
       // 
@@ -2878,7 +3073,9 @@ namespace vulkanDK {
          .pCommandBuffers    = &scratch.handle,
       };
       vkQueueSubmit(this->queues.graphics.handle, 1, &submit_info, VK_NULL_HANDLE);
-      vkQueueWaitIdle(this->queues.graphics.handle);
+      if (auto result = vkQueueWaitIdle(this->queues.graphics.handle); result != VK_SUCCESS) {
+         throw result_exception(result, "[surface_renderer::_end_one_time_commands] Wait-for-completion failed.");
+      }
    }
 
    bool surface_renderer::can_do_alpha() const {
@@ -2908,11 +3105,11 @@ namespace vulkanDK {
    buffer surface_renderer::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
       return buffer::create(*this, size, usage, properties);
    }
-   void surface_renderer::set_debug_object_name(uint64_t handle, VkDebugReportObjectTypeEXT type, const std::string& name) {
+   void surface_renderer::set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name) {
       if constexpr (!config::enable_validation_layers) {
          return;
       }
-      if (!this->api_functions.vkDebugMarkerSetObjectNameEXT) {
+      if (!this->api_functions.vkSetDebugUtilsObjectNameEXT) {
          if constexpr (debug_object_names_fallback_to_log) {
             //qDebug("[surface_renderer::set_debug_object_name] Extension unavailable; name for handle %016jX is %s.", (std::uintmax_t)handle, name.c_str());
             // getting crashes when using %016jX; just %016X causes int argument truncation; just stringify it manually:
@@ -2925,14 +3122,14 @@ namespace vulkanDK {
          }
          return;
       }
-      auto info = VkDebugMarkerObjectNameInfoEXT{
-         .sType       = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
-         .pNext       = nullptr,
-         .objectType  = type,
-         .object      = handle,
-         .pObjectName = name.c_str(),
+      auto info = VkDebugUtilsObjectNameInfoEXT{
+         .sType        = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+         .pNext        = nullptr,
+         .objectType   = type,
+         .objectHandle = handle,
+         .pObjectName  = name.c_str(),
       };
-      (this->api_functions.vkDebugMarkerSetObjectNameEXT)(this->logical_device, &info);
+      (this->api_functions.vkSetDebugUtilsObjectNameEXT)(this->logical_device, &info);
    }
 
    shader* surface_renderer::get_shader(cobb::eight_cc id) const {
@@ -2949,6 +3146,20 @@ namespace vulkanDK {
       s->material.owner = this;
       this->shaders.push_back(s);
       return s;
+   }
+
+   compute_shader* surface_renderer::create_compute_shader(cobb::eight_cc id) {
+      assert(!this->get_compute_shader(id));
+      auto* s = new compute_shader(*this);
+      s->id = id;
+      this->compute_shaders.push_back(s);
+      return s;
+   }
+   compute_shader* surface_renderer::get_compute_shader(cobb::eight_cc id) const {
+      for (auto* s : this->compute_shaders)
+         if (s->id == id)
+            return s;
+      return nullptr;
    }
 
    #pragma region scene

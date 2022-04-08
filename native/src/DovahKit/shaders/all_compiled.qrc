@@ -18,5 +18,6 @@
         <file>light-shadow-depth.frag.spv</file>
         <file>light-shadow-depth.vert.spv</file>
         <file>rendered_mesh/debug-shadow-caster-space.frag.spv</file>
+        <file>frustum-cull.comp.spv</file>
     </qresource>
 </RCC>

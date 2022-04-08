@@ -15,6 +15,29 @@ namespace vulkanDK {
    class scene;
    class surface_renderer;
 
+   union frame_in_flight_fence_set {
+      //
+      // These fences allow us to synchronize the CPU with command buffer execution on the 
+      // GPU: you cannot "record" commands to a command buffer if it's still being "played" 
+      // by the GPU, so wait on the relevant fences before trying.
+      //
+      std::array<VkFence, 2> list = { VK_NULL_HANDLE, VK_NULL_HANDLE };
+      struct {
+         VkFence compute;
+         VkFence graphics;
+      };
+
+      inline bool empty() const {
+         for (auto& item : list)
+            if (item != VK_NULL_HANDLE)
+               return false;
+         return true;
+      }
+      inline VkResult wait_on_all(VkDevice device) const {
+         return vkWaitForFences(device, list.size(), list.data(), VK_TRUE, UINT64_MAX);
+      }
+   };
+
    class frame_in_flight : no_copy {
       protected:
          union command_buffer_set {
@@ -68,14 +91,20 @@ namespace vulkanDK {
          size_t my_index = -1;
          //
       public:
-         VkFence fence = VK_NULL_HANDLE; // synchronize the command buffer: you cannot "record" commands to it if it's still being "played" by the GPU, so wait on this fence before trying
+         frame_in_flight_fence_set fences;
          struct {
-            VkSemaphore image_available = VK_NULL_HANDLE;
-            VkSemaphore render_finished = VK_NULL_HANDLE;
+            VkSemaphore image_available   = VK_NULL_HANDLE; // swap chain image acquired
+            VkSemaphore compute_finished  = VK_NULL_HANDLE; // compute commands done execution
+            VkSemaphore graphics_finished = VK_NULL_HANDLE; // graphics commands done execution
+            VkSemaphore render_finished   = VK_NULL_HANDLE; // last submission is done execution
          } semaphores;
          //
          descriptor_set_group descriptor_sets;
-         command_buffer_set   command_buffers;
+         command_buffer_set   graphics_commands;
+         struct {
+            command_buffer frustum_cull_main;
+            command_buffer frustum_cull_sun;
+         } compute_commands;
          struct {
             indirect_draw_buffers main;
             indirect_draw_buffers main_oit;
@@ -91,7 +120,6 @@ namespace vulkanDK {
             buffer sun;
          } shader_frustums;
          struct {
-            buffer bounds;      // per-object bounding sphere radii
             buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
             buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
             buffer light_shadow_data;
@@ -135,6 +163,7 @@ namespace vulkanDK {
          void _update_shader_texture_descriptors();
 
          void _refill_command_buffers();
+         void _record_frustum_cull_commands();
          void _refill_fps_overlay_command_buffer();
    };
 }

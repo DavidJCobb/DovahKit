@@ -1,9 +1,11 @@
 #pragma once
+#include <array>
 #include <vector>
 #include "_vulkan.h"
 #include "_util.h"
 
 namespace vulkanDK {
+   class compute_shader;
    class material;
    class render_pass;
    class surface_renderer;
@@ -40,6 +42,13 @@ namespace vulkanDK {
          }
          inline void end_render_pass() {
             vkCmdEndRenderPass(this->handle);
+         }
+
+      protected:
+         void _bind_compute_shader_and_descriptors(const compute_shader&, uint32_t bind_to, const VkDescriptorSet*, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count);
+      public:
+         template<size_t Sa, size_t Sb = 0> void bind_compute_shader_and_descriptors(const compute_shader& cs, uint32_t bind_to, const std::array<VkDescriptorSet, Sa>& descriptor_sets, const std::array<uint32_t, Sb>& dynamic_offsets = {}) {
+            this->_bind_compute_shader_and_descriptors(cs, bind_to, descriptor_sets.data(), descriptor_sets.size(), dynamic_offsets.data(), dynamic_offsets.size());
          }
          
       protected:

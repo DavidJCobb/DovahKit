@@ -4,6 +4,7 @@
 #include "_vulkan.h"
 #include "_util.h"
 #include "shader_module.h"
+#include "pipeline_stage_info.h"
 
 namespace vulkanDK {
    class render_pass;
@@ -11,38 +12,8 @@ namespace vulkanDK {
 
    class material_definition {
       public:
-         struct stage_specialization_info {
-            std::vector<std::byte> data;
-            std::vector<VkSpecializationMapEntry> fields;
-
-            inline bool empty() const { return this->data.empty(); }
-
-            stage_specialization_info() {}
-            template<typename T> stage_specialization_info(const T& d, const std::vector<VkSpecializationMapEntry>& f) : fields(f) {
-               this->data.resize(sizeof(T));
-               memcpy(this->data.data(), &d, sizeof(T));
-            };
-
-            template<typename... T> requires (!(std::is_pointer_v<T> || std::is_same_v<T, std::nullptr_t>) && ...)
-            stage_specialization_info(T... values) { // assumes constantIDs starting from 0
-               this->data.resize((sizeof(T) + ...));
-               this->fields.resize(sizeof...(T));
-               //
-               uint32_t i = 0;
-               uint32_t n = 0;
-               auto append = [&i, &n, this]<typename T>(T& v) {
-                  memcpy(n + this->data.data(), &v, sizeof(T));
-                  this->fields[i] = {
-                     .constantID = i,
-                     .offset     = n,
-                     .size       = sizeof(T),
-                  };
-                  ++i;
-                  n += sizeof(T);
-               };
-               (append(values), ...);
-            }
-         };
+         using stage_specialization_info = pipeline_stage_specialization_info;
+         using stage_info = pipeline_stage_info;
 
          struct color_blend {
             bool enabled = true;
@@ -59,13 +30,6 @@ namespace vulkanDK {
                VkBlendOp alpha = VK_BLEND_OP_ADD;
             } operations;
             VkColorComponentFlags write_mask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-         };
-         struct stage_info {
-            shader_module* module = nullptr; // unowned
-            const char*    entry_point_name = nullptr; // function in the shader to call
-            VkPipelineShaderStageCreateFlags flags = {};
-            VkShaderStageFlagBits            stage = {};
-            stage_specialization_info specialization_info; // can pass parameters to the shader
          };
 
          static constexpr color_blend default_no_op_blend = {};

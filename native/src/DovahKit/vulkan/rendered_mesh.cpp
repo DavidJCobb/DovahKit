@@ -152,6 +152,7 @@ namespace vulkanDK {
          float radius_sq = glm::distance2(bs.center, v.pos);
          bs.radius_sq = std::max(bs.radius_sq, radius_sq);
       }
+      this->shader_params.bounding_sphere_center = bs.center;
       this->shader_params.bounding_sphere_radius = sqrt(bs.radius_sq);
    }
    //

@@ -141,6 +141,32 @@ namespace vulkanDK {
       //
       // Submit our command buffers.
       // 
+      {  // Compute commands
+         vkWaitForFences(this->owner->logical_device, 1, &fif.fences.compute, VK_TRUE, UINT64_MAX);
+		   vkResetFences  (this->owner->logical_device, 1, &fif.fences.compute);
+         //
+         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
+         auto wait_semaphores   = std::array{ fif.semaphores.graphics_finished };
+         auto signal_semaphores = std::array{ fif.semaphores.compute_finished };
+         auto command_handles   = std::array{
+            fif.compute_commands.frustum_cull_main.handle,
+            fif.compute_commands.frustum_cull_sun.handle,
+         };
+         auto submit_info = VkSubmitInfo{
+            .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .waitSemaphoreCount   = (uint32_t)wait_semaphores.size(),
+            .pWaitSemaphores      = wait_semaphores.data(),
+            .pWaitDstStageMask    = waitStages,
+            .commandBufferCount   = (uint32_t)command_handles.size(),
+            .pCommandBuffers      = command_handles.data(),
+            .signalSemaphoreCount = (uint32_t)signal_semaphores.size(),
+            .pSignalSemaphores    = signal_semaphores.data(),
+         };
+         if (auto result = vkQueueSubmit(this->owner->queues.compute.handle, 1, &submit_info, fif.fences.compute); result != VK_SUCCESS) {
+            throw result_exception(result, "[swap_chain_image::draw] Failed to submit compute command buffer.");
+         }
+      }
+      // 
       // Our submit operation here will wait for all of the "wait semaphores" we provide 
       // to be signalled before beginning. When all command buffers listed in the submit 
       // operation have completed execution, it will signal the "signal semaphores" that 
@@ -160,16 +186,16 @@ namespace vulkanDK {
       //
       std::vector<VkCommandBuffer> cb_handles;
       {
-         auto& list = fif.command_buffers.list;
+         auto& list = fif.graphics_commands.list;
          auto  size = list.size();
          cb_handles.resize(size + 1);
          for (size_t i = 0; i < size; ++i)
             cb_handles[i] = list[i].handle;
          cb_handles[size] = this->final_blit_command.handle;
       }
-      auto wait_semaphores   = std::array{ fif.semaphores.image_available };
-      auto signal_semaphores = std::array{ fif.semaphores.render_finished };
-      VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+      auto wait_semaphores   = std::array{ fif.semaphores.image_available,   fif.semaphores.compute_finished };
+      auto signal_semaphores = std::array{ fif.semaphores.graphics_finished, fif.semaphores.render_finished };
+      VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
       auto submit_info = VkSubmitInfo{
          .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
          .waitSemaphoreCount   = wait_semaphores.size(),
@@ -180,26 +206,32 @@ namespace vulkanDK {
          .signalSemaphoreCount = signal_semaphores.size(),
          .pSignalSemaphores    = signal_semaphores.data(),
       };
-      vkResetFences(this->owner->logical_device, 1, &fif.fence); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
-      if (auto result = vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, fif.fence); result != VK_SUCCESS) {
+      vkResetFences(this->owner->logical_device, 1, &fif.fences.graphics); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
+      if (auto result = vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, fif.fences.graphics); result != VK_SUCCESS) {
          throw result_exception(result, "[swap_chain_image::draw] Failed to submit draw command buffer.");
       }
    }
    
    void swap_chain_image::_hook_to_frame(frame_in_flight& fif) {
-      auto& handle = this->current_fence_handle;
+      auto& handles = this->current_fence_handles;
       //
       // It may be the case that the last frame  to use this swap chain image is still 
       // drawing to it.  We can wait on that  frame's fence in order  to know when its 
       // command buffers have finished executing.
       //
-      if (handle != VK_NULL_HANDLE) {
-         vkWaitForFences(this->owner->logical_device, 1, &handle, VK_TRUE, UINT64_MAX);
+      if (!handles.empty()) {
+         //
+         // This branch would only *not* run when using a swap chain image for the first 
+         // time, when it's never been bound to a frame-in-flight before.
+         //
+         if (auto result = handles.wait_on_all(this->owner->logical_device); result != VK_SUCCESS) {
+            throw result_exception(result, "[swap_chain_image::_hook_to_frame] Wait on previously-bound frame-in-flight failed.");
+         }
       }
       //
       // Mark our swap chain  image as being in use for the new  frame and its command 
       // buffers.
       //
-      handle = fif.fence;
+      handles = fif.fences;
    }
 }

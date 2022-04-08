@@ -49,6 +49,7 @@ namespace vulkanDK {
             alignas( 4) float     specular_strength = 1.0;
             alignas( 4) float     specular_exponent = 32;
             //
+            alignas(16) glm::vec3 bounding_sphere_center = { 0, 0, 0 };
             alignas( 4) float     bounding_sphere_radius = 0;
          };
          struct push_constant {

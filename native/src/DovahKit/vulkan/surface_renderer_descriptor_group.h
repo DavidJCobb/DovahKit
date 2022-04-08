@@ -11,8 +11,10 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 6> list = {};
+            std::array<T, 8> list = {};
             struct {
+               T compute_frustum_culling_main;
+               T compute_frustum_culling_sun;
                T oit_composite;
                T sun_shadows;
                T light_shadows;
@@ -39,7 +41,7 @@ namespace vulkanDK {
       void setup_all(surface_renderer&);
 
       std::vector<VkDescriptorSetLayout> handles() const;
-      std::vector<VkDescriptorPoolSize> needed_pool_sizes(size_t swap_chain_image_count) const;
+      std::vector<VkDescriptorPoolSize> needed_pool_sizes(size_t fif_count) const;
    };
    struct descriptor_set_group : public surface_renderer_dsl_group<VkDescriptorSet> {
       using surface_renderer_dsl_group::surface_renderer_dsl_group;
