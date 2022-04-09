@@ -10,6 +10,7 @@
 #include "_memory.h"
 #include "_util.h"
 #include "helpers/debug_helper_typeof.h"
+#include "config/frames_in_flight.h"
 #include "config/scene_limits.h"
 #include "abstract_renderer.h"
 #include "buffer.h"
@@ -150,7 +151,7 @@ namespace vulkanDK {
             VkFormat       format = VK_FORMAT_UNDEFINED;
             //
             std::vector<swap_chain_image> images;
-            std::vector<frame_in_flight>  frames_in_flight;
+            std::array<frame_in_flight, config::frames_in_flight_count> frames_in_flight;
             //
             size_t current_frame = 0;
          } swap_chain;

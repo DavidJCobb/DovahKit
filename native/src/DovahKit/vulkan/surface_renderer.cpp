@@ -698,7 +698,6 @@ namespace vulkanDK {
          //
          vmaCreateAllocator(&allocatorInfo, &this->allocator);
       }
-      this->swap_chain.frames_in_flight.resize(config::frames_in_flight_count);
       //
       this->descriptor_set_layouts.setup_all(*this);
       {
@@ -1910,7 +1909,7 @@ namespace vulkanDK {
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto culling_mesh_indices_main_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.indirect_draw_commands.main.mesh_indices.handle,
+            .buffer = frame.indirect_draw_commands.main.mesh_indices.gpu.handle,
             .offset = 0,
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
@@ -1920,7 +1919,7 @@ namespace vulkanDK {
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto culling_mesh_indices_sun_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.indirect_draw_commands.sun_shadows.mesh_indices.handle,
+            .buffer = frame.indirect_draw_commands.sun_shadows.mesh_indices.gpu.handle,
             .offset = 0,
             .range  = VK_WHOLE_SIZE,
          };
@@ -1940,7 +1939,7 @@ namespace vulkanDK {
             std::array<VkDescriptorBufferInfo, config::max_active_shadow_casters> out;
             for (size_t i = 0; i < out.size(); ++i) {
                out[i] = {
-                  .buffer = frame.indirect_draw_commands.shadow_casters[i].mesh_indices.handle,
+                  .buffer = frame.indirect_draw_commands.shadow_casters[i].mesh_indices.gpu.handle,
                   .offset = 0,
                   .range  = VK_WHOLE_SIZE,
                };
@@ -2871,7 +2870,8 @@ namespace vulkanDK {
          vkDestroySwapchainKHR(this->logical_device, sc.handle, nullptr);
          sc.handle = VK_NULL_HANDLE;
          //
-         sc.frames_in_flight.clear();
+         for (auto& fif : sc.frames_in_flight)
+            fif.teardown();
       }
       this->_teardown_raw_pixel_texture_sampler();
       for (auto& e : this->render_passes_by_name._list)
@@ -3917,6 +3917,8 @@ namespace vulkanDK {
          auto& src = data->bounds;
          dst.center    = src.center;
          dst.radius_sq = src.radius * src.radius;
+         mesh.shader_params.bounding_sphere_center = dst.center;
+         mesh.shader_params.bounding_sphere_radius = sqrt(dst.radius_sq);
          qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //
@@ -4011,6 +4013,8 @@ namespace vulkanDK {
          auto& src = data->bounds;
          dst.center    = src.center;
          dst.radius_sq = src.radius * src.radius;
+         mesh.shader_params.bounding_sphere_center = dst.center;
+         mesh.shader_params.bounding_sphere_radius = sqrt(dst.radius_sq);
          qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //

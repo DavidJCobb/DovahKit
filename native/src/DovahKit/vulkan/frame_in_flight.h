@@ -12,6 +12,7 @@
 namespace vulkanDK {
    class descriptor_set;
    class render_pass;
+   class rendered_mesh;
    class scene;
    class surface_renderer;
 
@@ -72,9 +73,16 @@ namespace vulkanDK {
          };
          static_assert(sizeof(command_buffer_set) == sizeof(command_buffer) * std::tuple_size_v<decltype(command_buffer_set::list)>);
 
+      public:
          struct indirect_draw_buffers {
+            using mesh_index_list = std::array<int32_t, config::max_rendered_meshes>;
+            static constexpr size_t mesh_index_list_size = sizeof(mesh_index_list::value_type) * config::max_rendered_meshes;
+
             buffer params;
-            buffer mesh_indices;
+            struct {
+               buffer gpu;
+               std::unique_ptr<mesh_index_list> host;
+            } mesh_indices;
 
             void setup(surface_renderer&);
          };
@@ -82,13 +90,12 @@ namespace vulkanDK {
       public:
          frame_in_flight() {}
          ~frame_in_flight();
-
-         frame_in_flight(frame_in_flight&&) noexcept = default;
-         frame_in_flight& operator=(frame_in_flight&&) noexcept = default;
       
       protected:
          surface_renderer* owner = nullptr;
          size_t my_index = -1;
+         buffer idb_mesh_index_staging;
+         buffer idb_params_staging;
          //
       public:
          frame_in_flight_fence_set fences;
@@ -156,14 +163,12 @@ namespace vulkanDK {
          void prepare_indirect_draws();
          void record_compute_cull_commands();
          void record_graphics_commands();
-      protected:
+         protected:
             void _record_scene_draw_commands();
             void _record_ui_draw_commands();
       public:
          void submit_compute_cull_commands();
          void submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers = {});
-
-         void record_draw_commands();
 
          void on_scene_meshes_added_or_removed();
          void invalidate_all_command_buffers();
@@ -182,10 +187,5 @@ namespace vulkanDK {
          void _update_shader_lights_data_buffer();
          void _update_shader_object_data_buffer();
          void _update_shader_texture_descriptors();
-
-         void _refill_command_buffers();
-         void _record_frustum_cull_commands();
-         void _record_shadow_caster_cull_commands();
-         void _refill_fps_overlay_command_buffer();
    };
 }

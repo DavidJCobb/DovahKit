@@ -3,7 +3,7 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : enable
 
-layout (local_size_x = 16) in;
+layout (local_size_x = 64) in;
 
 #include "includes/rendered_light_shader_params.glsl"
 #include "includes/rendered_mesh_shader_params.glsl"

@@ -761,6 +761,7 @@
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
     <ClInclude Include="helpers\grid.h" />
+    <ClInclude Include="helpers\memset.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />

@@ -27,6 +27,8 @@ namespace vulkanDK {
          inline bool empty() const noexcept { return this->handle == VK_NULL_HANDLE; }
 
          static buffer create(surface_renderer&, VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+         
+         void teardown();
 
          void copy_from(const buffer& source);
          void copy_from(const buffer& source, VkDeviceSize);

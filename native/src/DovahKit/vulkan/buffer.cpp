@@ -8,14 +8,7 @@ namespace vulkanDK {
    buffer::buffer(surface_renderer& d) : renderer(&d) {
    }
    buffer::~buffer() {
-      if (this->handle != VK_NULL_HANDLE) {
-         assert(this->renderer);
-         vmaDestroyBuffer(this->renderer->allocator, this->handle, this->memory);
-         this->handle = VK_NULL_HANDLE;
-         this->memory = VK_NULL_HANDLE;
-      } else {
-         assert(this->memory == VK_NULL_HANDLE);
-      }
+      this->teardown();
    }
 
    buffer::buffer(buffer&& o) noexcept {
@@ -57,6 +50,17 @@ namespace vulkanDK {
       out.size = size;
       //
       return out;
+   }
+
+   void buffer::teardown() {
+      if (this->handle != VK_NULL_HANDLE) {
+         assert(this->renderer);
+         vmaDestroyBuffer(this->renderer->allocator, this->handle, this->memory);
+         this->handle = VK_NULL_HANDLE;
+         this->memory = VK_NULL_HANDLE;
+      } else {
+         assert(this->memory == VK_NULL_HANDLE);
+      }
    }
 
    void buffer::copy_from(const buffer& source) {

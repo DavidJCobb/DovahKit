@@ -370,21 +370,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    }
    //
    {
-      auto* widget = new QComboBox(this->toolbar);
-      widget->addItem("Standard Shader", -1);
-      widget->addItem("Caster 0",  0);
-      widget->addItem("Caster 1",  1);
-      widget->addItem("Caster 2",  2);
-      widget->addItem("Caster 3",  3);
-      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, view, widget]() {
-         auto i = widget->currentData().toInt();
-         view->surfaceRenderer()->debug_show_shadow_caster_depth(i == -1 ? std::string::npos : (size_t)i);
-      });
-      //
-      this->toolbar->addWidget(widget);
-   }
-   //
-   {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Spawn shadow-caster debug scene");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
