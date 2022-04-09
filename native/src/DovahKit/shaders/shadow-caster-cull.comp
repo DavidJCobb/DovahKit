@@ -1,0 +1,66 @@
+#version 450
+#pragma shader_stage(compute)
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
+
+layout (local_size_x = 16) in;
+
+#include "includes/rendered_light_shader_params.glsl"
+#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/scene_global_state.glsl"
+
+layout (constant_id = 0) const int MESH_COUNT     = 100;
+layout (constant_id = 1) const int LIGHT_COUNT    = 4;
+layout (constant_id = 2) const int CURRENT_CASTER = 0;
+
+struct frustum_plane_normals {
+	//
+	// These are inward-facing surface normals for the faces of the frustum pyramid.
+	//
+	vec4 normals[4]; // left, right, top, bottom
+};
+
+struct VkDrawIndexedIndirectCommand {
+   uint indexCount;
+   uint instanceCount;
+   uint firstIndex;
+   uint vertexOffset;
+   uint firstInstance;
+};
+
+layout(std140,binding = 0) readonly uniform SceneGlobalStateBuffer {
+	scene_global_state scene_state;
+};
+layout(std430,binding = 1) readonly buffer MeshBuffer {
+	rendered_mesh_shader_params scene_meshes[MESH_COUNT];
+};
+layout(std430,binding = 2) readonly buffer LightBuffer {
+	rendered_light_shader_params scene_lights[LIGHT_COUNT];
+};
+layout(std430,binding = 3) readonly buffer ObjectIndexBuffer {
+	int mesh_indices[MESH_COUNT];
+};
+layout(std430,binding = 4) writeonly buffer DrawCommandBuffer {
+	VkDrawIndexedIndirectCommand indirect_draws[MESH_COUNT];
+};
+
+void main() {
+	uint draw_index = gl_GlobalInvocationID.x;
+	if (draw_index >= MESH_COUNT)
+		return;
+	if (scene_state.shadow_caster_index[CURRENT_CASTER] < 0)
+		return;
+	int mesh = mesh_indices[draw_index];
+	if (mesh < 0) {
+		//indirect_draws[draw_index].instanceCount = 0; // the CPU should already have done this
+		return;
+	}
+	//
+	vec3 pos       = scene_meshes[mesh].bounding_sphere_center;
+	vec3 light_pos = vec3(scene_lights[scene_state.shadow_caster_index[CURRENT_CASTER]].transform[3]);
+	if (length(pos - light_pos) <= scene_meshes[mesh].bounding_sphere_radius) {
+		indirect_draws[draw_index].instanceCount = 1;
+	} else {
+		indirect_draws[draw_index].instanceCount = 0;
+	}
+}

@@ -137,35 +137,14 @@ namespace vulkanDK {
    void swap_chain_image::draw(frame_in_flight& fif) {
       this->_hook_to_frame(fif);
       //
-      fif.record_draw_commands();
+      fif.prepare_for_render();
+      fif.prepare_indirect_draws();
+      fif.record_compute_cull_commands();
+      fif.record_graphics_commands();
       //
       // Submit our command buffers.
       // 
-      {  // Compute commands
-         vkWaitForFences(this->owner->logical_device, 1, &fif.fences.compute, VK_TRUE, UINT64_MAX);
-		   vkResetFences  (this->owner->logical_device, 1, &fif.fences.compute);
-         //
-         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
-         auto wait_semaphores   = std::array{ fif.semaphores.graphics_finished };
-         auto signal_semaphores = std::array{ fif.semaphores.compute_finished };
-         auto command_handles   = std::array{
-            fif.compute_commands.frustum_cull_main.handle,
-            fif.compute_commands.frustum_cull_sun.handle,
-         };
-         auto submit_info = VkSubmitInfo{
-            .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount   = (uint32_t)wait_semaphores.size(),
-            .pWaitSemaphores      = wait_semaphores.data(),
-            .pWaitDstStageMask    = waitStages,
-            .commandBufferCount   = (uint32_t)command_handles.size(),
-            .pCommandBuffers      = command_handles.data(),
-            .signalSemaphoreCount = (uint32_t)signal_semaphores.size(),
-            .pSignalSemaphores    = signal_semaphores.data(),
-         };
-         if (auto result = vkQueueSubmit(this->owner->queues.compute.handle, 1, &submit_info, fif.fences.compute); result != VK_SUCCESS) {
-            throw result_exception(result, "[swap_chain_image::draw] Failed to submit compute command buffer.");
-         }
-      }
+      fif.submit_compute_cull_commands();
       // 
       // Our submit operation here will wait for all of the "wait semaphores" we provide 
       // to be signalled before beginning. When all command buffers listed in the submit 
@@ -184,32 +163,9 @@ namespace vulkanDK {
       // signal our fence when the command buffers  have finished running. We need to do 
       // all this so that we can safely reuse our command buffer when rendering.
       //
-      std::vector<VkCommandBuffer> cb_handles;
-      {
-         auto& list = fif.graphics_commands.list;
-         auto  size = list.size();
-         cb_handles.resize(size + 1);
-         for (size_t i = 0; i < size; ++i)
-            cb_handles[i] = list[i].handle;
-         cb_handles[size] = this->final_blit_command.handle;
-      }
-      auto wait_semaphores   = std::array{ fif.semaphores.image_available,   fif.semaphores.compute_finished };
-      auto signal_semaphores = std::array{ fif.semaphores.graphics_finished, fif.semaphores.render_finished };
-      VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
-      auto submit_info = VkSubmitInfo{
-         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-         .waitSemaphoreCount   = wait_semaphores.size(),
-         .pWaitSemaphores      = wait_semaphores.data(),
-         .pWaitDstStageMask    = waitStages,
-         .commandBufferCount   = (uint32_t)cb_handles.size(),
-         .pCommandBuffers      = cb_handles.data(),
-         .signalSemaphoreCount = signal_semaphores.size(),
-         .pSignalSemaphores    = signal_semaphores.data(),
-      };
-      vkResetFences(this->owner->logical_device, 1, &fif.fences.graphics); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
-      if (auto result = vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, fif.fences.graphics); result != VK_SUCCESS) {
-         throw result_exception(result, "[swap_chain_image::draw] Failed to submit draw command buffer.");
-      }
+      fif.submit_graphics_commands({
+         this->final_blit_command.handle,
+      });
    }
    
    void swap_chain_image::_hook_to_frame(frame_in_flight& fif) {

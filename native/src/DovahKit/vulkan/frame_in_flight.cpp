@@ -31,9 +31,10 @@ namespace vulkanDK {
       //
       auto* ld = this->owner->logical_device;
       if (this->fences.graphics != VK_NULL_HANDLE) {
-         vkDestroySemaphore(ld, this->semaphores.render_finished,  nullptr);
-         vkDestroySemaphore(ld, this->semaphores.compute_finished, nullptr);
-         vkDestroySemaphore(ld, this->semaphores.image_available,  nullptr);
+         vkDestroySemaphore(ld, this->semaphores.image_available,   nullptr);
+         vkDestroySemaphore(ld, this->semaphores.compute_finished,  nullptr);
+         vkDestroySemaphore(ld, this->semaphores.graphics_finished, nullptr);
+         vkDestroySemaphore(ld, this->semaphores.render_finished,   nullptr);
          vkDestroyFence    (ld, this->fences.compute, nullptr);
          vkDestroyFence    (ld, this->fences.graphics, nullptr);
       }
@@ -161,11 +162,13 @@ namespace vulkanDK {
       #endif
       {  // Compute
          auto& cc = this->compute_commands;
-         cc.frustum_cull_main = command_buffer(*this->owner);
-         cc.frustum_cull_sun  = command_buffer(*this->owner);
+         cc.frustum_cull_main  = command_buffer(*this->owner);
+         cc.frustum_cull_sun   = command_buffer(*this->owner);
+         cc.shadow_caster_cull = command_buffer(*this->owner);
          #if _DEBUG
-            this->owner->set_debug_object_name(cc.frustum_cull_main.handle, QString("Frame-in-Flight %1: Command Buffer: Frustum Cull: Main").arg(this->my_index).toStdString());
-            this->owner->set_debug_object_name(cc.frustum_cull_sun.handle,  QString("Frame-in-Flight %1: Command Buffer: Frustum Cull: Sun").arg(this->my_index).toStdString());
+            this->owner->set_debug_object_name(cc.frustum_cull_main.handle,  QString("Frame-in-Flight %1: Command Buffer: Frustum Cull: Main").arg(this->my_index).toStdString());
+            this->owner->set_debug_object_name(cc.frustum_cull_sun.handle,   QString("Frame-in-Flight %1: Command Buffer: Frustum Cull: Sun").arg(this->my_index).toStdString());
+            this->owner->set_debug_object_name(cc.shadow_caster_cull.handle, QString("Frame-in-Flight %1: Command Buffer: Shadow Caster Cull").arg(this->my_index).toStdString());
          #endif
       }
       this->command_buffers_invalid = true;
@@ -190,7 +193,7 @@ namespace vulkanDK {
    }
 
    void frame_in_flight::teardown_descriptor_sets() {
-      vkFreeDescriptorSets(this->owner->logical_device, this->owner->descriptor_pool, this->descriptor_sets.list.size(), this->descriptor_sets.list.data());
+      this->descriptor_sets.free_all(*this->owner);
    }
 
    void frame_in_flight::teardown() {
@@ -198,6 +201,720 @@ namespace vulkanDK {
          return;
       this->overlays.fps.teardown_atlas();
       this->invalidate_all_command_buffers();
+   }
+
+   void frame_in_flight::prepare_for_render() {
+      this->_update_shader_global_scene_state();
+      this->_update_shader_lights_data_buffer();
+      this->_update_shader_object_data_buffer();
+      this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
+      this->owner->scene.update_light_shadows(*this);
+      {
+         auto& fps = this->overlays.fps;
+         {
+            auto delta = this->owner->last_frame_time();
+            if (delta) {
+               fps.set_value(decltype(delta)(1) / delta);
+            } else {
+               //
+               // Instantaneous frame; dividing would be a  division by zero. Refer to documentation on 
+               // how we measure FPS, but basically, it's best to just skip measuring this frame.
+               //
+            }
+         }
+         //
+         if (fps.needs_atlas_update()) {
+            fps.generate_atlas(*this->owner, *this);
+            this->state.must_re_record_ui = true;
+         }
+         if (fps.needs_geometry_update()) {
+            fps.update_geometry(*this->owner);
+         }
+      }
+   }
+   namespace {
+      template<typename Pred> requires requires(const rendered_mesh& ro, Pred&& predicate) {
+         { predicate(ro) } -> std::same_as<bool>;
+      }
+      void _generate_indirect_draws(
+         const scene& scene,
+         frame_in_flight::indirect_draw_buffers& idb,
+         Pred&& predicate
+      ) {
+         auto* params  = (VkDrawIndexedIndirectCommand*)idb.params.map_memory();
+         auto* indices = (int32_t*)idb.mesh_indices.map_memory();
+         size_t i = 0; // index into scene mesh array
+         size_t j = 0; // index into indirect draw parameter arrays
+         for (; i < scene.meshes.size(); ++i) {
+            auto& ro = scene.meshes[i];
+            if (!ro.active())
+               continue;
+            if (!predicate(ro))
+               continue;
+            params[j] = VkDrawIndexedIndirectCommand{
+               .indexCount    = ro.vertex_and_index_buffer.index_count,
+               .instanceCount = 1,
+               .firstIndex    = 0,
+               .vertexOffset  = 0,
+               .firstInstance = 0,
+            };
+            indices[j] = i;
+            ++j;
+         }
+         for (; j < config::max_rendered_meshes; ++j) {
+            indices[j] = -1;
+            params[j]  = VkDrawIndexedIndirectCommand{
+               .indexCount    = 0,
+               .instanceCount = 0,
+               .firstIndex    = 0,
+               .vertexOffset  = 0,
+               .firstInstance = 0,
+            };
+         }
+         idb.params.unmap_memory(params);
+         idb.mesh_indices.unmap_memory(indices);
+      }
+   }
+   void frame_in_flight::prepare_indirect_draws() {
+      if (!this->state.scene_meshes_added_or_removed) {
+         return;
+      }
+      //
+      auto& scene        = this->owner->scene;
+      bool  can_do_alpha = this->owner->can_do_alpha();
+      //
+      _generate_indirect_draws( // sun shadows
+         scene,
+         this->indirect_draw_commands.sun_shadows,
+         [](const rendered_mesh& ro) {
+            return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+         }
+      );
+      for (auto& caster : this->indirect_draw_commands.shadow_casters) {
+         _generate_indirect_draws( // shadow caster
+            scene,
+            caster,
+            [](const rendered_mesh& ro) {
+               return (ro.mesh_flags & rendered_mesh::mesh_flag::cast_shadows) != 0;
+            }
+         );
+      }
+      if (can_do_alpha) {
+         _generate_indirect_draws( // main
+            scene,
+            this->indirect_draw_commands.main,
+            [](const rendered_mesh& ro) {
+               return !(ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit);
+            }
+         );
+         _generate_indirect_draws( // main OIT
+            scene,
+            this->indirect_draw_commands.main_oit,
+            [](const rendered_mesh& ro) {
+               return (ro.mesh_flags & rendered_mesh::mesh_flag::requires_oit) != 0;
+            }
+         );
+      } else {
+         _generate_indirect_draws( // main
+            scene,
+            this->indirect_draw_commands.main,
+            [](const rendered_mesh& ro) {
+               return true;
+            }
+         );
+      }
+   }
+   void frame_in_flight::record_compute_cull_commands() {
+      if (this->state.recorded_compute_cull_commands) {
+         return;
+      }
+      this->state.recorded_compute_cull_commands = true;
+      //
+      const auto* frustum_cull_shader = this->owner->get_compute_shader(surface_renderer::frustum_cull_shader_id);
+      assert(frustum_cull_shader);
+      #pragma region Frustum culling: main
+      {  // Main
+         auto& command_buffer = this->compute_commands.frustum_cull_main;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (main).");
+         }
+         auto barrier = VkBufferMemoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+            .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+            .srcQueueFamilyIndex = this->owner->queues.graphics.index,
+            .dstQueueFamilyIndex = this->owner->queues.compute.index,
+            .buffer = this->indirect_draw_commands.main.params.handle,
+            .size   = VK_WHOLE_SIZE,
+         };
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_main });
+
+         vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
+
+         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+         barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+         barrier.buffer = this->indirect_draw_commands.main.params.handle;
+         barrier.size   = VK_WHOLE_SIZE;
+         barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
+         barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
+
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (main).");
+         }
+      }
+      #pragma endregion
+      #pragma region Frustum culling: sun shadows
+      {  // Sun
+         auto& command_buffer = this->compute_commands.frustum_cull_sun;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (sun).");
+         }
+         auto barrier = VkBufferMemoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+            .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+            .srcQueueFamilyIndex = this->owner->queues.graphics.index,
+            .dstQueueFamilyIndex = this->owner->queues.compute.index,
+            .buffer = this->indirect_draw_commands.sun_shadows.params.handle,
+            .size   = VK_WHOLE_SIZE,
+         };
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_sun });
+
+         vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
+
+         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+         barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+         barrier.buffer = this->indirect_draw_commands.sun_shadows.params.handle;
+         barrier.size   = VK_WHOLE_SIZE;
+         barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
+         barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
+
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (sun).");
+         }
+      }
+      #pragma endregion
+      #pragma region Radius culling: shadow casters
+      {
+         auto& command_buffer = this->compute_commands.shadow_caster_cull;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (main).");
+         }
+         auto barrier = VkBufferMemoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+            .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+            .srcQueueFamilyIndex = this->owner->queues.graphics.index,
+            .dstQueueFamilyIndex = this->owner->queues.compute.index,
+            .buffer = this->indirect_draw_commands.main.params.handle,
+            .size   = VK_WHOLE_SIZE,
+         };
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         for (size_t i = 0; i < config::max_active_shadow_casters; ++i) {
+            const compute_shader* shader;
+            {
+               auto id = surface_renderer::shadow_caster_cull_shader_base_id;
+               id.bytes[7] += i;
+               shader = this->owner->get_compute_shader(id);
+               assert(shader);
+            }
+            command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_shadow_caster_culls[i] });
+
+            vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
+         }
+
+         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+         barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+         barrier.buffer = this->indirect_draw_commands.main.params.handle;
+         barrier.size   = VK_WHOLE_SIZE;
+         barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
+         barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
+
+         vkCmdPipelineBarrier(
+            command_handle,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+         );
+
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (main).");
+         }
+      }
+      #pragma endregion
+      // Done.
+   }
+   void frame_in_flight::record_graphics_commands() {
+      if (this->state.scene_meshes_added_or_removed || this->state.must_re_record_graphics) {
+         this->state.scene_meshes_added_or_removed = false;
+         this->state.must_re_record_graphics = false;
+         this->_record_scene_draw_commands();
+      }
+      if (auto& must = this->state.must_re_record_ui) {
+         must = false;
+         this->_record_ui_draw_commands();
+      }
+   }
+   namespace {
+      rendered_mesh::push_constant _make_push_constant_for(const rendered_mesh& ro, size_t object_index) {
+         auto pc = ro.push_params;
+         pc.object_index         = (int32_t)object_index;
+         pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
+         pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
+         return pc;
+      }
+
+      template<typename Prior> requires requires(const rendered_mesh& ro, Prior&& before_draw) {
+         { before_draw(ro) };
+      }
+      void _record_indirect_draws(
+         scene& scene,
+         command_buffer& command_buffer,
+         frame_in_flight::indirect_draw_buffers& indirect_buffer,
+         const shader& shader,
+         Prior&& before_draw,
+         VkShaderStageFlags push_constant_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+      ) {
+         auto   command_handle = command_buffer.handle;
+         auto&  material       = shader.material;
+         size_t first_double_sided_draw = std::string::npos;
+         //
+         auto* mesh_indices = (int32_t*)indirect_buffer.mesh_indices.map_memory();
+         for (size_t i = 0; i < config::max_rendered_meshes; ++i) {
+            auto mi = mesh_indices[i];
+            if (mi < 0)
+               break;
+            auto& ro = scene.meshes[mi];
+            if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
+               first_double_sided_draw = i;
+               continue;
+            }
+            before_draw(ro);
+            //
+            command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, mi));
+            {
+               VkDeviceSize offset = 0;
+               auto& vib = ro.vertex_and_index_buffer;
+               vkCmdBindVertexBuffers(command_handle, 0, 1, &vib.buffer.handle, &offset);
+               if (vib.wide_indices) {
+                  vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT32);
+               } else {
+                  vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT16);
+               }
+            }
+            vkCmdDrawIndexedIndirect(
+               command_handle,
+               indirect_buffer.params.handle,
+               sizeof(VkDrawIndexedIndirectCommand) * i,
+               1,
+               sizeof(VkDrawIndexedIndirectCommand)
+            );
+         }
+         if (first_double_sided_draw != std::string::npos) {
+            auto* variant = shader.get_variant({
+               .face_cull_mode = VK_CULL_MODE_NONE,
+            });
+            assert(variant);
+            vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, variant->handle);
+            //
+            for (size_t i = first_double_sided_draw; i < config::max_rendered_meshes; ++i) {
+               auto mi = mesh_indices[i];
+               if (mi < 0)
+                  break;
+               auto& ro = scene.meshes[mi];
+               if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided)) {
+                  continue;
+               }
+               before_draw(ro);
+               //
+               command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, mi));
+               {
+                  VkDeviceSize offset = 0;
+                  auto& vib = ro.vertex_and_index_buffer;
+                  vkCmdBindVertexBuffers(command_handle, 0, 1, &vib.buffer.handle, &offset);
+                  if (vib.wide_indices) {
+                     vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT32);
+                  } else {
+                     vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT16);
+                  }
+               }
+               vkCmdDrawIndexedIndirect(
+                  command_handle,
+                  indirect_buffer.params.handle,
+                  sizeof(VkDrawIndexedIndirectCommand) * i,
+                  1,
+                  sizeof(VkDrawIndexedIndirectCommand)
+               );
+            }
+         }
+         indirect_buffer.mesh_indices.unmap_memory(mesh_indices);
+      }
+   }
+   void frame_in_flight::_record_scene_draw_commands() {
+      auto& sr    = *this->owner;
+      auto& scene = sr.scene;
+      {  // Sun shadows
+         auto& command_buffer = this->graphics_commands.main_shadow;
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
+         }
+         //
+         command_buffer.begin_render_pass(
+            *sr.render_passes_by_name.main_shadow,
+            sr.canvas.sun_shadow.framebuffer,
+            {
+               .offset = { 0, 0 },
+               .extent = { config::sun_shadow_map_resolution_x, config::sun_shadow_map_resolution_y },
+            },
+            std::array{
+               VkClearValue{ .depthStencil = { config::sun_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
+         {
+            const auto* shader = sr.get_shader(surface_renderer::sun_shadow_shader_id);
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+            _record_indirect_draws(
+               scene, command_buffer, this->indirect_draw_commands.sun_shadows, *shader,
+               [](const rendered_mesh& ro) {}
+            );
+         }
+         command_buffer.end_render_pass();
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_scene_draw_commands] Failed to record indirect draws for sun shadows.");
+         }
+      }
+      {  // Point light shadows
+         auto& command_buffer = this->graphics_commands.main_shadow_placed;
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (light shadows).");
+         }
+         //
+         command_buffer.begin_render_pass(
+            *sr.render_passes_by_name.main_shadow_placed,
+            sr.canvas.light_shadows.framebuffer,
+            {
+               .offset = { 0, 0 },
+               .extent = { config::light_shadow_map_resolution_x, config::light_shadow_map_resolution_y },
+            },
+            std::array{
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+               VkClearValue{ .depthStencil = { config::light_shadow_invert_depth ? 0.0 : 1.0, 0 } },
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
+         //
+         for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
+            auto id = surface_renderer::light_shadow_map_shader_base_id;
+            id.bytes[7] += i;
+            //
+            const auto* shader = sr.get_shader(id);
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+            _record_indirect_draws(
+               scene, command_buffer, this->indirect_draw_commands.shadow_casters[i], *shader,
+               [](const rendered_mesh& ro) {}
+            );
+            if (i != surface_renderer::shadow_caster_count - 1)
+               command_buffer.next_render_subpass();
+         }
+         command_buffer.end_render_pass();
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (light shadows).");
+         }
+      }
+      {  // Scene objects
+         auto& command_buffer = this->graphics_commands.main;
+         auto  command_handle = command_buffer.handle;
+         //
+         command_buffer.reset(0);
+         if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer.");
+         }
+         sr.canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+         //
+         command_buffer.begin_render_pass(
+            *sr.render_passes_by_name.main,
+            sr.canvas.main_framebuffer,
+            {
+               .offset = { 0, 0 },
+               .extent = sr.surface_extent,
+            },
+            std::array{
+               VkClearValue{ .color = { 0, 0, 0, 1 } }, // set framebuffer to black
+               VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} }, // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+            },
+            VK_SUBPASS_CONTENTS_INLINE
+         );
+         //
+         bool last_was_decal   = false;
+         auto set_decal_config = [command_handle, &last_was_decal](const rendered_mesh& ro) {
+            bool current_is_decal = (ro.mesh_flags & rendered_mesh::mesh_flag::is_decal) != 0;
+            if (current_is_decal != last_was_decal) {
+               if (current_is_decal) {
+                  //
+                  // "Depth bias" in Vulkan is functionally equivalent to OpenGL's glPolygonOffset, and 
+                  // can be used to apply a depth offset to triangle-based models when generating the 
+                  // depth buffer and (I believe) when rendering it in general. This can prevent meshes 
+                  // from Z-fighting even when they're coplanar, as would typically be the case for any 
+                  // decal meshes.
+                  //
+                  constexpr auto base  = config::use_inverted_depth ? 1.25 : 1.25;
+                  constexpr auto limit = 0.0; // no limit, for now; NOTE: requires a hardware feature
+                  constexpr auto scale = config::use_inverted_depth ? 1.75 : 1.75;
+                  //
+                  // NOTE: Merely setting the depth bias parameters isn't enough; depth bias must actually 
+                  // be enabled as well. You can enable it when defining the shader, with the parameters 
+                  // set to zero initially; or, if you're using Vulkan 1.3+, you can flag "depth bias is 
+                  // enabled" as a dynamic state parameter and then use vkCmdSetDepthBiasEnable here.
+                  //
+                  vkCmdSetDepthBias(command_handle, base, limit, scale);
+               } else {
+                  vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
+               }
+               last_was_decal = current_is_decal;
+            }
+         };
+         vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
+         {
+            //
+            // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
+            // with each new material.
+            //
+            const auto* shader = sr.get_shader(surface_renderer::main_shader_id);
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+            //
+            _record_indirect_draws(
+               scene, command_buffer, this->indirect_draw_commands.main, *shader,
+               [&set_decal_config](const rendered_mesh& ro) {
+                  set_decal_config(ro);
+               }
+            );
+         }
+         command_buffer.end_render_pass();
+         //
+         if (sr.can_do_alpha()) {
+            assert(sr.render_passes_by_name.main_oit);
+            //
+            // OIT passes:
+            //
+            command_buffer.begin_render_pass(
+               *sr.render_passes_by_name.main_oit,
+               sr.canvas.oit.framebuffer,
+               {
+                  .offset = { 0, 0 },
+                  .extent = sr.surface_extent,
+               },
+               std::array{
+                  VkClearValue{ .color = { 0, 0, 0, 0 } }, // accumulator
+                  VkClearValue{ .color = { 1, 0, 0, 0 } }, // reveal
+               },
+               VK_SUBPASS_CONTENTS_INLINE
+            );
+            {
+               const auto* shader = sr.get_shader(surface_renderer::main_shader_oit_color_id);
+               command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+               //
+               _record_indirect_draws(
+                  scene, command_buffer, this->indirect_draw_commands.main_oit, *shader,
+                  [&set_decal_config](const rendered_mesh& ro) {
+                     set_decal_config(ro);
+                  }
+               );
+            }
+            command_buffer.next_render_subpass();
+            //
+            // Compositing:
+            //
+            {
+               const shader* shader = sr.get_shader(surface_renderer::oit_composite_shader_id);
+               command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.oit_composite });
+               vkCmdDraw(command_handle, 3, 1, 0, 0);
+            }
+            command_buffer.end_render_pass();
+         }
+         //
+         if (last_was_decal) {
+            vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
+         }
+         //
+         // Done!
+         //
+         if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+            throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer.");
+         }
+      }
+
+   }
+   void frame_in_flight::_record_ui_draw_commands() {
+      auto& sr = *this->owner;
+      //
+      auto& command_buffer = this->graphics_commands.fps;
+      auto  command_handle = command_buffer.handle;
+      //
+      command_buffer.reset(0);
+      if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_ui_draw_commands] Failed to start recording.");
+      }
+      //
+      this->overlays.fps.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
+      this->overlays.world_axes.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
+      //
+      command_buffer.begin_render_pass(
+         *sr.render_passes_by_name.ui,
+         sr.canvas.main_framebuffer,
+         {
+            .offset = { 0, 0 },
+            .extent = sr.surface_extent,
+         },
+         std::array{
+            VkClearValue{ .color        = { 0, 0, 0, 0 } },
+            VkClearValue{ .depthStencil = { 1.0, 0 } }, // don't apply inverted depth here; that's per projection matrix
+         },
+         VK_SUBPASS_CONTENTS_INLINE
+      );
+      {
+         const shader* shader = sr.get_shader(vulkanDK::overlays::fps::shader_id);
+         if (shader) {
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.fps });
+            this->overlays.fps.draw_call(command_handle);
+         }
+      }
+      {
+         const shader* shader = sr.get_shader(vulkanDK::overlays::world_axes::shader_id);
+         if (shader) {
+            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.world_axes });
+            this->overlays.world_axes.draw_call(command_handle);
+         }
+      }
+      command_buffer.end_render_pass();
+      if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_ui_draw_commands] Failed to finish recording.");
+      }
+   }
+   void frame_in_flight::submit_compute_cull_commands() {
+      vkWaitForFences(this->owner->logical_device, 1, &this->fences.compute, VK_TRUE, UINT64_MAX);
+		vkResetFences  (this->owner->logical_device, 1, &this->fences.compute);
+      //
+      VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
+      auto wait_semaphores   = std::array{ this->semaphores.graphics_finished };
+      auto signal_semaphores = std::array{ this->semaphores.compute_finished };
+      auto command_handles   = std::array{
+         this->compute_commands.frustum_cull_main.handle,
+         this->compute_commands.frustum_cull_sun.handle,
+         this->compute_commands.shadow_caster_cull.handle,
+      };
+      auto submit_info = VkSubmitInfo{
+         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+         .waitSemaphoreCount   = (uint32_t)wait_semaphores.size(),
+         .pWaitSemaphores      = wait_semaphores.data(),
+         .pWaitDstStageMask    = waitStages,
+         .commandBufferCount   = (uint32_t)command_handles.size(),
+         .pCommandBuffers      = command_handles.data(),
+         .signalSemaphoreCount = (uint32_t)signal_semaphores.size(),
+         .pSignalSemaphores    = signal_semaphores.data(),
+      };
+      if (auto result = vkQueueSubmit(this->owner->queues.compute.handle, 1, &submit_info, this->fences.compute); result != VK_SUCCESS) {
+         throw result_exception(result, "[frame_in_flight::submit_compute_cull_commands] Submission failed.");
+      }
+   }
+   void frame_in_flight::submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers) {
+      std::vector<VkCommandBuffer> cb_handles;
+      {
+         auto& list = this->graphics_commands.list;
+         auto  size = list.size();
+         cb_handles.resize(size + append_command_buffers.size());
+         //
+         size_t i = 0;
+         for (; i < size; ++i)
+            cb_handles[i] = list[i].handle;
+         for (auto& item : append_command_buffers)
+            cb_handles[i++] = item;
+      }
+      auto wait_semaphores   = std::array{ this->semaphores.image_available,   this->semaphores.compute_finished };
+      auto signal_semaphores = std::array{ this->semaphores.graphics_finished, this->semaphores.render_finished };
+      VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
+      auto submit_info = VkSubmitInfo{
+         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+         .waitSemaphoreCount   = wait_semaphores.size(),
+         .pWaitSemaphores      = wait_semaphores.data(),
+         .pWaitDstStageMask    = waitStages,
+         .commandBufferCount   = (uint32_t)cb_handles.size(),
+         .pCommandBuffers      = cb_handles.data(),
+         .signalSemaphoreCount = signal_semaphores.size(),
+         .pSignalSemaphores    = signal_semaphores.data(),
+      };
+      vkResetFences(this->owner->logical_device, 1, &this->fences.graphics); // set the fence to unsignalled; vkWaitForFences calls will wait for it to be signalled
+      if (auto result = vkQueueSubmit(this->owner->queues.graphics.handle, 1, &submit_info, this->fences.graphics); result != VK_SUCCESS) {
+         throw result_exception(result, "[frame_in_flight::submit_graphics_commands] Submission failed.");
+      }
    }
 
    void frame_in_flight::record_draw_commands() {
@@ -247,8 +964,14 @@ namespace vulkanDK {
       }
    }
 
+   void frame_in_flight::on_scene_meshes_added_or_removed() {
+      this->state.scene_meshes_added_or_removed = true;
+   }
    void frame_in_flight::invalidate_all_command_buffers() {
       this->command_buffers_invalid = true;
+      this->state.recorded_compute_cull_commands = false;
+      this->state.must_re_record_graphics = true;
+      this->state.must_re_record_ui = true;
    }
    
    scene& frame_in_flight::get_scene() {
@@ -536,14 +1259,6 @@ namespace vulkanDK {
    }
 
    namespace {
-      rendered_mesh::push_constant _make_push_constant_for(const rendered_mesh& ro, size_t object_index) {
-         auto pc = ro.push_params;
-         pc.object_index         = (int32_t)object_index;
-         pc.texture_index        = (int32_t)ro.texture_indices.diffuse;
-         pc.texture_normal_index = (int32_t)ro.texture_indices.normals;
-         return pc;
-      }
-      
       template<typename Pred> requires requires(const rendered_mesh& ro, Pred&& predicate) {
          { predicate(ro) } -> std::same_as<bool>;
       }
@@ -730,6 +1445,7 @@ namespace vulkanDK {
       this->command_buffers_invalid = false;
       //
       this->_record_frustum_cull_commands();
+      this->_record_shadow_caster_cull_commands();
       auto& scene = this->owner->scene;
       {  // Prep indirect draws.
          bool can_do_alpha = this->owner->can_do_alpha();
@@ -1045,7 +1761,7 @@ namespace vulkanDK {
             0, nullptr
          );
 
-         command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.compute_frustum_culling_main });
+         command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_main });
 
          vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
 
@@ -1098,7 +1814,7 @@ namespace vulkanDK {
             0, nullptr
          );
 
-         command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.compute_frustum_culling_sun });
+         command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_sun });
 
          vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
 
@@ -1124,6 +1840,68 @@ namespace vulkanDK {
          }
       }
       // Done.
+   }
+   void frame_in_flight::_record_shadow_caster_cull_commands() {
+      auto& command_buffer = this->compute_commands.shadow_caster_cull;
+      auto  command_handle = command_buffer.handle;
+      //
+      command_buffer.reset(0);
+      if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (main).");
+      }
+      auto barrier = VkBufferMemoryBarrier{
+         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+         .pNext = nullptr,
+         .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+         .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+         .srcQueueFamilyIndex = this->owner->queues.graphics.index,
+         .dstQueueFamilyIndex = this->owner->queues.compute.index,
+         .buffer = this->indirect_draw_commands.main.params.handle,
+         .size   = VK_WHOLE_SIZE,
+      };
+      vkCmdPipelineBarrier(
+         command_handle,
+         VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+         0,
+         0, nullptr,
+         1, &barrier,
+         0, nullptr
+      );
+
+      for (size_t i = 0; i < config::max_active_shadow_casters; ++i) {
+         const compute_shader* shader;
+         {
+            auto id = surface_renderer::shadow_caster_cull_shader_base_id;
+            id.bytes[7] += i;
+            shader = this->owner->get_compute_shader(id);
+            assert(shader);
+         }
+         command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_shadow_caster_culls[i] });
+
+         vkCmdDispatch(command_handle, config::max_rendered_meshes / 16, 1, 1);
+      }
+
+      barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+      barrier.buffer = this->indirect_draw_commands.main.params.handle;
+      barrier.size   = VK_WHOLE_SIZE;
+      barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
+      barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
+
+      vkCmdPipelineBarrier(
+         command_handle,
+         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+         VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+         0,
+         0, nullptr,
+         1, &barrier,
+         0, nullptr
+      );
+
+      if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (main).");
+      }
    }
    void frame_in_flight::_refill_fps_overlay_command_buffer() {
       auto& command_buffer = this->graphics_commands.fps;

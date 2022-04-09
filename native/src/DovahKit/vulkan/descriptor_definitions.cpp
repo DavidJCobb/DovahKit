@@ -36,6 +36,19 @@ namespace vulkanDK {
          binding_params[i] = binding_list[i].setup_params();
          flags_list[i]     = binding_list[i].flags;
       }
+      {
+         uint32_t vc = 0;
+         for (size_t j = 0; j < binding_count; ++j) {
+            auto& binding = binding_list[j];
+            if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT) {
+               if (vc != 0)
+                  throw std::logic_error("[descriptor_set_layout::setup] A descriptor set is not allowed to have multiple variable-length descriptor bindings.");
+               if (j != binding_count - 1)
+                  throw std::logic_error("[descriptor_set_layout::setup] If a descriptor set has a variable-length descriptor binding, it must be the last binding in the list.");
+               vc = binding.count;
+            }
+         }
+      }
       //
       auto flags_info = VkDescriptorSetLayoutBindingFlagsCreateInfo{
          .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
@@ -57,6 +70,15 @@ namespace vulkanDK {
          vkDestroyDescriptorSetLayout(this->device, this->handle, nullptr);
          this->handle = VK_NULL_HANDLE;
       }
+   }
+
+   uint32_t descriptor_set_layout::last_binding_variable_length() const {
+      if (this->bindings.empty())
+         return 0;
+      auto& binding = this->bindings.back();
+      if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT)
+         return binding.count;
+      return 0;
    }
    #pragma endregion
 }

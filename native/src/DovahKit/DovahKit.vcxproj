@@ -754,6 +754,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
+    <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
@@ -1632,6 +1633,7 @@
     <None Include="shaders\shader.shadows.frag.spv" />
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader.vert.spv" />
+    <None Include="shaders\shadow-caster-cull.comp" />
     <None Include="shaders\sun-shadow-depth.vert" />
     <None Include="shaders\sun-shadow-depth.vert.spv" />
     <None Include="shaders\util-full-screen-triangle.vert" />

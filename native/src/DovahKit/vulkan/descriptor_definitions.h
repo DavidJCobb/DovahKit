@@ -35,5 +35,7 @@ namespace vulkanDK {
    
          void setup();
          void teardown();
+
+         uint32_t last_binding_variable_length() const;
    };
 }

@@ -104,6 +104,7 @@ namespace vulkanDK {
          struct {
             command_buffer frustum_cull_main;
             command_buffer frustum_cull_sun;
+            command_buffer shadow_caster_cull;
          } compute_commands;
          struct {
             indirect_draw_buffers main;
@@ -143,8 +144,28 @@ namespace vulkanDK {
          void teardown_descriptor_sets();
          void teardown();
 
+      protected:
+         struct {
+            bool recorded_compute_cull_commands = false;
+            bool scene_meshes_added_or_removed  = true;
+            bool must_re_record_graphics = true;
+            bool must_re_record_ui       = true;
+         } state;
+      public:
+         void prepare_for_render();
+         void prepare_indirect_draws();
+         void record_compute_cull_commands();
+         void record_graphics_commands();
+      protected:
+            void _record_scene_draw_commands();
+            void _record_ui_draw_commands();
+      public:
+         void submit_compute_cull_commands();
+         void submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers = {});
+
          void record_draw_commands();
 
+         void on_scene_meshes_added_or_removed();
          void invalidate_all_command_buffers();
 
       protected:
@@ -164,6 +185,7 @@ namespace vulkanDK {
 
          void _refill_command_buffers();
          void _record_frustum_cull_commands();
+         void _record_shadow_caster_cull_commands();
          void _refill_fps_overlay_command_buffer();
    };
 }

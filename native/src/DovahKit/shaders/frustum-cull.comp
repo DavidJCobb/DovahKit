@@ -53,7 +53,7 @@ void main() {
 		return;
 	int mesh = mesh_indices[index];
 	if (mesh < 0) {
-		indirect_draws[index].instanceCount = 0;
+		//indirect_draws[index].instanceCount = 0; // CPU should already have done this
 		return;
 	}
 	//

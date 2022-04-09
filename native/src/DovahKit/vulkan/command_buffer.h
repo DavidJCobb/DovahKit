@@ -40,6 +40,9 @@ namespace vulkanDK {
          template<size_t S> void begin_render_pass(const render_pass& rp, VkFramebuffer fb, const VkRect2D render_area, const std::array<VkClearValue, S>& clears, VkSubpassContents sc) {
             this->_begin_render_pass(fb, render_area, rp, clears.data(), clears.size(), sc);
          }
+         void next_render_subpass() {
+            vkCmdNextSubpass(this->handle, VK_SUBPASS_CONTENTS_INLINE);
+         }
          inline void end_render_pass() {
             vkCmdEndRenderPass(this->handle);
          }

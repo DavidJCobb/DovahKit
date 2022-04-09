@@ -1,4 +1,5 @@
 #include "surface_renderer_descriptor_group.h"
+#include "config/frames_in_flight.h"
 #include "exceptions.h"
 #include "surface_renderer.h"
 
@@ -9,81 +10,122 @@ namespace vulkanDK {
          layout.set_device(sr.logical_device);
          layout.setup();
       }
+      for (auto& layout : this->shared_layouts.list) {
+         layout.set_device(sr.logical_device);
+         layout.setup();
+      }
       sr.set_debug_object_name(this->standard.handle,   "Descriptor Set Layout: Standard");
       sr.set_debug_object_name(this->fps.handle,        "Descriptor Set Layout: FPS Counter");
       sr.set_debug_object_name(this->world_axes.handle, "Descriptor Set Layout: World Axes Overlay");
    }
 
    std::vector<VkDescriptorSetLayout> descriptor_set_layout_group::handles() const {
-      constexpr size_t size = std::tuple_size_v<decltype(list)>;
-      //
+      std::vector<VkDescriptorSetLayout> out(size + this->shared_layouts.list.size());
+      for (size_t i = 0; i < size; ++i)
+         out[i] = this->list[i].handle;
+      for (size_t i = 0; i < this->shared_layouts.list.size(); ++i)
+         out[i + size] = this->shared_layouts.list[i].handle;
+      return out;
+   }
+   std::vector<VkDescriptorSetLayout> descriptor_set_layout_group::handles_for_sets() const {
       std::vector<VkDescriptorSetLayout> out(size);
       for (size_t i = 0; i < size; ++i)
          out[i] = this->list[i].handle;
+      {
+         auto& sl = this->shared_layouts;
+         for(size_t i = 0; i < using_set_count_of(sl.compute_frustum_culling); ++i)
+            out.push_back(sl.compute_frustum_culling.handle);
+         for (size_t i = 0; i < using_set_count_of(sl.compute_shadow_caster_culling); ++i)
+            out.push_back(sl.compute_shadow_caster_culling.handle);
+      }
       return out;
    }
-   std::vector<VkDescriptorPoolSize> descriptor_set_layout_group::needed_pool_sizes(size_t fif_count) const {
+
+   void descriptor_set_layout_group::_needed_pool_sizes_for(std::vector<VkDescriptorPoolSize>& sizes, const descriptor_set_layout& dl, size_t using_set_count) const {
+      for (auto& binding : dl.bindings) {
+         auto count = binding.count * config::frames_in_flight_count * using_set_count;
+         //
+         auto t    = binding.type;
+         bool done = false;
+         for(auto& prior : sizes) {
+            if (prior.type == t) {
+               prior.descriptorCount += count;
+               done = true;
+               break;
+            }
+         }
+         if (done)
+            continue;
+         sizes.emplace_back(VkDescriptorPoolSize{
+            .type            = t,
+            .descriptorCount = (uint32_t)count,
+         });
+      }
+   }
+   std::vector<VkDescriptorPoolSize> descriptor_set_layout_group::needed_pool_sizes() const {
       std::vector<VkDescriptorPoolSize> sizes;
       for (auto& dl : this->list) {
-         for (auto& binding : dl.bindings) {
-            auto count = binding.count * fif_count;
-            //
-            auto t    = binding.type;
-            bool done = false;
-            for(auto& prior : sizes) {
-               if (prior.type == t) {
-                  prior.descriptorCount += count;
-                  done = true;
-                  break;
-               }
-            }
-            if (done)
-               continue;
-            sizes.emplace_back(VkDescriptorPoolSize{
-               .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-               .descriptorCount = (uint32_t)count,
-            });
-         }
+         this->_needed_pool_sizes_for(sizes, dl);
+      }
+      {
+         auto& sl = this->shared_layouts;
+         this->_needed_pool_sizes_for(sizes, sl.compute_frustum_culling,       using_set_count_of(sl.compute_frustum_culling));
+         this->_needed_pool_sizes_for(sizes, sl.compute_shadow_caster_culling, using_set_count_of(sl.compute_shadow_caster_culling));
       }
       return sizes;
+   }
+   std::vector<uint32_t> descriptor_set_layout_group::variable_binding_counts() const {
+      std::vector<uint32_t> variable_counts; // one count per set; sets with no variable-length array will ignore their respective count
+      for (auto& layout : this->list) {
+         variable_counts.push_back(layout.last_binding_variable_length());
+      }
+      {  // Shared layouts:
+         {
+            auto& layout = this->shared_layouts.compute_frustum_culling;
+            auto  vc     = layout.last_binding_variable_length();
+            for (size_t i = 0; i < descriptor_set_layout_group::using_set_count_of(layout); ++i)
+               variable_counts.push_back(vc);
+         }
+         {
+            auto& layout = this->shared_layouts.compute_shadow_caster_culling;
+            auto  vc     = layout.last_binding_variable_length();
+            for (size_t i = 0; i < descriptor_set_layout_group::using_set_count_of(layout); ++i)
+               variable_counts.push_back(vc);
+         }
+      }
+      return variable_counts;
+   }
+
+   size_t descriptor_set_layout_group::total_set_count() const {
+      auto& sl = this->shared_layouts;
+      return (
+         this->list.size()
+         + using_set_count_of(sl.compute_frustum_culling)
+         + using_set_count_of(sl.compute_shadow_caster_culling)
+      ) * config::frames_in_flight_count;
    }
    #pragma endregion
    #pragma region descriptor_set_group
    void descriptor_set_group::allocate_all(surface_renderer& sr) {
       auto& dsl = sr.descriptor_set_layouts;
       //
-      constexpr size_t size = std::tuple_size_v<decltype(list)>;
-      static_assert(size == std::tuple_size_v<decltype(dsl.list)>);
-      //
       // Each descriptor set can have a single descriptor binding that acts as a variable-length 
       // array of descriptors. However, we have to provide suitable maximums for these lists via 
       // an extension struct.
       //
-      auto layouts = dsl.handles();
-      assert(layouts.size() == size);
-      std::vector<uint32_t> variable_counts; // one count per set; sets with no variable-length array will ignore their respective count
-      for(auto& layout : dsl.list) {
-         auto& bl = layout.bindings;
-         auto& vc = variable_counts.emplace_back(0);
-         for (size_t j = 0; j < bl.size(); ++j) {
-            auto& binding = bl[j];
-            if (binding.flags & VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT) {
-               assert(vc == 0            && "A descriptor set is not allowed to have multiple variable-length descriptor bindings.");
-               assert(j == bl.size() - 1 && "If a descriptor set has a variable-length descriptor binding, it must be the last binding in the list.");
-               vc = binding.count;
-            }
-         }
-      }
+      auto layouts = dsl.handles_for_sets();
+      auto variable_count_list = dsl.variable_binding_counts();
+      assert(layouts.size() == variable_count_list.size());
       auto variable_count_info = VkDescriptorSetVariableDescriptorCountAllocateInfo{
          .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
-         .descriptorSetCount = (uint32_t)variable_counts.size(),
-         .pDescriptorCounts  = variable_counts.data(),
+         .descriptorSetCount = (uint32_t)variable_count_list.size(),
+         .pDescriptorCounts  = variable_count_list.data(),
       };
       auto alloc_info = VkDescriptorSetAllocateInfo{
          .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
          .pNext              = &variable_count_info,
          .descriptorPool     = sr.descriptor_pool,
-         .descriptorSetCount = (uint32_t)size,
+         .descriptorSetCount = (uint32_t)layouts.size(),
          .pSetLayouts        = layouts.data(),
       };
       //
@@ -107,6 +149,10 @@ namespace vulkanDK {
          default:
             throw result_exception(result, "[vulkanDK::descriptor_set_group::allocate_all] Failed to allocate descriptor sets.");
       }
+   }
+   void descriptor_set_group::free_all(surface_renderer& sr) {
+      vkFreeDescriptorSets(sr.logical_device, sr.descriptor_pool, this->list.size(), this->list.data());
+      vkFreeDescriptorSets(sr.logical_device, sr.descriptor_pool, this->sharing_sets.list.size(), this->sharing_sets.list.data());
    }
    #pragma endregion
 }
