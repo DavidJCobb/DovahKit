@@ -17,9 +17,9 @@
 #include "command_buffer.h"
 #include "compute_shader.h"
 #include "descriptor_definitions.h"
+#include "graphics_shader.h"
 #include "image.h"
 #include "scene.h"
-#include "shader.h"
 #include "swap_chain_image.h"
 #include "surface_renderer_descriptor_group.h"
 //
@@ -56,13 +56,13 @@ namespace vulkanDK {
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
 
-         static constexpr shader::id_type oit_composite_shader_id    = "OITCompo";
-         static constexpr shader::id_type main_shader_id             = "MainMatl";
-         static constexpr shader::id_type main_shader_oit_color_id   = "MainOITc";
-         static constexpr shader::id_type sun_shadow_shader_id       = "SunShadw";
-         static constexpr compute_shader::id_type frustum_cull_shader_id = "CullFstm";
-         static constexpr shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
-         static constexpr compute_shader::id_type shadow_caster_cull_shader_base_id = "CullSdw0";
+         static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
+         static constexpr graphics_shader::id_type main_shader_id             = "MainMatl";
+         static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MainOITc";
+         static constexpr graphics_shader::id_type sun_shadow_shader_id       = "SunShadw";
+         static constexpr compute_shader::id_type  frustum_cull_shader_id     = "CullFstm";
+         static constexpr graphics_shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
+         static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "CullSdw0";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
          
@@ -156,8 +156,8 @@ namespace vulkanDK {
             size_t current_frame = 0;
          } swap_chain;
          //
-         std::vector<shader*> shaders;
-         std::vector<compute_shader*> compute_shaders;
+         std::vector<graphics_shader*> graphics_shaders;
+         std::vector<compute_shader*>  compute_shaders;
          union {
             std::array<render_pass*, 5> _list = { nullptr, nullptr, nullptr, nullptr, nullptr };
             struct {
@@ -201,17 +201,17 @@ namespace vulkanDK {
          VkFormat find_depth_format() const;
          bool needs_null_texture() const;
 
-         buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+         [[nodiscard]] buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
          void set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name);
          template<typename T> void set_debug_object_name(T handle, const std::string& name) {
             this->set_debug_object_name((uint64_t)handle, debug_helper_typeof<T>, name);
          }
 
-         shader* get_shader(cobb::eight_cc id) const;
-         shader* get_or_create_shader(cobb::eight_cc id);
+         [[nodiscard]] graphics_shader* get_graphics_shader(cobb::eight_cc id) const;
+         [[nodiscard]] graphics_shader* create_graphics_shader(cobb::eight_cc id);
 
-         compute_shader* create_compute_shader(cobb::eight_cc id);
-         compute_shader* get_compute_shader(cobb::eight_cc id) const;
+         [[nodiscard]] compute_shader* create_compute_shader(cobb::eight_cc id);
+         [[nodiscard]] compute_shader* get_compute_shader(cobb::eight_cc id) const;
 
          // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
          size_t add_texture(const QString& texture_path);

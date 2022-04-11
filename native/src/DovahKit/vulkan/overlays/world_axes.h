@@ -10,8 +10,8 @@
 #include "helpers/math.h"
 #include "../_vulkan.h"
 #include "../buffer.h"
+#include "../graphics_shader.h"
 #include "../image.h"
-#include "../shader.h"
 #include "../vertex_metadata.h"
 
 namespace vulkanDK {
@@ -35,7 +35,7 @@ namespace vulkanDK::overlays {
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
-         static constexpr shader::id_type shader_id = "WrldAxes";
+         static constexpr graphics_shader::id_type shader_id = "WrldAxes";
 
          // Magic numbers:
          static constexpr size_t axis_count        = 3;
@@ -66,7 +66,7 @@ namespace vulkanDK::overlays {
          };
          static constexpr size_t _vib_indices_offset = sizeof(_vertex) * vertex_count;
 
-         static void _update_shader_render_area(shader::area_override_data& aod, VkExtent2D extent);
+         static void _update_shader_render_area(graphics_shader& shader, VkExtent2D surface_extent);
 
          struct _shader_state {
             glm::mat4 view;
@@ -79,7 +79,7 @@ namespace vulkanDK::overlays {
             float thickness = 2.0;
          } style;
          struct {
-            glm::vec3 last_camera_rotation;
+            glm::vec3 last_camera_rotation = { 0, 0, 0 };
          } state;
          //
          buffer vertex_and_index_buffer;
@@ -100,7 +100,7 @@ namespace vulkanDK::overlays {
 
          bool needs_redraw() const;
 
-         void commands_pre_pass(VkCommandBuffer); // rendering commands to execute before entering a render pass
+         void prepare_for_render();
          void draw_call(VkCommandBuffer); // caller should bind descriptor sets, send necessary push constants, etc., before calling this
    };
 }

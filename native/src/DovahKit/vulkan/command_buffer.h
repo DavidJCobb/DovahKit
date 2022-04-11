@@ -6,7 +6,7 @@
 
 namespace vulkanDK {
    class compute_shader;
-   class material;
+   class graphics_shader;
    class render_pass;
    class surface_renderer;
 
@@ -55,26 +55,26 @@ namespace vulkanDK {
          }
          
       protected:
-         void _bind_material_and_descriptors(const material&, VkPipelineBindPoint, uint32_t bind_to, const VkDescriptorSet*, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count);
+         void _bind_graphics_shader_and_descriptors(const graphics_shader&, VkPipelineBindPoint, uint32_t bind_to, const VkDescriptorSet*, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count);
       public:
          template<size_t Sa, size_t Sb = 0> void bind_descriptor_sets(VkPipelineBindPoint bind_point, VkPipelineLayout layout, uint32_t bind_to, const std::array<VkDescriptorSet, Sa>& descriptor_sets, const std::array<uint32_t, Sb>& dynamic_offsets = {}) {
             vkCmdBindDescriptorSets(this->handle, bind_point, layout, bind_to, (uint32_t)descriptor_sets.size(), descriptor_sets.data(), (uint32_t)dynamic_offsets.size(), dynamic_offsets.data());
          }
-         template<size_t Sa, size_t Sb = 0> void bind_material_and_descriptors(
-            const material& mat,
+         template<size_t Sa, size_t Sb = 0> void bind_graphics_shader_and_descriptors(
+            const graphics_shader& gs,
             VkPipelineBindPoint bind_point,
             uint32_t bind_to,
             const std::array<VkDescriptorSet, Sa>& ds,
             const std::array<uint32_t, Sb>& dynamic_offsets = {}
          ) {
-            this->_bind_material_and_descriptors(mat, bind_point, bind_to, ds.data(), ds.size(), dynamic_offsets.data(), dynamic_offsets.size());
+            this->_bind_graphics_shader_and_descriptors(gs, bind_point, bind_to, ds.data(), ds.size(), dynamic_offsets.data(), dynamic_offsets.size());
          }
 
       protected:
-         void _set_pipeline_push_constant(const material&, VkShaderStageFlags, size_t size, const void* data);
+         void _set_pipeline_push_constant(VkPipelineLayout, VkShaderStageFlags, size_t size, const void* data);
       public:
-         template<typename PC> void set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, const PC& data) {
-            this->_set_pipeline_push_constant(m, flags, sizeof(PC), &data);
+         template<typename PC> void set_pipeline_push_constant(VkPipelineLayout layout, VkShaderStageFlags flags, const PC& data) {
+            this->_set_pipeline_push_constant(layout, flags, sizeof(PC), &data);
          }
 
       protected:

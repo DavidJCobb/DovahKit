@@ -7,7 +7,6 @@
 #include "compute_shader.h"
 #include "exceptions.h"
 #include "frame_in_flight.h"
-#include "material.h"
 #include "physical_device.h"
 #include "queue_family_info.h"
 #include "render_pass.h"
@@ -717,7 +716,7 @@ namespace vulkanDK {
          this->_setup_sun_shadow_buffer();
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
          this->_setup_render_passes();               // requires swap chain format
-         for (auto* s : this->shaders)
+         for (auto* s : this->graphics_shaders)
             s->setup_pipeline(this->surface_extent);
          this->_setup_oit_images();                  // requires extent size
          this->_setup_depth_buffer();                // requires extent size
@@ -1123,11 +1122,11 @@ namespace vulkanDK {
       }
       assert(this->render_passes_by_name.main_oit != nullptr);
       //
-      auto* s = this->get_or_create_shader(oit_composite_shader_id);
+      auto* s = this->create_graphics_shader(oit_composite_shader_id);
       s->set_render_pass(this->render_passes_by_name.main_oit, 1);
       s->set_layout_info({ this->descriptor_set_layouts.oit_composite.handle });
       //
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -1143,8 +1142,8 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util-full-screen-triangle.vert.spv)");
       }
       //
-      dfn.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
-      dfn.stages = {
+      options.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
+      options.stages = {
          {
             .module           = frag,
             .entry_point_name = "main",
@@ -1156,7 +1155,7 @@ namespace vulkanDK {
             .stage            = VK_SHADER_STAGE_VERTEX_BIT,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{
+      options.color_blending.blends.emplace_back(graphics_shader::color_blend{
          .source = {
             .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
             .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1166,16 +1165,16 @@ namespace vulkanDK {
             .alpha = VK_BLEND_FACTOR_SRC_ALPHA,
          },
       });
-      dfn.depth.testing    = true;
-      dfn.depth.writing    = false;
-      dfn.depth.comparison = VK_COMPARE_OP_ALWAYS;
+      options.depth.testing    = true;
+      options.depth.writing    = false;
+      options.depth.comparison = VK_COMPARE_OP_ALWAYS;
       //
       // And be sure to set up the pipeline layout when you're done!
       //
-      s->setup_pipeline_layout(*this);
+      s->setup_pipeline_layout();
    }
    void surface_renderer::_setup_basic_color_shader() {
-      auto* s = this->get_or_create_shader(main_shader_id);
+      auto* s = this->create_graphics_shader(main_shader_id);
       s->set_render_pass(this->render_passes_by_name.main);
       s->set_layout_info(
          {  // Descriptor set layouts
@@ -1193,7 +1192,7 @@ namespace vulkanDK {
          .face_cull_mode = VK_CULL_MODE_NONE,
       });
       //
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -1214,31 +1213,31 @@ namespace vulkanDK {
       };
       _specializations spec;
       //
-      dfn.stages = {
+      options.stages = {
          {
             .module              = frag,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_lights_in_scene),
          },
          {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_lights_in_scene),
          },
       };
-      //dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
-      dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend); // needed for alpha testing to work
+      //dfn.color_blending.blends.emplace_back(graphics_shader::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
       if constexpr (config::use_inverted_depth) {
-         dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
       }
-      dfn.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
-      dfn.dynamic_states = {
+      options.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
+      options.dynamic_states = {
          VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS, // for decals
       };
       {
-         auto& vertex     = dfn.inputs.vertex;
+         auto& vertex     = options.inputs.vertex;
          auto  attributes = vertex::getAttributeDescriptions();
          vertex.bindings.push_back(vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
@@ -1246,7 +1245,7 @@ namespace vulkanDK {
       //
       // And be sure to set up the pipeline layout when you're done!
       //
-      s->setup_pipeline_layout(*this);
+      s->setup_pipeline_layout();
    }
    void surface_renderer::_setup_basic_wboit_shader() {
       if (!this->can_do_alpha()) {
@@ -1258,7 +1257,7 @@ namespace vulkanDK {
       }
       assert(this->render_passes_by_name.main_oit != nullptr);
       //
-      auto* s = this->get_or_create_shader(main_shader_oit_color_id);
+      auto* s = this->create_graphics_shader(main_shader_oit_color_id);
       s->set_render_pass(this->render_passes_by_name.main_oit, 0);
       s->set_layout_info(
          {  // Descriptor set layouts
@@ -1276,7 +1275,7 @@ namespace vulkanDK {
          .face_cull_mode = VK_CULL_MODE_NONE,
       });
       //
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -1292,26 +1291,25 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (Basic WBOIT: shader.vert.spv)");
       }
       //
-      struct _specializations {
-         int32_t max_lights = config::max_lights_in_scene;
-      };
-      _specializations spec;
-      //
-      dfn.stages = {
+      options.stages = {
          {
             .module              = frag,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info(
+               (int32_t)config::max_lights_in_scene
+            ),
          },
          {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .specialization_info = material_definition::stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info(
+               (int32_t)config::max_lights_in_scene
+            ),
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{ // accumulator
+      options.color_blending.blends.emplace_back(graphics_shader::color_blend{ // accumulator
          .source = {
             .color = VK_BLEND_FACTOR_ONE,
             .alpha = VK_BLEND_FACTOR_ONE,
@@ -1325,7 +1323,7 @@ namespace vulkanDK {
             .alpha = VK_BLEND_OP_ADD,
          },
       });
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{ // reveal
+      options.color_blending.blends.emplace_back(graphics_shader::color_blend{ // reveal
          .source = {
             .color = VK_BLEND_FACTOR_ZERO,
             .alpha = VK_BLEND_FACTOR_ZERO,
@@ -1339,17 +1337,17 @@ namespace vulkanDK {
             .alpha = VK_BLEND_OP_ADD,
          },
       });
-      dfn.depth.testing = true;
-      dfn.depth.writing = false;
+      options.depth.testing = true;
+      options.depth.writing = false;
       if constexpr (config::use_inverted_depth) {
-         dfn.depth.comparison = VK_COMPARE_OP_GREATER;
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
       }
-      dfn.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
-      dfn.dynamic_states = {
+      options.rasterization.depthBiasEnable = VK_TRUE; // needed so we can selectively use depth bias during rendering; we'll leave the actual settings at 0, which is functionally off
+      options.dynamic_states = {
          VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS, // for decals
       };
       {
-         auto& vertex     = dfn.inputs.vertex;
+         auto& vertex     = options.inputs.vertex;
          auto  attributes = vertex::getAttributeDescriptions();
          vertex.bindings.push_back(vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
@@ -1357,10 +1355,10 @@ namespace vulkanDK {
       //
       // And be sure to set up the pipeline layout when you're done!
       //
-      s->setup_pipeline_layout(*this);
+      s->setup_pipeline_layout();
    }
    void surface_renderer::_setup_sun_shadow_shader() {
-      auto* s = this->get_or_create_shader(sun_shadow_shader_id);
+      auto* s = this->create_graphics_shader(sun_shadow_shader_id);
       s->set_render_pass(this->render_passes_by_name.main_shadow);
       s->set_layout_info(
          {  // Descriptor set layouts
@@ -1377,7 +1375,7 @@ namespace vulkanDK {
       s->add_variant({ // double-sided shader variant
          .face_cull_mode = VK_CULL_MODE_NONE,
       });
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* vert = nullptr;
       shader_module* frag = nullptr;
@@ -1393,7 +1391,7 @@ namespace vulkanDK {
          this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: shader.shadows.frag.spv)");
       }
       //
-      dfn.stages = {
+      options.stages = {
          {
             .module           = vert,
             .entry_point_name = "main",
@@ -1406,25 +1404,33 @@ namespace vulkanDK {
          },
       };
       if constexpr (config::sun_shadow_invert_culling) {
-         dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+         options.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
       }
-      dfn.rasterization.depthBiasEnable         = VK_TRUE;
-      dfn.rasterization.depthBiasConstantFactor = 1.25F;
-      dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
-      dfn.rasterization.depthBiasClamp          = 0.00F;
-      dfn.color_blending.blends.emplace_back(material_definition::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
+      options.rasterization.depthBiasEnable         = VK_TRUE;
+      options.rasterization.depthBiasConstantFactor = 1.25F;
+      options.rasterization.depthBiasSlopeFactor    = 1.75F;
+      options.rasterization.depthBiasClamp          = 0.00F;
+      options.color_blending.blends.emplace_back(graphics_shader::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
       if constexpr (config::sun_shadow_invert_depth) {
-         dfn.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+         options.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
       } else {
-         dfn.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
+         options.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL;
       }
       {
-         auto& vertex     = dfn.inputs.vertex;
+         auto& vertex     = options.inputs.vertex;
          auto  attributes = vertex::getAttributeDescriptions();
          vertex.bindings.push_back(vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
       }
-      s->set_area_override_info({
+      options.area = {
+         .mode = graphics_shader::area_mode::custom,
+         .scissor = {
+            .offset = { .x = 0, .y = 0 },
+            .extent = {
+               .width  = config::sun_shadow_map_resolution_x,
+               .height = config::sun_shadow_map_resolution_y,
+            },
+         },
          .viewport = {
             .x        = 0,
             .y        = 0,
@@ -1433,15 +1439,8 @@ namespace vulkanDK {
             .minDepth = 0.0,
             .maxDepth = 1.0,
          },
-         .scissor = {
-            .offset = { .x = 0, .y = 0 },
-            .extent = {
-               .width  = config::sun_shadow_map_resolution_x,
-               .height = config::sun_shadow_map_resolution_y,
-            },
-         },
-      });
-      s->setup_pipeline_layout(*this);
+      };
+      s->setup_pipeline_layout();
    }
    void surface_renderer::_setup_light_shadow_shaders() {
       shader_module* vert = nullptr;
@@ -1463,7 +1462,7 @@ namespace vulkanDK {
          auto id = light_shadow_map_shader_base_id;
          id.bytes[7] += i;
          //
-         auto* s = this->get_or_create_shader(id);
+         auto* s = this->create_graphics_shader(id);
          s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i);
          s->set_layout_info(
             {  // Descriptor set layouts
@@ -1481,13 +1480,13 @@ namespace vulkanDK {
             .face_cull_mode = VK_CULL_MODE_NONE,
          });
          //
-         auto& dfn = s->definition;
-         dfn.stages = {
+         auto& options = s->options;
+         options.stages = {
             {
                .module              = vert,
                .entry_point_name    = "main",
                .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-               .specialization_info = material_definition::stage_specialization_info((int32_t)i, (int32_t)config::max_lights_in_scene),
+               .specialization_info = pipeline_stage_specialization_info((int32_t)i, (int32_t)config::max_lights_in_scene),
             },
             {  // Fragment shader needed to discard alpha-tested pixels
                .module              = frag,
@@ -1496,29 +1495,37 @@ namespace vulkanDK {
             },
          };
          if constexpr (config::light_shadow_invert_culling) {
-            dfn.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
+            options.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
          }
-         dfn.rasterization.depthBiasEnable         = VK_TRUE;
-         dfn.rasterization.depthBiasConstantFactor = 1.25F;
-         dfn.rasterization.depthBiasSlopeFactor    = 1.75F;
-         dfn.rasterization.depthBiasClamp          = 0.00F;
-         dfn.rasterization.frontFace               = cubemaps_are_lefthanded ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE; // cubemaps are lefthanded in Vulakn, borrowing OpenGL conventions
-         dfn.color_blending.blends.emplace_back(material_definition::color_blend{
+         options.rasterization.depthBiasEnable         = VK_TRUE;
+         options.rasterization.depthBiasConstantFactor = 1.25F;
+         options.rasterization.depthBiasSlopeFactor    = 1.75F;
+         options.rasterization.depthBiasClamp          = 0.00F;
+         options.rasterization.frontFace               = cubemaps_are_lefthanded ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE; // cubemaps are lefthanded in Vulakn, borrowing OpenGL conventions
+         options.color_blending.blends.emplace_back(graphics_shader::color_blend{
             .enabled = true,
             .operations = {
                .color = config::light_shadow_invert_depth ? VK_BLEND_OP_MAX : VK_BLEND_OP_MIN,
                .alpha = config::light_shadow_invert_depth ? VK_BLEND_OP_MAX : VK_BLEND_OP_MIN,
             },
          });
-         dfn.depth.comparison = VK_COMPARE_OP_ALWAYS;
+         options.depth.comparison = VK_COMPARE_OP_ALWAYS;
          //
          {
-            auto& vertex     = dfn.inputs.vertex;
+            auto& vertex     = options.inputs.vertex;
             auto  attributes = vertex::getAttributeDescriptions();
             vertex.bindings.push_back(vertex::getBindingDescription());
             vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
          }
-         s->set_area_override_info({
+         options.area = {
+            .mode = graphics_shader::area_mode::custom,
+            .scissor = {
+               .offset = { .x = 0, .y = 0 },
+               .extent = {
+                  .width  = config::light_shadow_map_resolution_x,
+                  .height = config::light_shadow_map_resolution_y,
+               },
+            },
             .viewport = {
                .x        = 0,
                .y        = 0,
@@ -1527,18 +1534,11 @@ namespace vulkanDK {
                .minDepth = 0.0,
                .maxDepth = 1.0,
             },
-            .scissor = {
-               .offset = { .x = 0, .y = 0 },
-               .extent = {
-                  .width  = config::light_shadow_map_resolution_x,
-                  .height = config::light_shadow_map_resolution_y,
-               },
-            },
-         });
+         };
          //
          // And be sure to set up the pipeline layout when you're done!
          //
-         s->setup_pipeline_layout(*this);
+         s->setup_pipeline_layout();
       }
 
    }
@@ -2816,7 +2816,7 @@ namespace vulkanDK {
       this->scene.teardown();
       this->null_texture.teardown();
       {
-         auto& list = this->shaders;
+         auto& list = this->graphics_shaders;
          for (auto* e : list)
             delete e;
          list.clear();
@@ -2900,7 +2900,7 @@ namespace vulkanDK {
       VkFormat sc_format = sc.format;
       size_t   sc_count  = sc.images.size();
       {  // Tear down swap chain state
-         for (auto& s : this->shaders)
+         for (auto& s : this->graphics_shaders)
             s->pre_resize();
          for (auto& image : sc.images)
             image.teardown();
@@ -2961,7 +2961,7 @@ namespace vulkanDK {
                rp->setup();
             }
          }
-         for (auto& s : this->shaders)
+         for (auto& s : this->graphics_shaders)
             s->post_resize(this->surface_extent);
          this->_setup_depth_buffer(); // requires surface extent
          this->_setup_color_buffer(); // requires surface extent
@@ -3216,19 +3216,17 @@ namespace vulkanDK {
       (this->api_functions.vkSetDebugUtilsObjectNameEXT)(this->logical_device, &info);
    }
 
-   shader* surface_renderer::get_shader(cobb::eight_cc id) const {
-      for (auto* s : this->shaders)
+   graphics_shader* surface_renderer::get_graphics_shader(cobb::eight_cc id) const {
+      for (auto* s : this->graphics_shaders)
          if (s->id == id)
             return s;
       return nullptr;
    }
-   shader* surface_renderer::get_or_create_shader(cobb::eight_cc id) {
-      if (auto* s = this->get_shader(id))
-         return s;
-      auto* s = new shader;
+   graphics_shader* surface_renderer::create_graphics_shader(cobb::eight_cc id) {
+      assert(!this->get_graphics_shader(id));
+      auto* s = new graphics_shader(*this);
       s->id = id;
-      s->material.owner = this;
-      this->shaders.push_back(s);
+      this->graphics_shaders.push_back(s);
       return s;
    }
 

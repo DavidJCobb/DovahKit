@@ -1,7 +1,6 @@
 #include "compute_shader.h"
 #include <stdexcept>
 #include "exceptions.h"
-#include "material.h"
 #include "render_pass.h"
 #include "surface_renderer.h"
 

@@ -3,7 +3,6 @@
 #include "_vulkan.h"
 #include "_util.h"
 #include "descriptor_definitions.h"
-#include "material.h"
 #include "physical_device.h"
 
 namespace vulkanDK {

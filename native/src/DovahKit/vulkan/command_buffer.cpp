@@ -1,6 +1,6 @@
 #include "command_buffer.h"
 #include "compute_shader.h"
-#include "material.h"
+#include "graphics_shader.h"
 #include "render_pass.h"
 #include "surface_renderer.h"
 
@@ -95,15 +95,15 @@ namespace vulkanDK {
       vkCmdBindPipeline(this->handle, VK_PIPELINE_BIND_POINT_COMPUTE, cs.pipeline.handle);
    }
 
-   void command_buffer::_bind_material_and_descriptors(const material& mat, VkPipelineBindPoint bind_point, uint32_t bind_to, const VkDescriptorSet* sets, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count) {
-      vkCmdBindDescriptorSets(this->handle, bind_point, mat.pipeline.layout, bind_to, (uint32_t)ds_count, sets, (uint32_t)do_count, dynamic_offsets);
-      vkCmdBindPipeline(this->handle, bind_point, mat.pipeline.handle);
+   void command_buffer::_bind_graphics_shader_and_descriptors(const graphics_shader& gs, VkPipelineBindPoint bind_point, uint32_t bind_to, const VkDescriptorSet* sets, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count) {
+      vkCmdBindDescriptorSets(this->handle, bind_point, gs.pipeline.layout, bind_to, (uint32_t)ds_count, sets, (uint32_t)do_count, dynamic_offsets);
+      vkCmdBindPipeline(this->handle, bind_point, gs.pipeline.handle);
    }
 
-   void command_buffer::_set_pipeline_push_constant(const material& m, VkShaderStageFlags flags, size_t size, const void* data) {
+   void command_buffer::_set_pipeline_push_constant(VkPipelineLayout layout, VkShaderStageFlags flags, size_t size, const void* data) {
       vkCmdPushConstants(
          this->handle,
-         m.pipeline.layout,
+         layout,
          flags,
          0,
          size,

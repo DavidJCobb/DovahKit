@@ -10,8 +10,8 @@
 #include "helpers/math.h"
 #include "../_vulkan.h"
 #include "../buffer.h"
+#include "../graphics_shader.h"
 #include "../image.h"
-#include "../shader.h"
 
 namespace vulkanDK {
    class frame_in_flight;
@@ -36,7 +36,7 @@ namespace vulkanDK::overlays {
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
-         static constexpr shader::id_type shader_id = "FPSCount";
+         static constexpr graphics_shader::id_type shader_id = "FPSCount";
 
          // Magic numbers:
          static constexpr size_t max_visible_value = cobb::pow((size_t)display_base, max_digits) - 1;

@@ -74,7 +74,7 @@ namespace vulkanDK::overlays {
    }
 
    /*static*/ void fps::setup_shaders(surface_renderer& sr) {
-      auto* s = sr.get_or_create_shader(shader_id);
+      auto* s = sr.create_graphics_shader(shader_id);
       s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
@@ -82,7 +82,7 @@ namespace vulkanDK::overlays {
          }
       );
       //
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -98,7 +98,7 @@ namespace vulkanDK::overlays {
          sr.shader_modules.push_back(frag);
          sr.shader_modules.push_back(vert);
       }
-      dfn.stages = {
+      options.stages = {
          {
             .module              = frag,
             .entry_point_name    = "main",
@@ -110,14 +110,14 @@ namespace vulkanDK::overlays {
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend);
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend);
       {
-         auto& vertex     = dfn.inputs.vertex;
+         auto& vertex     = options.inputs.vertex;
          auto  attributes = _vertex::getAttributeDescriptions();
          vertex.bindings.push_back(_vertex::getBindingDescription());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
       }
-      s->setup_pipeline_layout(sr);
+      s->setup_pipeline_layout();
    }
    void fps::initialize_descriptor_sets(surface_renderer& sr, frame_in_flight& fif) {
       auto sampler_info = VkDescriptorImageInfo{

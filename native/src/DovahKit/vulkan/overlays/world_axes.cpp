@@ -18,22 +18,23 @@ namespace vulkanDK::overlays {
       this->owner = &o;
    }
 
-   /*static*/ void world_axes::_update_shader_render_area(shader::area_override_data& aod, VkExtent2D extent) {
-      aod.viewport = {
+   /*static*/ void world_axes::_update_shader_render_area(graphics_shader& shader, VkExtent2D surface_extent) {
+      auto& area = shader.options.area;
+      area.viewport = {
          .x        = 0,
-         .y        = (std::max)(0.0F, (float)extent.height - viewport_h),
+         .y        = (std::max)(0.0F, (float)surface_extent.height - viewport_h),
          .width    = viewport_w,
          .height   = viewport_h,
          .minDepth = 0.0, // must be >= 0
          .maxDepth = 1.0, // must be <= 1
       };
-      aod.scissor = {
-         .offset = { 0, (int32_t)aod.viewport.y },
+      area.scissor = {
+         .offset = { 0, (int32_t)area.viewport.y },
          .extent = { viewport_w, viewport_h },
       };
    }
    /*static*/ void world_axes::setup_shaders(surface_renderer& sr) {
-      auto* s = sr.get_or_create_shader(shader_id);
+      auto* s = sr.create_graphics_shader(shader_id);
       s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
@@ -41,7 +42,7 @@ namespace vulkanDK::overlays {
          }
       );
       //
-      auto& dfn = s->definition;
+      auto& options = s->options;
       //
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
@@ -57,7 +58,7 @@ namespace vulkanDK::overlays {
          sr.shader_modules.push_back(frag);
          sr.shader_modules.push_back(vert);
       }
-      dfn.stages = {
+      options.stages = {
          {
             .module           = frag,
             .entry_point_name = "main",
@@ -69,23 +70,24 @@ namespace vulkanDK::overlays {
             .stage            = VK_SHADER_STAGE_VERTEX_BIT,
          },
       };
-      dfn.color_blending.blends.emplace_back(material_definition::default_alpha_blend);
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend);
       {
-         auto& vertex     = dfn.inputs.vertex;
+         auto& vertex     = options.inputs.vertex;
          auto  attributes = _vertex::get_attribute_descriptions();
          vertex.bindings.push_back(_vertex::get_binding_description());
          vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
       }
-      dfn.dynamic_states = {
+      options.dynamic_states = {
          VkDynamicState::VK_DYNAMIC_STATE_LINE_WIDTH,
       };
-      dfn.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-      dfn.rasterization.cullMode    = VK_CULL_MODE_NONE;
+      options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+      options.rasterization.cullMode    = VK_CULL_MODE_NONE;
       if (sr.device_info->support.non_solid_polygon_fill_modes) {
-         dfn.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+         options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
       }
-      s->set_area_override_info({ .handler = &_update_shader_render_area });
-      s->setup_pipeline_layout(sr);
+      options.area.mode = graphics_shader::area_mode::custom;
+      s->on_resize = &_update_shader_render_area;
+      s->setup_pipeline_layout();
    }
    void world_axes::initialize_descriptor_sets(frame_in_flight& fif) {
       auto buffer_info = VkDescriptorBufferInfo{
@@ -212,7 +214,7 @@ namespace vulkanDK::overlays {
       return false;
    }
 
-   void world_axes::commands_pre_pass(VkCommandBuffer command_buffer) {
+   void world_axes::prepare_for_render() {
       auto& state  = *(_shader_state*)this->shader_params.uniform.map_memory();
       auto& scene  = this->owner->scene;
       auto& camera = scene.camera;

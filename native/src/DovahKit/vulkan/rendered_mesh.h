@@ -113,7 +113,7 @@ namespace vulkanDK {
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
-         VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
+         [[nodiscard]] VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
 
          void mark_for_delete();
          void reset();

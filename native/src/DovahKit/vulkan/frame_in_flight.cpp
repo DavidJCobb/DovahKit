@@ -221,6 +221,7 @@ namespace vulkanDK {
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
+      this->overlays.world_axes.prepare_for_render();
       {
          auto& fps = this->overlays.fps;
          {
@@ -241,6 +242,9 @@ namespace vulkanDK {
          }
          if (fps.needs_geometry_update()) {
             fps.update_geometry(*this->owner);
+         }
+         if (this->overlays.world_axes.needs_redraw()) {
+            this->state.must_re_record_ui = true;
          }
       }
    }
@@ -570,12 +574,11 @@ namespace vulkanDK {
          scene& scene,
          command_buffer& command_buffer,
          frame_in_flight::indirect_draw_buffers& indirect_buffer,
-         const shader& shader,
+         const graphics_shader& shader,
          Prior&& before_draw,
          VkShaderStageFlags push_constant_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
       ) {
          auto   command_handle = command_buffer.handle;
-         auto&  material       = shader.material;
          size_t first_double_sided_draw = std::string::npos;
          //
          const auto& mesh_indices = *indirect_buffer.mesh_indices.host;
@@ -590,7 +593,7 @@ namespace vulkanDK {
             }
             before_draw(ro);
             //
-            command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, mi));
+            command_buffer.set_pipeline_push_constant(shader.pipeline.layout, push_constant_stages, _make_push_constant_for(ro, mi));
             {
                VkDeviceSize offset = 0;
                auto& vib = ro.vertex_and_index_buffer;
@@ -626,7 +629,7 @@ namespace vulkanDK {
                }
                before_draw(ro);
                //
-               command_buffer.set_pipeline_push_constant(material, push_constant_stages, _make_push_constant_for(ro, mi));
+               command_buffer.set_pipeline_push_constant(shader.pipeline.layout, push_constant_stages, _make_push_constant_for(ro, mi));
                {
                   VkDeviceSize offset = 0;
                   auto& vib = ro.vertex_and_index_buffer;
@@ -671,8 +674,8 @@ namespace vulkanDK {
             VK_SUBPASS_CONTENTS_INLINE
          );
          {
-            const auto* shader = sr.get_shader(surface_renderer::sun_shadow_shader_id);
-            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+            const auto* shader = sr.get_graphics_shader(surface_renderer::sun_shadow_shader_id);
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
             _record_indirect_draws(
                scene, command_buffer, this->indirect_draw_commands.sun_shadows, *shader,
                [](const rendered_mesh& ro) {}
@@ -710,8 +713,8 @@ namespace vulkanDK {
             auto id = surface_renderer::light_shadow_map_shader_base_id;
             id.bytes[7] += i;
             //
-            const auto* shader = sr.get_shader(id);
-            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+            const auto* shader = sr.get_graphics_shader(id);
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
             _record_indirect_draws(
                scene, command_buffer, this->indirect_draw_commands.shadow_casters[i], *shader,
                [](const rendered_mesh& ro) {}
@@ -782,8 +785,8 @@ namespace vulkanDK {
             // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
             // with each new material.
             //
-            const auto* shader = sr.get_shader(surface_renderer::main_shader_id);
-            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+            const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
             _record_indirect_draws(
                scene, command_buffer, this->indirect_draw_commands.main, *shader,
@@ -813,8 +816,8 @@ namespace vulkanDK {
                VK_SUBPASS_CONTENTS_INLINE
             );
             {
-               const auto* shader = sr.get_shader(surface_renderer::main_shader_oit_color_id);
-               command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+               const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_oit_color_id);
+               command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
                //
                _record_indirect_draws(
                   scene, command_buffer, this->indirect_draw_commands.main_oit, *shader,
@@ -828,8 +831,8 @@ namespace vulkanDK {
             // Compositing:
             //
             {
-               const shader* shader = sr.get_shader(surface_renderer::oit_composite_shader_id);
-               command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.oit_composite });
+               const auto* shader = sr.get_graphics_shader(surface_renderer::oit_composite_shader_id);
+               command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.oit_composite });
                vkCmdDraw(command_handle, 3, 1, 0, 0);
             }
             command_buffer.end_render_pass();
@@ -859,7 +862,6 @@ namespace vulkanDK {
       }
       //
       this->overlays.fps.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
-      this->overlays.world_axes.commands_pre_pass(command_handle); // commands that must run before vkCmdBeginRenderPass
       //
       command_buffer.begin_render_pass(
          *sr.render_passes_by_name.ui,
@@ -875,16 +877,16 @@ namespace vulkanDK {
          VK_SUBPASS_CONTENTS_INLINE
       );
       {
-         const shader* shader = sr.get_shader(vulkanDK::overlays::fps::shader_id);
+         const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::fps::shader_id);
          if (shader) {
-            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.fps });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.fps });
             this->overlays.fps.draw_call(command_handle);
          }
       }
       {
-         const shader* shader = sr.get_shader(vulkanDK::overlays::world_axes::shader_id);
+         const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::world_axes::shader_id);
          if (shader) {
-            command_buffer.bind_material_and_descriptors(shader->material, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.world_axes });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.world_axes });
             this->overlays.world_axes.draw_call(command_handle);
          }
       }
