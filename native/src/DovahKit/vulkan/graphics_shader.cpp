@@ -115,6 +115,8 @@ namespace vulkanDK {
    graphics_shader::~graphics_shader() {
       if (!this->_owner)
          return;
+      for (auto& v : this->variants)
+         v.teardown(*this);
       this->teardown_pipeline();
       if (this->pipeline.layout != VK_NULL_HANDLE) {
          vkDestroyPipelineLayout(this->_owner->logical_device, this->pipeline.layout, nullptr);

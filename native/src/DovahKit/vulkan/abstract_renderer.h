@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <QString>
 #include "_vulkan.h"
 #include "_util.h"
 #include "descriptor_definitions.h"
@@ -47,5 +48,7 @@ namespace vulkanDK {
 
          void setup_texture_sampler();
          void teardown_texture_sampler();
+
+         shader_module* load_shader_module(QString resource_path);
    };
 }

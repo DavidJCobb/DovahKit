@@ -61,6 +61,7 @@ namespace vulkanDK {
          } shared_layouts;
 
          void setup_all(surface_renderer&);
+         void teardown_all();
 
          std::vector<VkDescriptorSetLayout> handles() const;
          std::vector<VkDescriptorSetLayout> handles_for_sets() const; // includes duplicates for shared layouts

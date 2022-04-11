@@ -155,6 +155,12 @@ namespace cobb {
                throw unexpected_end();
          }
 
+         void seek_to(size_t s) {
+            if (s >= this->size())
+               throw unexpected_end();
+            this->state.position = s;
+         }
+
          //
          // Read a value, or throw an exception on an early end-of-stream.
          //

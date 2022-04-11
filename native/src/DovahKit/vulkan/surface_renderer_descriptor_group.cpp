@@ -18,6 +18,12 @@ namespace vulkanDK {
       sr.set_debug_object_name(this->fps.handle,        "Descriptor Set Layout: FPS Counter");
       sr.set_debug_object_name(this->world_axes.handle, "Descriptor Set Layout: World Axes Overlay");
    }
+   void descriptor_set_layout_group::teardown_all() {
+      for (auto& layout : this->list)
+         layout.teardown();
+      for (auto& layout : this->shared_layouts.list)
+         layout.teardown();
+   }
 
    std::vector<VkDescriptorSetLayout> descriptor_set_layout_group::handles() const {
       std::vector<VkDescriptorSetLayout> out(size + this->shared_layouts.list.size());
@@ -151,8 +157,15 @@ namespace vulkanDK {
       }
    }
    void descriptor_set_group::free_all(surface_renderer& sr) {
-      vkFreeDescriptorSets(sr.logical_device, sr.descriptor_pool, this->list.size(), this->list.data());
-      vkFreeDescriptorSets(sr.logical_device, sr.descriptor_pool, this->sharing_sets.list.size(), this->sharing_sets.list.data());
+      auto free_list = [&sr]<typename T>(T& list) {
+         if (list[0] != VK_NULL_HANDLE) {
+            vkFreeDescriptorSets(sr.logical_device, sr.descriptor_pool, list.size(), list.data());
+            for (auto& item : list)
+               item = VK_NULL_HANDLE;
+         }
+      };
+      free_list(this->list);
+      free_list(this->sharing_sets.list);
    }
    #pragma endregion
 }

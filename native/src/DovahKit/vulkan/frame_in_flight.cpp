@@ -27,20 +27,8 @@ namespace vulkanDK {
 
    frame_in_flight::~frame_in_flight() {
       if (!this->owner) {
-         assert(this->fences.graphics == VK_NULL_HANDLE);
+         assert(this->fences.graphics == VK_NULL_HANDLE && "The owning surface renderer should've torn down its frames-in-flight before their own destructor ran.");
          return;
-      }
-      //
-      // Other resources have their own destructors, but we need to release these explicitly:
-      //
-      auto* ld = this->owner->logical_device;
-      if (this->fences.graphics != VK_NULL_HANDLE) {
-         vkDestroySemaphore(ld, this->semaphores.image_available,   nullptr);
-         vkDestroySemaphore(ld, this->semaphores.compute_finished,  nullptr);
-         vkDestroySemaphore(ld, this->semaphores.graphics_finished, nullptr);
-         vkDestroySemaphore(ld, this->semaphores.render_finished,   nullptr);
-         vkDestroyFence    (ld, this->fences.compute, nullptr);
-         vkDestroyFence    (ld, this->fences.graphics, nullptr);
       }
    }
 
@@ -213,6 +201,35 @@ namespace vulkanDK {
       this->shader_frustums = {};
       this->shader_params   = {};
       this->overlays = {};
+      //
+      this->descriptor_sets.free_all(*this->owner);
+      this->graphics_commands = {};
+      this->compute_commands  = {};
+      //
+      // Other resources have their own destructors, but we need to release these explicitly:
+      //
+      auto* ld = this->owner->logical_device;
+      {
+         auto destroy_fence = [ld](VkFence& f) {
+            vkDestroyFence(ld, f, nullptr);
+            f = VK_NULL_HANDLE;
+         };
+         auto destroy_semaphore = [ld](VkSemaphore& s) {
+            vkDestroySemaphore(ld, s, nullptr);
+            s = VK_NULL_HANDLE;
+         };
+         destroy_semaphore(this->semaphores.image_available);
+         destroy_semaphore(this->semaphores.compute_finished);
+         destroy_semaphore(this->semaphores.graphics_finished);
+         destroy_semaphore(this->semaphores.render_finished);
+         destroy_fence(this->fences.compute);
+         destroy_fence(this->fences.graphics);
+      }
+      //
+      // Done. Guard against accidental redundant teardown calls:
+      //
+      this->owner = nullptr;
+      this->my_index = -1;
    }
 
    void frame_in_flight::prepare_for_render() {

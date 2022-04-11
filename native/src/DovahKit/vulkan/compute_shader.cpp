@@ -4,8 +4,28 @@
 #include "render_pass.h"
 #include "surface_renderer.h"
 
+namespace {
+   std::string _id_to_string(const cobb::eight_cc id) {
+      std::string name;
+      name.resize(8);
+      for (size_t i = 0; i < 8; ++i)
+         name[i] = id.bytes[i];
+      return name;
+   }
+}
+
 namespace vulkanDK {
    compute_shader::~compute_shader() {
+      if (!this->owner)
+         return;
+      if (this->pipeline.handle != VK_NULL_HANDLE) {
+         vkDestroyPipeline(this->owner->logical_device, this->pipeline.handle, nullptr);
+         this->pipeline.handle = VK_NULL_HANDLE;
+      }
+      if (this->pipeline.layout != VK_NULL_HANDLE) {
+         vkDestroyPipelineLayout(this->owner->logical_device, this->pipeline.layout, nullptr);
+         this->pipeline.layout = VK_NULL_HANDLE;
+      }
    }
 
    void compute_shader::set_layout_info(const std::vector<VkDescriptorSetLayout>& dsl) {
@@ -15,14 +35,7 @@ namespace vulkanDK {
    void compute_shader::setup(surface_renderer& owner) {
       this->owner = &owner;
       #if _DEBUG
-      {
-         std::string name;
-         name.resize(8);
-         for (size_t i = 0; i < 8; ++i)
-            name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
-         //
-         qDebug("[vulkanDK::compute_shader::setup_pipeline] Setting up: %s ...", name.c_str());
-      }
+         qDebug("[vulkanDK::compute_shader::setup_pipeline] Setting up: %s ...", _id_to_string(this->id).c_str());
       #endif
       //
       {  // Pipeline layout
@@ -36,17 +49,17 @@ namespace vulkanDK {
          if (auto result = vkCreatePipelineLayout(owner.logical_device, &pipeline_layout_info, nullptr, &this->pipeline.layout); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::compute_shader::setup] Failed to create pipeline layout.");
          }
-         //
-         {
-            std::string name;
-            name.resize(8);
-            for (size_t i = 0; i < 8; ++i)
-               name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
-            //
-            owner.set_debug_object_name(this->pipeline.layout, name);
-         }
+         owner.set_debug_object_name(this->pipeline.layout, _id_to_string(this->id));
       }
       //
+      #if _DEBUG
+         if (auto* sm = this->config.stage.module) {
+            if (!(sm->data.stages & VK_SHADER_STAGE_COMPUTE_BIT))
+               throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have a compute shader entry point.");
+         } else {
+            throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module is missing.");
+         }
+      #endif
       auto create_info = VkComputePipelineCreateInfo{
          .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
          .pNext = nullptr,
@@ -71,12 +84,7 @@ namespace vulkanDK {
          &this->pipeline.handle
       );
       if (auto* sr = this->get_owner()) {
-         std::string name;
-         name.resize(8);
-         for (size_t i = 0; i < 8; ++i)
-            name[i] = (this->id.value >> (i * 0x8)) & 0xFF;
-         //
-         sr->set_debug_object_name(this->pipeline.handle, name);
+         sr->set_debug_object_name(this->pipeline.handle, _id_to_string(this->id));
       }
    }
 }

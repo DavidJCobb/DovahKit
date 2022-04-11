@@ -1,6 +1,7 @@
 #include "abstract_renderer.h"
 #include <cassert>
 #include <stdexcept>
+#include <QResource>
 #include "exceptions.h"
 #include "render_pass.h"
 #include "shader_module.h"
@@ -130,5 +131,25 @@ namespace vulkanDK {
          vkDestroySampler(this->logical_device, this->texture_sampler, nullptr);
          this->texture_sampler = VK_NULL_HANDLE;
       }
+   }
+
+   shader_module* abstract_renderer::load_shader_module(QString resource_path) {
+      for (auto* existing : this->shader_modules) {
+         if (existing->data.name == resource_path)
+            return existing;
+      }
+      shader_module* sm = nullptr;
+      {
+         auto data = QResource(resource_path).uncompressedData();
+         if (data.isEmpty() || data.isNull())
+            return nullptr;
+         sm = new shader_module(this->logical_device, data);
+         if (sm->empty()) {
+            delete sm;
+            return nullptr;
+         }
+      }
+      this->shader_modules.push_back(sm);
+      return sm;
    }
 }

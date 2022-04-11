@@ -1128,18 +1128,13 @@ namespace vulkanDK {
       //
       auto& options = s->options;
       //
-      shader_module* frag = nullptr;
-      shader_module* vert = nullptr;
+      shader_module* vert = this->load_shader_module("shaders/util-full-screen-triangle.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/util-oit.frag.spv");
       {
-         frag = new shader_module(this->logical_device, QResource("shaders/util-oit.frag.spv").uncompressedData());
-         vert = new shader_module(this->logical_device, QResource("shaders/util-full-screen-triangle.vert.spv").uncompressedData());
-         assert(!frag->empty());
-         assert(!vert->empty());
-         this->shader_modules.push_back(vert);
-         this->shader_modules.push_back(frag);
-         //
-         this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
+         assert(vert);
+         assert(frag);
          this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util-full-screen-triangle.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
       }
       //
       options.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
@@ -1194,18 +1189,13 @@ namespace vulkanDK {
       //
       auto& options = s->options;
       //
-      shader_module* frag = nullptr;
-      shader_module* vert = nullptr;
+      shader_module* vert = this->load_shader_module("shaders/shader.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/shader.frag.spv");
       {
-         frag = new shader_module(this->logical_device, QResource("shaders/shader.frag.spv").uncompressedData());
-         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-         assert(!frag->empty());
-         assert(!vert->empty());
-         this->shader_modules.push_back(frag);
-         this->shader_modules.push_back(vert);
-         //
-         this->set_debug_object_name(frag->handle, "Shader Module (Basic Color: shader.frag.spv)");
+         assert(vert);
+         assert(frag);
          this->set_debug_object_name(vert->handle, "Shader Module (Basic Color: shader.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Basic Color: shader.frag.spv)");
       }
       //
       struct _specializations {
@@ -1277,18 +1267,13 @@ namespace vulkanDK {
       //
       auto& options = s->options;
       //
-      shader_module* frag = nullptr;
-      shader_module* vert = nullptr;
+      shader_module* vert = this->load_shader_module("shaders/shader.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/shader.oit-color.frag.spv");
       {
-         frag = new shader_module(this->logical_device, QResource("shaders/shader.oit-color.frag.spv").uncompressedData());
-         vert = new shader_module(this->logical_device, QResource("shaders/shader.vert.spv").uncompressedData());
-         assert(!frag->empty());
-         assert(!vert->empty());
-         this->shader_modules.push_back(frag);
-         this->shader_modules.push_back(vert);
-         //
-         this->set_debug_object_name(frag->handle, "Shader Module (Basic WBOIT: shader.oit-color.frag.spv)");
+         assert(vert);
+         assert(frag);
          this->set_debug_object_name(vert->handle, "Shader Module (Basic WBOIT: shader.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Basic WBOIT: shader.oit-color.frag.spv)");
       }
       //
       options.stages = {
@@ -1377,16 +1362,11 @@ namespace vulkanDK {
       });
       auto& options = s->options;
       //
-      shader_module* vert = nullptr;
-      shader_module* frag = nullptr;
+      shader_module* vert = this->load_shader_module("shaders/sun-shadow-depth.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/shader.shadows.frag.spv");
       {
-         vert = new shader_module(this->logical_device, QResource("shaders/sun-shadow-depth.vert.spv").uncompressedData());
-         frag = new shader_module(this->logical_device, QResource("shaders/shader.shadows.frag.spv").uncompressedData());
-         assert(!frag->empty());
-         assert(!vert->empty());
-         this->shader_modules.push_back(vert);
-         this->shader_modules.push_back(frag);
-         //
+         assert(vert);
+         assert(frag);
          this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
          this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: shader.shadows.frag.spv)");
       }
@@ -1443,16 +1423,11 @@ namespace vulkanDK {
       s->setup_pipeline_layout();
    }
    void surface_renderer::_setup_light_shadow_shaders() {
-      shader_module* vert = nullptr;
-      shader_module* frag = nullptr;
+      shader_module* vert = this->load_shader_module("shaders/light-shadow-depth.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/light-shadow-depth.frag.spv");
       {
-         vert = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.vert.spv").uncompressedData());
-         frag = new shader_module(this->logical_device, QResource("shaders/light-shadow-depth.frag.spv").uncompressedData());
-         assert(!vert->empty());
-         assert(!frag->empty());
-         this->shader_modules.push_back(vert);
-         this->shader_modules.push_back(frag);
-         //
+         assert(vert);
+         assert(frag);
          this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
          this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.frag.spv)");
       }
@@ -1549,12 +1524,9 @@ namespace vulkanDK {
             this->descriptor_set_layouts.shared_layouts.compute_frustum_culling.handle,
          }
       );
-      shader_module* comp = nullptr;
+      shader_module* comp = this->load_shader_module("shaders/frustum-cull.comp.spv");
       {
-         comp = new shader_module(this->logical_device, QResource("shaders/frustum-cull.comp.spv").uncompressedData());
-         assert(!comp->empty());
-         this->shader_modules.push_back(comp);
-         //
+         assert(comp);
          this->set_debug_object_name(comp->handle, "Shader Module (Frustum Cull: frustum-cull.comp.spv)");
       }
       s->config.stage = pipeline_stage_info{
@@ -1577,12 +1549,9 @@ namespace vulkanDK {
                this->descriptor_set_layouts.shared_layouts.compute_shadow_caster_culling.handle,
             }
          );
-         shader_module* comp = nullptr;
+         shader_module* comp = this->load_shader_module("shaders/shadow-caster-cull.comp.spv");
          {
-            comp = new shader_module(this->logical_device, QResource("shaders/shadow-caster-cull.comp.spv").uncompressedData());
-            assert(!comp->empty());
-            this->shader_modules.push_back(comp);
-            //
+            assert(comp);
             this->set_debug_object_name(comp->handle, "Shader Module (Shadow Caster Cull: shadow-caster-cull.comp.spv)");
          }
          s->config.stage = pipeline_stage_info{
@@ -2882,8 +2851,7 @@ namespace vulkanDK {
       }
       //
       abstract_renderer::start_teardown();
-      for (auto& layout : this->descriptor_set_layouts.list)
-         layout.teardown();
+      this->descriptor_set_layouts.teardown_all();
       abstract_renderer::end_teardown(); // tears down the logical device
       //
       this->_on_renderer_teardown_complete();
