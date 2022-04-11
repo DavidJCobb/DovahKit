@@ -38,6 +38,7 @@ namespace {
             //
             return;
       }
+      stream.skip(4);
       std::string name;
       size_t length = 0;
       {

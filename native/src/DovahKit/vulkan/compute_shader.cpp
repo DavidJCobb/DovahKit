@@ -54,8 +54,18 @@ namespace vulkanDK {
       //
       #if _DEBUG
          if (auto* sm = this->config.stage.module) {
-            if (!(sm->data.stages & VK_SHADER_STAGE_COMPUTE_BIT))
-               throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have a compute shader entry point.");
+            const auto& name = this->config.stage.entry_point_name;
+            bool found = false;
+            for (auto& ep : sm->data.entry_points) {
+               if (ep.name == name) {
+                  if (!(ep.stages & VK_SHADER_STAGE_COMPUTE_BIT))
+                     throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have a compute shader entry point.");
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have an entry point with the specified name.");
          } else {
             throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module is missing.");
          }
