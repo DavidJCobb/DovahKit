@@ -1,0 +1,172 @@
+
+Before we begin this topic,  let's start with a review of some of the basics of 
+rendering a frame. Typically, to draw an object, we first bind the resources we 
+need for  the draw:  a "pipeline" for shaders,  some "descriptor sets"  for any 
+assets that the shaders may  rely on, and then buffers  for the mesh's vertices 
+and indices.
+
+   vkCmdBindDescriptorSets(...);
+   vkCmdBindPipeline(...);
+   
+   vkCmdBindVertexBuffers(...);
+   vkCmdBindIndexBuffer(...);
+   vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
+   
+(Here, we're performing an "indexed draw."  This means that the mesh is defined 
+as a list of vertices,  and then a list of triangles  (each consisting of three 
+vertex indices). This format allows us to reuse vertices; if multiple triangles 
+share a vertex, the vertex won't need to be duplicated within the vertex data.)
+
+This is a "direct draw:"  after binding resources,  we pass the draw parameters 
+directly as arguments to the draw call. However, there's an alternative to this 
+approach: "indirect draws."
+
+Imagine we have a data structure -- say, something like this:
+
+   struct VkDrawIndexedIndirectCommand {
+      uint32_t indexCount;
+      uint32_t instanceCount;
+      uint32_t firstIndex;
+      int32_t  vertexOffset;
+      uint32_t firstInstance;
+   };
+
+If we store that structure  in a GPU-side buffer,  then we can use an "indirect 
+draw" command to perform a draw using the arguments in that structure:
+
+   vkCmdDrawIndexedIndirect(
+      command_handle,
+      param_buffer,
+      0, // offset
+      1, // draw count
+      sizeof(VkDrawIndexedIndirectCommand) // stride
+   );
+   
+But why would we ever do this?  Well, if we store our draw call parameters over 
+on the GPU, then we can modify them on  the GPU using a compute shader. Compute 
+shaders don't participate in rendering; rather, they are a means to run code on 
+the GPU using the same language or bytecode one would write for rendering. They 
+are good for tasks that  can be run entirely in parallel,  where the outcome of 
+each task is independent of all other tasks.
+
+If we can find a way to cull objects out in parallel, then we can use a compute 
+shader to implement it.  The compute  shader can modify  the object's draw call 
+parameters and  set the instance count to  zero, effectively  turning that draw 
+into a no-op.
+
+
+== FRUSTUM CULLING ============================================================
+
+The term "frustum" refers to a region  of space formed when some shape (usually 
+a cone or pyramid) is cut by two planes. For our purposes, the field of view of 
+a perspective-projection  camera can be  defined as a pyramid,  and when we cut 
+that pyramid at the near and far planes, we get a frustum.
+
+"Frustum culling," then, is the process of culling objects from the scene based 
+on whether they lie within the frustum -- that is, whether they fall within the 
+camera's field of view.  It's a process that can be  done entirely in parallel; 
+each thread only  needs to look at the object it's currently  deciding to cull. 
+It's a useful task to perform within a compute shader. So how does it work?
+
+Each rendered mesh in our renderer has  a bounding box, defined by a mesh-local 
+position and a radius. We push our far plane to infinity, so our frustum (which 
+isn't technically a frustum anymore,  but no one cares) can be represented as a 
+group of four planes with infinite bounds;  each such plane can be defined as a 
+normal vector with  a position offset placing it somewhere  on the plane. Given 
+any point in space, we can  take its dot product  with the normal and determine 
+its signed  distance from the normal's plane, with the sign  representing which 
+side of the plane the point is on.
+
+If the sphere is too  far to the wrong side of any  frustum plane -- if the dot 
+product of  the sphere centerpoint and that plane's normal, minus  the sphere's 
+radius, is a negative number -- then the  sphere is outside of the frustum, and 
+so the mesh can be culled.
+
+
+== RADIUS CULLING =============================================================
+
+Currently, we render all shadow-casting lights' shadow maps as shadow cubemaps. 
+If a shadow-casting  light isn't an omni light, then we use  math in the shader 
+to test a fragment's angle to the light,  and carve up the shadows accordingly. 
+This has benefits and drawbacks.
+
+ - Benefits
+
+    - Position-based math  is already needed to handle  spot lights at all, and 
+      to emulate the seams in omni lights'  shadows (which result from Bethesda 
+      using two 179-degree FOV shadow maps instead of a shadow cubemap).
+
+ - Drawbacks
+
+    - The shadow maps for hemi lights (which cast light omnidirectionally while 
+      only casting shadows  over a 179-degree  field) render  more objects than 
+      needed.
+
+    - The shadow maps for spot lights  (which cast light and shadows in a cone) 
+      render more objects than needed.
+
+    - We cannot use frustum culling for shadow maps. They're all rendered as if 
+      the lights are omni lights,  and omni lights  effectively have a combined 
+      360-degree frustum.
+
+Although we can't use frustum culling  for any of our shadow maps, we can still 
+cull objects based  on their radius. If they're outside  of the light's radius, 
+then they can't receive that light (or have it obstructed) and so can be culled 
+from its shadow map.
+
+
+== LIMITATIONS AND ROOM FOR IMPROVEMENT =======================================
+
+The vkCmdDrawIndexedIndirect command  allows us to pass a draw count along with 
+a "stride" measured in bytes:  the distance,  within the parameter buffer, from 
+the start of one call's parameters to  the start of the next call's parameters. 
+In theory, given a buffer of N draws, we  could run a single draw-indirect call 
+with a draw count of N. In practice, however, all such draws would run with the 
+same bound resources  (most notably the vertex and index buffers)  and the same 
+push constant, which is not suitable for our use case.
+
+
+=== ELIMINATING THE NEED FOR DIFFERENT VERTEX/INDEX BINDINGS ==================
+
+In theory, we could  eliminate the need for different vertex  and index buffers 
+per mesh by changing how we store meshes' vertices and indices. Currently, each 
+mesh gets a single buffer, used to store  the vertices and indices together. We 
+could instead use two buffers for the entire scene: one for all meshes' indices 
+and another for all meshes' vertices. We already have the CPU keep its own copy 
+of each mesh's vertices and indices,  so resizing and reconstructing two shared 
+GPU-side buffers  as necessary would not  be inordinately  difficult, though we 
+would have to make absolutely certain  that a draw is not in progress (i.e. all 
+submitted draws have completed) before we modify the buffer.
+
+
+=== ELIMINATING THE NEED FOR DIFFERENT PUSH CONSTANTS =========================
+
+As of this writing we use push constants to pass the mesh index and its texture 
+indices (currently diffuse and normal) to our shaders. When you perform a multi-
+draw, as they're called,  the GLSL variable "gl_DrawID"  is set to the index of 
+the current draw; given a vkCmdDrawIndexedIndirect call with a draw count of N, 
+the GLSL variable "gl_DrawID" will  have values from 0 to (N - 1). However, for 
+our current renderer design, this is not the same as the mesh index.
+
+Not all meshes can be drawn with the same shader. Double-sided meshes are among 
+those that require an alternate shader  (though this wouldn't be the case if we 
+switched to Vulkan 1.3+;  VK_DYNAMIC_STATE_CULL_MODE would become usable). This 
+means that we can't just have a single  draw parameter buffer for every mesh in 
+the scene unless we draw meshes out of order. Currently we accomplish this with 
+push constants  (for the graphics shaders)  and a separate  buffer full of mesh 
+indices (for the compute shaders that cull our meshes).
+
+We'd have to take one of two approaches, then, to get rid of push constants:
+
+ - Give every shader access to the same buffer that compute shaders use to link 
+   draw indices to mesh indices.  Graphics shaders can use gl_DrawID to pluck a 
+   mesh index out of the buffer.
+
+ - Maintain one draw  parameter buffer per shader,  and set the instance counts 
+   based on whether a mesh  uses the shader and  isn't culled. Graphics shaders 
+   can then use  gl_DrawID as a mesh index, though the  extra parameter buffers 
+   will use more VRAM.
+
+Either way, each mesh's texture indices  would also need to be moved out of the 
+push constant and into the meshes' shader parameter structs.
+

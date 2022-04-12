@@ -7,6 +7,10 @@ present the final rendered image.
 
 == THE PROCESS ================================================================
 
+Let's start with a basic overview, focusing on a renderer that only records its 
+commands for the graphics queue.  We'll talk about what's needed to add in more 
+queues (e.g. compute) afterward.
+
 
 === GETTING A SWAP CHAIN IMAGE ================================================
 
@@ -218,3 +222,45 @@ This in turn means that our command buffers can be per frame-in-flight... other
 than the command buffer used to blit to the swap chain image, anyway. That lets 
 us make the descriptor sets per frame-in-flight as well, since they wouldn't be 
 used by the command buffer that does the final blit.
+
+
+== ADDING MORE QUEUES =========================================================
+
+A common use case for using multiple  queues is compute shader culling, wherein 
+you use commands on the  compute queue to cull out  objects before then running 
+indirect draw commands on the graphics queue. This approach requires two waits: 
+
+
+ - The CPU cannot record compute  commands for a frame-in-flight until the last 
+   set of compute commands recorded via that frame-in-flight have finished.
+
+ - Graphics commands for a frame must wait for compute commands to finish.
+
+
+To facilitate this, we use additional fences and semaphores.
+
+
+ - One semaphore for the image becoming available, as before.
+
+ - A semaphore for compute commands finishing.
+
+ - A semaphore for graphics commands finishing. This will be useful if we ever 
+   want to run additional commands or queues after the main graphics commands.
+
+ - A semaphore for rendering completion, as before.
+
+
+We also need a fence for each queue.  When we use a frame-in-flight, we'll have 
+to wait on  all of its fences. We  can loop over each fence and  wait on all of 
+them straightaway, but it'd probably be more efficient to wait on the fence for 
+a particular  step only just before we perform that step for the  new frame. At 
+the same time, waiting on all  of the fences  straightaway allows us to be sure 
+that resources used  within a frame (particularly resources  accessed from more 
+than one queue, e.g. buffers read by both the compute and graphics shaders) are 
+safe to write to from the CPU.
+
+Our renderer currently  has buffers that  are used by  both our compute and our 
+graphics shaders, so in at least some cases, we'd end up having to wait on both 
+queues before being able to safely modify  those buffers and record new compute 
+anyway.
+
