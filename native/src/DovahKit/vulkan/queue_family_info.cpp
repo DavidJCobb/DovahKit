@@ -13,6 +13,10 @@ namespace vulkanDK {
          //
          if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             this->set(this->families.graphics, i);
+         } else {
+            if (family.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+               this->set(this->families.transfer, i);
+            }
          }
          if (family.queueFlags & VK_QUEUE_COMPUTE_BIT) {
             this->set(this->families.compute, i);
@@ -27,6 +31,8 @@ namespace vulkanDK {
          if (this->mask == all_mask_bits_set) // early out; device supports all desired queue family types
             break;
       }
+      if (this->families.transfer == 0)
+         this->set(this->families.transfer, this->families.graphics);
    }
    void queue_family_info::set(queue_index_t& entry, queue_index_t value) {
       entry = value;

@@ -8,9 +8,46 @@
 
 namespace vulkanDK {
    #pragma region queue
-   void abstract_renderer::queue::setup(VkDevice device, uint32_t index) {
+   void abstract_renderer::queue::set_alias_of(queue& o) {
+      this->alias_of = &o;
+   }
+   //
+   void abstract_renderer::queue::setup_handle(VkDevice device, uint32_t index) {
       vkGetDeviceQueue(device, index, 0, &this->handle);
       this->index = index;
+   }
+   void abstract_renderer::queue::setup_command_pools(VkDevice device) {
+      if (this->alias_of) {
+         this->command_pools = this->alias_of->command_pools;
+         return;
+      }
+      //
+      auto pool_info = VkCommandPoolCreateInfo{
+         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+         .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+         .queueFamilyIndex = this->index,
+      };
+      if (auto result = vkCreateCommandPool(device, &pool_info, nullptr, &this->command_pools.persistent); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::queue::setup_command_pool] Failed to create the persistent command pool.");
+      }
+      //
+      pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+      if (auto result = vkCreateCommandPool(device, &pool_info, nullptr, &this->command_pools.transient); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::abstract_renderer::queue::setup_command_pool] Failed to create the transient command pool.");
+      }
+   }
+   //
+   void abstract_renderer::queue::teardown_command_pools(VkDevice device) {
+      if (this->alias_of)
+         return;
+      if (this->command_pools.persistent != VK_NULL_HANDLE) {
+         vkDestroyCommandPool(device, this->command_pools.persistent, nullptr);
+         this->command_pools.persistent = VK_NULL_HANDLE;
+      }
+      if (this->command_pools.transient != VK_NULL_HANDLE) {
+         vkDestroyCommandPool(device, this->command_pools.transient, nullptr);
+         this->command_pools.transient = VK_NULL_HANDLE;
+      }
    }
    #pragma endregion
 
@@ -26,7 +63,6 @@ namespace vulkanDK {
       // Subclasses should call vkDeviceWaitIdle and tear down state unique to themselves before 
       // using a call-super for this.
       //
-      this->teardown_command_pool();
       this->teardown_descriptor_pool();
       this->teardown_texture_sampler();
       {
@@ -49,32 +85,6 @@ namespace vulkanDK {
          return;
       vkDestroyDevice(this->logical_device, nullptr);
       this->logical_device = VK_NULL_HANDLE;
-   }
-
-   void abstract_renderer::setup_command_pool(uint32_t queue_family_index) {
-      auto pool_info = VkCommandPoolCreateInfo{
-         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-         .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-         .queueFamilyIndex = queue_family_index,
-      };
-      if (auto result = vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.persistent); result != VK_SUCCESS) {
-         throw result_exception(result, "[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the persistent command pool.");
-      }
-      //
-      pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-      if (auto result = vkCreateCommandPool(this->logical_device, &pool_info, nullptr, &this->command_pools.transient); result != VK_SUCCESS) {
-         throw result_exception(result, "[vulkanDK::abstract_renderer::_setup_command_pool] Failed to create the transient command pool.");
-      }
-   }
-   void abstract_renderer::teardown_command_pool() {
-      if (this->command_pools.persistent != VK_NULL_HANDLE) {
-         vkDestroyCommandPool(this->logical_device, this->command_pools.persistent, nullptr);
-         this->command_pools.persistent = VK_NULL_HANDLE;
-      }
-      if (this->command_pools.transient != VK_NULL_HANDLE) {
-         vkDestroyCommandPool(this->logical_device, this->command_pools.transient, nullptr);
-         this->command_pools.transient = VK_NULL_HANDLE;
-      }
    }
 
    void abstract_renderer::setup_descriptor_pool(const std::vector<VkDescriptorPoolSize>& sizes, uint32_t total_set_count) {

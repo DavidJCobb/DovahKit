@@ -21,8 +21,9 @@ namespace vulkanDK {
                queue_index_t compute;
                queue_index_t graphics;
                queue_index_t presentation;
+               queue_index_t transfer; // dedicated queue if possible; same as graphics queue otherwise
             };
-            std::array<queue_index_t, 3> list;
+            std::array<queue_index_t, 4> list;
          } families;
          uint8_t mask = 0;
 

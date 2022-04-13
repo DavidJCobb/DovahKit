@@ -84,7 +84,7 @@ namespace vulkanDK {
                std::unique_ptr<mesh_index_list> host;
             } mesh_indices;
 
-            void setup(surface_renderer&);
+            void setup(surface_renderer&, const std::string& debug_name = "");
          };
 
       public:

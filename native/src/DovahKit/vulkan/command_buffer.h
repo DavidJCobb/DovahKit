@@ -3,6 +3,7 @@
 #include <vector>
 #include "_vulkan.h"
 #include "_util.h"
+#include "abstract_renderer.h"
 
 namespace vulkanDK {
    class compute_shader;
@@ -18,9 +19,11 @@ namespace vulkanDK {
          command_buffer() {}
          command_buffer(VkDevice, VkCommandPool);
          command_buffer(surface_renderer&);
+         command_buffer(surface_renderer&, abstract_renderer::queue&);
          ~command_buffer();
 
          static command_buffer create_transient(surface_renderer&);
+         static command_buffer create_transient(surface_renderer&, abstract_renderer::queue&);
 
          command_buffer(command_buffer&&) noexcept;
          command_buffer& operator=(command_buffer&&) noexcept;

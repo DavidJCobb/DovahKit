@@ -36,5 +36,7 @@ namespace vulkanDK {
          void* map_memory(VkDeviceSize offset = 0, VkMemoryMapFlags = 0);
          void* map_memory(VkDeviceSize offset, VkDeviceSize length, VkMemoryMapFlags = 0);
          void unmap_memory(void* mapped);
+
+         VkResult flush_memory(); // only needed for device-cached rather than device-coherent memory
    };
 }

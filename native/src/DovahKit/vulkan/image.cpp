@@ -174,9 +174,16 @@ namespace vulkanDK {
    }
 
    void image_and_view::transition_layout(VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
-      this->owner->do_single_commands([=](command_buffer& scratch_commands) {
-         this->transition_layout(scratch_commands, aspect, layout, access);
-      });
+      this->owner->do_single_commands(
+         [=](command_buffer& scratch_commands) {
+            this->transition_layout(scratch_commands, aspect, layout, access);
+         },
+         //
+         // The pipeline barriers used for some image layout transitions are queue-specific, so 
+         // force the graphics queue for this.
+         //
+         this->owner->queues.graphics
+      );
    }
    void image_and_view::transition_layout(command_buffer& cmd, VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
       this->transition_layout(cmd, aspect, this->current.layout, layout, this->current.access, access);
@@ -277,7 +284,7 @@ namespace vulkanDK {
       assert(this->owner);
       this->owner->do_single_commands([this, buffer](command_buffer& scratch_commands) {
          this->copy_content_from_buffer(scratch_commands, buffer);
-      });
+      }, this->owner->queues.transfer);
    }
    void owned_image_and_view::copy_content_from_buffer(command_buffer& cmd, VkBuffer buffer) {
       auto region = VkBufferImageCopy{
@@ -305,22 +312,28 @@ namespace vulkanDK {
 
    void owned_image_and_view::overwrite_from_staging_buffer(const buffer& staging, VkImageAspectFlags aspect, VkImageLayout layout, VkAccessFlags access) {
       assert(this->owner);
-      this->owner->do_single_commands([this, &staging, aspect, layout, access](command_buffer& scratch_commands) {
-         {
-            //
-            // We don't care what content was present before, so we'll treat the image layout as 
-            // undefined and switch to a transfer-destination layout for our copy operation.
-            // 
-            // Because transfer writes don't need to wait, the source access mask can be empty; 
-            // based on that, we'll use the earliest pipeline stage: "top of pipe."
-            //
-            this->current.access = 0;
-            this->current.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-            this->transition_layout(aspect, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
-         }
-         this->copy_content_from_buffer(scratch_commands, staging.handle);
-         this->transition_layout(scratch_commands, aspect, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, access);
-      });
+      this->owner->do_single_commands(
+         [this, &staging, aspect, layout, access](command_buffer& scratch_commands) {
+            {
+               //
+               // We don't care what content was present before, so we'll treat the image layout as 
+               // undefined and switch to a transfer-destination layout for our copy operation.
+               // 
+               // Because transfer writes don't need to wait, the source access mask can be empty; 
+               // based on that, we'll use the earliest pipeline stage: "top of pipe."
+               //
+               this->current.access = 0;
+               this->current.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+               this->transition_layout(aspect, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
+            }
+            this->copy_content_from_buffer(scratch_commands, staging.handle);
+            this->transition_layout(scratch_commands, aspect, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, access);
+         },
+         //
+         // Graphics queue, not transfer queue; see comments on transition_layout
+         //
+         this->owner->queues.graphics
+      );
    }
 
    void owned_image_and_view::teardown() {

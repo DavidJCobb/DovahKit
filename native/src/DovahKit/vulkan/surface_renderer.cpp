@@ -621,9 +621,30 @@ namespace vulkanDK {
       //
       // And lastly, let's get our queues:
       //
-      this->queues.compute.setup     (this->logical_device, indices.families.compute);
-      this->queues.graphics.setup    (this->logical_device, indices.families.graphics);
-      this->queues.presentation.setup(this->logical_device, indices.families.presentation);
+      this->queues.compute.setup_handle(this->logical_device, indices.families.compute);
+      this->queues.graphics.setup_handle(this->logical_device, indices.families.graphics);
+      this->queues.presentation.setup_handle(this->logical_device, indices.families.presentation);
+      this->queues.transfer.setup_handle(this->logical_device, indices.families.transfer);
+      {
+         auto& list = this->queues.list;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& a = list[i];
+            for (size_t j = i + 1; j < list.size(); ++j) {
+               auto& b = list[j];
+               if (a.index == b.index) {
+                  //
+                  // These two queue entries actually refer to the same underlying queue. We'll set one as 
+                  // an "alias" of the other, so that we don't redundantly create multiple command pools 
+                  // for the same queue.
+                  //
+                  if (&b == &this->queues.graphics)
+                     a.set_alias_of(b);
+                  else
+                     b.set_alias_of(a);
+               }
+            }
+         }
+      }
       //
       // Oh, and some niche API functions:
       //
@@ -688,6 +709,14 @@ namespace vulkanDK {
       if (this->logical_device == VK_NULL_HANDLE) {
          return;
       }
+      {
+         auto fence_info = VkFenceCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+         };
+         vkCreateFence(this->logical_device, &fence_info, nullptr, &this->one_time_commands_fence);
+      }
       if constexpr (use_vma_library) {
          VmaAllocatorCreateInfo allocatorInfo = {};
          allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
@@ -710,7 +739,8 @@ namespace vulkanDK {
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
       this->_setup_raw_pixel_texture_sampler();
       //
-      this->setup_command_pool(this->queues.graphics.index);
+      for (auto& q : this->queues.list)
+         q.setup_command_pools(this->logical_device);
       //
       {  // swap chain
          this->_setup_sun_shadow_buffer();
@@ -2849,7 +2879,13 @@ namespace vulkanDK {
       if constexpr (use_vma_library) {
          vmaDestroyAllocator(this->allocator);
       }
+      if (this->one_time_commands_fence != VK_NULL_HANDLE) {
+         vkDestroyFence(this->logical_device, this->one_time_commands_fence, nullptr);
+         this->one_time_commands_fence = VK_NULL_HANDLE;
+      }
       //
+      for (auto& q : this->queues.list)
+         q.teardown_command_pools(this->logical_device);
       abstract_renderer::start_teardown();
       this->descriptor_set_layouts.teardown_all();
       abstract_renderer::end_teardown(); // tears down the logical device
@@ -3097,7 +3133,7 @@ namespace vulkanDK {
    }
 
 
-   command_buffer surface_renderer::_begin_one_time_commands() {
+   command_buffer surface_renderer::_begin_one_time_commands(queue& q) {
       //
       // TODO: This is a useful helper function, but you'll actually get higher throughput if you 
       // reuse a single command buffer instead of spawning several temporary buffers; you'd want 
@@ -3106,7 +3142,7 @@ namespace vulkanDK {
       // 
       // See the end of: https://vulkan-tutorial.com/en/Texture_mapping/Images#page_Transition-barrier-masks
       //
-      auto scratch = command_buffer::create_transient(*this);
+      auto scratch = command_buffer::create_transient(*this, q);
       //
       auto begin_info = VkCommandBufferBeginInfo{
          .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -3116,7 +3152,7 @@ namespace vulkanDK {
       //
       return scratch;
    }
-   void surface_renderer::_end_one_time_commands(command_buffer& scratch) {
+   void surface_renderer::_end_one_time_commands(command_buffer& scratch, queue& q) {
       vkEndCommandBuffer(scratch.handle);
       //
       auto submit_info = VkSubmitInfo{
@@ -3124,8 +3160,11 @@ namespace vulkanDK {
          .commandBufferCount = 1,
          .pCommandBuffers    = &scratch.handle,
       };
-      vkQueueSubmit(this->queues.graphics.handle, 1, &submit_info, VK_NULL_HANDLE);
-      if (auto result = vkQueueWaitIdle(this->queues.graphics.handle); result != VK_SUCCESS) {
+      vkResetFences(this->logical_device, 1, &this->one_time_commands_fence);
+      if (auto result = vkQueueSubmit(q.handle, 1, &submit_info, this->one_time_commands_fence); result != VK_SUCCESS) {
+         throw result_exception(result, "[surface_renderer::_end_one_time_commands] Submission failed.");
+      }
+      if (auto result = vkWaitForFences(this->logical_device, 1, &this->one_time_commands_fence, VK_FALSE, UINT64_MAX); result != VK_SUCCESS) {
          throw result_exception(result, "[surface_renderer::_end_one_time_commands] Wait-for-completion failed.");
       }
    }
@@ -3883,8 +3922,8 @@ namespace vulkanDK {
          auto& src = data->bounds;
          dst.center    = src.center;
          dst.radius_sq = src.radius * src.radius;
-         mesh.shader_params.bounding_sphere_center = dst.center;
-         mesh.shader_params.bounding_sphere_radius = sqrt(dst.radius_sq);
+         mesh.shader_params.bounding_sphere_center = src.center;
+         mesh.shader_params.bounding_sphere_radius = src.radius;
          qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //
@@ -3979,8 +4018,8 @@ namespace vulkanDK {
          auto& src = data->bounds;
          dst.center    = src.center;
          dst.radius_sq = src.radius * src.radius;
-         mesh.shader_params.bounding_sphere_center = dst.center;
-         mesh.shader_params.bounding_sphere_radius = sqrt(dst.radius_sq);
+         mesh.shader_params.bounding_sphere_center = src.center;
+         mesh.shader_params.bounding_sphere_radius = src.radius;
          qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //

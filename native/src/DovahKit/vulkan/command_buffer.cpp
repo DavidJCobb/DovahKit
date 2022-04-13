@@ -8,8 +8,10 @@ namespace vulkanDK {
    command_buffer::command_buffer(VkDevice d, VkCommandPool p) : owning_device(d), owning_pool(p) {
       this->_setup();
    }
-   command_buffer::command_buffer(surface_renderer& sr) : command_buffer(sr.logical_device, sr.command_pools.persistent) {
+   command_buffer::command_buffer(surface_renderer& sr) : command_buffer(sr, sr.queues.graphics) {
       this->_setup();
+   }
+   command_buffer::command_buffer(surface_renderer& sr, abstract_renderer::queue& q) : command_buffer(sr.logical_device, q.command_pools.persistent) {
    }
    command_buffer::~command_buffer() {
       if (this->handle == VK_NULL_HANDLE)
@@ -18,7 +20,10 @@ namespace vulkanDK {
    }
 
    /*static*/ command_buffer command_buffer::create_transient(surface_renderer& sr) {
-      return command_buffer(sr.logical_device, sr.command_pools.transient);
+      return create_transient(sr, sr.queues.graphics);
+   }
+   /*static*/ command_buffer command_buffer::create_transient(surface_renderer& sr, abstract_renderer::queue& q) {
+      return command_buffer(sr.logical_device, q.command_pools.transient);
    }
 
    command_buffer::command_buffer(command_buffer&& o) noexcept {

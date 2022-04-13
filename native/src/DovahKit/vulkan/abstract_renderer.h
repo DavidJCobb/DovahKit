@@ -15,8 +15,19 @@ namespace vulkanDK {
          struct queue {
             VkQueue  handle = VK_NULL_HANDLE;
             uint32_t index  = 0; // family index
+            struct {
+               VkCommandPool persistent = VK_NULL_HANDLE;
+               VkCommandPool transient  = VK_NULL_HANDLE;
+            } command_pools;
+            //
+            queue* alias_of = nullptr; // e.g. "this is a dedicated transfer queue if one exists, or an alias of the graphics queue otherwise"
 
-            void setup(VkDevice, uint32_t);
+            void set_alias_of(queue&);
+
+            void setup_handle(VkDevice, uint32_t index);
+            void setup_command_pools(VkDevice);
+            //
+            void teardown_command_pools(VkDevice);
          };
 
       public:
@@ -39,9 +50,6 @@ namespace vulkanDK {
          void start_teardown(); // command pool, descriptor pool, etc.
             // ...and then subclass should tear down its descriptor set layouts...
          void end_teardown(); // final teardown of the VkDevice
-
-         void setup_command_pool(uint32_t queue_family_index);
-         void teardown_command_pool();
 
          void setup_descriptor_pool(const std::vector<VkDescriptorPoolSize>&, uint32_t total_set_count);
          void teardown_descriptor_pool();

@@ -104,10 +104,16 @@ namespace vulkanDK {
          } widget;
          //
          VkExtent2D surface_extent; // last extent we set ourselves up for
-         struct {
-            queue compute;
-            queue graphics;
-            queue presentation;
+         union _ {
+            _() { for (auto& q : list) q = queue(); } // C++ union limits are really dumb sometimes
+            //
+            std::array<queue, 4> list;
+            struct {
+               queue compute;
+               queue graphics;
+               queue presentation;
+               queue transfer;
+            };
          } queues;
          //
          cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
@@ -182,6 +188,7 @@ namespace vulkanDK {
          struct {
             size_t show_shadow_caster_depths = std::string::npos;
          } debug;
+         VkFence one_time_commands_fence = VK_NULL_HANDLE;
 
          void setup(); // sets up the device and everything below, but not the surface
          void teardown(); // tears down the device and everything below, but not the surface
@@ -191,9 +198,12 @@ namespace vulkanDK {
          void draw_next_frame();
 
          template<typename T> inline void do_single_commands(T func) {
-            auto cb = this->_begin_one_time_commands();
+            this->do_single_commands(func, this->queues.graphics);
+         }
+         template<typename T> inline void do_single_commands(T func, queue& q) {
+            auto cb = this->_begin_one_time_commands(q);
             (func)(cb);
-            this->_end_one_time_commands(cb);
+            this->_end_one_time_commands(cb, q);
          }
 
          bool can_do_alpha() const;
@@ -280,8 +290,8 @@ namespace vulkanDK {
          //
          void _setup_descriptor_pool();
 
-         command_buffer _begin_one_time_commands();
-         void _end_one_time_commands(command_buffer&);
+         command_buffer _begin_one_time_commands(queue&);
+         void _end_one_time_commands(command_buffer&, queue&);
 
          void _execute_pending_scene_deletions();
    };
