@@ -584,7 +584,9 @@ namespace vulkanDK {
          }
       }
       #pragma endregion
+      //
       // Done.
+      //
    }
    void frame_in_flight::record_graphics_commands() {
       if (this->state.scene_meshes_added_or_removed || this->state.must_re_record_graphics) {
@@ -820,19 +822,25 @@ namespace vulkanDK {
          };
          vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
          {
-            //
-            // We'd want to pre-sort objects by material, and re-bind descriptor sets and pipelines 
-            // with each new material.
-            //
             const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
-            _record_indirect_draws(
-               scene, command_buffer, this->indirect_draw_commands.main, *shader,
-               [&set_decal_config](const rendered_mesh& ro) {
-                  set_decal_config(ro);
-               }
-            );
+            if (sr.debug.show_shadow_caster_culling != std::string::npos) {
+               auto& shadow_idb = this->indirect_draw_commands.shadow_casters[sr.debug.show_shadow_caster_culling];
+               _record_indirect_draws(
+                  scene, command_buffer, shadow_idb, *shader,
+                  [&set_decal_config](const rendered_mesh& ro) {
+                     set_decal_config(ro);
+                  }
+               );
+            } else {
+               _record_indirect_draws(
+                  scene, command_buffer, this->indirect_draw_commands.main, *shader,
+                  [&set_decal_config](const rendered_mesh& ro) {
+                     set_decal_config(ro);
+                  }
+               );
+            }
          }
          command_buffer.end_render_pass();
          //
@@ -956,6 +964,13 @@ namespace vulkanDK {
          .signalSemaphoreCount = (uint32_t)signal_semaphores.size(),
          .pSignalSemaphores    = signal_semaphores.data(),
       };
+      if (this->owner->debug.freeze_culling_updates) {
+         if (this->debug.compute_culling_ran_once) {
+            submit_info.commandBufferCount = 0;
+         } else {
+            this->debug.compute_culling_ran_once = true;
+         }
+      }
       if (auto result = vkQueueSubmit(this->owner->queues.compute.handle, 1, &submit_info, this->fences.compute); result != VK_SUCCESS) {
          throw result_exception(result, "[frame_in_flight::submit_compute_cull_commands] Submission failed.");
       }
@@ -1000,6 +1015,7 @@ namespace vulkanDK {
       this->state.recorded_compute_cull_commands = false;
       this->state.must_re_record_graphics = true;
       this->state.must_re_record_ui = true;
+      this->debug.compute_culling_ran_once = false;
    }
    
    scene& frame_in_flight::get_scene() {

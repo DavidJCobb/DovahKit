@@ -243,6 +243,8 @@ namespace vulkanDK {
       _make_normal<0, true>(view_proj, out[1]);  // right  plane
       _make_normal<1, false>(view_proj, out[2]); // top    plane
       _make_normal<1, true>(view_proj, out[3]);  // bottom plane
+      for (auto& item : out)
+         item /= glm::length(glm::vec3(item));
       return out;
    }
 }

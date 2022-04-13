@@ -186,7 +186,8 @@ namespace vulkanDK {
             PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
          } api_functions;
          struct {
-            size_t show_shadow_caster_depths = std::string::npos;
+            bool   freeze_culling_updates     = false;
+            size_t show_shadow_caster_culling = std::string::npos;
          } debug;
          VkFence one_time_commands_fence = VK_NULL_HANDLE;
 
@@ -251,6 +252,8 @@ namespace vulkanDK {
          inline double last_frame_time() const { return this->state.last_frame_time; }
 
          void debug_show_frustrums(); // adds relevant frustrums to the scene as rendered_meshes.
+         void debug_show_shadow_caster_culling(size_t which = std::string::npos);
+         void debug_set_culling_updates_frozen(bool);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes

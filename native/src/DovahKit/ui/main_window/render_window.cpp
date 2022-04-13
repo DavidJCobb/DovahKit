@@ -1,6 +1,7 @@
 #include "render_window.h"
 #include "helpers/rotation.h"
 #include <QBoxLayout>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QInputDialog>
@@ -424,5 +425,33 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
       //
       this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* widget = new QComboBox(this->toolbar);
+      widget->addItem("Normal", -1);
+      widget->addItem("Shadow Caster 0", 0);
+      widget->addItem("Shadow Caster 1", 1);
+      widget->addItem("Shadow Caster 2", 2);
+      widget->addItem("Shadow Caster 3", 3);
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, view, widget]() {
+         auto* sr = view->surfaceRenderer();
+         auto  i  = widget->currentData().toInt();
+         //
+         if (i < 0)
+            sr->debug_show_shadow_caster_culling(std::string::npos);
+         else
+            sr->debug_show_shadow_caster_culling(i);
+      });
+      this->toolbar->addWidget(widget);
+   }
+   //
+   {
+      auto* widget = new QCheckBox("Freeze culling updates", this->toolbar);
+      QObject::connect(widget, &QCheckBox::toggled, this, [this, view](bool checked) {
+         auto* sr = view->surfaceRenderer();
+         sr->debug_set_culling_updates_frozen(checked);
+      });
+      this->toolbar->addWidget(widget);
    }
 }

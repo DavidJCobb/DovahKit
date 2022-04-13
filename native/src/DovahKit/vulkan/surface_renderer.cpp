@@ -4441,6 +4441,16 @@ namespace vulkanDK {
       for (auto& image : this->swap_chain.frames_in_flight)
          image.on_scene_meshes_added_or_removed();
    }
+   void surface_renderer::debug_show_shadow_caster_culling(size_t which) {
+      this->debug.show_shadow_caster_culling = which;
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
+   }
+   void surface_renderer::debug_set_culling_updates_frozen(bool v) {
+      this->debug.freeze_culling_updates = v;
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
+   }
 
    void surface_renderer::_execute_pending_scene_deletions() {
       auto  ic = this->swap_chain.images.size();

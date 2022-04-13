@@ -139,6 +139,9 @@ namespace vulkanDK {
          } overlays;
          //
          bool command_buffers_invalid = true;
+         struct {
+            bool compute_culling_ran_once = false;
+         } debug;
 
          inline size_t index() const noexcept { return this->my_index; }
 
