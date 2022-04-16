@@ -61,6 +61,11 @@ namespace vulkanDK {
             alignas(4) VkBool32 enable_alpha_blending = VK_FALSE; // bools in GLSL are uint32_ts in SPIR-V
             alignas(4) VkBool32 receive_shadows       = VK_TRUE;  // bools in GLSL are uint32_ts in SPIR-V
          };
+         struct cull_data {
+            alignas(16) glm::mat4 transform;
+            alignas(16) glm::vec3 bounding_sphere_center = {};
+            alignas( 4) float     bounding_sphere_radius = 0;
+         };
          
          mesh_flags_t mesh_flags = mesh_flag::all_default_flags;
          struct {

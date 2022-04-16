@@ -79,6 +79,38 @@ namespace vulkanDK {
          template<typename PC> void set_pipeline_push_constant(VkPipelineLayout layout, VkShaderStageFlags flags, const PC& data) {
             this->_set_pipeline_push_constant(layout, flags, sizeof(PC), &data);
          }
+         
+      public:
+         template<
+            typename List_A = std::array<VkMemoryBarrier, 0>,
+            typename List_B = std::array<VkBufferMemoryBarrier, 0>,
+            typename List_C = std::array<VkImageMemoryBarrier, 0>
+         >
+         requires requires(List_A x, List_B y, List_C z) {
+            typename List_A::value_type;
+            typename List_B::value_type;
+            typename List_C::value_type;
+            { x.size() } -> std::same_as<size_t>;
+            { y.size() } -> std::same_as<size_t>;
+            { z.size() } -> std::same_as<size_t>;
+         }
+         void pipeline_barrier(
+            VkPipelineStageFlags src_stage,
+            VkPipelineStageFlags dst_stage,
+            VkDependencyFlags dependency_flags,
+            const List_A& memory  = {},
+            const List_B& buffers = {},
+            const List_C& images  = {}
+         ) {
+            vkCmdPipelineBarrier(
+               this->handle,
+               src_stage, dst_stage,
+               dependency_flags,
+               (uint32_t)memory.size(),  memory.data(),
+               (uint32_t)buffers.size(), buffers.data(),
+               (uint32_t)images.size(),  images.data()
+            );
+         }
 
       protected:
          void _setup();

@@ -932,10 +932,10 @@ namespace vulkanDK {
                //
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
-               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
-               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
                .dependencyFlags = 0,
             },
             VkSubpassDependency{
@@ -1563,7 +1563,9 @@ namespace vulkanDK {
          .module              = comp,
          .entry_point_name    = "main",
          .stage               = VK_SHADER_STAGE_COMPUTE_BIT,
-         .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_rendered_meshes),
+         .specialization_info = pipeline_stage_specialization_info(
+            (int32_t)config::max_rendered_meshes//,
+         ),
       };
       s->setup(*this);
    }
@@ -1590,7 +1592,7 @@ namespace vulkanDK {
             .stage               = VK_SHADER_STAGE_COMPUTE_BIT,
             .specialization_info = pipeline_stage_specialization_info(
                (int32_t)config::max_rendered_meshes,
-               (int32_t)config::max_lights_in_scene,
+               (int32_t)config::max_active_shadow_casters,
                (int32_t)i//,
             ),
          };
@@ -1902,6 +1904,17 @@ namespace vulkanDK {
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          //
+         auto light_position_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.active_caster_positions.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
+         auto mesh_bounds_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.mesh_bounds.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
+         //
          auto culling_mesh_params_main_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.indirect_draw_commands.main.params.handle,
             .offset = 0,
@@ -1910,7 +1923,7 @@ namespace vulkanDK {
          auto culling_mesh_indices_main_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.indirect_draw_commands.main.mesh_indices.gpu.handle,
             .offset = 0,
-            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+            .range  = VK_WHOLE_SIZE,
          };
          auto culling_mesh_params_sun_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.indirect_draw_commands.sun_shadows.params.handle,
@@ -1981,7 +1994,7 @@ namespace vulkanDK {
             //
             // Compute: frustum culling: main:
             //
-            ([&frame, &frustum_main_buffer_info, &rosp_buffer_info, &culling_mesh_indices_main_buffer_info, &culling_mesh_params_main_buffer_info]() {
+            ([&frame, &frustum_main_buffer_info, &mesh_bounds_buffer_info, &culling_mesh_indices_main_buffer_info, &culling_mesh_params_main_buffer_info]() {
                auto descriptor_set = frame.descriptor_sets.sharing_sets.compute_frustum_culling_main;
                auto out = std::array{
                   VkWriteDescriptorSet{ // storage buffer object: frustum plane normals
@@ -1993,13 +2006,13 @@ namespace vulkanDK {
                      .pBufferInfo      = &frustum_main_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+                  VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::cull_data[]
                      .dstSet           = descriptor_set,
                      .dstArrayElement  = 0,
                      .descriptorCount  = 1,
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rosp_buffer_info,
+                     .pBufferInfo      = &mesh_bounds_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                   VkWriteDescriptorSet{ // storage buffer object: object index buffer
@@ -2028,7 +2041,7 @@ namespace vulkanDK {
             //
             // Compute: frustum culling: sun:
             //
-            ([&frame, &frustum_main_buffer_info, &rosp_buffer_info, &culling_mesh_indices_sun_buffer_info, &culling_mesh_params_sun_buffer_info]() {
+            ([&frame, &frustum_main_buffer_info, &mesh_bounds_buffer_info, &culling_mesh_indices_sun_buffer_info, &culling_mesh_params_sun_buffer_info]() {
                auto descriptor_set = frame.descriptor_sets.sharing_sets.compute_frustum_culling_sun;
                auto out = std::array{
                   VkWriteDescriptorSet{ // storage buffer object: frustum plane normals
@@ -2040,13 +2053,13 @@ namespace vulkanDK {
                      .pBufferInfo      = &frustum_main_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+                  VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::cull_data[]
                      .dstSet           = descriptor_set,
                      .dstArrayElement  = 0,
                      .descriptorCount  = 1,
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rosp_buffer_info,
+                     .pBufferInfo      = &mesh_bounds_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                   VkWriteDescriptorSet{ // storage buffer object: object index buffer
@@ -2075,7 +2088,7 @@ namespace vulkanDK {
             //
             // Compute: shadow caster culling
             //
-            ([&frame, &global_state_buffer_info, &rosp_buffer_info, &rlsp_buffer_info, &culling_caster_mesh_indices_buffer_info, &culling_caster_params_buffer_info]() {
+            ([&frame, &global_state_buffer_info, &mesh_bounds_buffer_info, &light_position_buffer_info, &culling_caster_mesh_indices_buffer_info, &culling_caster_params_buffer_info]() {
                using caster_write_list_t = std::array<VkWriteDescriptorSet, 5>;
                //
                std::array<caster_write_list_t, config::max_active_shadow_casters> casters;
@@ -2091,22 +2104,22 @@ namespace vulkanDK {
                         .pBufferInfo      = &global_state_buffer_info,
                         .pTexelBufferView = nullptr,
                      },
-                     VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
+                     VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::cull_data[]
                         .dstSet           = descriptor_set,
                         .dstArrayElement  = 0,
                         .descriptorCount  = 1,
                         .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                         .pImageInfo       = nullptr,
-                        .pBufferInfo      = &rosp_buffer_info,
+                        .pBufferInfo      = &mesh_bounds_buffer_info,
                         .pTexelBufferView = nullptr,
                      },
-                     VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
+                     VkWriteDescriptorSet{ // storage buffer object: glm::vec4
                         .dstSet           = descriptor_set,
                         .dstArrayElement  = 0,
                         .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                         .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                         .pImageInfo       = nullptr,
-                        .pBufferInfo      = &rlsp_buffer_info,
+                        .pBufferInfo      = &light_position_buffer_info,
                         .pTexelBufferView = nullptr,
                      },
                      VkWriteDescriptorSet{ // storage buffer object: mesh indices array

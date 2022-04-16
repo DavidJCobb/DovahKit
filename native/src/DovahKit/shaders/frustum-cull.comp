@@ -5,7 +5,7 @@
 
 layout (local_size_x = 64) in;
 
-#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/rendered_mesh_cull_data.glsl"
 #include "includes/scene_global_state.glsl"
 
 layout (constant_id = 0) const int MESH_COUNT = 100;
@@ -29,7 +29,7 @@ layout(std430,binding = 0) readonly buffer FrustumBuffer {
 	frustum_plane_normals frustum;
 };
 layout(std430,binding = 1) readonly buffer ObjectBuffer {
-	rendered_mesh_shader_params scene_meshes[MESH_COUNT];
+	rendered_mesh_cull_data scene_meshes[MESH_COUNT];
 };
 layout(std430,binding = 2) readonly buffer ObjectIndexBuffer {
 	int mesh_indices[MESH_COUNT];
@@ -40,7 +40,8 @@ layout(std430,binding = 3) writeonly buffer DrawCommandBuffer {
 
 bool frustum_check(vec4 position, float radius) {
 	for (int i = 0; i < 4; i++) {
-		if (dot(position, frustum.normals[i]) + radius < 0.0) {
+		//if (dot(position, frustum.normals[i]) + radius < 0.0) {
+		if (dot(position.xyz, frustum.normals[i].xyz) + frustum.normals[i].w + radius < 0.0) {
 			return false;
 		}
 	}

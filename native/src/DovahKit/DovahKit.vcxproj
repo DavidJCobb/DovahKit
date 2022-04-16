@@ -503,6 +503,8 @@
     <ClCompile Include="helpers\rotation.cpp" />
     <ClCompile Include="helpers\set_current_thread_name.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
+    <ClCompile Include="helpers\string\strieq_ascii.cpp" />
+    <ClCompile Include="helpers\string\string_says_false.cpp" />
     <ClCompile Include="helpers\windows_environment.cpp" />
     <ClCompile Include="helpers\windows_ini.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
@@ -615,6 +617,7 @@
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
+    <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
     <ClCompile Include="vulkan\surface_renderer_descriptor_group.cpp" />
@@ -772,6 +775,10 @@
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
     <ClInclude Include="helpers\singleton_ex.h" />
     <ClInclude Include="helpers\sorted_list.h" />
+    <ClInclude Include="helpers\string\strcmp.h" />
+    <ClInclude Include="helpers\string\strieq_ascii.h" />
+    <ClInclude Include="helpers\string\string_says_false.h" />
+    <ClInclude Include="helpers\string\strlen.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
@@ -905,6 +912,8 @@
     <ClInclude Include="vulkan\scene_frame_item.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\shader_module.h" />
+    <ClInclude Include="vulkan\spir_v_entry_point.h" />
+    <ClInclude Include="vulkan\spir_v_parser.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
     <ClInclude Include="vulkan\surface_renderer_descriptor_group.h" />
     <ClInclude Include="vulkan\surface_support_info.h" />
@@ -1606,6 +1615,7 @@
     <None Include="shaders\includes\calc_point_shadow.glsl" />
     <None Include="shaders\includes\calc_spot_light.glsl" />
     <None Include="shaders\includes\computed_light.glsl" />
+    <None Include="shaders\includes\rendered_mesh_cull_data.glsl" />
     <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
     <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
     <None Include="shaders\includes\scene_global_state.glsl" />

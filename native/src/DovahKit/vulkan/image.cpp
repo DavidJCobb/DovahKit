@@ -284,7 +284,7 @@ namespace vulkanDK {
       assert(this->owner);
       this->owner->do_single_commands([this, buffer](command_buffer& scratch_commands) {
          this->copy_content_from_buffer(scratch_commands, buffer);
-      }, this->owner->queues.transfer);
+      });
    }
    void owned_image_and_view::copy_content_from_buffer(command_buffer& cmd, VkBuffer buffer) {
       auto region = VkBufferImageCopy{

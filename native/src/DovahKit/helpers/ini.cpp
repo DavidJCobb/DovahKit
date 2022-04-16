@@ -19,6 +19,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <filesystem>
 #include <fstream>
 #include "strings.h"
+#include "string/string_says_false.h"
 
 #include <windows.h>
 #include "intrusive_windows_defines.h"

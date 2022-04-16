@@ -37,6 +37,13 @@ namespace vulkanDK {
             pipeline_stage_info stage;
          } config;
          struct {
+            struct {
+               uint32_t x = 0;
+               uint32_t y = 0;
+               uint32_t z = 0;
+            } local_size;
+         } metadata;
+         struct {
             VkPipelineLayout layout = VK_NULL_HANDLE;
             VkPipeline       handle = VK_NULL_HANDLE;
          } pipeline;

@@ -83,8 +83,27 @@ namespace vulkanDK {
                buffer gpu;
                std::unique_ptr<mesh_index_list> host;
             } mesh_indices;
+            struct {
+               VkBufferMemoryBarrier to_compute;
+               VkBufferMemoryBarrier to_graphics;
+            } barriers;
 
             void setup(surface_renderer&, const std::string& debug_name = "");
+
+            //
+            // VkBuffers are only usable from one VkQueue (their "owner") at a time, unless the buffers 
+            // were created with VK_SHARING_MODE_CONCURRENT (which is slower). If you need to use a 
+            // buffer from multiple queues, without destroying its contents, then you must perform a 
+            // Queue Family Ownership Transfer. This entails submitting memory barrier commands on both 
+            // the source queue and the destination queue.
+            // 
+            // These calls should be made from outside of a render pass. Using these commands within a 
+            // render pass requires that the relevant subpass have a dependency on itself, but that's 
+            // not possible for a compute-to-graphics barrier (or vice versa) because compute shaders 
+            // themselves cannot exist within a render pass.
+            //
+            void transfer_queue_ownership_to_compute(VkCommandBuffer) const;
+            void transfer_queue_ownership_to_graphics(VkCommandBuffer) const;
          };
 
       public:
@@ -128,6 +147,14 @@ namespace vulkanDK {
             buffer sun;
          } shader_frustums;
          struct {
+            //
+            // For compute shaders:
+            //
+            buffer active_caster_positions; // position vectors for each active shadow caster, for the compute shader
+            buffer mesh_bounds; // per-mesh bounds for the compute shader
+            //
+            // For graphics:
+            //
             buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
             buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
             buffer light_shadow_data;

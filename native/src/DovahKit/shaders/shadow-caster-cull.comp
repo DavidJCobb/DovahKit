@@ -5,12 +5,11 @@
 
 layout (local_size_x = 64) in;
 
-#include "includes/rendered_light_shader_params.glsl"
-#include "includes/rendered_mesh_shader_params.glsl"
+#include "includes/rendered_mesh_cull_data.glsl"
 #include "includes/scene_global_state.glsl"
 
 layout (constant_id = 0) const int MESH_COUNT     = 100;
-layout (constant_id = 1) const int LIGHT_COUNT    = 4;
+layout (constant_id = 1) const int CASTER_COUNT   = 4;
 layout (constant_id = 2) const int CURRENT_CASTER = 0;
 
 struct frustum_plane_normals {
@@ -32,10 +31,10 @@ layout(std140,binding = 0) readonly uniform SceneGlobalStateBuffer {
 	scene_global_state scene_state;
 };
 layout(std430,binding = 1) readonly buffer MeshBuffer {
-	rendered_mesh_shader_params scene_meshes[MESH_COUNT];
+	rendered_mesh_cull_data scene_meshes[MESH_COUNT];
 };
 layout(std430,binding = 2) readonly buffer LightBuffer {
-	rendered_light_shader_params scene_lights[LIGHT_COUNT];
+	vec4 active_casters[CASTER_COUNT]; // XYZ position and radius
 };
 layout(std430,binding = 3) readonly buffer ObjectIndexBuffer {
 	int mesh_indices[MESH_COUNT];
@@ -65,11 +64,11 @@ void main() {
 	}
 	//
 	vec3  pos       = scene_meshes[mesh].bounding_sphere_center;
-	vec3  light_pos = vec3(scene_lights[scene_state.shadow_caster_index[CURRENT_CASTER]].transform[3]);
+	vec3  light_pos = active_casters[CURRENT_CASTER].xyz;
 	float radius    = scene_meshes[mesh].bounding_sphere_radius;
 	pos     = vec3(scene_meshes[mesh].transform * vec4(pos, 1));
 	radius *= get_scale(mesh);
-	if (length(pos - light_pos) <= radius) {
+	if (length(pos - light_pos) <= radius + active_casters[CURRENT_CASTER].w) {
 		indirect_draws[draw_index].instanceCount = 1;
 	} else {
 		indirect_draws[draw_index].instanceCount = 0;

@@ -52,24 +52,25 @@ namespace vulkanDK {
          owner.set_debug_object_name(this->pipeline.layout, _id_to_string(this->id));
       }
       //
-      #if _DEBUG
-         if (auto* sm = this->config.stage.module) {
-            const auto& name = this->config.stage.entry_point_name;
-            bool found = false;
-            for (auto& ep : sm->data.entry_points) {
-               if (ep.name == name) {
-                  if (!(ep.stages & VK_SHADER_STAGE_COMPUTE_BIT))
-                     throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have a compute shader entry point.");
-                  found = true;
-                  break;
-               }
-            }
-            if (!found)
-               throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have an entry point with the specified name.");
-         } else {
-            throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module is missing.");
-         }
-      #endif
+      if (auto* sm = this->config.stage.module) {
+         auto* ep = sm->entry_point(this->config.stage.entry_point_name, VK_SHADER_STAGE_COMPUTE_BIT);
+         if (!ep)
+            throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module does not appear to have a compute shader entry point with the specified name.");
+         this->metadata.local_size = {
+            .x = ep->execution_modes.LocalSize.x,
+            .y = ep->execution_modes.LocalSize.y,
+            .z = ep->execution_modes.LocalSize.z,
+         };
+      } else {
+         throw std::logic_error("[vulkanDK::compute_shader::setup] The shader_module is missing.");
+      }
+      //
+      auto specializations = VkSpecializationInfo{
+         .mapEntryCount = 0,
+         .pMapEntries   = nullptr,
+         .dataSize      = 0,
+         .pData         = nullptr,
+      };
       auto create_info = VkComputePipelineCreateInfo{
          .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
          .pNext = nullptr,
@@ -80,11 +81,23 @@ namespace vulkanDK {
             .stage  = VK_SHADER_STAGE_COMPUTE_BIT,
             .module = this->config.stage.module->handle,
             .pName  = this->config.stage.entry_point_name,
+            .pSpecializationInfo = &specializations,
          },
          .layout = this->pipeline.layout,
          .basePipelineHandle = VK_NULL_HANDLE,
          .basePipelineIndex  = 0,
       };
+      {
+         auto& info = this->config.stage.specialization_info;
+         if (!info.empty()) {
+            specializations = VkSpecializationInfo{
+               .mapEntryCount = (uint32_t)info.fields.size(),
+               .pMapEntries   = info.fields.data(),
+               .dataSize      = (uint32_t)info.data.size(),
+               .pData         = info.data.data(),
+            };
+         }
+      }
       vkCreateComputePipelines(
          owner.logical_device,
          VK_NULL_HANDLE,

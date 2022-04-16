@@ -71,7 +71,7 @@ namespace vulkanDK {
             .size      = source.size,
          };
          vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
-      }, this->renderer->queues.transfer);
+      });
    }
    void buffer::copy_from(const buffer& source, VkDeviceSize size) {
       this->renderer->do_single_commands([this, &source, size](command_buffer& scratch) {
@@ -81,7 +81,7 @@ namespace vulkanDK {
             .size      = size,
          };
          vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
-      }, this->renderer->queues.transfer);
+      });
    }
 
    void* buffer::map_memory(VkDeviceSize offset, VkMemoryMapFlags flags) {

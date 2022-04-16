@@ -25,6 +25,50 @@ namespace vulkanDK {
       //
       sr.set_debug_object_name(this->mesh_indices.gpu.handle, std::string("Buffer: IDB: Mesh Indices (") + debug_name + ")");
       sr.set_debug_object_name(this->params.handle, std::string("Buffer: IDB: Draw Params (") + debug_name + ")");
+      //
+      this->barriers.to_compute = {
+         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+         .pNext = nullptr,
+         .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+         .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+         .srcQueueFamilyIndex = sr.queues.graphics.index,
+         .dstQueueFamilyIndex = sr.queues.compute.index,
+         .buffer = this->params.handle,
+         .size   = VK_WHOLE_SIZE,
+      };
+      this->barriers.to_graphics = {
+         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+         .pNext = nullptr,
+         .srcAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
+         .dstAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+         .srcQueueFamilyIndex = sr.queues.compute.index,
+         .dstQueueFamilyIndex = sr.queues.graphics.index,
+         .buffer = this->params.handle,
+         .size   = VK_WHOLE_SIZE,
+      };
+   }
+
+   void frame_in_flight::indirect_draw_buffers::transfer_queue_ownership_to_compute(VkCommandBuffer command_handle) const {
+      vkCmdPipelineBarrier(
+         command_handle,
+         VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+         0,
+         0, nullptr,
+         1, &this->barriers.to_compute,
+         0, nullptr
+      );
+   }
+   void frame_in_flight::indirect_draw_buffers::transfer_queue_ownership_to_graphics(VkCommandBuffer command_handle) const {
+      vkCmdPipelineBarrier(
+         command_handle,
+         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+         VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+         0,
+         0, nullptr,
+         1, &this->barriers.to_graphics,
+         0, nullptr
+      );
    }
 
 
@@ -112,16 +156,30 @@ namespace vulkanDK {
    }
    void frame_in_flight::_setup_shader_parameter_buffers() {
       {
+         constexpr VkDeviceSize buffer_size = sizeof(glm::vec4) * config::max_active_shadow_casters;
+         this->shader_params.active_caster_positions = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+         this->owner->set_debug_object_name(this->shader_params.active_caster_positions.handle, QString("Buffer: FIF %1 Active Caster Position Buffer").arg(this->my_index).toStdString());
+      }
+      {
+         constexpr VkDeviceSize buffer_size = sizeof(rendered_mesh::cull_data) * config::max_rendered_meshes;
+         this->shader_params.mesh_bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+         this->owner->set_debug_object_name(this->shader_params.mesh_bounds.handle, QString("Buffer: FIF %1 Mesh Bounds Buffer").arg(this->my_index).toStdString());
+      }
+      //
+      {
          constexpr VkDeviceSize buffer_size = sizeof(scene_global_state);
          this->shader_params.scene_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
       {
          constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
          this->shader_params.object_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.object_data.handle, QString("Buffer: FIF %1 Scene Meshes Buffer").arg(this->my_index).toStdString());
       }
       {
          constexpr VkDeviceSize buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
          this->shader_params.light_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.light_data.handle, QString("Buffer: FIF %1 Scene Lights Buffer").arg(this->my_index).toStdString());
          //
          auto* data = this->shader_params.light_data.map_memory();
          memset(data, 0, buffer_size);
@@ -130,6 +188,7 @@ namespace vulkanDK {
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
          this->shader_params.light_shadow_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.light_shadow_data.handle, QString("Buffer: FIF %1 Scene Shadow-Caster Data Buffer").arg(this->my_index).toStdString());
       }
       //
       // Indirect draw params:
@@ -163,6 +222,8 @@ namespace vulkanDK {
          //
          sf.main = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          sf.sun  = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(sf.main.handle, QString("Buffer: FIF %1 Frustum Buffer (Main)").arg(this->my_index).toStdString());
+         this->owner->set_debug_object_name(sf.sun.handle, QString("Buffer: FIF %1 Frustum Buffer (Sun Shadows)").arg(this->my_index).toStdString());
       }
    }
    void frame_in_flight::_setup_command_buffers() {
@@ -256,6 +317,23 @@ namespace vulkanDK {
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
+      {
+         auto& buffer = this->shader_params.active_caster_positions;
+         auto& scene  = this->get_scene();
+         auto* data   = (glm::vec4*)buffer.map_memory();
+         for (size_t i = 0; i < config::max_active_shadow_casters; ++i) {
+            size_t light_index = scene.global_state.shadow_caster_index[i];
+            if (light_index == std::string::npos) {
+               data[i] = glm::vec4(0, 0, 0, 0);
+               continue;
+            }
+            auto& light = scene.lights[light_index];
+            data[i]   = light.shader_params.transform[3];
+            data[i].w = light.shader_params.radius;
+         }
+         buffer.flush_memory();
+         buffer.unmap_memory(data);
+      }
       this->overlays.world_axes.prepare_for_render();
       {
          auto& fps = this->overlays.fps;
@@ -413,54 +491,23 @@ namespace vulkanDK {
       {  // Main
          auto& command_buffer = this->compute_commands.frustum_cull_main;
          auto  command_handle = command_buffer.handle;
+         auto& indirect_info  = this->indirect_draw_commands.main;
          //
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (main).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to begin recording command buffer (main).");
          }
-         auto barrier = VkBufferMemoryBarrier{
-            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-            .pNext = nullptr,
-            .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-            .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
-            .srcQueueFamilyIndex = this->owner->queues.graphics.index,
-            .dstQueueFamilyIndex = this->owner->queues.compute.index,
-            .buffer = this->indirect_draw_commands.main.params.handle,
-            .size   = VK_WHOLE_SIZE,
-         };
-         vkCmdPipelineBarrier(
-            command_handle,
-            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            0,
-            0, nullptr,
-            1, &barrier,
-            0, nullptr
-         );
-
+         indirect_info.transfer_queue_ownership_to_compute(command_handle);
          command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_main });
-
-         vkCmdDispatch(command_handle, config::max_rendered_meshes / 64, 1, 1);
-
-         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-         barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-         barrier.buffer = this->indirect_draw_commands.main.params.handle;
-         barrier.size   = VK_WHOLE_SIZE;
-         barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
-         barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
-
-         vkCmdPipelineBarrier(
+         vkCmdDispatch(
             command_handle,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-            0,
-            0, nullptr,
-            1, &barrier,
-            0, nullptr
+            config::max_rendered_meshes / frustum_cull_shader->metadata.local_size.x,
+            1,
+            1
          );
-
+         indirect_info.transfer_queue_ownership_to_graphics(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (main).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to record a command buffer (main).");
          }
       }
       #pragma endregion
@@ -468,54 +515,23 @@ namespace vulkanDK {
       {  // Sun
          auto& command_buffer = this->compute_commands.frustum_cull_sun;
          auto  command_handle = command_buffer.handle;
+         auto& indirect_info  = this->indirect_draw_commands.sun_shadows;
          //
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (sun).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to begin recording command buffer (sun).");
          }
-         auto barrier = VkBufferMemoryBarrier{
-            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-            .pNext = nullptr,
-            .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-            .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
-            .srcQueueFamilyIndex = this->owner->queues.graphics.index,
-            .dstQueueFamilyIndex = this->owner->queues.compute.index,
-            .buffer = this->indirect_draw_commands.sun_shadows.params.handle,
-            .size   = VK_WHOLE_SIZE,
-         };
-         vkCmdPipelineBarrier(
-            command_handle,
-            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            0,
-            0, nullptr,
-            1, &barrier,
-            0, nullptr
-         );
-
+         indirect_info.transfer_queue_ownership_to_compute(command_handle);
          command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_sun });
-
-         vkCmdDispatch(command_handle, config::max_rendered_meshes / 64, 1, 1);
-
-         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-         barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-         barrier.buffer = this->indirect_draw_commands.sun_shadows.params.handle;
-         barrier.size   = VK_WHOLE_SIZE;
-         barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
-         barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
-
-         vkCmdPipelineBarrier(
+         vkCmdDispatch(
             command_handle,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-            0,
-            0, nullptr,
-            1, &barrier,
-            0, nullptr
+            config::max_rendered_meshes / frustum_cull_shader->metadata.local_size.x,
+            1,
+            1
          );
-
+         indirect_info.transfer_queue_ownership_to_graphics(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (sun).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to record a command buffer (sun).");
          }
       }
       #pragma endregion
@@ -526,10 +542,12 @@ namespace vulkanDK {
          //
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to begin recording command buffer (main).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to begin recording command buffer (main).");
          }
 
          for (size_t i = 0; i < config::max_active_shadow_casters; ++i) {
+            auto& indirect_info = this->indirect_draw_commands.shadow_casters[i];
+            //
             const compute_shader* shader;
             {
                auto id = surface_renderer::shadow_caster_cull_shader_base_id;
@@ -538,49 +556,18 @@ namespace vulkanDK {
                assert(shader);
             }
             command_buffer.bind_compute_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_shadow_caster_culls[i] });
-            
-            auto barrier = VkBufferMemoryBarrier{
-               .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-               .pNext = nullptr,
-               .srcAccessMask       = VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-               .dstAccessMask       = VK_ACCESS_SHADER_WRITE_BIT,
-               .srcQueueFamilyIndex = this->owner->queues.graphics.index,
-               .dstQueueFamilyIndex = this->owner->queues.compute.index,
-               .buffer = this->indirect_draw_commands.shadow_casters[i].params.handle,
-               .size   = VK_WHOLE_SIZE,
-            };
-            vkCmdPipelineBarrier(
+            indirect_info.transfer_queue_ownership_to_compute(command_handle);
+            vkCmdDispatch(
                command_handle,
-               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-               0,
-               0, nullptr,
-               1, &barrier,
-               0, nullptr
+               config::max_rendered_meshes / shader->metadata.local_size.x,
+               1,
+               1
             );
-
-            vkCmdDispatch(command_handle, config::max_rendered_meshes / 64, 1, 1);
-
-            barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-            barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-            barrier.buffer = this->indirect_draw_commands.shadow_casters[i].params.handle;
-            barrier.size   = VK_WHOLE_SIZE;
-            barrier.srcQueueFamilyIndex = this->owner->queues.compute.index;
-            barrier.dstQueueFamilyIndex = this->owner->queues.graphics.index;
-
-            vkCmdPipelineBarrier(
-               command_handle,
-               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
-               0,
-               0, nullptr,
-               1, &barrier,
-               0, nullptr
-            );
+            indirect_info.transfer_queue_ownership_to_graphics(command_handle);
          }
 
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
-            throw result_exception(result, "[vulkanDK::frame_in_flight::_record_frustum_cull_commands] Failed to record a command buffer (main).");
+            throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to record a command buffer (main).");
          }
       }
       #pragma endregion
@@ -690,18 +677,23 @@ namespace vulkanDK {
                );
             }
          }
+         //
+         // Done.
+         //
       }
    }
    void frame_in_flight::_record_scene_draw_commands() {
       auto& sr    = *this->owner;
       auto& scene = sr.scene;
       {  // Sun shadows
+         auto& indirect_info  = this->indirect_draw_commands.sun_shadows;
          auto& command_buffer = this->graphics_commands.main_shadow;
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (sun shadows).");
          }
          //
+         indirect_info.transfer_queue_ownership_to_graphics(command_buffer.handle);
          command_buffer.begin_render_pass(
             *sr.render_passes_by_name.main_shadow,
             sr.canvas.sun_shadow.framebuffer,
@@ -718,11 +710,13 @@ namespace vulkanDK {
             const auto* shader = sr.get_graphics_shader(surface_renderer::sun_shadow_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
             _record_indirect_draws(
-               scene, command_buffer, this->indirect_draw_commands.sun_shadows, *shader,
+               scene, command_buffer, indirect_info, *shader,
                [](const rendered_mesh& ro) {}
             );
          }
          command_buffer.end_render_pass();
+         indirect_info.transfer_queue_ownership_to_compute(command_buffer.handle);
+         //
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_record_scene_draw_commands] Failed to record indirect draws for sun shadows.");
          }
@@ -732,6 +726,10 @@ namespace vulkanDK {
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer (light shadows).");
+         }
+         //
+         for (auto& indirect_info : this->indirect_draw_commands.shadow_casters) {
+            indirect_info.transfer_queue_ownership_to_graphics(command_buffer.handle);
          }
          //
          command_buffer.begin_render_pass(
@@ -764,11 +762,17 @@ namespace vulkanDK {
                command_buffer.next_render_subpass();
          }
          command_buffer.end_render_pass();
+         //
+         for (auto& indirect_info : this->indirect_draw_commands.shadow_casters) {
+            indirect_info.transfer_queue_ownership_to_compute(command_buffer.handle);
+         }
+         //
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (light shadows).");
          }
       }
       {  // Scene objects
+         auto& indirect_info  = this->indirect_draw_commands.main;
          auto& command_buffer = this->graphics_commands.main;
          auto  command_handle = command_buffer.handle;
          //
@@ -777,6 +781,8 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to begin recording command buffer.");
          }
          sr.canvas.color.transition_layout(command_buffer, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+         //
+         indirect_info.transfer_queue_ownership_to_graphics(command_handle);
          //
          command_buffer.begin_render_pass(
             *sr.render_passes_by_name.main,
@@ -884,6 +890,7 @@ namespace vulkanDK {
             }
             command_buffer.end_render_pass();
          }
+         indirect_info.transfer_queue_ownership_to_compute(command_handle);
          //
          if (last_was_decal) {
             vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
@@ -967,10 +974,10 @@ namespace vulkanDK {
       if (this->owner->debug.freeze_culling_updates) {
          if (this->debug.compute_culling_ran_once) {
             submit_info.commandBufferCount = 0;
-         } else {
-            this->debug.compute_culling_ran_once = true;
+            submit_info.pCommandBuffers    = nullptr;
          }
       }
+      this->debug.compute_culling_ran_once = true;
       if (auto result = vkQueueSubmit(this->owner->queues.compute.handle, 1, &submit_info, this->fences.compute); result != VK_SUCCESS) {
          throw result_exception(result, "[frame_in_flight::submit_compute_cull_commands] Submission failed.");
       }
@@ -1033,19 +1040,21 @@ namespace vulkanDK {
       //
       // Frustums:
       //
-      {
-         auto& buffer  = this->shader_frustums.main;
-         auto* frustum = buffer.map_memory();
-         auto  normals = extract_frustum_normals(scene.global_state.proj * scene.global_state.view);
-         memcpy(frustum, &normals, sizeof(normals));
-         buffer.unmap_memory(frustum);
-      }
-      {
-         auto& buffer  = this->shader_frustums.sun;
-         auto* frustum = buffer.map_memory();
-         auto  normals = extract_frustum_normals(scene.global_state.sun_space);
-         memcpy(frustum, &normals, sizeof(normals));
-         buffer.unmap_memory(frustum);
+      if (!this->owner->debug.freeze_culling_updates) {
+         {
+            auto& buffer  = this->shader_frustums.main;
+            auto* frustum = buffer.map_memory();
+            auto  normals = extract_frustum_normals(scene.global_state.proj * scene.global_state.view);
+            memcpy(frustum, &normals, sizeof(normals));
+            buffer.unmap_memory(frustum);
+         }
+         {
+            auto& buffer  = this->shader_frustums.sun;
+            auto* frustum = buffer.map_memory();
+            auto  normals = extract_frustum_normals(scene.global_state.sun_space);
+            memcpy(frustum, &normals, sizeof(normals));
+            buffer.unmap_memory(frustum);
+         }
       }
    }
    void frame_in_flight::_update_shader_lights_data_buffer() {
@@ -1175,6 +1184,7 @@ namespace vulkanDK {
          // NOTE: VMA always maps entire buffers, so there's no point in trying to 
          //       only map the parts we need to update.
          //
+         auto* bounds = (rendered_mesh::cull_data*)this->shader_params.mesh_bounds.map_memory();
          auto* params = (entry_type*)this->shader_params.object_data.map_memory();
          for (size_t i = first_dirty; i < count; ++i) {
             auto& item = ro[i];
@@ -1186,8 +1196,16 @@ namespace vulkanDK {
             auto& dst = params[i];
             memcpy(&dst, &src, entry_size);
             //
+            bounds[i] = {
+               .transform              = item.shader_params.transform,
+               .bounding_sphere_center = item.data.bounding_sphere.center,
+               .bounding_sphere_radius = sqrtf(item.data.bounding_sphere.radius_sq),
+            };
+            //
             item.handled_frames.set_up_to_date(this->my_index);
          }
+         this->shader_params.mesh_bounds.flush_memory();
+         this->shader_params.mesh_bounds.unmap_memory(bounds);
          this->shader_params.object_data.unmap_memory(params);
       }
    }

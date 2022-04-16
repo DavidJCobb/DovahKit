@@ -7,6 +7,8 @@
 #include "type_traits/is_std_array.h"
 
 namespace cobb {
+   class generic_reader_ex;
+
    namespace impl::generic_reader_ex {
       template<typename T> concept IsLiteralIsh = cobb::is_literal<T> || (std::is_bounded_array_v<T> && cobb::is_literal<std::remove_extent_t<T>>);
 
@@ -25,6 +27,10 @@ namespace cobb {
 
    class generic_reader_ex {
       public:
+         class no_null_terminator : public std::runtime_error {
+            public:
+               no_null_terminator() : std::runtime_error("Null terminator expected but not found.") {};
+         };
          class unexpected_end : public std::runtime_error {
             public:
                unexpected_end() : std::runtime_error("Unexpected end-of-stream.") {};
@@ -190,6 +196,25 @@ namespace cobb {
                if (field.back() == '\00')
                   field.resize(size - 1);
             }
+         }
+
+         void read_null_terminated_string(std::string& field) {
+            size_t length = 0;
+            //
+            size_t s = size();
+            size_t i = position();
+            for (; i < s; ++i) {
+               auto byte = *(const uint8_t*)data_at(i);
+               if (byte)
+                  ++length;
+               else
+                  break;
+            }
+            if (i == s) {
+               throw no_null_terminator();
+            }
+            field.resize(length);
+            this->read(field.data(), length);
          }
          #pragma endregion
 
