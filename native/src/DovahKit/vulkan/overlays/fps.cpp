@@ -219,45 +219,20 @@ namespace vulkanDK::overlays {
       this->style.label = l;
       this->change_flags.set<change_flag::style>();
    }
-   void fps::set_value(value_type v) {
-      if constexpr (show_history_average) {
-         auto& h = this->history;
-         if (h.count == 0) {
-            h.average = v;
-            h.count   = 1;
-         } else if (h.count == std::numeric_limits<decltype(h.count)>::max() - 1) { // overflow imminent
-            if (v != max_value) {
-               h.average = v;
-            }
-            h.count = 1;
-         } else {
-            using average_t = decltype(h.average);
-            //
-            v = std::min(v, (value_type)max_visible_value);
-            //
-            constexpr bool alternate_method = true;
-            if constexpr (alternate_method) {
-               ++h.count;
-               h.average += ((average_t)v - h.average) / h.count;
-            } else {
-               h.average = ((average_t)v + (average_t)h.count * h.average) / (h.count + 1);
-               ++h.count;
-            }
-         }
-      } else {
-         if (this->value == v)
-            return;
-         this->value = v;
-      }
-      if constexpr (!assume_always_redraw) {
-         this->change_flags.set<change_flag::value>();
-      }
-   }
    void fps::set_digit_spacing(float ds) {
       if (this->style.space_between_digits == ds)
          return;
       this->style.space_between_digits = ds;
       this->change_flags.set<change_flag::positions>();
+   }
+   //
+   void fps::set_value(value_type v) {
+      if (this->value == v)
+         return;
+      this->value = v;
+      if constexpr (!assume_always_redraw) {
+         this->change_flags.set<change_flag::value>();
+      }
    }
 
    bool fps::needs_atlas_update() const {
@@ -467,12 +442,7 @@ namespace vulkanDK::overlays {
       //
       std::array<uint8_t, max_digits> digits;
       {
-         value_type v;
-         if constexpr (show_history_average) {
-            v = this->history.average;
-         } else {
-            v = this->value;
-         }
+         auto v = this->value;
          if (v > max_visible_value) {
             //
             // If the FPS count exceeds the maximum number that can be displayed with the digit 

@@ -17,6 +17,7 @@
 #include "command_buffer.h"
 #include "compute_shader.h"
 #include "descriptor_definitions.h"
+#include "fps_tracker.h"
 #include "graphics_shader.h"
 #include "image.h"
 #include "scene.h"
@@ -64,7 +65,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
          static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "CullSdw0";
 
-         using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::ratio<1>>>;
+         using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
          static constexpr auto color_target_layout_for_render = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
          static constexpr auto color_target_access_for_render = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -178,8 +179,9 @@ namespace vulkanDK {
          scene scene;
          //
          struct {
+            fps_tracker fps;
             timestamp_t last_frame_at;
-            double last_frame_time = 0.0;
+            double      last_frame_time = 0.0;
          } state;
          //
          struct {

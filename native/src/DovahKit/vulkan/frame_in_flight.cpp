@@ -337,18 +337,7 @@ namespace vulkanDK {
       this->overlays.world_axes.prepare_for_render();
       {
          auto& fps = this->overlays.fps;
-         {
-            auto delta = this->owner->last_frame_time();
-            if (delta) {
-               fps.set_value(decltype(delta)(1) / delta);
-            } else {
-               //
-               // Instantaneous frame; dividing would be a  division by zero. Refer to documentation on 
-               // how we measure FPS, but basically, it's best to just skip measuring this frame.
-               //
-            }
-         }
-         //
+         fps.set_value(this->owner->state.fps.display_value());
          if (fps.needs_atlas_update()) {
             fps.generate_atlas(*this->owner, *this);
             this->state.must_re_record_ui = true;

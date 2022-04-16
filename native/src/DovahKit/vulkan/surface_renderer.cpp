@@ -3141,6 +3141,8 @@ namespace vulkanDK {
       {
          this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(time_after - time_prior).count();
          this->state.last_frame_at   = time_after;
+         //
+         this->state.fps.next_delta(this->state.last_frame_time);
       }
       this->_execute_pending_scene_deletions();
    }

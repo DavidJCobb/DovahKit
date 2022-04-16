@@ -10,6 +10,7 @@
 #include "helpers/math.h"
 #include "../_vulkan.h"
 #include "../buffer.h"
+#include "../fps_tracker.h"
 #include "../graphics_shader.h"
 #include "../image.h"
 
@@ -27,26 +28,23 @@ namespace vulkanDK::overlays {
    class fps {
       public:
          // Config:
-         static constexpr size_t  max_digits   =  5; // max digits to display
-         static constexpr uint8_t display_base = 10; // display numbers in base-10
-         static constexpr size_t  history_size = 10;
-         static constexpr bool    show_history_average      = true;
-         static constexpr bool    assume_always_redraw      = true; // generally sensible; the FPS will likely change every frame
-         static constexpr bool    persistent_staging_buffer = true; // useful when (assume_always_redraw) is (true)
+         static constexpr size_t  max_digits   = fps_tracker::max_digits;
+         static constexpr uint8_t display_base = fps_tracker::display_base;
+         static constexpr bool    assume_always_redraw      = fps_tracker::mode != fps_tracker::counting_mode::count;
+         static constexpr bool    persistent_staging_buffer = assume_always_redraw == true;
 
          // For other compile-time systems' reference:
          static constexpr size_t texture_count = 1;
          static constexpr graphics_shader::id_type shader_id = "FPSCount";
 
          // Magic numbers:
-         static constexpr size_t max_visible_value = cobb::pow((size_t)display_base, max_digits) - 1;
+         static constexpr size_t max_visible_value = fps_tracker::max_visible_value;
          static constexpr size_t vertices_per_quad = 4;
          static constexpr size_t quad_count        = 1 + max_digits;
          static constexpr size_t vertex_count      = quad_count * vertices_per_quad;
          static constexpr size_t index_count       = quad_count * 6;
 
-         using value_type = int32_t;
-         static constexpr value_type max_value = std::numeric_limits<value_type>::max();
+         using value_type = fps_tracker::value_type;
 
       protected:
          struct _vertex {
@@ -76,10 +74,6 @@ namespace vulkanDK::overlays {
          using change_flags_t = cobb::enum_flags<change_flag, 4>;
 
          value_type value = 0;
-         struct {
-            double average = 0.0;
-            size_t count   = 0;
-         } history;
          change_flags_t change_flags = change_flags_t::with_all_set();
          //
          struct {
@@ -113,8 +107,9 @@ namespace vulkanDK::overlays {
 
          void set_font(QFont);
          void set_label(const QString&);
-         void set_value(value_type);
          void set_digit_spacing(float);
+         //
+         void set_value(value_type);
 
          bool needs_atlas_update() const;
          bool needs_geometry_update() const;

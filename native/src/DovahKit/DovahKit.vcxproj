@@ -601,6 +601,7 @@
     <ClCompile Include="vulkan\dds\texture.cpp" />
     <ClCompile Include="vulkan\descriptor_definitions.cpp" />
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
+    <ClCompile Include="vulkan\fps_tracker.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
     <ClCompile Include="vulkan\graphics_shader.cpp" />
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
@@ -887,6 +888,7 @@
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
     <ClInclude Include="vulkan\exceptions.h" />
+    <ClInclude Include="vulkan\fps_tracker.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustum.h" />
     <ClInclude Include="vulkan\graphics_shader.h" />
