@@ -32,5 +32,13 @@ namespace vulkanDK {
       alignas(16) glm::mat4 sun_space = glm::mat4(1);
       //
       alignas( 4) std::array<int32_t, 4> shadow_caster_index = { -1, -1, -1, -1 };
+      //
+      alignas(16) glm::vec3 fog_color_near = { 0, 0, 0 };
+      alignas( 4) float     fog_plane_near = 0;
+      alignas(16) glm::vec3 fog_color_far  = { 0, 0, 0 };
+      alignas( 4) float     fog_plane_far  = 0;
+      alignas( 4) float     fog_power  = 1.0F;
+      alignas( 4) float     fog_max    = 1.0F; // max fog
+      alignas( 4) float     interior_clip_distance = 0.0F; // maximum draw distance for interior cells only; unused if zero or negative
    };
 }

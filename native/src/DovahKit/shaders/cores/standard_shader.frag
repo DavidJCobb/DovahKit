@@ -59,6 +59,11 @@ const mat4 shadow_to_normalized_coords = mat4(
 );
 
 vec4 calculate_color() {
+   if (ubo.interior_clip_distance >= 0) {
+      if (fs_in.camera_distance > ubo.interior_clip_distance)
+         discard;
+   }
+   //
    vec4 color;
    //
    rendered_mesh_shader_params current_object = scene_meshes[pushed.object_index];
@@ -243,5 +248,19 @@ vec4 calculate_color() {
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
    color.rgb *= ubo.ambient_light_color + light_data.diffuse + light_data.specular;
+   //
+   // Fog:
+   //
+   {
+      float range = ubo.fog_plane_far - ubo.fog_plane_near;
+      float coord = clamp((fs_in.camera_distance - ubo.fog_plane_near) / range, 0, 1);
+      float fog   = clamp(ubo.fog_power, 0, 1) * coord;
+      fog = exp(-(fog * fog));
+      fog = min(1 - ubo.fog_max, fog);
+      //
+      vec3 fog_color = (ubo.fog_color_far * coord) + (ubo.fog_color_near * (1 - coord));
+      color.rgb = (fog_color * (1 - fog)) + (color.rgb * fog);
+   }
+   //
    return color;
 }

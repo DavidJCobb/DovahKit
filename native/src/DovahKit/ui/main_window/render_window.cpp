@@ -296,7 +296,8 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             return;
          }
          //
-         dovah::form_stub_helpers::for_each_child_form(cell, [this, view](dovah::form_stub* stub) {
+         auto* sr = view->surfaceRenderer();
+         dovah::form_stub_helpers::for_each_child_form(cell, [this, sr](dovah::form_stub* stub) {
             if (stub->formType != dovah::form_type::reference)
                return false;
             auto* base = dovah::form_stub_helpers::get_base_form(stub);
@@ -307,7 +308,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
                auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
                if (!loaded)
                   return false;
-               view->surfaceRenderer()->add_light(*loaded);
+               sr->add_light(*loaded);
                return false;
             }
             //
@@ -344,7 +345,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
                }
             }
             qDebug("NIF parsed. Passing to surface_renderer...");
-            view->surfaceRenderer()->add_nif(
+            sr->add_nif(
                model,
                glm::vec3{ loaded->position.x, loaded->position.y, loaded->position.z },
                glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z },
@@ -353,6 +354,33 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             //
             return false;
          });
+         {
+            auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
+               return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
+            };
+            //
+            auto  loaded = cell->load().ptr_cast<dovah::loaded_forms::Cell>();
+            auto& sgs    = sr->scene.global_state;
+            {
+               auto& lt = loaded->interior.lighting;
+               sgs.ambient_light_color = _to_vec(lt.ambient);
+               sgs.sun_color      = _to_vec(lt.directional);
+               // TODO: sgs.sun_dir
+               sgs.fog_color_near = _to_vec(lt.fog_color_near);
+               sgs.fog_color_far  = _to_vec(lt.fog_color_far);
+               sgs.fog_plane_near = lt.fog_distance_near;
+               sgs.fog_plane_far  = lt.fog_distance_far;
+               sgs.fog_power      = lt.fog_power;
+               sgs.fog_max        = lt.fog_max;
+               sgs.interior_clip_distance = lt.fog_distance_clip;
+            }
+            if (loaded->interior.lighting_template) {
+               // TODO: load the LTMP and use its params
+               //       for now, we just reset some fields to safe defaults
+               //sgs.fog_max = 0;
+               sgs.interior_clip_distance = 0;
+            }
+         }
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
       //
