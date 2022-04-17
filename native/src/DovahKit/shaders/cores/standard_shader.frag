@@ -16,7 +16,6 @@
 #include "../includes/scene_global_state.glsl"
 
 #include "../includes/alpha_testing_conditional_discard.glsl"
-#include "../includes/calc_specular_strength.glsl"
 #include "../includes/calc_directional_shadow.glsl"
 #include "../includes/computed_light.glsl"
 #include "../includes/calc_directional_light.glsl"
@@ -37,12 +36,12 @@ layout(std430,binding = 0) uniform UniformBufferObject {
 };
 layout(binding = 1) uniform sampler     default_sampler;
 layout(binding = 2) uniform sampler2D   sun_shadow_map;
-layout(binding = 3) uniform samplerCube light_shadow_maps[SHADOW_CASTER_COUNT];
+layout(binding = 3) uniform samplerCube light_shadow_maps[];
 layout(std140,set = 0, binding = 4) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params scene_meshes[];
 };
 layout(std430,set = 0, binding = 5) readonly buffer PointLightBuffer {
-	rendered_light_shader_params scene_lights[MAX_LIGHTS];
+	rendered_light_shader_params scene_lights[];
 };
 layout(binding = 6) uniform texture2D textures[];
 
@@ -50,13 +49,6 @@ layout(binding = 6) uniform texture2D textures[];
 layout(location = 0) in VS_OUT {
    fragment_input fs_in;
 };
-
-const mat4 shadow_to_normalized_coords = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0
-);
 
 vec4 calculate_color() {
    if (scene.interior_clip_distance > 0) {
@@ -114,6 +106,7 @@ vec4 calculate_color() {
          sun_shadow_map
       );
    }
+// CODE FROM HERE DOWN ISN'T CAUSING THE CRASH
    //
    // Point lights
    //
@@ -252,10 +245,11 @@ vec4 calculate_color() {
    // Fog:
    //
    {
-      float range = scene.fog_plane_far - scene.fog_plane_near;
-      float coord = clamp((fs_in.camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
-      float visibility = pow(coord, clamp(scene.fog_power, 0.0F, 1.0F));
-      visibility = max(1.0F - min(1.0F, scene.fog_max), visibility);
+      float range      = scene.fog_plane_far - scene.fog_plane_near;
+      float coord      = clamp((fs_in.camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
+      float visibility = pow(coord, max(0.0F, scene.fog_power));
+      float min_vis    = 1.0F - min(1.0F, scene.fog_max);
+      visibility = max(min_vis, visibility);
       //
       vec3 fog_color = (scene.fog_color_far * (1.0F - visibility)) + (scene.fog_color_near * (visibility));
       color.rgb = (fog_color * (1.0F - visibility)) + (color.rgb * visibility);

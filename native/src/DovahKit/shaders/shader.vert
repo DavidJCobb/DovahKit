@@ -126,5 +126,7 @@ void main() {
       }
    }
    //
-   vs_out.camera_distance = (scene.view * vec4(vs_out.pos_world, 1.0)).z;
+   //vs_out.camera_distance = (scene.view * vec4(vs_out.pos_world, 1.0)).z;
+   //vs_out.camera_distance = distance(vs_out.pos_world, -vec3(scene.view[3]));
+   vs_out.camera_distance = length(scene.view * vec4(vs_out.pos_world, 1.0));
 }
