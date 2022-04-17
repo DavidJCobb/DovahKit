@@ -1,3 +1,5 @@
+#extension GL_EXT_scalar_block_layout : require
+
 struct scene_global_state {
    mat4 view;
    mat4 proj;

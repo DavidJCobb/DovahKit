@@ -12,8 +12,8 @@
 layout (constant_id = 0) const int CASTER_INDEX = 0;
 layout (constant_id = 2) const int MAX_LIGHTS   = 4;
 
-layout(std140,binding = 0) uniform UniformBufferObject {
-   scene_global_state ubo;
+layout(std430,binding = 0) uniform UniformBufferObject {
+   scene_global_state scene;
 };
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params scene_meshes[];
@@ -42,7 +42,7 @@ void main() {
    vec4  light_pos;
    float light_radius = 1;
    {
-      int light_index = ubo.shadow_caster_index[CASTER_INDEX];
+      int light_index = scene.shadow_caster_index[CASTER_INDEX];
       if (light_index >= 0) {
          light_pos    = scene_lights[light_index].transform[3];
          light_radius = scene_lights[light_index].radius;

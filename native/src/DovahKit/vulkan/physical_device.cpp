@@ -23,9 +23,13 @@ namespace vulkanDK {
          .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES,
          .pNext = &robustness,
       };
+      auto uniform_std430 = VkPhysicalDeviceUniformBufferStandardLayoutFeatures{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES,
+         .pNext = &multiview,
+      };
       auto features = VkPhysicalDeviceFeatures2{
          .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-         .pNext = &multiview,
+         .pNext = &uniform_std430,
       };
       VkPhysicalDeviceProperties properties{};
       vkGetPhysicalDeviceProperties(d, &properties);
@@ -52,6 +56,7 @@ namespace vulkanDK {
       }
       this->support.max_vertex_index_for_draw    = properties.limits.maxDrawIndexedIndexValue;
       this->support.non_solid_polygon_fill_modes = features.features.fillModeNonSolid == VK_TRUE;
+      this->support.uniform_buffer_std430_layout = uniform_std430.uniformBufferStandardLayout == VK_TRUE;
       //
       this->support.compute = {
          .max_invocations_per_workgroup = properties.limits.maxComputeWorkGroupInvocations,

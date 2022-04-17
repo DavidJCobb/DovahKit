@@ -7,8 +7,8 @@
 
 #include "includes/standard_vertex_inputs.glsl"
 
-layout(std140,binding = 0) uniform UniformBufferObject {
-   scene_global_state ubo;
+layout(std430,binding = 0) uniform UniformBufferObject {
+   scene_global_state scene;
 };
 layout(std430,set = 0, binding = 1) readonly buffer ObjectBuffer {
 	rendered_mesh_shader_params scene_meshes[];
@@ -23,6 +23,6 @@ layout(location = 0) out VS_OUT {
 void main() {
    mat4 model_transform = scene_meshes[pushed.object_index].transform;
    //
-	gl_Position = (ubo.sun_space * model_transform) * vec4(in_position, 1.0);
+	gl_Position = (scene.sun_space * model_transform) * vec4(in_position, 1.0);
    vs_out.uv   = in_uv;
 }

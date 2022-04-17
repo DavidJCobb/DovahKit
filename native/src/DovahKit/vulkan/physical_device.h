@@ -40,6 +40,7 @@ namespace vulkanDK {
             uint32_t max_image_dimension_2D       = 0;          // max texture size
             uint32_t max_vertex_index_for_draw    = 0xFFFFFFFF; // indexed-draw calls cannot use vertex indices higher than this
             bool     non_solid_polygon_fill_modes = false;      // are VK_POLYGON_MODE_POINT and VK_POLYGON_MODE_LINE (wireframe) supported?
+            bool     uniform_buffer_std430_layout = false;
             struct {
                uint32_t max_invocations_per_workgroup = 0; // X, Y, and Z sizes multiplied together must not exceed this
                uint32_t max_shared_memory_size        = 0; // split across all variables with the `Workgroup` storage class

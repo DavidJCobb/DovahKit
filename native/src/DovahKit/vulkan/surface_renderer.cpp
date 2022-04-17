@@ -74,6 +74,7 @@ namespace {
    const std::vector<const char*> device_extensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+      VK_KHR_UNIFORM_BUFFER_STANDARD_LAYOUT_EXTENSION_NAME,
    };
 
    static constexpr auto desired_swap_chain_presentation_mode  = VK_PRESENT_MODE_MAILBOX_KHR;
@@ -205,6 +206,8 @@ namespace vulkanDK {
       if (!pd.support.descriptor_bindings.variable_count)
          return false;
       if (!pd.support.multiview.available)
+         return false;
+      if (!pd.support.uniform_buffer_std430_layout)
          return false;
       if (!pd.has_extensions(device_extensions))
          return false;
@@ -561,9 +564,14 @@ namespace vulkanDK {
          }
       }
       //
+      auto uniform_std430 = VkPhysicalDeviceUniformBufferStandardLayoutFeatures{
+         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES,
+         .pNext = nullptr,
+         .uniformBufferStandardLayout = VK_TRUE,
+      };
       auto multiview = VkPhysicalDeviceMultiviewFeatures{
          .sType     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES,
-         .pNext     = nullptr,
+         .pNext     = &uniform_std430,
          .multiview = VK_TRUE, // NOTE: failing to enable this here causes validation layers to emit misleading VUID 01091
       };
       auto device_features = VkPhysicalDeviceFeatures2{

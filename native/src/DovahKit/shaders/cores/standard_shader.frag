@@ -32,8 +32,8 @@ layout (constant_id = 0) const int MAX_LIGHTS = 4;
 
 #include "../includes/rendered_mesh_push_constant.glsl"
 
-layout(std140,binding = 0) uniform UniformBufferObject {
-   scene_global_state ubo;
+layout(std430,binding = 0) uniform UniformBufferObject {
+   scene_global_state scene;
 };
 layout(binding = 1) uniform sampler     default_sampler;
 layout(binding = 2) uniform sampler2D   sun_shadow_map;
@@ -59,8 +59,8 @@ const mat4 shadow_to_normalized_coords = mat4(
 );
 
 vec4 calculate_color() {
-   if (ubo.interior_clip_distance >= 0) {
-      if (fs_in.camera_distance > ubo.interior_clip_distance)
+   if (scene.interior_clip_distance > 0) {
+      if (fs_in.camera_distance > scene.interior_clip_distance)
          discard;
    }
    //
@@ -98,7 +98,7 @@ vec4 calculate_color() {
    if (pushed.receive_shadows == 0) {
       light_data = calc_directional_light(
          fs_in.tangent_sun_dir,
-         ubo.sun_color,
+         scene.sun_color,
          normal,
          tangent_view_dir,
          current_object.specular_exponent
@@ -107,7 +107,7 @@ vec4 calculate_color() {
       light_data = calc_directional_light_and_shadow(
          fs_in.tangent_sun_dir,
          fs_in.sun_shadow_vert_pos,
-         ubo.sun_color,
+         scene.sun_color,
          normal,
          tangent_view_dir,
          current_object.specular_exponent,
@@ -121,7 +121,7 @@ vec4 calculate_color() {
       #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
       bool any_casters = false;
       for(int i = 0; i < SHADOW_CASTER_COUNT; ++i) {
-         if (ubo.shadow_caster_index[i] < 0)
+         if (scene.shadow_caster_index[i] < 0)
             continue;
          if (fs_in.light_distance_ratio[i] > 1)
             continue;
@@ -157,7 +157,7 @@ vec4 calculate_color() {
             float shadow = 0.0;
             if (rendered_light_can_cast_shadows(scene_lights[i])) { // if this light is allowed to cast shadows
                for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
-                  if (ubo.shadow_caster_index[j] == i) {
+                  if (scene.shadow_caster_index[j] == i) {
                      {
                         vec3  light_direction = normalize(fs_in.light_space_pos[j]);
                         float yaw_offset      = atan(light_direction.y, light_direction.x);
@@ -247,19 +247,18 @@ vec4 calculate_color() {
    //
    light_data.specular *= current_object.specular_strength * current_object.specular_color;
    //
-   color.rgb *= ubo.ambient_light_color + light_data.diffuse + light_data.specular;
+   color.rgb *= scene.ambient_light_color + light_data.diffuse + light_data.specular;
    //
    // Fog:
    //
    {
-      float range = ubo.fog_plane_far - ubo.fog_plane_near;
-      float coord = clamp((fs_in.camera_distance - ubo.fog_plane_near) / range, 0, 1);
-      float fog   = clamp(ubo.fog_power, 0, 1) * coord;
-      fog = exp(-(fog * fog));
-      fog = min(1 - ubo.fog_max, fog);
+      float range = scene.fog_plane_far - scene.fog_plane_near;
+      float coord = clamp((fs_in.camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
+      float visibility = pow(coord, clamp(scene.fog_power, 0.0F, 1.0F));
+      visibility = max(1.0F - min(1.0F, scene.fog_max), visibility);
       //
-      vec3 fog_color = (ubo.fog_color_far * coord) + (ubo.fog_color_near * (1 - coord));
-      color.rgb = (fog_color * (1 - fog)) + (color.rgb * fog);
+      vec3 fog_color = (scene.fog_color_far * (1.0F - visibility)) + (scene.fog_color_near * (visibility));
+      color.rgb = (fog_color * (1.0F - visibility)) + (color.rgb * visibility);
    }
    //
    return color;

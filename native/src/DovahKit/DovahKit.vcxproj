@@ -50,7 +50,7 @@
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
-      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.2.189.2\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.3.204.1\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -61,7 +61,7 @@
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
-      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.2.189.2\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.3.204.1\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
