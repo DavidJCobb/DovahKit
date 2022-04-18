@@ -88,7 +88,8 @@ namespace vulkanDK {
    void scene::update_camera() {
       auto& cs  = this->camera;
       auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
-      this->global_state.view = glm::translate(glm::inverse(rot), -cs.position);
+      this->global_state.view       = glm::translate(glm::inverse(rot), -cs.position);
+      this->global_state.camera_pos = cs.position;
       this->update_sun_shadows();
    }
    void scene::adjust_camera(const DKVulkanCameraUpdate& change) {

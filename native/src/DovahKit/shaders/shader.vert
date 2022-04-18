@@ -125,8 +125,4 @@ void main() {
          vs_out.tangent_light_dir[i] = normalize(vs_out.tangent_space * vec3(scene_lights[light_index].transform[3]));
       }
    }
-   //
-   //vs_out.camera_distance = (scene.view * vec4(vs_out.pos_world, 1.0)).z;
-   //vs_out.camera_distance = distance(vs_out.pos_world, -vec3(scene.view[3]));
-   vs_out.camera_distance = length(scene.view * vec4(vs_out.pos_world, 1.0));
 }

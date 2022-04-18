@@ -51,8 +51,9 @@ layout(location = 0) in VS_OUT {
 };
 
 vec4 calculate_color() {
+   float camera_distance = distance(fs_in.pos_world, scene.camera_pos);
    if (scene.interior_clip_distance > 0) {
-      if (fs_in.camera_distance > scene.interior_clip_distance)
+      if (camera_distance > scene.interior_clip_distance)
          discard;
    }
    //
@@ -245,14 +246,14 @@ vec4 calculate_color() {
    // Fog:
    //
    {
-      float range      = scene.fog_plane_far - scene.fog_plane_near;
-      float coord      = clamp((fs_in.camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
-      float visibility = pow(coord, max(0.0F, scene.fog_power));
-      float min_vis    = 1.0F - min(1.0F, scene.fog_max);
-      visibility = max(min_vis, visibility);
+      float range   = scene.fog_plane_far - scene.fog_plane_near;
+      float coord   = clamp((camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
+      float density = pow(coord, max(0.0F, scene.fog_power));
+      density = min(min(1.0F, scene.fog_max), density);
       //
-      vec3 fog_color = (scene.fog_color_far * (1.0F - visibility)) + (scene.fog_color_near * (visibility));
-      color.rgb = (fog_color * (1.0F - visibility)) + (color.rgb * visibility);
+      vec3 fog_color = (scene.fog_color_far * (density)) + (scene.fog_color_near * (1.0F - density));
+      color.rgb = mix(color.rgb, fog_color, density);
+      //color.rgb = (fog_color * (density)) + (color.rgb * (1.0F - density));
    }
    //
    return color;

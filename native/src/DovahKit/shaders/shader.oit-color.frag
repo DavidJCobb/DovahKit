@@ -8,10 +8,11 @@ layout(location = 0) out vec4  out_accumulator;
 layout(location = 1) out float out_reveal;
 
 float compute_oit_weight(vec4 color) {
+   float camera_distance = distance(fs_in.pos_world, scene.camera_pos);
    // scale the camera-relative depth to range [0.01, 500]
    const float min_depth =    0.01;
    const float max_depth = 4096.0;
-   const float scaled_depth = (fs_in.camera_distance - min_depth) / (max_depth - min_depth) * (500.0 - 0.01) + 0.01;
+   const float scaled_depth = (camera_distance - min_depth) / (max_depth - min_depth) * (500.0 - 0.01) + 0.01;
    
    // equation 9
    float distance_weight = clamp(
