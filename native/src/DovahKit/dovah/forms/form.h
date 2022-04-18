@@ -18,8 +18,9 @@ namespace dovah {
       namespace papyrus {
          class script_data;
       }
-      class model;
-      using papyrus_attachment_data = papyrus::script_data;
+      class  model;
+      struct object_bounds;
+      using  papyrus_attachment_data = papyrus::script_data;
    }
 
    namespace loaded_forms {
@@ -59,6 +60,7 @@ namespace dovah {
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
             components::papyrus_attachment_data* get_papyrus_data() noexcept;
+            components::object_bounds* get_object_bounds() noexcept;
             components::model* get_model() noexcept;
 
             //

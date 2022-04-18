@@ -4,6 +4,7 @@
 #include "../types/BSVertexDesc.h"
 #include "../types/NiBound.h"
 #include "../types/Triangle.h"
+#include "vulkan/scene_item_handle.h"
 
 namespace nifDK::block_types {
    class BSDismemberSkinInstance;
@@ -32,6 +33,13 @@ namespace nifDK::block_types {
             std::vector<glm::fvec3> per_vertex;
             std::vector<Triangle> triangles; // copy of mesh triangle list
          } particle_data; // user version 2 == 100
+
+         struct {
+            //
+            // Fields for supporting DovahKit's run-time needs.
+            //
+            vulkanDK::rendered_mesh_handle mesh_handle;
+         } vulkan_state;
 
          virtual void parse(file_reader&) override;
    };

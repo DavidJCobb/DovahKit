@@ -534,8 +534,19 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to begin recording command buffer (main).");
          }
 
+         auto& scene = this->owner->scene;
          for (size_t i = 0; i < config::max_active_shadow_casters; ++i) {
             auto& indirect_info = this->indirect_draw_commands.shadow_casters[i];
+            if (scene.global_state.shadow_caster_index[i] < 0) {
+               //
+               // This transfer may seem redundant, but the graphics-queue commands acquire ownership and then 
+               // release it; Vulkan will expect something else to take that ownership and then release it back 
+               // to graphics.
+               //
+               indirect_info.transfer_queue_ownership_to_compute(command_handle);
+               indirect_info.transfer_queue_ownership_to_graphics(command_handle);
+               continue;
+            }
             //
             const compute_shader* shader;
             {
@@ -1058,83 +1069,52 @@ namespace vulkanDK {
       auto& list   = scene.lights;
       auto  count  = list.size();
       assert(count <= config::max_lights_in_scene);
-      VkDeviceSize size = count * entry_size;
+      //
+      // Find the first scene item in need of an update.
       //
       size_t first_dirty = 0;
-      size_t last_dirty  = 0;
       bool   any_dirty   = false;
-      if constexpr (map_only_what_is_necessary) {
-         for (size_t i = 0; i < count; ++i) {
-            auto& item = list[i];
-            switch (item.life_state) {
-               case scene_frame_item_state::empty:
-                  continue;
-               //
-               // Unlike with rendered meshes, we actually do want to pass updated data for a 
-               // rendered light that is pending deletion: we want to set its radius and color 
-               // to zero and black. This is to avoid requiring the shader to check an "alive" 
-               // bool on each light and branch; setting the light to zero and black is pretty 
-               // much a branchless no-op.
-               //
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
+      for (size_t i = 0; i < count; ++i) {
+         auto& item = list[i];
+         switch (item.life_state) {
+            case scene_frame_item_state::empty:
                continue;
-            if (!any_dirty) {
-               first_dirty = i;
-               any_dirty   = true;
-            }
-            last_dirty = i;
-         }
-      } else {
-         for (size_t i = 0; i < count; ++i) {
-            auto& item = list[i];
-            switch (item.life_state) {
-               case scene_frame_item_state::empty:
+            case scene_frame_item_state::pending_delete:
+               //
+               // For lights pending delete, we want to set the color and radius to 0. 
+               // This is so that shaders don't need to branch to check if the light 
+               // is active; they can just blindly run all lights.
+               //
+               if (item.handled_frames.is_up_to_date(this->my_index))
                   continue;
-               case scene_frame_item_state::pending_delete:
-                  item.handled_frames.set_up_to_date(this->my_index);
+               break;
+            case scene_frame_item_state::active:
+               if (item.handled_frames.is_up_to_date(this->my_index))
                   continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
-               continue;
-            first_dirty = i;
-            any_dirty   = true;
-            break;
+               break;
          }
+         first_dirty = i;
+         any_dirty   = true;
+         break;
       }
       //
       if (any_dirty) {
-         entry_type* data = nullptr;
-         if constexpr (map_only_what_is_necessary) {
-            VkDeviceSize offset = first_dirty * entry_size;
-            VkDeviceSize length = (last_dirty - first_dirty + 1) * entry_size;
-            data = (entry_type*)buffer.map_memory(offset, length);
-            for (size_t i = first_dirty; i <= last_dirty; ++i) {
-               auto& item = list[i];
-               if (!item.active())
-                  continue;
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               auto& src = list[i].shader_params;
-               auto& dst = data[i - first_dirty];
-               memcpy(&dst, &src, entry_size);
-               //
-               item.handled_frames.set_up_to_date(this->my_index);
-            }
-         } else {
-            data = (entry_type*)buffer.map_memory();
-            for (size_t i = first_dirty; i < count; ++i) {
-               auto& item = list[i];
-               if (!item.active())
-                  continue;
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               auto& src = list[i].shader_params;
-               auto& dst = data[i];
-               memcpy(&dst, &src, entry_size);
-               //
-               item.handled_frames.set_up_to_date(this->my_index);
-            }
+         //
+         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
+         //       only map the parts we need to update.
+         //
+         auto* data = (entry_type*)buffer.map_memory();
+         for (size_t i = first_dirty; i < count; ++i) {
+            auto& item = list[i];
+            if (!item.active() && !item.pending_delete()) // again, we want to do a one-time reset on shader params for lights pending deletion
+               continue;
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            auto& src = list[i].shader_params;
+            auto& dst = data[i];
+            memcpy(&dst, &src, entry_size);
+            //
+            item.handled_frames.set_up_to_date(this->my_index);
          }
          buffer.unmap_memory(data);
       }
@@ -1148,7 +1128,8 @@ namespace vulkanDK {
       auto& ro     = scene.meshes;
       auto  count  = ro.size();
       assert(count <= config::max_rendered_meshes);
-      VkDeviceSize size = count * entry_size;
+      //
+      // Find the first scene item in need of an update.
       //
       size_t first_dirty = 0;
       bool   any_dirty   = false;
@@ -1161,6 +1142,9 @@ namespace vulkanDK {
                item.handled_frames.set_up_to_date(this->my_index);
                continue;
          }
+         //
+         // Scene object is "active."
+         //
          if (item.handled_frames.is_up_to_date(this->my_index))
             continue;
          first_dirty = i;

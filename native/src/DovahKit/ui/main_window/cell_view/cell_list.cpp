@@ -345,6 +345,17 @@ CellList::CellList(QWidget* parent) : QTableView(parent) {
       if (auto* stub = this->formStub())
          emit this->currentCellChanged(stub);
    });
+   QObject::connect(this, &QAbstractItemView::doubleClicked, [this](const QModelIndex& index) {
+      auto proxy = (proxy_type*)this->model();
+      auto qmi   = proxy->mapToSource(index);
+      if (!qmi.isValid())
+         return;
+      auto* item = (model_item_type*)qmi.internalPointer();
+      if (!item)
+         return;
+      if (item->stub)
+         emit this->renderRequested(const_cast<dovah::form_stub*>(item->stub)); // const-cast: stub should not be modified by anything inside this system; don't care about what outside code does
+   });
 };
 void CellList::setWorldspacePicker(const FormsOfTypeCombobox* picker) {
    if (picker == this->_worldspaceSelector)
@@ -366,7 +377,7 @@ dovah::form_stub* CellList::formStub() const noexcept {
    const auto* item = this->_getCurrentItem();
    if (!item || !item->stub)
       return nullptr;
-   return const_cast<dovah::form_stub*>(item->stub);
+   return const_cast<dovah::form_stub*>(item->stub); // const-cast: stub should not be modified by anything inside this system; don't care about what outside code does
 }
 void CellList::rebuildModel() {
    auto m = this->unwrappedModel();

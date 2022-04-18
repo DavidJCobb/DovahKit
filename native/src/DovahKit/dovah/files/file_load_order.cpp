@@ -1,7 +1,7 @@
 #include "file_load_order.h"
-#include "../../helpers/performance.h"
-#include "../../helpers/strings.h"
-#include "../../helpers/unordered_map.h"
+#include "helpers/performance.h"
+#include "helpers/string/strieq_ascii.h"
+#include "helpers/unordered_map.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stub_helpers.h"
@@ -303,7 +303,7 @@ namespace dovah {
          if (isMaster)
             list = &this->normalizer.masters;
          //
-         auto it = std::find_if(list->begin(), list->end(), [&name](loaded_header* file) { return cobb::strieq(name, file->name); });
+         auto it = std::find_if(list->begin(), list->end(), [&name](loaded_header* file) { return cobb::strieq_ascii(name, file->name); });
          assert(it != list->end() && "How is it not in the list?!");
          loaded_header* header = *it;
          list->erase(it);
@@ -379,7 +379,7 @@ namespace dovah {
                auto* file = new tes_file_reading::file_loader(file_load_interface);
                this->save_load_state.loading_index = this->files.size();
                this->files.push_back(file);
-               if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
+               if (!this->queued_load.active_file.empty() && cobb::strieq_ascii(this->queued_load.active_file, header->name)) {
                   this->active_file = file;
                }
                if (!file->load(path.c_str())) {

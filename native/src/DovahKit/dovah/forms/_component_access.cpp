@@ -9,6 +9,9 @@ namespace dovah::loaded_forms {
       template<typename T> concept has_model = requires(T& x) {
          { x.model } -> _is_model;
       };
+      template<typename T> concept has_object_bounds = requires(T & x) {
+         { x.bounds } -> std::same_as<components::object_bounds&>;
+      };
       template<typename T> concept has_papyrus = requires(T& x) {
          { x.script_data } -> std::same_as<components::papyrus_attachment_data&>;
       };
@@ -16,6 +19,12 @@ namespace dovah::loaded_forms {
       template<typename T> components::model* get_model(Form* form) {
          if constexpr (has_model<T>) {
             return &((T*)form)->model;
+         }
+         return nullptr;
+      }
+      template<typename T> components::object_bounds* get_object_bounds(Form* form) {
+         if constexpr (has_object_bounds<T>) {
+            return &((T*)form)->bounds;
          }
          return nullptr;
       }
@@ -29,15 +38,17 @@ namespace dovah::loaded_forms {
       struct _entry {
          using list_t = std::array<_entry, form_types.size()>;
          //
-         decltype(&get_model<void>)   model   = nullptr;
-         decltype(&get_papyrus<void>) papyrus = nullptr;
+         decltype(&get_model<void>)         model         = nullptr;
+         decltype(&get_object_bounds<void>) object_bounds = nullptr;
+         decltype(&get_papyrus<void>)       papyrus       = nullptr;
       };
       _entry::list_t entries = ([]() {
          _entry::list_t out;
          all_loaded_form_types::for_each([&out]<typename Form>() {
             out[Form::form_type] = _entry{
-               .model   = &get_model<Form>,
-               .papyrus = &get_papyrus<Form>,
+               .model         = &get_model<Form>,
+               .object_bounds = &get_object_bounds<Form>,
+               .papyrus       = &get_papyrus<Form>,
             };
          });
          return out;
@@ -47,6 +58,9 @@ namespace dovah::loaded_forms {
    namespace component_access {
       extern components::model* get_model(Form* form) {
          return (entries[form->formType].model)(form);
+      }
+      extern components::object_bounds* get_object_bounds(Form* form) {
+         return (entries[form->formType].object_bounds)(form);
       }
       extern components::papyrus_attachment_data* get_papyrus_data(Form* form) {
          return (entries[form->formType].papyrus)(form);

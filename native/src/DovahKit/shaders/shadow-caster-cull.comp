@@ -27,19 +27,16 @@ struct VkDrawIndexedIndirectCommand {
    uint firstInstance;
 };
 
-layout(std140,binding = 0) readonly uniform SceneGlobalStateBuffer {
-	scene_global_state scene_state;
-};
-layout(std430,binding = 1) readonly buffer MeshBuffer {
+layout(std430,binding = 0) readonly buffer MeshBuffer {
 	rendered_mesh_cull_data scene_meshes[MESH_COUNT];
 };
-layout(std430,binding = 2) readonly buffer LightBuffer {
+layout(std430,binding = 1) readonly buffer LightBuffer {
 	vec4 active_casters[CASTER_COUNT]; // XYZ position and radius
 };
-layout(std430,binding = 3) readonly buffer ObjectIndexBuffer {
+layout(std430,binding = 2) readonly buffer ObjectIndexBuffer {
 	int mesh_indices[MESH_COUNT];
 };
-layout(std430,binding = 4) writeonly buffer DrawCommandBuffer {
+layout(std430,binding = 3) writeonly buffer DrawCommandBuffer {
 	VkDrawIndexedIndirectCommand indirect_draws[MESH_COUNT];
 };
 
@@ -54,8 +51,6 @@ float get_scale(int mesh_index) {
 void main() {
 	uint draw_index = gl_GlobalInvocationID.x;
 	if (draw_index >= MESH_COUNT)
-		return;
-	if (scene_state.shadow_caster_index[CURRENT_CASTER] < 0)
 		return;
 	int mesh = mesh_indices[draw_index];
 	if (mesh < 0) {

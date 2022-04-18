@@ -92,6 +92,10 @@ class DKXInputSubsystem : public QObject {
       };
       struct GamepadInternal {
          QVector<Vibration> vibes;
+         struct {
+            float l = 0.0;
+            float r = 0.0;
+         } accel;
       };
 
    protected:
@@ -138,8 +142,8 @@ class DKXInputSubsystem : public QObject {
       } state;
 
       QPointF normalize_stick(Side, int16_t x, int16_t y) const;
-      void apply_stick_inertia(Side, float elapsed, const QPointF& raw, QPointF& out) const;
-      void normalize_input_state(float elapsed, Gamepad&, const XINPUT_GAMEPAD&) const;
+      void apply_stick_inertia(Side, float elapsed, float& accel, const QPointF& raw, QPointF& out) const;
+      void normalize_input_state(float elapsed, Gamepad&, GamepadInternal&, const XINPUT_GAMEPAD&) const;
 
    public:
       inline bool isXInputLoaded() const noexcept { return this->dll.handle != NULL; }

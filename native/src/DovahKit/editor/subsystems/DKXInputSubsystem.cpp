@@ -3,6 +3,9 @@
 
 namespace {
    constexpr float trigger_threshold_for_button = 0.6;
+   constexpr bool  joystick_inertia_as_accel    = true;
+   constexpr bool  joystick_inertia_subtractive = true; // overridden by inertia-as-accel
+   constexpr float joystick_time_to_full_accel  = 0.8;
 
    struct _dll_version {
       constexpr _dll_version(const TCHAR* f, DKXInputSubsystem::DLLVersion v) : file(f), version(v) {}
@@ -112,7 +115,9 @@ QPointF DKXInputSubsystem::normalize_stick(Side s, int16_t x, int16_t y) const {
    }
    return out;
 }
-void DKXInputSubsystem::apply_stick_inertia(Side s, float elapsed, const QPointF& raw, QPointF& out) const {
+void DKXInputSubsystem::apply_stick_inertia(Side s, float elapsed, float& accel, const QPointF& raw, QPointF& out) const {
+   constexpr bool use_temporal_inertia = true;
+   //
    double factor = std::min(1.0F, this->stickInertiaChaseSpeed(s));
    if (factor <= 0) {
       out = raw;
@@ -123,30 +128,44 @@ void DKXInputSubsystem::apply_stick_inertia(Side s, float elapsed, const QPointF
       float o_sq = (out.x() * out.x()) + (out.y() * out.y());
       if (o_sq > r_sq + 0.05) { // user is moving the joystick back to a neutral position
          out = raw;
+         if constexpr (joystick_inertia_as_accel)
+            accel = std::max(0.0F, accel - elapsed);
          return;
       }
    }
-   factor *= elapsed;
-   //
-   QPointF diff = raw - out;
-   float distance_sq = (diff.rx() * diff.rx()) + (diff.ry() * diff.ry());
-   if (distance_sq < factor * factor) {
-      out = raw;
-      return;
+   if constexpr (joystick_inertia_as_accel) {
+      accel = std::min(joystick_time_to_full_accel, accel + elapsed);
+      QPointF diff = raw - out;
+      diff *= (accel / joystick_time_to_full_accel);
+      out = out + diff;
+   } else {
+      factor *= elapsed;
+      //
+      QPointF diff = raw - out;
+      float distance_sq = (diff.rx() * diff.rx()) + (diff.ry() * diff.ry());
+      if (distance_sq < factor * factor) {
+         out = raw;
+         return;
+      }
+      float scale = sqrt(distance_sq);
+      diff /= scale;
+      if constexpr (!joystick_inertia_subtractive) {
+         diff *= factor;
+         out = out + diff; // results in the camera drifting and sliding when you change directions
+      } else {
+         diff *= (1 - factor);
+         out = raw - diff;
+      }
    }
-   float scale = sqrt(distance_sq);
-   diff /= scale;
-   diff *= factor;
-   out = out + diff;
 }
-void DKXInputSubsystem::normalize_input_state(float elapsed, Gamepad& out, const XINPUT_GAMEPAD& state) const {
+void DKXInputSubsystem::normalize_input_state(float elapsed, Gamepad& out, GamepadInternal& internal, const XINPUT_GAMEPAD& state) const {
    out.buttons = state.wButtons;
    out.lt      = float(state.bLeftTrigger)  / 255.0;
    out.rt      = float(state.bRightTrigger) / 255.0;
    out.raw.ls  = normalize_stick(Side::Left,  state.sThumbLX, state.sThumbLY);
    out.raw.rs  = normalize_stick(Side::Right, state.sThumbRX, state.sThumbRY);
-   this->apply_stick_inertia(Side::Left,  elapsed, out.raw.ls, out.ls);
-   this->apply_stick_inertia(Side::Right, elapsed, out.raw.rs, out.rs);
+   this->apply_stick_inertia(Side::Left,  elapsed, internal.accel.l, out.raw.ls, out.ls);
+   this->apply_stick_inertia(Side::Right, elapsed, internal.accel.r, out.raw.rs, out.rs);
    //out.ls      = normalize_stick(Side::Left,  state.sThumbLX, state.sThumbLY);
    //out.rs      = normalize_stick(Side::Right, state.sThumbRX, state.sThumbRY);
 }
@@ -178,7 +197,7 @@ bool DKXInputSubsystem::invertStick(Side s) const {
 }
 float DKXInputSubsystem::stickInertiaChaseSpeed(Side s) const {
    if (s == Side::Right)
-      return 1.0;
+      return 0.3;
    return 0.0;
 }
 float DKXInputSubsystem::stickAxialDeadzone(Side s) const {
@@ -225,7 +244,7 @@ void DKXInputSubsystem::update() {
       }
       auto result = (this->dll.proc.p_XInputGetState)(i, &xs);
       if (result == ERROR_SUCCESS) {
-         this->normalize_input_state(elapsed, this->state.gamepads[i], xs.Gamepad);
+         this->normalize_input_state(elapsed, this->state.gamepads[i], this->state.gamepad_internal[i], xs.Gamepad);
          this->state.present |= (1 << i);
          if (!present) {
             // TODO: query capabilities

@@ -16,11 +16,11 @@
 namespace {
    using namespace dovahscript;
    using wrapper_t = wrappers::papyrus_root;
-
-   wrappers::papyrus_root::wrapped_t& _unwrap(lua_State* L, wrapper& w) {
-      auto* data = wrappers::papyrus_root::unwrap(w, true);
+   
+   wrapper_t::wrapped_t& _unwrap(lua_State* L, wrapper& w) {
+      auto* data = wrapper_t::unwrap(w, true);
       if (!data)
-         cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", wrappers::papyrus_root::metatable_key);
+         cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::metatable_key);
       return *data;
    }
 }

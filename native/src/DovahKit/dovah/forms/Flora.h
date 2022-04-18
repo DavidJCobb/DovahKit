@@ -23,6 +23,7 @@ namespace dovah::loaded_forms {
       public:
          using activator_flag    = Activator::activator_flag;
          using activator_flags_t = Activator::activator_flags_t;
+         using form_flag         = Activator::form_flag;
          
          // Fields inherited from Activator:
          // 

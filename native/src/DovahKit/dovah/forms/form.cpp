@@ -11,11 +11,14 @@ namespace dovah::loaded_forms {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
    }
 
-   components::papyrus_attachment_data* Form::get_papyrus_data() noexcept {
-      return component_access::get_papyrus_data(this);
-   }
    components::model* Form::get_model() noexcept {
       return component_access::get_model(this);
+   }
+   components::object_bounds* Form::get_object_bounds() noexcept {
+      return component_access::get_object_bounds(this);
+   }
+   components::papyrus_attachment_data* Form::get_papyrus_data() noexcept {
+      return component_access::get_papyrus_data(this);
    }
 
    const char* Form::get_editor_id() const noexcept {

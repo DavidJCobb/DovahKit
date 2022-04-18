@@ -1,5 +1,5 @@
 #include "file_load_order_normalizer.h"
-#include "../../helpers/strings.h"
+#include "helpers/string/strieq_ascii.h"
 #include "tes_file_reading/file_header.h"
 #include "../detailed_notice.h"
 #include "../notice_code_list.h"
@@ -8,20 +8,20 @@ namespace dovah {
    bool file_load_order_normalizer::has_master(const std::string& name) const {
       auto& list = this->masters;
       for (auto it = list.begin(); it != list.end(); ++it)
-         if (cobb::strieq(name, (*it)->name))
+         if (cobb::strieq_ascii(name, (*it)->name))
             return true;
       return false;
    }
    bool file_load_order_normalizer::has_plugin(const std::string& name) const {
       auto& list = this->plugins;
       for (auto it = list.begin(); it != list.end(); ++it)
-         if (cobb::strieq(name, (*it)->name))
+         if (cobb::strieq_ascii(name, (*it)->name))
             return true;
       return false;
    }
    void file_load_order_normalizer::move_to_masters(const std::string& name) noexcept {
       auto& list = this->plugins;
-      auto  it   = std::find_if(list.begin(), list.end(), [&name](file_header_reader* file) { return cobb::strieq(name, file->name); });
+      auto  it   = std::find_if(list.begin(), list.end(), [&name](file_header_reader* file) { return cobb::strieq_ascii(name, file->name); });
       if (it == list.end())
          return;
       file_header_reader* header = *it;
@@ -68,7 +68,7 @@ namespace dovah {
       //
       bool must_be_master = isMasterOfMaster || header->is_master();
       for (auto it = header->masters.begin(); it != header->masters.end(); ++it) {
-         if (!this->active_file.empty() && cobb::strieq(*it, this->active_file)) {
+         if (!this->active_file.empty() && cobb::strieq_ascii(*it, this->active_file)) {
             auto& name = *it;
             error.code = notice_code::active_file_is_dependency;
             error.set_cause_file(name);
@@ -159,10 +159,10 @@ namespace dovah {
    }
    bool file_load_order_normalizer::contains(const std::string& name) const noexcept {
       for (auto* file : this->masters)
-         if (cobb::strieq(file->name, name))
+         if (cobb::strieq_ascii(file->name, name))
             return true;
       for (auto* file : this->plugins)
-         if (cobb::strieq(file->name, name))
+         if (cobb::strieq_ascii(file->name, name))
             return true;
       return false;
    }

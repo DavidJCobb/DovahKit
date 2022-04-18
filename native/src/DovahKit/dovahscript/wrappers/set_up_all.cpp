@@ -64,6 +64,9 @@ namespace dovahscript {
                   define_wrapper_metatable<quest_ref_alias>(L);
             define_wrapper_metatable<shout>(L);
                define_wrapper_metatable<shout_word>(L);
+            define_wrapper_metatable<statik>(L);
+               define_wrapper_metatable<static_directional_material>(L);
+               define_wrapper_metatable<static_distant_lod_paths>(L);
             define_wrapper_metatable<texture_set>(L);
                define_wrapper_metatable<texture_set_path_list>(L);
             define_wrapper_metatable<topic>(L);

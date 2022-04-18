@@ -103,25 +103,26 @@ class CellList : public QTableView {
       using proxy_type      = CellListModelProxy;
       using model_type      = CellListModel;
       using model_item_type = model_type::item_type;
-      //
+      
       inline model_type* unwrappedModel() const noexcept {
          auto wrapper = (QSortFilterProxyModel*)this->model();
          return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
       }
-      //
+      
       inline const FormsOfTypeCombobox* worldspacePicker() const noexcept { return this->_worldspaceSelector; }
       void setWorldspacePicker(const FormsOfTypeCombobox*);
-      //
+      
       dovah::bare_form_id_t formID() const noexcept;
       dovah::form_stub* formStub() const noexcept;
-      //
+      
    public slots:
       void rebuildModel();
       void clear();
-      //
+      
    signals:
       void currentCellChanged(const dovah::form_stub* cell);
-      //
+      void renderRequested(dovah::form_stub* cell);
+      
    protected:
       const FormsOfTypeCombobox* _worldspaceSelector = nullptr;
       //

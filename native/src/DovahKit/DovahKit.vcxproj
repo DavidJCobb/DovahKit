@@ -463,6 +463,7 @@
     <ClCompile Include="editor\subsystems\assets.cpp" />
     <ClCompile Include="editor\subsystems\DKXInputSubsystem.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\cpuinfo.cpp" />
@@ -621,6 +622,7 @@
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
+    <ClCompile Include="vulkan\scene_item_handle.cpp" />
     <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
@@ -763,6 +765,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
+    <ClInclude Include="editor\subsystems\worldedit.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
@@ -919,6 +922,7 @@
     <ClInclude Include="vulkan\scene.h" />
     <ClInclude Include="vulkan\scene_frame_item.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
+    <ClInclude Include="vulkan\scene_item_handle.h" />
     <ClInclude Include="vulkan\shader_module.h" />
     <ClInclude Include="vulkan\spir_v_entry_point.h" />
     <ClInclude Include="vulkan\spir_v_parser.h" />

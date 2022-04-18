@@ -19,12 +19,7 @@ namespace dovah {
       size_t size = out.size();
       size_t i    = 0;
       //
-      bool can_intrin = false;
-      {
-         auto& cpu = cobb::cpuinfo::get();
-         can_intrin = cpu.extension_support.sse_2 && cpu.extension_support.sse_3;
-      }
-      if (can_intrin) {
+      if (auto& cpu = cobb::cpuinfo::get(); cpu.extension_support.sse_2 && cpu.extension_support.sse_3) {
          auto mb_a = _mm_set1_epi8('A' - 1);
          auto mb_z = _mm_set1_epi8('Z' + 1);
          auto mb_s = _mm_set1_epi8('/');

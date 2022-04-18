@@ -5,9 +5,11 @@
 #include "../../editor/core.h"
 #include "../../editor/open_window_for_form.h"
 #include "../generic/FormsOfTypeCombobox.h"
+#include "editor/subsystems/worldedit.h"
 
 CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
+   dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
    //
    this->ui.worldspace->addFormType(dovah::form_type::worldspace);
    this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
@@ -49,6 +51,9 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          text = tr("No Cell Selected", "cell view");
       }
       widget->setText(text);
+   });
+   QObject::connect(this->ui.cellList, &CellList::renderRequested, this, [this](dovah::form_stub* cell) {
+      dovahkit::subsystems::worldedit::get().set_current_cell(cell);
    });
    //
    #pragma region Context menus

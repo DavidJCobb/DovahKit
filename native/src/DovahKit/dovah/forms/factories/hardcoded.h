@@ -15,8 +15,9 @@ namespace dovah {
    extern loaded_forms::Form* instantiate_hardcoded_form(form_stub&);
 
    namespace hardcoded_form_ids {
-      static constexpr bare_form_id_t Player       = 0x00000007;
-      static constexpr bare_form_id_t PlayerRef    = 0x00000014;
-      static constexpr bare_form_id_t DefaultWater = 0x00000018;
+      static constexpr bare_form_id_t Player           = 0x00000007;
+      static constexpr bare_form_id_t PlayerRef        = 0x00000014;
+      static constexpr bare_form_id_t DefaultWater     = 0x00000018;
+      static constexpr bare_form_id_t COCMarkerHeading = 0x00000032;
    }
 }

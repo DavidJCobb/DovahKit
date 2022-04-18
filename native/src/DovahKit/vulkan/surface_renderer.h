@@ -21,6 +21,7 @@
 #include "graphics_shader.h"
 #include "image.h"
 #include "scene.h"
+#include "scene_item_handle.h"
 #include "swap_chain_image.h"
 #include "surface_renderer_descriptor_group.h"
 //
@@ -245,8 +246,9 @@ namespace vulkanDK {
          void add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
-         bool add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
-         bool add_light(const rendered_light::shader_parameters&);
+         rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
+         rendered_light_handle add_light(const rendered_light::shader_parameters&);
+         void remove_nif(nifDK::file& model);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);

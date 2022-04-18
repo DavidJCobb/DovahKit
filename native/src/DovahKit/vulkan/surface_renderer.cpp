@@ -295,36 +295,29 @@ namespace vulkanDK {
          },
       };
       this->descriptor_set_layouts.shared_layouts.compute_shadow_caster_culling.bindings = {
-         vulkanDK::descriptor_binding{ // storage buffer object: scene_global_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
-            .immutable_samplers = nullptr,
-         },
          vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
-            .index              = 1,
+            .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
-            .index              = 2,
+            .index              = 1,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // storage buffer object: uint32_t[] (mesh indices)
-            .index              = 3,
+            .index              = 2,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // storage buffer object: VkDrawIndexedIndirectCommand[]
-            .index              = 4,
+            .index              = 3,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
             .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
@@ -2096,22 +2089,13 @@ namespace vulkanDK {
             //
             // Compute: shadow caster culling
             //
-            ([&frame, &global_state_buffer_info, &mesh_bounds_buffer_info, &light_position_buffer_info, &culling_caster_mesh_indices_buffer_info, &culling_caster_params_buffer_info]() {
-               using caster_write_list_t = std::array<VkWriteDescriptorSet, 5>;
+            ([&frame, &mesh_bounds_buffer_info, &light_position_buffer_info, &culling_caster_mesh_indices_buffer_info, &culling_caster_params_buffer_info]() {
+               using caster_write_list_t = std::array<VkWriteDescriptorSet, 4>;
                //
                std::array<caster_write_list_t, config::max_active_shadow_casters> casters;
                for (size_t i = 0; i < casters.size(); ++i) {
                   auto descriptor_set = frame.descriptor_sets.sharing_sets.compute_shadow_caster_culls[i];
                   casters[i] = std::array{
-                     VkWriteDescriptorSet{ // scene_global_state
-                        .dstSet           = descriptor_set,
-                        .dstArrayElement  = 0,
-                        .descriptorCount  = 1,
-                        .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                        .pImageInfo       = nullptr,
-                        .pBufferInfo      = &global_state_buffer_info,
-                        .pTexelBufferView = nullptr,
-                     },
                      VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::cull_data[]
                         .dstSet           = descriptor_set,
                         .dstArrayElement  = 0,
@@ -3684,6 +3668,9 @@ namespace vulkanDK {
       }
       ++this->scene.pending_deletions.lights;
       auto& item = list[i];
+      if (item.can_cast_shadows()) {
+         this->scene.mark_light_shadows_dirty();
+      }
       item.mark_for_delete();
    }
    void surface_renderer::remove_last_light() {
@@ -3906,6 +3893,7 @@ namespace vulkanDK {
       auto  mesh_index = this->scene.insert_new_mesh();
       assert(mesh_index != std::string::npos);
       auto& mesh       = this->scene.meshes[mesh_index];
+      data->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
       mesh.life_state = scene_frame_item_state::active;
       mesh.shader_params.transform = transform;
@@ -3977,6 +3965,7 @@ namespace vulkanDK {
       auto  mesh_index = this->scene.insert_new_mesh();
       assert(mesh_index != std::string::npos);
       auto& mesh       = this->scene.meshes[mesh_index];
+      geom->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
       mesh.life_state = scene_frame_item_state::active;
       mesh.shader_params.transform = transform;
@@ -4136,14 +4125,55 @@ namespace vulkanDK {
       }
       return true;
    }
+   void surface_renderer::remove_nif(nifDK::file& model) {
+      if (!model.root_node) {
+         qDebug("[surface_renderer::remove_nif] Model has no root node.");
+         return;
+      }
+      auto functor = [this](nifDK::block_types::NiAVObject* object) {
+         //
+         // Lambdas can't recursively call themselves, in part because they'd have to reference their own 
+         // identifiers (not possible: the auto expression isn't "complete" at parse time, so the type 
+         // is unknown) and in part because those identifiers are in a different scope (lambdas can't 
+         // capture themselves).
+         //
+         auto impl = [this](nifDK::block_types::NiAVObject* object, auto& self) -> void {
+            auto* node = dynamic_cast<nifDK::block_types::NiNode*>(object);
+            if (node) {
+               for (auto* child : node->children)
+                  (self)(child, self);
+               return;
+            }
+            rendered_mesh_handle* handle = nullptr;
+            if (auto* geom = dynamic_cast<nifDK::block_types::NiTriBasedGeom*>(object)) {
+               handle = &geom->vulkan_state.mesh_handle;
+            } else if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
+               handle = &geom->vulkan_state.mesh_handle;
+            }
+            if (handle && !handle->empty()) {
+               if (handle->renderer() != this) {
+                  qDebug("[surface_renderer::remove_nif] WARNING: Geometry object belongs to a different renderer!");
+                  return;
+               }
+               handle->destroy();
+            }
+         };
+         impl(object, impl);
+      };
+      (functor)(model.root_node);
+      //
+      for (auto& image : this->swap_chain.frames_in_flight) {
+         image.on_scene_meshes_added_or_removed();
+      }
+   }
 
-   bool surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
+   rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
       auto* base = refr.base_form.get_form_stub();
       if (!base || base->formType != dovah::form_type::light)
-         return false;
+         return {};
       auto loaded_base = base->load().ptr_cast<dovah::loaded_forms::Light>();
       if (!loaded_base)
-         return false;
+         return {};
       //
       rendered_light::shader_parameters params = {
          .transform = glm_transform_from_beth(refr.position, refr.rotation, 1.0F),
@@ -4183,7 +4213,7 @@ namespace vulkanDK {
                params.type = rendered_light::light_type::spot_shadow;
                break;
             default:
-               return false; // unsupported light type
+               return {}; // unsupported light type
          }
       }
       if constexpr (debug_log_scene_object_lifetimes) {
@@ -4191,11 +4221,11 @@ namespace vulkanDK {
       }
       return this->add_light(params);
    }
-   bool surface_renderer::add_light(const rendered_light::shader_parameters& in) {
+   rendered_light_handle surface_renderer::add_light(const rendered_light::shader_parameters& in) {
       size_t light_index = this->scene.insert_new_light();
       if (light_index == std::string::npos) {
          qDebug("[vulkanDK::scene_renderer::add_light] Cannot add new rendered_light; scene limits reached.");
-         return false;
+         return {};
       }
       if constexpr (debug_log_scene_object_lifetimes) {
          qDebug("[vulkanDK::scene_renderer::add_light] Creating new light at index %u.", light_index);
@@ -4210,7 +4240,7 @@ namespace vulkanDK {
          this->scene.mark_light_shadows_dirty();
       }
       //
-      return true;
+      return rendered_light_handle(*this, light_index);
    }
 
    void surface_renderer::move_camera(const glm::vec3& move, const glm::vec3& turn) {

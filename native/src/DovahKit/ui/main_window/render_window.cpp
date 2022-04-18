@@ -9,6 +9,7 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QToolButton>
+#include "editor/subsystems/worldedit.h"
 #include "widgets/DKVulkanView.h"
 #include "../../vulkan/rendered_light.h"
 #include "../../vulkan/surface_renderer.h"
@@ -53,6 +54,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {
       this->status->showMessage(QString("Mesh #%1 clicked.").arg(index), 2000);
    });
+   dovahkit::subsystems::worldedit::get_or_create().set_target_view(*view);
    //
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);

@@ -1,9 +1,10 @@
 #pragma once
 #include <cstdint>
-#include <string>
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/bounds.h"
+#include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
    class FormList : public Form {
@@ -11,6 +12,9 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::formlist;
          FormList(const constructor_params& c) : Form(form_type, c) {};
 
+         components::papyrus_attachment_data script_data;
+         components::object_bounds bounds;
+         //
          std::vector<form_reference_t> contents;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

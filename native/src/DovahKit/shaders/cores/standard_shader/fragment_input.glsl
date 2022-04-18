@@ -2,7 +2,6 @@
 struct fragment_input {
    vec4  color; // vertex color
    vec2  uv;
-   float camera_distance;
    vec3  pos_world;
    mat3  tangent_space;
    vec3  tangent_sun_dir;

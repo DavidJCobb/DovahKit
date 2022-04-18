@@ -13,6 +13,12 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            case 'VMAD':
+               this->script_data.load(subrecord, intfc);
+               break;
+            case 'OBND':
+               this->bounds.load(subrecord, intfc);
+               break;
             case 'LNAM': // list entry
                if (subrecord.read(formID))
                   this->contents.push_back(formID);
@@ -35,6 +41,12 @@ namespace dovah::loaded_forms {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
+            case 'VMAD':
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               break;
+            case 'OBND': // bounds
+               components::object_bounds::generate_use_info(subrecord, uib);
+               break;
             case 'LNAM': // list entry
                if (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
@@ -47,6 +59,9 @@ namespace dovah::loaded_forms {
          return false;
       auto copy = (FormList*)out;
       //
+      copy->script_data.clone_from(this->script_data, *copy);
+      copy->bounds = this->bounds;
+      //
       size_t size = this->contents.size();
       copy->contents.resize(size);
       for (size_t i = 0; i < size; ++i)
@@ -54,14 +69,24 @@ namespace dovah::loaded_forms {
       return true;
    }
    bool FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc);
+      if (!this->bounds.is_zero()) {
+         auto& OBND = record.open_next_subrecord('OBND');
+         this->bounds.save(OBND, intfc);
+         OBND.close();
+      }
       for (auto& entry : this->contents)
          record.write_formID_subrecord('LNAM', entry);
       return true;
    }
    void FormList::_clear_impl() noexcept {
+      this->script_data.clear(*this);
+      this->bounds.clear();
       clear_form_reference_list(this->contents, *this);
    }
    void FormList::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this);
+      //
       std::vector<form_reference_t> replacement;
       bool edits = false;
       //
