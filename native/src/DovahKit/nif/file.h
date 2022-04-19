@@ -6,6 +6,10 @@
 #include "detailed_notice.h"
 #include "vulkan/scene_item_handle.h"
 
+namespace dovah {
+   class form_stub;
+}
+
 namespace nifDK {
    class block;
    class file_reader;
@@ -80,6 +84,8 @@ namespace nifDK {
          //
          std::vector<block*>  all_blocks;
          block_types::NiNode* root_node = nullptr;
+         //
+         dovah::form_stub* owning_form = nullptr;
 
          void read(void* data, size_t size);
 

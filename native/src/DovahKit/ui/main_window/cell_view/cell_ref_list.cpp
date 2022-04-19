@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/open_window_for_form.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/form_stub_helpers.h"
@@ -160,9 +161,9 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
                   .arg(item->editorID)
                   .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
             case 1:
-               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+               return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
             case 2:
-               return cobb::qt::four_cc_to_string( dovah::form_type_info::lookup(item->formType()).signature );
+               return editor_helpers::form_signature_to_string(item->stub);
          }
          break;
       case Qt::DecorationRole:
@@ -186,7 +187,7 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
       case Qt::UserRole + 1: // used for filtering
          switch (column) {
             case 0: return item->editorID;
-            case 1: return QString::asprintf("%08X", item->formID);
+            case 1: return editor_helpers::form_id_to_string(item->formID);
             case 2: return QVariant();
          }
          break;

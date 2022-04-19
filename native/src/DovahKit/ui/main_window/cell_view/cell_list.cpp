@@ -1,7 +1,8 @@
 #include "cell_list.h"
 #include <QHeaderView>
-#include "../../../editor/core.h"
-#include "../../../dovah/form_stub.h"
+#include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "dovah/form_stub.h"
 
 CellListModelItem::CellListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
@@ -160,13 +161,13 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
       case 1: // form ID
          switch (role) {
             case Qt::DisplayRole:
-               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+               return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
             case Qt::ForegroundRole:
                if (item->is_injected)
                   return QColor::fromRgb(0x309000);
                break;
             case FilteringRole:
-               return QString::asprintf("%08X", item->formID);
+               return editor_helpers::form_id_to_string(item->formID);
             case SortingRole:
                return item->formID;
          }

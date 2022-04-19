@@ -3,6 +3,7 @@
 #include <QLineEdit>
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/open_window_for_form.h"
 
 #pragma region DeleteFormDialogListModel
@@ -21,7 +22,7 @@ void DeleteFormDialogListModelItem::updateFromStub() {
       assert(parent->formType == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
       if (parent) {
          auto name = parent->get_editor_id();
-         auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
+         auto id   = editor_helpers::form_id_to_string(parent->formID);
          this->parentCell = QString("[CELL:%1]").arg(id);
          if (name && name[0]) {
             this->parentCell += name;
@@ -29,7 +30,7 @@ void DeleteFormDialogListModelItem::updateFromStub() {
             auto world = parent->get_parent_form();
             assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
             if (world) {
-               auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
+               auto    id   = editor_helpers::form_id_to_string(world->formID);
                QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
                int32_t x;
                int32_t y;

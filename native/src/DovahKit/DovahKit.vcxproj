@@ -452,6 +452,7 @@
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
     <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp" />
+    <ClCompile Include="editor\helpers\form_identifiers_to_string.cpp" />
     <ClCompile Include="editor\helpers\form_type_name_to_string.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\helpers\stringify_conditions.cpp" />
@@ -765,6 +766,7 @@
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
+    <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit.h" />
     <ClInclude Include="helpers\array_concat.h" />

@@ -8,6 +8,7 @@
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
 #include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
 #include "helpers/qt/strings.h"
 #include "nif/notice_code_t.h"
@@ -312,11 +313,11 @@ namespace dovahkit::subsystems {
          auto* stub = nif->owning_form;
          if (!stub)
             return;
+         auto* base = dovah::form_stub_helpers::get_base_form(stub);
          emit this->statusBarMessage(
-            QString("Clicked on form [%1:%2]%3.")
-               .arg(cobb::qt::four_cc_to_string(dovah::form_types[stub->formType].signature))
-               .arg(stub->formID, 8, 16, QChar('0'))
-               .arg(stub->get_editor_id()),
+            QString("Clicked on form %1 (base %2).")
+               .arg(editor_helpers::form_identifiers_to_string(stub))
+               .arg(editor_helpers::form_identifiers_to_string(base)),
             3000
          );
       });

@@ -7,54 +7,16 @@
 #include "types/NiTransform.h"
 
 namespace nifDK {
+   class file;
    class file_reader;
-
-   enum class block_type {
-      unknown,
-      //
-      // block types not yet implemented:
-      //
-      BSDismemberSkinInstance,
-      BSEffectShaderProperty,
-      BSFadeNode,
-      BSLightingShaderProperty,
-      BSShaderFlags,
-      BSShaderFlags2,
-      BSShaderLightingProperty,
-      BSShaderProperty,
-      BSShaderTextureSet,
-      BSShaderType,
-      BSSkyShaderProperty,
-      BSWaterShaderProperty,
-      BSXFlags,
-      NiAlphaProperty,
-      NiAVObject, // extends NiObjectNET
-      NiBillboardNode,
-      NiGeometry,
-      NiNode,
-      NiObject,
-      NiObjectNET, // extends NiObject
-      NiSkinData,
-      NiSkinInstance,
-      NiSwitchNode,
-      NiTriBasedGeom,
-      NiTriShape, // extends NiTriBasedGeom
-      NiTriShapeData,
-      SkyrimShaderPropertyFlags1,
-      SkyrimShaderPropertyFlags2,
-      SkyrimWaterShaderFlags,
-   };
 
    class block : public virtual block_interfaces::_DKVulkanInterface {
       public:
-         block_type type = block_type::unknown;
-
-         virtual void parse(file_reader&) = 0;
-   };
-
-   class extra_data_list {
+         virtual ~block() {}
       public:
-         
+         virtual void parse(file_reader&) = 0;
+
+         file* owner = nullptr;
    };
 
    namespace block_types {

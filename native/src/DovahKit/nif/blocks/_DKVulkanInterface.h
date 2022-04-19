@@ -6,6 +6,7 @@ namespace nifDK::block_interfaces {
    // state information as needed for DovahKit and its renderer.
    class _DKVulkanInterface {
       public:
+         virtual ~_DKVulkanInterface() {}
          virtual void sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle) {}
    };
 
@@ -17,9 +18,7 @@ namespace nifDK::block_interfaces {
             vulkanDK::rendered_mesh_handle mesh_handle;
          } vulkan_state;
 
-         virtual void sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle m) override {
-            if (this->vulkan_state.mesh_handle == m)
-               this->vulkan_state.mesh_handle = {};
-         }
+         virtual ~_DKVulkanMeshInterface();
+         virtual void sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle m) override;
    };
 }

@@ -4,6 +4,7 @@
 #include "../../../helpers/qt/strings.h"
 #include "../../../dovah/files/tes_file_reading/file_loader.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/get_game_setting_description.h"
 
 #pragma region GameSettingListModel
@@ -188,7 +189,7 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
             case Qt::DisplayRole:
                if (item->last_file.isEmpty() && !item->is_in_active_file)
                   return "";
-               return QString("%1").arg(item->formID, 8, 16, QChar('0')).toUpper();
+               return editor_helpers::form_id_to_string(item->formID);
             case SortRole: // sorting
                return item->formID;
          }

@@ -162,6 +162,7 @@ namespace nifDK {
                   },
                });
             }
+            b->owner = this;
          }
          size_t base = reader.position();
          size_t offset = 0;

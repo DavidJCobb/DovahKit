@@ -3,6 +3,7 @@
 #include <QLineEdit>
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/open_window_for_form.h"
 
 namespace {
@@ -10,16 +11,14 @@ namespace {
       assert(cell->formType == dovah::form_type::cell);
       //
       auto name = cell->get_editor_id();
-      auto id   = QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper();
-      QString cell_text = QString("[CELL:%1]").arg(id);
+      QString cell_text = editor_helpers::form_identifiers_to_string(cell);
       if (name && name[0]) {
          cell_text += name;
       } else {
          auto world = cell->get_parent_form();
          if (world) {
             assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
-            auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
-            QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
+            QString s = editor_helpers::form_identifiers_to_string(world);
             int32_t x;
             int32_t y;
             QString grid;
@@ -58,9 +57,7 @@ void FormUseInfoListModelItem::updateFromStub() {
    this->otherID   = stub->formID;
    this->otherType = stub->formType;
    this->editorID  = stub->get_editor_id();
-   //
-   uint32_t signature = dovah::form_type_info::lookup(this->otherType).signature;
-   this->signature = cobb::qt::four_cc_to_string(signature);
+   this->signature = editor_helpers::form_signature_to_string(stub);
    //
    if (is_reference) {
       auto parent = stub->get_parent_form();
@@ -306,8 +303,7 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
       case 1: // form ID
          switch (role) {
             case Qt::DisplayRole:
-               return QString("%1").arg(item->otherID, 8, 16, QChar('0')).toUpper();
-               return QString("%1").arg(item->otherID, 8, 16, QChar('0')).toUpper();
+               return editor_helpers::form_id_to_string(item->otherID);
             case Qt::UserRole + 0: // sorting
                return item->otherID;
          }

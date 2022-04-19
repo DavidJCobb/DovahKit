@@ -3,6 +3,7 @@
 #include <QLineEdit>
 #include <QMimeData>
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/files/common.h"
 
@@ -193,7 +194,7 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
                   .arg(item->editorID)
                   .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
             case 1:
-               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+               return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
             case 2:
                return item->userCount;
          }
@@ -229,7 +230,7 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
                if (none)
                   return QVariant();
                return item->editorID;
-            case 1: return QString::asprintf("%08X", item->formID);
+            case 1: return editor_helpers::form_id_to_string(item->formID);
             case 2: return QVariant(); // don't allow filtering by the use count
          }
          break;

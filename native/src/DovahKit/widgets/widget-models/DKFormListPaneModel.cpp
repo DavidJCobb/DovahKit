@@ -2,6 +2,7 @@
 #include <QMimeData>
 #include "../../helpers/qt/strings.h"
 #include "../../editor/core.h"
+#include "../../editor/helpers/form_identifiers_to_string.h"
 
 #pragma region Item
 DKFormListPaneModel::Item::Item(dovah::form_stub* stub) {
@@ -12,10 +13,8 @@ void DKFormListPaneModel::Item::updateFromStub() {
    bool is_reference;
    auto stub = this->stub;
    if (stub) {
-      this->editorID = stub->get_editor_id();
-      //
-      uint32_t signature = dovah::form_type_info::lookup(stub->formType).signature;
-      this->signature = cobb::qt::four_cc_to_string(signature);
+      this->editorID  = stub->get_editor_id();
+      this->signature = editor_helpers::form_signature_to_string(stub);
       is_reference = dovah::form_type_info::form_type_is_reference(stub->formType);
    } else {
       this->editorID.clear();
@@ -42,12 +41,12 @@ void DKFormListPaneModel::Item::updateFromStub() {
          const char* name = cell->get_editor_id();
          if (world) {
             if (name && name[0]) {
-               this->editorID = QString("[REFR:%1] in [CELL:%2]%3 in [WRLD:%4]%5")
-                  .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
-                  .arg(QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper())
-                  .arg(name);
+               this->editorID = QString("%1 in %2 in %3")
+                  .arg(editor_helpers::form_identifiers_to_string(stub))
+                  .arg(editor_helpers::form_identifiers_to_string(cell))
+                  .arg(editor_helpers::form_identifiers_to_string(world));
             } else {
-               this->editorID = QString("[REFR:%1] in cell (%2, %3) in [WRLD:%4]%5");
+               this->editorID = QString("%1 in cell (%2, %3) in %4").arg(editor_helpers::form_identifiers_to_string(stub));
                //
                int32_t x;
                int32_t y;
@@ -59,13 +58,11 @@ void DKFormListPaneModel::Item::updateFromStub() {
                this->editorID = this->editorID.arg(cell->formID);
             }
             this->editorID = this->editorID
-               .arg(QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper())
-               .arg(world->get_editor_id());
+               .arg(editor_helpers::form_identifiers_to_string(world));
          } else {
-            this->editorID = QString("[REFR:%1] in [CELL:%2]%3")
-               .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
-               .arg(QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper())
-               .arg(name ? name : "");
+            this->editorID = QString("%1 in %2")
+               .arg(editor_helpers::form_identifiers_to_string(stub))
+               .arg(editor_helpers::form_identifiers_to_string(cell));
          }
       }
    }

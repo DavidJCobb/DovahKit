@@ -4,6 +4,7 @@
 #include "../../../helpers/qt/strings.h"
 #include "../../../dovah/forms/DefaultObjectManager.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/get_default_object_info.h"
 
 #pragma region DefaultObjectListModel
@@ -16,11 +17,7 @@ DefaultObjectListModelItem::DefaultObjectListModelItem(uint32_t signature, dovah
 QString DefaultObjectListModelItem::valueAsString() const noexcept {
    if (!this->form)
       return QObject::tr("NONE", "default object list - no form");
-   uint32_t signature = dovah::form_type_info::lookup(this->form->formType).signature;
-   return QString("[%1:%2]%3")
-      .arg(cobb::qt::four_cc_to_string(signature))
-      .arg(QString("%1").arg(this->form->formID, 8, 16, QChar('0')).toUpper())
-      .arg(this->form->get_editor_id());
+   return editor_helpers::form_identifiers_to_string(this->form);
 }
 
 DefaultObjectListModel::DefaultObjectListModel(QObject* parent) : QAbstractTableModel(parent) {
