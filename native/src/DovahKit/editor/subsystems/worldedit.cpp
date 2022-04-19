@@ -249,18 +249,21 @@ namespace dovahkit::subsystems {
          }
          return false;
       });
-      if (found_coc_marker) {
-         sr->set_camera_position(coc_pos);
-         //
-         auto& scene  = sr->scene;
-         auto& camera = scene.camera;
-         camera.pitch = coc_rot.x - glm::radians<float>(90);
-         camera.roll  = coc_rot.y;
-         camera.yaw   = coc_rot.z;
-         scene.update_camera();
-      } else {
-         centroid /= refr_count;
-         sr->set_camera_position(centroid);
+      if (move_camera_to) {
+         if (found_coc_marker) {
+            coc_pos.z += 160; // the CK uses a vertical offset as well
+            sr->set_camera_position(coc_pos);
+            //
+            auto& scene = sr->scene;
+            auto& camera = scene.camera;
+            camera.pitch = coc_rot.x - glm::radians<float>(90);
+            camera.roll  = coc_rot.y;
+            camera.yaw   = coc_rot.z;
+            scene.update_camera();
+         } else {
+            centroid /= refr_count;
+            sr->set_camera_position(centroid);
+         }
       }
       //
       // Cell lighting parameters:
@@ -397,9 +400,9 @@ namespace dovahkit::subsystems {
             // step here.
             //
             update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
-            if (this->state.camera_speed.test(camera_speed_flags::boost))
+            if (this->state.camera_speed.test<camera_speed_flags::boost>())
                update.move.speed *= move_speed_mult_boost;
-            if (this->state.camera_speed.test(camera_speed_flags::precision))
+            if (this->state.camera_speed.test<camera_speed_flags::precision>())
                update.move.speed *= move_speed_mult_precision;
          }
          {
