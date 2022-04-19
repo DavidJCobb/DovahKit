@@ -90,8 +90,9 @@ namespace vulkanDK {
       this->shader_params   = o.shader_params;
       this->texture_indices = o.texture_indices;
       this->handled_frames  = o.handled_frames;
-      std::swap(this->life_state, o.life_state);
       std::swap(this->anim_state, o.anim_state);
+      std::swap(this->life_state, o.life_state);
+      std::swap(this->owning_nif, o.owning_nif);
       //
       return *this;
    }

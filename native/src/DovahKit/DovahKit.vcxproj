@@ -543,6 +543,7 @@
     <ClCompile Include="nif\blocks\NiTimeController.cpp" />
     <ClCompile Include="nif\blocks\NiTriShapeData.cpp" />
     <ClCompile Include="nif\blocks\unknown.cpp" />
+    <ClCompile Include="nif\blocks\_DKVulkanInterface.cpp" />
     <ClCompile Include="nif\blocks\_factory.cpp" />
     <ClCompile Include="nif\file.cpp" />
     <ClCompile Include="nif\reader.cpp" />
@@ -765,7 +766,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <QtMoc Include="editor\subsystems\DKXInputSubsystem.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
-    <ClInclude Include="editor\subsystems\worldedit.h" />
+    <QtMoc Include="editor\subsystems\worldedit.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />

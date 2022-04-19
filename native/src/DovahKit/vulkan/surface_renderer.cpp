@@ -3668,6 +3668,10 @@ namespace vulkanDK {
       ++this->scene.pending_deletions.meshes;
       auto& item = list[i];
       item.mark_for_delete();
+      if (item.owning_nif) {
+         item.owning_nif->sever_connection_to(rendered_mesh_handle(*this, i));
+         item.owning_nif = nullptr;
+      }
       {
          auto& list = this->scene.textures;
          for (auto& ti : item.texture_indices.list) {
@@ -3741,13 +3745,7 @@ namespace vulkanDK {
       }
    }
    //
-   size_t surface_renderer::object_index_at(int x, int y) {
-      //
-      // IntelliSense DOES NOT understand GLM's vector types properly and 
-      // will display them as if they aren't templated on float. Examination 
-      // in the run-time debugger confirms that they are indeed floats, so 
-      // ignore IntelliSense's lies!
-      //
+   rendered_mesh_handle surface_renderer::rendered_mesh_at(int x, int y) {
       glm::vec3 eye_position;
       glm::vec3 eye_endpoint;
       glm::vec3 eye_direction;
@@ -3783,7 +3781,9 @@ namespace vulkanDK {
             nearest = i;
          }
       }
-      return nearest;
+      if (nearest == -1)
+         return {};
+      return rendered_mesh_handle(*this, nearest);
    }
    
    namespace {
@@ -3946,6 +3946,7 @@ namespace vulkanDK {
       data->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
       mesh.life_state = scene_frame_item_state::active;
+      mesh.owning_nif = data->owner;
       mesh.shader_params.transform = transform;
       mesh.texture_indices.diffuse = fallback_texture_index;
       ++this->scene.textures[fallback_texture_index].refcount;
@@ -4018,6 +4019,7 @@ namespace vulkanDK {
       geom->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
       mesh.life_state = scene_frame_item_state::active;
+      mesh.owning_nif = object->owner;
       mesh.shader_params.transform = transform;
       mesh.texture_indices.diffuse = fallback_texture_index;
       ++this->scene.textures[fallback_texture_index].refcount;

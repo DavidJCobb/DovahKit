@@ -237,7 +237,7 @@ namespace vulkanDK {
          void remove_last_light();
          void set_animation_paused(size_t mesh, bool paused);
          //
-         size_t object_index_at(int viewport_x, int viewport_y); // returns -1 if none
+         rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
       
       protected:
          void _create_mesh_vib(rendered_mesh&);

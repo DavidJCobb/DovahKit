@@ -243,10 +243,9 @@ void DKVulkanView::mousePressEvent(QMouseEvent* event) {
    auto* s = this->renderer;
    if (!s)
       return;
-   auto pos = event->localPos();
-   auto i   = s->object_index_at(pos.x(), pos.y());
-   if (i == -1)
-      return;
-   emit this->renderedMeshClicked(i);
+   auto pos    = event->localPos();
+   auto handle = s->rendered_mesh_at(pos.x(), pos.y());
+   if (!handle.empty())
+      emit this->renderedMeshClicked(handle);
 }
 #pragma endregion

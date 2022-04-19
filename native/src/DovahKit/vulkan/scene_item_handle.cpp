@@ -30,6 +30,7 @@ namespace vulkanDK {
    void rendered_mesh_handle::destroy() {
       if (empty())
          return;
+      (*this)->owning_nif = nullptr;
       this->owner->remove_mesh(this->index);
       this->index = -1;
       this->owner = nullptr;

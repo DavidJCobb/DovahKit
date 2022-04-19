@@ -1,6 +1,9 @@
 #pragma once
 #include <chrono>
 #include <QWidget>
+#if !defined(QT_DESIGNER_LIB)
+   #include "vulkan/scene_item_handle.h"
+#endif
 
 namespace vulkanDK {
    class surface_renderer;
@@ -35,7 +38,9 @@ class DKVulkanView : public QWidget {
       void rendererTeardownImminent();
       void rendererTeardownComplete();
 
-      void renderedMeshClicked(size_t);
+      #if !defined(QT_DESIGNER_LIB)
+         void renderedMeshClicked(vulkanDK::rendered_mesh_handle);
+      #endif
 
       void rendererKilledDueToError();
 

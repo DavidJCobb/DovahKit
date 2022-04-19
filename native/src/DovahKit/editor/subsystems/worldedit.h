@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include "helpers/enum_flags.h"
 #include "helpers/singleton_ex.h"
 #include "helpers/vector3.h"
 #include "dovah/form_stub.h"
@@ -16,11 +17,17 @@ namespace dovahkit::subsystems {
    // Subsystem for accessing game assets.
    //
    class worldedit : public QObject, public cobb::singleton_ex<worldedit> {
+      Q_OBJECT;
       protected:
          worldedit();
       public:
          using singleton_ex::get;
          using singleton_ex::get_or_create;
+
+         enum class camera_speed_flags {
+            boost,
+            precision,
+         };
 
       protected:
          using form_stub       = dovah::form_stub;
@@ -42,7 +49,12 @@ namespace dovahkit::subsystems {
          DKVulkanView* target_view = nullptr;
          cell loaded_cell;
          std::vector<refr> loaded_refs;
+         //
+         struct {
+            cobb::enum_flags<camera_speed_flags, 2> camera_speed;
+         } state;
 
+         void _unload_refr(dovah::form_stub&);
          void _unload_cell(dovah::form_stub*);
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);
          void _load_cell(dovah::form_stub*, bool move_camera_to);
@@ -54,6 +66,7 @@ namespace dovahkit::subsystems {
       signals:
          void refSelected(dovah::form_stub&); // TODO
          void refDeselected(dovah::form_stub&); // TODO
+         void statusBarMessage(const QString& message, int display_time = 0);
 
       public slots:
          // TODO

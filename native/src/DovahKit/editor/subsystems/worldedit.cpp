@@ -7,7 +7,9 @@
 #include "dovah/forms/ObjectReference.h"
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
+#include "editor/core.h"
 #include "editor/subsystems/assets.h"
+#include "helpers/qt/strings.h"
 #include "nif/notice_code_t.h"
 #include "nif/blocks/NiNode.h"
 #include "nif/blocks/NiGeometry.h"
@@ -46,10 +48,70 @@ namespace {
 
 namespace dovahkit::subsystems {
    worldedit::worldedit() : QObject(nullptr) {
+      auto& core = DovahKitCore::get();
+      QObject::connect(&core, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* form, bool just_flagging) {
+         if (form->formType == dovah::form_type::cell) {
+            this->_unload_cell(form);
+            static_assert(!require_complete_implementation, "TODO: Interior cells: if the current cell is unloaded, reset lighting/fog params for the renderer.");
+            return;
+         }
+         if (dovah::form_type_info::form_type_is_reference(form->formType)) {
+            this->_unload_refr(*form);
+            return;
+         }
+         if (dovah::form_type_info::form_type_is_base_form(form->formType)) {
+            static_assert(!require_complete_implementation, "TODO: Find all loaded refs using this base form, and update them (show error NIF).");
+            return;
+         }
+      });
+      QObject::connect(&core, &DovahKitCore::formModified, this, [this](dovah::form_stub* form) {
+         if (form->formType == dovah::form_type::cell) {
+            if (form != this->loaded_cell.stub)
+               return;
+            static_assert(!require_complete_implementation, "TODO: Interior cells: check for changes to lighting params, and update Vulkan state.");
+            static_assert(!require_complete_implementation, "TODO: Exterior cells: check for changes to region, water height, etc., and update as needed.");
+            return;
+         }
+         if (dovah::form_type_info::form_type_is_reference(form->formType)) {
+            static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: Check for changes to render-relevant REFR fields, and update as needed.");
+            static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and an unselected REFR is moved out of the loaded area, unload the REFR.");
+            static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and a selected REFR is moved to another world or an interior, unload the REFR.");
+            static_assert(!require_complete_implementation, "TODO: If the REFR is NOT loaded: If we're in an exterior and the REFR is moved into the loaded area, load it.");
+            return;
+         }
+         if (dovah::form_type_info::form_type_is_base_form(form->formType)) {
+            static_assert(!require_complete_implementation, "TODO: Check if render-relevant properties (i.e. model; light data) have changed. If so, find all loaded refs using this base form, and update them.");
+            return;
+         }
+      });
    }
 
+   void worldedit::_unload_refr(dovah::form_stub& stub) {
+      if (!this->target_view)
+         return;
+      auto&  list = this->loaded_refs;
+      size_t size = list.size();
+      size_t i    = 0;
+      for (; i < size; ++i)
+         if (list[i].stub == &stub)
+            break;
+      if (i >= size)
+         return;
+      //
+      auto* sr   = this->target_view->surfaceRenderer();
+      auto& refr = list[i];
+      if (auto& h = refr.vulkan_handles.light; !h.empty()) {
+         h.destroy();
+      }
+      if (refr.nif)
+         sr->remove_nif(*refr.nif);
+      //
+      list.erase(list.begin() + i);
+   }
    void worldedit::_unload_cell(dovah::form_stub* cell) {
       if (!this->target_view)
+         return;
+      if (cell != this->loaded_cell.stub)
          return;
       //
       auto* sr   = this->target_view->surfaceRenderer();
@@ -122,6 +184,7 @@ namespace dovahkit::subsystems {
          delete model;
          return false;
       }
+      model->owning_form = &stub;
       //
       auto& item = this->loaded_refs.emplace_back();
       item.stub = &stub;
@@ -240,5 +303,22 @@ namespace dovahkit::subsystems {
          return;
       assert(this->target_view == nullptr);
       this->target_view = &view;
+      //
+      QObject::connect(&view, &DKVulkanView::renderedMeshClicked, this, [this](vulkanDK::rendered_mesh_handle handle) {
+         assert(!handle.empty());
+         auto* nif = handle->owning_nif;
+         if (!nif)
+            return;
+         auto* stub = nif->owning_form;
+         if (!stub)
+            return;
+         emit this->statusBarMessage(
+            QString("Clicked on form [%1:%2]%3.")
+               .arg(cobb::qt::four_cc_to_string(dovah::form_types[stub->formType].signature))
+               .arg(stub->formID, 8, 16, QChar('0'))
+               .arg(stub->get_editor_id()),
+            3000
+         );
+      });
    }
 }

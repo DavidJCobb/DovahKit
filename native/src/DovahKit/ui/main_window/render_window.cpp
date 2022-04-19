@@ -51,10 +51,13 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    view->setInputHandlingEnabled(true);
    //
    layout->addWidget(view, 1);
-   QObject::connect(view, &DKVulkanView::renderedMeshClicked, this, [this](size_t index) {
-      this->status->showMessage(QString("Mesh #%1 clicked.").arg(index), 2000);
-   });
-   dovahkit::subsystems::worldedit::get_or_create().set_target_view(*view);
+   {
+      auto& worldedit = dovahkit::subsystems::worldedit::get_or_create();
+      worldedit.set_target_view(*view);
+      QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::statusBarMessage, this, [this](const QString& message, int timeout) {
+         this->status->showMessage(message, timeout);
+      });
+   }
    //
    this->toolbar = new QToolBar(this);
    layout->setMenuBar(this->toolbar);
