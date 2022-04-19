@@ -1,5 +1,6 @@
 #include "surface_renderer.h"
 #include <chrono>
+#include <typeinfo>
 #include <QResource> // for loading shaders
 #include "helpers/array_concat.h"
 //
@@ -2334,7 +2335,7 @@ namespace vulkanDK {
       // Mark textures as synchronized:
       //
       for (auto& entry : this->scene.textures)
-         entry.handled_frames.set_all_up_to_date(list.size());
+         entry.handled_frames.set_all_up_to_date();
    }
    //
    void surface_renderer::_setup_render_passes() {
@@ -3265,9 +3266,28 @@ namespace vulkanDK {
       auto& list = this->scene.textures;
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
-         if (list[i].path == texture_path) {
+         auto& prior = list[i];
+         if (prior.path == texture_path) {
             if constexpr (debug_log_scene_object_lifetimes) {
                qDebug("[vulkanDK::scene_renderer::add_texture] Reusing texture index %u for texture path <%s>", i, qUtf8Printable(texture_path));
+            }
+            if (!prior.active()) {
+               if (!prior.pending_delete() || prior.content.handle == VK_NULL_HANDLE) {
+                  //
+                  // Texture slot matches our path, but the slot isn't active or pending deletion, 
+                  // or its texture content is gone. This shouldn't happen.
+                  //
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
+                  continue;
+               }
+               //
+               // Rescue the texture from deletion.
+               //
+               prior.life_state = scene_frame_item_state::active;
+               prior.handled_frames.set_all_out_of_date();
+               --this->scene.pending_deletions.textures;
             }
             return i;
          }
@@ -3425,9 +3445,28 @@ namespace vulkanDK {
       auto& list = this->scene.textures;
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
-         if (list[i].path == texture_path) {
+         auto& prior = list[i];
+         if (prior.path == texture_path) {
             if constexpr (debug_log_scene_object_lifetimes) {
                qDebug("[vulkanDK::scene_renderer::add_dds_texture] Reusing texture index %u for texture path <%s>", i, qUtf8Printable(texture_path));
+            }
+            if (!prior.active()) {
+               if (!prior.pending_delete() || prior.content.handle == VK_NULL_HANDLE) {
+                  //
+                  // Texture slot matches our path, but the slot isn't active or pending deletion, 
+                  // or its texture content is gone. This shouldn't happen.
+                  //
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
+                  continue;
+               }
+               //
+               // Rescue the texture from deletion.
+               //
+               prior.life_state = scene_frame_item_state::active;
+               prior.handled_frames.set_all_out_of_date();
+               --this->scene.pending_deletions.textures;
             }
             return i;
          }
@@ -3493,6 +3532,11 @@ namespace vulkanDK {
             img.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
          }
          img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
+         //
+         #if _DEBUG
+            this->set_debug_object_name(img.handle, QString("2D Image <Tex %1> <%2>").arg(texture_index).arg(target.path).toStdString());
+            this->set_debug_object_name(img.view,   QString("Image View <Tex %1> <%2>").arg(texture_index).arg(target.path).toStdString());
+         #endif
       } catch (std::runtime_error& e) {
          qDebug("[vulkanDK::scene_renderer::add_dds_texture] Exception thrown while trying to create a new texture.");
          target.content.teardown();
@@ -3629,6 +3673,7 @@ namespace vulkanDK {
          for (auto& ti : item.texture_indices.list) {
             if (ti < 0)
                continue;
+            assert(ti < list.size());
             if (ti < list.size()) {
                auto& tex = list[ti];
                if (--tex.refcount == 0) {
@@ -3742,7 +3787,7 @@ namespace vulkanDK {
    }
    
    namespace {
-      void _handle_ni_alpha(
+      void _handle_ni_shader_properties(
          rendered_mesh& mesh,
          const nifDK::block_types::NiAlphaProperty* alpha,
          const nifDK::block_types::BSShaderProperty* shader,
@@ -3754,6 +3799,8 @@ namespace vulkanDK {
             mesh.push_params.alpha_test_threshold  = (float)alpha->testing.threshold / 255.0F;
             mesh.push_params.enable_alpha_blending = alpha->blending.enabled ? VK_TRUE : VK_FALSE;
             //
+            if (!alpha->testing.enabled)
+               mesh.push_params.alpha_test_operation = (int)nifDK::block_types::NiAlphaProperty::test_mode::always;
             if (alpha->blending.enabled)
                mesh.mesh_flags |= rendered_mesh::mesh_flag::requires_oit;
          }
@@ -3773,6 +3820,9 @@ namespace vulkanDK {
                   // TODO: pass this alpha value in
                   //
                }
+               mesh.shader_params.specular_color    = { casted->specular.color.r, casted->specular.color.g, casted->specular.color.b };
+               mesh.shader_params.specular_exponent = casted->material.glossiness;
+               mesh.shader_params.specular_strength = casted->specular.strength;
             } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
                shader_flags     = casted->shader_flags;
                has_shader_flags = true;
@@ -3902,7 +3952,7 @@ namespace vulkanDK {
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
-      _handle_ni_alpha(mesh, data->properties.alpha, data->properties.shader, enable_vertex_alpha, enable_vertex_color);
+      _handle_ni_shader_properties(mesh, data->properties.alpha, data->properties.shader, enable_vertex_alpha, enable_vertex_color);
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto&       list = data->vertices;
@@ -3974,7 +4024,7 @@ namespace vulkanDK {
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
-      _handle_ni_alpha(mesh, geom->properties.alpha, geom->properties.shader, enable_vertex_alpha, enable_vertex_color);
+      _handle_ni_shader_properties(mesh, geom->properties.alpha, geom->properties.shader, enable_vertex_alpha, enable_vertex_color);
       {  // Vertices
          mesh.data.vertices.resize(size);
          auto& vl = data->vertices;
@@ -4070,30 +4120,21 @@ namespace vulkanDK {
          auto& texture_item = this->scene.textures[texture_index];
          texture_item.life_state = scene_frame_item_state::active;
       }
-      //
-      auto functor = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
-         //
-         // Lambdas can't recursively call themselves, in part because they'd have to reference their own 
-         // identifiers (not possible: the auto expression isn't "complete" at parse time, so the type 
-         // is unknown) and in part because those identifiers are in a different scope (lambdas can't 
-         // capture themselves).
-         //
-         auto impl = [this, texture_index](nifDK::block_types::NiAVObject* object, glm::mat4 transform, auto& self) -> void {
-            auto* node = dynamic_cast<nifDK::block_types::NiNode*>(object);
-            if (node) {
-               qDebug("[surface_renderer::add_nif] Handling node: %s...", node->name.data());
-               transform = transform * node->transform.to_matrix();
-               if (auto* sn = dynamic_cast<nifDK::block_types::NiSwitchNode*>(node)) {
-                  qDebug("[surface_renderer::add_nif] This is a NiSwitchNode...");
-                  auto* child = sn->current_child();
-                  if (child)
-                     (self)(child, transform, self);
-               } else {
-                  for (auto* child : node->children)
-                     (self)(child, transform, self);
-               }
-               qDebug("[surface_renderer::add_nif] Handled node: %s.", node->name.data());
-               return;
+      glm::mat4 transform = glm_transform_from_beth(pos, rot, scale);
+      model.root_node->walk_tree(
+         transform,
+         [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
+            transform = transform * node->transform.to_matrix();
+         },
+         [this, texture_index](nifDK::block_types::NiAVObject* object, const glm::mat4& transform) {
+            if (&typeid(*object->parent) == &typeid(nifDK::block_types::NiSwitchNode)) {
+               //
+               // For NiSwitchNodes, only import the current child. (TODO: Instead, import all children 
+               // and then cull the non-active ones somehow.)
+               //
+               auto* sn = (nifDK::block_types::NiSwitchNode*)object->parent;
+               if (sn->current_child() != object)
+                  return;
             }
             if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
                this->add_NiGeometry_mesh(geom, transform, texture_index);
@@ -4101,12 +4142,8 @@ namespace vulkanDK {
             if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
                this->add_BSTriShape_mesh(geom, transform, texture_index);
             }
-         };
-         impl(object, transform, impl);
-      };
-      {
-         (functor)(model.root_node, glm_transform_from_beth(pos, rot, scale));
-      }
+         }
+      );
       qDebug("[surface_renderer::add_nif] Done processing the NIF.");
       {
          auto& tex = this->scene.textures[texture_index];
@@ -4130,38 +4167,19 @@ namespace vulkanDK {
          qDebug("[surface_renderer::remove_nif] Model has no root node.");
          return;
       }
-      auto functor = [this](nifDK::block_types::NiAVObject* object) {
-         //
-         // Lambdas can't recursively call themselves, in part because they'd have to reference their own 
-         // identifiers (not possible: the auto expression isn't "complete" at parse time, so the type 
-         // is unknown) and in part because those identifiers are in a different scope (lambdas can't 
-         // capture themselves).
-         //
-         auto impl = [this](nifDK::block_types::NiAVObject* object, auto& self) -> void {
-            auto* node = dynamic_cast<nifDK::block_types::NiNode*>(object);
-            if (node) {
-               for (auto* child : node->children)
-                  (self)(child, self);
+      model.root_node->for_non_node_descendants([this](nifDK::block_types::NiAVObject* object) {
+         rendered_mesh_handle* handle = nullptr;
+         if (auto* intfc = dynamic_cast<nifDK::block_interfaces::_DKVulkanMeshInterface*>(object)) {
+            handle = &intfc->vulkan_state.mesh_handle;
+         }
+         if (handle && !handle->empty()) {
+            if (handle->renderer() != this) {
+               qDebug("[surface_renderer::remove_nif] WARNING: Geometry object belongs to a different renderer!");
                return;
             }
-            rendered_mesh_handle* handle = nullptr;
-            if (auto* geom = dynamic_cast<nifDK::block_types::NiTriBasedGeom*>(object)) {
-               handle = &geom->vulkan_state.mesh_handle;
-            } else if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
-               handle = &geom->vulkan_state.mesh_handle;
-            }
-            if (handle && !handle->empty()) {
-               if (handle->renderer() != this) {
-                  qDebug("[surface_renderer::remove_nif] WARNING: Geometry object belongs to a different renderer!");
-                  return;
-               }
-               handle->destroy();
-            }
-         };
-         impl(object, impl);
-      };
-      (functor)(model.root_node);
-      //
+            handle->destroy();
+         }
+      });
       for (auto& image : this->swap_chain.frames_in_flight) {
          image.on_scene_meshes_added_or_removed();
       }
@@ -4514,7 +4532,7 @@ namespace vulkanDK {
          auto&  list       = this->scene.lights;
          for (size_t i = 0; i < list.size(); ++i) {
             auto& item = list[i];
-            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date()) {
                item.reset();
                ++deleted;
             } else {
@@ -4535,7 +4553,7 @@ namespace vulkanDK {
          auto&  list       = this->scene.meshes;
          for (size_t i = 0; i < list.size(); ++i) {
             auto& item = list[i];
-            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date()) {
                item.reset();
                ++deleted;
             } else {
@@ -4556,7 +4574,7 @@ namespace vulkanDK {
          auto&  list       = this->scene.textures;
          for (size_t i = 0; i < list.size(); ++i) {
             auto& item = list[i];
-            if (item.pending_delete() && item.handled_frames.are_all_up_to_date(ic)) {
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date()) {
                item.reset();
                ++deleted;
             } else {

@@ -13,6 +13,10 @@
 // geometry
 #include "../helpers/vector3.h"
 
+namespace nifDK {
+   class file;
+}
+
 namespace vulkanDK {
    struct mesh_animation_state {
       bool  playing  = true;
@@ -100,6 +104,7 @@ namespace vulkanDK {
          frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
          scene_frame_item_state life_state = scene_frame_item_state::empty;
          //
+         nifDK::file* owning_nif = nullptr;
          mesh_animation_state* anim_state = nullptr; // owns
 
          inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }

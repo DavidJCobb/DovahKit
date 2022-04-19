@@ -1161,8 +1161,11 @@ namespace vulkanDK {
          auto* params = (entry_type*)this->shader_params.object_data.map_memory();
          for (size_t i = first_dirty; i < count; ++i) {
             auto& item = ro[i];
-            if (!item.active())
+            if (!item.active()) {
+               if (item.pending_delete())
+                  item.handled_frames.set_up_to_date(this->my_index);
                continue;
+            }
             if (item.handled_frames.is_up_to_date(this->my_index))
                continue;
             auto& src = item.shader_params;

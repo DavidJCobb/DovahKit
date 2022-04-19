@@ -832,6 +832,7 @@
     <ClInclude Include="nif\blocks\NiTimeController.h" />
     <ClInclude Include="nif\blocks\NiTriBasedGeomData.h" />
     <ClInclude Include="nif\blocks\NiTriShapeData.h" />
+    <ClInclude Include="nif\blocks\_DKVulkanInterface.h" />
     <ClInclude Include="nif\detailed_notice.h" />
     <ClInclude Include="nif\notice_code_list.h" />
     <ClInclude Include="nif\notice_code_t.h" />

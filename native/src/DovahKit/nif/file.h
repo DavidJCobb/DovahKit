@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "detailed_notice.h"
+#include "vulkan/scene_item_handle.h"
 
 namespace nifDK {
    class block;
@@ -89,5 +90,7 @@ namespace nifDK {
                return nullptr;
             return this->all_blocks[i];
          }
+
+         void sever_connection_to(vulkanDK::rendered_mesh_handle);
    };
 }

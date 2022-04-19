@@ -245,4 +245,10 @@ namespace nifDK {
       // I think we're done, at this point
       //
    }
+
+   void file::sever_connection_to(vulkanDK::rendered_mesh_handle handle) {
+      for (auto* b : this->all_blocks) {
+         b->sever_connection_to_vulkan_mesh(handle);
+      }
+   }
 }

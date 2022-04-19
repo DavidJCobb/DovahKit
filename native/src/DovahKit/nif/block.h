@@ -3,6 +3,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include "blocks/_DKVulkanInterface.h"
 #include "types/NiTransform.h"
 
 namespace nifDK {
@@ -44,7 +45,7 @@ namespace nifDK {
       SkyrimWaterShaderFlags,
    };
 
-   class block {
+   class block : public virtual block_interfaces::_DKVulkanInterface {
       public:
          block_type type = block_type::unknown;
 

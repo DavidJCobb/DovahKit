@@ -1,5 +1,6 @@
 #include "rendered_mesh.h"
 #include "../helpers/math.h"
+#include "nif/file.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -203,6 +204,7 @@ namespace vulkanDK {
    void rendered_mesh::mark_for_delete() {
       this->life_state = scene_frame_item_state::pending_delete;
       this->handled_frames.set_all_out_of_date();
+      this->owning_nif = nullptr;
    }
    void rendered_mesh::reset() {
       auto& vib = this->vertex_and_index_buffer;
@@ -220,6 +222,7 @@ namespace vulkanDK {
       this->texture_indices = decltype(texture_indices)();
       this->handled_frames = frame_dirty_state();
       this->life_state = scene_frame_item_state::empty;
+      this->owning_nif = nullptr;
       //
       this->data.vertices.clear();
       this->data.indices.clear();

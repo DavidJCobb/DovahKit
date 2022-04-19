@@ -17,6 +17,7 @@ namespace vulkanDK {
       scene_frame_item_state life_state = scene_frame_item_state::empty;
       uint32_t refcount = 0;
 
+      inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
       inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
       inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
 

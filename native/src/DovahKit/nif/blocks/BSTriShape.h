@@ -1,4 +1,5 @@
 #pragma once
+#include "_DKVulkanInterface.h"
 #include "NiAVObject.h"
 #include "../types/BSVertexDataSSE.h"
 #include "../types/BSVertexDesc.h"
@@ -11,7 +12,7 @@ namespace nifDK::block_types {
    class BSShaderProperty;
    class NiAlphaProperty;
 
-   class BSTriShape : public NiAVObject {
+   class BSTriShape : public NiAVObject, public virtual block_interfaces::_DKVulkanMeshInterface {
       public:
          static constexpr const char* const type_name = "BSTriShape";
       public:
@@ -33,13 +34,6 @@ namespace nifDK::block_types {
             std::vector<glm::fvec3> per_vertex;
             std::vector<Triangle> triangles; // copy of mesh triangle list
          } particle_data; // user version 2 == 100
-
-         struct {
-            //
-            // Fields for supporting DovahKit's run-time needs.
-            //
-            vulkanDK::rendered_mesh_handle mesh_handle;
-         } vulkan_state;
 
          virtual void parse(file_reader&) override;
    };

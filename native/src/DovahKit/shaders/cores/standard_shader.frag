@@ -61,9 +61,12 @@ vec4 calculate_color() {
    //
    rendered_mesh_shader_params current_object = scene_meshes[pushed.object_index];
    //
-   color = texture(sampler2D(textures[pushed.texture_index], default_sampler), fs_in.uv);
-   //
-   color *= fs_in.color;
+   if (pushed.texture_index >= 0) {
+      color = texture(sampler2D(textures[pushed.texture_index], default_sampler), fs_in.uv);
+      color *= fs_in.color;
+   } else {
+      color = fs_in.color;
+   }
    alpha_testing_conditional_discard(color.a, pushed.alpha_test_operation, pushed.alpha_test_threshold);
    #if USE_ALPHA_OIT == 1
       if (pushed.enable_alpha_blending == 0) {

@@ -38,4 +38,13 @@ namespace nifDK::block_types {
       for (uint32_t i = 0; i < count; ++i)
          reader.read_ref(this->effects[i]);
    }
+
+   size_t NiNode::index_of_child(const NiAVObject* c) const {
+      auto& list = this->children;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i)
+         if (list[i] == c)
+            return i;
+      return -1;
+   }
 }
