@@ -1,4 +1,6 @@
 #include "worldedit.h"
+#include "dk3D/tools/_results.h"
+#include "dk3D/DK3DInputHandler.h"
 #include "dovah/forms/factories/hardcoded.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub_helpers.h"
@@ -22,6 +24,14 @@
 
 namespace {
    static constexpr bool require_complete_implementation = false;
+}
+
+namespace {
+   static constexpr float move_speed_normal = 180.0F;
+   static constexpr float move_speed_mult_precision = 0.3F;
+   static constexpr float move_speed_mult_boost     = 2.0F;
+
+   static constexpr float turn_speed_per_second = glm::radians<float>(90);
 }
 
 namespace {
@@ -321,5 +331,91 @@ namespace dovahkit::subsystems {
             3000
          );
       });
+   }
+
+   void worldedit::view_input_poll_handler(DKVulkanView& view) {
+      if (&view != this->target_view)
+         return;
+      if (!view.isListeningForInput())
+         return;
+      DK3D::combined_tool_results results;
+      double delta;
+      DK3DInputHandler::get().update(results, delta);
+      //
+      auto* sr = view.surfaceRenderer();
+      //
+      #pragma region modify_camera_speed_flags
+      //
+      // This must run before we apply camera movements.
+      //
+      {
+         const auto& data = results.get_member<DK3D::tools::modify_camera_speed_flags>();
+         auto& mask = this->state.camera_speed;
+         {
+            constexpr auto flag = camera_speed_flags::boost;
+            switch (data.boost) {
+               using enum DK3D::bool_operation;
+               case set_true:
+                  mask.set<flag>();
+                  break;
+               case set_false:
+                  mask.reset<flag>();
+                  break;
+               case invert:
+                  mask.flip<flag>();
+                  break;
+            }
+         }
+         {
+            constexpr auto flag = camera_speed_flags::precision;
+            switch (data.precision) {
+               using enum DK3D::bool_operation;
+               case set_true:
+                  mask.set<flag>();
+                  break;
+               case set_false:
+                  mask.reset<flag>();
+                  break;
+               case invert:
+                  mask.flip<flag>();
+                  break;
+            }
+         }
+      }
+      #pragma endregion
+      #pragma region move_camera and turn_camera
+      {
+         DKVulkanCameraUpdate update;
+         update.delta_seconds = delta;
+         {
+            const auto& data = results.get_member<DK3D::tools::move_camera>();
+            update.move.direction      = { data.x, data.y, data.z };
+            update.move.scale_by_delta = false;
+            //
+            // Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
+            // delta in the code above. This means that we need to turn off scaling in this particular 
+            // step here.
+            //
+            update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+            if (this->state.camera_speed.test(camera_speed_flags::boost))
+               update.move.speed *= move_speed_mult_boost;
+            if (this->state.camera_speed.test(camera_speed_flags::precision))
+               update.move.speed *= move_speed_mult_precision;
+         }
+         {
+            const auto& data = results.get_member<DK3D::tools::turn_camera>();
+            update.turn.roll  = data.roll;
+            update.turn.pitch = data.pitch;
+            update.turn.yaw   = data.yaw;
+            update.turn.scale_by_delta = false;
+            //
+            update.turn.speed = turn_speed_per_second;
+         }
+         sr->scene.adjust_camera(update);
+      }
+      #pragma endregion
+      //
+      // Done processing all tools.
+      //
    }
 }

@@ -76,8 +76,8 @@ DK3DInputHandler::DK3DInputHandler() {
             float z = 0; // yaw
          };
          constexpr auto _binds = std::array{
-            _bind{ "Turn Camera Left",  'G',  0,  1}, // counterclockwise, so turning left is positive
-            _bind{ "Turn Camera Right", 'H',  0, -1},
+            _bind{ "Turn Camera Left",  'G',  0, -1}, // clockwise, so turning left is negative
+            _bind{ "Turn Camera Right", 'H',  0,  1},
             _bind{ "Turn Camera Up",    'R',  1,  0},
             _bind{ "Turn Camera Down" , 'V', -1,  0},
          };
@@ -172,8 +172,36 @@ DK3DInputHandler::DK3DInputHandler() {
                   .input_x = camera_turn_axis::yaw,
                   .input_y = camera_turn_axis::pitch,
                   .x_sign  = sign::positive,
-                  .y_sign  = sign::positive,
+                  .y_sign  = sign::negative, // in XInput, up is positive and down is negative; our system presupposes the opposite
                },
+            }
+         )));
+      }
+      {  // gamepad functions: boost and precision
+         root->append(*(new binds::nodes::input(
+            tr("Boost"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = DK3D::inputs::xinput_button::LT,
+                  .press_type = DK3D::button_press_type::while_down,
+               },
+            },
+            &tools::modify_camera_speed_flags::get(),
+            tools::modify_camera_speed_flags::options{
+               .boost = bool_operation::set_true,
+            }
+         )));
+         root->append(*(new binds::nodes::input(
+            tr("Toggle Precision"),
+            DK3D::inputs::bound_input{
+               .button = {
+                  .gamepad    = DK3D::inputs::xinput_button::LS,
+                  .press_type = DK3D::button_press_type::tap,
+               },
+            },
+            &tools::modify_camera_speed_flags::get(),
+            tools::modify_camera_speed_flags::options{
+               .precision = bool_operation::invert,
             }
          )));
       }
@@ -231,7 +259,7 @@ DK3DInputHandler::DK3DInputHandler() {
             tr("Test Modifier"),
             DK3D::inputs::bound_input{
                .button = {
-                  .gamepad    = inputs::xinput_button::LT,
+                  .gamepad    = inputs::xinput_button::RT,
                   .press_type = DK3D::button_press_type::while_down,
                },
             },
@@ -395,31 +423,25 @@ void DK3DInputHandler::viewFocusChange(DKVulkanView* target, bool has_focus) {
    }
 }
 
-void DK3DInputHandler::setTargetView(DKVulkanView* target) {
-   if (this->state.target_view == target)
-      return;
-   this->state.target_view = target;
-   this->ignoreAllHeldKeys();
-}
-DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
-   if (subject && subject != this->state.target_view)
-      return DKVulkanCameraUpdate();
-   //
-   auto now     = DK3D::current_time();
-   auto elapsed = DK3D::elapsed_time(this->state.last_update, now);
-   if (elapsed <= 0.0)
+void DK3DInputHandler::update(DK3D::combined_tool_results& out, double& elapsed) {
+   auto now = DK3D::current_time();
+   elapsed = DK3D::elapsed_time(this->state.last_update, now);
+   if (elapsed <= 0.0) {
       //
       // This can happen sometimes -- we receive  an update so soon that it's not even 
       // an easily-measurable  fraction of a  second -- and in  that case, there's not 
       // any point to doing input processing. We'll just be scaling speeds and whatnot 
       // by zero anyway.
       //
-      return DKVulkanCameraUpdate();
+      out = {};
+      return;
+   }
    this->state.last_update = now;
    //
    if (elapsed >= reset_after_lag_threshold) {
       this->ignoreAllHeldKeys(now);
-      return DKVulkanCameraUpdate();
+      out = {};
+      return;
    }
    //
    this->updateAllKeys(now);
@@ -452,10 +474,29 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
    while_results.scale(elapsed);
    instant_results.merge(while_results);
    //
+   out = instant_results;
+}
+
+void DK3DInputHandler::setTargetView(DKVulkanView* target) {
+   if (this->state.target_view == target)
+      return;
+   this->state.target_view = target;
+   this->ignoreAllHeldKeys();
+}
+DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
+   if (subject && subject != this->state.target_view)
+      return {};
+   //
+   double elapsed;
+   combined_tool_results results;
+   this->update(results, elapsed);
+   if (elapsed <= 0.0)
+      return {};
+   //
    DKVulkanCameraUpdate update;
    update.delta_seconds = elapsed;
    {
-      const auto& data = instant_results.get_member<DK3D::tools::move_camera>();
+      const auto& data = results.get_member<DK3D::tools::move_camera>();
       update.move.direction      = { data.x, data.y, data.z };
       update.move.scale_by_delta = false;
       //
@@ -463,10 +504,10 @@ DKVulkanCameraUpdate DK3DInputHandler::update(DKVulkanView* subject) {
       // delta in the code above. This means that we need to turn off scaling in this particular 
       // step here.
       //
-      update.move.speed = 1.0 * elapsed; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+      update.move.speed = 180.0 * elapsed; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
    }
    {
-      const auto& data = instant_results.get_member<DK3D::tools::turn_camera>();
+      const auto& data = results.get_member<DK3D::tools::turn_camera>();
       update.turn.roll  = data.roll;
       update.turn.pitch = data.pitch;
       update.turn.yaw   = data.yaw;

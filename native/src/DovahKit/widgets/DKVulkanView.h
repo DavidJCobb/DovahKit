@@ -24,6 +24,10 @@ class DKVulkanView : public QWidget {
 
       inline vulkanDK::surface_renderer* surfaceRenderer() const { return this->renderer; }
 
+      inline bool isListeningForInput() const {
+         return this->input_handling.enabled && this->input_handling.focused;
+      }
+
    public slots:
       void setDesiredFrameDelay(uint ms);
       void setPreferredGPUName(const QString&); // not retroactive; use before supplying an instance

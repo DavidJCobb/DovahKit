@@ -427,6 +427,23 @@ namespace cobb {
             this->bytes[bi] &= ~uint8_t(1 << bb);
          }
 
+         void flip(value_type v) {
+            auto cv = (underlying_type)v;
+            if constexpr (std::is_signed_v< underlying_type>) {
+               if (cv < 0)
+                  return;
+            }
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() ^= _value_as_register(v);
+                  return;
+               }
+            }
+            auto bi = cv / 8;
+            auto bb = cv % 8;
+            this->bytes[bi] ^= uint8_t(1 << bb);
+         }
+
          template<typename... T> requires (std::is_same_v<T, value_type> && ...)
          void reset_all_of(T... v) {
             if constexpr (_is_single_register) {
@@ -470,6 +487,19 @@ namespace cobb {
                }
             }
             this->reset(Value);
+         }
+
+         // flip() with compile-time checking for the enum values
+         template<value_type Value> void flip() {
+            static_assert(((underlying_type)Value >= 0),    "The specified value is negative.");
+            static_assert(((underlying_type)Value < count), "The specified value is greater than can be contained in this type.");
+            if constexpr (_is_single_register) {
+               if (!std::is_constant_evaluated()) {
+                  _data_as_register() ^= _value_as_register(Value);
+                  return;
+               }
+            }
+            this->flip(Value);
          }
 
          // reset_all_of() with compile-time checking for the enum values

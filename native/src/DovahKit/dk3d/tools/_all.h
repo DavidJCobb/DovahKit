@@ -6,6 +6,7 @@
 
 #include "debug_log.h"
 #include "debug_placeholder.h"
+#include "modify_camera_speed_flags.h"
 #include "move_camera.h"
 #include "turn_camera.h"
 
@@ -13,6 +14,7 @@ namespace DK3D {
    using all_tools = cobb::class_list<
       tools::debug_log,
       tools::debug_placeholder,
+      tools::modify_camera_speed_flags,
       tools::move_camera,
       tools::turn_camera//,
    >;

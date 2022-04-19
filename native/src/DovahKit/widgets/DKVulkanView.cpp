@@ -2,13 +2,14 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QPainter>
+//#include "../dk3D/DK3DInputHandler.h"
+#include "../editor/subsystems/worldedit.h"
 #include "../vulkan/data/DKVulkanCameraUpdate.h"
 #include "../vulkan/DKVulkanInstance.h"
 #include "../vulkan/exceptions.h"
 #include "../vulkan/physical_device.h"
 #include "../vulkan/queue_family_info.h"
 #include "../vulkan/surface_renderer.h"
-#include "../dk3d/DK3DInputHandler.h"
 
 namespace {
    constexpr int null_icon_render_bounds = 400;
@@ -140,11 +141,9 @@ void DKVulkanView::setInputHandlingEnabled(bool e) {
 void DKVulkanView::_inputPoll() {
    if (!this->input_handling.enabled || !this->input_handling.focused)
       return;
-   auto* s = this->renderer;
-   if (!s)
+   if (!this->renderer)
       return;
-   auto update = DK3DInputHandler::get().update(this);
-   s->scene.adjust_camera(update);
+   dovahkit::subsystems::worldedit::get().view_input_poll_handler(*this);
 }
 void DKVulkanView::_killRendererDueToError() {
    this->renderer_killed_due_to_error = true;
@@ -232,11 +231,11 @@ void DKVulkanView::timerEvent(QTimerEvent* event) {
 
 void DKVulkanView::focusInEvent(QFocusEvent* event) {
    this->input_handling.focused = true;
-   DK3DInputHandler::get().viewFocusChange(this, true);
+   //DK3DInputHandler::get().viewFocusChange(this, true);
 }
 void DKVulkanView::focusOutEvent(QFocusEvent* event) {
    this->input_handling.focused = false;
-   DK3DInputHandler::get().viewFocusChange(this, false);
+   //DK3DInputHandler::get().viewFocusChange(this, false);
 }
 
 void DKVulkanView::mousePressEvent(QMouseEvent* event) {

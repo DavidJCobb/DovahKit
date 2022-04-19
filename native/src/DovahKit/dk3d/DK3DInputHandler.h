@@ -20,6 +20,10 @@
 #include "vulkan/data/DKVulkanCameraUpdate.h"
 #include "widgets/DKVulkanView.h"
 
+namespace DK3D {
+   class combined_tool_results;
+}
+
 class DK3DInputHandler : public QObject {
    Q_OBJECT;
    public:
@@ -42,6 +46,8 @@ class DK3DInputHandler : public QObject {
    public:
       DK3D::binds::tree bindingsFor(DK3D::input_device_type) const;
       void viewFocusChange(DKVulkanView* target, bool has_focus);
+
+      void update(DK3D::combined_tool_results&, double& elapsed_time);
 
    public slots:
       void setTargetView(DKVulkanView* target);

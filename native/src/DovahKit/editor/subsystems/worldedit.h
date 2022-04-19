@@ -63,6 +63,8 @@ namespace dovahkit::subsystems {
          void set_current_cell(dovah::form_stub*);
          void set_target_view(DKVulkanView&);
 
+         void view_input_poll_handler(DKVulkanView&);
+
       signals:
          void refSelected(dovah::form_stub&); // TODO
          void refDeselected(dovah::form_stub&); // TODO

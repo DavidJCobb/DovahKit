@@ -122,6 +122,7 @@
     <ClCompile Include="dk3d\input_result.cpp" />
     <ClCompile Include="dk3d\tools\debug_log.cpp" />
     <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
+    <ClCompile Include="dk3d\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="dk3d\tools\move_camera.cpp" />
     <ClCompile Include="dk3d\tools\turn_camera.cpp" />
     <ClCompile Include="dk3d\tools\_all.cpp" />
@@ -716,6 +717,7 @@
     <ClInclude Include="dk3d\defaults.h" />
     <ClInclude Include="dk3d\devices\xinput.h" />
     <ClInclude Include="dk3d\enums\axis2D.h" />
+    <ClInclude Include="dk3d\enums\bool_operation.h" />
     <ClInclude Include="dk3d\enums\button_press_type.h" />
     <ClInclude Include="dk3d\enums\button_release_type.h" />
     <ClInclude Include="dk3d\enums\camera_turn_axis.h" />
@@ -732,6 +734,7 @@
     <ClInclude Include="dk3d\input_result.h" />
     <ClInclude Include="dk3d\tools\debug_log.h" />
     <ClInclude Include="dk3d\tools\debug_placeholder.h" />
+    <ClInclude Include="dk3d\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="dk3d\tools\move_camera.h" />
     <ClInclude Include="dk3d\tools\turn_camera.h" />
     <ClInclude Include="dk3d\tools\_all.h" />
