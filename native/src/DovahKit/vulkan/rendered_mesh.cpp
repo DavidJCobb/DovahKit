@@ -279,6 +279,17 @@ namespace vulkanDK {
             distance
          );
          if (result) {
+            if (distance < 0) {
+               //
+               // So GLM didn't  manage to  implement  a ray/triangle  intersection check 
+               // properly. That's fun.
+               // 
+               // Specifically, it can return a true result but with a negative distance, 
+               // which means that the surface is actually BEHIND the ray, which means it 
+               // isn't the hit position and indeed, there wasn't a hit.
+               //
+               continue;
+            }
             hits         = result;
             hit_distance = std::min(distance, hit_distance);
          }

@@ -95,11 +95,15 @@ namespace dovahkit::subsystems {
             return;
          }
       });
+      static_assert(!require_complete_implementation, "TODO: Hook our own selected/selected signals, and update selection effects in the renderer as appropriate.");
+         static_assert(!require_complete_implementation, "TODO: Add code to the renderer to show OBBs on specified meshes.");
    }
 
    void worldedit::_unload_refr(dovah::form_stub& stub) {
-      if (!this->target_view)
-         return;
+      {  // Deselect the ref.
+         auto& list = this->state.selection.refs;
+         list.erase(std::remove(list.begin(), list.end(), &stub), list.end());
+      }
       auto&  list = this->loaded_refs;
       size_t size = list.size();
       size_t i    = 0;
@@ -111,12 +115,18 @@ namespace dovahkit::subsystems {
       //
       auto* sr   = this->target_view->surfaceRenderer();
       auto& refr = list[i];
-      if (auto& h = refr.vulkan_handles.light; !h.empty()) {
-         h.destroy();
+      if (this->target_view) {
+         if (auto* sr = this->target_view->surfaceRenderer()) {
+            //
+            // Remove the ref and associated state from the Vulkan renderer.
+            //
+            if (auto& h = refr.vulkan_handles.light; !h.empty()) {
+               h.destroy();
+            }
+            if (refr.nif)
+               sr->remove_nif(*refr.nif);
+         }
       }
-      if (refr.nif)
-         sr->remove_nif(*refr.nif);
-      //
       list.erase(list.begin() + i);
    }
    void worldedit::_unload_cell(dovah::form_stub* cell) {
@@ -420,5 +430,35 @@ namespace dovahkit::subsystems {
       //
       // Done processing all tools.
       //
+   }
+
+   void worldedit::setRefSelectionState(dovah::form_stub& stub, bool state) {
+      if (!this->is_ref_loaded(&stub))
+         return;
+      auto& list = this->state.selection.refs;
+      auto  it   = std::find(list.begin(), list.end(), &stub);
+      bool  has  = it != list.end();
+      if (has == state)
+         return;
+      if (state) {
+         list.push_back(&stub);
+         emit this->refSelected(stub);
+      } else {
+         list.erase(it);
+         emit this->refDeselected(stub);
+      }
+   }
+   void worldedit::toggleRefSelectionState(dovah::form_stub& stub) {
+      if (!this->is_ref_loaded(&stub))
+         return;
+      auto& list = this->state.selection.refs;
+      auto  it   = std::find(list.begin(), list.end(), &stub);
+      if (it == list.end()) {
+         list.push_back(&stub);
+         emit this->refSelected(stub);
+      } else {
+         list.erase(it);
+         emit this->refDeselected(stub);
+      }
    }
 }

@@ -23,6 +23,10 @@ if so,  or false otherwise. Uses out-arguments  to supply the hit distance  and
 the barycentric  hit position (a two-value position relative  to the triangle's 
 vertices, apparently useful for raytracing).
 
+Notably,  the implementation appears to be wrong:  it can return  a true result 
+but with a negative distance, which indicates a false-positive "hit" on objects 
+behind the ray.
+
 Arguments:
 
  - const vec3& ray_origin

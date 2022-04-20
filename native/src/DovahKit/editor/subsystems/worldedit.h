@@ -52,6 +52,9 @@ namespace dovahkit::subsystems {
          //
          struct {
             cobb::enum_flags<camera_speed_flags, 2> camera_speed;
+            struct {
+               std::vector<dovah::form_stub*> refs;
+            } selection;
          } state;
 
          void _unload_refr(dovah::form_stub&);
@@ -65,12 +68,15 @@ namespace dovahkit::subsystems {
 
          void view_input_poll_handler(DKVulkanView&);
 
+         bool is_ref_loaded(const dovah::form_stub*) const;
+
       signals:
-         void refSelected(dovah::form_stub&); // TODO
-         void refDeselected(dovah::form_stub&); // TODO
+         void refSelected(dovah::form_stub&);
+         void refDeselected(dovah::form_stub&);
          void statusBarMessage(const QString& message, int display_time = 0);
 
       public slots:
-         // TODO
+         void setRefSelectionState(dovah::form_stub&, bool state);
+         void toggleRefSelectionState(dovah::form_stub&);
    };
 }
