@@ -20,5 +20,9 @@
         <file>rendered_mesh/debug-shadow-caster-space.frag.spv</file>
         <file>frustum-cull.comp.spv</file>
         <file>shadow-caster-cull.comp.spv</file>
+        <file>bounding-box.frag.spv</file>
+        <file>bounding-box.vert.spv</file>
+        <file>bounding-origin.frag.spv</file>
+        <file>bounding-origin.vert.spv</file>
     </qresource>
 </RCC>

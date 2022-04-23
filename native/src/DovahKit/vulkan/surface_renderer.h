@@ -65,6 +65,8 @@ namespace vulkanDK {
          static constexpr compute_shader::id_type  frustum_cull_shader_id     = "CullFstm";
          static constexpr graphics_shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
          static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "CullSdw0";
+         static constexpr graphics_shader::id_type bounding_box_shader_id     = "BoundBox";
+         static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -167,12 +169,13 @@ namespace vulkanDK {
          std::vector<graphics_shader*> graphics_shaders;
          std::vector<compute_shader*>  compute_shaders;
          union {
-            std::array<render_pass*, 5> _list = { nullptr, nullptr, nullptr, nullptr, nullptr };
+            std::array<render_pass*, 6> _list = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
             struct {
                render_pass* main_shadow; // shadows for the directional sun
                render_pass* main_shadow_placed; // shadows for placed lights
                render_pass* main;
                render_pass* main_oit;
+               render_pass* bounds;
                render_pass* ui;
             };
          } render_passes_by_name;
@@ -238,6 +241,9 @@ namespace vulkanDK {
          void set_animation_paused(size_t mesh, bool paused);
          //
          rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
+
+         rendered_bounds_handle add_bounds(const glm::mat4& transform);
+         void remove_bounds(size_t);
       
       protected:
          void _create_mesh_vib(rendered_mesh&);
@@ -276,6 +282,7 @@ namespace vulkanDK {
             void _setup_light_shadow_shaders(); // LiteMap0 - LiteMap8
             void _setup_frustum_cull_shader();
             void _setup_shadow_caster_cull_shaders();
+            void _setup_scene_bounds_shaders();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

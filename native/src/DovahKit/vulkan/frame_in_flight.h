@@ -42,11 +42,12 @@ namespace vulkanDK {
    class frame_in_flight : no_copy {
       protected:
          union command_buffer_set {
-            std::array<command_buffer, 4> list;
+            std::array<command_buffer, 5> list;
             struct {
                command_buffer main_shadow;
                command_buffer main_shadow_placed;
                command_buffer main;
+               command_buffer bounds;
                command_buffer fps;
             };
 
@@ -155,10 +156,11 @@ namespace vulkanDK {
             //
             // For graphics:
             //
-            buffer object_data; // per-object data which can be updated without having to re-record command buffers (rendered_mesh::shader_parameters[])
-            buffer light_data;  // per-light  data which can be updated without having to re-record command buffers (rendered_light::shader_parameters[])
-            buffer light_shadow_data;
-            buffer scene_data;  // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            buffer scene_data;   // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            buffer scene_bounds; // glm::mat4[] array for rendered_bounds
+            buffer scene_meshes; // rendered_mesh::shader_parameters[]
+            buffer scene_lights; // rendered_light::shader_parameters[]
+            buffer light_shadow_data; // glm::mat4[] array: six view matrices per shadow caster
          } shader_params;
          struct {
             overlays::fps        fps;
@@ -184,6 +186,7 @@ namespace vulkanDK {
       protected:
          struct {
             bool recorded_compute_cull_commands = false;
+            bool scene_bounds_added_or_removed  = true;
             bool scene_meshes_added_or_removed  = true;
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
@@ -195,11 +198,13 @@ namespace vulkanDK {
          void record_graphics_commands();
          protected:
             void _record_scene_draw_commands();
+               void _record_bounds_draw_commands();
             void _record_ui_draw_commands();
       public:
          void submit_compute_cull_commands();
          void submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers = {});
 
+         void on_scene_bounds_added_or_removed();
          void on_scene_meshes_added_or_removed();
          void invalidate_all_command_buffers();
 
@@ -214,6 +219,7 @@ namespace vulkanDK {
          //
          scene& get_scene();
          void _update_shader_global_scene_state();
+         void _update_shader_scene_bounds_buffer();
          void _update_shader_lights_data_buffer();
          void _update_shader_object_data_buffer();
          void _update_shader_texture_descriptors();

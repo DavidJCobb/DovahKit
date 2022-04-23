@@ -495,6 +495,22 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
+      this->descriptor_set_layouts.scene_bounds.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: glm::mat4[] (bound matrices)
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       //
       this->set_widget(widget);
       if (this->handle == VK_NULL_HANDLE) {
@@ -988,7 +1004,7 @@ namespace vulkanDK {
                .format         = this->find_depth_format(),
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
                .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
-               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                .initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -1068,6 +1084,73 @@ namespace vulkanDK {
          };
       }
       {
+         auto* rp = this->render_passes_by_name.bounds = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // color
+               .format         = VK_FORMAT_UNDEFINED,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            },
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after this render pass, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            },
+         };
+         rp->subpasses = {
+            {  // subpass
+               .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = { // there can be multiple color attachments
+                     VkAttachmentReference{
+                        .attachment = 0,
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     }
+                  },
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 1,
+                     .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+         };
+         rp->subpass_dependencies = {
+            VkSubpassDependency{
+               //
+               // Writing to the color attachment image  should be delayed until all operations 
+               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+               // layout) are complete.
+               //
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            }
+         };
+      }
+      {
          auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
          rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
             VkAttachmentDescription{ // color
@@ -1139,6 +1222,7 @@ namespace vulkanDK {
          this->render_passes_by_name.main_shadow,
          this->render_passes_by_name.main_shadow_placed,
          this->render_passes_by_name.main,
+         this->render_passes_by_name.bounds,
          this->render_passes_by_name.ui,
          this->render_passes_by_name.main_oit,
       };
@@ -1231,7 +1315,7 @@ namespace vulkanDK {
       }
       //
       struct _specializations {
-         int32_t max_lights = config::max_lights_in_scene;
+         int32_t max_lights = config::max_rendered_lights;
       };
       _specializations spec;
       //
@@ -1240,13 +1324,13 @@ namespace vulkanDK {
             .module              = frag,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_rendered_lights),
          },
          {
             .module              = vert,
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_lights_in_scene),
+            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_rendered_lights),
          },
       };
       //dfn.color_blending.blends.emplace_back(graphics_shader::color_blend{}); // add a default blend: a disabled, "draw the source directly onto the destination" RGBA blend.
@@ -1314,7 +1398,7 @@ namespace vulkanDK {
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
             .specialization_info = pipeline_stage_specialization_info(
-               (int32_t)config::max_lights_in_scene
+               (int32_t)config::max_rendered_lights
             ),
          },
          {
@@ -1322,7 +1406,7 @@ namespace vulkanDK {
             .entry_point_name    = "main",
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
             .specialization_info = pipeline_stage_specialization_info(
-               (int32_t)config::max_lights_in_scene
+               (int32_t)config::max_rendered_lights
             ),
          },
       };
@@ -1493,7 +1577,7 @@ namespace vulkanDK {
                .module              = vert,
                .entry_point_name    = "main",
                .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-               .specialization_info = pipeline_stage_specialization_info((int32_t)i, (int32_t)config::max_lights_in_scene),
+               .specialization_info = pipeline_stage_specialization_info((int32_t)i, (int32_t)config::max_rendered_lights),
             },
             {  // Fragment shader needed to discard alpha-tested pixels
                .module              = frag,
@@ -1601,22 +1685,106 @@ namespace vulkanDK {
          s->setup(*this);
       }
    }
+   void surface_renderer::_setup_scene_bounds_shaders() {
+      #pragma region Bounding box
+      {
+         auto* s = this->create_graphics_shader(bounding_box_shader_id);
+         s->set_render_pass(this->render_passes_by_name.bounds);
+         s->set_layout_info({
+            this->descriptor_set_layouts.scene_bounds.handle,
+         });
+         //
+         auto& options = s->options;
+         //
+         shader_module* vert = this->load_shader_module("shaders/bounding-box.vert.spv");
+         shader_module* frag = this->load_shader_module("shaders/bounding-box.frag.spv");
+         {
+            assert(vert);
+            assert(frag);
+            this->set_debug_object_name(vert->handle, "Shader Module (Bounding Box Vert)");
+            this->set_debug_object_name(frag->handle, "Shader Module (Bounding Box Frag)");
+         }
+         //
+         options.stages = {
+            {
+               .module           = frag,
+               .entry_point_name = "main",
+               .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+               .module           = vert,
+               .entry_point_name = "main",
+               .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+            },
+         };
+         options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+         if constexpr (config::use_inverted_depth) {
+            options.depth.comparison = VK_COMPARE_OP_GREATER;
+         }
+         options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+         options.rasterization.cullMode    = VK_CULL_MODE_NONE;
+         if (this->device_info->support.non_solid_polygon_fill_modes) {
+            options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+         }
+         //
+         s->setup_pipeline_layout();
+      }
+      #pragma endregion
+      #pragma region Pivot
+      {
+         auto* s = this->create_graphics_shader(bounding_origin_shader_id);
+         s->set_render_pass(this->render_passes_by_name.bounds);
+         s->set_layout_info({
+            this->descriptor_set_layouts.scene_bounds.handle,
+         });
+         //
+         auto& options = s->options;
+         //
+         shader_module* vert = this->load_shader_module("shaders/bounding-origin.vert.spv");
+         shader_module* frag = this->load_shader_module("shaders/bounding-origin.frag.spv");
+         {
+            assert(vert);
+            assert(frag);
+            this->set_debug_object_name(vert->handle, "Shader Module (Bounding Box Origin Vert)");
+            this->set_debug_object_name(frag->handle, "Shader Module (Bounding Box Origin Frag)");
+         }
+         //
+         options.stages = {
+            {
+               .module           = frag,
+               .entry_point_name = "main",
+               .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+               .module           = vert,
+               .entry_point_name = "main",
+               .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+            },
+         };
+         options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+         if constexpr (config::use_inverted_depth) {
+            options.depth.comparison = VK_COMPARE_OP_GREATER;
+         }
+         options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+         options.rasterization.cullMode    = VK_CULL_MODE_NONE;
+         if (this->device_info->support.non_solid_polygon_fill_modes) {
+            options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+         }
+         //
+         s->setup_pipeline_layout();
+      }
+      #pragma endregion
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
-      qDebug("[Vulkan] Shader setup: OIT composite");
       //
       this->_setup_sun_shadow_shader();
-      qDebug("[Vulkan] Shader setup: Sun Shadow");
       this->_setup_basic_color_shader();
-      qDebug("[Vulkan] Shader setup: Main");
       this->_setup_basic_wboit_shader();
-      qDebug("[Vulkan] Shader setup: Main (OIT)");
       this->_setup_light_shadow_shaders();
-      qDebug("[Vulkan] Shader setup: Light Shadows");
       this->_setup_frustum_cull_shader();
-      qDebug("[Vulkan] Shader setup: Frustum Culling");
       this->_setup_shadow_caster_cull_shaders();
-      qDebug("[Vulkan] Shader setup: Shadow Caster Culling");
+      this->_setup_scene_bounds_shaders();
       //
       // FPS counter:
       //
@@ -1966,20 +2134,25 @@ namespace vulkanDK {
             .offset = 0,
             .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
-         auto rosp_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.object_data.handle,
+         auto rmsp_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_meshes.handle,
             .offset = 0,
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto rlsp_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.light_data.handle,
+            .buffer = frame.shader_params.scene_lights.handle,
             .offset = 0,
             .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto shad_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.light_shadow_data.handle,
             .offset = 0,
-            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+            .range  = VK_WHOLE_SIZE,
+         };
+         auto bounds_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_bounds.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
          };
          //
          std::array<VkDescriptorImageInfo, shadow_caster_count> light_shadow_info;
@@ -2143,7 +2316,7 @@ namespace vulkanDK {
             //
             // Sun shadow render pass:
             //
-            ([&frame, &global_state_buffer_info, &rosp_buffer_info, &sampler_info]() {
+            ([&frame, &global_state_buffer_info, &rmsp_buffer_info, &sampler_info]() {
                auto descriptor_set = frame.descriptor_sets.sun_shadows;
                auto out = std::array{
                   VkWriteDescriptorSet{ // uniform buffer object
@@ -2161,7 +2334,7 @@ namespace vulkanDK {
                      .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rosp_buffer_info,
+                     .pBufferInfo      = &rmsp_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                   VkWriteDescriptorSet{ // texture sampler
@@ -2179,7 +2352,7 @@ namespace vulkanDK {
             //
             // Light shadow pass:
             //
-            ([&frame, &global_state_buffer_info, &rosp_buffer_info, &rlsp_buffer_info, &shad_buffer_info, &sampler_info]() {
+            ([&frame, &global_state_buffer_info, &rmsp_buffer_info, &rlsp_buffer_info, &shad_buffer_info, &sampler_info]() {
                auto descriptor_set = frame.descriptor_sets.light_shadows;
                auto out = std::array{
                   VkWriteDescriptorSet{ // uniform buffer object
@@ -2197,7 +2370,7 @@ namespace vulkanDK {
                      .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rosp_buffer_info,
+                     .pBufferInfo      = &rmsp_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                   VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
@@ -2233,7 +2406,7 @@ namespace vulkanDK {
             //
             // Main render pass:
             //
-            ([&frame, &global_state_buffer_info, &sampler_info, &image_info_sun_shadow, &light_shadow_info, &rosp_buffer_info, &rlsp_buffer_info, &texture_infos]() {
+            ([&frame, &global_state_buffer_info, &sampler_info, &image_info_sun_shadow, &light_shadow_info, &rmsp_buffer_info, &rlsp_buffer_info, &texture_infos]() {
                auto descriptor_set = frame.descriptor_sets.standard;
                auto out = std::array{
                   VkWriteDescriptorSet{ // uniform buffer object
@@ -2272,7 +2445,7 @@ namespace vulkanDK {
                      .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rosp_buffer_info,
+                     .pBufferInfo      = &rmsp_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                   VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
@@ -2290,6 +2463,35 @@ namespace vulkanDK {
                      .descriptorCount = (uint32_t)texture_infos.size(),
                      .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
                      .pImageInfo      = texture_infos.data(),
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // Scene bounds render pass:
+            //
+            ([&frame, &global_state_buffer_info, &bounds_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.scene_bounds;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // uniform buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &global_state_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // storage buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &bounds_buffer_info,
+                     .pTexelBufferView = nullptr,
                   },
                };
                for (size_t i = 0; i < out.size(); ++i)
@@ -2343,6 +2545,7 @@ namespace vulkanDK {
       if (auto* rp = this->render_passes_by_name.main_oit) {
          rp->attachments[2].format = this->swap_chain.format;
       }
+      this->render_passes_by_name.bounds->attachments[0].format = this->swap_chain.format;
       this->render_passes_by_name.ui->attachments[0].format = this->swap_chain.format;
       //
       // (Re)create the render passes within the GPU:
@@ -2356,6 +2559,7 @@ namespace vulkanDK {
       if (auto* rp = this->render_passes_by_name.main_oit) {
          this->set_debug_object_name(rp->handle, "Render Pass: Main OIT");
       }
+      this->set_debug_object_name(this->render_passes_by_name.bounds->handle, "Render Pass: Bounds");
       this->set_debug_object_name(this->render_passes_by_name.ui->handle,   "Render Pass: UI");
    }
    //
@@ -2963,6 +3167,11 @@ namespace vulkanDK {
             if (auto* rp = this->render_passes_by_name.main_oit) {
                rp->teardown();
                rp->attachments[2].format = sc.format;
+               rp->setup();
+            }
+            if (auto* rp = this->render_passes_by_name.bounds) {
+               rp->teardown();
+               rp->attachments[0].format = sc.format;
                rp->setup();
             }
             if (auto* rp = this->render_passes_by_name.ui) {
@@ -3785,6 +3994,40 @@ namespace vulkanDK {
          return {};
       return rendered_mesh_handle(*this, nearest);
    }
+
+   rendered_bounds_handle surface_renderer::add_bounds(const glm::mat4& transform) {
+      size_t index = this->scene.insert_new_bound();
+      if (index == std::string::npos) {
+         qDebug("[vulkanDK::scene_renderer::add_bounds] Cannot add new rendered_bounds; scene limits reached.");
+         return {};
+      }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_bounds] Creating new bound at index %u.", index);
+      }
+      auto& item = this->scene.bounds[index];
+      item.life_state = scene_frame_item_state::active;
+      item.handled_frames.set_all_out_of_date();
+      item.transform = transform;
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_scene_bounds_added_or_removed();
+      //
+      return rendered_bounds_handle(*this, index);
+   }
+   void surface_renderer::remove_bounds(size_t i) {
+      auto& list = this->scene.bounds;
+      if (i >= list.size())
+         return;
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::remove_bounds] Marking scene bounds %u for delete.", i);
+      }
+      ++this->scene.pending_deletions.bounds;
+      auto& item = list[i];
+      item.mark_for_delete();
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_scene_bounds_added_or_removed();
+   }
    
    namespace {
       void _handle_ni_shader_properties(
@@ -4528,6 +4771,27 @@ namespace vulkanDK {
    void surface_renderer::_execute_pending_scene_deletions() {
       auto  ic = this->swap_chain.images.size();
       auto& pd = this->scene.pending_deletions;
+      if (pd.bounds) {
+         size_t deleted    =  0;
+         size_t last_alive = -1;
+         auto&  list       = this->scene.bounds;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date()) {
+               item.reset();
+               ++deleted;
+            } else {
+               last_alive = i;
+            }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            if (deleted) {
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_deletions] Deleted %u scene bounds.", deleted);
+            }
+         }
+         pd.bounds -= deleted;
+         list.resize(last_alive + 1);
+      }
       if (pd.lights) {
          size_t deleted    =  0;
          size_t last_alive = -1;

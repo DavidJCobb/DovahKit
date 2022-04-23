@@ -1,4 +1,5 @@
 #include "worldedit.h"
+#include <algorithm> // std::swap
 #include "dk3D/tools/_results.h"
 #include "dk3D/DK3DInputHandler.h"
 #include "dovah/forms/factories/hardcoded.h"
@@ -13,10 +14,12 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
 #include "helpers/qt/strings.h"
+#include "helpers/type_traits/value_type_of.h"
 #include "nif/notice_code_t.h"
 #include "nif/blocks/NiNode.h"
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
+#include "vulkan/config/scene_limits.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 #include "vulkan/rendered_light.h"
 #include "vulkan/surface_renderer.h"
@@ -27,6 +30,8 @@ namespace {
 }
 
 namespace {
+   static constexpr auto max_selected_refr_count = vulkanDK::config::max_rendered_bounds;
+
    static constexpr float move_speed_normal = 180.0F;
    static constexpr float move_speed_mult_precision = 0.3F;
    static constexpr float move_speed_mult_boost     = 2.0F;
@@ -58,6 +63,19 @@ namespace {
 }
 
 namespace dovahkit::subsystems {
+   #pragma region selected_refr_info
+   worldedit::selected_refr_info::selected_refr_info() {}
+   worldedit::selected_refr_info::~selected_refr_info() {
+      this->handle.destroy();
+   }
+
+   worldedit::selected_refr_info& worldedit::selected_refr_info::operator=(selected_refr_info&& o) noexcept {
+      std::swap(this->stub,   o.stub);
+      std::swap(this->handle, o.handle);
+      return *this;
+   }
+   #pragma endregion
+
    worldedit::worldedit() : QObject(nullptr) {
       auto& core = DovahKitCore::get();
       QObject::connect(&core, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* form, bool just_flagging) {
@@ -99,10 +117,34 @@ namespace dovahkit::subsystems {
          static_assert(!require_complete_implementation, "TODO: Add code to the renderer to show OBBs on specified meshes.");
    }
 
+   vulkanDK::rendered_bounds_handle worldedit::_make_bounds_for(dovah::form_stub& stub) {
+      vulkanDK::rendered_bounds_handle handle;
+      if (!this->target_view)
+         return {};
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return {};
+      auto* loaded = (dovah::loaded_forms::ObjectReference*)stub.form;
+      assert(loaded);
+      //
+      glm::mat4 transform = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, loaded->get_scale());
+      transform[0] *= 128;
+      transform[1] *= 128;
+      transform[2] *= 128;
+      static_assert(!require_complete_implementation, "TODO: Identify the NIF's full AABB and use that instead of (128, 128, 128) as the bounds size.");
+      return sr->add_bounds(transform);
+   }
    void worldedit::_unload_refr(dovah::form_stub& stub) {
       {  // Deselect the ref.
          auto& list = this->state.selection.refs;
-         list.erase(std::remove(list.begin(), list.end(), &stub), list.end());
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; }
+            ),
+            list.end()
+         );
       }
       auto&  list = this->loaded_refs;
       size_t size = list.size();
@@ -343,6 +385,10 @@ namespace dovahkit::subsystems {
                .arg(editor_helpers::form_identifiers_to_string(base)),
             3000
          );
+         #if _DEBUG
+            static_assert(!require_complete_implementation, "TODO: Don't run this here! We should be listening for DK3D's attempt-selection tool!!");
+            this->toggleRefSelectionState(*stub);
+         #endif
       });
    }
 
@@ -432,16 +478,28 @@ namespace dovahkit::subsystems {
       //
    }
 
+   bool worldedit::is_ref_loaded(const dovah::form_stub* ref) const {
+      if (!ref)
+         return false;
+      for (const auto& item : this->loaded_refs)
+         if (item.stub == ref)
+            return true;
+      return false;
+   }
+
    void worldedit::setRefSelectionState(dovah::form_stub& stub, bool state) {
       if (!this->is_ref_loaded(&stub))
          return;
       auto& list = this->state.selection.refs;
-      auto  it   = std::find(list.begin(), list.end(), &stub);
+      auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
       bool  has  = it != list.end();
       if (has == state)
          return;
       if (state) {
-         list.push_back(&stub);
+         if (list.size() >= max_selected_refr_count) {
+            return;
+         }
+         list.push_back({ &stub, _make_bounds_for(stub) });
          emit this->refSelected(stub);
       } else {
          list.erase(it);
@@ -452,9 +510,9 @@ namespace dovahkit::subsystems {
       if (!this->is_ref_loaded(&stub))
          return;
       auto& list = this->state.selection.refs;
-      auto  it   = std::find(list.begin(), list.end(), &stub);
+      auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
       if (it == list.end()) {
-         list.push_back(&stub);
+         list.push_back({ &stub, _make_bounds_for(stub) });
          emit this->refSelected(stub);
       } else {
          list.erase(it);

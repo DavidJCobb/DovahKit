@@ -33,6 +33,21 @@ namespace dovahkit::subsystems {
          using form_stub       = dovah::form_stub;
          using loaded_refr_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::ObjectReference>;
 
+         struct selected_refr_info {
+            selected_refr_info();
+            selected_refr_info(form_stub* f, vulkanDK::rendered_bounds_handle h) : stub(f), handle(h) {}
+            ~selected_refr_info();
+
+            selected_refr_info(const selected_refr_info& o) = delete;
+            selected_refr_info& operator=(const selected_refr_info&) = delete;
+
+            selected_refr_info(selected_refr_info&& o) noexcept { *this = std::move(o); }
+            selected_refr_info& operator=(selected_refr_info&&) noexcept;
+
+            form_stub* stub = nullptr;
+            vulkanDK::rendered_bounds_handle handle;
+         };
+
          struct refr {
             form_stub*      stub = nullptr;
             loaded_refr_ptr form;
@@ -53,10 +68,11 @@ namespace dovahkit::subsystems {
          struct {
             cobb::enum_flags<camera_speed_flags, 2> camera_speed;
             struct {
-               std::vector<dovah::form_stub*> refs;
+               std::vector<selected_refr_info> refs;
             } selection;
          } state;
 
+         vulkanDK::rendered_bounds_handle _make_bounds_for(dovah::form_stub&);
          void _unload_refr(dovah::form_stub&);
          void _unload_cell(dovah::form_stub*);
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);

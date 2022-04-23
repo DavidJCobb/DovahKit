@@ -12,7 +12,7 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 6> list = {};
+            std::array<T, 7> list = {};
             struct {
                T oit_composite;
                T sun_shadows;
@@ -20,6 +20,7 @@ namespace vulkanDK {
                T standard;
                T fps;
                T world_axes;
+               T scene_bounds;
             };
          };
          static constexpr size_t size = std::tuple_size_v<decltype(list)>;
@@ -27,6 +28,7 @@ namespace vulkanDK {
          surface_renderer_dsl_group() {}
          ~surface_renderer_dsl_group() {}
    };
+
    struct descriptor_set_layout_group : public surface_renderer_dsl_group<descriptor_set_layout> {
       using surface_renderer_dsl_group::surface_renderer_dsl_group;
       protected:
@@ -70,6 +72,7 @@ namespace vulkanDK {
 
          size_t total_set_count() const;
    };
+
    struct descriptor_set_group : public surface_renderer_dsl_group<VkDescriptorSet> {
       using surface_renderer_dsl_group::surface_renderer_dsl_group;
 

@@ -724,6 +724,7 @@
     <ClInclude Include="dk3d\enums\control_type.h" />
     <ClInclude Include="dk3d\enums\editor_mode.h" />
     <ClInclude Include="dk3d\enums\input_device_type.h" />
+    <ClInclude Include="dk3d\enums\pointer_position_type.h" />
     <ClInclude Include="dk3d\enums\reference_frame.h" />
     <ClInclude Include="dk3d\enums\scalar_control.h" />
     <ClInclude Include="dk3d\enums\vector_control.h" />
@@ -732,6 +733,7 @@
     <ClInclude Include="dk3d\devices\keyboard_mouse.h" />
     <ClInclude Include="dk3d\button_state.h" />
     <ClInclude Include="dk3d\input_result.h" />
+    <ClInclude Include="dk3d\tools\attempt_on_screen_selection.h" />
     <ClInclude Include="dk3d\tools\debug_log.h" />
     <ClInclude Include="dk3d\tools\debug_placeholder.h" />
     <ClInclude Include="dk3d\tools\modify_camera_speed_flags.h" />
@@ -773,6 +775,7 @@
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit.h" />
     <ClInclude Include="helpers\array_concat.h" />
+    <ClInclude Include="helpers\array_flatten.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
@@ -802,6 +805,7 @@
     <ClInclude Include="helpers\type_traits\is_std_array.h" />
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
     <ClInclude Include="helpers\type_traits\strip_enum.h" />
+    <ClInclude Include="helpers\type_traits\value_type_of.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="nif\block.h" />
@@ -923,6 +927,7 @@
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\pipeline_stage_info.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
+    <ClInclude Include="vulkan\rendered_bounds.h" />
     <ClInclude Include="vulkan\rendered_light.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />
     <ClInclude Include="vulkan\render_pass.h" />
@@ -1623,6 +1628,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="shaders\bounding-box.frag" />
+    <None Include="shaders\bounding-box.vert" />
+    <None Include="shaders\bounding-origin.frag" />
+    <None Include="shaders\bounding-origin.vert" />
     <None Include="shaders\cores\standard_shader.frag" />
     <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
     <None Include="shaders\frustum-cull.comp" />

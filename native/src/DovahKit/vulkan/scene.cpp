@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "helpers/array_flatten.h" // cobb::array_flatten
 #include "frame_in_flight.h"
 #include "surface_renderer.h"
 //
@@ -374,6 +375,7 @@ namespace vulkanDK {
    }
 
    void scene::teardown() {
+      this->bounds.clear();
       this->lights.clear();
       this->meshes.clear();
       this->textures.clear();
@@ -409,6 +411,19 @@ namespace vulkanDK {
       }
    }
 
+   size_t scene::insert_new_bound() {
+      auto& list = this->bounds;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& item = list[i];
+         if (item.empty())
+            return i;
+      }
+      if (size >= config::max_rendered_bounds)
+         return std::string::npos;
+      list.emplace_back();
+      return size;
+   }
    size_t scene::insert_new_light() {
       auto& list = this->lights;
       auto  size = list.size();
@@ -417,7 +432,7 @@ namespace vulkanDK {
          if (item.empty())
             return i;
       }
-      if (size >= config::max_lights_in_scene)
+      if (size >= config::max_rendered_lights)
          return std::string::npos;
       list.emplace_back();
       return size;

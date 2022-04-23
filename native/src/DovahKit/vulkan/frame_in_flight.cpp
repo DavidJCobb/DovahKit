@@ -172,18 +172,23 @@ namespace vulkanDK {
          this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
       {
-         constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
-         this->shader_params.object_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.object_data.handle, QString("Buffer: FIF %1 Scene Meshes Buffer").arg(this->my_index).toStdString());
+         constexpr VkDeviceSize buffer_size = config::max_rendered_bounds * sizeof(glm::mat4);
+         this->shader_params.scene_bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.scene_bounds.handle, QString("Buffer: FIF %1 Scene rendered_bounds Buffer").arg(this->my_index).toStdString());
       }
       {
-         constexpr VkDeviceSize buffer_size = config::max_lights_in_scene * sizeof(rendered_light::shader_parameters);
-         this->shader_params.light_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.light_data.handle, QString("Buffer: FIF %1 Scene Lights Buffer").arg(this->my_index).toStdString());
+         constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
+         this->shader_params.scene_meshes = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.scene_meshes.handle, QString("Buffer: FIF %1 Scene rendered_mesh Buffer").arg(this->my_index).toStdString());
+      }
+      {
+         constexpr VkDeviceSize buffer_size = config::max_rendered_lights * sizeof(rendered_light::shader_parameters);
+         this->shader_params.scene_lights = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.scene_lights.handle, QString("Buffer: FIF %1 Scene rendered_light Buffer").arg(this->my_index).toStdString());
          //
-         auto* data = this->shader_params.light_data.map_memory();
+         auto* data = this->shader_params.scene_lights.map_memory();
          memset(data, 0, buffer_size);
-         this->shader_params.light_data.unmap_memory(data);
+         this->shader_params.scene_lights.unmap_memory(data);
       }
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
@@ -313,6 +318,7 @@ namespace vulkanDK {
 
    void frame_in_flight::prepare_for_render() {
       this->_update_shader_global_scene_state();
+      this->_update_shader_scene_bounds_buffer();
       this->_update_shader_lights_data_buffer();
       this->_update_shader_object_data_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
@@ -579,7 +585,12 @@ namespace vulkanDK {
       if (this->state.scene_meshes_added_or_removed || this->state.must_re_record_graphics) {
          this->state.must_re_record_graphics       = false;
          this->state.scene_meshes_added_or_removed = false;
+         this->state.scene_bounds_added_or_removed = false;
          this->_record_scene_draw_commands();
+      }
+      if (this->state.scene_bounds_added_or_removed) {
+         this->state.scene_bounds_added_or_removed = false;
+         this->_record_bounds_draw_commands();
       }
       if (auto& must = this->state.must_re_record_ui) {
          must = false;
@@ -902,7 +913,96 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer.");
          }
       }
-
+      //
+      // Done with core commands.
+      //
+      this->_record_bounds_draw_commands();
+   }
+   void frame_in_flight::_record_bounds_draw_commands() {
+      auto& sr    = *this->owner;
+      auto& scene = sr.scene;
+      //
+      auto& command_buffer = this->graphics_commands.bounds;
+      auto  command_handle = command_buffer.handle;
+      //
+      command_buffer.reset(0);
+      if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_bounds_draw_commands] Failed to begin recording command buffer.");
+      }
+      command_buffer.begin_render_pass(
+         *sr.render_passes_by_name.bounds,
+         sr.canvas.main_framebuffer,
+         {
+            .offset = { 0, 0 },
+            .extent = sr.surface_extent,
+         },
+         std::array<VkClearValue, 0>{},
+         VK_SUBPASS_CONTENTS_INLINE
+      );
+      {
+         constexpr size_t axis_count     = 3;
+         constexpr size_t lines_per_axis = 4;
+         constexpr size_t verts_per_line = 2;
+         constexpr size_t total_verts    = axis_count * lines_per_axis * verts_per_line;
+         //
+         const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_box_shader_id);
+         command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
+         //
+         size_t first = std::string::npos;
+         size_t count = scene.bounds.size();
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = scene.bounds[i];
+            if (first == std::string::npos) {
+               if (item.active()) {
+                  first = i;
+                  continue;
+               }
+            } else {
+               if (!item.active()) {
+                  vkCmdDraw(command_handle, total_verts, i - first, 0, first);
+                  first = std::string::npos;
+               }
+            }
+         }
+         if (first != std::string::npos) {
+            vkCmdDraw(command_handle, total_verts, count - first, 0, first);
+         }
+      }
+      {
+         constexpr size_t axis_count     = 3;
+         constexpr size_t verts_per_line = 2;
+         constexpr size_t total_verts    = axis_count *  verts_per_line;
+         //
+         const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_origin_shader_id);
+         command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
+         //
+         size_t first = std::string::npos;
+         size_t count = scene.bounds.size();
+         for (size_t i = 0; i < count; ++i) {
+            auto& item = scene.bounds[i];
+            if (first == std::string::npos) {
+               if (item.active()) {
+                  first = i;
+                  continue;
+               }
+            } else {
+               if (!item.active()) {
+                  vkCmdDraw(command_handle, total_verts, i - first, 0, first);
+                  first = std::string::npos;
+               }
+            }
+         }
+         if (first != std::string::npos) {
+            vkCmdDraw(command_handle, total_verts, count - first, 0, first);
+         }
+      }
+      command_buffer.end_render_pass();
+      //
+      // Done!
+      //
+      if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_bounds_draw_commands] Failed to record a command buffer.");
+      }
    }
    void frame_in_flight::_record_ui_draw_commands() {
       auto& sr = *this->owner;
@@ -1014,6 +1114,9 @@ namespace vulkanDK {
       }
    }
 
+   void frame_in_flight::on_scene_bounds_added_or_removed() {
+      this->state.scene_bounds_added_or_removed = true;
+   }
    void frame_in_flight::on_scene_meshes_added_or_removed() {
       this->state.scene_meshes_added_or_removed = true;
    }
@@ -1057,6 +1160,63 @@ namespace vulkanDK {
          }
       }
    }
+   void frame_in_flight::_update_shader_scene_bounds_buffer() {
+      using entry_type = glm::mat4;
+      constexpr auto entry_size = sizeof(entry_type);
+
+      auto& scene  = this->get_scene();
+      //
+      auto& ro     = scene.bounds;
+      auto  count  = ro.size();
+      assert(count <= config::max_rendered_bounds);
+      //
+      // Find the first scene item in need of an update.
+      //
+      size_t first_dirty = 0;
+      bool   any_dirty   = false;
+      for (size_t i = 0; i < count; ++i) {
+         auto& item = ro[i];
+         switch (item.life_state) {
+            case scene_frame_item_state::empty:
+               continue;
+            case scene_frame_item_state::pending_delete:
+               item.handled_frames.set_up_to_date(this->my_index);
+               continue;
+         }
+         //
+         // Scene object is "active."
+         //
+         if (item.handled_frames.is_up_to_date(this->my_index))
+            continue;
+         first_dirty = i;
+         any_dirty   = true;
+         break;
+      }
+      //
+      if (any_dirty) {
+         //
+         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
+         //       only map the parts we need to update.
+         //
+         auto* params = (entry_type*)this->shader_params.scene_bounds.map_memory();
+         for (size_t i = first_dirty; i < count; ++i) {
+            auto& item = ro[i];
+            if (!item.active()) {
+               if (item.pending_delete())
+                  item.handled_frames.set_up_to_date(this->my_index);
+               continue;
+            }
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            auto& src = item.transform;
+            auto& dst = params[i];
+            memcpy(&dst, &src, entry_size);
+            //
+            item.handled_frames.set_up_to_date(this->my_index);
+         }
+         this->shader_params.scene_bounds.unmap_memory(params);
+      }
+   }
    void frame_in_flight::_update_shader_lights_data_buffer() {
       using entry_type = rendered_light::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
@@ -1064,11 +1224,11 @@ namespace vulkanDK {
       constexpr bool map_only_what_is_necessary = false; // useless in VMA
 
       auto& scene  = this->get_scene();
-      auto& buffer = this->shader_params.light_data;
+      auto& buffer = this->shader_params.scene_lights;
       //
       auto& list   = scene.lights;
       auto  count  = list.size();
-      assert(count <= config::max_lights_in_scene);
+      assert(count <= config::max_rendered_lights);
       //
       // Find the first scene item in need of an update.
       //
@@ -1158,7 +1318,7 @@ namespace vulkanDK {
          //       only map the parts we need to update.
          //
          auto* bounds = (rendered_mesh::cull_data*)this->shader_params.mesh_bounds.map_memory();
-         auto* params = (entry_type*)this->shader_params.object_data.map_memory();
+         auto* params = (entry_type*)this->shader_params.scene_meshes.map_memory();
          for (size_t i = first_dirty; i < count; ++i) {
             auto& item = ro[i];
             if (!item.active()) {
@@ -1182,7 +1342,7 @@ namespace vulkanDK {
          }
          this->shader_params.mesh_bounds.flush_memory();
          this->shader_params.mesh_bounds.unmap_memory(bounds);
-         this->shader_params.object_data.unmap_memory(params);
+         this->shader_params.scene_meshes.unmap_memory(params);
       }
    }
    void frame_in_flight::_update_shader_texture_descriptors() {
