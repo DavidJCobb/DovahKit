@@ -117,22 +117,40 @@ namespace dovahkit::subsystems {
          static_assert(!require_complete_implementation, "TODO: Add code to the renderer to show OBBs on specified meshes.");
    }
 
-   vulkanDK::rendered_bounds_handle worldedit::_make_bounds_for(dovah::form_stub& stub) {
+   vulkanDK::rendered_bounds_handle worldedit::_make_bounds_for(refr& item) {
       vulkanDK::rendered_bounds_handle handle;
       if (!this->target_view)
          return {};
       auto* sr = this->target_view->surfaceRenderer();
       if (!sr)
          return {};
-      auto* loaded = (dovah::loaded_forms::ObjectReference*)stub.form;
-      assert(loaded);
+      assert(item.form);
       //
-      glm::mat4 transform = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, loaded->get_scale());
-      transform[0] *= 128;
-      transform[1] *= 128;
-      transform[2] *= 128;
+      glm::mat4 transform = vulkanDK::glm_transform_from_beth(item.form->position, item.form->rotation, item.form->get_scale());
+      if (item.nif) {
+         static_assert(!require_complete_implementation, "TODO: Account for off-center bounding boxes.");
+         //
+         // TODO: Account for the centerpoint as well.
+         //
+         auto& bnd = item.nif->bounds;
+         auto& min = bnd.min;
+         auto& max = bnd.max;
+         transform[0] *= (max.x - min.x) / 2.0F; // need to pass in halfwidths
+         transform[1] *= (max.y - min.y) / 2.0F;
+         transform[2] *= (max.z - min.z) / 2.0F;
+      } else {
+         transform[0] *= 128;
+         transform[1] *= 128;
+         transform[2] *= 128;
+      }
       static_assert(!require_complete_implementation, "TODO: Identify the NIF's full AABB and use that instead of (128, 128, 128) as the bounds size.");
       return sr->add_bounds(transform);
+   }
+   worldedit::refr* worldedit::_get_loaded_refr_info(const dovah::form_stub& stub) {
+      for (auto& item : this->loaded_refs)
+         if (item.stub == &stub)
+            return &item;
+      return nullptr;
    }
    void worldedit::_unload_refr(dovah::form_stub& stub) {
       {  // Deselect the ref.
@@ -488,7 +506,8 @@ namespace dovahkit::subsystems {
    }
 
    void worldedit::setRefSelectionState(dovah::form_stub& stub, bool state) {
-      if (!this->is_ref_loaded(&stub))
+      auto* ref_info = this->_get_loaded_refr_info(stub);
+      if (!ref_info)
          return;
       auto& list = this->state.selection.refs;
       auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
@@ -499,7 +518,7 @@ namespace dovahkit::subsystems {
          if (list.size() >= max_selected_refr_count) {
             return;
          }
-         list.push_back({ &stub, _make_bounds_for(stub) });
+         list.push_back({ &stub, _make_bounds_for(*ref_info) });
          emit this->refSelected(stub);
       } else {
          list.erase(it);
@@ -507,12 +526,13 @@ namespace dovahkit::subsystems {
       }
    }
    void worldedit::toggleRefSelectionState(dovah::form_stub& stub) {
-      if (!this->is_ref_loaded(&stub))
+      auto* ref_info = this->_get_loaded_refr_info(stub);
+      if (!ref_info)
          return;
       auto& list = this->state.selection.refs;
       auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
       if (it == list.end()) {
-         list.push_back({ &stub, _make_bounds_for(stub) });
+         list.push_back({ &stub, _make_bounds_for(*ref_info) });
          emit this->refSelected(stub);
       } else {
          list.erase(it);

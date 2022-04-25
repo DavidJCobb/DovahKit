@@ -1,10 +1,18 @@
 #include "file.h"
+#include <intrin.h>
+#include "helpers/glm/mat4_by_vec3_simd.h"
+#include "helpers/cpuinfo.h"
+//
 #include "notice_code_list.h"
 #include "reader.h"
 //
 #include "block.h"
 #include "blocks/_factory.h"
 #include "blocks/NiNode.h"
+//
+#include "blocks/BSTriShape.h"
+#include "blocks/NiGeometry.h"
+#include "blocks/NiGeometryData.h"
 
 namespace nifDK {
    /*static*/ file_version file_version::from_string(const std::string& s) {
@@ -245,8 +253,106 @@ namespace nifDK {
       //
       // I think we're done, at this point
       //
+      if (this->results.error.empty()) {
+         this->recalc_bounds();
+      }
    }
 
+   void file::recalc_bounds() {
+      this->bounds = {};
+      if (!this->root_node)
+         return;
+      //
+      glm::mat4 transform = glm::mat4(1);
+      //
+      if (auto& cpuinfo = cobb::cpuinfo::get(); cpuinfo.extension_support.sse_1) {
+         //
+         // SIMD intrinsics to process entire vertices at once.
+         //
+         this->root_node->walk_tree(
+            transform,
+            [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
+               transform = transform * node->transform.to_matrix();
+            },
+            [this](nifDK::block_types::NiAVObject* object, const glm::mat4& transform) {
+               if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
+                  auto* data = dynamic_cast<nifDK::block_types::NiGeometryData*>(geom->data);
+                  if (!data)
+                     return;
+                  __m128 bmin = _mm_load_ps(this->bounds.min.list.data());
+                  __m128 bmax = _mm_load_ps(this->bounds.max.list.data());
+                  auto& list = data->vertices;
+                  auto  size = list.size();
+                  //
+                  size_t i = 0;
+                  for (; i < size; ++i) {
+                     auto v = cobb::glm::mat4_by_vec3_simd(transform, list[i]);
+                     __m128 vert = _mm_load_ps(&v.x);
+                     bmin = _mm_min_ps(bmin, vert);
+                     bmax = _mm_max_ps(bmax, vert);
+                  }
+                  _mm_store_ps(this->bounds.min.list.data(), bmin);
+                  _mm_store_ps(this->bounds.max.list.data(), bmax);
+               }
+               if (auto* data = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
+                  __m128 bmin = _mm_load_ps(this->bounds.min.list.data());
+                  __m128 bmax = _mm_load_ps(this->bounds.max.list.data());
+                  auto& list = data->vertices;
+                  auto  size = list.size();
+                  //
+                  size_t i = 0;
+                  for (; i < size; ++i) {
+                     auto v = cobb::glm::mat4_by_vec3_simd(transform, list[i].vertex);
+                     __m128 vert = _mm_load_ps(&v.x);
+                     bmin = _mm_min_ps(bmin, vert);
+                     bmax = _mm_max_ps(bmax, vert);
+                  }
+                  _mm_store_ps(this->bounds.min.list.data(), bmin);
+                  _mm_store_ps(this->bounds.max.list.data(), bmax);
+               }
+            }
+         );
+      } else {
+         this->root_node->walk_tree(
+            transform,
+            [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
+               transform = transform * node->transform.to_matrix();
+            },
+            [this](nifDK::block_types::NiAVObject* object, const glm::mat4& transform) {
+               if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
+                  auto* data = dynamic_cast<nifDK::block_types::NiGeometryData*>(geom->data);
+                  if (!data)
+                     return;
+                  auto& bmin = this->bounds.min;
+                  auto& bmax = this->bounds.max;
+                  for (glm::fvec3 v : data->vertices) {
+                     v = transform * glm::fvec4(v, 1);
+                     bmin.x = std::min(bmin.x, v.x);
+                     bmin.y = std::min(bmin.y, v.y);
+                     bmin.z = std::min(bmin.z, v.z);
+                     bmax.x = std::max(bmax.x, v.x);
+                     bmax.y = std::max(bmax.y, v.y);
+                     bmax.z = std::max(bmax.z, v.z);
+                  }
+               }
+               if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
+                  auto& bmin = this->bounds.min;
+                  auto& bmax = this->bounds.max;
+                  for (auto& vert : geom->vertices) {
+                     auto v = transform * glm::fvec4(vert.vertex, 1);
+                     bmin.x = std::min(bmin.x, v.x);
+                     bmin.y = std::min(bmin.y, v.y);
+                     bmin.z = std::min(bmin.z, v.z);
+                     bmax.x = std::max(bmax.x, v.x);
+                     bmax.y = std::max(bmax.y, v.y);
+                     bmax.z = std::max(bmax.z, v.z);
+                  }
+               }
+            }
+         );
+         // End of non-intrinsic branch.
+      }
+   }
    void file::sever_connection_to(vulkanDK::rendered_mesh_handle handle) {
       for (auto* b : this->all_blocks) {
          b->sever_connection_to_vulkan_mesh(handle);

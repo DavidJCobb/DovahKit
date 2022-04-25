@@ -72,7 +72,8 @@ namespace dovahkit::subsystems {
             } selection;
          } state;
 
-         vulkanDK::rendered_bounds_handle _make_bounds_for(dovah::form_stub&);
+         vulkanDK::rendered_bounds_handle _make_bounds_for(refr&);
+         refr* _get_loaded_refr_info(const dovah::form_stub&);
          void _unload_refr(dovah::form_stub&);
          void _unload_cell(dovah::form_stub*);
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);

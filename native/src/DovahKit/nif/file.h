@@ -59,6 +59,25 @@ namespace nifDK {
             little = 1,
          };
 
+         struct point3D {
+            point3D() : list({ 0, 0, 0 }) {}
+            point3D(float a, float b, float c) : x(a), y(b), z(c) {}
+
+            union {
+               std::array<float, 3> list;
+               struct {
+                  float x;
+                  float y;
+                  float z;
+               };
+            };
+         };
+
+         struct point3D_simd : public point3D {
+            private:
+               uint32_t padding = 0;
+         };
+
       public:
          file() {}
          ~file();
@@ -84,6 +103,10 @@ namespace nifDK {
          //
          std::vector<block*>  all_blocks;
          block_types::NiNode* root_node = nullptr;
+         struct {
+            point3D_simd min;
+            point3D_simd max;
+         } bounds;
          //
          dovah::form_stub* owning_form = nullptr;
 
@@ -97,6 +120,7 @@ namespace nifDK {
             return this->all_blocks[i];
          }
 
+         void recalc_bounds();
          void sever_connection_to(vulkanDK::rendered_mesh_handle);
    };
 }
