@@ -274,11 +274,13 @@ namespace nifDK {
             [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
                transform = transform * node->transform.to_matrix();
             },
-            [this](nifDK::block_types::NiAVObject* object, const glm::mat4& transform) {
+            [this](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
                if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
                   auto* data = dynamic_cast<nifDK::block_types::NiGeometryData*>(geom->data);
                   if (!data)
                      return;
+                  transform = transform * geom->transform.to_matrix();
+                  //
                   __m128 bmin = _mm_load_ps(this->bounds.min.list.data());
                   __m128 bmax = _mm_load_ps(this->bounds.max.list.data());
                   auto& list = data->vertices;
@@ -293,8 +295,12 @@ namespace nifDK {
                   }
                   _mm_store_ps(this->bounds.min.list.data(), bmin);
                   _mm_store_ps(this->bounds.max.list.data(), bmax);
+                  //
+                  return;
                }
                if (auto* data = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
+                  transform = transform * data->transform.to_matrix();
+                  //
                   __m128 bmin = _mm_load_ps(this->bounds.min.list.data());
                   __m128 bmax = _mm_load_ps(this->bounds.max.list.data());
                   auto& list = data->vertices;
@@ -309,6 +315,8 @@ namespace nifDK {
                   }
                   _mm_store_ps(this->bounds.min.list.data(), bmin);
                   _mm_store_ps(this->bounds.max.list.data(), bmax);
+                  //
+                  return;
                }
             }
          );

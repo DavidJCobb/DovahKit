@@ -105,10 +105,15 @@ namespace nifDK::block_types {
          //    then just use lambda captures.)
          //
          template<typename State, typename NodeFunctor, typename ChildFunctor, bool outer = true>
-         requires requires(NiNode* node, NiAVObject* child, State& s, const State& const_s, NodeFunctor nf, ChildFunctor cf) {
+         requires requires(NiNode* node, NiAVObject* child, State& s, NodeFunctor nf) {
             { nf(node, s) };
-            { cf(child, const_s) };
-         }
+         } && (
+            requires(NiAVObject * child, const State& const_s, ChildFunctor cf) {
+               { cf(child, const_s) };
+            } || requires(NiAVObject * child, State copy_s, ChildFunctor cf) {
+               { cf(child, copy_s) };
+            }
+         )
          void walk_tree(State s, NodeFunctor nf, ChildFunctor cf) {
             if constexpr (std::is_same_v<bool, cobb::function_traits<NodeFunctor>::return_type>) {
                bool filter = (nf)(this, s);

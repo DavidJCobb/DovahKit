@@ -95,5 +95,7 @@ namespace dovahkit::subsystems {
       public slots:
          void setRefSelectionState(dovah::form_stub&, bool state);
          void toggleRefSelectionState(dovah::form_stub&);
+         void deselectAllRefs();
+         void replaceRefSelection(dovah::form_stub&);
    };
 }

@@ -1,5 +1,6 @@
 #include "DK3DInputHandler.h"
 #include <QApplication>
+#include <QMouseEvent>
 #include "../editor/subsystems/DKXInputSubsystem.h"
 #include "button_state.h"
 #include "bind_tree/nodes/input.h"
@@ -36,6 +37,20 @@ DK3DInputHandler::DK3DInputHandler() {
    {
       auto& tree = this->binds.keyboard;
       auto* root = tree.root;
+      //
+      auto* mod_ctrl = new binds::nodes::input( // Modifier
+         tr("Ctrl Modifier"),
+         DK3D::inputs::bound_input{
+            .button = {
+               .key = cobb::qt::key::from_windows_vk(VK_CONTROL),
+               .press_type = DK3D::button_press_type::while_down,
+            },
+         },
+         nullptr,
+         true
+      );
+      root->append(*mod_ctrl);
+      //
       {  // keyboard functions: move camera
          struct _bind {
             const char* name;
@@ -93,6 +108,25 @@ DK3DInputHandler::DK3DInputHandler() {
             )));
          }
       }
+      //
+      root->append(*(new binds::nodes::input(
+         tr("Select Object"),
+         DK3D::inputs::bound_input::from_mouse_button(Qt::MouseButton::LeftButton, DK3D::button_press_type::tap),
+         &tools::attempt_on_screen_selection::get(),
+         tools::attempt_on_screen_selection::options{
+            .operation = selection_operation::replace,
+            .position  = pointer_position_type::mouse,
+         }
+      )));
+      mod_ctrl->append(*(new binds::nodes::input(
+         tr("Toggle Selection"),
+         DK3D::inputs::bound_input::from_mouse_button(Qt::MouseButton::LeftButton, DK3D::button_press_type::tap),
+         &tools::attempt_on_screen_selection::get(),
+         tools::attempt_on_screen_selection::options{
+            .operation = selection_operation::toggle,
+            .position  = pointer_position_type::mouse,
+         }
+      )));
    }
    #pragma endregion
    #pragma region tree binds: gamepad
@@ -373,7 +407,16 @@ DK3D::input_result DK3DInputHandler::inputResultOf(const DK3D::inputs::bound_inp
       } else {
          kds = this->keyboard_state.key_down_state(b);
       }
-      return input_result::for_button_input(this->state.last_update, input, kds);
+      auto res = input_result::for_button_input(this->state.last_update, input, kds);
+      if (b.mouse != Qt::MouseButton::NoButton) {
+         auto pos = this->keyboard_state.mouse.pos;
+         if (this->state.target_view) {
+            pos = this->state.target_view->mapFromGlobal(pos);
+         }
+         res.x = pos.x();
+         res.y = pos.y();
+      }
+      return res;
    }
    if (input.is_scalar()) {
       result.type = control_type::scalar;

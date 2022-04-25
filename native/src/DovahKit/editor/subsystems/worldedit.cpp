@@ -130,10 +130,6 @@ namespace dovahkit::subsystems {
       glm::vec3 bounds_min;
       glm::vec3 bounds_max;
       if (item.nif) {
-         static_assert(!require_complete_implementation, "TODO: Account for off-center bounding boxes.");
-         //
-         // TODO: Account for the centerpoint as well.
-         //
          auto& bnd = item.nif->bounds;
          bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
          bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
@@ -141,7 +137,6 @@ namespace dovahkit::subsystems {
          bounds_min = { -128, -128, -128 };
          bounds_max = {  128,  128,  128 };
       }
-      static_assert(!require_complete_implementation, "TODO: Identify the NIF's full AABB and use that instead of (128, 128, 128) as the bounds size.");
       return sr->add_bounds(bounds_min, bounds_max, transform);
    }
    worldedit::refr* worldedit::_get_loaded_refr_info(const dovah::form_stub& stub) {
@@ -386,6 +381,12 @@ namespace dovahkit::subsystems {
       assert(this->target_view == nullptr);
       this->target_view = &view;
       //
+      DK3DInputHandler::get().setTargetView(&view);
+      QObject::connect(&view, &QObject::destroyed, this, [this]() {
+         DK3DInputHandler::get().setTargetView(nullptr);
+         this->target_view = nullptr;
+      });
+      //
       QObject::connect(&view, &DKVulkanView::renderedMeshClicked, this, [this](vulkanDK::rendered_mesh_handle handle) {
          assert(!handle.empty());
          auto* nif = handle->owning_nif;
@@ -401,10 +402,6 @@ namespace dovahkit::subsystems {
                .arg(editor_helpers::form_identifiers_to_string(base)),
             3000
          );
-         #if _DEBUG
-            static_assert(!require_complete_implementation, "TODO: Don't run this here! We should be listening for DK3D's attempt-selection tool!!");
-            this->toggleRefSelectionState(*stub);
-         #endif
       });
    }
 
@@ -489,6 +486,46 @@ namespace dovahkit::subsystems {
          sr->scene.adjust_camera(update);
       }
       #pragma endregion
+      #pragma region attempt_on_screen_selection
+      {
+         const auto& data = results.get_member<DK3D::tools::attempt_on_screen_selection>();
+         if (data.sweep) {
+            //
+            // TODO
+            //
+            static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
+         } else {
+            if (data.position == DK3D::pointer_position_type::mouse) {
+               auto handle = sr->rendered_mesh_at(data.mouse.x(), data.mouse.y());
+               if (!handle.empty()) {
+                  if (auto* nif = handle->owning_nif) {
+                     if (auto* stub = nif->owning_form) {
+                        switch (data.operation) {
+                           case DK3D::selection_operation::no_op:
+                              break;
+                           case DK3D::selection_operation::toggle:
+                              this->toggleRefSelectionState(*stub);
+                              break;
+                           case DK3D::selection_operation::add:
+                           case DK3D::selection_operation::remove:
+                              this->setRefSelectionState(*stub, data.operation == DK3D::selection_operation::add);
+                              break;
+                           case DK3D::selection_operation::replace:
+                              this->replaceRefSelection(*stub);
+                              break;
+                        }
+                     }
+                  }
+               }
+            } else {
+               //
+               // TODO
+               //
+               static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
+            }
+         }
+      }
+      #pragma endregion
       //
       // Done processing all tools.
       //
@@ -536,5 +573,22 @@ namespace dovahkit::subsystems {
          list.erase(it);
          emit this->refDeselected(stub);
       }
+   }
+   void worldedit::deselectAllRefs() {
+      std::vector<dovah::form_stub*> deselected;
+      //
+      auto& list = this->state.selection.refs;
+      auto  size = list.size();
+      deselected.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         deselected[i] = list[i].stub;
+      list.clear();
+      //
+      for (auto* stub : deselected)
+         emit this->refDeselected(*stub);
+   }
+   void worldedit::replaceRefSelection(dovah::form_stub& stub) {
+      this->deselectAllRefs();
+      this->setRefSelectionState(stub, true);
    }
 }

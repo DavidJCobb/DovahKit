@@ -30,6 +30,11 @@ namespace DK3D::devices {
          struct {
             QPoint pos;  // mouse screen position; tracked so we can generate the (move) field
             QPoint move; // distance the mouse moved since the last update
+            //
+            struct {
+               QPoint pos;
+               timestamp_t time = {};
+            } last_click; // primary button only; used to identify double-clicks
          } mouse;
          struct {
             //
@@ -41,12 +46,14 @@ namespace DK3D::devices {
                bool swap_left_right  = false;
                uint double_click_ms  = 500;
                struct {
-                  QPoint double_click; // second click must occur within this distance of the first
-                  QPoint drag;         // minimum mousemove distance before a click becomes a drag
+                  QPoint double_click; // second click must occur within this distance of the first (rectangle)
+                  QPoint drag;         // minimum mousemove distance before a click becomes a drag (rectangle)
                } hitboxes;
             } mouse;
          } system;
 
+      protected:
+         bool _mouseup_handler_for_double_click(timestamp_t now);
       public:
          void recheck_mouse_metrics();
 

@@ -120,6 +120,7 @@
     <ClCompile Include="dk3d\DK3DInputHandler.cpp" />
     <ClCompile Include="dk3d\inputs\bound_input.cpp" />
     <ClCompile Include="dk3d\input_result.cpp" />
+    <ClCompile Include="dk3d\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="dk3d\tools\debug_log.cpp" />
     <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
     <ClCompile Include="dk3d\tools\modify_camera_speed_flags.cpp" />
@@ -730,6 +731,7 @@
     <ClInclude Include="dk3d\enums\pointer_position_type.h" />
     <ClInclude Include="dk3d\enums\reference_frame.h" />
     <ClInclude Include="dk3d\enums\scalar_control.h" />
+    <ClInclude Include="dk3d\enums\selection_operation.h" />
     <ClInclude Include="dk3d\enums\vector_control.h" />
     <ClInclude Include="dk3d\inputs\bound_input.h" />
     <ClInclude Include="dk3d\inputs\button.h" />

@@ -3,8 +3,24 @@
 #include "dk3d/inputs/button.h"
 #include <windows.h>
 #include "helpers/intrusive_windows_defines.h"
+#include <QCursor>
 
 namespace {
+   constexpr bool use_winapi_for_mouse_location = false;
+}
+
+namespace {
+   bool vk_is_mouse(int vk) {
+      switch (vk) {
+         case VK_LBUTTON:
+         case VK_RBUTTON:
+         case VK_MBUTTON:
+         case VK_XBUTTON1:
+         case VK_XBUTTON2:
+            return true;
+      }
+      return false;
+   }
    int qt_mouse_button_to_vk(Qt::MouseButton b) {
       switch (b) {
          using _ = Qt::MouseButton;
@@ -39,6 +55,19 @@ namespace {
 }
 
 namespace DK3D::devices {
+   bool keyboard_mouse::_mouseup_handler_for_double_click(timestamp_t now) {
+      auto& last = this->mouse.last_click;
+      if (last.time == timestamp_t{})
+         return false;
+      QPoint pos = QCursor::pos();
+      pos -= this->mouse.pos;
+      if (pos.x() > this->system.mouse.hitboxes.double_click.x())
+         return false;
+      if (pos.y() > this->system.mouse.hitboxes.double_click.y())
+         return false;
+      return true;
+   }
+
    void keyboard_mouse::ignore_all_down() {
       for (size_t i = 0; i < vk_code_count; ++i)
          if (this->buttons.start[i] != zero_timestamp)
@@ -69,6 +98,24 @@ namespace DK3D::devices {
                //
                // Key has been released.
                //
+               if (i == (this->system.mouse.swap_left_right) ? VK_RBUTTON : VK_LBUTTON) {
+                  if (_mouseup_handler_for_double_click(now)) {
+                     //
+                     // Double-click.
+                     //
+                     this->mouse.last_click.pos  = {};
+                     this->mouse.last_click.time = {};
+                     //
+                     // TODO: Find a way to signal double-clicks to DK3D for handling.
+                     //
+                  } else {
+                     //
+                     // Not a double-click.
+                     //
+                     this->mouse.last_click.pos  = QCursor::pos();
+                     this->mouse.last_click.time = now;
+                  }
+               }
                this->buttons.ignore.reset(i);
                float elapsed = elapsed_time(start, now);
                start = zero_timestamp;
@@ -83,22 +130,28 @@ namespace DK3D::devices {
       //
       // Get mousemove state:
       //
-      auto dummy = dummy_mouse_point;
-      std::array<MOUSEMOVEPOINT, 1> points = {};
-      auto count = GetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &dummy, points.data(), 1, GMMP_USE_DISPLAY_POINTS);
-      if (count > 0) {
-         auto& point = points[count - 1];
-         //
-         // Multiple monitors may require some normalization:
-         //
-         if (point.x > 32767)
-            point.x -= 65536;
-         if (point.y > 32767)
-            point.y -= 65536;
-         //
-         auto prior = this->mouse.pos;
-         this->mouse.pos  = { point.x, point.y };
-         this->mouse.move = this->mouse.pos - prior;
+      if constexpr (use_winapi_for_mouse_location) {
+         auto dummy = dummy_mouse_point;
+         std::array<MOUSEMOVEPOINT, 1> points = {};
+         auto count = GetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &dummy, points.data(), 1, GMMP_USE_DISPLAY_POINTS);
+         if (count > 0) {
+            auto& point = points[count - 1];
+            //
+            // Multiple monitors may require some normalization:
+            //
+            if (point.x > 32767)
+               point.x -= 65536;
+            if (point.y > 32767)
+               point.y -= 65536;
+            //
+            auto prior = this->mouse.pos;
+            this->mouse.pos  = { point.x, point.y };
+            this->mouse.move = this->mouse.pos - prior;
+         }
+      } else {
+         QPoint current = QCursor::pos();
+         this->mouse.move = current - this->mouse.pos;
+         this->mouse.pos  = current;
       }
       //
       // TODO: If we want mouse wheel state, we'll need to either find a way to bridge QWheelEvent to 

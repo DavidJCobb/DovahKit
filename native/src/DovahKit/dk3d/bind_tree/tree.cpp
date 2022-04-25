@@ -76,19 +76,21 @@ namespace DK3D::binds {
             //    [U]     Test Shadowed
             //    [L + U] Test Shadower
             // 
+            // Edge-case 1:
+            // 
             // If you press and hold [L], press and hold [U], release [L] and then 
             // release [U], then "Test Shadower" will stop running (because the 
             // parent modifier is no longer down) but will never receive a key-up 
             // "invoke" call, which is incorrect behavior.
             // 
-            /// TODO: THE BELOW IS NOT FIXED; REQUIRES ACTION WHEN ENTERING A MODIFIER, NOT LEAVING ONE
+            // Edge-case 2:
             // 
             // If you press and hold [U], and then press and hold [L], then "Test 
             // Shadowed" will stop running (because it becomes shadowed), but it 
             // will never receive a key-up "invoke" call, which is also incorrect 
             // behavior.
             // 
-            /// TODO: THE ABOVE IS NOT FIXED; REQUIRES ACTION WHEN ENTERING A MODIFIER, NOT LEAVING ONE
+            // Edge-case 3:
             // 
             // Lastly, if you press and hold [L] and [U] on the same frame, and 
             // then release both keys on the same frame, then "Test Shadower" will 
