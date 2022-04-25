@@ -8,6 +8,9 @@
 
 namespace dovah {
    class form_stub;
+   namespace loaded_forms::components {
+      class model_ts;
+   }
 }
 
 namespace nifDK {
@@ -15,6 +18,7 @@ namespace nifDK {
    class file_reader;
    namespace block_types {
       class NiNode;
+      class NiObjectNET;
    }
 
    struct file_version {
@@ -119,7 +123,9 @@ namespace nifDK {
                return nullptr;
             return this->all_blocks[i];
          }
+         block_types::NiObjectNET* block_by_name(const std::string&) const;
 
+         void apply_texture_swaps(const dovah::loaded_forms::components::model_ts&);
          void recalc_bounds();
          void sever_connection_to(vulkanDK::rendered_mesh_handle);
    };

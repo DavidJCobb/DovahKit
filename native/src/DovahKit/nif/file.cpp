@@ -10,9 +10,14 @@
 #include "blocks/_factory.h"
 #include "blocks/NiNode.h"
 //
+#include "blocks/BSLightingShaderProperty.h"
+#include "blocks/BSShaderTextureSet.h"
 #include "blocks/BSTriShape.h"
 #include "blocks/NiGeometry.h"
 #include "blocks/NiGeometryData.h"
+//
+#include "dovah/forms/components/model.h"
+#include "dovah/forms/TextureSet.h"
 
 namespace nifDK {
    /*static*/ file_version file_version::from_string(const std::string& s) {
@@ -258,6 +263,47 @@ namespace nifDK {
       }
    }
 
+   block_types::NiObjectNET* file::block_by_name(const std::string& name) const {
+      for (auto* b : this->all_blocks) {
+         auto* net = dynamic_cast<nifDK::block_types::NiObjectNET*>(b);
+         if (!net)
+            continue;
+         if (net->name == name)
+            return net;
+      }
+      return nullptr;
+   }
+
+   void file::apply_texture_swaps(const dovah::loaded_forms::components::model_ts& defs) {
+      for (const auto& entry : defs.texture_swaps) {
+         if (!entry.texture_set)
+            continue;
+         auto* block = this->block_by_name(entry.nif_block_name);
+         if (!block)
+            continue;
+         //
+         auto txst = entry.texture_set.get_form_stub()->load().ptr_cast<dovah::loaded_forms::TextureSet>();
+         if (!txst)
+            continue;
+         //
+         block_types::BSShaderProperty* shader = nullptr;
+         if (auto* data = dynamic_cast<nifDK::block_types::NiGeometry*>(block)) {
+            shader = data->properties.shader;
+         } else if (auto* data = dynamic_cast<nifDK::block_types::BSTriShape*>(block)) {
+            shader = data->properties.shader;
+         }
+         if (!shader)
+            continue;
+         //
+         if (auto* bslp = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+            if (auto* paths = bslp->texture.paths) {
+               for (size_t i = 0; i < paths->textures.list.size(); ++i)
+                  paths->textures.list[i] = std::string("textures\\") + txst->textures.list[i];
+            }
+            continue;
+         }
+      }
+   }
    void file::recalc_bounds() {
       this->bounds = {};
       if (!this->root_node)

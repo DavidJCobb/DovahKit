@@ -259,6 +259,9 @@ namespace dovahkit::subsystems {
          return false;
       }
       model->owning_form = &stub;
+      if (form_model->supports_texture_swaps) {
+         model->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)form_model);
+      }
       //
       auto& item = this->loaded_refs.emplace_back();
       item.stub = &stub;
@@ -331,7 +334,7 @@ namespace dovahkit::subsystems {
       //
       // Cell lighting parameters:
       //
-      {
+      if (!cell->is_exterior_cell()) {
          auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
             return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
          };
