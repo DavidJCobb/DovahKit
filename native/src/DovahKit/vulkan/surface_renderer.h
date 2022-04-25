@@ -242,7 +242,7 @@ namespace vulkanDK {
          //
          rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
 
-         rendered_bounds_handle add_bounds(const glm::mat4& transform);
+         rendered_bounds_handle add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
          void remove_bounds(size_t);
       
       protected:

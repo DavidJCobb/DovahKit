@@ -3,12 +3,13 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "includes/scene_global_state.glsl"
+#include "includes/rendered_bounds_shader_params.glsl"
 
 layout(std430,binding = 0) uniform UniformBufferObject {
    scene_global_state scene;
 };
 layout(std430,binding = 1) readonly buffer ObjectBuffer {
-	mat4 scene_bounding_boxes[];
+	rendered_bounds_shader_params scene_bounds[];
 };
 
 #define MARKER_SIZE 16
@@ -20,7 +21,8 @@ layout(std430,binding = 1) readonly buffer ObjectBuffer {
 // auto& line_vert = all_verts[(current_axis * lines_per_axis) + (current_line * verts_per_line) + current_vert];
 
 void main() {
-   mat4 transform = scene_bounding_boxes[gl_InstanceIndex];
+   mat4 transform    = scene_bounds[gl_InstanceIndex].transform;
+   vec3 pivot_offset = scene_bounds[gl_InstanceIndex].pivot_offset;
    transform[0] = normalize(transform[0]); // remove scaling
    transform[1] = normalize(transform[1]);
    transform[2] = normalize(transform[2]);
@@ -30,7 +32,8 @@ void main() {
    //
    gl_Position = vec4(0, 0, 0, 1);
    gl_Position[axis_index] = ((vert_index) * (MARKER_SIZE * 2)) - MARKER_SIZE; // -MARKER_SIZE or +MARKER_SIZE
-   gl_Position.w = 1;
+   gl_Position.w    = 1;
+   gl_Position.xyz -= pivot_offset;
    //
    gl_Position = scene.proj * scene.view * transform * gl_Position;
 }

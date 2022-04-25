@@ -127,24 +127,22 @@ namespace dovahkit::subsystems {
       assert(item.form);
       //
       glm::mat4 transform = vulkanDK::glm_transform_from_beth(item.form->position, item.form->rotation, item.form->get_scale());
+      glm::vec3 bounds_min;
+      glm::vec3 bounds_max;
       if (item.nif) {
          static_assert(!require_complete_implementation, "TODO: Account for off-center bounding boxes.");
          //
          // TODO: Account for the centerpoint as well.
          //
          auto& bnd = item.nif->bounds;
-         auto& min = bnd.min;
-         auto& max = bnd.max;
-         transform[0] *= (max.x - min.x) / 2.0F; // need to pass in halfwidths
-         transform[1] *= (max.y - min.y) / 2.0F;
-         transform[2] *= (max.z - min.z) / 2.0F;
+         bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
+         bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
       } else {
-         transform[0] *= 128;
-         transform[1] *= 128;
-         transform[2] *= 128;
+         bounds_min = { -128, -128, -128 };
+         bounds_max = {  128,  128,  128 };
       }
       static_assert(!require_complete_implementation, "TODO: Identify the NIF's full AABB and use that instead of (128, 128, 128) as the bounds size.");
-      return sr->add_bounds(transform);
+      return sr->add_bounds(bounds_min, bounds_max, transform);
    }
    worldedit::refr* worldedit::_get_loaded_refr_info(const dovah::form_stub& stub) {
       for (auto& item : this->loaded_refs)

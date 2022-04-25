@@ -3995,7 +3995,7 @@ namespace vulkanDK {
       return rendered_mesh_handle(*this, nearest);
    }
 
-   rendered_bounds_handle surface_renderer::add_bounds(const glm::mat4& transform) {
+   rendered_bounds_handle surface_renderer::add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform) {
       size_t index = this->scene.insert_new_bound();
       if (index == std::string::npos) {
          qDebug("[vulkanDK::scene_renderer::add_bounds] Cannot add new rendered_bounds; scene limits reached.");
@@ -4007,7 +4007,7 @@ namespace vulkanDK {
       auto& item = this->scene.bounds[index];
       item.life_state = scene_frame_item_state::active;
       item.handled_frames.set_all_out_of_date();
-      item.transform = transform;
+      item.set_shader_params(min, max, pivot_transform);
       //
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_scene_bounds_added_or_removed();

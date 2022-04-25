@@ -3,12 +3,13 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "includes/scene_global_state.glsl"
+#include "includes/rendered_bounds_shader_params.glsl"
 
 layout(std430,binding = 0) uniform UniformBufferObject {
    scene_global_state scene;
 };
 layout(std430,binding = 1) readonly buffer ObjectBuffer {
-	mat4 scene_bounding_boxes[];
+	rendered_bounds_shader_params scene_bounds[];
 };
 
 layout(location = 0) out VS_OUT {
@@ -22,7 +23,7 @@ layout(location = 0) out VS_OUT {
 // auto& line_vert = all_verts[(current_axis * lines_per_axis) + (current_line * verts_per_line) + current_vert];
 
 void main() {
-   mat4 transform = scene_bounding_boxes[gl_InstanceIndex];
+   mat4 transform = scene_bounds[gl_InstanceIndex].transform;
    //
    int axis_index = gl_VertexIndex / VERTS_PER_AXIS;
    int vert_index = gl_VertexIndex % VERTS_PER_LINE;

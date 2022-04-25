@@ -5,16 +5,15 @@
 
 namespace vulkanDK {
    class rendered_bounds {
+      protected:
+         void _on_shader_parameter_change();
       public:
-         struct box_vertex {
-            glm::vec3 pos;
-            glm::vec3 color;
-         };
-         struct center_vertex {
-            glm::vec3 pos;
+         struct shader_parameters { // pass to the shader via a storage buffer
+            alignas(16) glm::mat4 transform;    // centerpoint position, rotation, and box size
+            alignas(16) glm::vec3 pivot_offset; // pivot's offset from the centerpoint
          };
 
-         glm::mat4 transform; // use stretch/skew to set bounds
+         shader_parameters shader_params;
          //
          frame_dirty_state      handled_frames;
          scene_frame_item_state life_state = scene_frame_item_state::empty;
@@ -28,5 +27,8 @@ namespace vulkanDK {
             this->handled_frames.set_all_out_of_date();
          }
          void reset() {}
+
+         void set_shader_params(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
+         void set_shader_params(const shader_parameters&);
    };
 }

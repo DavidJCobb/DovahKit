@@ -172,7 +172,7 @@ namespace vulkanDK {
          this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
       {
-         constexpr VkDeviceSize buffer_size = config::max_rendered_bounds * sizeof(glm::mat4);
+         constexpr VkDeviceSize buffer_size = config::max_rendered_bounds * sizeof(rendered_bounds::shader_parameters);
          this->shader_params.scene_bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(this->shader_params.scene_bounds.handle, QString("Buffer: FIF %1 Scene rendered_bounds Buffer").arg(this->my_index).toStdString());
       }
@@ -939,6 +939,7 @@ namespace vulkanDK {
          std::array<VkClearValue, 0>{},
          VK_SUBPASS_CONTENTS_INLINE
       );
+      size_t count = scene.bounds.size();
       {
          constexpr size_t axis_count     = 3;
          constexpr size_t lines_per_axis = 4;
@@ -949,7 +950,6 @@ namespace vulkanDK {
          command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
          //
          size_t first = std::string::npos;
-         size_t count = scene.bounds.size();
          for (size_t i = 0; i < count; ++i) {
             auto& item = scene.bounds[i];
             if (first == std::string::npos) {
@@ -977,7 +977,6 @@ namespace vulkanDK {
          command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
          //
          size_t first = std::string::npos;
-         size_t count = scene.bounds.size();
          for (size_t i = 0; i < count; ++i) {
             auto& item = scene.bounds[i];
             if (first == std::string::npos) {
@@ -1161,7 +1160,7 @@ namespace vulkanDK {
       }
    }
    void frame_in_flight::_update_shader_scene_bounds_buffer() {
-      using entry_type = glm::mat4;
+      using entry_type = rendered_bounds::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 
       auto& scene  = this->get_scene();
@@ -1208,7 +1207,7 @@ namespace vulkanDK {
             }
             if (item.handled_frames.is_up_to_date(this->my_index))
                continue;
-            auto& src = item.transform;
+            auto& src = item.shader_params;
             auto& dst = params[i];
             memcpy(&dst, &src, entry_size);
             //

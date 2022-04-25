@@ -623,6 +623,7 @@
     <ClCompile Include="vulkan\overlays\world_axes.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
+    <ClCompile Include="vulkan\rendered_bounds.cpp" />
     <ClCompile Include="vulkan\rendered_light.cpp" />
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
@@ -874,6 +875,7 @@
     <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h" />
     <ClInclude Include="nif\types\Triangle.h" />
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
+    <ClInclude Include="shaders\includes\rendered_bounds_shader_params.glsl" />
     <ClInclude Include="shaders\includes\rendered_light_shader_params.glsl" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
