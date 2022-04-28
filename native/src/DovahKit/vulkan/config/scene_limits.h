@@ -7,4 +7,6 @@ namespace vulkanDK::config {
    static constexpr size_t max_loaded_textures = 1600;
 
    static constexpr size_t max_active_shadow_casters = 4;
+
+   static constexpr size_t max_landscapes = 5 * 5; // TODO: make this a configuration option on the renderer
 }

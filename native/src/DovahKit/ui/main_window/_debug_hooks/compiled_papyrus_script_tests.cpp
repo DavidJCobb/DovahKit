@@ -48,9 +48,33 @@ namespace DovahKitDebug::features {
          return;
       }
       //
+      QString functions;
       QString properties;
       if (data.objects.size()) {
          auto& o = data.objects[0];
+         for (auto& s : o.states) {
+            for (auto& f : s.functions) {
+               if (!functions.isEmpty())
+                  functions += '\n';
+               //
+               if (!f.return_type.empty())
+                  functions += QString::fromUtf8(f.return_type.c_str()) + QLatin1Char(' ');
+               //
+               if (!s.name.empty())
+                  functions += QString::fromUtf8(s.name.c_str()) + QLatin1String("::");
+               functions += QString::fromUtf8(f.name.c_str()) + QLatin1Char('(');
+               //
+               bool first = true;
+               for (auto& arg : f.arguments) {
+                  if (first)
+                     first = false;
+                  else
+                     functions += ", ";
+                  functions += QString::fromUtf8(arg.type.c_str()) + QLatin1Char(' ') + QString::fromUtf8(arg.name.c_str());
+               }
+               functions += QLatin1Char(')');
+            }
+         }
          for (auto& p : o.properties) {
             if (!properties.isEmpty())
                properties += '\n';
@@ -59,11 +83,13 @@ namespace DovahKitDebug::features {
             properties += QString::fromUtf8(p.name.c_str());
          }
       }
+      if (functions.isEmpty())
+         functions = "<none>";
       if (properties.isEmpty())
          properties = "<none>";
       QMessageBox::information(window,
          QObject::tr("Report", "debug"),
-         QObject::tr("Properties:\n\n%1", "debug").arg(properties),
+         QObject::tr("Functions:\n\n%1\n\nProperties:\n\n%2", "debug").arg(functions).arg(properties),
          QMessageBox::Ok
       );
    }

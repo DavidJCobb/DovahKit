@@ -41,6 +41,8 @@ namespace dovah::loaded_forms {
          static constexpr int vertices_per_quad_side  = 17;
          static constexpr int total_quad_vertex_count = vertices_per_quad_side * vertices_per_quad_side;
 
+         static constexpr int max_usable_layers_per_quad = 6;
+
          struct quad_indices {
             quad_indices() = delete;
             enum {

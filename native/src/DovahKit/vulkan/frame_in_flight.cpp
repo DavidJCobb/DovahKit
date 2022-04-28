@@ -182,6 +182,11 @@ namespace vulkanDK {
          this->owner->set_debug_object_name(this->shader_params.scene_meshes.handle, QString("Buffer: FIF %1 Scene rendered_mesh Buffer").arg(this->my_index).toStdString());
       }
       {
+         constexpr VkDeviceSize buffer_size = config::max_landscapes * sizeof(rendered_landscape::shader_parameters);
+         this->shader_params.scene_landscapes = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.scene_landscapes.handle, QString("Buffer: FIF %1 Scene rendered_landscape Buffer").arg(this->my_index).toStdString());
+      }
+      {
          constexpr VkDeviceSize buffer_size = config::max_rendered_lights * sizeof(rendered_light::shader_parameters);
          this->shader_params.scene_lights = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(this->shader_params.scene_lights.handle, QString("Buffer: FIF %1 Scene rendered_light Buffer").arg(this->my_index).toStdString());
@@ -319,8 +324,9 @@ namespace vulkanDK {
    void frame_in_flight::prepare_for_render() {
       this->_update_shader_global_scene_state();
       this->_update_shader_scene_bounds_buffer();
-      this->_update_shader_lights_data_buffer();
-      this->_update_shader_object_data_buffer();
+      this->_update_shader_scene_landscapes_buffer();
+      this->_update_shader_scene_lights_buffer();
+      this->_update_shader_scene_meshes_buffer();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
       {
@@ -582,10 +588,11 @@ namespace vulkanDK {
       //
    }
    void frame_in_flight::record_graphics_commands() {
-      if (this->state.scene_meshes_added_or_removed || this->state.must_re_record_graphics) {
-         this->state.must_re_record_graphics       = false;
-         this->state.scene_meshes_added_or_removed = false;
-         this->state.scene_bounds_added_or_removed = false;
+      if (this->state.scene_meshes_added_or_removed || this->state.scene_landscapes_added_or_removed || this->state.must_re_record_graphics) {
+         this->state.must_re_record_graphics = false;
+         this->state.scene_bounds_added_or_removed     = false;
+         this->state.scene_meshes_added_or_removed     = false;
+         this->state.scene_landscapes_added_or_removed = false; // TODO: investigate a separate command buffer for landscapes
          this->_record_scene_draw_commands();
       }
       if (this->state.scene_bounds_added_or_removed) {
@@ -782,7 +789,7 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::frame_in_flight::_refill_command_buffers] Failed to record a command buffer (light shadows).");
          }
       }
-      {  // Scene objects
+      {  // Scene objects and landscapes
          auto& indirect_info  = this->indirect_draw_commands.main;
          auto& command_buffer = this->graphics_commands.main;
          auto  command_handle = command_buffer.handle;
@@ -838,7 +845,7 @@ namespace vulkanDK {
             }
          };
          vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
-         {
+         {  // Meshes
             const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
             //
@@ -857,6 +864,21 @@ namespace vulkanDK {
                      set_decal_config(ro);
                   }
                );
+            }
+         }
+         {  // Landscape
+            const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_shader_id);
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.landscape });
+            //
+            vkCmdBindIndexBuffer(command_handle, sr.scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+            for (size_t i = 0; i < scene.landscapes.size(); ++i) {
+               auto& item = scene.landscapes[i];
+               if (!item.active())
+                  continue;
+               VkDeviceSize offset = scene.landscape_buffer_vertex_index(i);
+               vkCmdBindVertexBuffers(command_handle, 0, 1, &sr.scene.coalesced.landscape_buffer.handle, &offset);
+               //
+               vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::verts_per_mesh, 1, 0, 0, i);
             }
          }
          command_buffer.end_render_pass();
@@ -879,6 +901,8 @@ namespace vulkanDK {
                },
                VK_SUBPASS_CONTENTS_INLINE
             );
+            vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // binding the landscape shader wiped this state; need to reinitialize it
+            last_was_decal = false;
             {
                const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_oit_color_id);
                command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
@@ -1116,6 +1140,9 @@ namespace vulkanDK {
    void frame_in_flight::on_scene_bounds_added_or_removed() {
       this->state.scene_bounds_added_or_removed = true;
    }
+   void frame_in_flight::on_scene_landscape_added_or_removed() {
+      this->state.scene_landscapes_added_or_removed;
+   }
    void frame_in_flight::on_scene_meshes_added_or_removed() {
       this->state.scene_meshes_added_or_removed = true;
    }
@@ -1216,7 +1243,63 @@ namespace vulkanDK {
          this->shader_params.scene_bounds.unmap_memory(params);
       }
    }
-   void frame_in_flight::_update_shader_lights_data_buffer() {
+   void frame_in_flight::_update_shader_scene_landscapes_buffer() {
+      using entry_type = rendered_landscape::shader_parameters;
+      constexpr auto entry_size = sizeof(entry_type);
+
+      auto& scene  = this->get_scene();
+      //
+      auto& ro    = scene.landscapes;
+      auto  count = ro.size();
+      //
+      // Find the first scene item in need of an update.
+      //
+      size_t first_dirty = 0;
+      bool   any_dirty   = false;
+      for (size_t i = 0; i < count; ++i) {
+         auto& item = ro[i];
+         switch (item.life_state) {
+            case scene_frame_item_state::empty:
+               continue;
+            case scene_frame_item_state::pending_delete:
+               item.handled_frames.set_up_to_date(this->my_index);
+               continue;
+         }
+         //
+         // Scene object is "active."
+         //
+         if (item.handled_frames.is_up_to_date(this->my_index))
+            continue;
+         first_dirty = i;
+         any_dirty   = true;
+         break;
+      }
+      //
+      if (any_dirty) {
+         //
+         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
+         //       only map the parts we need to update.
+         //
+         auto* params = (entry_type*)this->shader_params.scene_landscapes.map_memory();
+         for (size_t i = first_dirty; i < count; ++i) {
+            auto& item = ro[i];
+            if (!item.active()) {
+               if (item.pending_delete())
+                  item.handled_frames.set_up_to_date(this->my_index);
+               continue;
+            }
+            if (item.handled_frames.is_up_to_date(this->my_index))
+               continue;
+            auto& src = item.shader_params;
+            auto& dst = params[i];
+            memcpy(&dst, &src, entry_size);
+            //
+            item.handled_frames.set_up_to_date(this->my_index);
+         }
+         this->shader_params.scene_landscapes.unmap_memory(params);
+      }
+   }
+   void frame_in_flight::_update_shader_scene_lights_buffer() {
       using entry_type = rendered_light::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 
@@ -1278,7 +1361,7 @@ namespace vulkanDK {
          buffer.unmap_memory(data);
       }
    }
-   void frame_in_flight::_update_shader_object_data_buffer() {
+   void frame_in_flight::_update_shader_scene_meshes_buffer() {
       using entry_type = rendered_mesh::shader_parameters;
       constexpr auto entry_size = sizeof(entry_type);
 

@@ -3,6 +3,7 @@
 
 namespace vulkanDK {
    class rendered_bounds;
+   class rendered_landscape;
    class rendered_light;
    class rendered_mesh;
    class surface_renderer;
@@ -47,6 +48,28 @@ namespace vulkanDK {
       };
    }
 
+   class rendered_bounds_handle;
+   class rendered_bounds_handle : public impl::scene_item_handle<rendered_bounds_handle> {
+      public:
+         using scene_item_handle::scene_item_handle;
+
+         rendered_bounds& operator*();
+         rendered_bounds* operator->();
+
+         void destroy();
+   };
+
+   class rendered_landscape_handle;
+   class rendered_landscape_handle : public impl::scene_item_handle<rendered_landscape_handle> {
+      public:
+         using scene_item_handle::scene_item_handle;
+
+         rendered_landscape& operator*();
+         rendered_landscape* operator->();
+
+         void destroy();
+   };
+
    class rendered_light_handle;
    class rendered_light_handle : public impl::scene_item_handle<rendered_light_handle> {
       public:
@@ -65,17 +88,6 @@ namespace vulkanDK {
 
          rendered_mesh& operator*();
          rendered_mesh* operator->();
-
-         void destroy();
-   };
-
-   class rendered_bounds_handle;
-   class rendered_bounds_handle : public impl::scene_item_handle<rendered_bounds_handle> {
-      public:
-         using scene_item_handle::scene_item_handle;
-
-         rendered_bounds& operator*();
-         rendered_bounds* operator->();
 
          void destroy();
    };

@@ -25,6 +25,11 @@
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 
+// landscape:
+#include "helpers/vertex_indices_for_quad_grid.h"
+#include "rendered_landscape.h"
+#include "vertex_landscape.h"
+
 #include <glm/gtx/matrix_decompose.hpp> // for debugging
 
 namespace {
@@ -42,6 +47,26 @@ namespace vulkanDK {
       this->camera.yaw   = glm::radians(-45.0F);
       this->camera.pitch = glm::radians(-45.0F);
       this->update_camera();
+   }
+
+   void scene::setup_landscape_buffer(surface_renderer& sr, size_t max_landscape_count) {
+      constexpr auto indices = vertex_indices_for_quad_grid<rendered_landscape::verts_per_side, rendered_landscape::verts_per_side, true>;
+      //
+      constexpr size_t indices_size = std::tuple_size_v<decltype(indices)> *sizeof(decltype(indices)::value_type);
+      constexpr size_t buffer_size  = ([&indices, indices_size]() {
+         constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+         return indices_size + (v * config::max_landscapes);
+      })();
+      //
+      this->coalesced.landscape_buffer = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      {
+         auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         void* data    = staging.map_memory();
+         memset(data, 0, buffer_size);
+         memcpy(data, &indices, indices_size);
+         staging.unmap_memory(data);
+         this->coalesced.landscape_buffer.copy_from(staging);
+      }
    }
 
    void scene::update_projection(VkExtent2D render_area) {
@@ -215,11 +240,11 @@ namespace vulkanDK {
       this->light_shadow_state.set_up_to_date(fif.index());
       //
       struct _entry {
-         size_t index    = std::string::npos;
+         size_t index    = index_of_none;
          float  distance = FLT_MAX;
          //
          bool operator>(float d) const noexcept {
-            if (index == std::string::npos)
+            if (index == index_of_none)
                return true;
             return distance > d;
          }
@@ -255,7 +280,7 @@ namespace vulkanDK {
       //
       for (size_t i = 0; i < nearest.size(); ++i) {
          auto& entry = nearest[i];
-         if (entry.index == std::string::npos) {
+         if (entry.index == index_of_none) {
             this->global_state.shadow_caster_index[i] = -1;
             data[i] = { glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1) };
             continue;
@@ -374,11 +399,15 @@ namespace vulkanDK {
       return out;
    }
 
-   void scene::teardown() {
+   void scene::clear() {
       this->bounds.clear();
       this->lights.clear();
       this->meshes.clear();
       this->textures.clear();
+   }
+   void scene::teardown() {
+      this->clear();
+      this->coalesced = {};
    }
 
    void scene::update() {
@@ -420,7 +449,20 @@ namespace vulkanDK {
             return i;
       }
       if (size >= config::max_rendered_bounds)
-         return std::string::npos;
+         return index_of_none;
+      list.emplace_back();
+      return size;
+   }
+   size_t scene::insert_new_landscape() {
+      auto& list = this->landscapes;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& item = list[i];
+         if (item.empty())
+            return i;
+      }
+      if (size >= config::max_landscapes)
+         return index_of_none;
       list.emplace_back();
       return size;
    }
@@ -433,7 +475,7 @@ namespace vulkanDK {
             return i;
       }
       if (size >= config::max_rendered_lights)
-         return std::string::npos;
+         return index_of_none;
       list.emplace_back();
       return size;
    }
@@ -446,7 +488,7 @@ namespace vulkanDK {
             return i;
       }
       if (size >= config::max_rendered_meshes)
-         return std::string::npos;
+         return index_of_none;
       list.emplace_back();
       return size;
    }
@@ -457,9 +499,17 @@ namespace vulkanDK {
          if (list[i].empty())
             return i;
       if (size >= config::max_loaded_textures)
-         return std::string::npos;
+         return index_of_none;
       list.emplace_back();
       return size;
+   }
+
+   size_t scene::landscape_buffer_vertex_index(size_t landscape_index) const {
+      constexpr auto indices = vertex_indices_for_quad_grid<rendered_landscape::verts_per_side, rendered_landscape::verts_per_side, true>;
+      //
+      constexpr size_t i = std::tuple_size_v<decltype(indices)> *sizeof(decltype(indices)::value_type);
+      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+      return i + (v * landscape_index);
    }
 
    size_t scene::_empty_mesh_slot_count() const {

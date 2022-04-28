@@ -12,7 +12,7 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 7> list = {};
+            std::array<T, 8> list = {};
             struct {
                T oit_composite;
                T sun_shadows;
@@ -21,6 +21,7 @@ namespace vulkanDK {
                T fps;
                T world_axes;
                T scene_bounds;
+               T landscape;
             };
          };
          static constexpr size_t size = std::tuple_size_v<decltype(list)>;

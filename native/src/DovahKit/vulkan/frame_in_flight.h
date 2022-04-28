@@ -156,10 +156,11 @@ namespace vulkanDK {
             //
             // For graphics:
             //
-            buffer scene_data;   // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
-            buffer scene_bounds; // glm::mat4[] array for rendered_bounds
-            buffer scene_meshes; // rendered_mesh::shader_parameters[]
-            buffer scene_lights; // rendered_light::shader_parameters[]
+            buffer scene_data;       // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            buffer scene_bounds;     // glm::mat4[] array for rendered_bounds
+            buffer scene_meshes;     // rendered_mesh::shader_parameters[]
+            buffer scene_landscapes; // rendered_landscape::shader_parameters[]
+            buffer scene_lights;     // rendered_light::shader_parameters[]
             buffer light_shadow_data; // glm::mat4[] array: six view matrices per shadow caster
          } shader_params;
          struct {
@@ -185,9 +186,10 @@ namespace vulkanDK {
 
       protected:
          struct {
-            bool recorded_compute_cull_commands = false;
-            bool scene_bounds_added_or_removed  = true;
-            bool scene_meshes_added_or_removed  = true;
+            bool recorded_compute_cull_commands    = false;
+            bool scene_bounds_added_or_removed     = true;
+            bool scene_landscapes_added_or_removed = true;
+            bool scene_meshes_added_or_removed     = true;
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
          } state;
@@ -205,6 +207,7 @@ namespace vulkanDK {
          void submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers = {});
 
          void on_scene_bounds_added_or_removed();
+         void on_scene_landscape_added_or_removed();
          void on_scene_meshes_added_or_removed();
          void invalidate_all_command_buffers();
 
@@ -220,8 +223,9 @@ namespace vulkanDK {
          scene& get_scene();
          void _update_shader_global_scene_state();
          void _update_shader_scene_bounds_buffer();
-         void _update_shader_lights_data_buffer();
-         void _update_shader_object_data_buffer();
+         void _update_shader_scene_landscapes_buffer();
+         void _update_shader_scene_lights_buffer();
+         void _update_shader_scene_meshes_buffer();
          void _update_shader_texture_descriptors();
    };
 }

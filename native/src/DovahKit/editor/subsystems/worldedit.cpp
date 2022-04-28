@@ -188,6 +188,10 @@ namespace dovahkit::subsystems {
       if (cell != this->loaded_cell.stub)
          return;
       //
+      if (auto& handle = this->loaded_cell.vulkan_handles.landscape; !handle.empty())
+         handle.destroy();
+      this->loaded_cell.land = nullptr;
+      //
       auto* sr   = this->target_view->surfaceRenderer();
       auto& list = this->loaded_refs;
       for (auto& refr : list) {
@@ -284,6 +288,12 @@ namespace dovahkit::subsystems {
          return;
       assert(cell && cell->formType == dovah::form_type::cell);
       this->loaded_cell.stub = cell;
+      this->loaded_cell.land = nullptr;
+      if (cell->is_exterior_cell()) {
+         if (auto* land = dovah::form_stub_helpers::get_cell_landscape(cell)) {
+            this->loaded_cell.land = land->load().ptr_cast<dovah::loaded_forms::Landscape>();
+         }
+      }
       //
       glm::vec3 centroid = { 0, 0, 0 };
       glm::vec3 coc_pos  = { 0, 0, 0 };
@@ -292,6 +302,18 @@ namespace dovahkit::subsystems {
       bool   found_coc_marker = false;
       //
       auto* sr = this->target_view->surfaceRenderer();
+      if (this->loaded_cell.land) {
+         glm::fvec3 position = { 0, 0, 0 };
+         int32_t gx;
+         int32_t gy;
+         if (cell->get_grid_coordinates(gx, gy)) {
+            position.x = (float)gx * dovah::loaded_forms::Cell::side_length;
+            position.y = (float)gy * dovah::loaded_forms::Cell::side_length;
+            position.z = 0.0F; // our LAND loader resolves the base height
+         }
+         //
+         this->loaded_cell.vulkan_handles.landscape = sr->add_landscape(position, *this->loaded_cell.land);
+      }
       dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &found_coc_marker, &refr_count, &centroid, &coc_pos, &coc_rot](dovah::form_stub* stub) {
          if (stub->formType != dovah::form_type::reference)
             return false;

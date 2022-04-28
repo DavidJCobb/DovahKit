@@ -1,10 +1,12 @@
 #pragma once
 #include <chrono>
+#include <limits>
 #include <vector>
 #include "buffer.h"
 #include "frustum.h"
 #include "loaded_texture.h"
 #include "rendered_bounds.h"
+#include "rendered_landscape.h"
 #include "rendered_light.h"
 #include "rendered_mesh.h"
 #include "scene_global_state.h"
@@ -20,13 +22,16 @@ namespace vulkanDK {
 
    class scene {
       public:
+         static constexpr size_t index_of_none = std::numeric_limits<size_t>::max();
+      public:
          scene();
 
-         std::chrono::steady_clock::time_point last_update;
-         std::vector<rendered_bounds> bounds; // bounding boxes, to indicate object selections
-         std::vector<rendered_light>  lights;
-         std::vector<rendered_mesh>   meshes;
-         std::vector<loaded_texture>  textures;
+         std::chrono::steady_clock::time_point last_update = {};
+         std::vector<rendered_bounds>    bounds;     // bounding boxes, to indicate object selections
+         std::vector<rendered_landscape> landscapes; // heightmapped terrain generated from LAND forms
+         std::vector<rendered_light>     lights;     // in-scene light emitters, including ones that support shadow casting
+         std::vector<rendered_mesh>      meshes;
+         std::vector<loaded_texture>     textures;   // all textures used within the scene, aside from things like shadow maps that we generate and update during the render
          //
          struct {
             float vertical_fov_degrees = 45.0F;
@@ -44,12 +49,17 @@ namespace vulkanDK {
          scene_global_state global_state; // GPU-side state
          //
          struct {
+            buffer landscape_buffer; // indices; then all verts
+         } coalesced;
+         struct {
             size_t bounds   = 0; // count
             size_t lights   = 0; // count
             size_t meshes   = 0; // count
             size_t textures = 0; // count
          } pending_deletions;
          frame_dirty_state light_shadow_state;
+
+         void setup_landscape_buffer(surface_renderer&, size_t max_landscape_count);
 
          void update_projection(VkExtent2D render_area);
          void update_camera();
@@ -62,13 +72,17 @@ namespace vulkanDK {
 
          frustum get_current_view_frustum(float near, float far) const;
 
+         void clear();
          void teardown();
          void update(); // anim state, etc.
 
-         size_t insert_new_bound();   // returns index of inserted item, std::string::npos on failure
-         size_t insert_new_light();   // returns index of inserted item, std::string::npos on failure
-         size_t insert_new_mesh();    // returns index of inserted item, std::string::npos on failure
-         size_t insert_new_texture(); // returns index of inserted item, std::string::npos on failure
+         size_t insert_new_bound();     // returns index of inserted item; index_of_none on failure
+         size_t insert_new_landscape(); // returns index of inserted item; index_of_none on failure
+         size_t insert_new_light();     // returns index of inserted item; index_of_none on failure
+         size_t insert_new_mesh();      // returns index of inserted item; index_of_none on failure
+         size_t insert_new_texture();   // returns index of inserted item; index_of_none on failure
+
+         size_t landscape_buffer_vertex_index(size_t landscape_index) const;
 
       protected:
          size_t _empty_mesh_slot_count() const;

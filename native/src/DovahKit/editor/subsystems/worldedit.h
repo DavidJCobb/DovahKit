@@ -4,11 +4,17 @@
 #include "helpers/singleton_ex.h"
 #include "helpers/vector3.h"
 #include "dovah/form_stub.h"
+#include "dovah/forms/Landscape.h"
 #include "dovah/forms/ObjectReference.h"
 #include "nif/file.h"
 #include "vulkan/scene_item_handle.h"
 
 class DKVulkanView;
+namespace dovah {
+   namespace loaded_forms {
+      class Landscape;
+   }
+}
 
 namespace dovahkit::subsystems {
    class worldedit;
@@ -31,6 +37,7 @@ namespace dovahkit::subsystems {
 
       protected:
          using form_stub       = dovah::form_stub;
+         using loaded_land_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::Landscape>;
          using loaded_refr_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::ObjectReference>;
 
          struct selected_refr_info {
@@ -58,7 +65,11 @@ namespace dovahkit::subsystems {
          };
 
          struct cell {
-            dovah::form_stub* stub = nullptr;
+            dovah::form_stub* stub = nullptr; // CELL form
+            loaded_land_ptr   land = nullptr; // LAND form
+            struct {
+               vulkanDK::rendered_landscape_handle landscape;
+            } vulkan_handles;
          };
 
          DKVulkanView* target_view = nullptr;

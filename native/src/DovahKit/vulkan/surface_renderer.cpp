@@ -58,11 +58,14 @@
 #include "nif/blocks/NiTriShape.h"
 #include "nif/blocks/NiTriShapeData.h"
 
-// loading light refs
+// loading refs and landscapes
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
+#include "dovah/forms/Landscape.h"
+#include "dovah/forms/LandTexture.h"
 #include "dovah/forms/Light.h"
 #include "dovah/forms/ObjectReference.h"
+#include "dovah/forms/TextureSet.h"
 #include "dovah/forms/components/extra_data/light.h"
 #include "dovah/forms/components/extra_data/radius.h"
 
@@ -511,6 +514,22 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
+      this->descriptor_set_layouts.landscape.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_landscape::shader_parameters[]
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       //
       this->set_widget(widget);
       if (this->handle == VK_NULL_HANDLE) {
@@ -760,6 +779,7 @@ namespace vulkanDK {
       for (auto& q : this->queues.list)
          q.setup_command_pools(this->logical_device);
       //
+      this->scene.setup_landscape_buffer(*this, config::max_landscapes);
       {  // swap chain
          this->_setup_sun_shadow_buffer();
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
@@ -1775,6 +1795,49 @@ namespace vulkanDK {
       }
       #pragma endregion
    }
+   void surface_renderer::_setup_landscape_shader() {
+      auto* s = this->create_graphics_shader(landscape_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main);
+      s->set_layout_info({
+         this->descriptor_set_layouts.landscape.handle,
+      });
+      //
+      auto& options = s->options;
+      //
+      shader_module* vert = this->load_shader_module("shaders/landscape.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/landscape.frag.spv");
+      {
+         assert(vert);
+         assert(frag);
+         this->set_debug_object_name(vert->handle, "Shader Module (Landscape Vert)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Landscape Frag)");
+      }
+      //
+      options.stages = {
+         {
+            .module = frag,
+            .entry_point_name = "main",
+            .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module = vert,
+            .entry_point_name = "main",
+            .stage = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+      if constexpr (config::use_inverted_depth) {
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      {
+         auto& vertex     = options.inputs.vertex;
+         auto  attributes = vertex_landscape::attribute_descriptions();
+         vertex.bindings.push_back(vertex_landscape::binding_description());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      //
+      s->setup_pipeline_layout();
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
       //
@@ -1785,6 +1848,7 @@ namespace vulkanDK {
       this->_setup_frustum_cull_shader();
       this->_setup_shadow_caster_cull_shaders();
       this->_setup_scene_bounds_shaders();
+      this->_setup_landscape_shader();
       //
       // FPS counter:
       //
@@ -2154,6 +2218,11 @@ namespace vulkanDK {
             .offset = 0,
             .range  = VK_WHOLE_SIZE,
          };
+         auto landscape_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_landscapes.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
          //
          std::array<VkDescriptorImageInfo, shadow_caster_count> light_shadow_info;
          for (size_t i = 0; i < shadow_caster_count; ++i) {
@@ -2491,6 +2560,35 @@ namespace vulkanDK {
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
                      .pBufferInfo      = &bounds_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // Landscape
+            //
+            ([&frame, &global_state_buffer_info, &landscape_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.landscape;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // uniform buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &global_state_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // storage buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &landscape_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                };
@@ -3063,7 +3161,7 @@ namespace vulkanDK {
                handle = VK_NULL_HANDLE;
             }
             for (auto& item : ls.resources) {
-               item.light_index = std::string::npos;
+               item.light_index = scene::index_of_none;
                item.cubemap.teardown();
             }
          }
@@ -3470,7 +3568,7 @@ namespace vulkanDK {
 
    #pragma region scene
    size_t surface_renderer::add_texture(const QString& texture_path) {
-      constexpr size_t fail = std::string::npos;
+      constexpr size_t fail = scene::index_of_none;
       //
       auto& list = this->scene.textures;
       auto  size = list.size();
@@ -3526,7 +3624,7 @@ namespace vulkanDK {
          // Create scene texture.
          //
          auto texture_index = this->scene.insert_new_texture();
-         if (texture_index == std::string::npos) {
+         if (texture_index == scene::index_of_none) {
             qDebug("[vulkanDK::scene_renderer::add_texture] Cannot add new rendered textures. Maximum has been reached.");
             return fail;
          }
@@ -3600,7 +3698,7 @@ namespace vulkanDK {
       // here, we may want to lock the texture asset list, if we were doing a multithreaded renderer
       //
       auto texture_index = this->scene.insert_new_texture();
-      if (texture_index == std::string::npos) {
+      if (texture_index == scene::index_of_none) {
          qDebug("Cannot add new rendered textures. Maximum has been reached.");
          return fail;
       }
@@ -3645,7 +3743,7 @@ namespace vulkanDK {
       return texture_index;
    }
    size_t surface_renderer::add_dds_texture(QString texture_path) {
-      constexpr size_t fail = std::string::npos;
+      constexpr size_t fail = scene::index_of_none;
       //
       if (!texture_path.endsWith(".dds", Qt::CaseInsensitive))
          return fail;
@@ -3710,7 +3808,7 @@ namespace vulkanDK {
       // Create scene texture.
       //
       auto texture_index = this->scene.insert_new_texture();
-      if (texture_index == std::string::npos) {
+      if (texture_index == scene::index_of_none) {
          qDebug("[vulkanDK::scene_renderer::add_dds_texture] Cannot add new rendered textures. Maximum has been reached.");
          return fail;
       }
@@ -3760,13 +3858,13 @@ namespace vulkanDK {
    }
    void surface_renderer::add_mesh(const QString& texture_path) {
       size_t texture_index = this->add_texture(texture_path);
-      if (texture_index == std::string::npos) {
+      if (texture_index == scene::index_of_none) {
          qDebug("Cannot add new rendered object: failed to add its texture.");
          return;
       }
       auto&  texture_item = this->scene.textures[texture_index];
       size_t object_index = this->scene.insert_new_mesh();
-      if (object_index == std::string::npos) {
+      if (object_index == scene::index_of_none) {
          qDebug("Cannot add new rendered objects. Maximum has been reached.");
          if (texture_item.refcount == 0) {
             //
@@ -3997,7 +4095,7 @@ namespace vulkanDK {
 
    rendered_bounds_handle surface_renderer::add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform) {
       size_t index = this->scene.insert_new_bound();
-      if (index == std::string::npos) {
+      if (index == scene::index_of_none) {
          qDebug("[vulkanDK::scene_renderer::add_bounds] Cannot add new rendered_bounds; scene limits reached.");
          return {};
       }
@@ -4027,6 +4125,128 @@ namespace vulkanDK {
       //
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_scene_bounds_added_or_removed();
+   }
+
+   rendered_landscape_handle surface_renderer::add_landscape(const glm::vec3& position) {
+      size_t index = this->scene.insert_new_landscape();
+      if (index == scene::index_of_none) {
+         qDebug("[vulkanDK::scene_renderer::add_landscape] Cannot add new rendered_landscape; scene limits reached.");
+         return {};
+      }
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::add_landscape] Creating new landscape at index %u.", index);
+      }
+      auto& item = this->scene.landscapes[index];
+      item.life_state = scene_frame_item_state::active;
+      item.handled_frames.set_all_out_of_date();
+      item.set_position(position);
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_scene_landscape_added_or_removed();
+      //
+      return rendered_landscape_handle(*this, index);
+   }
+   rendered_landscape_handle surface_renderer::add_landscape(const glm::vec3& position, const dovah::loaded_forms::Landscape& land) {
+      auto handle = this->add_landscape(position);
+      if (handle.empty())
+         return handle;
+      //
+      auto _load_textures = [this](int32_t& diffuse, int32_t& normal, dovah::form_stub& ltex) {
+         auto  load = ltex.load().ptr_cast<dovah::loaded_forms::LandTexture>();
+         if (!load)
+            return;
+         auto* txst = load->texture_set.get_form_stub();
+         if (!txst)
+            return;
+         auto  txld = txst->load().ptr_cast<dovah::loaded_forms::TextureSet>();
+         if (!txld)
+            return;
+         //
+         diffuse = this->add_dds_texture(txld->textures.diffuse.c_str());
+         normal  = this->add_dds_texture(txld->textures.normal.c_str());
+      };
+      //
+      auto& sp = handle->shader_params;
+      for (size_t i = 0; i < 4; ++i) {
+         sp.diffuse_base[i] = -1;
+         sp.normals_base[i] = -1;
+         //
+         auto* ltex = land.default_quad_textures[i].get_form_stub();
+         if (!ltex)
+            continue;
+         _load_textures(sp.diffuse_base[i], sp.normals_base[i], *ltex);
+         //
+         auto& blends = land.alpha_layers_by_quad[i];
+         for (auto& blend : blends) {
+            if (blend.layer < 0 || blend.layer >= rendered_landscape::max_usable_layers_per_quad)
+               continue;
+            auto* ltex = blend.texture.get_form_stub();
+            if (!ltex)
+               continue;
+            _load_textures(sp.diffuse_blends_by_quad[i][blend.layer], sp.normals_blends_by_quad[i][blend.layer], *ltex);
+         }
+      }
+      //
+      handle->import_vertex_data_from_form(land);
+      return handle;
+   }
+   void surface_renderer::remove_landscape(size_t i) {
+      auto& list = this->scene.landscapes;
+      if (i >= list.size())
+         return;
+      if constexpr (debug_log_scene_object_lifetimes) {
+         qDebug("[vulkanDK::scene_renderer::remove_landscape] Marking scene landscape %u for delete.", i);
+      }
+      auto& item = list[i];
+      item.mark_for_delete();
+      {
+         auto _dec_tex_ref = [this, i](loaded_texture& tex, size_t ti) {
+            if (--tex.refcount == 0) {
+               tex.mark_for_delete();
+               ++this->scene.pending_deletions.textures;
+               if constexpr (debug_log_scene_object_lifetimes) {
+                  qDebug("[vulkanDK::scene_renderer::remove_landscape] Landscape %u used texture %u which is now unused; marking the texture for delete.", i, ti);
+               }
+            }
+         };
+         //
+         auto& list = this->scene.textures;
+         for (auto& ti : item.shader_params.diffuse_base) {
+            if (ti < 0)
+               continue;
+            assert(ti < list.size());
+            if (ti < list.size())
+               _dec_tex_ref(list[ti], ti);
+            ti = -1;
+         }
+         for (auto& ti : item.shader_params.diffuse_blends) {
+            if (ti < 0)
+               continue;
+            assert(ti < list.size());
+            if (ti < list.size())
+               _dec_tex_ref(list[ti], ti);
+            ti = -1;
+         }
+         for (auto& ti : item.shader_params.normals_base) {
+            if (ti < 0)
+               continue;
+            assert(ti < list.size());
+            if (ti < list.size())
+               _dec_tex_ref(list[ti], ti);
+            ti = -1;
+         }
+         for (auto& ti : item.shader_params.normals_blends) {
+            if (ti < 0)
+               continue;
+            assert(ti < list.size());
+            if (ti < list.size())
+               _dec_tex_ref(list[ti], ti);
+            ti = -1;
+         }
+      }
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_scene_landscape_added_or_removed();
    }
    
    namespace {
@@ -4140,8 +4360,8 @@ namespace vulkanDK {
       size_t prior_diffuse = mesh.texture_indices.diffuse;
       size_t prior_normals = mesh.texture_indices.normals;
       //
-      size_t texture_index = std::string::npos;
-      size_t normals_index = std::string::npos;
+      size_t texture_index = scene::index_of_none;
+      size_t normals_index = scene::index_of_none;
       if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
          if (auto* textures = lighting->texture.paths) {
             const auto& diffuse = textures->textures.diffuse;
@@ -4165,14 +4385,14 @@ namespace vulkanDK {
       }
       mesh.texture_indices.diffuse = texture_index;
       mesh.texture_indices.normals = normals_index;
-      if (texture_index != std::string::npos) {
+      if (texture_index != scene::index_of_none) {
          ++this->scene.textures[texture_index].refcount;
-         if (prior_diffuse != std::string::npos)
+         if (prior_diffuse != scene::index_of_none)
             --this->scene.textures[prior_diffuse].refcount;
       }
-      if (normals_index != std::string::npos) {
+      if (normals_index != scene::index_of_none) {
          ++this->scene.textures[normals_index].refcount;
-         if (prior_normals != std::string::npos)
+         if (prior_normals != scene::index_of_none)
             --this->scene.textures[prior_normals].refcount;
       }
    }
@@ -4184,7 +4404,7 @@ namespace vulkanDK {
       transform = transform * data->transform.to_matrix();
       //
       auto  mesh_index = this->scene.insert_new_mesh();
-      assert(mesh_index != std::string::npos);
+      assert(mesh_index != scene::index_of_none);
       auto& mesh       = this->scene.meshes[mesh_index];
       data->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
@@ -4257,7 +4477,7 @@ namespace vulkanDK {
       transform = transform * geom->transform.to_matrix();
       //
       auto  mesh_index = this->scene.insert_new_mesh();
-      assert(mesh_index != std::string::npos);
+      assert(mesh_index != scene::index_of_none);
       auto& mesh       = this->scene.meshes[mesh_index];
       geom->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
@@ -4358,7 +4578,7 @@ namespace vulkanDK {
       size_t texture_index;
       {
          texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
-         if (texture_index == std::string::npos) {
+         if (texture_index == scene::index_of_none) {
             qDebug("Cannot add new rendered object: failed to add its texture.");
             return false;
          }
@@ -4486,7 +4706,7 @@ namespace vulkanDK {
    }
    rendered_light_handle surface_renderer::add_light(const rendered_light::shader_parameters& in) {
       size_t light_index = this->scene.insert_new_light();
-      if (light_index == std::string::npos) {
+      if (light_index == scene::index_of_none) {
          qDebug("[vulkanDK::scene_renderer::add_light] Cannot add new rendered_light; scene limits reached.");
          return {};
       }
@@ -4533,7 +4753,7 @@ namespace vulkanDK {
       size_t texture_index;
       {
          texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
-         if (texture_index == std::string::npos) {
+         if (texture_index == scene::index_of_none) {
             qDebug("Cannot display debug frustrums: failed to add texture.");
             return;
          }
@@ -4545,7 +4765,7 @@ namespace vulkanDK {
       //
       {  // Camera
          auto mesh_index = this->scene.insert_new_mesh();
-         if (mesh_index == std::string::npos) {
+         if (mesh_index == scene::index_of_none) {
             qDebug("Cannot show debug frustrum (camera). Mesh limit reached.");
             return;
          }
@@ -4661,7 +4881,7 @@ namespace vulkanDK {
       }
       {  // Sun shadows
          auto mesh_index = this->scene.insert_new_mesh();
-         if (mesh_index == std::string::npos) {
+         if (mesh_index == scene::index_of_none) {
             qDebug("Cannot show debug frustrum (camera). Mesh limit reached.");
             return;
          }

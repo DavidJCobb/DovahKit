@@ -33,6 +33,7 @@ class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
 namespace dovah {
    namespace loaded_forms {
+      class Landscape;
       class ObjectReference;
    }
 }
@@ -67,6 +68,7 @@ namespace vulkanDK {
          static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "CullSdw0";
          static constexpr graphics_shader::id_type bounding_box_shader_id     = "BoundBox";
          static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
+         static constexpr graphics_shader::id_type landscape_shader_id        = "Landscap";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -244,6 +246,10 @@ namespace vulkanDK {
 
          rendered_bounds_handle add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
          void remove_bounds(size_t);
+
+         rendered_landscape_handle add_landscape(const glm::vec3& position);
+         rendered_landscape_handle add_landscape(const glm::vec3& position, const dovah::loaded_forms::Landscape&);
+         void remove_landscape(size_t);
       
       protected:
          void _create_mesh_vib(rendered_mesh&);
@@ -283,6 +289,7 @@ namespace vulkanDK {
             void _setup_frustum_cull_shader();
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();
+            void _setup_landscape_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

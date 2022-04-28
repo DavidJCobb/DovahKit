@@ -24,5 +24,7 @@
         <file>bounding-box.vert.spv</file>
         <file>bounding-origin.frag.spv</file>
         <file>bounding-origin.vert.spv</file>
+        <file>landscape.frag.spv</file>
+        <file>landscape.vert.spv</file>
     </qresource>
 </RCC>

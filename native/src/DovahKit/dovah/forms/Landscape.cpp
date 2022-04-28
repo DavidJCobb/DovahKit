@@ -243,7 +243,7 @@ namespace dovah::loaded_forms {
                      last_alpha_layer = -1;
                      break;
                   }
-                  if (layer.layer > 5) {
+                  if (layer.layer >= max_usable_layers_per_quad) {
                      detailed_notice warning;
                      warning.type    = detailed_notice::notice_type::warning;
                      warning.context = detailed_notice::notice_context::on_demand_form_load;
