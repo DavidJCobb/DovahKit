@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm> // std::swap
+#include "helpers/passkey.h"
 
 namespace vulkanDK {
    class rendered_bounds;
@@ -15,6 +16,9 @@ namespace vulkanDK {
       // handle types.
       //
       template<typename Self> class scene_item_handle {
+         public:
+            using surface_renderer_passkey = cobb::passkey<surface_renderer, Self>;
+
          protected:
             surface_renderer* owner = nullptr;
             size_t index = -1;
@@ -41,6 +45,8 @@ namespace vulkanDK {
             }
 
             surface_renderer* renderer() const { return owner; }
+
+            inline size_t list_index(surface_renderer_passkey) const noexcept { return this->index; }
 
             inline bool empty() const noexcept {
                return owner == nullptr || index == -1;

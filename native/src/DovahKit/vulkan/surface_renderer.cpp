@@ -3120,7 +3120,7 @@ namespace vulkanDK {
       //
       // Ensure all child objects belonging to the instance are destroyed.
       //
-      this->scene.teardown();
+      this->scene.teardown(*this);
       this->null_texture.teardown();
       {
          auto& list = this->graphics_shaders;
@@ -4162,8 +4162,8 @@ namespace vulkanDK {
          if (!txld)
             return;
          //
-         diffuse = this->add_dds_texture(txld->textures.diffuse.c_str());
-         normal  = this->add_dds_texture(txld->textures.normal.c_str());
+         diffuse = this->add_dds_texture(QString("textures/") + txld->textures.diffuse.c_str());
+         normal  = this->add_dds_texture(QString("textures/") + txld->textures.normal.c_str());
       };
       //
       auto& sp = handle->shader_params;
@@ -4188,6 +4188,10 @@ namespace vulkanDK {
       }
       //
       handle->import_vertex_data_from_form(land);
+      {
+         this->_wait_on_all_frames_in_flight(); // ensure that we don't write to the coalesced landscape buffer while it is in use // TODO: double-buffering to work around this?
+         this->scene.update_single_landscape(*this, handle.list_index({}));
+      }
       return handle;
    }
    void surface_renderer::remove_landscape(size_t i) {
@@ -4986,6 +4990,11 @@ namespace vulkanDK {
       this->debug.freeze_culling_updates = v;
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.invalidate_all_command_buffers();
+   }
+
+   void surface_renderer::_wait_on_all_frames_in_flight() {
+      for (auto& item : this->swap_chain.frames_in_flight)
+         item.fences.wait_on_all(this->logical_device);
    }
 
    void surface_renderer::_execute_pending_scene_deletions() {

@@ -72,8 +72,8 @@ namespace vulkanDK {
 
          frustum get_current_view_frustum(float near, float far) const;
 
-         void clear();
-         void teardown();
+         void clear(surface_renderer&);
+         void teardown(surface_renderer&);
          void update(); // anim state, etc.
 
          size_t insert_new_bound();     // returns index of inserted item; index_of_none on failure
@@ -83,6 +83,7 @@ namespace vulkanDK {
          size_t insert_new_texture();   // returns index of inserted item; index_of_none on failure
 
          size_t landscape_buffer_vertex_index(size_t landscape_index) const;
+         void update_single_landscape(surface_renderer&, size_t landscape_index);
 
       protected:
          size_t _empty_mesh_slot_count() const;

@@ -18,6 +18,7 @@ layout(std430,binding = 1) readonly buffer ObjectBuffer {
 
 layout(location = 0) out VS_OUT {
    vec4 out_color;
+   vec3 out_world_pos;
 };
 
 #define VERTS_PER_SIDE 33
@@ -25,14 +26,15 @@ layout(location = 0) out VS_OUT {
 #define VERTS_PER_QUAD 17
 
 #define CELL_SIDE_LENGTH 4096
-#define VERT_DISTANCE (CELL_SIDE_LENGTH / (CELL_SIDE_LENGTH - 1))
+#define VERT_DISTANCE (CELL_SIDE_LENGTH / (VERTS_PER_SIDE - 1))
 
 void main() {
    mat4 transform = mat4(1);
    transform[3] = vec4(landscapes[gl_InstanceIndex].position, 1.0);
    //
-   int land_x = gl_VertexIndex % VERTS_PER_SIDE;
-   int land_y = gl_VertexIndex / VERTS_PER_SIDE;
+   int vert_i = gl_VertexIndex % TOTAL_VERTS; // allows for sharing a vertex buffer and shifting the base vertex offset
+   int land_x = vert_i % VERTS_PER_SIDE;
+   int land_y = vert_i / VERTS_PER_SIDE;
    //
    gl_Position.x = land_x * VERT_DISTANCE;
    gl_Position.y = land_y * VERT_DISTANCE;
@@ -41,5 +43,6 @@ void main() {
    //
    out_color = vec4(0.5, 0.5, 0.5, 1); // testing
    //
+   out_world_pos = (transform * gl_Position).xyz;
    gl_Position = scene.proj * scene.view * transform * gl_Position;
 }

@@ -870,15 +870,15 @@ namespace vulkanDK {
             const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.landscape });
             //
+            VkDeviceSize offset = scene.landscape_buffer_vertex_index(0);
+            vkCmdBindVertexBuffers(command_handle, 0, 1, &sr.scene.coalesced.landscape_buffer.handle, &offset);
             vkCmdBindIndexBuffer(command_handle, sr.scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+            //
             for (size_t i = 0; i < scene.landscapes.size(); ++i) {
                auto& item = scene.landscapes[i];
                if (!item.active())
                   continue;
-               VkDeviceSize offset = scene.landscape_buffer_vertex_index(i);
-               vkCmdBindVertexBuffers(command_handle, 0, 1, &sr.scene.coalesced.landscape_buffer.handle, &offset);
-               //
-               vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::verts_per_mesh, 1, 0, 0, i);
+               vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::indices_per_mesh, 1, 0, i * rendered_landscape::verts_per_mesh, i);
             }
          }
          command_buffer.end_render_pass();
@@ -1249,15 +1249,15 @@ namespace vulkanDK {
 
       auto& scene  = this->get_scene();
       //
-      auto& ro    = scene.landscapes;
-      auto  count = ro.size();
+      auto& list  = scene.landscapes;
+      auto  count = list.size();
       //
       // Find the first scene item in need of an update.
       //
       size_t first_dirty = 0;
       bool   any_dirty   = false;
       for (size_t i = 0; i < count; ++i) {
-         auto& item = ro[i];
+         auto& item = list[i];
          switch (item.life_state) {
             case scene_frame_item_state::empty:
                continue;
@@ -1282,7 +1282,7 @@ namespace vulkanDK {
          //
          auto* params = (entry_type*)this->shader_params.scene_landscapes.map_memory();
          for (size_t i = first_dirty; i < count; ++i) {
-            auto& item = ro[i];
+            auto& item = list[i];
             if (!item.active()) {
                if (item.pending_delete())
                   item.handled_frames.set_up_to_date(this->my_index);

@@ -314,6 +314,8 @@ namespace vulkanDK {
          command_buffer _begin_one_time_commands(queue&);
          void _end_one_time_commands(command_buffer&, queue&);
 
+         void _wait_on_all_frames_in_flight();
+
          void _execute_pending_scene_deletions();
    };
 }

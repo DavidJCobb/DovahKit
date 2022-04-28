@@ -4,9 +4,10 @@
 #include <type_traits>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
-#include "helpers/array_of_n_values.h"
-#include "helpers/frame_dirty_state.h"
+#include "helpers/array_of_n_values.h" // cobb
+#include "helpers/frame_dirty_state.h" // vulkan
 #include "helpers/vertex_index_list.h"
+#include "helpers/vertex_indices_for_quad_grid.h"
 #include "buffer.h"
 #include "vertex_landscape.h"
 #include "scene_frame_item.h"
@@ -21,6 +22,8 @@ namespace vulkanDK {
          using loaded_form = dovah::loaded_forms::Landscape;
          static constexpr size_t verts_per_side = 33;
          static constexpr size_t verts_per_mesh = verts_per_side * verts_per_side;
+
+         static constexpr size_t indices_per_mesh = vertex_index_count_for_quad_grid<verts_per_side, verts_per_side>;
 
          static constexpr size_t max_usable_layers_per_quad = 6;
 

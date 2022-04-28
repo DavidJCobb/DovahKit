@@ -399,14 +399,24 @@ namespace vulkanDK {
       return out;
    }
 
-   void scene::clear() {
+   void scene::clear(surface_renderer& sr) {
       this->bounds.clear();
       this->lights.clear();
+      {
+         auto& list = this->meshes;
+         auto  size = list.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto& mesh = list[i];
+            if (!mesh.owning_nif)
+               continue;
+            mesh.owning_nif->sever_connection_to({ sr, i });
+         }
+      }
       this->meshes.clear();
       this->textures.clear();
    }
-   void scene::teardown() {
-      this->clear();
+   void scene::teardown(surface_renderer&sr) {
+      this->clear(sr);
       this->coalesced = {};
    }
 
@@ -510,6 +520,25 @@ namespace vulkanDK {
       constexpr size_t i = std::tuple_size_v<decltype(indices)> *sizeof(decltype(indices)::value_type);
       constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
       return i + (v * landscape_index);
+   }
+   void scene::update_single_landscape(surface_renderer& sr, size_t landscape_index) {
+      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+
+      auto  staging = sr.create_buffer(v, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      void* data    = staging.map_memory();
+      auto& entry   = this->landscapes[landscape_index];
+      //
+      memcpy(data, entry.vertices.data(), v);
+      staging.unmap_memory(data);
+      //
+      sr.do_single_commands([this, &staging, landscape_index](command_buffer& scratch) {
+         auto copy_region = VkBufferCopy{
+            .srcOffset = 0,
+            .dstOffset = this->landscape_buffer_vertex_index(landscape_index),
+            .size      = v,
+         };
+         vkCmdCopyBuffer(scratch.handle, staging.handle, this->coalesced.landscape_buffer.handle, 1, &copy_region);
+      });
    }
 
    size_t scene::_empty_mesh_slot_count() const {

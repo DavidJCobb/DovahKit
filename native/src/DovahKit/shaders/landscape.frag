@@ -7,6 +7,7 @@
 
 layout(location = 0) in VS_OUT {
    vec4 in_color;
+   vec3 in_world_pos;
 };
 
 layout(location = 0) out vec4 out_color;
