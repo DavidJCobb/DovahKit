@@ -77,6 +77,6 @@ void main() {
    //
    // Apply vertex color to texture color:
    //
-   out_color.rgb *= base_color;
+   out_color.rgb *= tex_color;
    out_color.a = 1;
 }

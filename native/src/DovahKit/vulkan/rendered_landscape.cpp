@@ -3,6 +3,8 @@
 #include "dovah/forms/LandTexture.h"
 #include "dovah/forms/TextureSet.h"
 
+#include <QDebug>
+
 namespace vulkanDK {
    static_assert(rendered_landscape::verts_per_mesh == rendered_landscape::loaded_form::total_vertex_count);
 
@@ -32,15 +34,29 @@ namespace vulkanDK {
             vl[i].blends[j] = 0;
       }
       //
-      constexpr bool dont_even_bother_dealing_with_the_quads = false;
+      constexpr bool dont_even_bother_dealing_with_the_quads = true;
       //
+qDebug("[rendered_landscape::import_vertex_data_from_form] Generating landscape vertex data...");
       for (size_t q = 0; q < 4; ++q) {
+qDebug(" - Quad %d", q);
          for (auto& blend : land.alpha_layers_by_quad[q]) {
             auto layer = blend.layer;
+qDebug("    - Layer %d", layer);
             if (layer < 0 || layer >= rendered_landscape::max_usable_layers_per_quad)
                continue;
+qDebug("      Proceeding...");
             //
             auto& alphas = blend.opacities;
+{
+   qDebug("       - Dumping blends:");
+   for (size_t y = 0; y < verts_per_side; ++y) {
+      QString line = "         ";
+      for (size_t x = 0; x < verts_per_side; ++x) {
+         line += QString::number(alphas.item(x, y), 'f', 2) + ' ';
+      }
+      qDebug(qUtf8Printable(line));
+   }
+}
             if constexpr (dont_even_bother_dealing_with_the_quads) {
                //
                // Blends are stored as four 17x17 quadrants with one vertex of overlap, 
@@ -76,6 +92,21 @@ namespace vulkanDK {
             }
          }
       }
+{
+   qDebug("       - Dumping final data:");
+   for (size_t b = 0; b < max_usable_layers_per_quad; ++b) {
+      qDebug("          - Blend %d:", b);
+      for (size_t y = 0; y < verts_per_side; ++y) {
+         QString line = "            ";
+         for (size_t x = 0; x < verts_per_side; ++x) {
+            auto& v = vl[y * verts_per_side + x];
+            line += QString::number(v.blends[b], 'f', 2) + ' ';
+         }
+         qDebug(qUtf8Printable(line));
+      }
+   }
+}
+qDebug(" - Data dumped.");
    }
    void rendered_landscape::setup_vertex_data_at(void* dest) {
       auto& vl = this->vertices;

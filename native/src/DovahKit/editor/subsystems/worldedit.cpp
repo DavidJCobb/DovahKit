@@ -410,6 +410,23 @@ namespace dovahkit::subsystems {
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          DK3DInputHandler::get().setTargetView(nullptr);
          this->target_view = nullptr;
+         //
+         // Forcibly discard all handles to scene objects.
+         //
+         for (auto& item : this->state.selection.refs) {
+            item.handle = {};
+         }
+         for (auto& item : this->loaded_refs) {
+            item.vulkan_handles = {};
+            if (auto* nif = item.nif.get()) {
+               for (auto* block : nif->all_blocks)
+                  block->sever_all_vulkan_mesh_connections();
+            }
+         }
+         {
+            auto& item = this->loaded_cell;
+            item.vulkan_handles = {};
+         }
       });
       //
       QObject::connect(&view, &DKVulkanView::renderedMeshClicked, this, [this](vulkanDK::rendered_mesh_handle handle) {

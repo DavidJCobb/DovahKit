@@ -552,21 +552,24 @@ namespace dovah::loaded_forms {
       }
       VCLR.close();
       //
-      {
-         auto& list = this->default_quad_textures;
-         for (int i = 0; i < list.size(); ++i) {
-            auto& ref  = list[i];
+      // Official files have blend data sorted by quad; BTXT, ATXT, and VTXT, per quad.
+      //
+      for (size_t quad = 0; quad < 4; ++quad) {
+         auto& bases = this->default_quad_textures;
+         {  // BTXT
+            auto& ref = bases[quad];
             if (ref == nullptr)
                continue;
             auto& BTXT = record.open_next_subrecord('BTXT');
             BTXT.write(ref);
-            BTXT.write(uint8_t(i));
+            BTXT.write(uint8_t(quad));
             BTXT.skip_bytes(1);
             BTXT.write(int16_t(-1));
             BTXT.close();
          }
-      }
-      for (uint8_t quad = 0; quad < this->alpha_layers_by_quad.size(); ++quad) {
+         //
+         // Blends:
+         //
          auto& list = this->alpha_layers_by_quad[quad];
          for (auto& layer : list) {
             std::vector<uint16_t> indices;
