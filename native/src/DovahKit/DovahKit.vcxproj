@@ -473,6 +473,7 @@
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\generic_reader.cpp" />
+    <ClCompile Include="helpers\glm\cross_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
@@ -786,6 +787,7 @@
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
+    <ClInclude Include="helpers\glm\cross_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
@@ -800,6 +802,10 @@
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
+    <ClInclude Include="helpers\simd\bytes_to_floats.h" />
+    <ClInclude Include="helpers\simd\min_and_max.h" />
+    <ClInclude Include="helpers\simd\shuffle.h" />
+    <ClInclude Include="helpers\simd\sum_register.h" />
     <ClInclude Include="helpers\singleton_ex.h" />
     <ClInclude Include="helpers\sorted_list.h" />
     <ClInclude Include="helpers\string\strcmp.h" />
@@ -921,6 +927,7 @@
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustum.h" />
     <ClInclude Include="vulkan\graphics_shader.h" />
+    <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h" />
     <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />
     <ClInclude Include="vulkan\helpers\cubemap_helpers.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
@@ -1628,6 +1635,7 @@
     <Text Include="editor\_docs\asset manager.txt" />
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
+    <Text Include="helpers\simd\_notes.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
     <Text Include="vulkan\_docs\an overview of the basic render process.txt" />

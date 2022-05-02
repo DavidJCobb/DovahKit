@@ -35,12 +35,9 @@ namespace {
          auto* layer = form->get_alpha_layer(q, l);
          if (!layer)
             return 0;
-         int8_t cx = x - 1;
-         int8_t cy = y - 1;
-         wrapped_type::cell_coords_to_quad_coords(q, cx, cy);
-         if (cx < 0 || cy < 0) // coordinates were not in this quad
-            return 0;
-         lua_pushnumber(L, layer->opacities.at(cx, cy));
+         --x;
+         --y;
+         lua_pushnumber(L, layer->opacities.item(x, y));
          return 1;
       }
    }

@@ -8,6 +8,9 @@ namespace nifDK::block_interfaces {
          handle = {};
       }
    }
+   void _DKVulkanMeshInterface::sever_all_vulkan_mesh_connections() {
+      this->vulkan_state.mesh_handle = {};
+   }
    void _DKVulkanMeshInterface::sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle m) {
       if (this->vulkan_state.mesh_handle == m) {
          if (!m.empty())

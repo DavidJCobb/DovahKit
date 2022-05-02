@@ -1,4 +1,9 @@
 #include "Landscape.h"
+//
+#include "helpers/simd/min_and_max.h"
+#include <intrin.h>
+#include "helpers/cpuinfo.h"
+//
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
@@ -75,6 +80,32 @@ namespace dovah::loaded_forms {
       }
    }
 
+   float Landscape::minimum_height() const {
+      auto& list = this->heightmap.heights.list();
+      if (!std::is_constant_evaluated()) {
+         if (cobb::cpuinfo::get().extension_support.sse_1) {
+            return cobb::simd::minimum_of_list(list);
+         }
+      }
+      float min = std::numeric_limits<float>::max();
+      for (auto f : list)
+         if (f < min)
+            min = f;
+      return min;
+   }
+   float Landscape::maximum_height() const {
+      auto& list = this->heightmap.heights.list();
+      if (!std::is_constant_evaluated()) {
+         if (cobb::cpuinfo::get().extension_support.sse_1) {
+            return cobb::simd::maximum_of_list(list);
+         }
+      }
+      float max = std::numeric_limits<float>::lowest(); // ::min() isn't actually the minimum for floating-point types
+      for (auto f : list)
+         if (f > max)
+            max = f;
+      return max;
+   }
 
    void Landscape::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -107,7 +138,7 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(g);
                   subrecord.unchecked_read(b);
                   //
-                  this->heightmap.colors.list[i] = { r, g, b };
+                  this->heightmap.colors.by_flat_index(i) = { r, g, b };
                }
                break;
             case 'VHGT': // vertex heights
@@ -156,7 +187,7 @@ namespace dovah::loaded_forms {
                      } else {
                         span_offset += (float)value * 8.0F;
                      }
-                     this->heightmap.heights.list[i] = base_offset + span_offset;
+                     this->heightmap.heights.by_flat_index(i) = base_offset + span_offset;
                   }
                }
                subrecord.skip_bytes(3); // padding
@@ -174,7 +205,7 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(y);
                   subrecord.unchecked_read(z);
                   //
-                  auto& vec = this->heightmap.normals.list[i];
+                  auto& vec = this->heightmap.normals.by_flat_index(i);
                   vec.x = (float)x / 127.0F;
                   vec.y = (float)y / 127.0F;
                   vec.z = (float)z / 127.0F;
@@ -292,8 +323,11 @@ namespace dovah::loaded_forms {
                      subrecord.skip_bytes(2);
                      subrecord.unchecked_read(opacity);
                      //
-                     if (vertex >= layer.opacities.list.size())
+                     if (vertex > vertices_per_quad_side * vertices_per_quad_side)
                         continue;
+                     uint8_t x = vertex % vertices_per_quad_side;
+                     uint8_t y = vertex / vertices_per_quad_side;
+                     quad_coords_to_cell_coords(last_alpha_quad, x, y);
                      //
                      if (opacity < 0.0F)
                         opacity = 0.0F;
@@ -307,10 +341,10 @@ namespace dovah::loaded_forms {
                      //  - Layer  index out of bounds
                      // 
                      // Of these three, we already validated the quad when reading an alpha layer, and we want 
-                     // to load out-of-bounds layers since they may be relevant to editing. We'll validate 
-                     // vertex indices here.
+                     // to load out-of-bounds layers since they may be relevant to editing. We've validated the 
+                     // vertex index above as well.
                      //
-                     layer.opacities.list[vertex] = opacity;
+                     layer.opacities.item(x, y) = opacity;
                   }
                   //
                   last_alpha_quad  = -1;
@@ -436,7 +470,7 @@ namespace dovah::loaded_forms {
       //
       auto& VNML = record.open_next_subrecord('VNML');
       for (int i = 0; i < total_vertex_count; ++i) {
-         auto& vec = this->heightmap.normals.list[i];
+         auto& vec = this->heightmap.normals.by_flat_index(i);
          //
          int8_t x = 0;
          int8_t y = 0;
@@ -454,7 +488,7 @@ namespace dovah::loaded_forms {
       //
       auto& VHGT = record.open_next_subrecord('VHGT');
       {
-         auto& list = this->heightmap.heights.list;
+         auto& list = this->heightmap.heights.list();
          //
          // Landscapes are encoded as follows:
          // 
@@ -475,7 +509,7 @@ namespace dovah::loaded_forms {
          // 
          //  - bytes[x][y] == (height[x][y] - height[x - 1][y]) / 8
          //
-         float base_offset = floor(this->heightmap.heights.list[0] / 8.0F);
+         float base_offset = floor(list[0] / 8.0F);
          float span_offset = 0.0F;
          VHGT.write(base_offset);
          for (int i = 0; i < total_vertex_count; ++i) {
@@ -511,7 +545,7 @@ namespace dovah::loaded_forms {
       //
       auto& VCLR = record.open_next_subrecord('VCLR');
       for (int i = 0; i < total_vertex_count; ++i) {
-         auto& color = this->heightmap.colors.list[i];
+         auto& color = this->heightmap.colors.by_flat_index(i);
          VCLR.write(color.r);
          VCLR.write(color.g);
          VCLR.write(color.b);
@@ -536,8 +570,8 @@ namespace dovah::loaded_forms {
          auto& list = this->alpha_layers_by_quad[quad];
          for (auto& layer : list) {
             std::vector<uint16_t> indices;
-            for (uint16_t i = 0; i < layer.opacities.list.size(); ++i) {
-               const auto f = layer.opacities.list[i];
+            for (uint16_t i = 0; i < decltype(layer.opacities)::area; ++i) {
+               const auto f = layer.opacities.by_flat_index(i);
                if (f > 0.0F)
                   indices.push_back(i);
             }
@@ -555,7 +589,7 @@ namespace dovah::loaded_forms {
             for (const auto i : indices) {
                VTXT.write(uint16_t(i));
                VTXT.skip_bytes(2);
-               VTXT.write(layer.opacities.list[i]);
+               VTXT.write(layer.opacities.by_flat_index(i));
             }
             VTXT.close();
          }
@@ -593,11 +627,11 @@ namespace dovah::loaded_forms {
       }
       //
       this->land_flags = land_flag::all_common_flags;
-      for (auto& e : this->heightmap.heights.list)
+      for (auto& e : this->heightmap.heights.list())
          e = 0.0F;
-      for (auto& e : this->heightmap.normals.list)
+      for (auto& e : this->heightmap.normals.list())
          e = { 0, 0, 1.0F };
-      for (auto& e : this->heightmap.colors.list)
+      for (auto& e : this->heightmap.colors.list())
          e = { 255, 255, 255 };
       this->mpcd.clear();
    }

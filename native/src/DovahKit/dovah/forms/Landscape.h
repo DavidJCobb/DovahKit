@@ -7,6 +7,7 @@
 #include "_common.h"
 #include "components/bounds.h"
 #include "components/model.h"
+#include "../../helpers/grid.h"
 #include "../../helpers/vector3.h"
 
 namespace dovah::loaded_forms {
@@ -74,12 +75,7 @@ namespace dovah::loaded_forms {
          // northeasternmost vertex, so positive Y is north and negative Y is south. 
          // The western column and southern row must overlap with those of the adjoining 
          // cells, or there will be tears in the landscape.
-         template<typename T, int vertices_per_side = vertices_per_side> struct grid {
-            std::array<T, vertices_per_side * vertices_per_side> list = {};
-
-            T& at(int x, int y) noexcept { return list[y * vertices_per_side + x]; }
-            const T& at(int x, int y) const noexcept { return list[y * vertices_per_side + x]; }
-         };
+         template<typename T> using grid = cobb::corner_square_grid<T, vertices_per_side>;
 
          // Given a vertex index within a quad, retrieve a cell-relative position.
          static void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
@@ -100,14 +96,14 @@ namespace dovah::loaded_forms {
          struct alpha_layer {
             form_reference_t texture; // ATXT
             int16_t layer = 0;        // 
-            grid<float, vertices_per_quad_side> opacities;
+            grid<float> opacities = {};
          };
 
          uint32_t land_flags = land_flag::all_common_flags; // DATA
          struct {
-            grid<float>                heights; // heights[y][x] // VHGT
-            grid<cobb::vector3<float>> normals; // normals[y][x] // VNML, always 0xCC3 bytes in the file. each normal is encoded as a cobb::vector3<int8_t>; convert to float by dividing by 127.0F
-            grid<vertex_color>         colors;  // colors[y][x]  // VCLR
+            grid<float>                heights = {}; // heights[y][x] // VHGT
+            grid<cobb::vector3<float>> normals = {}; // normals[y][x] // VNML, always 0xCC3 bytes in the file. each normal is encoded as a cobb::vector3<int8_t>; convert to float by dividing by 127.0F
+            grid<vertex_color>         colors  = {}; // colors[y][x]  // VCLR
          } heightmap;
          std::vector<form_reference_t> textures; // VTEX
          std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure // index == quad
@@ -122,6 +118,9 @@ namespace dovah::loaded_forms {
                   return &layer;
             return nullptr;
          }
+
+         float minimum_height() const;
+         float maximum_height() const;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

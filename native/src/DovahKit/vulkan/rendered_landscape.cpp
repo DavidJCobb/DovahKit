@@ -20,12 +20,61 @@ namespace vulkanDK {
    void rendered_landscape::import_vertex_data_from_form(const loaded_form& land) {
       auto& vl = this->vertices;
       for (size_t i = 0; i < verts_per_mesh; ++i) {
-         const auto& color = land.heightmap.colors.list[i];
-         vl[i].color = glm::vec3{ (float)color.r, (float)color.g, (float)color.b } / 255.0F;
+         const auto& color = land.heightmap.colors.by_flat_index(i);
+         if (land.land_flags & loaded_form::land_flag::has_colors) {
+            vl[i].color = glm::vec3{ (float)color.r, (float)color.g, (float)color.b } / 255.0F;
+         } else {
+            vl[i].color = glm::fvec3{ 1, 1, 1 };
+         }
          //
-         vl[i].height = land.heightmap.heights.list[i];
+         vl[i].height = land.heightmap.heights.by_flat_index(i);
          for (size_t j = 0; j < vl[i].blends.size(); ++j)
             vl[i].blends[j] = 0;
+      }
+      //
+      constexpr bool dont_even_bother_dealing_with_the_quads = false;
+      //
+      for (size_t q = 0; q < 4; ++q) {
+         for (auto& blend : land.alpha_layers_by_quad[q]) {
+            auto layer = blend.layer;
+            if (layer < 0 || layer >= rendered_landscape::max_usable_layers_per_quad)
+               continue;
+            //
+            auto& alphas = blend.opacities;
+            if constexpr (dont_even_bother_dealing_with_the_quads) {
+               //
+               // Blends are stored as four 17x17 quadrants with one vertex of overlap, 
+               // covering the full 33x33 cell. Mapping quadrant blends to whole-cell 
+               // coordinates SHOULD be easy, but it just isn't working no matter what 
+               // I try.
+               //
+               for (size_t y = 0; y < verts_per_side; ++y) {
+                  for (size_t x = 0; x < verts_per_side; ++x) {
+                     auto f = alphas.item(x, y);
+                     if (f <= 0)
+                        continue;
+                     auto i = (y * verts_per_side) + x;
+                     vl[i].blends[layer] = f;
+                  }
+               }
+            } else {
+               using alpha_grid = std::remove_reference_t<decltype(alphas)>;
+               //
+               uint8_t x_min =  0;
+               uint8_t x_max = 17;
+               uint8_t y_min =  0;
+               uint8_t y_max = 17;
+               land.quad_coords_to_cell_coords(q, x_min, y_min);
+               land.quad_coords_to_cell_coords(q, x_max, y_max);
+               //
+               for (size_t y = y_min; y < y_max; ++y) {
+                  for (size_t x = x_min; x < x_max; ++x) {
+                     auto i = (y * verts_per_side) + x;
+                     vl[i].blends[layer] = alphas.item(x, y);
+                  }
+               }
+            }
+         }
       }
    }
    void rendered_landscape::setup_vertex_data_at(void* dest) {

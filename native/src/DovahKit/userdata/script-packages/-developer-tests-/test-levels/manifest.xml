@@ -1,0 +1,16 @@
+<package>
+   <metadata>
+      <name>Test levels</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>
+         A package created by DovahKit's developers to test the script engine's functionality.
+         
+         This package tests the "levels" filter on rasters. The included image was taken by NASA and is therefore public domain.
+      </description>
+   </metadata>
+   <files>
+main.lua
+   </files>
+</package>

@@ -519,14 +519,29 @@ namespace vulkanDK {
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
          vulkanDK::descriptor_binding{ // storage buffer object: rendered_landscape::shader_parameters[]
             .index              = 1,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 2,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 3,
+            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .count              = config::max_loaded_textures,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
       };
@@ -1164,7 +1179,7 @@ namespace vulkanDK {
                .dstSubpass      = VK_SUBPASS_EXTERNAL,
                .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
-               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,
                .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             }
@@ -2568,9 +2583,9 @@ namespace vulkanDK {
                return out;
             })(),
             //
-            // Landscape
+            // Landscape:
             //
-            ([&frame, &global_state_buffer_info, &landscape_buffer_info]() {
+            ([&frame, &global_state_buffer_info, &landscape_buffer_info, &sampler_info, &texture_infos]() {
                auto descriptor_set = frame.descriptor_sets.landscape;
                auto out = std::array{
                   VkWriteDescriptorSet{ // uniform buffer object
@@ -2590,6 +2605,20 @@ namespace vulkanDK {
                      .pImageInfo       = nullptr,
                      .pBufferInfo      = &landscape_buffer_info,
                      .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // texture sampler
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = 1,
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
+                     .pImageInfo      = &sampler_info,
+                  },
+                  VkWriteDescriptorSet{ // texture array
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = (uint32_t)texture_infos.size(),
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                     .pImageInfo      = texture_infos.data(),
                   },
                };
                for (size_t i = 0; i < out.size(); ++i)
@@ -4170,6 +4199,10 @@ namespace vulkanDK {
       for (size_t i = 0; i < 4; ++i) {
          sp.diffuse_base[i] = -1;
          sp.normals_base[i] = -1;
+         for (size_t j = 0; j < rendered_landscape::max_usable_layers_per_quad; ++j) {
+            sp.diffuse_blends_by_quad[i][j] = -1;
+            sp.normals_blends_by_quad[i][j] = -1;
+         }
          //
          auto* ltex = land.default_quad_textures[i].get_form_stub();
          if (!ltex)

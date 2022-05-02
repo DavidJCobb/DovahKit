@@ -48,7 +48,7 @@ namespace {
          --x;
          --y;
          //
-         const auto& color = form->heightmap.colors.at(x, y);
+         const auto& color = form->heightmap.colors.item(x, y);
          lua_createtable(L, 3, 3);
          //
          lua_pushinteger(L, color.r);
@@ -84,7 +84,7 @@ namespace {
             return 0;
          --x;
          --y;
-         lua_pushnumber(L, form->heightmap.heights.at(x, y));
+         lua_pushnumber(L, form->heightmap.heights.item(x, y));
          return 1;
       }
       int get_maximum_height(lua_State* L) {
@@ -92,11 +92,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         float max = std::numeric_limits<float>::lowest(); // ::min() isn't actually the minimum for floating-point types
-         for (auto f : form->heightmap.heights.list)
-            if (f > max)
-               max = f;
-         lua_pushnumber(L, max);
+         lua_pushnumber(L, form->maximum_height());
          return 1;
       }
       int get_minimum_height(lua_State* L) {
@@ -104,11 +100,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         float min = std::numeric_limits<float>::max();
-         for (auto f : form->heightmap.heights.list)
-            if (f < min)
-               min = f;
-         lua_pushnumber(L, min);
+         lua_pushnumber(L, form->minimum_height());
          return 1;
       }
       int set_color_at(lua_State* L) {
@@ -179,7 +171,7 @@ namespace {
          --y;
          //
          self.before_edit();
-         auto& color = form->heightmap.colors.at(x, y);
+         auto& color = form->heightmap.colors.item(x, y);
          color.r = r;
          color.g = g;
          color.b = b;

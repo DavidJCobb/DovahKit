@@ -7,6 +7,7 @@ namespace nifDK::block_interfaces {
    class _DKVulkanInterface {
       public:
          virtual ~_DKVulkanInterface() {}
+         virtual void sever_all_vulkan_mesh_connections() {}
          virtual void sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle) {}
    };
 
@@ -19,6 +20,7 @@ namespace nifDK::block_interfaces {
          } vulkan_state;
 
          virtual ~_DKVulkanMeshInterface();
+         virtual void sever_all_vulkan_mesh_connections() override;
          virtual void sever_connection_to_vulkan_mesh(vulkanDK::rendered_mesh_handle m) override;
    };
 }

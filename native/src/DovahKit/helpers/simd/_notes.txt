@@ -1,0 +1,352 @@
+
+So this information can be hard to find  depending on how you try to search it, 
+because Google is awful now, but it's important to know that SIMD registers are 
+labeled in reverse order  --  and intrinsics are named and defined accordingly. 
+Intel's intrinsics guide assumes that  the "most significant element" is first, 
+and the  "least significant element," last." When the elements are bytes,  this 
+is the same as little-endianness.  The problem, of course, is that the elements 
+are not always bytes.
+
+Before we go any further, let's define two abbreviations: MSE for most-signifi-
+cant element, and LSE for least-significant element.
+
+So let's consider four dwords:
+
+   uint32_t a = 0x00112233;
+   uint32_t b = 0x44556677;
+   uint32_t c = 0x8899AABB;
+   uint32_t d = 0xCCDDEEFF;
+
+Let's say we  store these  in an array, and then copy  them into  a single SIMD 
+register.
+
+   std::array<uint32_t, 4> src = { a, b, c, d };
+
+   __m128i dst = _mm_loadu_si32(src.data());
+
+That intrinsic  writes the first integer at the source address  to the LSE, and 
+the last integer at the source address to the MSE. This means that our elements 
+look like this:
+
+   MSE [ d, c, b, a ] LSE
+
+The bytes for these look like:
+
+   [ FF EE DD CC | BB AA 99 88 | 77 66 55 44 | 33 22 11 00 ]
+
+This almost looks like  little-endian notation,  except that endianness applies 
+to byte order  within an element; here, the multi-byte elements  themselves are 
+stored in reverse order *in addition* to using little-endian storage. It's been 
+speculated that  Intel chose this  notation because it's  reminiscent of little-
+endianness,  but as we'll soon see, it breaks down and becomes  unhinged fairly 
+quickly.
+
+
+== THE BOUNDARY BETWEEN SIMD AND NON-SIMD =====================================
+
+Generally,  a 128-bit SIMD register is exposed to C++ as the __m128 type.  This 
+is a struct.  I believe we're  meant to treat it as an opaque value,  but let's 
+write a struct definition just to help us reason about what's going on.
+
+   union __m128 {
+      std::array<uint8_t,  16> bytes;
+      std::array<uint16_t,  8> shorts;
+      std::array<uint32_t,  4> dwords;
+      std::array<float,     4> singles;
+      std::array<double,    2> doubles;
+   };
+
+Now let's take a look at some basic intrinsics.
+
+
+   _mm_loadu_si128(const __m128i* src)
+
+      Load 128 bits,  treating them as a single  little-endian 128-bit integer. 
+      If you use this to quickly load sixteen bytes, then the first byte at the 
+      source address will become the MSE,  and the last byte at the source will 
+      become the LSE.
+
+
+   _mm_load_ss(const float* src)
+
+      Set the LSE to the single-precision float at the source address,  and set 
+      the other elements to zero.
+
+
+   _mm_loadu_ps(const float* src)
+
+      Load four single-precision floats.  Order is preserved here; the first of 
+      the floats at the source will become the LSE,  and the last of the floats 
+      at the source will become the MSE.
+
+
+   _mm_shuffle_ps(__m128 a, __m128 b, _MM_SHUFFLE(int z, int y, int x, int w))
+
+      Pull single-precision  floats from two SIMD registers,  using the bitmask 
+      in the third argument to control which floats get pulled. The _MM_SHUFFLE 
+      macro constructs  this bitmask for you  given four indices. These indices 
+      are numbered from the least-significant element. That is:
+
+         std::array<float, 4> non_simd;
+         __m128 simd = _mm_loadu_ps(non_simd.data());
+
+         // simd.singles[0] == non_simd[0]
+         // simd.singles[3] == non_simd[3]
+         //
+         // Indices passed to _MM_SHUFFLE are consistent with these.
+
+      You'll note, however, that the indices are in reverse order:
+
+         w: Index to pull from "a;" written to output index 0 (LSE).
+         x: Index to pull from "a;" written to output index 1.
+         y: Index to pull from "b;" written to output index 2.
+         z: Index to pull from "b;" written to output index 3 (MSE).
+
+      If you pass the same register as both "a" and "b,"  then you can use this 
+      intrinsic to rearrange  floats within that single register.  Consider the 
+      following:
+
+         // given:
+         std::array<float, 4> src = { 5, 6, 7, 8 };
+
+         std::array<float, 4> dst = { src[3], src[2], src[1], src[0] };
+
+      The equivalent in SIMD would be:
+      
+         // given:
+         std::array<float, 4> src = { 5, 6, 7, 8 };
+
+         __m128 v   = _mm_loadu_ps(src.data());
+         __m128 dst = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 1, 2, 3));
+
+      Because the shuffle mask accepts indices in reverse order, we're actually 
+      reversing the order of the floats  in the register by passing a mask that 
+      looks, at first glance, like a no-op.
+
+      
+== CASE STUDY: SHIFTING BYTES ACROSS VALUES ===================================
+
+Consider the following:
+
+   std::array<uint32_t, 4> values = {
+      0x11000011,
+      0x22000022,
+      0x33000033,
+      0x44000044,
+   };
+
+In memory, these values look like this:
+
+   11 00 00 11 | 22 00 00 22 | 33 00 00 33 | 44 00 00 44
+
+Indeed, the values look the same regardless of endianness because each one is a 
+palindrome.
+
+Let's say we want to shift all of these  values to the left by one byte, but we 
+also want the leftmost byte in one value to overwrite the rightmost byte in the 
+previous value, instead of merely being lost. Essentially, we want to treat the 
+four numbers as a contiguous 128-bit number.
+
+   for(size_t i = 0; i < values.size(); ++i) {
+      auto& item = values[i];
+      if (i > 0) {
+         auto& prev = values[i - 1];
+         prev |= (item >> 0x18) & 0xFF;
+      }
+      item <<= 0x08;
+   }
+
+The final results should be:
+
+   { 0x00001122, 0x00002233, 0x00003344, 0x00004400 }
+
+Let's imagine that we perform a pointer cast to 64-bit integers first:
+
+   auto* items = (uint64_t*)values.data();
+   for(size_t i = 0; i < 2; ++i) {
+      auto& item = items[i];
+      if (i > 0) {
+         auto& prev = items[i - 1];
+         prev |= (item >> 0x38) & 0xFF;
+      }
+      item <<= 0x08;
+   }
+
+This means that we're treating the array as a pair of non-palindromic values:
+
+   11 00 00 11 22 00 00 22 | 33 00 00 33 44 00 00 44
+
+   0x2200002211000011 | 0x4400004433000033
+
+The above loop gives us:
+
+   44 11 00 00 11 22 00 00 | 00 33 00 00 33 44 00 00
+
+   0x0000221100001144 | 0x0000443300003300
+
+The final results are therefore:
+
+   { 0x00001144, 0x00002211, 0x00003300, 0x00004433 }
+
+So we can expect things to break if we try this in SIMD; it'd be the equivalent 
+of doing a cast to some hypothetical uint128_t.
+
+   __m128i simd = _mm_loadu_si128((const __m128i*)values.data());
+   simd = _mm_slli_si128(simd, 1);
+   _mm_storeu_si128(values.data(), simd);
+
+Let's step through that. First, we load our values:
+
+   MSE [ 44 00 00 44 | 33 00 00 33 | 22 00 00 22 | 11 00 00 11 ] LSE
+   
+Then, we shift them to the left by one byte. This is, of course, a shift within 
+SIMD notation, so we're shifting bytes toward the MSE.
+
+   MSE [ 00 00 44 33 | 00 00 33 22 | 00 00 22 11 | 00 00 11 00 ] LSE
+
+Of course, that means that our final results will be:
+
+   { 0x00001100, 0x00002211, 0x00003322, 0x00004433 }
+
+And indeed, things break, the same way they would if we did something like this 
+without SIMD.
+
+      
+== CASE STUDY: SHIFTING BYTES WITHIN A BYTE ARRAY =============================
+
+Where this breaks down is as follows:  consider shifting bytes within a 128-bit 
+register.
+
+   std::array<uint8_t, 16> values;
+   for(int i = 0; i < 16; ++i)
+      values[i] = i;
+
+   __m128i simd = _mm_loadu_si128((const __m128i*)values.data());
+   simd = _mm_slli_si128(simd, 1);
+   _mm_storeu_si128(values.data(), simd);
+
+Our initial array is:
+
+   [ 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D, 0E ]
+
+Within the SIMD register, that's:
+
+   MSE [ 0E 0D 0C 0B 0A 09 08 07 06 05 04 03 02 01 00 ] LSE
+
+Shifting it left toward the MSE by one byte gives us:
+
+   MSE [ 0D 0C 0B 0A 09 08 07 06 05 04 03 02 01 00 00 ] LSE
+
+And so the final array is as follows, with the individual bytes having been 
+shifted to the right by a "left" shift:
+
+   [ 00, 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D ]
+
+If we have a byte array, but can only  store and manipulate it by embedding 
+it into a multi-byte value, then all shifts are inverted.
+
+      
+== CASE STUDY: SUMMING ALL FLOATS IN A REGISTER ===========================
+
+If SSE3 instructions  are available, then the  _mm_hadd_ps intrinsic allows 
+us to handle this task very easily:
+
+   __m128 _mm_hadd_ps(__m128 a, __m128 b) {
+      __m128 out;
+      out.singles = {
+         a.singles[0] + a.singles[1],
+         a.singles[2] + a.singles[3],
+         b.singles[0] + b.singles[1],
+         b.singles[2] + b.singles[3]
+      };
+      return out;
+   }
+
+We can thus sum a single register "v" in just two easy steps:
+
+   auto halves = _mm_hadd_ps(v, v);
+   auto result = _mm_hadd_ps(halves, halves);
+   // All elements set to the sum.
+
+Without SSE3, things get a bit less clear:
+
+   __m128 _mm_movehl_ps(__m128 a, __m128 b) {
+      __m128 out;
+      out.singles[0] = b.singles[2];
+      out.singles[1] = b.singles[3];
+      out.singles[2] = a.singles[2];
+      out.singles[3] = a.singles[3];
+      return out;
+   }
+
+   auto temp   = _mm_add_ps(_mm_movehl_ps(v, v), v);
+   auto result = _mm_add_ss(
+      temp,
+      _mm_shuffle_ps(temp, temp, _MM_SHUFFLE(0, 0, 0, 1))
+   );
+   // LSE element set to the sum.
+
+This works out to:
+
+   __128 temp;
+   temp.singles = {
+      v.singles[0] + v.singles[2],
+      v.singles[1] + v.singles[3],
+      v.singles[2] + v.singles[2], // not used
+      v.singles[3] + v.singles[3]  // not used
+   };
+
+   __128 shuf;
+   shuf.singles = {
+      v.singles[1] + v.singles[3], // temp.singles[1]
+      v.singles[0] + v.singles[2], // temp.singles[0]
+      v.singles[0] + v.singles[2], // temp.singles[0] // not used
+      v.singles[0] + v.singles[2]  // temp.singles[0] // not used
+   };
+
+   __m128 result;
+   for(size_t i = 0; i < 4; ++i)
+      result.singles[i] = temp.singles[i] + shuf.singles[i];
+
+      
+
+== CASE STUDY: ZEROING A FLOAT IN A REGISTER ==============================
+
+Zeroing the lowest float in a register  is possible using moves or a simple 
+multiply:
+
+   auto result = _mm_move_ss(v, _mm_setzero_ps());
+
+   auto result = _mm_mul_ss(v, _mm_setzero_ps());
+
+Demonstrating with an example:
+
+   std::array<float, 4> non_simd = { 1, 2, 3, 4 };
+
+   __m128 v = _mm_loadu_ps(non_simd.data());
+   v = _mm_move_ss(v, _mm_setzero_ps());
+   _mm_storeu_ps(non_simd.data(), v);
+
+   // non_simd == { 0, 2, 3, 4 }
+
+Zeroing other floats requires a multiply.  Here's an example which gets rid 
+of the MSE;  note that _mm_set_ps takes its arguments in reverse order (MSE 
+first; LSE last):
+
+   __m128 _mm_set_ps(float d, float c, float b, float a) {
+      __m128 out;
+      out.singles = { a, b, c, d };
+      return out;
+   }
+
+   auto result = _mm_mul_ps(v, _mm_set_ps(0, 1, 1, 1));
+
+Demonstrating with an example:
+
+   std::array<float, 4> non_simd = { 1, 2, 3, 4 };
+
+   __m128 v = _mm_loadu_ps(non_simd.data());
+   v = _mm_mul_ps(v, _mm_set_ps(0, 1, 1, 1));
+   _mm_storeu_ps(non_simd.data(), v);
+
+   // non_simd == { 1, 2, 3, 0 }

@@ -1528,6 +1528,17 @@ namespace vulkanDK {
          }
          vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
       }
+      {
+         //
+         // And landscapes...
+         //
+         auto& target_set = this->descriptor_sets.landscape;
+         for (auto& item : write_info) {
+            item.dstSet     = target_set;
+            item.dstBinding = 3;
+         }
+         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
+      }
       //
       // Updating a descriptor set will invalidate any command buffers using it; they must 
       // be reset and their queue regenerated:

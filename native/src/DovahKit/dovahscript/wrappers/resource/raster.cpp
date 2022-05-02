@@ -1,5 +1,6 @@
 #include "raster.h"
 #include <array>
+#include <intrin.h>
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/for_each_in_array.h"
 #include "../../../helpers/lua/istablelike.h"
@@ -8,6 +9,9 @@
 #include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/lua/tostringex.h"
 #include "../../../helpers/lua/warning.h"
+#include "../../../helpers/simd/bytes_to_floats.h"
+#include "../../../helpers/cpuinfo.h"
+#include "../../../helpers/endian.h"
 #include "../../../helpers/masking.h"
 #include "../../../helpers/rotation.h"
 #include "../../constants/qt_graphics.h"
@@ -43,17 +47,6 @@ namespace {
    static constexpr auto default_painter_hints = QPainter::Antialiasing | QPainter::TextAntialiasing;
 
    namespace _helpers {
-      inline QRgb adapt_to_format(QRgb in) noexcept {
-         if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied)
-            return qPremultiply(in);
-         return in;
-      }
-      inline QRgb adapt_from_format(QRgb in) noexcept {
-         if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied)
-            return qUnpremultiply(in);
-         return in;
-      }
-
       void pull_fill_color(lua_State* L, int index, QBrush& brush, bool optional = false) {
          index = lua_absindex(L, index);
          if (optional && lua_isnoneornil(L, index)) {
@@ -328,6 +321,43 @@ namespace {
       }
 
       QRgb blend_pixel(QColor src, QRgb dst_rgba) {
+         auto& cpuinfo = cobb::cpuinfo::get();
+         if (cpuinfo.extension_support.sse_3) {
+            auto two_fifty_five = _mm_set1_ps(255.0F);
+            //
+            auto to_all_alpha = [](__m128 v) {
+               return _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 3, 3, 3));
+            };
+            //
+            __m128 src_simd = cobb::simd::bytes_to_floats(src.rgba());
+            __m128 dst_simd = cobb::simd::bytes_to_floats(dst_rgba);
+            src_simd = _mm_div_ps(src_simd, two_fifty_five); // from [0, 255] to [0, 1]
+            dst_simd = _mm_div_ps(dst_simd, two_fifty_five); // from [0, 255] to [0, 1]
+            //
+            __m128 src_alpha = to_all_alpha(src_simd);
+            //
+            __m128 dst_by_inv_src  = _mm_mul_ps(dst_simd, _mm_sub_ps(_mm_set1_ps(1), src_alpha));
+            __m128 final_dst_alpha = to_all_alpha(dst_by_inv_src);
+            __m128 out_alpha       = _mm_add_ps(src_alpha, final_dst_alpha);
+            //
+            __m128 out_simd = _mm_add_ps(
+               _mm_mul_ps(src_simd, src_alpha),
+               _mm_mul_ps(dst_simd, final_dst_alpha)
+            );
+            out_simd = _mm_blend_ps(out_simd, out_alpha, 0b1000);
+            //
+            out_simd = _mm_mul_ps(out_simd, two_fifty_five); // from [0, 1] to [0, 255]
+            //
+            // Back to bytes:
+            //
+            auto out_simd_i = _mm_cvtps_epi32(out_simd);
+            out_simd_i = _mm_shuffle_epi8(out_simd_i, _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xC, 8, 4, 0));
+            //
+            uint32_t dst;
+            _mm_storeu_si32(&dst, out_simd_i);
+            dst = cobb::endian_cast<std::endian::little>(dst);
+            return dst;
+         }
          constexpr size_t index_a = std::endian::native == std::endian::little ? 3 : 0;
          constexpr size_t index_r = std::endian::native == std::endian::little ? 2 : 1;
          constexpr size_t index_g = std::endian::native == std::endian::little ? 1 : 2;
@@ -353,14 +383,6 @@ namespace {
          inline constexpr uint16_t _divide_by_255(uint16_t x) noexcept {
             return ((x + 1) * 257) >> 16;
          }
-      }
-      QRgb blend_pixel_premul(QRgb color_a, QRgb color_b) { // fast; very slightly inaccurate
-         unsigned int alpha = qAlpha(color_a);
-         //
-         uint32_t a  = alpha + _divide_by_255(qAlpha(color_b) * alpha);
-         uint32_t rb = (color_a & 0xFF00FF) + ((alpha * (color_b & 0xFF00FF)) >> 8);
-         uint32_t g  = (color_a & 0x00FF00) + ((alpha * (color_b & 0x00FF00)) >> 8);
-         return (rb & 0xFF00FF) | (g & 0x00FF00) | (a << 0x18);
       }
    }
 
@@ -480,20 +502,13 @@ namespace {
             if (x >= w || y >= h)
                return;
             auto* bytes = (QRgb*)image.scanLine(y);
-            if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied) {
-               QRgb over = qPremultiply(color.rgba());
-               bytes[x] = _helpers::blend_pixel_premul(over, bytes[x]);
-               return;
-            }
             if (color.alpha() <= 0)
                return;
             if (color.alpha() >= 255) {
                bytes[x] = color.rgba();
                return;
             }
-            bytes[x] = _helpers::adapt_from_format(bytes[x]);
             bytes[x] = _helpers::blend_pixel(color, bytes[x]);
-            bytes[x] = _helpers::adapt_to_format(bytes[x]);
          });
          luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
@@ -866,8 +881,7 @@ namespace {
          assert(image.format() == desired_qt_pixel_format);
          luaL_argcheck(L, x < image.width(),  2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < image.height(), 3, "y-coordinate exceeded the raster's height");
-         auto pixel = _helpers::adapt_from_format(image.pixel(x, y));
-         api_helpers::push_color(L, pixel);
+         api_helpers::push_color(L, image.pixel(x, y));
          return 1;
       }
       int levels(lua_State* L) {
@@ -1100,7 +1114,7 @@ namespace {
             if (x >= w || y >= h)
                return;
             auto* bytes = (QRgb*)image.scanLine(y);
-            bytes[x] = _helpers::adapt_to_format(color.rgba());
+            bytes[x] = color.rgba();
          });
          luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
