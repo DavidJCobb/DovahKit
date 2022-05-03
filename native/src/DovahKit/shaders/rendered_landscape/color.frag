@@ -31,24 +31,47 @@ layout(location = 0) out vec4 out_color;
 
 #define current_landscape landscapes[in_landscape_index]
 
+vec4 sample_diffuse(int texture_index) { // returns RGBA
+   if (texture_index < 0) {
+      //
+      // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandDiffuseTexture. The 
+      // Creation Kit can serialize landscapes as being painted with texture index -1, 
+      // which explicitly indicates that they should blend with the default texture.
+      //
+      texture_index = scene.default_land_diffuse_texture;
+      if (texture_index < 0)
+         //
+         // No default texture loaded. Go with "missing texture purple."
+         //
+         return vec4(1, 0, 1, 1);
+   }
+   return texture(sampler2D(textures[texture_index], default_sampler), in_uv);
+}
+
+vec4 sample_normals(int texture_index) { // returns RGBA
+   if (texture_index < 0) {
+      //
+      // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandNormalTexture. The 
+      // Creation Kit can serialize landscapes as being painted with texture index -1, 
+      // which explicitly indicates that they should blend with the default texture.
+      //
+      texture_index = scene.default_land_diffuse_texture;
+      if (texture_index < 0)
+         //
+         // No default texture loaded. Go with vertical normals.
+         //
+         return vec4(0, 0, 1, 1);
+   }
+   return texture(sampler2D(textures[texture_index], default_sampler), in_uv);
+}
+
 void main() {
    out_color = in_color; // vertex color
    //
    // Apply texture blending:
    //
-   vec3 base_color;
-   if (current_landscape.diffuse_base[in_quad] >= 0) {
-      base_color = texture(sampler2D(textures[current_landscape.diffuse_base[in_quad]], default_sampler), in_uv).rgb;
-   } else {
-      base_color = vec3(1, 1, 1);
-   }
-   //
-   vec3 base_tex_normal;
-   if (current_landscape.normals_base[in_quad] >= 0) {
-      base_tex_normal = texture(sampler2D(textures[current_landscape.normals_base[in_quad]], default_sampler), in_uv).rgb;
-   } else {
-      base_tex_normal = vec3(0, 0, 1);
-   }
+   vec3 base_color      = sample_diffuse(current_landscape.diffuse_base[in_quad]).rgb;
+   vec3 base_tex_normal = sample_normals(current_landscape.normals_base[in_quad]).rgb;
    //
    vec3 tex_color  = base_color;
    vec3 tex_normal = base_tex_normal;
@@ -59,40 +82,8 @@ void main() {
          int diffuse_index = current_landscape.diffuse_blends[index_index];
          int normals_index = current_landscape.normals_blends[index_index];
          //
-         vec3 current_color;
-         vec3 current_tex_normal;
-         if (diffuse_index >= 0) {
-            current_color = texture(sampler2D(textures[diffuse_index], default_sampler), in_uv).rgb;
-         } else {
-            diffuse_index = scene.default_land_normals_texture;
-            if (diffuse_index >= 0) {
-               //
-               // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandDiffuseTexture. The 
-               // Creation Kit can serialize landscapes as being painted with texture index -1, 
-               // which explicitly indicates that they should blend with the default texture.
-               //
-               current_tex_normal = texture(sampler2D(textures[diffuse_index], default_sampler), in_uv).rgb;
-            } else {
-               // TODO: this is wrong; have the renderer provide a default diffuse texture as a descriptor that we can use.
-               current_tex_normal = base_tex_normal;
-            }
-         }
-         if (normals_index >= 0) {
-            current_tex_normal = texture(sampler2D(textures[normals_index], default_sampler), in_uv).rgb;
-         } else {
-            normals_index = scene.default_land_normals_texture;
-            if (normals_index >= 0) {
-               //
-               // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandNormalTexture. The 
-               // Creation Kit can serialize landscapes as being painted with texture index -1, 
-               // which explicitly indicates that they should blend with the default texture.
-               //
-               current_tex_normal = texture(sampler2D(textures[normals_index], default_sampler), in_uv).rgb;
-            } else {
-               // TODO: this is wrong; have the renderer provide a default normals texture as a descriptor that we can use.
-               current_tex_normal = base_tex_normal;
-            }
-         }
+         vec3 current_color      = sample_diffuse(diffuse_index).rgb;
+         vec3 current_tex_normal = sample_normals(normals_index).rgb;
          //
          tex_color  = mix(tex_color,  current_color,      blend_alpha);
          tex_normal = mix(tex_normal, current_tex_normal, blend_alpha);

@@ -1,7 +1,7 @@
 
 #include "calc_directional_shadow.glsl"
 #include "calc_specular_strength.glsl"
-#include "computed_light.glsl"
+#include "structs/computed_light.glsl"
 
 // inputs are in tangent space, where applicable
 computed_light calc_directional_light(

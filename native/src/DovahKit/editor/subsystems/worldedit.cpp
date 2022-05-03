@@ -79,6 +79,7 @@ namespace dovahkit::subsystems {
 
    worldedit::worldedit() : QObject(nullptr) {
       auto& core = DovahKitCore::get();
+      QObject::connect(&core, &DovahKitCore::dataAcquireComplete, this, &worldedit::_update_default_land_textures);
       QObject::connect(&core, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* form, bool just_flagging) {
          if (form->formType == dovah::form_type::cell) {
             this->_unload_cell(form);
@@ -438,6 +439,45 @@ namespace dovahkit::subsystems {
       }
    }
 
+   void worldedit::_update_default_land_textures() {
+      if (!this->target_view)
+         return;
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      if (!DovahKitCore::get().has_data())
+         //
+         // We won't know where to load textures from if DovahKit doesn't have game data 
+         // loaded. That's how it knows what game and BSAs to pull files from.
+         //
+         return;
+      //
+      // Default land textures:
+      //
+      auto& ini = editor::game_inis::get_skyrim();
+      //
+      QString diffuse_path;
+      QString normals_path;
+      if (auto* setting = ini.setting("Landscape", "sDefaultLandDiffuseTexture")) {
+         auto value = setting->currentValue();
+         if (value.userType() == QMetaType::QString) {
+            diffuse_path = value.toString();
+            if (!diffuse_path.isEmpty())
+               diffuse_path = QLatin1Literal("textures/Landscape/") + diffuse_path;
+         }
+      }
+      if (auto* setting = ini.setting("Landscape", "sDefaultLandNormalTexture")) {
+         auto value = setting->currentValue();
+         if (value.userType() == QMetaType::QString) {
+            normals_path = value.toString();
+            if (!normals_path.isEmpty())
+               normals_path = QLatin1Literal("textures/Landscape/") + normals_path;
+         }
+      }
+      //
+      sr->set_default_land_textures(diffuse_path, normals_path);
+   }
+
    void worldedit::set_current_cell(dovah::form_stub* cell) {
       if (this->loaded_cell.stub == cell)
          return;
@@ -455,24 +495,15 @@ namespace dovahkit::subsystems {
       this->target_view = &view;
       //
       DK3DInputHandler::get().setTargetView(&view);
+      //
+      QObject::connect(&view, &DKVulkanView::rendererReady, this, &worldedit::_update_default_land_textures, Qt::UniqueConnection);
       if (auto* sr = view.surfaceRenderer()) {
-         auto& ini = editor::game_inis::get_skyrim();
          //
-         QString diffuse_path;
-         QString normals_path;
-         if (auto* setting = ini.setting("Landscape", "sDefaultLandDiffuseTexture")) {
-            auto value = setting->currentValue();
-            if (value.userType() == QMetaType::QString)
-               diffuse_path = value.toString();
-         }
-         if (auto* setting = ini.setting("Landscape", "sDefaultLandNormalTexture")) {
-            auto value = setting->currentValue();
-            if (value.userType() == QMetaType::QString)
-               normals_path = value.toString();
-         }
+         // Renderer is already ready.
          //
-         sr->set_default_land_textures(diffuse_path, normals_path);
+         this->_update_default_land_textures();
       }
+      //
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          DK3DInputHandler::get().setTargetView(nullptr);
          this->target_view = nullptr;

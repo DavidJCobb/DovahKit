@@ -1,7 +1,7 @@
 
 #include "calc_base_light.glsl"
-#include "computed_light.glsl"
-#include "rendered_light_shader_params.glsl"
+#include "structs/computed_light.glsl"
+#include "structs/rendered_light_shader_params.glsl"
 
 // inputs except (light) are in tangent space, where applicable
 computed_light calc_point_light(
