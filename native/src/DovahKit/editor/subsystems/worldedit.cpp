@@ -13,6 +13,7 @@
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
+#include "editor/subsystems/game_inis.h"
 #include "helpers/qt/strings.h"
 #include "helpers/type_traits/value_type_of.h"
 #include "nif/notice_code_t.h"
@@ -322,18 +323,22 @@ namespace dovahkit::subsystems {
       size_t refr_count = 0;
       bool   found_coc_marker = false;
       //
+      glm::fvec3 cell_position = { 0, 0, 0 };
+      float cell_land_max = 0;
+      //
       auto* sr = this->target_view->surfaceRenderer();
       if (this->loaded_cell.land) {
-         glm::fvec3 position = { 0, 0, 0 };
+         cell_land_max = this->loaded_cell.land->maximum_height();
+         //
          int32_t gx;
          int32_t gy;
          if (cell->get_grid_coordinates(gx, gy)) {
-            position.x = (float)gx * dovah::loaded_forms::Cell::side_length;
-            position.y = (float)gy * dovah::loaded_forms::Cell::side_length;
-            position.z = 0.0F; // our LAND loader resolves the base height
+            cell_position.x = (float)gx * dovah::loaded_forms::Cell::side_length;
+            cell_position.y = (float)gy * dovah::loaded_forms::Cell::side_length;
+            cell_position.z = 0.0F; // our LAND loader resolves the base height
          }
          //
-         this->loaded_cell.vulkan_handles.landscape = sr->add_landscape(position, *this->loaded_cell.land);
+         this->loaded_cell.vulkan_handles.landscape = sr->add_landscape(cell_position, *this->loaded_cell.land);
       }
       dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &found_coc_marker, &refr_count, &centroid, &coc_pos, &coc_rot](dovah::form_stub* stub) {
          if (stub->formType != dovah::form_type::reference)
@@ -370,8 +375,14 @@ namespace dovahkit::subsystems {
             camera.yaw   = coc_rot.z;
             scene.update_camera();
          } else {
-            centroid /= refr_count;
-            sr->set_camera_position(centroid);
+            if (cell->is_exterior_cell()) {
+               auto pos = cell_position;
+               pos += glm::fvec3{ 2048, 2048, cell_land_max + 1024.0F };
+               sr->set_camera_position(pos);
+            } else {
+               centroid /= refr_count;
+               sr->set_camera_position(centroid);
+            }
          }
       }
       //
@@ -444,6 +455,24 @@ namespace dovahkit::subsystems {
       this->target_view = &view;
       //
       DK3DInputHandler::get().setTargetView(&view);
+      if (auto* sr = view.surfaceRenderer()) {
+         auto& ini = editor::game_inis::get_skyrim();
+         //
+         QString diffuse_path;
+         QString normals_path;
+         if (auto* setting = ini.setting("Landscape", "sDefaultLandDiffuseTexture")) {
+            auto value = setting->currentValue();
+            if (value.userType() == QMetaType::QString)
+               diffuse_path = value.toString();
+         }
+         if (auto* setting = ini.setting("Landscape", "sDefaultLandNormalTexture")) {
+            auto value = setting->currentValue();
+            if (value.userType() == QMetaType::QString)
+               normals_path = value.toString();
+         }
+         //
+         sr->set_default_land_textures(diffuse_path, normals_path);
+      }
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          DK3DInputHandler::get().setTargetView(nullptr);
          this->target_view = nullptr;

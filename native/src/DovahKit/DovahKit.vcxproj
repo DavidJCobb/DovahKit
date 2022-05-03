@@ -884,8 +884,6 @@
     <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h" />
     <ClInclude Include="nif\types\Triangle.h" />
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
-    <ClInclude Include="shaders\includes\rendered_bounds_shader_params.glsl" />
-    <ClInclude Include="shaders\includes\rendered_light_shader_params.glsl" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
@@ -1661,7 +1659,6 @@
     <None Include="shaders\includes\calc_point_light.glsl" />
     <None Include="shaders\includes\calc_point_shadow.glsl" />
     <None Include="shaders\includes\calc_spot_light.glsl" />
-    <None Include="shaders\includes\computed_light.glsl" />
     <None Include="shaders\includes\descriptor_sets\all_landscapes.glsl" />
     <None Include="shaders\includes\descriptor_sets\all_lights.glsl" />
     <None Include="shaders\includes\descriptor_sets\all_meshes.glsl" />
@@ -1669,11 +1666,6 @@
     <None Include="shaders\includes\descriptor_sets\scene_state.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_caster_map_render.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_maps.glsl" />
-    <None Include="shaders\includes\rendered_landscape_shader_params.glsl" />
-    <None Include="shaders\includes\rendered_mesh_cull_data.glsl" />
-    <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
-    <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
-    <None Include="shaders\includes\scene_global_state.glsl" />
     <None Include="shaders\includes\standard_vertex_inputs.glsl" />
     <None Include="shaders\includes\structs\computed_light.glsl" />
     <None Include="shaders\includes\structs\rendered_bounds_shader_params.glsl" />

@@ -64,14 +64,34 @@ void main() {
          if (diffuse_index >= 0) {
             current_color = texture(sampler2D(textures[diffuse_index], default_sampler), in_uv).rgb;
          } else {
-            // TODO: this is wrong; use the Skyrim.ini-specified default textures instead ([Landscape]sDefaultLandDiffuseTexture)
-            current_color = base_color;
+            diffuse_index = scene.default_land_normals_texture;
+            if (diffuse_index >= 0) {
+               //
+               // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandDiffuseTexture. The 
+               // Creation Kit can serialize landscapes as being painted with texture index -1, 
+               // which explicitly indicates that they should blend with the default texture.
+               //
+               current_tex_normal = texture(sampler2D(textures[diffuse_index], default_sampler), in_uv).rgb;
+            } else {
+               // TODO: this is wrong; have the renderer provide a default diffuse texture as a descriptor that we can use.
+               current_tex_normal = base_tex_normal;
+            }
          }
          if (normals_index >= 0) {
             current_tex_normal = texture(sampler2D(textures[normals_index], default_sampler), in_uv).rgb;
          } else {
-            // TODO: this is wrong; use the Skyrim.ini-specified default textures instead ([Landscape]sDefaultLandNormalTexture)
-            current_tex_normal = base_tex_normal;
+            normals_index = scene.default_land_normals_texture;
+            if (normals_index >= 0) {
+               //
+               // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandNormalTexture. The 
+               // Creation Kit can serialize landscapes as being painted with texture index -1, 
+               // which explicitly indicates that they should blend with the default texture.
+               //
+               current_tex_normal = texture(sampler2D(textures[normals_index], default_sampler), in_uv).rgb;
+            } else {
+               // TODO: this is wrong; have the renderer provide a default normals texture as a descriptor that we can use.
+               current_tex_normal = base_tex_normal;
+            }
          }
          //
          tex_color  = mix(tex_color,  current_color,      blend_alpha);

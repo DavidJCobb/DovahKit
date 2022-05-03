@@ -218,6 +218,7 @@ namespace vulkanDK {
          delete p;
          p = nullptr;
       }
+      this->mesh_flags    = mesh_flag::all_default_flags;
       this->push_params   = {};
       this->shader_params = {};
       this->texture_indices = decltype(texture_indices)();

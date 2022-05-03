@@ -4585,10 +4585,10 @@ namespace vulkanDK {
       }
       //
       if (!already_diffuse) {
-         this->scene.global_state.default_land_diffuse_texture = this->add_dds_texture(diffuse);
+         this->scene.global_state.default_land_diffuse_texture = diffuse.isEmpty() ? -1 : this->add_dds_texture(diffuse);
       }
       if (!already_normals) {
-         this->scene.global_state.default_land_normals_texture = this->add_dds_texture(normals);
+         this->scene.global_state.default_land_normals_texture = normals.isEmpty() ? -1 : this->add_dds_texture(normals);
       }
    }
 
