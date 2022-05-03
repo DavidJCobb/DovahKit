@@ -12,16 +12,19 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 8> list = {};
+            std::array<T, 11> list = {};
             struct {
-               T oit_composite;
-               T sun_shadows;
-               T light_shadows;
-               T standard;
-               T fps;
-               T world_axes;
-               T scene_bounds;
-               T landscape;
+               T scene_state;
+               T shadow_caster_map_render;
+               T shadow_maps;
+               T all_textures;
+               T all_bounds;
+               T all_landscapes;
+               T all_lights;
+               T all_meshes;
+               T overlay_fps;
+               T overlay_world_axes;
+               T oit_compositing;
             };
          };
          static constexpr size_t size = std::tuple_size_v<decltype(list)>;
@@ -51,10 +54,10 @@ namespace vulkanDK {
             //
             std::array<descriptor_set_layout, 2> list;
             struct {
-               layout_with_size<2> compute_frustum_culling;
+               layout_with_size<2> compute_cull_frustum;
                   // - compute_frustum_culling_main
                   // - compute_frustum_culling_sun
-               layout_with_size<config::max_active_shadow_casters> compute_shadow_caster_culling;
+               layout_with_size<config::max_active_shadow_casters> compute_cull_caster;
                   // - compute_shadow_caster_culls[i]
             };
 

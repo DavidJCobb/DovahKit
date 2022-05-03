@@ -262,6 +262,8 @@ namespace vulkanDK {
          rendered_light_handle add_light(const rendered_light::shader_parameters&);
          void remove_nif(nifDK::file& model);
 
+         void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
+
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);
 
@@ -282,10 +284,11 @@ namespace vulkanDK {
          void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
          void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
             void _setup_oit_composite_shader(); // OITCompo
-            void _setup_basic_color_shader();   // MainMatl
-            void _setup_basic_wboit_shader();   // MainOITc
-            void _setup_sun_shadow_shader();    // SunShadw
-            void _setup_light_shadow_shaders(); // LiteMap0 - LiteMap8
+            void _setup_rendered_mesh_shaders();
+               void _setup_rendered_mesh_color_shader();   // MainMatl
+               void _setup_rendered_mesh_wboit_shader();   // MainOITc
+               void _setup_rendered_mesh_shadows_caster_shaders(); // LiteMap0 - LiteMap7
+               void _setup_rendered_mesh_shadows_sun_shader(); // SunShadw
             void _setup_frustum_cull_shader();
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();

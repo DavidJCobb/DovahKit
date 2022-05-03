@@ -17,7 +17,6 @@
         <file>shader.shadows.frag.spv</file>
         <file>light-shadow-depth.frag.spv</file>
         <file>light-shadow-depth.vert.spv</file>
-        <file>rendered_mesh/debug-shadow-caster-space.frag.spv</file>
         <file>frustum-cull.comp.spv</file>
         <file>shadow-caster-cull.comp.spv</file>
         <file>bounding-box.frag.spv</file>
@@ -26,5 +25,26 @@
         <file>bounding-origin.vert.spv</file>
         <file>landscape.frag.spv</file>
         <file>landscape.vert.spv</file>
+        <file>compute/culling/frustum.comp.spv</file>
+        <file>compute/culling/shadows-caster.comp.spv</file>
+        <file>overlays/fps/main.frag.spv</file>
+        <file>overlays/fps/main.vert.spv</file>
+        <file>overlays/world_axes/main.frag.spv</file>
+        <file>overlays/world_axes/main.vert.spv</file>
+        <file>rendered_bounds/box/color.frag.spv</file>
+        <file>rendered_bounds/box/color.vert.spv</file>
+        <file>rendered_bounds/pivot/color.frag.spv</file>
+        <file>rendered_bounds/pivot/color.vert.spv</file>
+        <file>rendered_landscape/color.frag.spv</file>
+        <file>rendered_landscape/color.vert.spv</file>
+        <file>rendered_mesh/bslp/color.vert.spv</file>
+        <file>rendered_mesh/bslp/color-main.frag.spv</file>
+        <file>rendered_mesh/bslp/color-oit.frag.spv</file>
+        <file>rendered_mesh/bslp/shadows-caster.frag.spv</file>
+        <file>rendered_mesh/bslp/shadows-caster.vert.spv</file>
+        <file>rendered_mesh/bslp/shadows-sun.frag.spv</file>
+        <file>rendered_mesh/bslp/shadows-sun.vert.spv</file>
+        <file>util/full-screen-triangle.vert.spv</file>
+        <file>util/oit-composite.frag.spv</file>
     </qresource>
 </RCC>

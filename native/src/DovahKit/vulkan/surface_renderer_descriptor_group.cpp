@@ -14,9 +14,6 @@ namespace vulkanDK {
          layout.set_device(sr.logical_device);
          layout.setup();
       }
-      sr.set_debug_object_name(this->standard.handle,   "Descriptor Set Layout: Standard");
-      sr.set_debug_object_name(this->fps.handle,        "Descriptor Set Layout: FPS Counter");
-      sr.set_debug_object_name(this->world_axes.handle, "Descriptor Set Layout: World Axes Overlay");
    }
    void descriptor_set_layout_group::teardown_all() {
       for (auto& layout : this->list)
@@ -39,10 +36,10 @@ namespace vulkanDK {
          out[i] = this->list[i].handle;
       {
          auto& sl = this->shared_layouts;
-         for(size_t i = 0; i < using_set_count_of(sl.compute_frustum_culling); ++i)
-            out.push_back(sl.compute_frustum_culling.handle);
-         for (size_t i = 0; i < using_set_count_of(sl.compute_shadow_caster_culling); ++i)
-            out.push_back(sl.compute_shadow_caster_culling.handle);
+         for(size_t i = 0; i < using_set_count_of(sl.compute_cull_frustum); ++i)
+            out.push_back(sl.compute_cull_frustum.handle);
+         for (size_t i = 0; i < using_set_count_of(sl.compute_cull_caster); ++i)
+            out.push_back(sl.compute_cull_caster.handle);
       }
       return out;
    }
@@ -75,8 +72,8 @@ namespace vulkanDK {
       }
       {
          auto& sl = this->shared_layouts;
-         this->_needed_pool_sizes_for(sizes, sl.compute_frustum_culling,       using_set_count_of(sl.compute_frustum_culling));
-         this->_needed_pool_sizes_for(sizes, sl.compute_shadow_caster_culling, using_set_count_of(sl.compute_shadow_caster_culling));
+         this->_needed_pool_sizes_for(sizes, sl.compute_cull_frustum, using_set_count_of(sl.compute_cull_frustum));
+         this->_needed_pool_sizes_for(sizes, sl.compute_cull_caster,  using_set_count_of(sl.compute_cull_caster));
       }
       return sizes;
    }
@@ -87,13 +84,13 @@ namespace vulkanDK {
       }
       {  // Shared layouts:
          {
-            auto& layout = this->shared_layouts.compute_frustum_culling;
+            auto& layout = this->shared_layouts.compute_cull_frustum;
             auto  vc     = layout.last_binding_variable_length();
             for (size_t i = 0; i < descriptor_set_layout_group::using_set_count_of(layout); ++i)
                variable_counts.push_back(vc);
          }
          {
-            auto& layout = this->shared_layouts.compute_shadow_caster_culling;
+            auto& layout = this->shared_layouts.compute_cull_caster;
             auto  vc     = layout.last_binding_variable_length();
             for (size_t i = 0; i < descriptor_set_layout_group::using_set_count_of(layout); ++i)
                variable_counts.push_back(vc);
@@ -106,8 +103,8 @@ namespace vulkanDK {
       auto& sl = this->shared_layouts;
       return (
          this->list.size()
-         + using_set_count_of(sl.compute_frustum_culling)
-         + using_set_count_of(sl.compute_shadow_caster_culling)
+         + using_set_count_of(sl.compute_cull_frustum)
+         + using_set_count_of(sl.compute_cull_caster)
       ) * config::frames_in_flight_count;
    }
    #pragma endregion

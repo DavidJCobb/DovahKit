@@ -703,7 +703,7 @@ namespace vulkanDK {
    void frame_in_flight::_record_scene_draw_commands() {
       auto& sr    = *this->owner;
       auto& scene = sr.scene;
-      {  // Sun shadows
+      {  // Rendered mesh: shadows, sun
          auto& indirect_info  = this->indirect_draw_commands.sun_shadows;
          auto& command_buffer = this->graphics_commands.main_shadow;
          command_buffer.reset(0);
@@ -726,7 +726,16 @@ namespace vulkanDK {
          );
          {
             const auto* shader = sr.get_graphics_shader(surface_renderer::sun_shadow_shader_id);
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.sun_shadows });
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *shader,
+               VK_PIPELINE_BIND_POINT_GRAPHICS,
+               0,
+               std::array{
+                  this->descriptor_sets.scene_state,
+                  this->descriptor_sets.all_meshes,
+                  this->descriptor_sets.all_textures,
+               }
+            );
             _record_indirect_draws(
                scene, command_buffer, indirect_info, *shader,
                [](const rendered_mesh& ro) {}
@@ -771,7 +780,18 @@ namespace vulkanDK {
             id.bytes[7] += i;
             //
             const auto* shader = sr.get_graphics_shader(id);
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.light_shadows });
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *shader,
+               VK_PIPELINE_BIND_POINT_GRAPHICS,
+               0,
+               std::array{
+                  this->descriptor_sets.scene_state,
+                  this->descriptor_sets.all_textures,
+                  this->descriptor_sets.all_meshes,
+                  this->descriptor_sets.all_lights,
+                  this->descriptor_sets.shadow_caster_map_render,
+               }
+            );
             _record_indirect_draws(
                scene, command_buffer, this->indirect_draw_commands.shadow_casters[i], *shader,
                [](const rendered_mesh& ro) {}
@@ -847,7 +867,18 @@ namespace vulkanDK {
          vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
          {  // Meshes
             const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *shader,
+               VK_PIPELINE_BIND_POINT_GRAPHICS,
+               0,
+               std::array{
+                  this->descriptor_sets.scene_state,
+                  this->descriptor_sets.all_textures,
+                  this->descriptor_sets.all_meshes,
+                  this->descriptor_sets.all_lights,
+                  this->descriptor_sets.shadow_maps,
+               }
+            );
             //
             if (sr.debug.show_shadow_caster_culling != std::string::npos) {
                auto& shadow_idb = this->indirect_draw_commands.shadow_casters[sr.debug.show_shadow_caster_culling];
@@ -868,7 +899,17 @@ namespace vulkanDK {
          }
          {  // Landscape
             const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_shader_id);
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.landscape });
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *shader,
+               VK_PIPELINE_BIND_POINT_GRAPHICS,
+               0,
+               std::array{
+                  this->descriptor_sets.scene_state,
+                  this->descriptor_sets.all_textures,
+                  this->descriptor_sets.all_landscapes,
+                  this->descriptor_sets.all_lights,
+               }
+            );
             //
             VkDeviceSize offset = scene.landscape_buffer_vertex_index(0);
             vkCmdBindVertexBuffers(command_handle, 0, 1, &sr.scene.coalesced.landscape_buffer.handle, &offset);
@@ -878,7 +919,18 @@ namespace vulkanDK {
                auto& item = scene.landscapes[i];
                if (!item.active())
                   continue;
-               vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::indices_per_mesh, 1, 0, i * rendered_landscape::verts_per_mesh, i);
+               //vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::indices_per_mesh, 1, 0, i * rendered_landscape::verts_per_mesh, i);
+               for (size_t j = 0; j < 4; ++j) {
+                  auto instance_index = i * 4 + j;
+                  vkCmdDrawIndexed(
+                     command_handle,
+                     (uint32_t)rendered_landscape::indices_per_quad,
+                     1,
+                     0,
+                     (i * rendered_landscape::vertices_per_mesh) + (j * rendered_landscape::vertices_per_quad),
+                     i * 4 + j
+                  );
+               }
             }
          }
          command_buffer.end_render_pass();
@@ -905,7 +957,18 @@ namespace vulkanDK {
             last_was_decal = false;
             {
                const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_oit_color_id);
-               command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.standard });
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *shader,
+                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  0,
+                  std::array{
+                     this->descriptor_sets.scene_state,
+                     this->descriptor_sets.all_textures,
+                     this->descriptor_sets.all_meshes,
+                     this->descriptor_sets.all_lights,
+                     this->descriptor_sets.shadow_maps,
+                  }
+               );
                //
                _record_indirect_draws(
                   scene, command_buffer, this->indirect_draw_commands.main_oit, *shader,
@@ -920,7 +983,14 @@ namespace vulkanDK {
             //
             {
                const auto* shader = sr.get_graphics_shader(surface_renderer::oit_composite_shader_id);
-               command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.oit_composite });
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *shader,
+                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  0,
+                  std::array{
+                     this->descriptor_sets.oit_compositing,
+                  }
+               );
                vkCmdDraw(command_handle, 3, 1, 0, 0);
             }
             command_buffer.end_render_pass();
@@ -971,7 +1041,15 @@ namespace vulkanDK {
          constexpr size_t total_verts    = axis_count * lines_per_axis * verts_per_line;
          //
          const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_box_shader_id);
-         command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
+         command_buffer.bind_graphics_shader_and_descriptors(
+            *shader,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            0,
+            std::array{
+               this->descriptor_sets.scene_state,
+               this->descriptor_sets.all_bounds,
+            }
+         );
          //
          size_t first = std::string::npos;
          for (size_t i = 0; i < count; ++i) {
@@ -998,7 +1076,15 @@ namespace vulkanDK {
          constexpr size_t total_verts    = axis_count *  verts_per_line;
          //
          const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_origin_shader_id);
-         command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.scene_bounds });
+         command_buffer.bind_graphics_shader_and_descriptors(
+            *shader,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            0,
+            std::array{
+               this->descriptor_sets.scene_state,
+               this->descriptor_sets.all_bounds,
+            }
+         );
          //
          size_t first = std::string::npos;
          for (size_t i = 0; i < count; ++i) {
@@ -1056,14 +1142,14 @@ namespace vulkanDK {
       {
          const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::fps::shader_id);
          if (shader) {
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.fps });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.overlay_fps });
             this->overlays.fps.draw_call(command_handle);
          }
       }
       {
          const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::world_axes::shader_id);
          if (shader) {
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.world_axes });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.overlay_world_axes });
             this->overlays.world_axes.draw_call(command_handle);
          }
       }
@@ -1488,7 +1574,7 @@ namespace vulkanDK {
       if (writes.empty())
          return;
       //
-      auto& target_set = this->descriptor_sets.standard;
+      auto& target_set = this->descriptor_sets.all_textures;
       //
       std::vector<VkWriteDescriptorSet> write_info(writes.size());
       for (size_t i = 0; i < writes.size(); ++i) {
@@ -1498,7 +1584,7 @@ namespace vulkanDK {
          write_info[i] = VkWriteDescriptorSet{ // texture array
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet          = target_set,
-            .dstBinding      = 6, // this should match the binding value in the shader
+            .dstBinding      = 1, // this should match the binding value in the shader
             .dstArrayElement = src.start,
             .descriptorCount = (uint32_t)info.size(),
             .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -1506,39 +1592,6 @@ namespace vulkanDK {
          };
       }
       vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
-      {
-         //
-         // And sun shadows...
-         //
-         auto& target_set = this->descriptor_sets.sun_shadows;
-         for (auto& item : write_info) {
-            item.dstSet     = target_set;
-            item.dstBinding = 3;
-         }
-         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
-      }
-      {
-         //
-         // And light shadows...
-         //
-         auto& target_set = this->descriptor_sets.light_shadows;
-         for (auto& item : write_info) {
-            item.dstSet     = target_set;
-            item.dstBinding = 5;
-         }
-         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
-      }
-      {
-         //
-         // And landscapes...
-         //
-         auto& target_set = this->descriptor_sets.landscape;
-         for (auto& item : write_info) {
-            item.dstSet     = target_set;
-            item.dstBinding = 3;
-         }
-         vkUpdateDescriptorSets(this->owner->logical_device, (uint32_t)write_info.size(), write_info.data(), 0, nullptr);
-      }
       //
       // Updating a descriptor set will invalidate any command buffers using it; they must 
       // be reset and their queue regenerated:

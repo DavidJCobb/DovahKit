@@ -1,0 +1,68 @@
+#version 450
+#pragma shader_stage(compute)
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : enable
+
+layout (local_size_x = 64) in;
+
+#include "../../includes/structs/rendered_mesh_cull_data.glsl"
+#include "../../includes/structs/VkDrawIndexedIndirectCommand.glsl"
+
+layout (constant_id = 0) const int MESH_COUNT = 100;
+
+struct frustum_plane_normals {
+	//
+	// These are inward-facing surface normals for the faces of the frustum pyramid.
+	//
+	vec4 normals[4]; // left, right, top, bottom
+};
+
+layout(std430,set=0,binding = 0) readonly buffer FrustumBuffer {
+	frustum_plane_normals frustum;
+};
+layout(std430,set=0,binding = 1) readonly buffer ObjectBuffer {
+	rendered_mesh_cull_data scene_meshes[MESH_COUNT];
+};
+layout(std430,set=0,binding = 2) readonly buffer ObjectIndexBuffer {
+	int mesh_indices[MESH_COUNT];
+};
+layout(std430,set=0,binding = 3) writeonly buffer DrawCommandBuffer {
+	VkDrawIndexedIndirectCommand indirect_draws[MESH_COUNT];
+};
+
+bool frustum_check(vec4 position, float radius) {
+	for (int i = 0; i < 4; i++) {
+		if (dot(position.xyz, frustum.normals[i].xyz) + frustum.normals[i].w + radius < 0.0) {
+			return false;
+		}
+	}
+	return true;
+}
+float get_scale(int mesh_index) {
+	//
+	// Assumes uniform scaling; for non-uniform scaling I'd have to figure out ellipse/plane tests 
+	// and, for CPU-side stuff, line/ellipse intersection tests.
+	//
+	return length(vec3(scene_meshes[mesh_index].transform[0]));
+}
+
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+	if (index >= MESH_COUNT)
+		return;
+	int mesh = mesh_indices[index];
+	if (mesh < 0) {
+		//indirect_draws[index].instanceCount = 0; // CPU should already have done this
+		return;
+	}
+	//
+	vec4  pos    = vec4(scene_meshes[mesh].bounding_sphere_center, 1.0);
+	float radius = scene_meshes[mesh].bounding_sphere_radius;
+	pos     = scene_meshes[mesh].transform * pos;
+	radius *= get_scale(mesh);
+	if (frustum_check(pos, radius)) {
+		indirect_draws[index].instanceCount = 1;
+	} else {
+		indirect_draws[index].instanceCount = 0;
+	}
+}

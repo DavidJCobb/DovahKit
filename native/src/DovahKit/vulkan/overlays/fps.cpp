@@ -78,7 +78,7 @@ namespace vulkanDK::overlays {
       s->set_render_pass(sr.render_passes_by_name.ui);
       s->set_layout_info(
          {  // Descriptor set layouts
-            sr.descriptor_set_layouts.fps.handle,
+            sr.descriptor_set_layouts.overlay_fps.handle,
          }
       );
       //
@@ -87,8 +87,8 @@ namespace vulkanDK::overlays {
       shader_module* frag = nullptr;
       shader_module* vert = nullptr;
       {
-         frag = new shader_module(sr.logical_device, QResource("shaders/overlay-fps.frag.spv").uncompressedData());
-         vert = new shader_module(sr.logical_device, QResource("shaders/overlay-fps.vert.spv").uncompressedData());
+         frag = new shader_module(sr.logical_device, QResource("shaders/overlays/fps/main.frag.spv").uncompressedData());
+         vert = new shader_module(sr.logical_device, QResource("shaders/overlays/fps/main.vert.spv").uncompressedData());
          if (frag->empty()) {
             throw std::runtime_error("[vulkanDK::overlays::fps::setup_shaders] Failed to load fragment shader.");
          }
@@ -134,7 +134,7 @@ namespace vulkanDK::overlays {
       auto descriptor_writes = std::array{
          VkWriteDescriptorSet{ // uniform buffer object
             .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet           = fif.descriptor_sets.fps,
+            .dstSet           = fif.descriptor_sets.overlay_fps,
             .dstBinding       = 0, // this should match the binding value in the shader
             .dstArrayElement  = 0, // index of the first descriptor in the raray to update
             .descriptorCount  = 1, // you can update multiple descriptors at once if they're in an array
@@ -145,7 +145,7 @@ namespace vulkanDK::overlays {
          },
          VkWriteDescriptorSet{ // texture sampler
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet          = fif.descriptor_sets.fps,
+            .dstSet          = fif.descriptor_sets.overlay_fps,
             .dstBinding      = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = 1,
@@ -256,7 +256,7 @@ namespace vulkanDK::overlays {
       auto descriptor_writes = std::array{
          VkWriteDescriptorSet{ // texture sampler
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet          = fif.descriptor_sets.fps,
+            .dstSet          = fif.descriptor_sets.overlay_fps,
             .dstBinding      = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = 1,
@@ -379,7 +379,7 @@ namespace vulkanDK::overlays {
       auto writes = std::array{
          VkWriteDescriptorSet{
             .sType      = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet     = fif.descriptor_sets.fps,
+            .dstSet     = fif.descriptor_sets.overlay_fps,
             .dstBinding = 1, // this should match the binding value in the shader
             .dstArrayElement = 0,
             .descriptorCount = (uint32_t)infos.size(),

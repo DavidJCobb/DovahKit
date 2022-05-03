@@ -13,4 +13,8 @@ namespace vulkanDK {
       this->life_state     = scene_frame_item_state::empty;
       this->handled_frames = frame_dirty_state();
    }
+
+   bool loaded_texture::persist_for_life_of_renderer() const {
+      return (this->flags & (flag::is_default_land_texture)) != 0;
+   }
 }

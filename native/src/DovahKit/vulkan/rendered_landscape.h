@@ -18,14 +18,21 @@ namespace dovah::loaded_forms {
 
 namespace vulkanDK {
    class rendered_landscape {
+      protected:
+         static constexpr bool render_as_separated_quads = true;
       public:
          using loaded_form = dovah::loaded_forms::Landscape;
-         static constexpr size_t verts_per_side = 33;
-         static constexpr size_t verts_per_mesh = verts_per_side * verts_per_side;
+         static constexpr size_t vertices_per_side = 33 + 1; // all quads overlap by one line of vertices on each axis; needed to avoid a gap in tris
+         static constexpr size_t vertices_per_mesh = vertices_per_side * vertices_per_side;
 
-         static constexpr size_t indices_per_mesh = vertex_index_count_for_quad_grid<verts_per_side, verts_per_side>;
+         static constexpr size_t vertices_per_quad_side  = 17;
+         static constexpr size_t vertices_per_quad       = vertices_per_quad_side * vertices_per_quad_side;
 
          static constexpr size_t max_usable_layers_per_quad = 6;
+
+         static constexpr auto quad_vertex_indices = vertex_indices_for_quad_grid<vertices_per_quad_side, vertices_per_quad_side, true>;
+         static constexpr auto indices_per_quad    = std::tuple_size_v<decltype(quad_vertex_indices)>;
+         using quad_vertex_index_type = decltype(quad_vertex_indices)::value_type;
 
       protected:
          void _on_shader_parameter_change();
@@ -47,7 +54,7 @@ namespace vulkanDK {
             };
          };
 
-         std::array<vertex_landscape, verts_per_mesh> vertices;
+         std::array<vertex_landscape, vertices_per_mesh> vertices;
          shader_parameters shader_params;
          //
          frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)

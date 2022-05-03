@@ -268,7 +268,149 @@ namespace vulkanDK {
    #pragma endregion
 
    surface_renderer::surface_renderer(DKVulkanInstance& dkvi, DKVulkanView* widget) : owner(dkvi), null_texture(*this) {
-      this->descriptor_set_layouts.shared_layouts.compute_frustum_culling.bindings = {
+      this->descriptor_set_layouts.scene_state.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.shadow_caster_map_render.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: mat4[shadow_caster_count][6]
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.shadow_maps.bindings = {
+         vulkanDK::descriptor_binding{ // sun shadow map
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // light shadow maps
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .count              = shadow_caster_count,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.all_textures.bindings = {
+         vulkanDK::descriptor_binding{ // texture sampler
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture array
+            .index              = 1,
+            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .count              = config::max_loaded_textures,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.all_bounds.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: glm::mat4[] (bound matrices)
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.all_landscapes.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_landscape::shader_parameters[]
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.all_lights.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.all_meshes.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.overlay_fps.bindings = {
+         vulkanDK::descriptor_binding{ // screen size
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // texture atlas
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.overlay_world_axes.bindings = {
+         vulkanDK::descriptor_binding{ // world camera info
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.shared_layouts.compute_cull_caster.bindings = {
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::cull_data[]
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: vec4[] (XYZ position and radius of all active casters)
+            .index              = 1,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: uint32_t[] (mesh indices)
+            .index              = 2,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+         vulkanDK::descriptor_binding{ // storage buffer object: VkDrawIndexedIndirectCommand[]
+            .index              = 3,
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
+      this->descriptor_set_layouts.shared_layouts.compute_cull_frustum.bindings = {
          vulkanDK::descriptor_binding{ // storage buffer object: glm::vec4[4][] (frustum normal vectors)
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -276,7 +418,7 @@ namespace vulkanDK {
             .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
             .immutable_samplers = nullptr,
          },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
+         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::cull_data[]
             .index              = 1,
             .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .count              = 1,
@@ -298,38 +440,7 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
-      this->descriptor_set_layouts.shared_layouts.compute_shadow_caster_culling.bindings = {
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: uint32_t[] (mesh indices)
-            .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: VkDrawIndexedIndirectCommand[]
-            .index              = 3,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_COMPUTE_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      //
-      this->descriptor_set_layouts.oit_composite.bindings = {
+      this->descriptor_set_layouts.oit_compositing.bindings = {
          vulkanDK::descriptor_binding{
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
@@ -341,206 +452,6 @@ namespace vulkanDK {
             .index              = 1,
             .type               = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.sun_shadows.bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_shadow_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture sampler
-            .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture array
-            .index              = 3,
-            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .count              = config::max_loaded_textures,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.light_shadows.bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_shadow_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
-            .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: mat4[shadow_caster_count][6]
-            .index              = 3,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture sampler
-            .index              = 4,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture array
-            .index              = 5,
-            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .count              = config::max_loaded_textures,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.standard.bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture sampler
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // sun shadow map
-            .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // light shadow maps
-            .index              = 3,
-            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .count              = shadow_caster_count,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_mesh::shader_parameters[]
-            .index              = 4,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_light::shader_parameters[]
-            .index              = 5,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture array
-            .index              = 6,
-            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .count              = config::max_loaded_textures,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.fps.bindings = { // FPS counter
-         vulkanDK::descriptor_binding{ // uniform buffer object
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture sampler
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.world_axes.bindings = { // World axes
-         vulkanDK::descriptor_binding{ // uniform buffer object
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.scene_bounds.bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: glm::mat4[] (bound matrices)
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT,
-            .immutable_samplers = nullptr,
-         },
-      };
-      this->descriptor_set_layouts.landscape.bindings = {
-         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_global_state
-            .index              = 0,
-            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // storage buffer object: rendered_landscape::shader_parameters[]
-            .index              = 1,
-            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture sampler
-            .index              = 2,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLER,
-            .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .immutable_samplers = nullptr,
-         },
-         vulkanDK::descriptor_binding{ // texture array
-            .index              = 3,
-            .flags              = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-            .type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-            .count              = config::max_loaded_textures,
             .shader_stages      = VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
@@ -780,12 +691,6 @@ namespace vulkanDK {
       }
       //
       this->descriptor_set_layouts.setup_all(*this);
-      {
-         auto& dsl = this->descriptor_set_layouts;
-         this->set_debug_object_name(dsl.fps.handle,         "Descriptor Set Layout: FPS");
-         this->set_debug_object_name(dsl.standard.handle,    "Descriptor Set Layout: Main");
-         this->set_debug_object_name(dsl.sun_shadows.handle, "Descriptor Set Layout: Sun Shadows");
-      }
       this->_define_render_passes();
       this->_setup_shaders();
       this->setup_texture_sampler(); // descriptor set layout must be able to refer to our immutable sampler
@@ -1275,17 +1180,17 @@ namespace vulkanDK {
       //
       auto* s = this->create_graphics_shader(oit_composite_shader_id);
       s->set_render_pass(this->render_passes_by_name.main_oit, 1);
-      s->set_layout_info({ this->descriptor_set_layouts.oit_composite.handle });
+      s->set_layout_info({ this->descriptor_set_layouts.oit_compositing.handle });
       //
       auto& options = s->options;
       //
-      shader_module* vert = this->load_shader_module("shaders/util-full-screen-triangle.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/util-oit.frag.spv");
+      shader_module* vert = this->load_shader_module("shaders/util/full-screen-triangle.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/util/oit-composite.frag.spv");
       {
          assert(vert);
          assert(frag);
-         this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util-full-screen-triangle.vert.spv)");
-         this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util-oit.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (OIT Composite: util/full-screen-triangle.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (OIT Composite: util/oit-composite.frag.spv)");
       }
       //
       options.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
@@ -1319,12 +1224,22 @@ namespace vulkanDK {
       //
       s->setup_pipeline_layout();
    }
-   void surface_renderer::_setup_basic_color_shader() {
+   void surface_renderer::_setup_rendered_mesh_shaders() {
+      this->_setup_rendered_mesh_color_shader();
+      this->_setup_rendered_mesh_wboit_shader();
+      this->_setup_rendered_mesh_shadows_caster_shaders();
+      this->_setup_rendered_mesh_shadows_sun_shader();
+   }
+   void surface_renderer::_setup_rendered_mesh_color_shader() {
       auto* s = this->create_graphics_shader(main_shader_id);
       s->set_render_pass(this->render_passes_by_name.main);
       s->set_layout_info(
          {  // Descriptor set layouts
-            this->descriptor_set_layouts.standard.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_textures.handle,
+            this->descriptor_set_layouts.all_meshes.handle,
+            this->descriptor_set_layouts.all_lights.handle,
+            this->descriptor_set_layouts.shadow_maps.handle,
          },
          {  // Push constants
             VkPushConstantRange{
@@ -1340,13 +1255,13 @@ namespace vulkanDK {
       //
       auto& options = s->options;
       //
-      shader_module* vert = this->load_shader_module("shaders/shader.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/shader.frag.spv");
+      shader_module* vert = this->load_shader_module("shaders/rendered_mesh/bslp/color.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_mesh/bslp/color-main.frag.spv");
       {
          assert(vert);
          assert(frag);
-         this->set_debug_object_name(vert->handle, "Shader Module (Basic Color: shader.vert.spv)");
-         this->set_debug_object_name(frag->handle, "Shader Module (Basic Color: shader.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Rendered Mesh Color Main: rendered_mesh/bslp/color.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Rendered Mesh Color Main: rendered_mesh/bslp/color-main.frag.spv)");
       }
       //
       struct _specializations {
@@ -1388,7 +1303,7 @@ namespace vulkanDK {
       //
       s->setup_pipeline_layout();
    }
-   void surface_renderer::_setup_basic_wboit_shader() {
+   void surface_renderer::_setup_rendered_mesh_wboit_shader() {
       if (!this->can_do_alpha()) {
          //
          // If the device doesn't support the features we need for OIT, then we don't even 
@@ -1402,7 +1317,11 @@ namespace vulkanDK {
       s->set_render_pass(this->render_passes_by_name.main_oit, 0);
       s->set_layout_info(
          {  // Descriptor set layouts
-            this->descriptor_set_layouts.standard.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_textures.handle,
+            this->descriptor_set_layouts.all_meshes.handle,
+            this->descriptor_set_layouts.all_lights.handle,
+            this->descriptor_set_layouts.shadow_maps.handle,
          },
          {  // Push constants
             VkPushConstantRange{
@@ -1418,13 +1337,13 @@ namespace vulkanDK {
       //
       auto& options = s->options;
       //
-      shader_module* vert = this->load_shader_module("shaders/shader.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/shader.oit-color.frag.spv");
+      shader_module* vert = this->load_shader_module("shaders/rendered_mesh/bslp/color.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_mesh/bslp/color-oit.frag.spv");
       {
          assert(vert);
          assert(frag);
-         this->set_debug_object_name(vert->handle, "Shader Module (Basic WBOIT: shader.vert.spv)");
-         this->set_debug_object_name(frag->handle, "Shader Module (Basic WBOIT: shader.oit-color.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Rendered Mesh Color WBOIT: rendered_mesh/bslp/color.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Rendered Mesh Color WBOIT: rendered_mesh/bslp/color-oit.frag.spv)");
       }
       //
       options.stages = {
@@ -1493,12 +1412,14 @@ namespace vulkanDK {
       //
       s->setup_pipeline_layout();
    }
-   void surface_renderer::_setup_sun_shadow_shader() {
+   void surface_renderer::_setup_rendered_mesh_shadows_sun_shader() {
       auto* s = this->create_graphics_shader(sun_shadow_shader_id);
       s->set_render_pass(this->render_passes_by_name.main_shadow);
       s->set_layout_info(
          {  // Descriptor set layouts
-            this->descriptor_set_layouts.sun_shadows.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_meshes.handle,
+            this->descriptor_set_layouts.all_textures.handle,
          },
          {  // Push constants
             VkPushConstantRange{
@@ -1513,13 +1434,13 @@ namespace vulkanDK {
       });
       auto& options = s->options;
       //
-      shader_module* vert = this->load_shader_module("shaders/sun-shadow-depth.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/shader.shadows.frag.spv");
+      shader_module* vert = this->load_shader_module("shaders/rendered_mesh/bslp/shadows-sun.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_mesh/bslp/shadows-sun.frag.spv");
       {
          assert(vert);
          assert(frag);
-         this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: sun-shadow-depth.vert.spv)");
-         this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: shader.shadows.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Sun Shadow: rendered_mesh/bslp/shadows-sun.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Sun Shadow: rendered_mesh/bslp/shadows-sun.frag.spv)");
       }
       //
       options.stages = {
@@ -1573,14 +1494,14 @@ namespace vulkanDK {
       };
       s->setup_pipeline_layout();
    }
-   void surface_renderer::_setup_light_shadow_shaders() {
-      shader_module* vert = this->load_shader_module("shaders/light-shadow-depth.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/light-shadow-depth.frag.spv");
+   void surface_renderer::_setup_rendered_mesh_shadows_caster_shaders() {
+      shader_module* vert = this->load_shader_module("shaders/rendered_mesh/bslp/shadows-caster.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_mesh/bslp/shadows-caster.frag.spv");
       {
          assert(vert);
          assert(frag);
-         this->set_debug_object_name(vert->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.vert.spv)");
-         this->set_debug_object_name(frag->handle, "Shader Module (Placed Light Shadow: light-shadow-depth.frag.spv)");
+         this->set_debug_object_name(vert->handle, "Shader Module (Rendered Mesh Shadows/Caster: rendered_mesh/bslp/shadows-caster.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Rendered Mesh Shadows/Caster: rendered_mesh/bslp/shadows-caster.frag.spv)");
       }
       //
       static_assert(shadow_caster_count < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
@@ -1592,7 +1513,11 @@ namespace vulkanDK {
          s->set_render_pass(this->render_passes_by_name.main_shadow_placed, i);
          s->set_layout_info(
             {  // Descriptor set layouts
-               this->descriptor_set_layouts.light_shadows.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_textures.handle,
+            this->descriptor_set_layouts.all_meshes.handle,
+            this->descriptor_set_layouts.all_lights.handle,
+            this->descriptor_set_layouts.shadow_caster_map_render.handle,
             },
             {  // Push constants
                VkPushConstantRange{
@@ -1672,13 +1597,13 @@ namespace vulkanDK {
       auto* s = this->create_compute_shader(frustum_cull_shader_id);
       s->set_layout_info(
          {  // Descriptor set layouts
-            this->descriptor_set_layouts.shared_layouts.compute_frustum_culling.handle,
+            this->descriptor_set_layouts.shared_layouts.compute_cull_frustum.handle,
          }
       );
-      shader_module* comp = this->load_shader_module("shaders/frustum-cull.comp.spv");
+      shader_module* comp = this->load_shader_module("shaders/compute/culling/frustum.comp.spv");
       {
          assert(comp);
-         this->set_debug_object_name(comp->handle, "Shader Module (Frustum Cull: frustum-cull.comp.spv)");
+         this->set_debug_object_name(comp->handle, "Shader Module (Frustum Cull: compute/culling/frustum.comp.spv)");
       }
       s->config.stage = pipeline_stage_info{
          .module              = comp,
@@ -1699,13 +1624,13 @@ namespace vulkanDK {
          auto* s = this->create_compute_shader(id);
          s->set_layout_info(
             {  // Descriptor set layouts
-               this->descriptor_set_layouts.shared_layouts.compute_shadow_caster_culling.handle,
+               this->descriptor_set_layouts.shared_layouts.compute_cull_caster.handle,
             }
          );
-         shader_module* comp = this->load_shader_module("shaders/shadow-caster-cull.comp.spv");
+         shader_module* comp = this->load_shader_module("shaders/compute/culling/shadows-caster.comp.spv");
          {
             assert(comp);
-            this->set_debug_object_name(comp->handle, "Shader Module (Shadow Caster Cull: shadow-caster-cull.comp.spv)");
+            this->set_debug_object_name(comp->handle, "Shader Module (Shadow Caster Cull: compute/culling/shadows-caster.comp.spv)");
          }
          s->config.stage = pipeline_stage_info{
             .module              = comp,
@@ -1726,13 +1651,14 @@ namespace vulkanDK {
          auto* s = this->create_graphics_shader(bounding_box_shader_id);
          s->set_render_pass(this->render_passes_by_name.bounds);
          s->set_layout_info({
-            this->descriptor_set_layouts.scene_bounds.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_bounds.handle,
          });
          //
          auto& options = s->options;
          //
-         shader_module* vert = this->load_shader_module("shaders/bounding-box.vert.spv");
-         shader_module* frag = this->load_shader_module("shaders/bounding-box.frag.spv");
+         shader_module* vert = this->load_shader_module("shaders/rendered_bounds/box/color.vert.spv");
+         shader_module* frag = this->load_shader_module("shaders/rendered_bounds/box/color.frag.spv");
          {
             assert(vert);
             assert(frag);
@@ -1770,18 +1696,19 @@ namespace vulkanDK {
          auto* s = this->create_graphics_shader(bounding_origin_shader_id);
          s->set_render_pass(this->render_passes_by_name.bounds);
          s->set_layout_info({
-            this->descriptor_set_layouts.scene_bounds.handle,
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_bounds.handle,
          });
          //
          auto& options = s->options;
          //
-         shader_module* vert = this->load_shader_module("shaders/bounding-origin.vert.spv");
-         shader_module* frag = this->load_shader_module("shaders/bounding-origin.frag.spv");
+         shader_module* vert = this->load_shader_module("shaders/rendered_bounds/pivot/color.vert.spv");
+         shader_module* frag = this->load_shader_module("shaders/rendered_bounds/pivot/color.frag.spv");
          {
             assert(vert);
             assert(frag);
-            this->set_debug_object_name(vert->handle, "Shader Module (Bounding Box Origin Vert)");
-            this->set_debug_object_name(frag->handle, "Shader Module (Bounding Box Origin Frag)");
+            this->set_debug_object_name(vert->handle, "Shader Module (Bounding Box Pivot Vert)");
+            this->set_debug_object_name(frag->handle, "Shader Module (Bounding Box Pivot Frag)");
          }
          //
          options.stages = {
@@ -1814,13 +1741,16 @@ namespace vulkanDK {
       auto* s = this->create_graphics_shader(landscape_shader_id);
       s->set_render_pass(this->render_passes_by_name.main);
       s->set_layout_info({
-         this->descriptor_set_layouts.landscape.handle,
+         this->descriptor_set_layouts.scene_state.handle,
+         this->descriptor_set_layouts.all_textures.handle,
+         this->descriptor_set_layouts.all_landscapes.handle,
+         this->descriptor_set_layouts.all_lights.handle,
       });
       //
       auto& options = s->options;
       //
-      shader_module* vert = this->load_shader_module("shaders/landscape.vert.spv");
-      shader_module* frag = this->load_shader_module("shaders/landscape.frag.spv");
+      shader_module* vert = this->load_shader_module("shaders/rendered_landscape/color.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_landscape/color.frag.spv");
       {
          assert(vert);
          assert(frag);
@@ -1856,10 +1786,7 @@ namespace vulkanDK {
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
       //
-      this->_setup_sun_shadow_shader();
-      this->_setup_basic_color_shader();
-      this->_setup_basic_wboit_shader();
-      this->_setup_light_shadow_shaders();
+      this->_setup_rendered_mesh_shaders();
       this->_setup_frustum_cull_shader();
       this->_setup_shadow_caster_cull_shaders();
       this->_setup_scene_bounds_shaders();
@@ -1869,10 +1796,8 @@ namespace vulkanDK {
       //
       if constexpr (setup_fps_counter) {
          vulkanDK::overlays::fps::setup_shaders(*this);
-         qDebug("[Vulkan] Shader setup: FPS");
       }
       vulkanDK::overlays::world_axes::setup_shaders(*this);
-      qDebug("[Vulkan] Shader setup: World Axes");
    }
    //
    void surface_renderer::_create_null_texture() {
@@ -2142,6 +2067,37 @@ namespace vulkanDK {
       //
       auto& list = this->swap_chain.frames_in_flight;
       for (auto& frame : list) {
+         auto global_state_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_data.handle,
+            .offset = 0,
+            .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto shad_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.light_shadow_data.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
+         auto bounds_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_bounds.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
+         auto landscape_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_landscapes.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
+         auto rlsp_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_lights.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto rmsp_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.scene_meshes.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         //
          auto frustum_main_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_frustums.main.handle,
             .offset = 0,
@@ -2208,37 +2164,6 @@ namespace vulkanDK {
             return out;
          })();
          //
-         auto global_state_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.scene_data.handle,
-            .offset = 0,
-            .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
-         };
-         auto rmsp_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.scene_meshes.handle,
-            .offset = 0,
-            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
-         };
-         auto rlsp_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.scene_lights.handle,
-            .offset = 0,
-            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
-         };
-         auto shad_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.light_shadow_data.handle,
-            .offset = 0,
-            .range  = VK_WHOLE_SIZE,
-         };
-         auto bounds_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.scene_bounds.handle,
-            .offset = 0,
-            .range  = VK_WHOLE_SIZE,
-         };
-         auto landscape_buffer_info = VkDescriptorBufferInfo{
-            .buffer = frame.shader_params.scene_landscapes.handle,
-            .offset = 0,
-            .range  = VK_WHOLE_SIZE,
-         };
-         //
          std::array<VkDescriptorImageInfo, shadow_caster_count> light_shadow_info;
          for (size_t i = 0; i < shadow_caster_count; ++i) {
             auto& entry = this->canvas.light_shadows.resources[i];
@@ -2251,7 +2176,176 @@ namespace vulkanDK {
          //
          auto descriptor_writes = cobb::array_concat(
             //
-            // Compute: frustum culling: main:
+            // Scene state:
+            //
+            ([&frame, &global_state_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.scene_state;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // uniform buffer object
+                     .dstSet           = descriptor_set,
+                     .dstBinding       = 0,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &global_state_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               return out;
+            })(),
+            //
+            // Shadow maps:
+            //
+            ([&frame, &image_info_sun_shadow, &light_shadow_info]() {
+               auto descriptor_set = frame.descriptor_sets.shadow_maps;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // sun shadow map
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = (uint32_t)1,
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                     .pImageInfo      = &image_info_sun_shadow,
+                  },
+                  VkWriteDescriptorSet{ // light shadow maps
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = (uint32_t)light_shadow_info.size(),
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                     .pImageInfo      = light_shadow_info.data(),
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // Shadow caster map render:
+            //
+            ([&frame, &shad_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.shadow_caster_map_render;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object: mat4[shadow_caster_count][6]
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &shad_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // All textures:
+            //
+            ([&frame, &sampler_info, &texture_infos]() {
+               auto descriptor_set = frame.descriptor_sets.all_textures;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // texture sampler
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = 1,
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
+                     .pImageInfo      = &sampler_info,
+                  },
+                  VkWriteDescriptorSet{ // texture array
+                     .dstSet          = descriptor_set,
+                     .dstArrayElement = 0,
+                     .descriptorCount = (uint32_t)texture_infos.size(),
+                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                     .pImageInfo      = texture_infos.data(),
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // All bounds:
+            //
+            ([&frame, &bounds_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.all_bounds;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &bounds_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // All landscapes:
+            //
+            ([&frame, &landscape_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.all_landscapes;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &landscape_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // All lights:
+            //
+            ([&frame, &rlsp_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.all_lights;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &rlsp_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // All meshes:
+            //
+            ([&frame, &rmsp_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.all_meshes;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::shader_parameters[]
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &rmsp_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            //
+            // Compute: frustum culling:
             //
             ([&frame, &frustum_main_buffer_info, &mesh_bounds_buffer_info, &culling_mesh_indices_main_buffer_info, &culling_mesh_params_main_buffer_info]() {
                auto descriptor_set = frame.descriptor_sets.sharing_sets.compute_frustum_culling_main;
@@ -2398,238 +2492,10 @@ namespace vulkanDK {
                return out;
             })(),
             //
-            // Sun shadow render pass:
-            //
-            ([&frame, &global_state_buffer_info, &rmsp_buffer_info, &sampler_info]() {
-               auto descriptor_set = frame.descriptor_sets.sun_shadows;
-               auto out = std::array{
-                  VkWriteDescriptorSet{ // uniform buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1,
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &global_state_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rmsp_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // texture sampler
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = 1,
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
-                     .pImageInfo      = &sampler_info,
-                  },
-               };
-               for (size_t i = 0; i < out.size(); ++i)
-                  out[i].dstBinding = i;
-               return out;
-            })(),
-            //
-            // Light shadow pass:
-            //
-            ([&frame, &global_state_buffer_info, &rmsp_buffer_info, &rlsp_buffer_info, &shad_buffer_info, &sampler_info]() {
-               auto descriptor_set = frame.descriptor_sets.light_shadows;
-               auto out = std::array{
-                  VkWriteDescriptorSet{ // uniform buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1,
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &global_state_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rmsp_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rlsp_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: mat4[shadow_caster_count][6]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &shad_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // texture sampler
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = 1,
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
-                     .pImageInfo      = &sampler_info,
-                  },
-               };
-               for (size_t i = 0; i < out.size(); ++i)
-                  out[i].dstBinding = i;
-               return out;
-            })(),
-            //
-            // Main render pass:
-            //
-            ([&frame, &global_state_buffer_info, &sampler_info, &image_info_sun_shadow, &light_shadow_info, &rmsp_buffer_info, &rlsp_buffer_info, &texture_infos]() {
-               auto descriptor_set = frame.descriptor_sets.standard;
-               auto out = std::array{
-                  VkWriteDescriptorSet{ // uniform buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1,
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &global_state_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // texture sampler
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = 1,
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
-                     .pImageInfo      = &sampler_info,
-                  },
-                  VkWriteDescriptorSet{ // sun shadow map
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = (uint32_t)1,
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                     .pImageInfo      = &image_info_sun_shadow,
-                  },
-                  VkWriteDescriptorSet{ // light shadow maps
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = (uint32_t)light_shadow_info.size(),
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                     .pImageInfo      = light_shadow_info.data(),
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_object::shader_parameters[]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rmsp_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object: rendered_light::shader_parameters[]
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &rlsp_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // texture array
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = (uint32_t)texture_infos.size(),
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                     .pImageInfo      = texture_infos.data(),
-                  },
-               };
-               for (size_t i = 0; i < out.size(); ++i)
-                  out[i].dstBinding = i;
-               return out;
-            })(),
-            //
-            // Scene bounds render pass:
-            //
-            ([&frame, &global_state_buffer_info, &bounds_buffer_info]() {
-               auto descriptor_set = frame.descriptor_sets.scene_bounds;
-               auto out = std::array{
-                  VkWriteDescriptorSet{ // uniform buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1,
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &global_state_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &bounds_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-               };
-               for (size_t i = 0; i < out.size(); ++i)
-                  out[i].dstBinding = i;
-               return out;
-            })(),
-            //
-            // Landscape:
-            //
-            ([&frame, &global_state_buffer_info, &landscape_buffer_info, &sampler_info, &texture_infos]() {
-               auto descriptor_set = frame.descriptor_sets.landscape;
-               auto out = std::array{
-                  VkWriteDescriptorSet{ // uniform buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1,
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &global_state_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // storage buffer object
-                     .dstSet           = descriptor_set,
-                     .dstArrayElement  = 0,
-                     .descriptorCount  = 1, // this should be 1 because we are updating 1 buffer; that the buffer's data is used as an array on the shader side is irrelevant
-                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                     .pImageInfo       = nullptr,
-                     .pBufferInfo      = &landscape_buffer_info,
-                     .pTexelBufferView = nullptr,
-                  },
-                  VkWriteDescriptorSet{ // texture sampler
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = 1,
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLER,
-                     .pImageInfo      = &sampler_info,
-                  },
-                  VkWriteDescriptorSet{ // texture array
-                     .dstSet          = descriptor_set,
-                     .dstArrayElement = 0,
-                     .descriptorCount = (uint32_t)texture_infos.size(),
-                     .descriptorType  = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                     .pImageInfo      = texture_infos.data(),
-                  },
-               };
-               for (size_t i = 0; i < out.size(); ++i)
-                  out[i].dstBinding = i;
-               return out;
-            })(),
-            //
             // OIT composite pass:
             //
             ([&frame, &image_info_oit_accumulator, &image_info_oit_reveal]() {
-               auto descriptor_set = frame.descriptor_sets.oit_composite;
+               auto descriptor_set = frame.descriptor_sets.oit_compositing;
                auto out = std::array{
                   VkWriteDescriptorSet{
                      .dstSet          = descriptor_set,
@@ -4016,9 +3882,7 @@ namespace vulkanDK {
             assert(ti < list.size());
             if (ti < list.size()) {
                auto& tex = list[ti];
-               if (--tex.refcount == 0) {
-                  tex.mark_for_delete();
-                  ++this->scene.pending_deletions.textures;
+               if (this->scene.texture_dec_ref({}, tex)) {
                   if constexpr (debug_log_scene_object_lifetimes) {
                      qDebug("[vulkanDK::scene_renderer::remove_mesh] Mesh %u used texture %u which is now unused; marking the texture for delete.", i, ti);
                   }
@@ -4238,9 +4102,7 @@ namespace vulkanDK {
       item.mark_for_delete();
       {
          auto _dec_tex_ref = [this, i](loaded_texture& tex, size_t ti) {
-            if (--tex.refcount == 0) {
-               tex.mark_for_delete();
-               ++this->scene.pending_deletions.textures;
+            if (this->scene.texture_dec_ref({}, tex)) {
                if constexpr (debug_log_scene_object_lifetimes) {
                   qDebug("[vulkanDK::scene_renderer::remove_landscape] Landscape %u used texture %u which is now unused; marking the texture for delete.", i, ti);
                }
@@ -4684,6 +4546,49 @@ namespace vulkanDK {
       });
       for (auto& image : this->swap_chain.frames_in_flight) {
          image.on_scene_meshes_added_or_removed();
+      }
+   }
+
+   void surface_renderer::set_default_land_textures(const QString& raw_diffuse, const QString& raw_normals) {
+      auto diffuse = QDir::cleanPath(raw_diffuse).toLower();
+      auto normals = QDir::cleanPath(raw_normals).toLower();
+      //
+      auto& list = this->scene.textures;
+      //
+      bool already_diffuse = false;
+      bool already_normals = false;
+      for (auto& tex : list) {
+         if ((tex.flags & loaded_texture::flag::is_default_land_texture) == 0)
+            continue;
+         if (tex.path == diffuse) {
+            already_diffuse = true;
+            if (already_normals)
+               return;
+            continue;
+         }
+         if (tex.path == normals) {
+            already_normals = true;
+            if (already_diffuse)
+               return;
+            continue;
+         }
+         tex.flags &= ~loaded_texture::flag::is_default_land_texture;
+         if (tex.refcount == 0 && !tex.persist_for_life_of_renderer()) {
+            //
+            // The texture isn't directly used by a rendered_landscape (i.e. it wasn't manually picked 
+            // and painted on), and it isn't used by other stuff e.g. rendered_meshes. Mark it for delete 
+            // now that we no longer need to keep it.
+            //
+            ++tex.refcount; // disgusting hack so we can just use dec ref to get consistent mark-for-delete behavior
+            this->scene.texture_dec_ref({}, tex);
+         }
+      }
+      //
+      if (!already_diffuse) {
+         this->scene.global_state.default_land_diffuse_texture = this->add_dds_texture(diffuse);
+      }
+      if (!already_normals) {
+         this->scene.global_state.default_land_normals_texture = this->add_dds_texture(normals);
       }
    }
 

@@ -50,11 +50,9 @@ namespace vulkanDK {
    }
 
    void scene::setup_landscape_buffer(surface_renderer& sr, size_t max_landscape_count) {
-      constexpr auto indices = vertex_indices_for_quad_grid<rendered_landscape::verts_per_side, rendered_landscape::verts_per_side, true>;
-      //
-      constexpr size_t indices_size = std::tuple_size_v<decltype(indices)> *sizeof(decltype(indices)::value_type);
-      constexpr size_t buffer_size  = ([&indices, indices_size]() {
-         constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+      constexpr size_t indices_size = rendered_landscape::indices_per_quad * sizeof(rendered_landscape::quad_vertex_index_type);
+      constexpr size_t buffer_size  = ([indices_size]() {
+         constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
          return indices_size + (v * config::max_landscapes);
       })();
       //
@@ -63,7 +61,7 @@ namespace vulkanDK {
          auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          void* data    = staging.map_memory();
          memset(data, 0, buffer_size);
-         memcpy(data, &indices, indices_size);
+         memcpy(data, rendered_landscape::quad_vertex_indices.data(), indices_size);
          staging.unmap_memory(data);
          this->coalesced.landscape_buffer.copy_from(staging);
       }
@@ -514,15 +512,24 @@ namespace vulkanDK {
       return size;
    }
 
+   bool scene::texture_dec_ref(renderer_passkey, loaded_texture& tex) {
+      if (--tex.refcount == 0) {
+         if (tex.persist_for_life_of_renderer())
+            return false;
+         tex.mark_for_delete();
+         ++this->pending_deletions.textures;
+         return true;
+      }
+      return false;
+   }
+
    size_t scene::landscape_buffer_vertex_index(size_t landscape_index) const {
-      constexpr auto indices = vertex_indices_for_quad_grid<rendered_landscape::verts_per_side, rendered_landscape::verts_per_side, true>;
-      //
-      constexpr size_t i = std::tuple_size_v<decltype(indices)> *sizeof(decltype(indices)::value_type);
-      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+      constexpr size_t i = rendered_landscape::indices_per_quad * sizeof(rendered_landscape::quad_vertex_index_type);
+      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
       return i + (v * landscape_index);
    }
    void scene::update_single_landscape(surface_renderer& sr, size_t landscape_index) {
-      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::verts_per_mesh;
+      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
 
       auto  staging = sr.create_buffer(v, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       void* data    = staging.map_memory();

@@ -2,6 +2,7 @@
 #include <chrono>
 #include <limits>
 #include <vector>
+#include "helpers/passkey.h"
 #include "buffer.h"
 #include "frustum.h"
 #include "loaded_texture.h"
@@ -23,6 +24,9 @@ namespace vulkanDK {
    class scene {
       public:
          static constexpr size_t index_of_none = std::numeric_limits<size_t>::max();
+
+         using renderer_passkey = cobb::passkey<surface_renderer, scene>;
+
       public:
          scene();
 
@@ -81,6 +85,8 @@ namespace vulkanDK {
          size_t insert_new_light();     // returns index of inserted item; index_of_none on failure
          size_t insert_new_mesh();      // returns index of inserted item; index_of_none on failure
          size_t insert_new_texture();   // returns index of inserted item; index_of_none on failure
+
+         bool texture_dec_ref(renderer_passkey, loaded_texture&); // returns true if the texture will be marked for delete
 
          size_t landscape_buffer_vertex_index(size_t landscape_index) const;
          void update_single_landscape(surface_renderer&, size_t landscape_index);

@@ -41,5 +41,8 @@ namespace vulkanDK {
       alignas( 4) float     fog_power  = 1.0F;
       alignas( 4) float     fog_max    = 1.0F; // max fog
       alignas( 4) float     interior_clip_distance = 0.0F; // maximum draw distance for interior cells only; unused if zero or negative
+      //
+      alignas( 4) int32_t default_land_diffuse_texture = -1;
+      alignas( 4) int32_t default_land_normals_texture = -1;
    };
 }

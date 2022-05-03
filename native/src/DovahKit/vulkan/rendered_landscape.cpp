@@ -6,8 +6,6 @@
 #include <QDebug>
 
 namespace vulkanDK {
-   static_assert(rendered_landscape::verts_per_mesh == rendered_landscape::loaded_form::total_vertex_count);
-
    void rendered_landscape::_on_shader_parameter_change() {
       if (this->pending_delete())
          return;
@@ -20,93 +18,56 @@ namespace vulkanDK {
    }
 
    void rendered_landscape::import_vertex_data_from_form(const loaded_form& land) {
+      constexpr size_t centerline_index_src = 16;
+      //
       auto& vl = this->vertices;
-      for (size_t i = 0; i < verts_per_mesh; ++i) {
-         const auto& color = land.heightmap.colors.by_flat_index(i);
-         if (land.land_flags & loaded_form::land_flag::has_colors) {
-            vl[i].color = glm::vec3{ (float)color.r, (float)color.g, (float)color.b } / 255.0F;
-         } else {
-            vl[i].color = glm::fvec3{ 1, 1, 1 };
-         }
+      for (size_t q = 0; q < 4; ++q) {
+         size_t offset_x = (q % 2) * centerline_index_src;
+         size_t offset_y = (q / 2) * centerline_index_src;
          //
-         vl[i].height = land.heightmap.heights.by_flat_index(i);
-         for (size_t j = 0; j < vl[i].blends.size(); ++j)
-            vl[i].blends[j] = 0;
+         for (size_t y = 0; y < vertices_per_quad_side; ++y) {
+            for (size_t x = 0; x < vertices_per_quad_side; ++x) {
+               size_t src_i = ((y + offset_y) * loaded_form::vertices_per_side) + (x + offset_x);
+               size_t dst_i = (q * vertices_per_quad) + (y * vertices_per_quad_side) + x;
+               //
+               const auto& color = land.heightmap.colors.by_flat_index(src_i);
+               if (land.land_flags & loaded_form::land_flag::has_colors) {
+                  vl[dst_i].color = glm::vec3{ (float)color.r, (float)color.g, (float)color.b } / 255.0F;
+               } else {
+                  vl[dst_i].color = glm::fvec3{ 1, 1, 1 };
+               }
+               //
+               vl[dst_i].height = land.heightmap.heights.by_flat_index(src_i);
+               for (size_t j = 0; j < vl[dst_i].blends.size(); ++j)
+                  vl[dst_i].blends[j] = 0;
+            }
+         }
       }
       //
-      constexpr bool dont_even_bother_dealing_with_the_quads = true;
+      // Get alpha-blending data:
       //
-qDebug("[rendered_landscape::import_vertex_data_from_form] Generating landscape vertex data...");
       for (size_t q = 0; q < 4; ++q) {
-qDebug(" - Quad %d", q);
+         size_t offset_x = (q % 2) * centerline_index_src;
+         size_t offset_y = (q / 2) * centerline_index_src;
+         //
          for (auto& blend : land.alpha_layers_by_quad[q]) {
             auto layer = blend.layer;
-qDebug("    - Layer %d", layer);
             if (layer < 0 || layer >= rendered_landscape::max_usable_layers_per_quad)
                continue;
-qDebug("      Proceeding...");
             //
             auto& alphas = blend.opacities;
-{
-   qDebug("       - Dumping blends:");
-   for (size_t y = 0; y < verts_per_side; ++y) {
-      QString line = "         ";
-      for (size_t x = 0; x < verts_per_side; ++x) {
-         line += QString::number(alphas.item(x, y), 'f', 2) + ' ';
-      }
-      qDebug(qUtf8Printable(line));
-   }
-}
-            if constexpr (dont_even_bother_dealing_with_the_quads) {
-               //
-               // Blends are stored as four 17x17 quadrants with one vertex of overlap, 
-               // covering the full 33x33 cell. Mapping quadrant blends to whole-cell 
-               // coordinates SHOULD be easy, but it just isn't working no matter what 
-               // I try.
-               //
-               for (size_t y = 0; y < verts_per_side; ++y) {
-                  for (size_t x = 0; x < verts_per_side; ++x) {
-                     auto f = alphas.item(x, y);
-                     if (f <= 0)
-                        continue;
-                     auto i = (y * verts_per_side) + x;
-                     vl[i].blends[layer] = f;
-                  }
-               }
-            } else {
-               using alpha_grid = std::remove_reference_t<decltype(alphas)>;
-               //
-               uint8_t x_min =  0;
-               uint8_t x_max = 17;
-               uint8_t y_min =  0;
-               uint8_t y_max = 17;
-               land.quad_coords_to_cell_coords(q, x_min, y_min);
-               land.quad_coords_to_cell_coords(q, x_max, y_max);
-               //
-               for (size_t y = y_min; y < y_max; ++y) {
-                  for (size_t x = x_min; x < x_max; ++x) {
-                     auto i = (y * verts_per_side) + x;
-                     vl[i].blends[layer] = alphas.item(x, y);
-                  }
+            for (size_t y = 0; y < loaded_form::vertices_per_side; ++y) {
+               for (size_t x = 0; x < loaded_form::vertices_per_side; ++x) {
+                  auto f = alphas.item(x, y);
+                  if (f <= 0)
+                     continue;
+                  //
+                  auto i = (q * vertices_per_quad) + ((y - offset_y) * vertices_per_quad_side) + (x - offset_x);
+                  vl[i].blends[layer] = f;
                }
             }
          }
       }
-{
-   qDebug("       - Dumping final data:");
-   for (size_t b = 0; b < max_usable_layers_per_quad; ++b) {
-      qDebug("          - Blend %d:", b);
-      for (size_t y = 0; y < verts_per_side; ++y) {
-         QString line = "            ";
-         for (size_t x = 0; x < verts_per_side; ++x) {
-            auto& v = vl[y * verts_per_side + x];
-            line += QString::number(v.blends[b], 'f', 2) + ' ';
-         }
-         qDebug(qUtf8Printable(line));
-      }
-   }
-}
-qDebug(" - Data dumped.");
    }
    void rendered_landscape::setup_vertex_data_at(void* dest) {
       auto& vl = this->vertices;
