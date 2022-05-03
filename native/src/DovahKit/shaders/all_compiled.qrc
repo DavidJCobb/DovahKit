@@ -1,30 +1,9 @@
 <RCC>
     <qresource prefix="/shaders">
-        <file>shader.frag.spv</file>
-        <file>shader.vert.spv</file>
         <file>Tamriel-Skyrim.esm.png</file>
         <file>ScreenShot278.bmp</file>
         <file>ScreenShot389.bmp</file>
-        <file>overlay-fps.frag.spv</file>
-        <file>overlay-fps.vert.spv</file>
         <file>white.png</file>
-        <file>overlay-world-axes.frag.spv</file>
-        <file>overlay-world-axes.vert.spv</file>
-        <file>sun-shadow-depth.vert.spv</file>
-        <file>util-full-screen-triangle.vert.spv</file>
-        <file>util-oit.frag.spv</file>
-        <file>shader.oit-color.frag.spv</file>
-        <file>shader.shadows.frag.spv</file>
-        <file>light-shadow-depth.frag.spv</file>
-        <file>light-shadow-depth.vert.spv</file>
-        <file>frustum-cull.comp.spv</file>
-        <file>shadow-caster-cull.comp.spv</file>
-        <file>bounding-box.frag.spv</file>
-        <file>bounding-box.vert.spv</file>
-        <file>bounding-origin.frag.spv</file>
-        <file>bounding-origin.vert.spv</file>
-        <file>landscape.frag.spv</file>
-        <file>landscape.vert.spv</file>
         <file>compute/culling/frustum.comp.spv</file>
         <file>compute/culling/shadows-caster.comp.spv</file>
         <file>overlays/fps/main.frag.spv</file>

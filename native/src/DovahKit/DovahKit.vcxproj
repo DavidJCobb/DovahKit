@@ -1648,22 +1648,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
-    <None Include="shaders\bounding-box.frag" />
-    <None Include="shaders\bounding-box.frag.spv" />
-    <None Include="shaders\bounding-box.vert" />
-    <None Include="shaders\bounding-box.vert.spv" />
-    <None Include="shaders\bounding-origin.frag" />
-    <None Include="shaders\bounding-origin.frag.spv" />
-    <None Include="shaders\bounding-origin.vert" />
-    <None Include="shaders\bounding-origin.vert.spv" />
     <None Include="shaders\compute\culling\frustum.comp" />
     <None Include="shaders\compute\culling\frustum.comp.spv" />
     <None Include="shaders\compute\culling\shadows-caster.comp" />
     <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
     <None Include="shaders\cores\standard_shader.frag" />
     <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
-    <None Include="shaders\frustum-cull.comp" />
-    <None Include="shaders\frustum-cull.comp.spv" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
@@ -1694,22 +1684,6 @@
     <None Include="shaders\includes\structs\rendered_mesh_shader_params.glsl" />
     <None Include="shaders\includes\structs\scene_global_state.glsl" />
     <None Include="shaders\includes\structs\VkDrawIndexedIndirectCommand.glsl" />
-    <None Include="shaders\landscape.frag" />
-    <None Include="shaders\landscape.frag.spv" />
-    <None Include="shaders\landscape.vert" />
-    <None Include="shaders\landscape.vert.spv" />
-    <None Include="shaders\light-shadow-depth.frag" />
-    <None Include="shaders\light-shadow-depth.frag.spv" />
-    <None Include="shaders\light-shadow-depth.vert" />
-    <None Include="shaders\light-shadow-depth.vert.spv" />
-    <None Include="shaders\overlay-fps.frag" />
-    <None Include="shaders\overlay-fps.frag.spv" />
-    <None Include="shaders\overlay-fps.vert" />
-    <None Include="shaders\overlay-fps.vert.spv" />
-    <None Include="shaders\overlay-world-axes.frag" />
-    <None Include="shaders\overlay-world-axes.frag.spv" />
-    <None Include="shaders\overlay-world-axes.vert" />
-    <None Include="shaders\overlay-world-axes.vert.spv" />
     <None Include="shaders\overlays\fps\main.frag" />
     <None Include="shaders\overlays\fps\main.frag.spv" />
     <None Include="shaders\overlays\fps\main.vert" />
@@ -1749,24 +1723,6 @@
     <None Include="shaders\rendered_mesh\bslp\shadows-sun.frag.spv" />
     <None Include="shaders\rendered_mesh\bslp\shadows-sun.vert" />
     <None Include="shaders\rendered_mesh\bslp\shadows-sun.vert.spv" />
-    <None Include="shaders\shader.frag">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="shaders\shader.frag.spv" />
-    <None Include="shaders\shader.oit-color.frag" />
-    <None Include="shaders\shader.oit-color.frag.spv" />
-    <None Include="shaders\shader.shadows.frag" />
-    <None Include="shaders\shader.shadows.frag.spv" />
-    <None Include="shaders\shader.vert" />
-    <None Include="shaders\shader.vert.spv" />
-    <None Include="shaders\shadow-caster-cull.comp" />
-    <None Include="shaders\shadow-caster-cull.comp.spv" />
-    <None Include="shaders\sun-shadow-depth.vert" />
-    <None Include="shaders\sun-shadow-depth.vert.spv" />
-    <None Include="shaders\util-full-screen-triangle.vert" />
-    <None Include="shaders\util-full-screen-triangle.vert.spv" />
-    <None Include="shaders\util-oit.frag" />
-    <None Include="shaders\util-oit.frag.spv" />
     <None Include="shaders\util\full-screen-triangle.vert" />
     <None Include="shaders\util\full-screen-triangle.vert.spv" />
     <None Include="shaders\util\oit-composite.frag" />

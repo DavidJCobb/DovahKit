@@ -145,29 +145,26 @@ namespace dovahkit::subsystems {
             return &item;
       return nullptr;
    }
-   void worldedit::_unload_refr(dovah::form_stub& stub) {
-      {  // Deselect the ref.
+   void worldedit::_unload_refr(refr& refr, bool handle_deselection) {
+      auto* stub = refr.stub;
+      if (handle_deselection) {
+         //
+         // This function can optionally handle deselection as well. There are cases 
+         // where the caller may want to do that itself -- for example, when unloading 
+         // refs matching some criteria en masse, it may be cheaper to manually loop 
+         // over the while selection list one time, instead of looping once per ref.
+         //
          auto& list = this->state.selection.refs;
          list.erase(
             std::remove_if(
                list.begin(),
                list.end(),
-               [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; }
+               [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == stub; }
             ),
             list.end()
          );
       }
-      auto&  list = this->loaded_refs;
-      size_t size = list.size();
-      size_t i    = 0;
-      for (; i < size; ++i)
-         if (list[i].stub == &stub)
-            break;
-      if (i >= size)
-         return;
-      //
-      auto* sr   = this->target_view->surfaceRenderer();
-      auto& refr = list[i];
+      auto* sr = this->target_view->surfaceRenderer();
       if (this->target_view) {
          if (auto* sr = this->target_view->surfaceRenderer()) {
             //
@@ -180,6 +177,20 @@ namespace dovahkit::subsystems {
                sr->remove_nif(*refr.nif);
          }
       }
+      refr.stub = nullptr;
+      refr.form = nullptr;
+      refr.nif.reset();
+   }
+   void worldedit::_unload_refr(dovah::form_stub& stub) {
+      auto&  list = this->loaded_refs;
+      size_t size = list.size();
+      size_t i    = 0;
+      for (; i < size; ++i)
+         if (list[i].stub == &stub)
+            break;
+      if (i >= size)
+         return;
+      this->_unload_refr(list[i]);
       list.erase(list.begin() + i);
    }
    void worldedit::_unload_cell(dovah::form_stub* cell) {
@@ -192,26 +203,36 @@ namespace dovahkit::subsystems {
          handle.destroy();
       this->loaded_cell.land = nullptr;
       //
-      auto* sr   = this->target_view->surfaceRenderer();
+      // Deselect any refs inside of this cell:
+      //
+      {
+         auto& list = this->state.selection.refs;
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [&cell](const cobb::value_type_of<decltype(list)>& item) { return item.stub->get_parent_form() == cell; }
+            ),
+            list.end()
+         );
+      }
+      //
+      // Unload any refs inside of this cell:
+      //
       auto& list = this->loaded_refs;
       for (auto& refr : list) {
          auto* stub   = refr.stub;
          auto* parent = stub->get_parent_form();
          if (parent != cell)
             continue;
-         //
-         if (auto& h = refr.vulkan_handles.light; !h.empty()) {
-            h.destroy();
-         }
-         if (refr.nif)
-            sr->remove_nif(*refr.nif);
+         this->_unload_refr(refr, false);
       }
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
             [cell](refr& item) {
-               return item.stub->get_parent_form() == cell;
+               return item.stub == nullptr;
             }
          ),
          list.end()
@@ -345,7 +366,7 @@ namespace dovahkit::subsystems {
             auto& scene = sr->scene;
             auto& camera = scene.camera;
             camera.pitch = coc_rot.x - glm::radians<float>(90);
-            camera.roll  = coc_rot.y;
+            camera.roll  = 0.0;
             camera.yaw   = coc_rot.z;
             scene.update_camera();
          } else {
@@ -387,6 +408,22 @@ namespace dovahkit::subsystems {
             sgs.fog_power = 1;
             sgs.fog_max   = 1;
          }
+      } else {
+         static_assert(!require_complete_implementation, "TODO: Pull lighting parameters from the appropriate Weather and time of day.");
+         //
+         auto& sgs = sr->scene.global_state;
+         sgs.ambient_light_color = { 0.1, 0.1, 0.1 };
+         sgs.sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 }); // vector from sun to world
+         sgs.sun_color = { 1, 1, 1 };
+         sgs.sun_space = glm::mat4(1);
+         //
+         sgs.fog_color_near = { 0, 0, 0 };
+         sgs.fog_plane_near = 0;
+         sgs.fog_color_far  = { 0, 0, 0 };
+         sgs.fog_plane_far  = 7000;
+         sgs.fog_power      = 1.0F;
+         sgs.fog_max        = 1.0F;
+         sgs.interior_clip_distance = 0.0F;
       }
    }
 
