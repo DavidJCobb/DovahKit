@@ -7,6 +7,12 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
+#include "Cell.h"
+
+namespace {
+   static constexpr float vertex_distance = dovah::loaded_forms::Cell::side_length / (dovah::loaded_forms::Landscape::vertices_per_side - 1);
+}
+
 namespace dovah::loaded_forms {
    /*static*/ void Landscape::quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y) {
       x = index % vertices_per_quad_side;
@@ -105,6 +111,36 @@ namespace dovah::loaded_forms {
          if (f > max)
             max = f;
       return max;
+   }
+
+   void Landscape::recalc_normals() {
+      this->recalc_normals_to(this->heightmap.normals.list());
+   }
+   void Landscape::recalc_normals_to(std::array<cobb::vector3<float>, total_vertex_count>& out) const {
+      using vector3 = cobb::vector3<float>;
+      //
+      auto _height_at = [this](int x, int y) -> vector3 {
+         return { x * vertex_distance, y * vertex_distance, this->heightmap.heights.item(x, y) };
+      };
+
+      for (auto& item : out)
+         item = { 0, 0, 0 };
+      for (int y = 0; y < vertices_per_side - 1; ++y) {
+         for (int x = 0; x < vertices_per_side - 1; ++x) {
+            vector3 a = _height_at(x,     y);
+            vector3 b = _height_at(x + 1, y);
+            vector3 c = _height_at(x,     y + 1);
+            vector3 d = _height_at(x + 1, y + 1);
+            //
+            auto normal = (b - a).cross(c - a);
+            out[(y + 0) * vertices_per_side + (x + 0)] += normal;
+            out[(y + 1) * vertices_per_side + (x + 0)] += normal;
+            out[(y + 0) * vertices_per_side + (x + 1)] += normal;
+            out[(y + 1) * vertices_per_side + (x + 1)] += normal;
+         }
+      }
+      for (auto& item : out)
+         item.normalize();
    }
 
    void Landscape::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {

@@ -29,72 +29,87 @@ namespace cobb {
       };
    }
 
-   template<typename T> class vector3 {
+   template<typename T = float> requires std::is_arithmetic_v<T>
+   class vector3 {
       public:
-         static_assert(std::is_arithmetic_v<T>, "cobb::vector3 must be templated on a numeric type.");
          static constexpr int axis_count = 3;
+
+         using value_type = T;
          
          union {
             struct {
-               T x;
-               T y;
-               T z;
+               value_type x;
+               value_type y;
+               value_type z;
             };
-            T components[axis_count] = { T(0), T(0), T(0) };
+            std::array<value_type, axis_count> components = { T(0), T(0), T(0) };
          };
 
          constexpr vector3() {}
-         constexpr vector3(T x, T y, T z) : x(x), y(y), z(z) {}
+         constexpr vector3(value_type x, value_type y, value_type z) : x(x), y(y), z(z) {}
+
+         // Constructor to allow narrowing conversions (e.g. double -> float) without manual casts
+         template<typename U, typename V, typename W> requires (std::is_arithmetic_v<U> && std::is_arithmetic_v<V> && std::is_arithmetic_v<W>)
+         constexpr vector3(U x, V y, W z) : x(x), y(y), z(z) {}
 
          template<typename U> requires std::is_arithmetic_v<U>
-         constexpr vector3(U x, U y, U z) : x(x), y(y), z(z) {}
-
-         template<typename U> explicit constexpr vector3(const std::array<U, axis_count>& a) {
-            static_assert(std::is_arithmetic_v<U>, "cobb::vector3 can only be constructed with an array if it's an array of a numeric type.");
+         explicit constexpr vector3(const std::array<U, axis_count>& a) {
             this->x = a[0];
             this->y = a[1];
             this->z = a[2];
          }
 
-         template<typename O> requires impl::vector3::is_vector_like<T, O>
+         template<typename O> requires impl::vector3::is_vector_like<value_type, O>
          constexpr vector3(const O& other) {
             this->x = other.x;
             this->y = other.y;
             this->z = other.z;
          }
 
-         template<typename U> constexpr operator std::array<U, axis_count>() const noexcept {
-            static_assert(std::is_arithmetic_v<U>, "cobb::vector3 can only be converted to an array of a numeric type.");
+         template<typename U> requires std::is_arithmetic_v<U>
+         constexpr operator std::array<U, axis_count>() const noexcept {
             return { this->x, this->y, this->z };
          }
-         [[nodiscard]] std::array<T, axis_count> to_array() const noexcept {
+         [[nodiscard]] std::array<value_type, axis_count> to_array() const noexcept {
             return { this->x, this->y, this->z };
+         }
+
+         template<typename O> requires impl::vector3::is_vector_like<value_type, O>
+         constexpr O to_struct() const noexcept {
+            O out;
+            out.x = this->x;
+            out.y = this->y;
+            out.z = this->z;
+            return out;
          }
          
          [[nodiscard]] vector3 cross(const vector3& other) const noexcept {
             vector3 result;
-            result.x = (float)y * (float)other.z - (float)z * (float)other.y;
-            result.y = (float)z * (float)other.x - (float)x * (float)other.z;
-            result.z = (float)x * (float)other.y - (float)y * (float)other.x;
+            result.x = y * other.z - z * other.y;
+            result.y = z * other.x - x * other.z;
+            result.z = x * other.y - y * other.x;
             return result;
          }
-         [[nodiscard]] T dot(const vector3& other) const noexcept {
+         [[nodiscard]] value_type dot(const vector3& other) const noexcept {
             return (this->x * other.x) + (this->y * other.y) + (this->z * other.z);
          }
-         [[nodiscard]] T length_sq() const noexcept {
-            float a = x * x;
-            float b = y * y;
-            float c = z * z;
+         [[nodiscard]] value_type length_sq() const noexcept {
+            value_type a = x * x;
+            value_type b = y * y;
+            value_type c = z * z;
             return a + b + c;
          }
-         [[nodiscard]] inline T length() const noexcept {
+         [[nodiscard]] inline value_type length() const noexcept {
             return sqrt(this->length_sq());
          }
          vector3& normalize() noexcept {
             *this /= this->length();
             return *this;
          }
-         [[nodiscard]] T square() const noexcept { // equivalent operation to taking the dot product of the vector with itself
+         [[nodiscard]] vector3 normalized() const noexcept {
+            return vector3(*this).normalize();
+         }
+         [[nodiscard]] value_type square() const noexcept { // equivalent operation to taking the dot product of the vector with itself
             return this->length_sq();
          }
          
@@ -142,14 +157,12 @@ namespace cobb {
                return *this;
             }
             template<typename U> requires std::is_arithmetic_v<U> vector3& operator*=(U other) noexcept {
-               static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator*= must be given a numeric argument.");
                x *= other;
                y *= other;
                z *= other;
                return *this;
             }
             template<typename U> requires std::is_arithmetic_v<U> vector3& operator/=(U other) noexcept {
-               static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator/= must be given a numeric argument.");
                x /= other;
                y /= other;
                z /= other;
@@ -169,13 +182,11 @@ namespace cobb {
                return result;
             }
             template<typename U> requires std::is_arithmetic_v<U> vector3 operator*(U other) const noexcept {
-               static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator* must be given a numeric argument.");
                vector3 result = *this;
                result *= other;
                return result;
             }
             template<typename U> requires std::is_arithmetic_v<U> vector3 operator/(U other) const noexcept {
-               static_assert(std::is_arithmetic_v<U>, "cobb::vector3::operator/ must be given a numeric argument.");
                vector3 result = *this;
                result /= other;
                return result;

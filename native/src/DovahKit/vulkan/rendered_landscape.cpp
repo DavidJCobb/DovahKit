@@ -50,6 +50,26 @@ namespace vulkanDK {
          }
       }
       //
+      // Normals:
+      //
+      {
+         std::array<cobb::vector3<float>, loaded_form::total_vertex_count> normals;
+         land.recalc_normals_to(normals);
+         for (size_t q = 0; q < 4; ++q) {
+            size_t offset_x = (q % 2) * centerline_index_src;
+            size_t offset_y = (q / 2) * centerline_index_src;
+            //
+            for (size_t y = 0; y < vertices_per_quad_side; ++y) {
+               for (size_t x = 0; x < vertices_per_quad_side; ++x) {
+                  size_t src_i = ((y + offset_y) * loaded_form::vertices_per_side) + (x + offset_x);
+                  size_t dst_i = (q * vertices_per_quad) + (y * vertices_per_quad_side) + x;
+                  //
+                  vl[dst_i].normal = normals[src_i].to_struct<glm::vec3>();
+               }
+            }
+         }
+      }
+      //
       // Get alpha-blending data:
       //
       for (size_t q = 0; q < 4; ++q) {

@@ -1695,6 +1695,7 @@
     <None Include="shaders\rendered_landscape\color.vert" />
     <None Include="shaders\rendered_landscape\color.vert.spv" />
     <None Include="shaders\rendered_landscape\functions\calc_local_vertex_position.glsl" />
+    <None Include="shaders\rendered_landscape\vertex-inputs.glsl" />
     <None Include="shaders\rendered_mesh\bslp\color-main.frag.spv" />
     <None Include="shaders\rendered_mesh\bslp\color-oit.frag.spv" />
     <None Include="shaders\rendered_mesh\bslp\color.descriptors.glsl" />

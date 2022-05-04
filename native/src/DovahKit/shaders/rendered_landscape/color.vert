@@ -9,9 +9,7 @@
 #include "../includes/descriptor_sets/all_textures.glsl"
 #include "../includes/descriptor_sets/scene_state.glsl"
 
-layout(location = 0) in vec3  in_color;
-layout(location = 1) in float in_height;
-layout(location = 2) in float blends[6];
+#include "vertex-inputs.glsl"
 
 #define SET_SCENE_STATE    0
 #define SET_ALL_TEXTURES   1
@@ -44,5 +42,5 @@ void main() {
    //
    for(int i = 0; i < 6; ++i)
       out_blends[i] = blends[i];
-   out_uv = vec2(land_x, land_y);
+   out_uv = vec2(out_world_pos / 128);
 }

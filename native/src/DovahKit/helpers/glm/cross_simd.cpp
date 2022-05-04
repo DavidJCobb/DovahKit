@@ -56,7 +56,7 @@ namespace cobb::glm {
       // Finally, let's clear the W-component (since there's no such things as a 
       // 4D cross product; we only use vec4s for SIMD) and return the whole vector.
       //
-      o_simd = _mm_or_ps(o_simd, _mm_set_ps(1, 1, 1, 0));
+      o_simd = _mm_and_ps(o_simd, _mm_set_ps(1, 1, 1, 0));
       return o_simd;
    }
 }
