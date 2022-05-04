@@ -242,6 +242,7 @@ namespace vulkanDK {
          void remove_last_light();
          void set_animation_paused(size_t mesh, bool paused);
          //
+         void surface_position_to_world_ray(int viewport_x, int viewport_y, glm::vec3& eye_position, glm::vec3& eye_direction) const;
          rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
 
          rendered_bounds_handle add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);

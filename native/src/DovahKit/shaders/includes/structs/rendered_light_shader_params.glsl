@@ -1,6 +1,6 @@
 
-#ifndef included_rendered_light_shader_params // include guard
-#define included_rendered_light_shader_params
+#ifndef INCLUDE_GUARD_rendered_light_shader_params // include guard
+#define INCLUDE_GUARD_rendered_light_shader_params
 
 struct rendered_light_shader_params {
    mat4  transform;

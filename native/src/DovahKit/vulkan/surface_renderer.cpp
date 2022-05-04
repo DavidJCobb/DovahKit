@@ -3945,33 +3945,34 @@ namespace vulkanDK {
       }
    }
    //
+   void surface_renderer::surface_position_to_world_ray(int x, int y, glm::vec3& eye_position, glm::vec3& eye_direction) const {
+      auto viewport = glm::vec4( 0, 0, this->surface_extent.width, this->surface_extent.height );
+      //
+      eye_position = glm::unProjectZO(
+         glm::vec3{ x, y, config::use_inverted_depth ? 1.0 : 0.0 },
+         this->scene.global_state.view,
+         this->scene.global_state.proj,
+         viewport
+      );
+      auto eye_endpoint = glm::unProjectZO(
+         glm::vec3{ x, y, config::use_inverted_depth ? 0.5 : 1.0 }, // don't use 0.0 for inverted far, because when we invert depth, we also push the far plane to infinity
+         this->scene.global_state.view,
+         this->scene.global_state.proj,
+         viewport
+      );
+      eye_direction = glm::normalize(eye_endpoint - eye_position);
+   }
    rendered_mesh_handle surface_renderer::rendered_mesh_at(int x, int y) {
       glm::vec3 eye_position;
-      glm::vec3 eye_endpoint;
       glm::vec3 eye_direction;
-      {
-         auto viewport = glm::vec4( 0, 0, this->surface_extent.width, this->surface_extent.height );
-         //
-         eye_position = glm::unProjectZO(
-            glm::vec3{ x, y, config::use_inverted_depth ? 1.0 : 0.0 },
-            this->scene.global_state.view,
-            this->scene.global_state.proj,
-            viewport
-         );
-         eye_endpoint = glm::unProjectZO(
-            glm::vec3{ x, y, config::use_inverted_depth ? 0.5 : 1.0 }, // don't use 0.0 for inverted far, because when we invert depth, we also push the far plane to infinity
-            this->scene.global_state.view,
-            this->scene.global_state.proj,
-            viewport
-         );
-         eye_direction = glm::normalize(eye_endpoint - eye_position);
-      }
+      this->surface_position_to_world_ray(x, y, eye_position, eye_direction);
       //
       size_t nearest  = -1;
       float  distance = std::numeric_limits<float>::max();
-      auto&  list     = this->scene.meshes;
+      //
+      const auto& list = this->scene.meshes;
       for (size_t i = 0; i < list.size(); ++i) {
-         auto& mesh = list[i];
+         const auto& mesh = list[i];
          //
          float hit_distance;
          if (!mesh.ray_intersects(eye_position, eye_direction, hit_distance))
@@ -3983,6 +3984,24 @@ namespace vulkanDK {
       }
       if (nearest == -1)
          return {};
+      //
+      // Double-check that objects of other types (e.g. landscapes) aren't in front of the 
+      // hit mesh.
+      //
+      for (const auto& item : this->scene.landscapes) {
+         float hit_distance;
+         if (!item.ray_intersects(eye_position, eye_direction, hit_distance))
+            continue;
+         if (hit_distance < distance)
+            //
+            // There's a landscape in front of the nearest rendered mesh. Return a fail 
+            // result.
+            //
+            return {};
+      }
+      //
+      // If we reach this point, then there's nothing else obstructing the hit mesh.
+      //
       return rendered_mesh_handle(*this, nearest);
    }
 

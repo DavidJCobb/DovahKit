@@ -30,32 +30,17 @@ layout(location = 0) out VS_OUT {
    flat int out_landscape_index;
 };
 
-#define VERTS_PER_SIDE   17
-#define TOTAL_VERTS      (VERTS_PER_SIDE * VERTS_PER_SIDE)
-#define QUAD_SIDE_OFFSET 16
-
-#define CELL_SIDE_LENGTH 4096
-#define QUAD_SIDE_LENGTH (CELL_SIDE_LENGTH / 2)
-#define VERT_DISTANCE (QUAD_SIDE_LENGTH / (VERTS_PER_SIDE - 1))
+#include "functions/calc_local_vertex_position.glsl"
 
 void main() {
    out_quad = gl_InstanceIndex % 4;
    out_landscape_index = gl_InstanceIndex / 4;
 
-   int vert_i = gl_VertexIndex % TOTAL_VERTS; // allows for sharing a vertex buffer and shifting the base vertex offset
-   int land_x = vert_i % VERTS_PER_SIDE + (QUAD_SIDE_OFFSET * (out_quad % 2));
-   int land_y = vert_i / VERTS_PER_SIDE + (QUAD_SIDE_OFFSET * (out_quad / 2));
-   //
-   gl_Position.x = land_x * VERT_DISTANCE;
-   gl_Position.y = land_y * VERT_DISTANCE;
-   gl_Position.z = in_height;
-   gl_Position.w = 1;
+   out_world_pos = calc_local_vertex_position(out_quad, gl_VertexIndex, in_height) + landscapes[out_landscape_index].position;
+   gl_Position   = vec4(out_world_pos, 1);
+   gl_Position   = scene.proj * scene.view * gl_Position;
    //
    out_color = vec4(in_color, 1);
-   //
-   gl_Position += vec4(landscapes[out_landscape_index].position, 0);
-   out_world_pos = vec3(gl_Position);
-   gl_Position = scene.proj * scene.view * gl_Position;
    //
    for(int i = 0; i < 6; ++i)
       out_blends[i] = blends[i];

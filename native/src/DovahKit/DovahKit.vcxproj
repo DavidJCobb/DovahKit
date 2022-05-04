@@ -1650,8 +1650,6 @@
     <None Include="shaders\compute\culling\frustum.comp.spv" />
     <None Include="shaders\compute\culling\shadows-caster.comp" />
     <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
-    <None Include="shaders\cores\standard_shader.frag" />
-    <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
@@ -1696,6 +1694,7 @@
     <None Include="shaders\rendered_landscape\color.frag.spv" />
     <None Include="shaders\rendered_landscape\color.vert" />
     <None Include="shaders\rendered_landscape\color.vert.spv" />
+    <None Include="shaders\rendered_landscape\functions\calc_local_vertex_position.glsl" />
     <None Include="shaders\rendered_mesh\bslp\color-main.frag.spv" />
     <None Include="shaders\rendered_mesh\bslp\color-oit.frag.spv" />
     <None Include="shaders\rendered_mesh\bslp\color.descriptors.glsl" />

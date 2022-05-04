@@ -34,6 +34,9 @@ namespace vulkanDK {
          static constexpr auto indices_per_quad    = std::tuple_size_v<decltype(quad_vertex_indices)>;
          using quad_vertex_index_type = decltype(quad_vertex_indices)::value_type;
 
+         static constexpr size_t cell_side_length = 4096;
+         static constexpr size_t vertex_distance  = (cell_side_length / 32);
+
       protected:
          void _on_shader_parameter_change();
       public:
@@ -75,7 +78,12 @@ namespace vulkanDK {
          void mark_for_delete();
          void reset();
 
+         glm::vec3 local_vertex_position(int quad, size_t quad_vertex_index) const;
+         glm::vec3 local_vertex_position(size_t mesh_vertex_index) const;
+         glm::vec3 world_vertex_position(int quad, size_t quad_vertex_index) const;
+         glm::vec3 world_vertex_position(size_t mesh_vertex_index) const;
+
          // World-relative raycasts (uses the mesh's transform):
-         bool ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const;
+         bool ray_intersects(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
    };
 }

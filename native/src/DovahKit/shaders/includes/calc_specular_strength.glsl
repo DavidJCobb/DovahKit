@@ -1,6 +1,6 @@
 
-#ifndef included_calc_specular_strength // include guard
-#define included_calc_specular_strength
+#ifndef INCLUDE_GUARD_calc_specular_strength // include guard
+#define INCLUDE_GUARD_calc_specular_strength
 
 #define BLINN_PHONG_MODE_PHONG 0
 #define BLINN_PHONG_MODE_BLINN 1

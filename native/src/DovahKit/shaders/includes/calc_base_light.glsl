@@ -1,6 +1,6 @@
 
-#ifndef included_calc_base_light // include guard
-#define included_calc_base_light
+#ifndef INCLUDE_GUARD_calc_base_light // include guard
+#define INCLUDE_GUARD_calc_base_light
 
 #include "calc_specular_strength.glsl"
 

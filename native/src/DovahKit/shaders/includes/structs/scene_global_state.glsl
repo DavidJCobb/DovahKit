@@ -1,3 +1,7 @@
+
+#ifndef INCLUDE_GUARD_scene_global_state
+#define INCLUDE_GUARD_scene_global_state
+
 #extension GL_EXT_scalar_block_layout : require
 
 struct scene_global_state {
@@ -22,3 +26,5 @@ struct scene_global_state {
    int default_land_diffuse_texture;
    int default_land_normals_texture;
 };
+
+#endif
