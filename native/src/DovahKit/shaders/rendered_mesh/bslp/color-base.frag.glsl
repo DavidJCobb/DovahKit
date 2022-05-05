@@ -103,7 +103,6 @@ vec4 calculate_color() {
          sun_shadow_map
       );
    }
-// CODE FROM HERE DOWN ISN'T CAUSING THE CRASH
    //
    // Point lights
    //

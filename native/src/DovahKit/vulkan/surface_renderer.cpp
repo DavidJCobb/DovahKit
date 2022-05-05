@@ -890,10 +890,10 @@ namespace vulkanDK {
                //
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
-               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-               .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-               .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
-               .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+               .srcStageMask    = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcAccessMask   = 0,
+               .dstAccessMask   = (VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             },
             VkSubpassDependency{
@@ -917,8 +917,8 @@ namespace vulkanDK {
                .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // the initial layout is the EXPECTED state, not something that is done for you. YOU have to get it there before starting.
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // the final layout IS done for you.
             },
             VkAttachmentDescription{ // OIT reveal
                .format         = format_for_oit_reveal,
@@ -995,23 +995,31 @@ namespace vulkanDK {
          };
          rp->subpass_dependencies = {
             VkSubpassDependency{
+               //
+               // Wait for the initial layout transition to complete.
+               //
                .srcSubpass      = VK_SUBPASS_EXTERNAL,
                .dstSubpass      = 0,
-               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcStageMask    = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                .srcAccessMask   = 0, // 0 == all operations? documentation/spec are unclear
                .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             },
             VkSubpassDependency{
+               //
+               // Wait for the layout transition from subpass 0 to 1 to complete? Or wait 
+               // for writes from the previous subpass to complete before allowing reads?
+               //
                .srcSubpass      = 0,
                .dstSubpass      = 1,
                .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                .dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-               .dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
-               .dependencyFlags = 0,
+               .dstAccessMask   = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+               .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
             },
+            /*//
             VkSubpassDependency{ // dependency to transition the images back to optimal
                .srcSubpass      = 1,
                .dstSubpass      = VK_SUBPASS_EXTERNAL,
@@ -1021,6 +1029,7 @@ namespace vulkanDK {
                .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                .dependencyFlags = 0,
             },
+            //*/
          };
       }
       {
@@ -1263,11 +1272,6 @@ namespace vulkanDK {
          this->set_debug_object_name(vert->handle, "Shader Module (Rendered Mesh Color Main: rendered_mesh/bslp/color.vert.spv)");
          this->set_debug_object_name(frag->handle, "Shader Module (Rendered Mesh Color Main: rendered_mesh/bslp/color-main.frag.spv)");
       }
-      //
-      struct _specializations {
-         int32_t max_lights = config::max_rendered_lights;
-      };
-      _specializations spec;
       //
       options.stages = {
          {
@@ -1745,6 +1749,7 @@ namespace vulkanDK {
          this->descriptor_set_layouts.all_textures.handle,
          this->descriptor_set_layouts.all_landscapes.handle,
          this->descriptor_set_layouts.all_lights.handle,
+         this->descriptor_set_layouts.shadow_maps.handle,
       });
       //
       auto& options = s->options;
@@ -1763,6 +1768,7 @@ namespace vulkanDK {
             .module = frag,
             .entry_point_name = "main",
             .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .specialization_info = pipeline_stage_specialization_info((int32_t)config::max_rendered_lights),
          },
          {
             .module = vert,
@@ -2548,6 +2554,7 @@ namespace vulkanDK {
             rp->setup();
       //
       this->set_debug_object_name(this->render_passes_by_name.main_shadow->handle, "Render Pass: Sun Shadows");
+      this->set_debug_object_name(this->render_passes_by_name.main_shadow_placed->handle, "Render Pass: Caster Shadows");
       this->set_debug_object_name(this->render_passes_by_name.main->handle, "Render Pass: Main");
       if (auto* rp = this->render_passes_by_name.main_oit) {
          this->set_debug_object_name(rp->handle, "Render Pass: Main OIT");

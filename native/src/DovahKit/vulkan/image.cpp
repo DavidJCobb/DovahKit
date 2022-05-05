@@ -100,7 +100,14 @@ namespace vulkanDK {
       if (out.is_cubemap)
          out.layer_count *= 6;
       //
-      out.mipmap_count = header.mipmap_count + 1;
+      out.mipmap_count = header.mipmap_count + 1; // TODO: Are we sure DDS mip level counts start at 0 for files that use mipmaps?
+      out.mipmap_count = std::min(
+         out.mipmap_count,
+         std::min(
+            std::bit_width(header.width),
+            std::bit_width(header.height)
+         )
+      );
       //
       return out;
    }

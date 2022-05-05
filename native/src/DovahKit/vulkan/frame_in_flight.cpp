@@ -908,6 +908,7 @@ namespace vulkanDK {
                   this->descriptor_sets.all_textures,
                   this->descriptor_sets.all_landscapes,
                   this->descriptor_sets.all_lights,
+                  this->descriptor_sets.shadow_maps,
                }
             );
             //

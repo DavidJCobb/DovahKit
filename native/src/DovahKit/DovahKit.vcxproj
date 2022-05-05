@@ -1651,6 +1651,7 @@
     <None Include="shaders\compute\culling\shadows-caster.comp" />
     <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
+    <None Include="shaders\includes\calc_all_light_and_shadow.glsl" />
     <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
@@ -1666,6 +1667,7 @@
     <None Include="shaders\includes\descriptor_sets\shadow_maps.glsl" />
     <None Include="shaders\includes\standard_vertex_inputs.glsl" />
     <None Include="shaders\includes\structs\computed_light.glsl" />
+    <None Include="shaders\includes\structs\light_and_shadow_inputs.glsl" />
     <None Include="shaders\includes\structs\rendered_bounds_shader_params.glsl" />
     <None Include="shaders\includes\structs\rendered_landscape_shader_params.glsl" />
     <None Include="shaders\includes\structs\rendered_light_shader_params.glsl" />
@@ -1692,6 +1694,7 @@
     <None Include="shaders\rendered_bounds\pivot\color.vert.spv" />
     <None Include="shaders\rendered_landscape\color.frag" />
     <None Include="shaders\rendered_landscape\color.frag.spv" />
+    <None Include="shaders\rendered_landscape\color.fragment-input.glsl" />
     <None Include="shaders\rendered_landscape\color.vert" />
     <None Include="shaders\rendered_landscape\color.vert.spv" />
     <None Include="shaders\rendered_landscape\functions\calc_local_vertex_position.glsl" />
