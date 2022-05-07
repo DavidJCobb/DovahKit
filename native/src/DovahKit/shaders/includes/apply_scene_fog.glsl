@@ -1,4 +1,7 @@
 
+#ifndef INCLUDE_GUARD_apply_scene_fog
+#define INCLUDE_GUARD_apply_scene_fog
+
 #if !defined(SET_SCENE_STATE)
    #error You included this file too early. Place it after the definition for the its index macro.
 #endif
@@ -12,3 +15,5 @@ void apply_scene_fog(inout vec4 color, float camera_distance) {
    vec3 fog_color = (scene.fog_color_far * (density)) + (scene.fog_color_near * (1.0F - density));
    color.rgb = mix(color.rgb, fog_color, density);
 }
+
+#endif

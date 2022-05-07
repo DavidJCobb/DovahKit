@@ -1,5 +1,5 @@
 
-#ifndef INCLUDE_GUARD_rendered_light_shader_params // include guard
+#ifndef INCLUDE_GUARD_rendered_light_shader_params
 #define INCLUDE_GUARD_rendered_light_shader_params
 
 struct rendered_light_shader_params {

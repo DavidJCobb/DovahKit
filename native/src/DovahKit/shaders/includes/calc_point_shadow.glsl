@@ -1,4 +1,7 @@
 
+#ifndef INCLUDE_GUARD_calc_point_shadow
+#define INCLUDE_GUARD_calc_point_shadow
+
 #define USE_POINT_SHADOW_DEPTH_BIAS 1
 #define USE_INVERTED_POINT_SHADOW_MAP 0
 
@@ -30,3 +33,5 @@ float calc_point_shadow(
    
    return shadow;
 }
+
+#endif

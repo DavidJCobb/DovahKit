@@ -1,9 +1,11 @@
 
+#ifndef INCLUDE_GUARD_calc_spot_light
+#define INCLUDE_GUARD_calc_spot_light
+
 #include "calc_base_light.glsl"
 #include "structs/computed_light.glsl"
 #include "structs/rendered_light_shader_params.glsl"
 
-//
 computed_light calc_spot_light(
    rendered_light_shader_params light,
    mat3  tangent_space,
@@ -45,3 +47,5 @@ computed_light calc_spot_light(
    );
    return result;
 }
+
+#endif

@@ -1651,6 +1651,7 @@
     <None Include="shaders\compute\culling\shadows-caster.comp" />
     <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
+    <None Include="shaders\includes\apply_scene_fog.glsl" />
     <None Include="shaders\includes\calc_all_light_and_shadow.glsl" />
     <None Include="shaders\includes\calc_base_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />

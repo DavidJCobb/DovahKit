@@ -17,11 +17,6 @@
 
 #include "../../includes/alpha_testing_conditional_discard.glsl"
 #include "../../includes/structs/computed_light.glsl"
-#include "../../includes/calc_directional_shadow.glsl"
-#include "../../includes/calc_directional_light.glsl"
-#include "../../includes/calc_point_light.glsl"
-#include "../../includes/calc_point_shadow.glsl"
-#include "../../includes/calc_spot_light.glsl"
 
 // configuration defines:
 // USE_ALPHA_OIT == 0 or 1
@@ -43,8 +38,12 @@ layout(location = 0) in VS_OUT {
    fragment_input fs_in;
 };
 
+#include "../../includes/apply_scene_fog.glsl"
+#include "../../includes/calc_all_light_and_shadow.glsl"
+#include "../../includes/expand_light_and_shadow_inputs.glsl"
+
 vec4 calculate_color() {
-   float camera_distance = distance(fs_in.pos_world, scene.camera_pos);
+   float camera_distance = distance(fs_in.lighting_data.pos_world, scene.camera_pos);
    if (scene.interior_clip_distance > 0) {
       if (camera_distance > scene.interior_clip_distance)
          discard;
@@ -79,176 +78,19 @@ vec4 calculate_color() {
       normal = normalize(normal * 2.0 - 1.0);
    }
    //
-   // Apply all lights in the scene:
-   //
-   vec3 tangent_view_dir = normalize(fs_in.tangent_view_pos - fs_in.tangent_vert_pos); // direction from camera position to fragment position
-   //
-   computed_light light_data;
-   if (pushed.receive_shadows == 0) {
-      light_data = calc_directional_light(
-         fs_in.tangent_sun_dir,
-         scene.sun_color,
-         normal,
-         tangent_view_dir,
-         current_object.specular_exponent
-      );
-   } else {
-      light_data = calc_directional_light_and_shadow(
-         fs_in.tangent_sun_dir,
-         fs_in.sun_shadow_vert_pos,
-         scene.sun_color,
-         normal,
-         tangent_view_dir,
+   {
+      computed_light light_data = calc_all_light_and_shadow(
+         expand_light_and_shadow_inputs(fs_in.lighting_data),
+         pushed.receive_shadows,
+         current_object.specular_color,
          current_object.specular_exponent,
-         sun_shadow_map
+         current_object.specular_strength,
+         normal
       );
+      color.rgb *= scene.ambient_light_color + light_data.diffuse + light_data.specular;
    }
    //
-   // Point lights
-   //
-   {
-      #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
-      bool any_casters = false;
-      for(int i = 0; i < SHADOW_CASTER_COUNT; ++i) {
-         if (scene.shadow_caster_index[i] < 0)
-            continue;
-         if (fs_in.light_distance_ratio[i] > 1)
-            continue;
-         any_casters = true;
-         break;
-      }
-      if (any_casters) {
-      #endif
-         for(int i = 0; i < MAX_LIGHTS; ++i) {
-            int light_type = scene_lights[i].type;
-            //
-            computed_light current;
-            if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
-               current = calc_spot_light(
-                  scene_lights[i],
-                  fs_in.tangent_space,
-                  normal,
-                  fs_in.tangent_vert_pos,
-                  tangent_view_dir,
-                  current_object.specular_exponent
-               );
-            } else {
-               current = calc_point_light(
-                  scene_lights[i],
-                  fs_in.tangent_space,
-                  normal,
-                  fs_in.tangent_vert_pos,
-                  tangent_view_dir,
-                  current_object.specular_exponent
-               );
-            }
-            //
-            float shadow = 0.0;
-            if (rendered_light_can_cast_shadows(scene_lights[i])) { // if this light is allowed to cast shadows
-               for(int j = 0; j < SHADOW_CASTER_COUNT; ++j) {
-                  if (scene.shadow_caster_index[j] == i) {
-                     {
-                        vec3  light_direction = normalize(fs_in.light_space_pos[j]);
-                        float yaw_offset      = atan(light_direction.y, light_direction.x);
-                        int   light_type      = scene_lights[i].type;
-                        //
-                        if (light_type == RENDERED_LIGHT_TYPE_OMNI_SHADOW) {
-                           //
-                           // Omni-shadow lights cast light and shadows in all directions. However, due to Bethesda's 
-                           // approach to rendering them, there is a seam in the shadow no wider than one degree. The 
-                           // seam follows the light's local YZ plane, i.e. it is a ring that reaches forward, back, 
-                           // up, and down (all light-relative directions).
-                           //
-                           #if EMULATE_OMNI_LIGHT_SHADOW_SEAM
-                              //
-                              // Bethesda doesn't use cubemap shadows; to reduce VRAM usage, they use two 179-degree-FOV 
-                              // shadow maps stitched together. (GPUs use rectilinear projection; 180-degree FOVs and 
-                              // above are mathematically impossible.) This results in a seam -- a gap where there are 
-                              // no shadows.
-                              //
-                              if (abs(abs(yaw_offset) - radians(90)) < radians(1)) { // within one degree of (+/-)90deg
-                                 break;
-                              }
-                           #endif
-                        } else if (light_type == RENDERED_LIGHT_TYPE_HEMI_SHADOW) {
-                           //
-                           // Hemi lights cast light in all directions, but cast shadows only over a 179-degree range 
-                           // on the local +X side, spanning from local -Y to local +Y.
-                           //
-                           if (abs(yaw_offset) > radians(89)) {
-                              break;
-                           }
-                        } else if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
-                           //
-                           // TODO
-                           //
-                        }
-                     }
-                     //
-                     // Compute shadows:
-                     //
-                     shadow = calc_point_shadow(
-                        normal,
-                        fs_in.tangent_light_dir[j],
-                        fs_in.light_distance_ratio[j],
-                        fs_in.vector_to_light[j],
-                        light_shadow_maps[j]
-                     );
-                     break;
-                  }
-               }
-            }
-            shadow = 1.0 - shadow;
-            //
-            light_data.diffuse  += current.diffuse  * shadow;
-            light_data.specular += current.specular * shadow;
-         }
-      #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS
-      } else {
-         for(int i = 0; i < MAX_LIGHTS; ++i) {
-            int light_type = scene_lights[i].type;
-            //
-            computed_light current;
-            if (light_type == RENDERED_LIGHT_TYPE_SPOT_SHADOW) {
-               current = calc_spot_light(
-                  scene_lights[i],
-                  fs_in.tangent_space,
-                  normal,
-                  fs_in.tangent_vert_pos,
-                  tangent_view_dir,
-                  current_object.specular_exponent
-               );
-            } else {
-               current = calc_point_light(
-                  scene_lights[i],
-                  fs_in.tangent_space,
-                  normal,
-                  fs_in.tangent_vert_pos,
-                  tangent_view_dir,
-                  current_object.specular_exponent
-               );
-            }
-      }
-      #endif
-   }
-   //
-   // Lights and shadows done.
-   //
-   light_data.specular *= current_object.specular_strength * current_object.specular_color;
-   //
-   color.rgb *= scene.ambient_light_color + light_data.diffuse + light_data.specular;
-   //
-   // Fog:
-   //
-   {
-      float range   = scene.fog_plane_far - scene.fog_plane_near;
-      float coord   = clamp((camera_distance - scene.fog_plane_near) / range, 0.0F, 1.0F);
-      float density = pow(coord, max(0.0F, scene.fog_power));
-      density = min(min(1.0F, scene.fog_max), density);
-      //
-      vec3 fog_color = (scene.fog_color_far * (density)) + (scene.fog_color_near * (1.0F - density));
-      color.rgb = mix(color.rgb, fog_color, density);
-   }
+   apply_scene_fog(color, camera_distance);
    //
    return color;
 }

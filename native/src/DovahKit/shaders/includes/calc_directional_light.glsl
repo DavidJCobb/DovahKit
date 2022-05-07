@@ -1,4 +1,7 @@
 
+#ifndef INCLUDE_GUARD_calc_directional_light
+#define INCLUDE_GUARD_calc_directional_light
+
 #include "calc_directional_shadow.glsl"
 #include "calc_specular_strength.glsl"
 #include "structs/computed_light.glsl"
@@ -43,3 +46,5 @@ computed_light calc_directional_light_and_shadow(
    result.specular = str_spec * light_color;
    return result;
 }
+
+#endif

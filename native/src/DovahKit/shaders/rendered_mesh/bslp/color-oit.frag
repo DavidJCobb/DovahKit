@@ -8,7 +8,7 @@ layout(location = 0) out vec4  out_accumulator;
 layout(location = 1) out float out_reveal;
 
 float compute_oit_weight(vec4 color) {
-   float camera_distance = distance(fs_in.pos_world, scene.camera_pos);
+   float camera_distance = distance(fs_in.lighting_data.pos_world, scene.camera_pos);
    //
    // scale the camera-relative depth to range [0.01, 500]
    //

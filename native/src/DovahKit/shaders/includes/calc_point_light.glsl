@@ -1,4 +1,7 @@
 
+#ifndef INCLUDE_GUARD_calc_point_light
+#define INCLUDE_GUARD_calc_point_light
+
 #include "calc_base_light.glsl"
 #include "structs/computed_light.glsl"
 #include "structs/rendered_light_shader_params.glsl"
@@ -26,3 +29,5 @@ computed_light calc_point_light(
       attenuate
    );
 }
+
+#endif

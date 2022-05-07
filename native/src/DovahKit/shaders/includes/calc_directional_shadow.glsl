@@ -1,5 +1,5 @@
 
-#ifndef INCLUDE_GUARD_calc_directional_shadow // include guard
+#ifndef INCLUDE_GUARD_calc_directional_shadow
 #define INCLUDE_GUARD_calc_directional_shadow
 
 #define USE_SHADOW_DEPTH_BIAS 1

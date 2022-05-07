@@ -571,7 +571,6 @@ namespace vulkanDK {
          create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
          //
          if (this->device_info->has_extension("VK_EXT_debug_marker")) {
-            create_ext.push_back("VK_EXT_debug_report");
             create_ext.push_back("VK_EXT_debug_marker");
          }
          if constexpr (enable_shader_debug_printf) {
@@ -2747,7 +2746,7 @@ namespace vulkanDK {
          .compareOp        = VK_COMPARE_OP_LESS,
          .minLod           = 0.0,
          .maxLod           = 1.0,
-         .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+         .borderColor      = config::sun_shadow_invert_depth ? VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE : VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK,
          .unnormalizedCoordinates = VK_FALSE,
       };
       if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
@@ -2781,7 +2780,7 @@ namespace vulkanDK {
             .compareOp        = VK_COMPARE_OP_NEVER,
             .minLod           = 0.0,
             .maxLod           = 1.0,
-            .borderColor      = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+            .borderColor      = config::sun_shadow_invert_depth ? VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK : VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
             .unnormalizedCoordinates = VK_FALSE,
          };
          if (auto result = vkCreateSampler(this->logical_device, &sampler_info, nullptr, &sampler); result != VK_SUCCESS) {
