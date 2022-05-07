@@ -91,6 +91,7 @@ namespace dovahkit::subsystems {
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);
          void _load_cell(dovah::form_stub*, bool move_camera_to);
 
+         void _on_renderer_lost();
          void _update_default_land_textures();
          
       public:

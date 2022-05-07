@@ -32,8 +32,8 @@ DECLARE_SHADOW_MAPS_PARAMS
 layout(location = 0) in VS_OUT {
    fragment_input fs_in;
    //
-   // Can't use storage/interpolation qualifiers on struct members, because a 
-   // struct would never appear as part of shader input/output... >_>
+   // Can't use storage/interpolation qualifiers on struct members, so these've gotta 
+   // hang out:
    //
    flat int fs_in_quad;
    flat int fs_in_landscape_index;
@@ -41,7 +41,9 @@ layout(location = 0) in VS_OUT {
 
 layout(location = 0) out vec4 out_color;
 
+#include "../includes/apply_scene_fog.glsl"
 #include "../includes/calc_all_light_and_shadow.glsl"
+#include "../includes/expand_light_and_shadow_inputs.glsl"
 
 vec4 sample_diffuse(int texture_index) { // returns RGBA
    if (texture_index < 0) {
@@ -115,13 +117,20 @@ void main() {
    // Lighting:
    //
    tex_normal = normalize(tex_normal * 2.0 - 1.0);
-   computed_light light_data = calc_all_light_and_shadow(
-      fs_in.light_inputs,
-      0,             // receive_shadows
-      vec3(1, 1, 1), // specular_color
-      1.0,           // specular_exponent // TODO: load specular exponent from land textures?
-      0.0,           // specular_strength
-      tex_normal
+   {
+      computed_light light_data = calc_all_light_and_shadow(
+         expand_light_and_shadow_inputs(fs_in.lighting_data),
+         1,             // receive_shadows
+         vec3(1, 1, 1), // specular_color
+         1.0,           // specular_exponent // TODO: load specular exponent from land textures?
+         0.0,           // specular_strength
+         tex_normal
+      );
+      out_color.rgb *= scene.ambient_light_color + light_data.diffuse + light_data.specular;
+   }
+   //
+   apply_scene_fog(
+      out_color,
+      distance(fs_in.lighting_data.pos_world, scene.camera_pos)
    );
-   out_color.rgb *= scene.ambient_light_color + light_data.diffuse + light_data.specular;
 }

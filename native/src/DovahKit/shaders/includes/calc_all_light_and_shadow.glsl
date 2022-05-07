@@ -8,7 +8,7 @@
 //
 //  - Define a value called MAX_LIGHTS somewhere, ideally as a specialization constant
 //
-//  - Define a value called SHADOW_CASTER_COUNT somewhere, ideally as a specialization constant
+//  - Define a value called SHADOW_CASTER_COUNT somewhere
 //
 //  - Include and declare the "scene state" and "shadow maps" descriptor sets
 //

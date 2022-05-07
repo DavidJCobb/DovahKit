@@ -1665,6 +1665,8 @@
     <None Include="shaders\includes\descriptor_sets\scene_state.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_caster_map_render.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_maps.glsl" />
+    <None Include="shaders\includes\expand_light_and_shadow_inputs.glsl" />
+    <None Include="shaders\includes\prep_all_light_and_shadow.glsl" />
     <None Include="shaders\includes\standard_vertex_inputs.glsl" />
     <None Include="shaders\includes\structs\computed_light.glsl" />
     <None Include="shaders\includes\structs\light_and_shadow_inputs.glsl" />

@@ -83,6 +83,8 @@ namespace {
 
    static constexpr auto desired_swap_chain_presentation_mode  = VK_PRESENT_MODE_MAILBOX_KHR;
    static constexpr bool rebuild_swap_chain_asap_if_suboptimal = false;
+
+   static constexpr bool enable_shader_debug_printf = false;
 }
 
 #include "overlays/fps.h"
@@ -569,10 +571,20 @@ namespace vulkanDK {
          create_info.ppEnabledLayerNames = config::desired_validation_layers.data();
          //
          if (this->device_info->has_extension("VK_EXT_debug_marker")) {
+            create_ext.push_back("VK_EXT_debug_report");
             create_ext.push_back("VK_EXT_debug_marker");
-            create_info.enabledExtensionCount   = (uint32_t)create_ext.size();
-            create_info.ppEnabledExtensionNames = create_ext.data();
          }
+         if constexpr (enable_shader_debug_printf) {
+            if (this->device_info->has_extension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME)) {
+               create_ext.push_back(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
+            }
+         }
+         //
+         // The extension list may have changed size and therefore address as a result 
+         // of further additions, so repoint the create info to it:
+         //
+         create_info.enabledExtensionCount   = (uint32_t)create_ext.size();
+         create_info.ppEnabledExtensionNames = create_ext.data();
       } else {
          create_info.enabledLayerCount = 0;
       }
@@ -3016,9 +3028,7 @@ namespace vulkanDK {
          return;
       }
       //
-      if (auto result = vkDeviceWaitIdle(this->logical_device); result != VK_SUCCESS) {
-         throw result_exception(result, "[surface_renderer::teardown] Device-wait failed.");
-      }
+      vkDeviceWaitIdle(this->logical_device); // Do not handle errors here; there is no other recourse but attempting a teardown anyway.
       //
       // Ensure all child objects belonging to the instance are destroyed.
       //

@@ -58,6 +58,9 @@ namespace vulkanDK {
       this->support.non_solid_polygon_fill_modes = features.features.fillModeNonSolid == VK_TRUE;
       this->support.uniform_buffer_std430_layout = uniform_std430.uniformBufferStandardLayout == VK_TRUE;
       //
+      this->support.max_fragment_input_components = properties.limits.maxFragmentInputComponents;
+      this->support.max_vertex_output_components  = properties.limits.maxVertexOutputComponents;
+      //
       this->support.compute = {
          .max_invocations_per_workgroup = properties.limits.maxComputeWorkGroupInvocations,
          .max_shared_memory_size        = properties.limits.maxComputeSharedMemorySize,

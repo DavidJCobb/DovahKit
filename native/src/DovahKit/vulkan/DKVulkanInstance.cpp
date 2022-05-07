@@ -164,7 +164,10 @@ DKVulkanInstance::~DKVulkanInstance() {
    void* pUserData
 ) {
    if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-      qDebug("[DovahKitVulkanInstance][Validation Layer] %s", pCallbackData->pMessage);
+      qDebug("[DKVulkanInstance][Validation Layer] %s", pCallbackData->pMessage);
+   }
+   if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+      qDebug("[DKVulkanInstance][Info] %s", pCallbackData->pMessage);
    }
    return VK_FALSE;
 }

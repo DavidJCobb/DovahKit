@@ -32,15 +32,18 @@ namespace vulkanDK {
          struct {
             uint32_t vulkan_api_version = 0;
             //
-            bool     independent_blending         = false;
-            bool     indirect_draw_first_instance = false;
-            bool     large_points                 = false;
-            float    max_anisotropic_filtering    = 0;
-            uint32_t max_indirect_draw_count      = 0;
-            uint32_t max_image_dimension_2D       = 0;          // max texture size
-            uint32_t max_vertex_index_for_draw    = 0xFFFFFFFF; // indexed-draw calls cannot use vertex indices higher than this
-            bool     non_solid_polygon_fill_modes = false;      // are VK_POLYGON_MODE_POINT and VK_POLYGON_MODE_LINE (wireframe) supported?
-            bool     uniform_buffer_std430_layout = false;
+            bool     independent_blending          = false;
+            bool     indirect_draw_first_instance  = false;
+            bool     large_points                  = false;
+            float    max_anisotropic_filtering     = 0;
+            uint32_t max_fragment_input_components = 64;
+            uint32_t max_indirect_draw_count       = 0;
+            uint32_t max_image_dimension_2D        = 0;          // max texture size
+            uint32_t max_vertex_index_for_draw     = 0xFFFFFFFF; // indexed-draw calls cannot use vertex indices higher than this
+            uint32_t max_vertex_output_components  = 64;
+            bool     non_solid_polygon_fill_modes  = false;      // are VK_POLYGON_MODE_POINT and VK_POLYGON_MODE_LINE (wireframe) supported?
+            bool     uniform_buffer_std430_layout  = false;
+            //
             struct {
                uint32_t max_invocations_per_workgroup = 0; // X, Y, and Z sizes multiplied together must not exceed this
                uint32_t max_shared_memory_size        = 0; // split across all variables with the `Workgroup` storage class

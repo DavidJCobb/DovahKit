@@ -6,5 +6,5 @@ struct fragment_input {
    float blends[6];
    vec2  uv;
    //
-   light_and_shadow_inputs light_inputs;
+   compact_light_and_shadow_inputs lighting_data;
 };

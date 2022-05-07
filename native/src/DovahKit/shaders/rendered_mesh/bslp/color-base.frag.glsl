@@ -248,7 +248,6 @@ vec4 calculate_color() {
       //
       vec3 fog_color = (scene.fog_color_far * (density)) + (scene.fog_color_near * (1.0F - density));
       color.rgb = mix(color.rgb, fog_color, density);
-      //color.rgb = (fog_color * (density)) + (color.rgb * (1.0F - density));
    }
    //
    return color;
