@@ -53,8 +53,11 @@ namespace vulkanDK {
       // Normals:
       //
       {
+         /*//
          std::array<cobb::vector3<float>, loaded_form::total_vertex_count> normals;
          land.recalc_normals_to(normals);
+         //*/
+         const auto& normals = land.heightmap.normals.list();
          for (size_t q = 0; q < 4; ++q) {
             size_t offset_x = (q % 2) * centerline_index_src;
             size_t offset_y = (q / 2) * centerline_index_src;

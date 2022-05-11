@@ -100,9 +100,14 @@ namespace dovahkit::subsystems {
 
          void view_input_poll_handler(DKVulkanView&);
 
+         bool is_cell_loaded(const dovah::form_stub*) const;
+         bool is_current_cell(const dovah::form_stub*) const;
          bool is_ref_loaded(const dovah::form_stub*) const;
 
       signals:
+         void cellLoaded(dovah::form_stub&);
+         void cellUnloaded(dovah::form_stub&);
+         void currentCellChanged(dovah::form_stub*);
          void refSelected(dovah::form_stub&);
          void refDeselected(dovah::form_stub&);
          void statusBarMessage(const QString& message, int display_time = 0);

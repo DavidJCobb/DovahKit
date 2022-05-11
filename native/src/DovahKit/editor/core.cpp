@@ -29,6 +29,7 @@
 #include "widgets/widget-models/DKBSACollectionModel.h"
 #include <QDebug>
 #include "subsystems/game_inis.h"
+#include "subsystems/worldedit.h"
 #include "asset_manager/asset_manager.h"
 
 #include "form_stub_meta_type.h"
@@ -124,7 +125,10 @@ DovahKitCore::DovahKitCore() {
    this->bsa_browse_backend = new DKBSACollectionModelBackend(this);
    DKBSACollectionModel::setDefaultBackend(this->bsa_browse_backend);
    //
-   QTimer::singleShot(0, []() { DovahKitAssetManager::get(); }); // ensure the asset manager exists (but ensure that we construct it AFTER DovahKitCore, or we risk cyclical dependencies / infinite recursion)
+   // We want to make sure a few systems exist, but we need to construct them AFTER DovahKitCore to avoid 
+   // cyclical dependencies / infinite recursion:
+   //
+   QTimer::singleShot(0, []() { DovahKitAssetManager::get(); });
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {

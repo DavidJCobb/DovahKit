@@ -239,6 +239,10 @@ namespace dovahkit::subsystems {
          ),
          list.end()
       );
+      //
+      // Signals:
+      //
+      emit this->cellUnloaded(*cell);
    }
    bool worldedit::_load_refr(dovah::form_stub& stub, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc) {
       auto* base = dovah::form_stub_helpers::get_base_form(&stub);
@@ -437,6 +441,10 @@ namespace dovahkit::subsystems {
          sgs.fog_max        = 1.0F;
          sgs.interior_clip_distance = 0.0F;
       }
+      //
+      // Signals:
+      //
+      emit this->cellLoaded(*cell);
    }
 
    void worldedit::_on_renderer_lost() {
@@ -505,6 +513,10 @@ namespace dovahkit::subsystems {
       if (cell) {
          assert(cell->formType == dovah::form_type::cell && "Worldedit was asked to load a cell, but the provided form is not a cell.");
          this->_load_cell(cell, true);
+         //
+         // Signals:
+         //
+         emit this->currentCellChanged(cell);
       }
    }
    void worldedit::set_target_view(DKVulkanView& view) {
@@ -675,6 +687,16 @@ namespace dovahkit::subsystems {
       //
    }
 
+   bool worldedit::is_cell_loaded(const dovah::form_stub* cell) const {
+      if (!cell)
+         return false;
+      return cell == this->loaded_cell.stub;
+   }
+   bool worldedit::is_current_cell(const dovah::form_stub* cell) const {
+      if (!cell)
+         return false;
+      return cell == this->loaded_cell.stub;
+   }
    bool worldedit::is_ref_loaded(const dovah::form_stub* ref) const {
       if (!ref)
          return false;

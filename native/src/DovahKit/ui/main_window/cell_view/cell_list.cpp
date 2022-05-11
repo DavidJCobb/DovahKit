@@ -3,18 +3,13 @@
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "dovah/form_stub.h"
+#include "widgets/DKHeaderView.h"
+
+#include "editor/subsystems/worldedit.h"
 
 CellListModelItem::CellListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
    this->update();
-}
-bool CellListModelItem::cellIsLoaded() {
-   //
-   // TODO: It's not enough to check if the form is loaded, because it could be loaded by a 
-   // properties dialog or something. What we want to know is if the Render Window has a 
-   // cell loaded and ready to render.
-   //
-   return false;
 }
 void CellListModelItem::update() {
    auto stub = this->stub;
@@ -24,6 +19,17 @@ void CellListModelItem::update() {
    //
    this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
    this->is_injected = stub->is_injected();
+   //
+   this->updateRenderWindowState();
+}
+void CellListModelItem::updateRenderWindowState() {
+   auto& worldedit = dovahkit::subsystems::worldedit::get();
+   this->render_window_loaded = worldedit.is_cell_loaded(stub);
+   if (this->render_window_loaded) {
+      this->render_window_current = worldedit.is_current_cell(stub);
+   } else {
+      this->render_window_current = false;
+   }
 }
 
 #pragma region CellListModel
@@ -35,8 +41,33 @@ CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &CellListModel::formDeletionImminent);
    QObject::connect(&editor, &DovahKitCore::formRenumbered,       this, &CellListModel::formRenumbered);
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, [this]() { this->rebuild(this->worldspace); });
+   //
+   auto& worldedit = dovahkit::subsystems::worldedit::get_or_create();
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::cellLoaded, this, [this](dovah::form_stub& cell) {
+      this->cellRenderWindowLoadedStateChanged(cell, true);
+   });
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::cellUnloaded, this, [this](dovah::form_stub& cell) {
+      this->cellRenderWindowLoadedStateChanged(cell, false);
+   });
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::currentCellChanged, this, &CellListModel::renderWindowCurrentCellChanged);
 }
 
+void CellListModel::cellRenderWindowLoadedStateChanged(const dovah::form_stub& cell, bool loaded) {
+   if (this->worldspace != cell.get_parent_form())
+      return;
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == &cell) {
+         item->render_window_loaded = loaded;
+         if (!loaded)
+            item->render_window_current = false;
+         this->emitRowChanged(i);
+         break;
+      }
+   }
+}
 void CellListModel::formCreated(const dovah::form_stub* stub) {
    if (stub->formType != dovah::form_type::cell)
       return;
@@ -59,10 +90,7 @@ void CellListModel::formModified(const dovah::form_stub* stub) {
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto root  = QModelIndex();
-         auto start = this->index(i, 0, root);
-         auto end   = this->index(i, this->columnCount(root), root);
-         emit dataChanged(start, end);
+         this->emitRowChanged(i);
          break;
       }
    }
@@ -100,6 +128,30 @@ void CellListModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_for
       }
    }
 }
+void CellListModel::renderWindowCurrentCellChanged(const dovah::form_stub* current) {
+   bool updated_old = false;
+   bool updated_new = false;
+   //
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      //
+      if (item->stub == current) {
+         if (item->render_window_current)
+            break;
+         item->render_window_current = true;
+         this->emitRowChanged(i);
+         updated_new = true;
+      } else if (item->render_window_current) {
+         item->render_window_current = false;
+         this->emitRowChanged(i);
+         updated_old = true;
+      }
+      if (updated_new && updated_old)
+         break;
+   }
+}
 
 QModelIndex CellListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
@@ -132,8 +184,35 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
    auto column  = index.column();
    bool edited  = item->is_active;
    bool deleted = item->stub->is_deleted();
+   if (role == Qt::FontRole) {
+      auto font = QFont();
+      if (column == ColumnName) {
+         if (item->editorID.isEmpty()) {
+            font.setItalic(true);
+         }
+      }
+      if (item->render_window_current) {
+         font.setBold(true);
+      }
+      return font;
+   }
+   if (role == RenderWindowRole) {
+      if (item->render_window_current)
+         return -10;
+      if (item->render_window_loaded)
+         return -5;
+      return 0;
+   }
+   if (role == SortOverrideRole) {
+      int magnitude = 0;
+      if (column == ColumnName) {
+         if (item->editorID.isEmpty())
+            magnitude += 1;
+      }
+      return magnitude;
+   }
    switch (column) {
-      case 0: // editor ID
+      case ColumnName: // editor ID
          switch (role) {
             case Qt::DisplayRole:
             case SortingRole:
@@ -146,19 +225,9 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
                      text += tr(" * ", "edited form ID marker");
                   return text;
                }
-            case SortOverrideRole:
-               if (item->editorID.isEmpty())
-                  return 1;
-            case Qt::FontRole:
-               if (item->editorID.isEmpty()) {
-                  auto font = QFont();
-                  font.setItalic(true);
-                  return font;
-               }
-               break;
          }
          break;
-      case 1: // form ID
+      case ColumnFormID: // form ID
          switch (role) {
             case Qt::DisplayRole:
                return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
@@ -172,7 +241,7 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
                return item->formID;
          }
          break;
-      case 2: // grid X
+      case ColumnGridX: // grid X
          switch (role) {
             case Qt::DisplayRole:
             case SortingRole:
@@ -181,7 +250,7 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
                return QVariant(); // don't allow filtering by the grid coordinates
          }
          break;
-      case 3: // grid Y
+      case ColumnGridY: // grid Y
          switch (role) {
             case Qt::DisplayRole:
             case SortingRole:
@@ -200,16 +269,22 @@ QVariant CellListModel::headerData(int section, Qt::Orientation orientation, int
    switch (role) {
       case Qt::DisplayRole:
          switch (section) {
-            case 0: return tr("Editor ID", "cell view cell list");
-            case 1: return tr("Form ID",   "cell view cell list");
-            case 2: return tr("X", "cell view cell list");
-            case 3: return tr("Y", "cell view cell list");
+            case ColumnName:   return tr("Editor ID", "cell view cell list");
+            case ColumnFormID: return tr("Form ID",   "cell view cell list");
+            case ColumnGridX:  return tr("X", "cell view cell list");
+            case ColumnGridY:  return tr("Y", "cell view cell list");
          }
          break;
    }
    return QVariant();
 }
 
+void CellListModel::emitRowChanged(int i) {
+   auto root  = QModelIndex();
+   auto start = this->index(i, 0, root);
+   auto end   = this->index(i, this->columnCount(root) - 1, root);
+   emit dataChanged(start, end);
+}
 void CellListModel::insertItem(const dovah::form_stub* stub, bool queued) {
    if (!stub)
       return;
@@ -273,50 +348,39 @@ void CellListModel::rebuild(const dovah::form_stub* worldspace) {
 #pragma region CellListModelProxy
 CellListModelProxy::CellListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
    this->setFilterCaseSensitivity(Qt::CaseInsensitive);
-   this->setFilterRole(Qt::UserRole + 1);
+   this->setFilterRole(CellListModel::FilteringRole);
    this->setFilterKeyColumn(-1);
    this->setSortCaseSensitivity(Qt::CaseInsensitive);
-   this->setSortRole(Qt::UserRole);
-   //
-   this->setSortOverrideRole((Qt::ItemDataRole)CellListModel::SortOverrideRole);
+   this->setSortRole(CellListModel::SortingRole);
 }
 bool CellListModelProxy::lessThan(const QModelIndex& left, const QModelIndex& right) const {
    auto source    = this->sourceModel();
    auto sort_role = this->sortRole();
    //
-   {
-      auto override_role = this->_sortOverrideRole;
-      if (override_role != Qt::DisplayRole) {
-         auto a = source->data(left,  override_role).toInt();
-         auto b = source->data(right, override_role).toInt();
-         //
-         // The override role can be used to force an item to the start of the list, or to the end. 
-         // If both items are trying to force to the same side of the list, then they should be 
-         // sorted normally; otherwise, the override should be honored.
-         //
-         if ((a | b) && (a * b <= 0)) { // at least one is non-zero; signs are different or one is zero
-            if (a > 0)
-               return false;
-            if (a < 0)
-               return true;
-            //
-            if (b > 0)
-               return true;
-            if (b < 0)
-               return false;
-         }
-      }
+   int over_a = 0;
+   int over_b = 0;
+   if (this->_loadedCellsAtTop) {
+      over_a = source->data(left,  CellListModel::RenderWindowRole).toInt();
+      over_b = source->data(right, CellListModel::RenderWindowRole).toInt();
+   }
+   over_a += source->data(left,  CellListModel::SortOverrideRole).toInt();
+   over_b += source->data(right, CellListModel::SortOverrideRole).toInt();
+   if (over_a != over_b) {
+      return over_a < over_b;
    }
    //
-   QVariant leftData  = source->data(left,  sort_role);
-   QVariant rightData = source->data(right, sort_role);
-   return QString::localeAwareCompare(leftData.toString(), rightData.toString()) < 0;
+   QVariant lhs = source->data(left,  sort_role);
+   QVariant rhs = source->data(right, sort_role);
+   if (lhs.type() != QMetaType::QString && lhs.canConvert<int>() && rhs.type() == lhs.type()) {
+      return lhs.toInt() < rhs.toInt();
+   }
+   return QString::localeAwareCompare(lhs.toString(), rhs.toString()) < 0;
 }
-void CellListModelProxy::setSortOverrideRole(Qt::ItemDataRole r) {
-   if (this->_sortOverrideRole == r)
+void CellListModelProxy::setLoadedCellsAtTop(bool v) {
+   if (v == this->_loadedCellsAtTop)
       return;
-   this->_sortOverrideRole = r;
-   this->sort(this->sortColumn());
+   this->_loadedCellsAtTop = v;
+   this->invalidate();
 }
 #pragma endregion
 
@@ -325,22 +389,34 @@ CellList::CellList(QWidget* parent) : QTableView(parent) {
    auto underlying = new model_type;
    auto proxy      = new CellListModelProxy(this);
    proxy->setSourceModel(underlying);
+   proxy->setDynamicSortFilter(true);
    this->setModel(proxy);
    this->verticalHeader()->setDefaultSectionSize(0);
-   this->sortByColumn(0, Qt::AscendingOrder);
    this->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-   //
-   auto header  = this->horizontalHeader();
-   auto metrics = QFontMetrics(this->font());
-   header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
-   header->setMinimumSectionSize(2);
-   header->resizeSection(1, metrics.boundingRect("00000000").width() * 1.5F + 4);
-   header->resizeSection(2, metrics.boundingRect("000").width() * 1.5F + 4);
-   header->resizeSection(3, metrics.boundingRect("000").width() * 1.5F + 4);
-   header->setSectionResizeMode(0, QHeaderView::Stretch);
-   header->setSectionResizeMode(1, QHeaderView::Interactive);
-   header->setSectionResizeMode(2, QHeaderView::Interactive);
-   header->setSectionResizeMode(3, QHeaderView::Interactive);
+   {
+      auto* header = new DKHeaderView(Qt::Horizontal, this);
+      header->setFlexResizeEnabled(true);
+      {
+         auto* old = this->horizontalHeader();
+         header->setHighlightSections(old->highlightSections());
+         header->setSortIndicatorShown(old->isSortIndicatorShown());
+         header->setSectionsClickable(old->sectionsClickable());
+      }
+      this->setHorizontalHeader(header);
+      //
+      auto metrics = QFontMetrics(this->font());
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+      header->setMinimumSectionSize(2);
+      header->setColumnFlex(CellListModel::ColumnName,   1, 0);
+      header->setColumnFlex(CellListModel::ColumnFormID, 0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4);
+      header->setColumnFlex(CellListModel::ColumnGridX,  0, 0, metrics.boundingRect("00").width() * 1.5F + 4);
+      header->setColumnFlex(CellListModel::ColumnGridY,  0, 0, metrics.boundingRect("00").width() * 1.5F + 4);
+      header->modSectionSizeTo(CellListModel::ColumnFormID, 4); // mimics a user resize and shrinks the column
+      for(int i = 0; i <= CellListModel::ColumnGridY; ++i)
+         header->setSectionResizeMode(i, QHeaderView::Interactive);
+      header->setStretchLastSection(false);
+   }
+   this->sortByColumn(CellListModel::ColumnName, Qt::AscendingOrder);
    
    QObject::connect(this->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
       if (auto* stub = this->formStub())
@@ -380,6 +456,12 @@ dovah::form_stub* CellList::formStub() const noexcept {
       return nullptr;
    return const_cast<dovah::form_stub*>(item->stub); // const-cast: stub should not be modified by anything inside this system; don't care about what outside code does
 }
+
+void CellList::setLoadedCellsAtTop(bool v) {
+   auto proxy = (proxy_type*)this->model();
+   proxy->setLoadedCellsAtTop(v);
+}
+
 void CellList::rebuildModel() {
    auto m = this->unwrappedModel();
    if (!m)

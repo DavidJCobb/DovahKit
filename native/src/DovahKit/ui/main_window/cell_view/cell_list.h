@@ -19,21 +19,24 @@ class CellListModelItem {
    friend CellListModel;
    public:
       using form_id_t = dovah::bare_form_id_t;
-      //
+      
       const dovah::form_stub* stub = nullptr;
       QString   editorID;
       form_id_t formID    = 0;
       int32_t   gridX     = 0;
       int32_t   gridY     = 0;
       //
-      bool is_active   = false;
-      bool is_injected = false;
+      bool is_active   = false; // in active file?
+      bool is_injected = false; // injected record?
       //
+      bool render_window_loaded  = false;
+      bool render_window_current = false;
+      
       CellListModelItem() {}
       CellListModelItem(const dovah::form_stub*);
       //
-      bool cellIsLoaded(); // TODO: update this when the render window is implemented
       void update();
+      void updateRenderWindowState();
 };
 
 class CellListModel : public QAbstractTableModel {
@@ -41,24 +44,33 @@ class CellListModel : public QAbstractTableModel {
    public:
       using item_type = CellListModelItem;
       using form_stub = dovah::form_stub;
-      //
+      
       using role_t = std::underlying_type_t<Qt::ItemDataRole>;
       static constexpr role_t SortingRole      = Qt::UserRole + 0;
       static constexpr role_t FilteringRole    = Qt::UserRole + 1;
-      static constexpr role_t SortOverrideRole = Qt::UserRole + 2;
-      //
+      static constexpr role_t SortOverrideRole = Qt::UserRole + 2; // override normal sorting; negative = up; higher absolute value = stronger influence
+      static constexpr role_t RenderWindowRole = Qt::UserRole + 3; // override normal sorting; negative = up; higher absolute value = stronger influence
+
+      static constexpr int ColumnName   = 0;
+      static constexpr int ColumnFormID = 1;
+      static constexpr int ColumnGridX  = 2;
+      static constexpr int ColumnGridY  = 3;
+      
    protected:
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
       const form_stub* worldspace = nullptr;
       //
+      void emitRowChanged(int);
       void insertItem(const dovah::form_stub*, bool queued);
       //
    protected slots:
+      void cellRenderWindowLoadedStateChanged(const dovah::form_stub&, bool loaded);
       void formCreated(const dovah::form_stub*);
       void formModified(const dovah::form_stub*);
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
+      void renderWindowCurrentCellChanged(const dovah::form_stub*);
       //
    public slots:
       void clear();
@@ -89,11 +101,11 @@ class CellListModelProxy : public QSortFilterProxyModel {
    public:
       CellListModelProxy(QObject* parent = nullptr);
       bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
-      //
-      void setSortOverrideRole(Qt::ItemDataRole);
-      //
+
+      void setLoadedCellsAtTop(bool);
+      
    protected:
-      Qt::ItemDataRole _sortOverrideRole = Qt::ItemDataRole::DisplayRole; // 1 = end (ascending); -1 = start (descending)
+      bool _loadedCellsAtTop = false;
 };
 
 class CellList : public QTableView {
@@ -114,6 +126,8 @@ class CellList : public QTableView {
       
       dovah::bare_form_id_t formID() const noexcept;
       dovah::form_stub* formStub() const noexcept;
+
+      void setLoadedCellsAtTop(bool);
       
    public slots:
       void rebuildModel();

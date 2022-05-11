@@ -56,6 +56,10 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       dovahkit::subsystems::worldedit::get().set_current_cell(cell);
    });
    //
+   QObject::connect(this->ui.loadedCellsAtTop, &QCheckBox::toggled, this, [this](bool checked) {
+      this->ui.cellList->setLoadedCellsAtTop(checked);
+   });
+   //
    #pragma region Context menus
       #pragma region Cell
          this->cellContextMenu.edit        = new QAction(tr("Edit...",     "cell view cell actions"), this->ui.cellList);
