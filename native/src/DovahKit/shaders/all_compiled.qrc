@@ -30,5 +30,8 @@
         <file>rendered_landscape/normals.frag.spv</file>
         <file>rendered_landscape/normals.geom.spv</file>
         <file>rendered_landscape/normals.vert.spv</file>
+        <file>rendered_landscape/shadows-caster.frag.spv</file>
+        <file>rendered_landscape/shadows-caster.vert.spv</file>
+        <file>rendered_landscape/shadows-sun.vert.spv</file>
     </qresource>
 </RCC>

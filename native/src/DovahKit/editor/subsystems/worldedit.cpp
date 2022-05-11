@@ -505,6 +505,32 @@ namespace dovahkit::subsystems {
       sr->set_default_land_textures(diffuse_path, normals_path);
    }
 
+   void worldedit::center_on_refr(dovah::form_stub& ref) {
+      auto* cell = ref.get_parent_form();
+      if (!cell || cell->formType != dovah::form_type::cell)
+         return;
+      if (!this->is_cell_loaded(cell)) {
+         this->set_current_cell(cell);
+      }
+      //
+      if (this->target_view) {
+         if (auto* sr = this->target_view->surfaceRenderer()) {
+            auto loaded = ref.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (loaded) {
+               glm::fvec3 pos = { loaded->position.x, loaded->position.y, loaded->position.z };
+               pos.z += 160;
+               sr->set_camera_position(pos);
+               //
+               auto& scene  = sr->scene;
+               auto& camera = scene.camera;
+               camera.pitch = glm::radians<float>(-90);
+               camera.roll  = 0.0;
+               camera.yaw   = loaded->rotation.z;
+               scene.update_camera();
+            }
+         }
+      }
+   }
    void worldedit::set_current_cell(dovah::form_stub* cell) {
       if (this->loaded_cell.stub == cell)
          return;

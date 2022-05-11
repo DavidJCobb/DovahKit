@@ -727,6 +727,7 @@ namespace vulkanDK {
    }
    void frame_in_flight::_record_scene_draw_commands() {
       auto& sr    = *this->owner;
+      auto& ds    = this->descriptor_sets;
       auto& scene = sr.scene;
       {  // Rendered mesh: shadows, sun
          auto& indirect_info  = this->indirect_draw_commands.sun_shadows;
@@ -750,21 +751,24 @@ namespace vulkanDK {
             VK_SUBPASS_CONTENTS_INLINE
          );
          {
-            const auto* shader = sr.get_graphics_shader(surface_renderer::sun_shadow_shader_id);
+            const auto* shader = sr.get_graphics_shader(surface_renderer::shader_id_mesh_shadows_sun);
             command_buffer.bind_graphics_shader_and_descriptors(
                *shader,
-               VK_PIPELINE_BIND_POINT_GRAPHICS,
                0,
-               std::array{
-                  this->descriptor_sets.scene_state,
-                  this->descriptor_sets.all_meshes,
-                  this->descriptor_sets.all_textures,
-               }
+               std::array{ ds.scene_state, ds.all_meshes, ds.all_textures }
             );
             _record_indirect_draws(
                scene, command_buffer, indirect_info, *shader,
                [](const rendered_mesh& ro) {}
             );
+         }
+         {  // Landscape
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *sr.get_graphics_shader(surface_renderer::shader_id_landscape_shadows_sun),
+               0,
+               std::array{ ds.scene_state, ds.all_landscapes }
+            );
+            _record_landscape_draws(scene, command_buffer);
          }
          command_buffer.end_render_pass();
          indirect_info.transfer_queue_ownership_to_compute(command_buffer.handle);
@@ -801,26 +805,33 @@ namespace vulkanDK {
          );
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
-            auto id = surface_renderer::light_shadow_map_shader_base_id;
-            id.bytes[7] += i;
+            {  // Meshes
+               auto id = surface_renderer::light_shadow_map_shader_base_id;
+               id.bytes[7] += i;
+               //
+               const auto* shader = sr.get_graphics_shader(id);
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *shader,
+                  0,
+                  std::array{ ds.scene_state, ds.all_textures, ds.all_meshes, ds.all_lights, ds.shadow_caster_map_render }
+               );
+               _record_indirect_draws(
+                  scene, command_buffer, this->indirect_draw_commands.shadow_casters[i], *shader,
+                  [](const rendered_mesh& ro) {}
+               );
+            }
+            {  // Landscape
+               auto id = surface_renderer::shader_id_landscape_shadows_caster;
+               id.bytes[7] += i;
+               //
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *sr.get_graphics_shader(id),
+                  0,
+                  std::array{ ds.scene_state, ds.all_landscapes, ds.all_lights, ds.shadow_caster_map_render }
+               );
+               _record_landscape_draws(scene, command_buffer);
+            }
             //
-            const auto* shader = sr.get_graphics_shader(id);
-            command_buffer.bind_graphics_shader_and_descriptors(
-               *shader,
-               VK_PIPELINE_BIND_POINT_GRAPHICS,
-               0,
-               std::array{
-                  this->descriptor_sets.scene_state,
-                  this->descriptor_sets.all_textures,
-                  this->descriptor_sets.all_meshes,
-                  this->descriptor_sets.all_lights,
-                  this->descriptor_sets.shadow_caster_map_render,
-               }
-            );
-            _record_indirect_draws(
-               scene, command_buffer, this->indirect_draw_commands.shadow_casters[i], *shader,
-               [](const rendered_mesh& ro) {}
-            );
             if (i != surface_renderer::shadow_caster_count - 1)
                command_buffer.next_render_subpass();
          }
@@ -894,14 +905,13 @@ namespace vulkanDK {
             const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(
                *shader,
-               VK_PIPELINE_BIND_POINT_GRAPHICS,
                0,
                std::array{
-                  this->descriptor_sets.scene_state,
-                  this->descriptor_sets.all_textures,
-                  this->descriptor_sets.all_meshes,
-                  this->descriptor_sets.all_lights,
-                  this->descriptor_sets.shadow_maps,
+                  ds.scene_state,
+                  ds.all_textures,
+                  ds.all_meshes,
+                  ds.all_lights,
+                  ds.shadow_maps,
                }
             );
             //
@@ -926,50 +936,41 @@ namespace vulkanDK {
             const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(
                *shader,
-               VK_PIPELINE_BIND_POINT_GRAPHICS,
                0,
                std::array{
-                  this->descriptor_sets.scene_state,
-                  this->descriptor_sets.all_textures,
-                  this->descriptor_sets.all_landscapes,
-                  this->descriptor_sets.all_lights,
-                  this->descriptor_sets.shadow_maps,
+                  ds.scene_state,
+                  ds.all_textures,
+                  ds.all_landscapes,
+                  ds.all_lights,
+                  ds.shadow_maps,
                }
             );
             _record_landscape_draws(scene, command_buffer);
             //
-            // Wireframe:
+            // Debugging:
             //
-            if (sr.debug.draw_landscape_wireframe) {
+            if (sr.debug.draw_landscape_wireframe || sr.debug.draw_landscape_normals) {
                const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_wireframe_shader_id);
-               command_buffer.bind_graphics_shader_and_descriptors(
-                  *shader,
-                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                  0,
-                  std::array{
-                     this->descriptor_sets.scene_state,
-                     this->descriptor_sets.all_landscapes,
-                  }
-               );
-               _record_landscape_draws(scene, command_buffer);
-            }
-            if (sr.debug.draw_landscape_normals) {
-               const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_normals_shader_id);
-               if (shader) {
-                  //
-                  // This shader involves a geometry shader module. If those aren't available on this hardware, then 
-                  // the shader will not be loaded.
-                  //
-                  command_buffer.bind_graphics_shader_and_descriptors(
-                     *shader,
-                     VK_PIPELINE_BIND_POINT_GRAPHICS,
-                     0,
-                     std::array{
-                        this->descriptor_sets.scene_state,
-                        this->descriptor_sets.all_landscapes,
-                     }
-                  );
+               //
+               // As of this writing, both of these shaders have identical pipeline layouts and use identical 
+               // descriptor sets and descriptor set layouts, so we can just bind the descriptor sets once 
+               // instead of having to rebind with each shader.
+               //
+               command_buffer.bind_descriptor_sets(VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.layout, 0, std::array{ ds.scene_state, ds.all_landscapes });
+               //
+               if (sr.debug.draw_landscape_wireframe) {
+                  vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.handle);
                   _record_landscape_draws(scene, command_buffer);
+               }
+               if (sr.debug.draw_landscape_normals) {
+                  //
+                  // If the current hardware doesn't support geometry shaders, then this shader won't be 
+                  // loaded. We need to check for a null pointer before trying to use it.
+                  //
+                  if (const auto* ln_shader = sr.get_graphics_shader(surface_renderer::landscape_normals_shader_id)) {
+                     vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, ln_shader->pipeline.handle);
+                     _record_landscape_draws(scene, command_buffer);
+                  }
                }
             }
          }
@@ -999,14 +1000,13 @@ namespace vulkanDK {
                const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_oit_color_id);
                command_buffer.bind_graphics_shader_and_descriptors(
                   *shader,
-                  VK_PIPELINE_BIND_POINT_GRAPHICS,
                   0,
                   std::array{
-                     this->descriptor_sets.scene_state,
-                     this->descriptor_sets.all_textures,
-                     this->descriptor_sets.all_meshes,
-                     this->descriptor_sets.all_lights,
-                     this->descriptor_sets.shadow_maps,
+                     ds.scene_state,
+                     ds.all_textures,
+                     ds.all_meshes,
+                     ds.all_lights,
+                     ds.shadow_maps,
                   }
                );
                //
@@ -1022,14 +1022,10 @@ namespace vulkanDK {
             // Compositing:
             //
             {
-               const auto* shader = sr.get_graphics_shader(surface_renderer::oit_composite_shader_id);
                command_buffer.bind_graphics_shader_and_descriptors(
-                  *shader,
-                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  *sr.get_graphics_shader(surface_renderer::oit_composite_shader_id),
                   0,
-                  std::array{
-                     this->descriptor_sets.oit_compositing,
-                  }
+                  std::array{ ds.oit_compositing }
                );
                vkCmdDraw(command_handle, 3, 1, 0, 0);
             }
@@ -1054,6 +1050,7 @@ namespace vulkanDK {
    }
    void frame_in_flight::_record_bounds_draw_commands() {
       auto& sr    = *this->owner;
+      auto& ds    = this->descriptor_sets;
       auto& scene = sr.scene;
       //
       auto& command_buffer = this->graphics_commands.bounds;
@@ -1083,12 +1080,8 @@ namespace vulkanDK {
          const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_box_shader_id);
          command_buffer.bind_graphics_shader_and_descriptors(
             *shader,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
             0,
-            std::array{
-               this->descriptor_sets.scene_state,
-               this->descriptor_sets.all_bounds,
-            }
+            std::array{ ds.scene_state, ds.all_bounds }
          );
          //
          size_t first = std::string::npos;
@@ -1118,12 +1111,8 @@ namespace vulkanDK {
          const auto* shader = sr.get_graphics_shader(surface_renderer::bounding_origin_shader_id);
          command_buffer.bind_graphics_shader_and_descriptors(
             *shader,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
             0,
-            std::array{
-               this->descriptor_sets.scene_state,
-               this->descriptor_sets.all_bounds,
-            }
+            std::array{ ds.scene_state, ds.all_bounds }
          );
          //
          size_t first = std::string::npos;
@@ -1182,14 +1171,14 @@ namespace vulkanDK {
       {
          const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::fps::shader_id);
          if (shader) {
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.overlay_fps });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.overlay_fps });
             this->overlays.fps.draw_call(command_handle);
          }
       }
       {
          const auto* shader = sr.get_graphics_shader(vulkanDK::overlays::world_axes::shader_id);
          if (shader) {
-            command_buffer.bind_graphics_shader_and_descriptors(*shader, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, std::array{ this->descriptor_sets.overlay_world_axes });
+            command_buffer.bind_graphics_shader_and_descriptors(*shader, 0, std::array{ this->descriptor_sets.overlay_world_axes });
             this->overlays.world_axes.draw_call(command_handle);
          }
       }

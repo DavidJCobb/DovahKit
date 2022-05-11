@@ -100,9 +100,33 @@ namespace vulkanDK {
       vkCmdBindPipeline(this->handle, VK_PIPELINE_BIND_POINT_COMPUTE, cs.pipeline.handle);
    }
 
-   void command_buffer::_bind_graphics_shader_and_descriptors(const graphics_shader& gs, VkPipelineBindPoint bind_point, uint32_t bind_to, const VkDescriptorSet* sets, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count) {
-      vkCmdBindDescriptorSets(this->handle, bind_point, gs.pipeline.layout, bind_to, (uint32_t)ds_count, sets, (uint32_t)do_count, dynamic_offsets);
-      vkCmdBindPipeline(this->handle, bind_point, gs.pipeline.handle);
+   void command_buffer::_bind_graphics_shader_and_descriptors(const graphics_shader& gs, uint32_t bind_to, const VkDescriptorSet* sets, size_t ds_count, const uint32_t* dynamic_offsets, size_t do_count) {
+      //
+      // Per the Vulkan spec, the rules for when you need to rebind descriptors are as follows:
+      // 
+      //  - You must rebind the descriptor set at slot #N if it is "disturbed" in some way.
+      // 
+      //  - When binding Descriptor Set #N,...
+      // 
+      //     - If the descriptor sets previously bound to slots 0 through (N - 1) were all 
+      //       bound using compatible pipeline layouts, then none of them will be disturbed.
+      // 
+      //     - If, in addition, the descriptor set previously bound to slot N was bound using 
+      //       a compatible pipeline layout, then slots greater than N will also not be 
+      //       disturbed.
+      // 
+      //  - When binding a new pipeline (i.e. switching shaders),...
+      // 
+      //     - The new pipeline can access a descriptor set previously bound ot any slot N, 
+      //       provided that the descriptor sets previously bound to slots 0 through N were 
+      //       bound using compatible pipeline layouts.
+      // 
+      //  - Two pipeline layouts are "compatible for set N" if they were created with ident-
+      //    ically defined descriptor set layouts for sets 0 through N, and if they were 
+      //    created with identical push constant ranges.
+      //
+      vkCmdBindPipeline(this->handle, VK_PIPELINE_BIND_POINT_GRAPHICS, gs.pipeline.handle);
+      vkCmdBindDescriptorSets(this->handle, VK_PIPELINE_BIND_POINT_GRAPHICS, gs.pipeline.layout, bind_to, (uint32_t)ds_count, sets, (uint32_t)do_count, dynamic_offsets);
    }
 
    void command_buffer::_set_pipeline_push_constant(VkPipelineLayout layout, VkShaderStageFlags flags, size_t size, const void* data) {

@@ -5,6 +5,7 @@
 #include "../../../editor/core.h"
 #include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/open_window_for_form.h"
+#include "../../../editor/subsystems/worldedit.h"
 
 namespace {
    QString _format_cell(dovah::form_stub* cell) {
@@ -13,22 +14,21 @@ namespace {
       auto name = cell->get_editor_id();
       QString cell_text = editor_helpers::form_identifiers_to_string(cell);
       if (name && name[0]) {
-         cell_text += name;
-      } else {
-         auto world = cell->get_parent_form();
-         if (world) {
-            assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
-            QString s = editor_helpers::form_identifiers_to_string(world);
-            int32_t x;
-            int32_t y;
-            QString grid;
-            if (cell->get_grid_coordinates(x, y)) {
-               grid = QString("(%1, %2)").arg(x).arg(y);
-            } else {
-               grid = QString("(?, ?)");
-            }
-            return QString("%2%3 in %1").arg(s).arg(cell_text).arg(grid);
+         return cell_text;
+      }
+      auto world = cell->get_parent_form();
+      if (world) {
+         assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
+         QString s = editor_helpers::form_identifiers_to_string(world);
+         int32_t x;
+         int32_t y;
+         QString grid;
+         if (cell->get_grid_coordinates(x, y)) {
+            grid = QString("(%1, %2)").arg(x).arg(y);
+         } else {
+            grid = QString("(?, ?)");
          }
+         return QString("%2%3 in %1").arg(s).arg(cell_text).arg(grid);
       }
       return cell_text;
    }
@@ -452,8 +452,16 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
       if (!real.isValid())
          return;
       auto data = (model_item_type*)real.internalPointer();
-      if (data && data->otherStub)
-         open_edit_dialog_for_form(data->otherStub, this);
+      if (data) {
+         auto* stub = data->otherStub;
+         if (stub) {
+            if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
+               dovahkit::subsystems::worldedit::get_or_create().center_on_refr(*stub);
+            } else {
+               open_edit_dialog_for_form(data->otherStub, this);
+            }
+         }
+      }
    });
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)

@@ -62,13 +62,15 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
          static constexpr graphics_shader::id_type main_shader_id             = "MeshColr";
          static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MeshOITc";
-         static constexpr graphics_shader::id_type sun_shadow_shader_id       = "MeshSdwS";
+         static constexpr graphics_shader::id_type shader_id_mesh_shadows_sun = "MeshSdwS";
          static constexpr compute_shader::id_type  frustum_cull_shader_id     = "MeshClFs";
          static constexpr graphics_shader::id_type light_shadow_map_shader_base_id   = "MeshSdw0";
          static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "MeshClS0";
          static constexpr graphics_shader::id_type bounding_box_shader_id     = "BoundBox";
          static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
          static constexpr graphics_shader::id_type landscape_shader_id           = "LandColr";
+         static constexpr graphics_shader::id_type shader_id_landscape_shadows_sun    = "LandSdwS";
+         static constexpr graphics_shader::id_type shader_id_landscape_shadows_caster = "LandSdw0";
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
          static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // will not exist if geometry shaders aren't available on this hardware
 
@@ -291,18 +293,21 @@ namespace vulkanDK {
          
          void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
          void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
-            void _setup_oit_composite_shader(); // OITCompo
+            void _setup_oit_composite_shader();
             void _setup_rendered_mesh_shaders();
-               void _setup_rendered_mesh_color_shader();   // MainMatl
-               void _setup_rendered_mesh_wboit_shader();   // MainOITc
-               void _setup_rendered_mesh_shadows_caster_shaders(); // LiteMap0 - LiteMap7
-               void _setup_rendered_mesh_shadows_sun_shader(); // SunShadw
+               void _setup_rendered_mesh_color_shader();
+               void _setup_rendered_mesh_wboit_shader();
+               void _setup_rendered_mesh_shadows_caster_shaders();
+               void _setup_rendered_mesh_shadows_sun_shader();
+            void _setup_rendered_landscape_shaders();
+               void _setup_rendered_landscape_color_shader();
+               void _setup_rendered_landscape_shadows_caster_shaders();
+               void _setup_rendered_landscape_shadows_sun_shader();
+               void _setup_rendered_landscape_wireframe_shader();
+               void _setup_rendered_landscape_normals_shader();
             void _setup_frustum_cull_shader();
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();
-            void _setup_landscape_shader();
-            void _setup_landscape_wireframe_shader();
-            void _setup_landscape_normals_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

@@ -54,6 +54,18 @@ namespace vulkanDK {
                } per_axis;
             } compute;
             struct {
+               uint32_t max_bound_descriptor_sets = 0; // max number of descriptor sets that a pipeline can use simultaneously
+               struct {
+                  uint32_t input_attachment = 0;
+                  uint32_t sampled_image    = 0; // sampled image; combined image sampler; uniform texel buffer
+                  uint32_t sampler          = 0; // sampler; combined image sampler
+                  uint32_t storage_buffer   = 0; // storage buffer (dynamic or not)
+                  uint32_t storage_dynamic  = 0; // dynamic storage buffer
+                  uint32_t storage_image    = 0; // storage image; storage texel buffer
+                  uint32_t uniform_buffer   = 0; // uniform buffer (dynamic or not)
+                  uint32_t uniform_dynamic  = 0; // dynamic uniform buffer
+               } maximums_by_descriptor_type;
+               //
                bool null_handles   = false;
                bool runtime_array  = false;
                bool variable_count = false;

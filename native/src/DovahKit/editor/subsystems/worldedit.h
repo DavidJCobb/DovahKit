@@ -95,6 +95,7 @@ namespace dovahkit::subsystems {
          void _update_default_land_textures();
          
       public:
+         void center_on_refr(dovah::form_stub&);
          void set_current_cell(dovah::form_stub*);
          void set_target_view(DKVulkanView&);
 

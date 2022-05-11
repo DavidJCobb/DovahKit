@@ -80,6 +80,17 @@ namespace vulkanDK {
          },
       };
       this->support.descriptor_bindings = {
+         .max_bound_descriptor_sets   = properties.limits.maxBoundDescriptorSets,
+         .maximums_by_descriptor_type = {
+            .input_attachment = properties.limits.maxDescriptorSetInputAttachments,
+            .sampled_image    = properties.limits.maxDescriptorSetSampledImages,
+            .sampler          = properties.limits.maxDescriptorSetSamplers,
+            .storage_buffer   = properties.limits.maxDescriptorSetStorageBuffers,
+            .storage_dynamic  = properties.limits.maxDescriptorSetStorageBuffersDynamic,
+            .storage_image    = properties.limits.maxDescriptorSetStorageBuffersDynamic,
+            .uniform_buffer   = properties.limits.maxDescriptorSetUniformBuffers,
+            .uniform_dynamic  = properties.limits.maxDescriptorSetUniformBuffersDynamic,
+         },
          .null_handles   = robustness.nullDescriptor == VK_TRUE,
          .runtime_array  = indexing_features.runtimeDescriptorArray == VK_TRUE,
          .variable_count = indexing_features.descriptorBindingVariableDescriptorCount == VK_TRUE,
