@@ -27,5 +27,8 @@
         <file>util/oit-composite.frag.spv</file>
         <file>rendered_landscape/wireframe.frag.spv</file>
         <file>rendered_landscape/wireframe.vert.spv</file>
+        <file>rendered_landscape/normals.frag.spv</file>
+        <file>rendered_landscape/normals.geom.spv</file>
+        <file>rendered_landscape/normals.vert.spv</file>
     </qresource>
 </RCC>

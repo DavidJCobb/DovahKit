@@ -275,7 +275,7 @@ namespace vulkanDK {
             .index              = 0,
             .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
             .count              = 1,
-            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .immutable_samplers = nullptr,
          },
       };
@@ -536,6 +536,7 @@ namespace vulkanDK {
          .pNext    = &multiview,
          .features = {
             .independentBlend  = pd_support.independent_blending ? VK_TRUE : VK_FALSE,
+            .geometryShader    = pd_support.geometry_shaders.available ? VK_TRUE : VK_FALSE,
             .fillModeNonSolid  = pd_support.non_solid_polygon_fill_modes ? VK_TRUE : VK_FALSE,
             .wideLines         = pd_support.wide_lines.available ? VK_TRUE : VK_FALSE,
             .largePoints       = pd_support.large_points ? VK_TRUE : VK_FALSE,
@@ -1856,6 +1857,66 @@ namespace vulkanDK {
       //
       s->setup_pipeline_layout();
    }
+   void surface_renderer::_setup_landscape_normals_shader() {
+      if (!this->device_info->support.geometry_shaders.available)
+         return;
+      //
+      auto* s = this->create_graphics_shader(landscape_normals_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main);
+      s->set_layout_info({
+         this->descriptor_set_layouts.scene_state.handle,
+         this->descriptor_set_layouts.all_landscapes.handle,
+      });
+      //
+      auto& options = s->options;
+      //
+      shader_module* vert = this->load_shader_module("shaders/rendered_landscape/normals.vert.spv");
+      shader_module* geom = this->load_shader_module("shaders/rendered_landscape/normals.geom.spv");
+      shader_module* frag = this->load_shader_module("shaders/rendered_landscape/normals.frag.spv");
+      {
+         assert(vert);
+         assert(geom);
+         assert(frag);
+         this->set_debug_object_name(vert->handle, "Shader Module (Landscape Normals Vert)");
+         this->set_debug_object_name(geom->handle, "Shader Module (Landscape Normals Geom)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Landscape Normals Frag)");
+      }
+      //
+      options.stages = {
+         {
+            .module = frag,
+            .entry_point_name = "main",
+            .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module = geom,
+            .entry_point_name = "main",
+            .stage = VK_SHADER_STAGE_GEOMETRY_BIT,
+         },
+         {
+            .module = vert,
+            .entry_point_name = "main",
+            .stage = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+      if constexpr (config::use_inverted_depth) {
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+      options.rasterization.cullMode = VK_CULL_MODE_NONE;
+      if (this->device_info->support.non_solid_polygon_fill_modes) {
+         options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+      }
+      {
+         auto& vertex     = options.inputs.vertex;
+         auto  attributes = vertex_landscape::attribute_descriptions();
+         vertex.bindings.push_back(vertex_landscape::binding_description());
+         vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+      }
+      //
+      s->setup_pipeline_layout();
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_oit_composite_shader();
       //
@@ -1865,6 +1926,7 @@ namespace vulkanDK {
       this->_setup_scene_bounds_shaders();
       this->_setup_landscape_shader();
       this->_setup_landscape_wireframe_shader();
+      this->_setup_landscape_normals_shader();
       //
       // FPS counter:
       //
@@ -5023,6 +5085,11 @@ namespace vulkanDK {
    }
    void surface_renderer::debug_set_landscape_wireframes_visible(bool v) {
       this->debug.draw_landscape_wireframe = v;
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.invalidate_all_command_buffers();
+   }
+   void surface_renderer::debug_set_landscape_normals_visible(bool v) {
+      this->debug.draw_landscape_normals = v;
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.invalidate_all_command_buffers();
    }

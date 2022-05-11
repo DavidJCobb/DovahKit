@@ -84,6 +84,15 @@ namespace vulkanDK {
          .runtime_array  = indexing_features.runtimeDescriptorArray == VK_TRUE,
          .variable_count = indexing_features.descriptorBindingVariableDescriptorCount == VK_TRUE,
       };
+      this->support.geometry_shaders = {
+         .available = features.features.geometryShader == VK_TRUE,
+         //
+         .max_input_components        = properties.limits.maxGeometryInputComponents,
+         .max_output_components       = properties.limits.maxGeometryOutputComponents,
+         .max_output_components_total = properties.limits.maxGeometryTotalOutputComponents,
+         //
+         .max_output_vertices = properties.limits.maxGeometryOutputVertices,
+      };
       this->support.memory = {
          .buffer_image_granularity     = properties.limits.bufferImageGranularity,
          .max_allocation_count         = properties.limits.maxMemoryAllocationCount,

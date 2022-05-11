@@ -489,10 +489,19 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    }
    //
    {
-      auto* widget = new QCheckBox("Show landscape wireframes", this->toolbar);
+      auto* widget = new QCheckBox("Landscape wire", this->toolbar);
       QObject::connect(widget, &QCheckBox::toggled, this, [this, view](bool checked) {
          auto* sr = view->surfaceRenderer();
          sr->debug_set_landscape_wireframes_visible(checked);
+      });
+      this->toolbar->addWidget(widget);
+   }
+   //
+   {
+      auto* widget = new QCheckBox("Landscape normals", this->toolbar);
+      QObject::connect(widget, &QCheckBox::toggled, this, [this, view](bool checked) {
+         auto* sr = view->surfaceRenderer();
+         sr->debug_set_landscape_normals_visible(checked);
       });
       this->toolbar->addWidget(widget);
    }

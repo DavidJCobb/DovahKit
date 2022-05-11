@@ -59,6 +59,15 @@ namespace vulkanDK {
                bool variable_count = false;
             } descriptor_bindings;
             struct {
+               bool available = false;
+               //
+               uint32_t max_input_components  = 0;
+               uint32_t max_output_components = 0;
+               uint32_t max_output_components_total = 0; // max across all emitted vertices
+               //
+               uint32_t max_output_vertices = 0;
+            } geometry_shaders;
+            struct {
                VkDeviceSize buffer_image_granularity     = 0;
                uint32_t     max_allocation_count         = 0;
                uint32_t     max_total_push_constant_size = 0;

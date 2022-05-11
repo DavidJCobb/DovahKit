@@ -953,6 +953,25 @@ namespace vulkanDK {
                );
                _record_landscape_draws(scene, command_buffer);
             }
+            if (sr.debug.draw_landscape_normals) {
+               const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_normals_shader_id);
+               if (shader) {
+                  //
+                  // This shader involves a geometry shader module. If those aren't available on this hardware, then 
+                  // the shader will not be loaded.
+                  //
+                  command_buffer.bind_graphics_shader_and_descriptors(
+                     *shader,
+                     VK_PIPELINE_BIND_POINT_GRAPHICS,
+                     0,
+                     std::array{
+                        this->descriptor_sets.scene_state,
+                        this->descriptor_sets.all_landscapes,
+                     }
+                  );
+                  _record_landscape_draws(scene, command_buffer);
+               }
+            }
          }
          command_buffer.end_render_pass();
          //

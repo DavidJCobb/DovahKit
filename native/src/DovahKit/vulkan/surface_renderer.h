@@ -70,6 +70,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
          static constexpr graphics_shader::id_type landscape_shader_id           = "LandColr";
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
+         static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // will not exist if geometry shaders aren't available on this hardware
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -278,6 +279,7 @@ namespace vulkanDK {
          void debug_show_shadow_caster_culling(size_t which = std::string::npos);
          void debug_set_culling_updates_frozen(bool);
          void debug_set_landscape_wireframes_visible(bool);
+         void debug_set_landscape_normals_visible(bool);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes
@@ -300,6 +302,7 @@ namespace vulkanDK {
             void _setup_scene_bounds_shaders();
             void _setup_landscape_shader();
             void _setup_landscape_wireframe_shader();
+            void _setup_landscape_normals_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

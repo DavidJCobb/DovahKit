@@ -1701,6 +1701,9 @@
     <None Include="shaders\rendered_landscape\color.vert" />
     <None Include="shaders\rendered_landscape\color.vert.spv" />
     <None Include="shaders\rendered_landscape\functions\calc_local_vertex_position.glsl" />
+    <None Include="shaders\rendered_landscape\normals.frag" />
+    <None Include="shaders\rendered_landscape\normals.geom" />
+    <None Include="shaders\rendered_landscape\normals.vert" />
     <None Include="shaders\rendered_landscape\vertex-inputs.glsl" />
     <None Include="shaders\rendered_landscape\wireframe.frag" />
     <None Include="shaders\rendered_landscape\wireframe.vert" />
