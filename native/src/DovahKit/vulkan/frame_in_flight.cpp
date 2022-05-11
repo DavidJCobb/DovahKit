@@ -699,6 +699,31 @@ namespace vulkanDK {
          // Done.
          //
       }
+
+      void _record_landscape_draws(scene& scene, command_buffer& command_buffer) {
+         auto command_handle = command_buffer.handle;
+         //
+         VkDeviceSize offset = scene.landscape_buffer_vertex_index(0);
+         vkCmdBindVertexBuffers(command_handle, 0, 1, &scene.coalesced.landscape_buffer.handle, &offset);
+         vkCmdBindIndexBuffer(command_handle, scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+         //
+         for (size_t i = 0; i < scene.landscapes.size(); ++i) {
+            auto& item = scene.landscapes[i];
+            if (!item.active())
+               continue;
+            for (size_t j = 0; j < 4; ++j) {
+               auto instance_index = i * 4 + j;
+               vkCmdDrawIndexed(
+                  command_handle,
+                  (uint32_t)rendered_landscape::indices_per_quad,
+                  1,
+                  0,
+                  (i * rendered_landscape::vertices_per_mesh) + (j * rendered_landscape::vertices_per_quad),
+                  i * 4 + j
+               );
+            }
+         }
+      }
    }
    void frame_in_flight::_record_scene_draw_commands() {
       auto& sr    = *this->owner;
@@ -911,27 +936,22 @@ namespace vulkanDK {
                   this->descriptor_sets.shadow_maps,
                }
             );
+            _record_landscape_draws(scene, command_buffer);
             //
-            VkDeviceSize offset = scene.landscape_buffer_vertex_index(0);
-            vkCmdBindVertexBuffers(command_handle, 0, 1, &sr.scene.coalesced.landscape_buffer.handle, &offset);
-            vkCmdBindIndexBuffer(command_handle, sr.scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+            // Wireframe:
             //
-            for (size_t i = 0; i < scene.landscapes.size(); ++i) {
-               auto& item = scene.landscapes[i];
-               if (!item.active())
-                  continue;
-               //vkCmdDrawIndexed(command_handle, (uint32_t)rendered_landscape::indices_per_mesh, 1, 0, i * rendered_landscape::verts_per_mesh, i);
-               for (size_t j = 0; j < 4; ++j) {
-                  auto instance_index = i * 4 + j;
-                  vkCmdDrawIndexed(
-                     command_handle,
-                     (uint32_t)rendered_landscape::indices_per_quad,
-                     1,
-                     0,
-                     (i * rendered_landscape::vertices_per_mesh) + (j * rendered_landscape::vertices_per_quad),
-                     i * 4 + j
-                  );
-               }
+            if (sr.debug.draw_landscape_wireframe) {
+               const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_wireframe_shader_id);
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *shader,
+                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  0,
+                  std::array{
+                     this->descriptor_sets.scene_state,
+                     this->descriptor_sets.all_landscapes,
+                  }
+               );
+               _record_landscape_draws(scene, command_buffer);
             }
          }
          command_buffer.end_render_pass();

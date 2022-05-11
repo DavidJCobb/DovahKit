@@ -27,14 +27,6 @@ layout(location = 0) out VS_OUT {
    fragment_input vs_out;
 };
 
-// [-1, 1] to [0, 1]
-const mat4 shadow_to_normalized_coords = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0
-);
-
 #include "../../includes/prep_all_light_and_shadow.glsl"
 
 void main() {
@@ -42,8 +34,8 @@ void main() {
    //
    gl_Position = scene.proj * scene.view * model_transform * vec4(in_position, 1.0);
    //
-   vs_out.color     = in_color;
-   vs_out.uv        = in_uv;
+   vs_out.color = in_color;
+   vs_out.uv    = in_uv;
    //
    // Lighting:
    //

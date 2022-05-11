@@ -487,4 +487,13 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       this->toolbar->addWidget(widget);
    }
+   //
+   {
+      auto* widget = new QCheckBox("Show landscape wireframes", this->toolbar);
+      QObject::connect(widget, &QCheckBox::toggled, this, [this, view](bool checked) {
+         auto* sr = view->surfaceRenderer();
+         sr->debug_set_landscape_wireframes_visible(checked);
+      });
+      this->toolbar->addWidget(widget);
+   }
 }

@@ -34,14 +34,6 @@ layout(location = 0) out VS_OUT {
    flat int vs_out_landscape_index;
 };
 
-// [-1, 1] to [0, 1]
-const mat4 shadow_to_normalized_coords = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0
-);
-
 #include "../includes/prep_all_light_and_shadow.glsl"
 #include "functions/calc_local_vertex_position.glsl"
 

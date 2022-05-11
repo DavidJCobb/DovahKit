@@ -60,15 +60,16 @@ namespace vulkanDK {
          ~surface_renderer();
 
          static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
-         static constexpr graphics_shader::id_type main_shader_id             = "MainMatl";
-         static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MainOITc";
-         static constexpr graphics_shader::id_type sun_shadow_shader_id       = "SunShadw";
-         static constexpr compute_shader::id_type  frustum_cull_shader_id     = "CullFstm";
-         static constexpr graphics_shader::id_type light_shadow_map_shader_base_id = "LiteSdw0";
-         static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "CullSdw0";
+         static constexpr graphics_shader::id_type main_shader_id             = "MeshColr";
+         static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MeshOITc";
+         static constexpr graphics_shader::id_type sun_shadow_shader_id       = "MeshSdwS";
+         static constexpr compute_shader::id_type  frustum_cull_shader_id     = "MeshClFs";
+         static constexpr graphics_shader::id_type light_shadow_map_shader_base_id   = "MeshSdw0";
+         static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "MeshClS0";
          static constexpr graphics_shader::id_type bounding_box_shader_id     = "BoundBox";
          static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
-         static constexpr graphics_shader::id_type landscape_shader_id        = "Landscap";
+         static constexpr graphics_shader::id_type landscape_shader_id           = "LandColr";
+         static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -196,6 +197,9 @@ namespace vulkanDK {
          struct {
             bool   freeze_culling_updates     = false;
             size_t show_shadow_caster_culling = std::string::npos;
+            //
+            bool draw_landscape_wireframe = false;
+            bool draw_landscape_normals   = false; // TODO
          } debug;
          VkFence one_time_commands_fence = VK_NULL_HANDLE;
 
@@ -273,6 +277,7 @@ namespace vulkanDK {
          void debug_show_frustrums(); // adds relevant frustrums to the scene as rendered_meshes.
          void debug_show_shadow_caster_culling(size_t which = std::string::npos);
          void debug_set_culling_updates_frozen(bool);
+         void debug_set_landscape_wireframes_visible(bool);
 
       protected:
          void _init_surface(); // on init, and when the HWND changes
@@ -294,6 +299,7 @@ namespace vulkanDK {
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();
             void _setup_landscape_shader();
+            void _setup_landscape_wireframe_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

@@ -14,7 +14,15 @@ compact_light_and_shadow_inputs prep_all_light_and_shadow(
    compact_light_and_shadow_inputs result;
    //
    result.pos_world = pos_world;
-   result.sun_shadow_vert_pos = (shadow_to_normalized_coords * scene.sun_space) * vec4(pos_world, 1.0);
+   {
+      const mat4 shadow_to_normalized_coords = mat4(  // [-1, 1] to [0, 1] for X and Y only
+	      0.5, 0.0, 0.0, 0.0,
+	      0.0, 0.5, 0.0, 0.0,
+	      0.0, 0.0, 1.0, 0.0,
+	      0.5, 0.5, 0.0, 1.0
+      );
+      result.sun_shadow_vert_pos = (shadow_to_normalized_coords * scene.sun_space) * vec4(pos_world, 1.0);
+   }
    for(int i = 0; i < 4; ++i) {
       result.vector_to_light[i] = vec4(0, 0, 0, 2);
       result.light_space_pos[i] = pos_world;

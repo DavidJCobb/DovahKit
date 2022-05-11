@@ -25,5 +25,7 @@
         <file>rendered_mesh/bslp/shadows-sun.vert.spv</file>
         <file>util/full-screen-triangle.vert.spv</file>
         <file>util/oit-composite.frag.spv</file>
+        <file>rendered_landscape/wireframe.frag.spv</file>
+        <file>rendered_landscape/wireframe.vert.spv</file>
     </qresource>
 </RCC>
