@@ -1,6 +1,6 @@
 #pragma once
 #include <concepts>
-#include "helpers/class_list.h"
+#include "helpers/class_array.h"
 #include "../../../incomplete_code_warnings.h"
 //
 #include "Form.h"
@@ -38,7 +38,7 @@
 #pragma endregion
 
 namespace dovah {
-   using all_loaded_form_types = cobb::class_list<
+   using all_loaded_form_types = cobb::class_array<
       loaded_forms::Form,
       //
       loaded_forms::Activator,
@@ -76,7 +76,7 @@ namespace dovah {
          requires (std::is_same_v<T, loaded_forms::Form> || std::is_base_of_v<loaded_forms::Form, T>);
          { T::form_type } -> std::common_with<form_type_t>;
       };
-      constexpr size_t first_invalid_form_class = all_loaded_form_types::index_of_matching([]<typename T>() { return !valid_loaded_form_class<T>; });
+      constexpr size_t first_invalid_form_class = all_loaded_form_types::index_of_matching_type<[]<typename T>() { return !valid_loaded_form_class<T>; }>;
    }
    static_assert(
       impl::first_invalid_form_class == (size_t)-1,
@@ -84,7 +84,7 @@ namespace dovah {
    );
 
    static_assert(
-      incomplete_code_warnings::allow_compiling_despite_incomplete_forms || !all_loaded_form_types::has_matching([]<typename T>() { return std::is_base_of_v<loaded_forms::_IncompleteFormType, T>; }),
+      incomplete_code_warnings::allow_compiling_despite_incomplete_forms || !all_loaded_form_types::contains_matching_type<[]<typename T>() { return std::is_base_of_v<loaded_forms::_IncompleteFormType, T>; }>,
       "The backend for one or more form types is incomplete."
    );
 }

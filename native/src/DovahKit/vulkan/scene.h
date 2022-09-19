@@ -56,10 +56,11 @@ namespace vulkanDK {
             buffer landscape_buffer; // indices; then all verts
          } coalesced;
          struct {
-            size_t bounds   = 0; // count
-            size_t lights   = 0; // count
-            size_t meshes   = 0; // count
-            size_t textures = 0; // count
+            size_t bounds     = 0; // count
+            size_t landscapes = 0; // count
+            size_t lights     = 0; // count
+            size_t meshes     = 0; // count
+            size_t textures   = 0; // count
          } pending_deletions;
          frame_dirty_state light_shadow_state;
 

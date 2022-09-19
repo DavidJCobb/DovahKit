@@ -1,4 +1,6 @@
 #include "manifest_parser.h"
+#include <array>
+#include <cstdint>
 #include "../../helpers/qt/minimize_indent.h"
 
 namespace {

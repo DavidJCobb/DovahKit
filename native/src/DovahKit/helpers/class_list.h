@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <concepts>
 #include <tuple>
 #include <type_traits>
+#include "tuples/contains_type.h"
 
 namespace cobb {
    namespace class_list_concepts {
@@ -101,7 +102,7 @@ namespace cobb {
          using as_tuple = std::tuple<Types...>;
          template<size_t n> using nth_type = typename std::tuple_element<n, as_tuple>::type;
 
-         template<typename T> static constexpr bool contains = (std::is_same_v<T, Types> || ...);
+         template<typename T> static constexpr bool contains = cobb::tuples::contains_type<as_tuple, T>;
 
          template<typename T> static consteval size_t index_of() {
             size_t index = 0;
@@ -155,21 +156,26 @@ namespace cobb {
             );
             return index < count ? index : size_t(-1);
          }
+         template<auto f>
+         static constexpr size_t index_of_matching() {
+            size_t index = 0;
+            (
+               (f.template operator()<Types>() ?
+                  false             // if match: set result to current index; use false to short-circuit the "and" operator and stop iteration
+                : ((++index), true) // no match: increment current index; use true to avoid short-circuiting, and continue iteration
+               )
+               && ...
+            );
+            return index < count ? index : size_t(-1);
+         }
 
          template<typename lambda> requires is_for_each_lambda_with_bool_result<lambda>
          static constexpr bool has_matching(lambda&& f) {
             return (f.template operator()<Types>() || ...);
          }
 
-         #if !defined(_MSC_VER) || _MSC_VER >= 1930
-         //
-         // MSVC2019 bug 1498687: templated lambdas do not work with templated using declarations; fixed in MSVC2022
-         // MSVC2019 bug ???????: attempting to work around the above will trigger an internal compiler error (C1001, impossible to debug)
-         // MSVC2019 bug ???????: requirements, and distinctions between type and non-type template parameters, are not needed; this overload conflicts with the functor version
-         //
-         template<auto lambda> requires is_for_each_lambda_with_bool_result<decltype(lambda)>
-         using get_matching = nth_type<index_of_matching(lambda)>;
-         #endif
+         template<auto lambda> //requires (is_for_each_lambda_with_bool_result<decltype(lambda)>)
+         using get_matching = nth_type<index_of_matching<lambda>()>;
 
       protected:
          template<typename T, auto lambda> requires is_for_each_lambda_with_bool_result<decltype(lambda)>
@@ -184,25 +190,14 @@ namespace cobb {
 
          #pragma region Functor-struct functions
          template<template<typename T> typename functor> requires is_for_each_functor_with_bool_result<functor>
-         static constexpr size_t index_of_matching() {
-            size_t index = 0;
-            (
-               (functor<Types>::execute() ?
-                  false             // if match: set result to current index; use false to short-circuit the "and" operator and stop iteration
-                : ((++index), true) // no match: increment current index; use true to avoid short-circuiting, and continue iteration
-               )
-               && ...
-            );
-            return index < count ? index : size_t(-1);
-         }
-
-         template<template<typename T> typename functor> requires is_for_each_functor_with_bool_result<functor>
          static constexpr bool has_matching() {
             return (functor<Types>::execute() || ...);
          }
 
+         #if defined(_MSC_VER) && _MSC_VER < 1930
          template<template<typename T> typename functor> requires is_for_each_functor_with_bool_result<functor>
          using get_matching = nth_type<index_of_matching<functor>()>;
+         #endif
 
          template<template<typename T> typename functor> requires is_for_each_functor<functor>
          static constexpr void for_each() {
@@ -243,9 +238,6 @@ namespace cobb {
          { functor<void>::execute(v) } -> std::same_as<bool>;
       };
    }
-   namespace impl::class_list_with_data {
-      extern constexpr auto dummy_array = std::array{ 0 }; // hopefully prevent MSVC and IntelliSense from complaining too much
-   }
 
    //
    // A variant on class_list that takes a constexpr std::array as a specialization, 
@@ -258,7 +250,7 @@ namespace cobb {
    //  - The (for_each_with_args) and (for_each_breakable_with_args) functions are 
    //    given the array element as an argument, followed by forwarded arguments.
    //
-   template<auto list = impl::class_list_with_data::dummy_array, typename... Types> requires cobb::is_std_array_instance<list>
+   template<auto list, typename... Types> requires cobb::is_std_array_instance<list>
    class class_list_with_data {
       public:
          using data_type = typename decltype(list)::value_type;

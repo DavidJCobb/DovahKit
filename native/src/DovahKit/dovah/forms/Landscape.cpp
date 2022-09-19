@@ -192,7 +192,7 @@ namespace dovah::loaded_forms {
                   //  - The first vertex in each row is encoded as the delta from the first vertex in the previous 
                   //    row, divided by eight. The first vertex in the first row has a delta of zero.
                   // 
-                  //  - After that, Each vertex in a row is encoded as the delta from the previous vertex, divided 
+                  //  - After that, each vertex in a row is encoded as the delta from the previous vertex, divided 
                   //    by eight.
                   // 
                   // Accordingly, the following relationships exist, in order of decreasing priority:

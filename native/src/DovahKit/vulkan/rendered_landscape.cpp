@@ -112,9 +112,14 @@ namespace vulkanDK {
       this->life_state = scene_frame_item_state::pending_delete;
       this->handled_frames.set_all_out_of_date();
    }
-   /*//
-   void rendered_landscape::reset();
-   //*/
+   void rendered_landscape::reset() {
+      this->handled_frames = frame_dirty_state();
+      this->life_state     = scene_frame_item_state::empty;
+      //
+      #if _DEBUG
+         this->shader_params = {};
+      #endif
+   }
 
    glm::vec3 rendered_landscape::local_vertex_position(int quad, size_t quad_vertex_index) const {
       quad_vertex_index = quad_vertex_index % vertices_per_quad;

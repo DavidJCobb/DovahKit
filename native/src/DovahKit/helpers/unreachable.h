@@ -20,13 +20,19 @@ namespace cobb {
    #if defined(__GNUC__)
       [[noreturn]] inline __attribute__((always_inline)) void unreachable() {
          __builtin_unreachable();
+         if (std::is_constant_evaluated())
+            throw;
       }
    #elif defined(_MSC_VER)
-      [[noreturn]] __forceinline void unreachable() {
+      [[noreturn]] inline __forceinline void unreachable() {
          __assume(false);
+         if (std::is_constant_evaluated())
+            throw;
       }
    #else
-      inline void unreachable() {}
+      inline void unreachable() {
+         if (std::is_constant_evaluated())
+            throw;
+      }
    #endif
-
 }

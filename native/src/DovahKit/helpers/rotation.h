@@ -24,7 +24,7 @@ namespace cobb {
    class euler;
    class quaternion;
 
-   extern constexpr double pi = 3.14159265358979323846;
+   inline constexpr double pi = 3.14159265358979323846;
 
    inline constexpr double degrees_to_radians(double degrees) noexcept {
       return degrees * pi / 180.0;

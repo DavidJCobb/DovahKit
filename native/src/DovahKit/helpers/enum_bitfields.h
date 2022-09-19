@@ -16,13 +16,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include <array>
+#include <cstdint>
 #include "concepts.h"
 
 namespace cobb {
-   namespace impl::enum_bitfield {
-      extern constexpr auto dummy_array = std::array{ 0 }; // MSVC complains about enum_bitfield even if it's not instantiated... -_-
-   }
-
    //
    // Use to give data structures a compile-time-specified bitmask of values from a 
    // discontiguous enum. Start by defining your enum type:
@@ -51,7 +48,7 @@ namespace cobb {
    // 
    //    bool foo = a.contains(my_enum::foo);
    //
-   template<auto _values = impl::enum_bitfield::dummy_array, typename M = uint32_t > requires (cobb::is_std_array_instance<_values> && std::integral<M>)
+   template<auto _values, typename M = uint32_t> requires (cobb::is_std_array_instance<_values> && std::integral<M>)
    class enum_bitfield {
       public:
          using item_type = typename std::decay<decltype(_values)>::value_type;

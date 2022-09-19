@@ -1410,9 +1410,6 @@
     <ClCompile Include="vulkan\shader_module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\material.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vulkan\surface_support_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1558,9 +1555,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\overlays\fps.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkan\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nif\file.cpp">
@@ -1732,6 +1726,72 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nif\blocks\BSOrderedNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\helpers\extract_frustum_normals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\compute_shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\graphics_shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\string\strieq_ascii.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\string\string_says_false.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\spir_v_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\fps_tracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\statik.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\static\directional_material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\static\distant_lod_paths.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\scene_item_handle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\_DKVulkanInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\form_identifiers_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\modify_camera_speed_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\rendered_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\attempt_on_screen_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\rendered_landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\glm\cross_simd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\resizable_grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3167,9 +3227,6 @@
     <ClInclude Include="vulkan\command_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\surface_support_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3366,9 +3423,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\overlays\fps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\_memory.h">
@@ -3659,16 +3713,13 @@
     <ClInclude Include="dovah\utils\world_position_to_grid_coordinates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\frustrum.h">
+    <ClInclude Include="vulkan\frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\config\shadow_maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="shaders\includes\point_light.glsl">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\config\antialiasing.h">
@@ -3687,6 +3738,174 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\exceptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\cubemap_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\extract_frustum_normals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\compute_shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\pipeline_stage_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\array_concat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\memset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\graphics_shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\strlen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\strcmp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\strieq_ascii.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\string_says_false.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\spir_v_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\spir_v_entry_point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\fps_tracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\statik.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\static\directional_material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\static\distant_lod_paths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_item_handle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\_DKVulkanInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\form_identifiers_to_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\modify_camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\bool_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\pointer_position_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\attempt_on_screen_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\rendered_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\array_flatten.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\value_type_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\enums\selection_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\vertex_landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\rendered_landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\glm\cross_simd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\simd\sum_register.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\simd\shuffle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\simd\min_and_max.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\simd\bytes_to_floats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\resizable_grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\filter_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\prepend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\filter_values_by_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\indices_of_matching_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\concat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\is_std_tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\index_of_matching_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\contains_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\contains_type_matching_functor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\map_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\index_of_first_matching_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\class_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\unpack_types_into.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\first_index_of_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\make.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -4134,6 +4353,9 @@
     <QtMoc Include="ui\options_3d_input_window\localization.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\worldedit.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -4208,50 +4430,102 @@
     <Text Include="vulkan\_docs\order-independent transparency.txt" />
     <Text Include="vulkan\_docs\how to measure FPS.txt" />
     <Text Include="vulkan\_docs\an overview of the basic render process.txt" />
+    <Text Include="vulkan\_docs\compute shader frustum culling.txt" />
+    <Text Include="helpers\simd\_notes.txt" />
+    <Text Include="helpers\tuples\docs.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
-    <None Include="shaders\shader.frag" />
-    <None Include="shaders\shader.vert" />
-    <None Include="shaders\shader.frag.spv" />
-    <None Include="shaders\shader.vert.spv" />
-    <None Include="shaders\overlay-fps.vert" />
-    <None Include="shaders\overlay-fps.frag" />
-    <None Include="shaders\overlay-fps.frag.spv" />
-    <None Include="shaders\overlay-fps.vert.spv" />
-    <None Include="shaders\overlay-world-axes.vert" />
-    <None Include="shaders\overlay-world-axes.frag" />
-    <None Include="shaders\sun-shadow-depth.vert" />
-    <None Include="shaders\util-full-screen-triangle.vert" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
-    <None Include="shaders\includes\computed_light.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
     <None Include="shaders\includes\calc_point_light.glsl" />
-    <None Include="shaders\cores\standard_shader.frag" />
-    <None Include="shaders\shader.oit-color.frag" />
-    <None Include="shaders\util-oit.frag" />
-    <None Include="shaders\shader.shadows.frag" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
-    <None Include="shaders\overlay-world-axes.frag.spv" />
-    <None Include="shaders\overlay-world-axes.vert.spv" />
-    <None Include="shaders\shader.oit-color.frag.spv" />
-    <None Include="shaders\shader.shadows.frag.spv" />
-    <None Include="shaders\sun-shadow-depth.vert.spv" />
-    <None Include="shaders\util-full-screen-triangle.vert.spv" />
-    <None Include="shaders\util-oit.frag.spv" />
-    <None Include="shaders\includes\rendered_mesh_shader_params.glsl" />
-    <None Include="shaders\includes\rendered_mesh_push_constant.glsl" />
-    <None Include="shaders\includes\scene_global_state.glsl" />
     <None Include="shaders\includes\standard_vertex_inputs.glsl" />
-    <None Include="shaders\cores\standard_shader\fragment_input.glsl" />
-    <None Include="shaders\light-shadow-depth.vert" />
-    <None Include="shaders\light-shadow-depth.frag" />
-    <None Include="shaders\light-shadow-depth.frag.spv" />
-    <None Include="shaders\light-shadow-depth.vert.spv" />
     <None Include="shaders\includes\calc_point_shadow.glsl" />
-    <None Include="shaders\rendered_mesh\debug-shadow-caster-space.frag" />
+    <None Include="shaders\includes\calc_spot_light.glsl" />
+    <None Include="shaders\includes\calc_base_light.glsl" />
+    <None Include="shaders\compute\culling\frustum.comp" />
+    <None Include="shaders\includes\structs\VkDrawIndexedIndirectCommand.glsl" />
+    <None Include="shaders\includes\structs\rendered_mesh_cull_data.glsl" />
+    <None Include="shaders\compute\culling\shadows-caster.comp" />
+    <None Include="shaders\rendered_mesh\bslp\color-base.frag.glsl" />
+    <None Include="shaders\rendered_mesh\bslp\color.fragment-input.glsl" />
+    <None Include="shaders\includes\structs\computed_light.glsl" />
+    <None Include="shaders\includes\structs\rendered_bounds_shader_params.glsl" />
+    <None Include="shaders\includes\structs\rendered_landscape_shader_params.glsl" />
+    <None Include="shaders\includes\structs\rendered_light_shader_params.glsl" />
+    <None Include="shaders\includes\structs\rendered_mesh_push_constant.glsl" />
+    <None Include="shaders\includes\structs\rendered_mesh_shader_params.glsl" />
+    <None Include="shaders\rendered_mesh\bslp\color-main.frag" />
+    <None Include="shaders\rendered_mesh\bslp\color-oit.frag" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-caster.frag" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-caster.vert" />
+    <None Include="shaders\rendered_landscape\color.vert" />
+    <None Include="shaders\rendered_landscape\color.frag" />
+    <None Include="shaders\rendered_mesh\bslp\color.vert" />
+    <None Include="shaders\includes\descriptor_sets\scene_state.glsl" />
+    <None Include="shaders\rendered_bounds\box\color.frag" />
+    <None Include="shaders\rendered_bounds\box\color.vert" />
+    <None Include="shaders\rendered_bounds\pivot\color.frag" />
+    <None Include="shaders\rendered_bounds\pivot\color.vert" />
+    <None Include="shaders\includes\descriptor_sets\all_textures.glsl" />
+    <None Include="shaders\includes\descriptor_sets\all_landscapes.glsl" />
+    <None Include="shaders\overlays\fps\main.vert" />
+    <None Include="shaders\overlays\fps\main.frag" />
+    <None Include="shaders\overlays\world_axes\main.frag" />
+    <None Include="shaders\overlays\world_axes\main.vert" />
+    <None Include="shaders\util\oit-composite.frag" />
+    <None Include="shaders\util\full-screen-triangle.vert" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-sun.frag" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-sun.vert" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-sun.descriptors.glsl" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-caster.descriptors.glsl" />
+    <None Include="shaders\includes\descriptor_sets\all_meshes.glsl" />
+    <None Include="shaders\includes\descriptor_sets\all_lights.glsl" />
+    <None Include="shaders\includes\descriptor_sets\shadow_caster_map_render.glsl" />
+    <None Include="shaders\rendered_mesh\bslp\color.descriptors.glsl" />
+    <None Include="shaders\includes\descriptor_sets\shadow_maps.glsl" />
+    <None Include="shaders\includes\structs\scene_global_state.glsl" />
+    <None Include="shaders\compute\culling\frustum.comp.spv" />
+    <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
+    <None Include="shaders\overlays\fps\main.frag.spv" />
+    <None Include="shaders\overlays\fps\main.vert.spv" />
+    <None Include="shaders\overlays\world_axes\main.frag.spv" />
+    <None Include="shaders\overlays\world_axes\main.vert.spv" />
+    <None Include="shaders\rendered_bounds\box\color.frag.spv" />
+    <None Include="shaders\rendered_bounds\box\color.vert.spv" />
+    <None Include="shaders\rendered_bounds\pivot\color.frag.spv" />
+    <None Include="shaders\rendered_bounds\pivot\color.vert.spv" />
+    <None Include="shaders\rendered_landscape\color.frag.spv" />
+    <None Include="shaders\rendered_landscape\color.vert.spv" />
+    <None Include="shaders\rendered_mesh\bslp\color.vert.spv" />
+    <None Include="shaders\rendered_mesh\bslp\color-main.frag.spv" />
+    <None Include="shaders\rendered_mesh\bslp\color-oit.frag.spv" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-caster.frag.spv" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-caster.vert.spv" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-sun.frag.spv" />
+    <None Include="shaders\rendered_mesh\bslp\shadows-sun.vert.spv" />
+    <None Include="shaders\util\full-screen-triangle.vert.spv" />
+    <None Include="shaders\util\oit-composite.frag.spv" />
+    <None Include="shaders\rendered_landscape\functions\calc_local_vertex_position.glsl" />
+    <None Include="shaders\rendered_landscape\vertex-inputs.glsl" />
+    <None Include="shaders\rendered_landscape\color.fragment-input.glsl" />
+    <None Include="shaders\includes\calc_all_light_and_shadow.glsl" />
+    <None Include="shaders\includes\structs\light_and_shadow_inputs.glsl" />
+    <None Include="shaders\includes\prep_all_light_and_shadow.glsl" />
+    <None Include="shaders\includes\expand_light_and_shadow_inputs.glsl" />
+    <None Include="shaders\includes\apply_scene_fog.glsl" />
+    <None Include="shaders\rendered_landscape\wireframe.vert" />
+    <None Include="shaders\rendered_landscape\wireframe.frag" />
+    <None Include="shaders\rendered_landscape\normals.vert" />
+    <None Include="shaders\rendered_landscape\normals.frag" />
+    <None Include="shaders\rendered_landscape\normals.geom" />
+    <None Include="shaders\rendered_landscape\shadows-sun.vert" />
+    <None Include="shaders\rendered_landscape\shadows-caster.vert" />
+    <None Include="shaders\rendered_landscape\shadows-caster.frag" />
+    <None Include="shaders\rendered_landscape\shadows-caster.descriptors.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

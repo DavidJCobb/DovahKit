@@ -13,9 +13,7 @@ namespace cobb {
          target &= ~mask;
    }
 
-   template<int bytecount> struct bytecount_to_int {
-      using type = struct _disabled { _disabled() { static_assert(false, "Unsupported bytecount."); } };
-   };
+   template<int bytecount> struct bytecount_to_int;
    template<> struct bytecount_to_int<1> { using type = uint8_t; };
    template<> struct bytecount_to_int<2> { using type = uint16_t; };
    template<> struct bytecount_to_int<4> { using type = uint32_t; };

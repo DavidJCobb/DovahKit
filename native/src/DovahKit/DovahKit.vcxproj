@@ -13,18 +13,18 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{27AD41A9-254C-460D-B111-C9A52C5FEF7F}</ProjectGuid>
     <Keyword>QtVS_v303</Keyword>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.18362.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -510,6 +510,7 @@
     <ClCompile Include="helpers\qt\vector3.cpp" />
     <ClCompile Include="helpers\qt\widget_utils.cpp" />
     <ClCompile Include="helpers\qt\xml_html_entity_resolver.cpp" />
+    <ClCompile Include="helpers\resizable_grid.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
     <ClCompile Include="helpers\set_current_thread_name.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
@@ -712,6 +713,7 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h" />
     <ClInclude Include="dk3d\bind_tree\node.h" />
     <ClInclude Include="dk3d\bind_tree\nodes\editor_mode.h" />
     <ClInclude Include="dk3d\bind_tree\nodes\input.h" />
@@ -781,8 +783,10 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit.h" />
+    <ClInclude Include="helpers\arrays\make.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_flatten.h" />
+    <ClInclude Include="helpers\class_array.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
@@ -802,6 +806,7 @@
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
+    <ClInclude Include="helpers\resizable_grid.h" />
     <ClInclude Include="helpers\simd\bytes_to_floats.h" />
     <ClInclude Include="helpers\simd\min_and_max.h" />
     <ClInclude Include="helpers\simd\shuffle.h" />
@@ -812,11 +817,24 @@
     <ClInclude Include="helpers\string\strieq_ascii.h" />
     <ClInclude Include="helpers\string\string_says_false.h" />
     <ClInclude Include="helpers\string\strlen.h" />
+    <ClInclude Include="helpers\tuples\concat.h" />
+    <ClInclude Include="helpers\tuples\contains_type_matching_functor.h" />
+    <ClInclude Include="helpers\tuples\filter_types.h" />
+    <ClInclude Include="helpers\tuples\filter_values_by_type.h" />
+    <ClInclude Include="helpers\tuples\first_index_of_type.h" />
+    <ClInclude Include="helpers\tuples\index_of_first_matching_type.h" />
+    <ClInclude Include="helpers\tuples\indices_of_matching_types.h" />
+    <ClInclude Include="helpers\tuples\map_types.h" />
+    <ClInclude Include="helpers\tuples\prepend.h" />
+    <ClInclude Include="helpers\tuples\unpack_types_into.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
+    <ClInclude Include="helpers\tuples\contains_type.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
+    <ClInclude Include="helpers\type_traits\index_of_matching_value.h" />
     <ClInclude Include="helpers\type_traits\is_literal.h" />
     <ClInclude Include="helpers\type_traits\is_std_array.h" />
+    <ClInclude Include="helpers\type_traits\is_std_tuple.h" />
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
     <ClInclude Include="helpers\type_traits\strip_enum.h" />
     <ClInclude Include="helpers\type_traits\value_type_of.h" />
@@ -1634,6 +1652,7 @@
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="helpers\simd\_notes.txt" />
+    <Text Include="helpers\tuples\docs.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
     <Text Include="vulkan\_docs\an overview of the basic render process.txt" />

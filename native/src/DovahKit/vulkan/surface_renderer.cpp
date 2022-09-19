@@ -4421,6 +4421,7 @@ namespace vulkanDK {
       if constexpr (debug_log_scene_object_lifetimes) {
          qDebug("[vulkanDK::scene_renderer::remove_landscape] Marking scene landscape %u for delete.", i);
       }
+      ++this->scene.pending_deletions.landscapes;
       auto& item = list[i];
       item.mark_for_delete();
       {
@@ -5290,6 +5291,27 @@ namespace vulkanDK {
             }
          }
          pd.bounds -= deleted;
+         list.resize(last_alive + 1);
+      }
+      if (pd.landscapes) {
+         size_t deleted    = 0;
+         size_t last_alive = -1;
+         auto&  list       = this->scene.landscapes;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.pending_delete() && item.handled_frames.are_all_up_to_date()) {
+               item.reset();
+               ++deleted;
+            } else {
+               last_alive = i;
+            }
+         }
+         if constexpr (debug_log_scene_object_lifetimes) {
+            if (deleted) {
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_deletions] Deleted %u scene landscapes.", deleted);
+            }
+         }
+         pd.landscapes -= deleted;
          list.resize(last_alive + 1);
       }
       if (pd.lights) {

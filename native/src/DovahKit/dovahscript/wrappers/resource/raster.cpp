@@ -320,9 +320,8 @@ namespace {
          return true;
       }
 
-      QRgb blend_pixel(QColor src, QRgb dst_rgba) {
-         auto& cpuinfo = cobb::cpuinfo::get();
-         if (cpuinfo.extension_support.sse_3) {
+      namespace sse3 {
+         QRgb blend_pixel(QColor src, QRgb dst_rgba) {
             auto two_fifty_five = _mm_set1_ps(255.0F);
             //
             auto to_all_alpha = [](__m128 v) {
@@ -358,6 +357,8 @@ namespace {
             dst = cobb::endian_cast<std::endian::little>(dst);
             return dst;
          }
+      }
+      QRgb blend_pixel(QColor src, QRgb dst_rgba) {
          constexpr size_t index_a = std::endian::native == std::endian::little ? 3 : 0;
          constexpr size_t index_r = std::endian::native == std::endian::little ? 2 : 1;
          constexpr size_t index_g = std::endian::native == std::endian::little ? 1 : 2;
@@ -475,7 +476,7 @@ namespace {
    }
 
    namespace _methods {
-      int blend_pixel(lua_State* L) {
+      template<bool sse3 = false> int blend_pixel(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.managed_resource)
             return 0;
@@ -508,7 +509,11 @@ namespace {
                bytes[x] = color.rgba();
                return;
             }
-            bytes[x] = _helpers::blend_pixel(color, bytes[x]);
+            if constexpr (sse3) {
+               bytes[x] = _helpers::sse3::blend_pixel(color, bytes[x]);
+            } else {
+               bytes[x] = _helpers::blend_pixel(color, bytes[x]);
+            }
          });
          luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
@@ -1275,5 +1280,24 @@ namespace dovahscript::wrappers::resource {
       lua_setfield     (L, -2, "new");
       lua_pushcfunction(L, &_singleton_functions::is);
       lua_setfield     (L, -2, "is");
+   }
+
+   /*static*/ void cls::extra_class_setup(lua_State* L) {
+      //
+      // Install SIMD alternatives to functions where appropriate, to avoid run-time 
+      // branching during script execution.
+      //
+      auto& cpuinfo = cobb::cpuinfo::get();
+      if (cpuinfo.extension_support.sse_3) {
+         classes::extend_class(
+            L,
+            cls::metatable_key,
+            {  // methods
+               { "blend_pixel",  &_methods::blend_pixel<true> },
+            },
+            {}, // getters
+            {}  // setters
+         );
+      }
    }
 }

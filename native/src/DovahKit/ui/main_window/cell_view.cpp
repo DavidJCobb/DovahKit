@@ -53,7 +53,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       widget->setText(text);
    });
    QObject::connect(this->ui.cellList, &CellList::renderRequested, this, [this](dovah::form_stub* cell) {
-      dovahkit::subsystems::worldedit::get().set_current_cell(cell);
+      dovahkit::subsystems::worldedit::get().set_current_area(cell);
    });
    //
    QObject::connect(this->ui.loadedCellsAtTop, &QCheckBox::toggled, this, [this](bool checked) {

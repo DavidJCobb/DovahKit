@@ -115,7 +115,7 @@ namespace nifDK::block_types {
             }
          )
          void walk_tree(State s, NodeFunctor nf, ChildFunctor cf) {
-            if constexpr (std::is_same_v<bool, cobb::function_traits<NodeFunctor>::return_type>) {
+            if constexpr (std::is_same_v<bool, typename cobb::function_traits<NodeFunctor>::return_type>) {
                bool filter = (nf)(this, s);
                if (!filter)
                   return;

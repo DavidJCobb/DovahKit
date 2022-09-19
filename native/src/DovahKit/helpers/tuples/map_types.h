@@ -17,10 +17,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <tuple>
 
-namespace cobb {
-   namespace impl::tuple_transform {
-      template<template<typename> typename Transform, typename Tuple> struct exec;
-      template<template<typename> typename Transform, typename... Types> struct exec<Transform, std::tuple<Types...>> {
+namespace cobb::tuples {
+   namespace impl {
+      template<template<typename> typename Transform, typename Tuple> struct _map_types;
+      template<template<typename> typename Transform, typename... Types> struct _map_types<Transform, std::tuple<Types...>> {
          using type = std::tuple<typename Transform<Types>::type...>;
       };
    }
@@ -30,5 +30,5 @@ namespace cobb {
    //
    // template<typename T> struct my_transform { using type = some_permutation_of<T>; };
    //
-   template<template<typename T> typename Transform, typename Tuple> using tuple_transform = impl::tuple_transform::exec<Transform, Tuple>;
+   template<template<typename T> typename Transform, typename Tuple> using map_types = impl::_map_types<Transform, Tuple>::type;
 }

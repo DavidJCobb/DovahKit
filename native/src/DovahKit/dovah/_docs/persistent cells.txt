@@ -14,7 +14,7 @@ Persistent cells introduce some complications.
    source files.
 
  - A persistent  reference's parent record is the persistent cell,  and not the 
-   reference's "true" parent form. If we actually represent the forms in memory 
+   reference's "true" parent cell. If we actually represent the forms in memory 
    this way, then persistent references  become cumbersome to work with: when a 
    frontend wishes to load a new exterior  cell, it must loop over every single 
    persistent reference in the containing world in order to identify persistent 

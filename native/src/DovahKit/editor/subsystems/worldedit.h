@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include "helpers/enum_flags.h"
+#include "helpers/resizable_grid.h"
 #include "helpers/singleton_ex.h"
 #include "helpers/vector3.h"
 #include "dovah/form_stub.h"
@@ -72,8 +73,20 @@ namespace dovahkit::subsystems {
             } vulkan_handles;
          };
 
+         using loaded_cell_grid_coord = int8_t;
+         using loaded_cell_grid = cobb::resizable_square_grid<cell, loaded_cell_grid_coord>;
+
          DKVulkanView* target_view = nullptr;
-         cell loaded_cell;
+         struct {
+            form_stub* cell  = nullptr;
+            form_stub* world = nullptr;
+
+            struct {
+               int32_t x = 0;
+               int32_t y = 0;
+            } world_grid_pos;
+         } target_area;
+         loaded_cell_grid  loaded_cells;
          std::vector<refr> loaded_refs;
          //
          struct {
@@ -85,18 +98,23 @@ namespace dovahkit::subsystems {
 
          vulkanDK::rendered_bounds_handle _make_bounds_for(refr&);
          refr* _get_loaded_refr_info(const dovah::form_stub&);
+         cell* _get_loaded_cell_info(const dovah::form_stub&);
          void _unload_refr(refr&, bool handle_deselection = true); // does not remove the refr from the loaded refs list; caller must do that
          void _unload_refr(dovah::form_stub&);
+         void _unload_cell(cell&);
          void _unload_cell(dovah::form_stub*);
+         void _unload_all_cells();
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);
-         void _load_cell(dovah::form_stub*, bool move_camera_to);
+         void _load_cell(dovah::form_stub*, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy, bool move_camera_to);
+
+         void _center_camera_on_cell(dovah::form_stub&);
 
          void _on_renderer_lost();
          void _update_default_land_textures();
          
       public:
          void center_on_refr(dovah::form_stub&);
-         void set_current_cell(dovah::form_stub*);
+         void set_current_area(dovah::form_stub* cell_or_world);
          void set_target_view(DKVulkanView&);
 
          void view_input_poll_handler(DKVulkanView&);
@@ -109,6 +127,7 @@ namespace dovahkit::subsystems {
          void cellLoaded(dovah::form_stub&);
          void cellUnloaded(dovah::form_stub&);
          void currentCellChanged(dovah::form_stub*);
+         void currentWorldChanged(dovah::form_stub*);
          void refSelected(dovah::form_stub&);
          void refDeselected(dovah::form_stub&);
          void statusBarMessage(const QString& message, int display_time = 0);

@@ -9,7 +9,7 @@ namespace DK3D::tools {
    class attempt_on_screen_selection : public base {
       public:
          static constexpr const char* function_name = "attempt_on_screen_selection";
-         static constexpr compile_time_tool_options compile_time_options = {
+         static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = true,
          };
       protected:

@@ -320,7 +320,7 @@ namespace nifDK {
             [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
                transform = transform * node->transform.to_matrix();
             },
-            [this](nifDK::block_types::NiAVObject* object, glm::mat4 transform) {
+            [this](nifDK::block_types::NiAVObject* object, glm::mat4 transform) -> void {
                if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
                   auto* data = dynamic_cast<nifDK::block_types::NiGeometryData*>(geom->data);
                   if (!data)

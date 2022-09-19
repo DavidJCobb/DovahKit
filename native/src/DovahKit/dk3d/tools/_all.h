@@ -1,7 +1,8 @@
 #pragma once
 #include <array>
+#include <type_traits>
 #include "_base.h"
-#include "../../helpers/class_list.h"
+#include "../../helpers/class_array.h"
 #include "../chrono.h"
 
 #include "attempt_on_screen_selection.h"
@@ -12,7 +13,7 @@
 #include "turn_camera.h"
 
 namespace DK3D {
-   using all_tools = cobb::class_list<
+   using all_tools = cobb::class_array<
       tools::attempt_on_screen_selection,
       tools::debug_log,
       tools::debug_placeholder,
@@ -45,18 +46,18 @@ namespace DK3D {
       };
    }
    template<typename Options> consteval tool_id id_of_tool_options() {
-      constexpr auto i = all_tools::index_of_matching([]<typename Tool>() {
+      constexpr auto i = all_tools::index_of_matching_type<[]<typename Tool>() {
          if constexpr (tools::tool_has_options_member_type<Tool>) {
             return std::is_same_v<Options, Tool::options>;
          }
          return false;
-      });
+      }>;
       if (i != (decltype(i))-1)
          return i;
       return tools::id_of_none;
    }
    template<typename T> consteval tool_id id_of_tool() {
-      auto i = all_tools::index_of<T>();
+      auto i = all_tools::index_of_type<T>;
       if (i != (decltype(i))-1)
          return i;
       return id_of_tool_options<T>();
@@ -93,43 +94,25 @@ namespace DK3D {
 
    namespace impl {
       template<typename T> struct tool_to_tool_results {
-         using type = T::results;
+         using type = typename T::results;
       };
    }
-   using all_tools_with_results = all_tools::all_matching<[]<typename T>() { return tools::tool_has_results_member_type<T>; }>; // list of all tool classes with results
-   using all_tool_results       = all_tools_with_results::transform<impl::tool_to_tool_results>; // list of all results classes from tools that have them
+   using all_tools_with_results = all_tools::filter_types<[]<typename T>() { return tools::tool_has_results_member_type<T>; }>; // list of all tool classes with results
+   using all_tool_results       = all_tools_with_results::map_types<impl::tool_to_tool_results>; // list of all results classes from tools that have them
    
-   #pragma region tool_for_results<Results>
-   template<typename Results> struct tool_for_results_f {
-      template<typename Tool> struct functor {
-         static constexpr bool execute() {
-            return std::is_same_v<Results, Tool::results>;
-         }
-      };
-      using result = all_tools_with_results::get_matching<functor>;
-   };
-   template<typename Results> using tool_for_results = tool_for_results_f<Results>::result; // workaround MSVC2019 bug with the below code: internal compiler error
-   /*
-   template<typename Results> struct tool_for_results_s {
-      using type = all_tools_with_results::get_matching<[]<typename Tool>() constexpr {
-         return std::is_same_v<Results, Tool::results>;
-      }>;
-   };
-   template<typename Results> using tool_for_results = tool_for_results_s<Results>::type; // workaround MSVC2019 bug with the below code: templated lambdas do not work with templated aliases; fixed in MSVC2022
-   */
-   /*
-   template<typename Results> using tool_for_results = all_tools_with_results::get_matching<[]<typename Tool>() {
-      return std::is_same_v<Results, Tool::results>;
-   }>;
-   */
-   #pragma endregion
+   template<typename Results> requires all_tool_results::contains_type<Results>
+   using tool_for_results = all_tools_with_results::nth_type<
+      all_tool_results::index_of_type<Results>
+   >;
 
    static_assert(
-      !all_tools_with_results::has_matching([]<tools::tool_has_results_member_type T>() constexpr {
-         return all_tools_with_results::for_each_breakable([]<tools::tool_has_results_member_type U>() constexpr {
-            return !std::is_same_v<T, U> && std::is_same_v<T::results, U::results>;
-         });
-      }),
+      !all_tools_with_results::contains_matching_type<
+         []<tools::tool_has_results_member_type T>() constexpr {
+            return !all_tools_with_results::for_each_until_false<[]<tools::tool_has_results_member_type U>() constexpr {
+               return std::is_same_v<T, U> || !std::is_same_v<T::results, U::results>;
+            }>();
+         }
+      >,
       "Different tools cannot have the same results type."
    );
 }

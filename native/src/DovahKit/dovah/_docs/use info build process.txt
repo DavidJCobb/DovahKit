@@ -117,10 +117,10 @@ the file format.
 Snippet A, then,  is the right approach, even though Snippet  B is considerably 
 cleaner and simpler. What a shame.
 
-All of this, of course, is just a s pecific case, so let's focus on the broader 
+All of this, of course, is just a specific case,  so let's focus on the broader 
 principle at hand: we must build use info for all of the data that we load *and 
 retain.* Simply *seeing* the data is  not enough; if the full form-load process 
-will not *retain*  the data, then we *must  not* build use  info for that data.
+will not *retain*  the data, then we  *must not* build use  info for that data.
 Above, we see one strategy  for ensuring that we honor  this requirement. Let's 
 look at another strategy: spawning subordinate use info builders.
 

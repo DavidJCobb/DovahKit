@@ -33,6 +33,6 @@ namespace vulkanDK {
    }
    void rendered_light::reset() {
       this->handled_frames = frame_dirty_state();
-      this->life_state = scene_frame_item_state::empty;
+      this->life_state     = scene_frame_item_state::empty;
    }
 }

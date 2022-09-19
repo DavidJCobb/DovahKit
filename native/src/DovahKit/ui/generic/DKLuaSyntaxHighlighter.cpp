@@ -413,11 +413,9 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
             break;
          case TokenType::Comment_Block:
             if (extract_long_bracket_close(next, state.param(), length)) {
-               if (text.mid(i + length, 2) == "--") {
-                  this->setFormat(start, i - start + length + 2, this->formats.comment.block);
-                  state.clear();
-                  i += length + 2 - 1;
-               }
+               this->setFormat(start, i - start + length, this->formats.comment.block);
+               state.clear();
+               i += length - 1;
             }
             break;
       }

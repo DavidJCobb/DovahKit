@@ -6,10 +6,11 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include "../../../../DirectXTex/DirectXTex.h"
+#include "../../../helpers/arrays/make.h"
 #include "../../../helpers/intrusive_windows_defines.h"
 
 namespace {
-   constexpr auto executable_binary_extensions = std::array{
+   constexpr const auto executable_binary_extensions = cobb::arrays::make(
       "cpl", // Control Panel extension
       "dll", // Dynamic link library
       "exe", // Executable
@@ -28,9 +29,9 @@ namespace {
       "pif", // Program Information File: a DOS-era program options format that Windows extended
       "scr", // Screensaver executable
       "sys", // System-level configuration and device driver files
-      "u3p",
-   };
-   constexpr auto executable_script_extensions = std::array{
+      "u3p"//,
+   );
+   constexpr const auto executable_script_extensions = cobb::arrays::make(
       "bat", // Batch file: a list of CMD instructions
       "com", // Command file
       "cmd",
@@ -48,8 +49,8 @@ namespace {
       "vbscript",
       "ws",  // Windows script
       "wsf", // Windows script file
-      "wsh", // Windows script preferences
-   };
+      "wsh"//, // Windows script preferences
+   );
 }
 
 DovahscriptSaveButton::DovahscriptSaveButton(QWidget* parent) : QPushButton(parent) {

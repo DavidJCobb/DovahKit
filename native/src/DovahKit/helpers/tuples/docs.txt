@@ -1,0 +1,8 @@
+
+Convention for template arguments is:
+
+ - For things that operate on values, the predicate is the first template parameter, 
+   because the tuple type can be deduced.
+
+ - For things that operate on types, the tuple type is the first template parameter,
+   followed by the predicate, for legibility.
