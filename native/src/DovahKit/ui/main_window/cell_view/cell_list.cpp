@@ -49,7 +49,8 @@ CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::cellUnloaded, this, [this](dovah::form_stub& cell) {
       this->cellRenderWindowLoadedStateChanged(cell, false);
    });
-   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::currentCellChanged, this, &CellListModel::renderWindowCurrentCellChanged);
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::currentCellChanged,      this, &CellListModel::renderWindowCurrentCellChanged);
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::crossedIntoExteriorCell, this, &CellListModel::renderWindowCurrentCellChanged);
 }
 
 void CellListModel::cellRenderWindowLoadedStateChanged(const dovah::form_stub& cell, bool loaded) {

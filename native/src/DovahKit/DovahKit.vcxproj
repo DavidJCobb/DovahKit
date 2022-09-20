@@ -526,7 +526,10 @@
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp" />
     <ClCompile Include="nif\blocks\BSLODTriShape.cpp" />
+    <ClCompile Include="nif\blocks\BSMultiBound.cpp" />
+    <ClCompile Include="nif\blocks\BSMultiBoundNode.cpp" />
     <ClCompile Include="nif\blocks\BSOrderedNode.cpp" />
+    <ClCompile Include="nif\blocks\BSRangeNode.cpp" />
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
@@ -841,6 +844,8 @@
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
     <ClInclude Include="nif\block.h" />
+    <ClInclude Include="nif\blocks\BSBlastNode.h" />
+    <ClInclude Include="nif\blocks\BSDamageStage.h" />
     <ClInclude Include="nif\blocks\BSDismemberSkinInstance.h" />
     <ClInclude Include="nif\blocks\BSEffectShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSFadeNode.h" />
@@ -849,7 +854,10 @@
     <ClInclude Include="nif\blocks\BSLightingShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSLightingShaderPropertyFloatController.h" />
     <ClInclude Include="nif\blocks\BSLODTriShape.h" />
+    <ClInclude Include="nif\blocks\BSMultiBound.h" />
+    <ClInclude Include="nif\blocks\BSMultiBoundNode.h" />
     <ClInclude Include="nif\blocks\BSOrderedNode.h" />
+    <ClInclude Include="nif\blocks\BSRangeNode.h" />
     <ClInclude Include="nif\blocks\BSShaderProperty.h" />
     <ClInclude Include="nif\blocks\BSShaderTextureSet.h" />
     <ClInclude Include="nif\blocks\BSTriShape.h" />
@@ -1760,6 +1768,11 @@
     <Image Include="shaders\ScreenShot278.bmp" />
     <Image Include="shaders\ScreenShot389.bmp" />
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="helpers\resizable_grid.natvis" />
+    <Natvis Include="vulkan\rendered_landscape.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

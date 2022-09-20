@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::rendered_landscape">
+      <DisplayString>{{ {life_state,en}; frames={(uint8_t)handled_frames.mask,bb}; position={{ {(int)shader_params.position.x,d}, {(int)shader_params.position.y,d} }} }}</DisplayString>
+   </Type>
+</AutoVisualizer>

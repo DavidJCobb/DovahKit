@@ -46,6 +46,10 @@ void main() {
 		//indirect_draws[draw_index].instanceCount = 0; // the CPU should already have done this
 		return;
 	}
+	if ((scene_meshes[mesh].flags & RENDERED_MESH_CULL_FLAG_CULLED_BY_APPLICATION) != 0) {
+		indirect_draws[draw_index].instanceCount = 0;
+		return;
+	}
 	//
 	vec3  pos       = scene_meshes[mesh].bounding_sphere_center;
 	vec3  light_pos = active_casters[CURRENT_CASTER].xyz;

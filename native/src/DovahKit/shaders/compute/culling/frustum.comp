@@ -55,6 +55,10 @@ void main() {
 		//indirect_draws[index].instanceCount = 0; // CPU should already have done this
 		return;
 	}
+	if ((scene_meshes[mesh].flags & RENDERED_MESH_CULL_FLAG_CULLED_BY_APPLICATION) != 0) {
+		indirect_draws[index].instanceCount = 0;
+		return;
+	}
 	//
 	vec4  pos    = vec4(scene_meshes[mesh].bounding_sphere_center, 1.0);
 	float radius = scene_meshes[mesh].bounding_sphere_radius;

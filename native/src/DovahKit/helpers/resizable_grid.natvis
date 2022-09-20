@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::resizable_grid&lt;*,*&gt;">
+      <DisplayString>{{ size={(int)_w,d}x{(int)_h,d}, area={(int)_w*(int)_h,d} }}</DisplayString>
+      <Expand>
+         <ArrayItems Condition="_length > 0">
+            <Direction>Forward</Direction>
+            <Rank>_h > 1 ? 2 : 1</Rank>
+            <Size>_w</Size>
+            <ValuePointer>_data,na</ValuePointer>
+         </ArrayItems>
+      </Expand>
+   </Type>
+   <Type Name="cobb::resizable_square_grid&lt;*,*&gt;">
+      <DisplayString>{{ size={(int)_length,d}x{(int)_length,d}, area={(int)_length*(int)_length,d} }}</DisplayString>
+      <Expand>
+         <ArrayItems Condition="_length > 0">
+            <Direction>Forward</Direction>
+            <Rank>_length > 1 ? 2 : 1</Rank>
+            <Size>_length</Size>
+            <ValuePointer>_data,na</ValuePointer>
+         </ArrayItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

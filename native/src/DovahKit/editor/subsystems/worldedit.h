@@ -105,16 +105,19 @@ namespace dovahkit::subsystems {
          void _unload_cell(dovah::form_stub*);
          void _unload_all_cells();
          bool _load_refr(dovah::form_stub&, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc);
-         void _load_cell(dovah::form_stub*, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy, bool move_camera_to);
+         void _load_cell(dovah::form_stub*, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy);
 
          void _center_camera_on_cell(dovah::form_stub&);
 
          void _on_renderer_lost();
          void _update_default_land_textures();
+
+         void _set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x = 0, int32_t grid_y = 0);
          
       public:
          void center_on_refr(dovah::form_stub&);
          void set_current_area(dovah::form_stub* cell_or_world);
+         void set_current_area(dovah::form_stub* world, int32_t grid_x, int32_t grid_y);
          void set_target_view(DKVulkanView&);
 
          void view_input_poll_handler(DKVulkanView&);
@@ -126,8 +129,10 @@ namespace dovahkit::subsystems {
       signals:
          void cellLoaded(dovah::form_stub&);
          void cellUnloaded(dovah::form_stub&);
-         void currentCellChanged(dovah::form_stub*);
-         void currentWorldChanged(dovah::form_stub*);
+         void currentAreaChanged(dovah::form_stub* interior_cell_or_world);
+         void currentCellChanged(dovah::form_stub* interior);
+         void currentWorldChanged(dovah::form_stub* world);
+         void crossedIntoExteriorCell(dovah::form_stub* cell); // use if you need to know what cell is at the center of the loaded grid
          void refSelected(dovah::form_stub&);
          void refDeselected(dovah::form_stub&);
          void statusBarMessage(const QString& message, int display_time = 0);

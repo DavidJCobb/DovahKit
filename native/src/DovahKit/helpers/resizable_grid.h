@@ -371,6 +371,17 @@ namespace cobb {
          const_iterator begin() const { return cbegin(); }
          const_iterator end() const { return cend(); }
 
+         template<typename Functor> void for_each(Functor&& functor) {
+            for (coordinate_type y = top(); y <= bottom(); ++y)
+               for (coordinate_type x = left(); x <= right(); ++x)
+                  functor(at(x, y), x, y);
+         }
+         template<typename Functor> void for_each(Functor&& functor) const {
+            for (coordinate_type y = top(); y <= bottom(); ++y)
+               for (coordinate_type x = left(); x <= right(); ++x)
+                  functor(at(x, y), x, y);
+         }
+
          constexpr void clear() {
             for (size_t i = 0; i < this->area(); ++i)
                this->_data[i] = value_type{};
@@ -421,36 +432,40 @@ namespace cobb {
          }
 
          template<typename Functor> constexpr void shift_by(coordinate_type x_delta, coordinate_type y_delta, Functor&& destroy_functor) {
-            length_type max_zx = length();
-            length_type max_zy = length();
-            if (x_delta < 0)
-               max_zx += x_delta;
-            if (y_delta < 0)
-               max_zy += y_delta;
+            auto x_d_abs = abs(x_delta);
+            auto y_d_abs = abs(y_delta);
+            if (x_d_abs > this->length() || y_d_abs > this->length()) {
+               //
+               // We're shifting by a large enough magnitude to clear the grid entirely.
+               //
+               this->for_each(destroy_functor);
+               this->clear();
+               return;
+            }
+            //
+            const auto length = this->length();
+            const auto lookup = [length](value_type* data, coordinate_type x, coordinate_type y) -> value_type* {
+               if (x < 0 || x >= length)
+                  return nullptr;
+               if (y < 0 || y >= length)
+                  return nullptr;
+               return &data[x + (y * length)];
+            };
 
-            length_type zy = 0;
-            for (; zy < y_delta; ++zy) { // destroy topmost items if shifting down
-               for (length_type zx = 0; zx < length(); ++zx) {
-                  destroy_functor(_zero_based_item(zx, zy), (coordinate_type)zx + left(), (coordinate_type)zy + top());
+            auto* working = _alloc(length * length);
+            for (length_type y = 0; y < length; ++y) {
+               for (length_type x = 0; x < length; ++x) {
+                  auto& src = _zero_based_item(x, y);
+                  auto* dst = lookup(working, x + x_delta, y + y_delta);
+                  if (dst) {
+                     *dst = std::move(src);
+                  } else {
+                     destroy_functor(src, (coordinate_type)x - x_delta + left(), (coordinate_type)y - y_delta + top());
+                  }
                }
             }
-            for (; zy < max_zy; ++zy) {
-               length_type zx = 0;
-               for (; zx < x_delta; ++zx) { // destroy leftmost items if shifting right
-                  destroy_functor(_zero_based_item(zx, zy), (coordinate_type)zx + left(), (coordinate_type)zy + top());
-               }
-               for (; zx < max_zx; ++zx) {
-                  _zero_based_item(zx, zy) = _zero_based_item(zx, zy - y_delta);
-               }
-               for (; zx < length(); ++zx) { // destroy rightmost items if shifting left
-                  destroy_functor(_zero_based_item(zx, zy), (coordinate_type)zx + left(), (coordinate_type)zy + top());
-               }
-            }
-            for (; zy < length(); ++zy) { // destroy bottommost items if shifting up
-               for (length_type zx = 0; zx < length(); ++zx) {
-                  destroy_functor(_zero_based_item(zx, zy), (coordinate_type)zx + left(), (coordinate_type)zy + top());
-               }
-            }
+            _free(this->_data);
+            this->_data = working;
          }
    };
 }

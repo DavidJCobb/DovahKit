@@ -59,6 +59,21 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->ui.loadedCellsAtTop, &QCheckBox::toggled, this, [this](bool checked) {
       this->ui.cellList->setLoadedCellsAtTop(checked);
    });
+   QObject::connect(this->ui.worldspace, &FormsOfTypeCombobox::formChanged, this, [this](dovah::form_stub* stub) {
+      if (!DovahKitCore::get().has_data())
+         return;
+      this->ui.jumpToGrid->setEnabled(stub != nullptr);
+   });
+   QObject::connect(this->ui.jumpToGrid, &QPushButton::clicked, this, [this]() {
+      auto* world = this->ui.worldspace->formStub();
+      if (!world)
+         return;
+      dovahkit::subsystems::worldedit::get().set_current_area(
+         world,
+         this->ui.jumpToGridX->value(),
+         this->ui.jumpToGridY->value()
+      );
+   });
    //
    #pragma region Context menus
       #pragma region Cell
@@ -153,7 +168,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
 }
 void CellViewWindow::setAllEnableStates(bool state) {
    this->ui.worldspace->setEnabled(state);
-   this->ui.jumpToGrid->setEnabled(state);
+   this->ui.jumpToGrid->setEnabled(this->ui.worldspace->formStub() != nullptr);
    this->ui.filterFormType->setEnabled(state);
    this->ui.filterText->setEnabled(state);
    this->ui.loadedCellsAtTop->setEnabled(state);

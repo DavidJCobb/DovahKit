@@ -36,7 +36,7 @@ namespace vulkanDK {
       //
       alignas(16) glm::vec3 fog_color_near = { 0, 0, 0 };
       alignas( 4) float     fog_plane_near = 0;
-      alignas(16) glm::vec3 fog_color_far  = { 0, 0, 0 };
+      alignas(16) glm::vec3 fog_color_far  = { 0, 0, 0 }; // used as the scene background color, too, but updating THAT in specific requires resubmitting scene draw commands (frame_in_flight::_record_scene_draw_commands); TODO: remove the need by just drawing a full-screen polygon with the desired color?
       alignas( 4) float     fog_plane_far  = 7000;
       alignas( 4) float     fog_power  = 1.0F;
       alignas( 4) float     fog_max    = 1.0F; // max fog

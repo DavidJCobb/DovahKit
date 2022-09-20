@@ -96,7 +96,7 @@ namespace nifDK {
             file_version version;
             endian       endianness = endian::little;
             struct {
-               uint32_t primary;
+               uint32_t primary   = 0;
                uint32_t secondary = 0;
             } user_versions;
             struct {

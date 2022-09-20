@@ -66,6 +66,7 @@ namespace vulkanDK {
          inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
          inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
          inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
+         inline bool pending_reload() const noexcept { return this->life_state == scene_frame_item_state::pending_reload; }
          
          inline const glm::vec3& position() const noexcept { return this->shader_params.position; }
          void set_position(const glm::vec3&);

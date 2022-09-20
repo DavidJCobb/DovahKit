@@ -468,6 +468,10 @@ namespace vulkanDK {
          auto& item = list[i];
          if (item.empty())
             return i;
+         if (item.pending_delete()) {
+            item.life_state = scene_frame_item_state::pending_reload;
+            return i;
+         }
       }
       if (size >= config::max_landscapes)
          return index_of_none;

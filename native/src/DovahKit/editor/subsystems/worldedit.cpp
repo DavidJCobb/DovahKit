@@ -31,6 +31,11 @@ namespace {
 }
 
 namespace {
+   static constexpr bool debug_log_area_load_unload = true;
+   static constexpr bool debug_log_mesh_load_unload = false;
+}
+
+namespace {
    static constexpr auto max_selected_refr_count = vulkanDK::config::max_rendered_bounds;
 
    static constexpr float move_speed_normal = 180.0F;
@@ -58,7 +63,8 @@ namespace {
          #endif
          return false;
       }
-      qDebug("NIF parsed. Passing to surface_renderer...");
+      if constexpr (debug_log_mesh_load_unload)
+         qDebug("NIF parsed. Passing to surface_renderer...");
       return true;
    }
 }
@@ -209,10 +215,14 @@ namespace dovahkit::subsystems {
       if (auto& handle = loaded.vulkan_handles.landscape; !handle.empty())
          handle.destroy();
       loaded.land = nullptr;
+      loaded.stub = nullptr;
       //
       loaded = {};
       if (!cell)
          return;
+      if constexpr (debug_log_area_load_unload) {
+         qDebug("[Worldedit][_unload_cell] %08X", cell->formID);
+      }
       //
       // Deselect any refs inside of this cell:
       //
@@ -331,12 +341,15 @@ namespace dovahkit::subsystems {
       );
       return true;
    }
-   void worldedit::_load_cell(dovah::form_stub* cell, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy, bool move_camera_to) {
+   void worldedit::_load_cell(dovah::form_stub* cell, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy) {
       if (!this->target_view)
          return;
       assert(cell && cell->formType == dovah::form_type::cell);
       auto& loaded = this->loaded_cells.at(gx, gy);
       assert(!loaded.stub && "Why is a cell already in this spot?");
+      if constexpr (debug_log_area_load_unload) {
+         qDebug("[Worldedit][_load_cell] %08X", cell->formID);
+      }
       loaded.stub = cell;
       loaded.land = nullptr;
       if (cell->is_exterior_cell()) {
@@ -345,11 +358,7 @@ namespace dovahkit::subsystems {
          }
       }
       //
-      glm::vec3 centroid = { 0, 0, 0 };
-      glm::vec3 coc_pos  = { 0, 0, 0 };
-      glm::vec3 coc_rot  = { 0, 0, 0 };
       size_t refr_count = 0;
-      bool   found_coc_marker = false;
       //
       glm::fvec3 cell_position = { 0, 0, 0 };
       float cell_land_max = 0;
@@ -368,7 +377,7 @@ namespace dovahkit::subsystems {
          //
          loaded.vulkan_handles.landscape = sr->add_landscape(cell_position, *loaded.land);
       }
-      dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &found_coc_marker, &refr_count, &centroid, &coc_pos, &coc_rot](dovah::form_stub* stub) {
+      dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &refr_count](dovah::form_stub* stub) {
          if (stub->formType != dovah::form_type::reference)
             return false;
          //
@@ -380,90 +389,8 @@ namespace dovahkit::subsystems {
             return false;
          ++refr_count;
          //
-         if (!found_coc_marker) {
-            if (is_coc) {
-               found_coc_marker = true;
-               coc_pos = { pos.x, pos.y, pos.z };
-               coc_rot = { rot.x, rot.y, rot.z };
-            } else {
-               centroid += glm::vec3{ pos.x, pos.y, pos.z };
-            }
-         }
          return false;
       });
-      if (move_camera_to) {
-         if (found_coc_marker) {
-            coc_pos.z += 160; // the CK uses a vertical offset as well
-            sr->set_camera_position(coc_pos);
-            //
-            auto& scene = sr->scene;
-            auto& camera = scene.camera;
-            camera.pitch = coc_rot.x - glm::radians<float>(90);
-            camera.roll  = 0.0;
-            camera.yaw   = coc_rot.z;
-            scene.update_camera();
-         } else {
-            if (cell->is_exterior_cell()) {
-               auto pos = cell_position;
-               pos += glm::fvec3{ 2048, 2048, cell_land_max + 1024.0F };
-               sr->set_camera_position(pos);
-            } else {
-               centroid /= refr_count;
-               sr->set_camera_position(centroid);
-            }
-         }
-      }
-      //
-      // Cell lighting parameters:
-      //
-      if (!cell->is_exterior_cell()) {
-         auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
-            return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
-         };
-         //
-         auto  loaded = cell->load().ptr_cast<dovah::loaded_forms::Cell>();
-         auto& sgs    = sr->scene.global_state;
-         {
-            auto& lt = loaded->interior.lighting;
-            sgs.ambient_light_color = _to_vec(lt.ambient);
-            sgs.sun_color      = _to_vec(lt.directional);
-            static_assert(!require_complete_implementation, "TODO: sgs.sun_dir");
-            // TODO: sgs.sun_dir
-            sgs.fog_color_near = _to_vec(lt.fog_color_near);
-            sgs.fog_color_far  = _to_vec(lt.fog_color_far);
-            sgs.fog_plane_near = lt.fog_distance_near;
-            sgs.fog_plane_far  = lt.fog_distance_far;
-            sgs.fog_power      = lt.fog_power;
-            sgs.fog_max        = lt.fog_max;
-            sgs.interior_clip_distance = lt.fog_distance_clip;
-         }
-         if (loaded->interior.lighting_template) {
-            static_assert(!require_complete_implementation, "TODO: Load the LTMP and use its parameters.");
-            // TODO: load the LTMP and use its params
-            //       for now, we just reset some fields to safe defaults
-            sgs.interior_clip_distance = 0;
-            sgs.fog_plane_near = 0;
-            sgs.fog_plane_far  = 7000;
-            sgs.fog_power = 1;
-            sgs.fog_max   = 1;
-         }
-      } else {
-         static_assert(!require_complete_implementation, "TODO: Pull lighting parameters from the appropriate Weather and time of day.");
-         //
-         auto& sgs = sr->scene.global_state;
-         sgs.ambient_light_color = { 0.1, 0.1, 0.1 };
-         sgs.sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 }); // vector from sun to world
-         sgs.sun_color = { 1, 1, 1 };
-         sgs.sun_space = glm::mat4(1);
-         //
-         sgs.fog_color_near = { 130, 150, 210 };
-         sgs.fog_plane_near = 28000;
-         sgs.fog_color_far  = { 130, 150, 210 };
-         sgs.fog_plane_far  = 160000;
-         sgs.fog_power      = 1.0F;
-         sgs.fog_max        = 1.0F;
-         sgs.interior_clip_distance = 0.0F;
-      }
       //
       // Signals:
       //
@@ -598,34 +525,8 @@ namespace dovahkit::subsystems {
       //
       sr->set_default_land_textures(diffuse_path, normals_path);
    }
-
-   void worldedit::center_on_refr(dovah::form_stub& ref) {
-      auto* cell = ref.get_parent_form();
-      if (!cell || cell->formType != dovah::form_type::cell)
-         return;
-      if (!this->is_cell_loaded(cell)) {
-         this->set_current_area(cell);
-      }
-      //
-      if (this->target_view) {
-         if (auto* sr = this->target_view->surfaceRenderer()) {
-            auto loaded = ref.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
-            if (loaded) {
-               glm::fvec3 pos = { loaded->position.x, loaded->position.y, loaded->position.z };
-               pos.z += 160;
-               sr->set_camera_position(pos);
-               //
-               auto& scene  = sr->scene;
-               auto& camera = scene.camera;
-               camera.pitch = glm::radians<float>(-90);
-               camera.roll  = 0.0;
-               camera.yaw   = loaded->rotation.z;
-               scene.update_camera();
-            }
-         }
-      }
-   }
-   void worldedit::set_current_area(dovah::form_stub* cell_or_world) {
+   
+   void worldedit::_set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x, int32_t grid_y) {
       dovah::form_stub* cell  = nullptr;
       dovah::form_stub* world = nullptr;
       if (cell_or_world) {
@@ -647,11 +548,15 @@ namespace dovahkit::subsystems {
       }
       //
       if (world) {
-         qDebug("[Worldedit] Moving to worldspace [WRLD:%08X]...", world->formID);
+         if constexpr (debug_log_area_load_unload) {
+            qDebug("[Worldedit] Moving to worldspace [WRLD:%08X]...", world->formID);
+         }
          //
          bool world_changed = false;
          if (this->target_area.cell || this->target_area.world != world) {
-            qDebug("[Worldedit] Different area; unloading all cells...");
+            if constexpr (debug_log_area_load_unload) {
+               qDebug("[Worldedit] Different area; unloading all cells...");
+            }
             world_changed = true;
          }
          this->target_area.cell  = nullptr;
@@ -665,8 +570,9 @@ namespace dovahkit::subsystems {
                gp_now.y = 0;
             }
          } else {
-            gp_now.x = 0;
-            gp_now.y = 0;
+            gp_now.x = grid_x;
+            gp_now.y = grid_y;
+            cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, grid_x, grid_y);
          }
          //
          auto diff_x = gp_now.x - gp_old.x;
@@ -677,12 +583,22 @@ namespace dovahkit::subsystems {
             // New area overlaps the old. Unload only the cells that have shifted out of the 
             // loaded grid.
             //
-            this->loaded_cells.shift_by(diff_x, diff_y, [this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+            this->loaded_cells.shift_by(-diff_x, -diff_y, [this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+               if constexpr (debug_log_area_load_unload) {
+                  qDebug("[Worldedit] Unloading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
+               }
                this->_unload_cell(data.stub);
-               //
+            });
+            this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+               if (data.stub)
+                  return;
                auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
-               if (replace)
-                  this->_load_cell(replace, x, y, false);
+               if (replace) {
+                  if constexpr (debug_log_area_load_unload) {
+                     qDebug("[Worldedit] Loading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
+                  }
+                  this->_load_cell(replace, x, y);
+               }
             });
          } else {
             this->_unload_all_cells();
@@ -692,7 +608,7 @@ namespace dovahkit::subsystems {
                for (loaded_cell_grid_coord x = lc.left(); x <= lc.right(); ++x) {
                   auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
                   if (replace) {
-                     this->_load_cell(replace, x, y, false);
+                     this->_load_cell(replace, x, y);
                   }
                }
             }
@@ -722,14 +638,18 @@ namespace dovahkit::subsystems {
          if (world_changed)
             emit this->currentWorldChanged(world);
       } else {
-         if (cell) {
-            qDebug("[Worldedit] Moving to [CELL:%08X]...", cell->formID);
-         } else {
-            qDebug("[Worldedit] Moving to nowhere...");
+         if constexpr (debug_log_area_load_unload) {
+            if (cell) {
+               qDebug("[Worldedit] Moving to [CELL:%08X]...", cell->formID);
+            } else {
+               qDebug("[Worldedit] Moving to nowhere...");
+            }
          }
          //
          if (this->target_area.cell || this->target_area.world) {
-            qDebug("[Worldedit] Different area; unloading all cells...");
+            if constexpr (debug_log_area_load_unload) {
+               qDebug("[Worldedit] Different area; unloading all cells...");
+            }
             this->_unload_all_cells();
          }
          this->target_area.cell  = cell;
@@ -737,7 +657,10 @@ namespace dovahkit::subsystems {
          //
          if (cell) {
             assert(cell->formType == dovah::form_type::cell && "Worldedit was asked to load a cell, but the provided form is not a cell.");
-            this->_load_cell(cell, 0, 0, false);
+            this->_load_cell(cell, 0, 0);
+            if constexpr (debug_log_area_load_unload) {
+               qDebug("[Worldedit] Loading interior cell...");
+            }
             this->_center_camera_on_cell(*cell);
             //
             // Signals:
@@ -745,6 +668,104 @@ namespace dovahkit::subsystems {
             emit this->currentCellChanged(cell);
          }
       }
+      //
+      // Set lighting and fog params.
+      //
+      if (this->target_view) {
+         auto* sr = this->target_view->surfaceRenderer();
+         if (sr) {
+            auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
+               return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
+            };
+            if (cell && !world) {
+               auto  loaded = cell->load().ptr_cast<dovah::loaded_forms::Cell>();
+               auto& sgs    = sr->scene.global_state;
+               {
+                  auto& lt = loaded->interior.lighting;
+                  sgs.ambient_light_color = _to_vec(lt.ambient);
+                  sgs.sun_color      = _to_vec(lt.directional);
+                  static_assert(!require_complete_implementation, "TODO: sgs.sun_dir");
+                  // TODO: sgs.sun_dir
+                  sgs.fog_color_near = _to_vec(lt.fog_color_near);
+                  sgs.fog_color_far  = _to_vec(lt.fog_color_far);
+                  sgs.fog_plane_near = lt.fog_distance_near;
+                  sgs.fog_plane_far  = lt.fog_distance_far;
+                  sgs.fog_power      = lt.fog_power;
+                  sgs.fog_max        = lt.fog_max;
+                  sgs.interior_clip_distance = lt.fog_distance_clip;
+               }
+               if (loaded->interior.lighting_template) {
+                  static_assert(!require_complete_implementation, "TODO: Load the LTMP and use its parameters.");
+                  // TODO: load the LTMP and use its params
+                  //       for now, we just reset some fields to safe defaults
+                  sgs.interior_clip_distance = 0;
+                  sgs.fog_plane_near = 0;
+                  sgs.fog_plane_far  = 7000;
+                  sgs.fog_power = 1;
+                  sgs.fog_max   = 1;
+               }
+            } else if (world) {
+               static_assert(!require_complete_implementation, "TODO: Pull lighting parameters from the appropriate Weather and time of day.");
+               //
+               auto& sgs = sr->scene.global_state;
+               sgs.ambient_light_color = { 0.1, 0.1, 0.1 };
+               sgs.sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 }); // vector from sun to world
+               sgs.sun_color = { 1, 1, 1 };
+               sgs.sun_space = glm::mat4(1);
+               //
+               sgs.fog_color_near = _to_vec({ 130, 150, 210 });
+               sgs.fog_plane_near = 28000;
+               sgs.fog_color_far  = _to_vec({ 130, 150, 210 });
+               sgs.fog_plane_far  = 160000;
+               sgs.fog_power      = 1.0F;
+               sgs.fog_max        = 1.0F;
+               sgs.interior_clip_distance = 0.0F;
+            }
+         }
+      }
+      //
+      // Done!
+      //
+      emit this->currentAreaChanged(world ? world : cell);
+   }
+
+   void worldedit::center_on_refr(dovah::form_stub& ref) {
+      auto* cell = ref.get_parent_form();
+      if (!cell || cell->formType != dovah::form_type::cell)
+         return;
+      if (!this->is_cell_loaded(cell)) {
+         this->set_current_area(cell);
+      }
+      //
+      if (this->target_view) {
+         if (auto* sr = this->target_view->surfaceRenderer()) {
+            auto loaded = ref.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (loaded) {
+               glm::fvec3 pos = { loaded->position.x, loaded->position.y, loaded->position.z };
+               pos.z += 160;
+               sr->set_camera_position(pos);
+               //
+               auto& scene  = sr->scene;
+               auto& camera = scene.camera;
+               camera.pitch = glm::radians<float>(-90);
+               camera.roll  = 0.0;
+               camera.yaw   = loaded->rotation.z;
+               scene.update_camera();
+            }
+         }
+      }
+   }
+   void worldedit::set_current_area(dovah::form_stub* cell_or_world) {
+      this->_set_current_area_impl(cell_or_world);
+   }
+   void worldedit::set_current_area(dovah::form_stub* world, int32_t grid_x, int32_t grid_y) {
+      if (world && world->formType != dovah::form_type::worldspace) {
+         #if _DEBUG
+            __debugbreak(); // invalid argument
+         #endif
+         return;
+      }
+      this->_set_current_area_impl(world, grid_x, grid_y);
    }
    void worldedit::set_target_view(DKVulkanView& view) {
       if (this->target_view == &view)
@@ -912,6 +933,63 @@ namespace dovahkit::subsystems {
       //
       // Done processing all tools.
       //
+      if (auto* world = this->target_area.world) {
+         //
+         // Process (un)loading cells as the camera moves.
+         //
+         const auto& camera_pos = sr->scene.camera.position;
+         int32_t cgx = camera_pos.x / dovah::loaded_forms::Cell::side_length;
+         int32_t cgy = camera_pos.y / dovah::loaded_forms::Cell::side_length;
+
+         auto& gp = this->target_area.world_grid_pos;
+         if (cgx != gp.x || cgy != gp.y) {
+            auto diff_x = cgx - gp.x;
+            auto diff_y = cgy - gp.y;
+            auto length = this->loaded_cells.length();
+            if (std::abs(diff_x) < length && std::abs(diff_y) < length) {
+               //
+               // New area overlaps the old. Unload only the cells that have shifted out of the 
+               // loaded grid.
+               //
+               this->loaded_cells.shift_by(-diff_x, -diff_y, [this, world, cgx, cgy](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+                  if constexpr (debug_log_area_load_unload) {
+                     qDebug("[Worldedit] Unloading cell at (%d, %d) due to camera movement...", (cgx + x), (cgy + y));
+                  }
+                  this->_unload_cell(data.stub);
+               });
+               this->loaded_cells.for_each([this, world, cgx, cgy](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+                  if (data.stub)
+                     return;
+                  auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, cgx + x, cgy + y);
+                  if (replace) {
+                     if constexpr (debug_log_area_load_unload) {
+                        qDebug("[Worldedit] Loading cell at (%d, %d) due to camera movement...", (cgx + x), (cgy + y));
+                     }
+                     this->_load_cell(replace, x, y);
+                  }
+               });
+            } else {
+               this->_unload_all_cells();
+               //
+               auto& lc = this->loaded_cells;
+               for (loaded_cell_grid_coord y = lc.top(); y <= lc.bottom(); ++y) {
+                  for (loaded_cell_grid_coord x = lc.left(); x <= lc.right(); ++x) {
+                     auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, cgx + x, cgy + y);
+                     if (replace) {
+                        if constexpr (debug_log_area_load_unload) {
+                           qDebug("[Worldedit] Loading cell at (%d, %d) due to camera movement...", (cgx + x), (cgy + y));
+                        }
+                        this->_load_cell(replace, x, y);
+                     }
+                  }
+               }
+            }
+            gp.x = cgx;
+            gp.y = cgy;
+            //
+            emit this->crossedIntoExteriorCell(this->loaded_cells.at(0, 0).stub);
+         }
+      }
    }
 
    bool worldedit::is_cell_loaded(const dovah::form_stub* cell) const {

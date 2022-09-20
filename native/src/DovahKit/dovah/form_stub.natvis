@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::form_stub">
+
+      <Intrinsic Name="_signature_char" Expression="
+         ((const char*)&amp;dovah::form_types[formType].signature + (3 - a)),[1]nasb
+      ">
+         <Parameter Name="a" Type="uint32_t" />
+      </Intrinsic>
+
+      <DisplayString Condition="formType == dovah::form_type::cell &amp;&amp; addenda">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb} at ({addenda-&gt;grid_coords.x,d}, {addenda-&gt;grid_coords.y,d})</DisplayString>
+      <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb}</DisplayString>
+      <Expand>
+         <Item Name="[form type]">dovah::form_types[formType].name,sb</Item>
+         <Synthetic Name="[flags]">
+            <DisplayString>{(int)flags,2X}</DisplayString>
+            <Expand>
+               <Synthetic Name="is_edited">
+                  <DisplayString>{(flags &amp; flag::is_edited) != 0}</DisplayString>
+               </Synthetic>
+               <Synthetic Name="is_hardcoded">
+                  <DisplayString>{(flags &amp; flag::is_hardcoded) != 0}</DisplayString>
+               </Synthetic>
+               <Synthetic Name="has_multiple_source_files">
+                  <DisplayString>{(flags &amp; flag::has_multiple_source_files) != 0}</DisplayString>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[source files]" Condition="flags &amp; flag::has_multiple_source_files">
+            <DisplayString>{files.entries,d} files</DisplayString>
+            <Expand>
+               <ArrayItems>
+                  <Size>files.count</Size>
+                  <ValuePointer>files.entries</ValuePointer>
+               </ArrayItems>
+            </Expand>
+         </Synthetic>
+         <Item Name="[source file]" Condition="!(flags &amp; flag::has_multiple_source_files)">file</Item>
+         <Item Name="[addenda]" Condition="addenda != nullptr">addenda</Item>
+         <Item Name="[loaded form]" Condition="working_copy != nullptr">form</Item>
+         <Item Name="[working copy]" Condition="working_copy != nullptr">working_copy</Item>
+         <Synthetic Name="[use info]">
+            <DisplayString>{outbound.size(),d} outbound refs; {inbound.size(),d} inbound</DisplayString>
+            <Expand>
+               <Synthetic Name="outbound">
+                  <Expand>
+                     <ExpandedItem>outbound</ExpandedItem>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="inbound">
+                  <Expand>
+                     <ExpandedItem>inbound</ExpandedItem>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -1794,6 +1794,15 @@
     <ClCompile Include="helpers\resizable_grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nif\blocks\BSMultiBound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSMultiBoundNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSRangeNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3908,6 +3917,21 @@
     <ClInclude Include="helpers\arrays\make.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nif\blocks\BSMultiBound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSMultiBoundNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSRangeNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSBlastNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSDamageStage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4537,5 +4561,10 @@
     <Image Include="shaders\ScreenShot389.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="helpers\resizable_grid.natvis" />
+    <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="vulkan\rendered_landscape.natvis" />
   </ItemGroup>
 </Project>

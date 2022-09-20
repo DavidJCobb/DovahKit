@@ -8,6 +8,7 @@
    // Includes are organized by class hierarchy:
    //
    #include "NiObject.h"
+      #include "BSMultiBound.h"
       #include "BSShaderTextureSet.h"
       #include "NiCollisionObject.h"
       #include "NiExtraData.h"
@@ -30,7 +31,11 @@
             #include "NiNode.h"
                #include "BSFadeNode.h"
                #include "BSLeafAnimNode.h"
+               #include "BSMultiBoundNode.h"
                #include "BSOrderedNode.h"
+               #include "BSRangeNode.h"
+                  #include "BSBlastNode.h"
+                     #include "BSDamageStage.h"
                #include "NiSwitchNode.h"
          #include "NiProperty.h"
             #include "NiAlphaProperty.h"
@@ -53,6 +58,8 @@ namespace nifDK {
    using all_block_types = cobb::class_list<
       block_types::unknown_block,
       //
+      block_types::BSBlastNode,
+      block_types::BSDamageStage,
       block_types::BSDismemberSkinInstance,
       block_types::BSEffectShaderProperty,
       block_types::BSFadeNode,
@@ -61,7 +68,13 @@ namespace nifDK {
       block_types::BSLightingShaderProperty,
       block_types::BSLightingShaderPropertyFloatController,
       block_types::BSLODTriShape,
+      block_types::BSMultiBound,
+      block_types::BSMultiBoundData,
+      block_types::BSMultiBoundDataOBB,
+      block_types::BSMultiBoundDataSphere,
+      block_types::BSMultiBoundNode,
       block_types::BSOrderedNode,
+      block_types::BSRangeNode,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
       block_types::BSTriShape,

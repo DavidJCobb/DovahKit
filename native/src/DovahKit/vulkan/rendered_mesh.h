@@ -34,12 +34,20 @@ namespace vulkanDK {
          rendered_mesh(rendered_mesh&&) noexcept;
          rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
+         struct cull_flag {
+            enum type : uint32_t {
+               culled_by_application = 0x00000001,
+            };
+         };
+         using cull_flags_t = std::underlying_type_t<cull_flag::type>;
+
          struct mesh_flag { // flags applied on the CPU, not within shaders
             enum type : uint32_t {
-               requires_oit = 0x00000001,
-               double_sided = 0x00000002,
-               cast_shadows = 0x00000004,
-               is_decal     = 0x00000008,
+               requires_oit          = 0x00000001,
+               double_sided          = 0x00000002,
+               cast_shadows          = 0x00000004,
+               is_decal              = 0x00000008,
+               culled_by_application = 0x00000010,
             };
             //
             static constexpr uint32_t all_default_flags = cast_shadows;
@@ -66,9 +74,10 @@ namespace vulkanDK {
             alignas(4) VkBool32 receive_shadows       = VK_TRUE;  // bools in GLSL are uint32_ts in SPIR-V
          };
          struct cull_data {
-            alignas(16) glm::mat4 transform;
-            alignas(16) glm::vec3 bounding_sphere_center = {};
-            alignas( 4) float     bounding_sphere_radius = 0;
+            alignas(16) glm::mat4    transform;
+            alignas(16) glm::vec3    bounding_sphere_center = {};
+            alignas( 4) float        bounding_sphere_radius = 0;
+            alignas( 4) cull_flags_t flags = 0;
          };
          
          mesh_flags_t mesh_flags = mesh_flag::all_default_flags;

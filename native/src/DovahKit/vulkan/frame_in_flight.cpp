@@ -866,7 +866,12 @@ namespace vulkanDK {
                .extent = sr.surface_extent,
             },
             std::array{
-               VkClearValue{ .color = { 0, 0, 0, 1 } }, // set framebuffer to black
+               VkClearValue{ .color = {
+                  scene.global_state.fog_color_far[0],
+                  scene.global_state.fog_color_far[1],
+                  scene.global_state.fog_color_far[2],
+                  1
+               } },
                VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} }, // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
             },
             VK_SUBPASS_CONTENTS_INLINE
@@ -1256,7 +1261,7 @@ namespace vulkanDK {
       this->state.scene_bounds_added_or_removed = true;
    }
    void frame_in_flight::on_scene_landscape_added_or_removed() {
-      this->state.scene_landscapes_added_or_removed;
+      this->state.scene_landscapes_added_or_removed = true;
    }
    void frame_in_flight::on_scene_meshes_added_or_removed() {
       this->state.scene_meshes_added_or_removed = true;
@@ -1398,7 +1403,7 @@ namespace vulkanDK {
          auto* params = (entry_type*)this->shader_params.scene_landscapes.map_memory();
          for (size_t i = first_dirty; i < count; ++i) {
             auto& item = list[i];
-            if (!item.active()) {
+            if (!item.active() && !item.pending_reload()) {
                if (item.pending_delete())
                   item.handled_frames.set_up_to_date(this->my_index);
                continue;
@@ -1408,6 +1413,9 @@ namespace vulkanDK {
             auto& src = item.shader_params;
             auto& dst = params[i];
             memcpy(&dst, &src, entry_size);
+            if (item.pending_reload()) {
+               // if we had one coalesced landscape buffer per FiF, we'd update this FiF's buffer here
+            }
             //
             item.handled_frames.set_up_to_date(this->my_index);
          }
@@ -1529,10 +1537,15 @@ namespace vulkanDK {
             auto& dst = params[i];
             memcpy(&dst, &src, entry_size);
             //
+            uint32_t cull_flags = 0;
+            if (item.mesh_flags & rendered_mesh::mesh_flag::culled_by_application)
+               cull_flags |= rendered_mesh::cull_flag::culled_by_application;
+            //
             bounds[i] = {
                .transform              = item.shader_params.transform,
                .bounding_sphere_center = item.data.bounding_sphere.center,
                .bounding_sphere_radius = sqrtf(item.data.bounding_sphere.radius_sq),
+               .flags                  = cull_flags,
             };
             //
             item.handled_frames.set_up_to_date(this->my_index);

@@ -70,6 +70,7 @@
 #include "dovah/forms/components/extra_data/radius.h"
 
 namespace {
+   static constexpr bool debug_log_mesh_loading             = false;
    static constexpr bool debug_log_scene_object_lifetimes   = false;
    static constexpr bool debug_object_names_fallback_to_log = false; // logs objects' debug names when the relevant extension isn't supported; log spam on window resize; use only when needed
 }
@@ -3644,6 +3645,7 @@ namespace vulkanDK {
          this->state.fps.next_delta(this->state.last_frame_time);
       }
       this->_execute_pending_scene_deletions();
+      this->_execute_pending_scene_reloads();
    }
 
 
@@ -4353,6 +4355,8 @@ namespace vulkanDK {
          qDebug("[vulkanDK::scene_renderer::add_landscape] Creating new landscape at index %u.", index);
       }
       auto& item = this->scene.landscapes[index];
+      if (item.life_state == scene_frame_item_state::pending_reload)
+         --this->scene.pending_deletions.landscapes;
       item.life_state = scene_frame_item_state::active;
       item.handled_frames.set_all_out_of_date();
       item.set_position(position);
@@ -4619,11 +4623,12 @@ namespace vulkanDK {
             --this->scene.textures[prior_normals].refcount;
       }
    }
-   void surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
+   rendered_mesh* surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
       auto size = data->vertices.size();
       if (!size || !data->triangles.size())
-         return;
-      qDebug("[surface_renderer::add_BSTriShape_mesh] Handling geometry: %s...", data->name.data());
+         return nullptr;
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_BSTriShape_mesh] Handling geometry: %s...", data->name.data());
       transform = transform * data->transform.to_matrix();
       //
       auto  mesh_index = this->scene.insert_new_mesh();
@@ -4660,10 +4665,12 @@ namespace vulkanDK {
             dst.uv        = src.uv;
          }
       }
-      qDebug("[surface_renderer::add_BSTriShape_mesh] Loaded %u vertices...", size);
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_BSTriShape_mesh] Loaded %u vertices...", size);
       {  // Triangles
          _ni_triangles_to_mesh_triangles(data->triangles, mesh);
-         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+         if constexpr (debug_log_mesh_loading)
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
       }
       {  // Bounding sphere
          auto& dst = mesh.data.bounding_sphere;
@@ -4672,31 +4679,36 @@ namespace vulkanDK {
          dst.radius_sq = src.radius * src.radius;
          mesh.shader_params.bounding_sphere_center = src.center;
          mesh.shader_params.bounding_sphere_radius = src.radius;
-         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
+         if constexpr (debug_log_mesh_loading)
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //
       // Vulkan:
       //
       this->_create_mesh_vib(mesh);
-      qDebug("[surface_renderer::add_BSTriShape_mesh] Vulkan setup complete for geometry: %s.", data->name.c_str());
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_BSTriShape_mesh] Vulkan setup complete for geometry: %s.", data->name.c_str());
       //
       // Texture:
       //
       if (auto* shader = data->properties.shader) {
          _handle_ni_textures(mesh, shader);
       }
+      //
+      return &mesh;
    }
-   void surface_renderer::add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index) {
+   rendered_mesh* surface_renderer::add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index) {
       auto* geom = dynamic_cast<nifDK::block_types::NiTriBasedGeom*>(object); // the NiGeometry superclass isn't enough for triangle-based rendering
       if (!geom)
-         return;
+         return nullptr;
       auto* data = dynamic_cast<nifDK::block_types::NiTriShapeData*>(geom->data);
       if (!data)
-         return;
+         return nullptr;
       auto size = data->vertices.size();
       if (!size || !data->triangles.size())
-         return;
-      qDebug("[surface_renderer::add_NiGeometry_mesh] Handling geometry: %s...", object->name.data());
+         return nullptr;
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Handling geometry: %s...", object->name.data());
       transform = transform * geom->transform.to_matrix();
       //
       auto  mesh_index = this->scene.insert_new_mesh();
@@ -4758,10 +4770,12 @@ namespace vulkanDK {
             }
          }
       }
-      qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", size);
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", size);
       {  // Triangles
          _ni_triangles_to_mesh_triangles(data->triangles, mesh);
-         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+         if constexpr (debug_log_mesh_loading)
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
       }
       {  // Bounding sphere
          auto& dst = mesh.data.bounding_sphere;
@@ -4770,19 +4784,23 @@ namespace vulkanDK {
          dst.radius_sq = src.radius * src.radius;
          mesh.shader_params.bounding_sphere_center = src.center;
          mesh.shader_params.bounding_sphere_radius = src.radius;
-         qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
+         if constexpr (debug_log_mesh_loading)
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded NiBound...");
       }
       //
       // Vulkan:
       //
       this->_create_mesh_vib(mesh);
-      qDebug("[surface_renderer::add_NiGeometry_mesh] Vulkan setup complete for geometry: %s.", object->name.c_str());
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_NiGeometry_mesh] Vulkan setup complete for geometry: %s.", object->name.c_str());
       //
       // Texture:
       //
       if (auto* shader = geom->properties.shader) {
          _handle_ni_textures(mesh, shader);
       }
+      //
+      return &mesh;
    }
    bool surface_renderer::add_nif(nifDK::file& model, const glm::vec3& pos, const glm::vec3& rot, float scale) {
       if (!model.root_node) {
@@ -4808,31 +4826,49 @@ namespace vulkanDK {
          auto& texture_item = this->scene.textures[texture_index];
          texture_item.life_state = scene_frame_item_state::active;
       }
-      glm::mat4 transform = glm_transform_from_beth(pos, rot, scale);
-      model.root_node->walk_tree(
-         transform,
-         [](nifDK::block_types::NiNode* node, glm::mat4& transform) {
-            transform = transform * node->transform.to_matrix();
-         },
-         [this, texture_index](nifDK::block_types::NiAVObject* object, const glm::mat4& transform) {
-            if (&typeid(*object->parent) == &typeid(nifDK::block_types::NiSwitchNode)) {
+      {
+         using namespace nifDK::block_types;
+
+         struct _import_state {
+            glm::mat4 transform;
+            bool      is_culled = false;
+         };
+         _import_state state;
+         state.transform = glm_transform_from_beth(pos, rot, scale);
+
+         model.root_node->walk_tree(
+            state,
+            [](NiNode* node, _import_state& state) {
+               state.transform  = state.transform * node->transform.to_matrix();
+               state.is_culled |= ((node->flags & NiAVObject::flag::culled_by_application) != 0);
+            },
+            [this, texture_index](NiAVObject* object, const _import_state& state) {
+               if (&typeid(*object->parent) == &typeid(NiSwitchNode)) {
+                  //
+                  // For NiSwitchNodes, only import the current child. (TODO: Instead, import all children 
+                  // and then cull the non-active ones somehow.)
+                  //
+                  auto* sn = (NiSwitchNode*)object->parent;
+                  if (sn->current_child() != object)
+                     return;
+               }
+               rendered_mesh* mesh = nullptr;
+               if (auto* geom = dynamic_cast<NiGeometry*>(object)) {
+                  mesh = this->add_NiGeometry_mesh(geom, state.transform, texture_index);
+               } else if (auto* geom = dynamic_cast<BSTriShape*>(object)) {
+                  mesh = this->add_BSTriShape_mesh(geom, state.transform, texture_index);
+               }
                //
-               // For NiSwitchNodes, only import the current child. (TODO: Instead, import all children 
-               // and then cull the non-active ones somehow.)
-               //
-               auto* sn = (nifDK::block_types::NiSwitchNode*)object->parent;
-               if (sn->current_child() != object)
-                  return;
+               if (mesh) {
+                  if (state.is_culled || (object->flags & NiAVObject::flag::culled_by_application))
+                     mesh->mesh_flags |= rendered_mesh::mesh_flag::culled_by_application;
+               }
             }
-            if (auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(object)) {
-               this->add_NiGeometry_mesh(geom, transform, texture_index);
-            }
-            if (auto* geom = dynamic_cast<nifDK::block_types::BSTriShape*>(object)) {
-               this->add_BSTriShape_mesh(geom, transform, texture_index);
-            }
-         }
-      );
-      qDebug("[surface_renderer::add_nif] Done processing the NIF.");
+         );
+      }
+      if constexpr (debug_log_mesh_loading)
+         qDebug("[surface_renderer::add_nif] Done processing the NIF.");
+
       {
          auto& tex = this->scene.textures[texture_index];
          if (tex.refcount == 0) {
@@ -4840,7 +4876,8 @@ namespace vulkanDK {
             // Means this model failed to produce any meshes (AND no other meshes loaded via 
             // this function did either), so the white.png texture is unused.
             //
-            qDebug("[surface_renderer::add_nif] Texture is unreferenced; deleting it.");
+            if constexpr (debug_log_mesh_loading)
+               qDebug("[surface_renderer::add_nif] Texture is unreferenced; deleting it.");
             tex.mark_for_delete();
          }
       }
@@ -5376,6 +5413,28 @@ namespace vulkanDK {
          }
          pd.textures -= deleted;
          list.resize(last_alive + 1);
+      }
+   }
+   void surface_renderer::_execute_pending_scene_reloads() {
+      auto ic = this->swap_chain.images.size();
+      {
+         bool  waited = false;
+         auto& list   = this->scene.landscapes;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (item.life_state != scene_frame_item_state::pending_reload)
+               continue;
+            if (!waited) {
+               this->_wait_on_all_frames_in_flight();
+               waited = true;
+            }
+            this->scene.update_single_landscape(*this, i);
+            item.life_state = scene_frame_item_state::active;
+         }
+         if (waited) {
+            for (auto& fif : this->swap_chain.frames_in_flight)
+               fif.on_scene_landscape_added_or_removed();
+         }
       }
    }
    #pragma endregion

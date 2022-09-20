@@ -262,8 +262,8 @@ namespace vulkanDK {
       protected:
          void _create_mesh_vib(rendered_mesh&);
          void _handle_ni_textures(rendered_mesh&, nifDK::block_types::BSShaderProperty*);
-         void add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index);
-         void add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
+         rendered_mesh* add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index);
+         rendered_mesh* add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
          rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
@@ -335,5 +335,6 @@ namespace vulkanDK {
          void _wait_on_all_frames_in_flight();
 
          void _execute_pending_scene_deletions();
+         void _execute_pending_scene_reloads();
    };
 }
