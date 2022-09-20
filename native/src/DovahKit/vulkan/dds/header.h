@@ -102,7 +102,7 @@ namespace vulkanDK::dds {
       //
       header_extension dx10_header; // only if has_extended_header() is true
 
-      inline bool has_extended_header() const { return this->format.use_extended_header(); }
+      constexpr bool has_extended_header() const noexcept { return this->format.use_extended_header(); }
 
       void read(cobb::generic_reader_ex&);
       VkFormat to_vulkan_format() const;

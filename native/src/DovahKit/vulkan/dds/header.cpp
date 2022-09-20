@@ -1,4 +1,8 @@
 #include "header.h"
+#include <algorithm>
+#include <bit>
+#include <cstdint>
+#include <optional>
 #include "helpers/generic_reader_ex.h"
 #include "load_exception.h"
 
@@ -64,32 +68,34 @@ namespace vulkanDK::dds {
       }
    }
    VkFormat header::to_vulkan_format() const {
+      using enum VkFormat;
+
       if (this->has_extended_header()) {
          auto i = this->dx10_header.format;
          if (i >= dxgi_formats.size())
-            return VkFormat::VK_FORMAT_UNDEFINED;
+            return VK_FORMAT_UNDEFINED;
          return dxgi_formats[i].vulkan.format;
       }
       if (this->format.has_four_cc()) {
          switch (this->format.four_cc) {
             case 'DXT1':
                if (this->format.has_channel_a()) {
-                  return VkFormat::VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+                  return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
                }
-               return VkFormat::VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+               return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
             case 'DXT2':
-               return VkFormat::VK_FORMAT_BC2_UNORM_BLOCK;
+               return VK_FORMAT_BC2_UNORM_BLOCK;
             case 'DXT3':
-               return VkFormat::VK_FORMAT_BC2_UNORM_BLOCK;
+               return VK_FORMAT_BC2_UNORM_BLOCK;
             case 'DXT4':
-               return VkFormat::VK_FORMAT_BC3_UNORM_BLOCK;
+               return VK_FORMAT_BC3_UNORM_BLOCK;
             case 'DXT5':
-               return VkFormat::VK_FORMAT_BC3_UNORM_BLOCK;
+               return VK_FORMAT_BC3_UNORM_BLOCK;
          }
       }
       //
       // TODO: we can use the rest of the header to try and find a matching format
       //
-      return VkFormat::VK_FORMAT_UNDEFINED;
+      return VK_FORMAT_UNDEFINED;
    }
 }

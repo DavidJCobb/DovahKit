@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::dds::header">
+      <Intrinsic Name="_has_mipmaps" Expression="(flags &amp; flag::has_mipmap_count) != 0 &amp;&amp; mipmap_count != 0" />
+      <Intrinsic Name="_is_cubemap" Expression="(flags &amp; flag::has_capabilities) != 0 &amp;&amp; (capabilities[1] &amp; capabilities_1::is_cubemap) != 0" />
+
+      <DisplayString Condition="_is_cubemap() &amp;&amp; _has_mipmaps()">{{ DDS cubemap {width,d}x{height,d}px with {mipmap_count,d} mipmaps }}</DisplayString>
+      <DisplayString Condition="_is_cubemap()">{{ DDS cubemap {width,d}x{height,d}px }}</DisplayString>
+      <DisplayString Condition="_has_mipmaps()">{{ DDS {width,d}x{height,d}px with {mipmap_count,d} mipmaps }}</DisplayString>
+      <DisplayString>{{ DDS {width,d}x{height,d}px }}</DisplayString>
+      
+      <Expand>
+         <Synthetic Name="flags">
+            <DisplayString>flags</DisplayString>
+            <Expand>
+               <Item Name="has_capabilities">(flags &amp; flag::has_capabilities) != 0</Item>
+               <Item Name="has_height">(flags &amp; flag::has_height) != 0</Item>
+               <Item Name="has_width">(flags &amp; flag::has_width) != 0</Item>
+               <Item Name="has_pitch">(flags &amp; flag::has_pitch) != 0</Item>
+               <Item Name="has_pixel_format">(flags &amp; flag::has_pixel_format) != 0</Item>
+               <Item Name="has_mipmap_count">(flags &amp; flag::has_mipmap_count) != 0</Item>
+               <Item Name="has_linear_size">(flags &amp; flag::has_linear_size) != 0</Item>
+               <Item Name="has_depth">(flags &amp; flag::has_depth) != 0</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="width">width</Item>
+         <Item Name="height">height</Item>
+         <Item Name="pitch"       Condition="(flags &amp; flag::has_pitch) != 0">pitch</Item>
+         <Item Name="linear_size" Condition="(flags &amp; flag::has_pitch) == 0">linear_size</Item>
+         <Item Name="depth"       Condition="(flags &amp; flag::has_depth) != 0">depth</Item>
+         <Item Name="mipmap_count">mipmap_count</Item>
+         <Item Name="format">format</Item>
+         <Item Name="capabilities" Condition="(flags &amp; flag::has_capabilities) != 0">capabilities</Item>
+         <Item Name="dx10_header" Condition="(format.flags &amp; pixel_format::flag::has_four_cc) &amp;&amp; format.four_cc == pixel_format::format_code::extended_header">dx10_header</Item>
+         <Synthetic Name="[is cubemap]">
+            <DisplayString>{_is_cubemap()}</DisplayString>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

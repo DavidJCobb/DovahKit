@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::dds::pixel_format">
+      <Intrinsic Name="_has_rgb_bitcount" Expression="0 != (this->flags &amp; (flag::uncompressed_rgb | flag::has_luminance | flag::has_yuv_colors))"/>
+      
+      <Expand>
+         <Synthetic Name="flags">
+            <DisplayString>flags</DisplayString>
+            <Expand>
+               <Item Name="has_alpha">(flags &amp; flag::has_alpha) != 0</Item>
+               <Item Name="alpha_only">(flags &amp; flag::alpha_only) != 0</Item>
+               <Item Name="has_four_cc">(flags &amp; flag::has_four_cc) != 0</Item>
+               <Item Name="uncompressed_rgb">(flags &amp; flag::uncompressed_rgb) != 0</Item>
+               <Item Name="has_yuv_colors">(flags &amp; flag::has_yuv_colors) != 0</Item>
+               <Item Name="has_luminance">(flags &amp; flag::has_luminance) != 0</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="four_cc">four_cc</Item>
+         <Item Name="rgb_bitcount" Condition="_has_rgb_bitcount()">rgb_bitcount</Item>
+         <Item Name="channel_masks">channel_masks</Item>
+         
+         <Synthetic Name="[has RGB bitcount]">
+            <DisplayString>{_has_rgb_bitcount()}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[use DX10 header]">
+            <DisplayString>{(flags &amp; flag::has_four_cc) != 0 &amp;&amp; four_cc == format_code::extended_header}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[has channel R]">
+            <DisplayString>{0 != (flags &amp; (flag::uncompressed_rgb | flag::has_yuv_colors | flag::has_luminance))}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[has channel G]">
+            <DisplayString>{0 != (flags &amp; (flag::uncompressed_rgb | flag::has_yuv_colors))}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[has channel B]">
+            <DisplayString>{0 != (flags &amp; (flag::uncompressed_rgb | flag::has_yuv_colors))}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[has channel A]">
+            <DisplayString>{0 != (flags &amp; (flag::has_alpha | flag::alpha_only))}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[is uncompressed]">
+            <DisplayString>{0 != (flags &amp; (flag::uncompressed_rgb | flag::has_yuv_colors | flag::has_luminance | flag::alpha_only))}</DisplayString>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

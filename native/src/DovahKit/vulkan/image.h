@@ -20,6 +20,12 @@ namespace vulkanDK {
       uint32_t              mipmap_count = 1; // includes top-level texture, unlike DDS
       VkSampleCountFlagBits samples      = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
       VkSharingMode         sharing      = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+      VkComponentMapping    swizzle = {
+         .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+         .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+      };
       VkImageTiling         tiling       = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
       VkImageUsageFlags     usage        = 0;
 

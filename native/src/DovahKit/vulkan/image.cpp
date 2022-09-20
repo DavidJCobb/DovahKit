@@ -41,15 +41,7 @@ namespace {
          .image      = image,
          .viewType   = vt,
          .format     = meta.format,
-         .components = {
-            //
-            // No color channel mixing/swapping/etc.
-            //
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-         },
+         .components = meta.swizzle,
          .subresourceRange = { // control what part of the image is accessed
             .aspectMask     = aspect,
             .baseMipLevel   = 0, // don't skip mipmaps
@@ -91,8 +83,80 @@ namespace vulkanDK {
          .height = header.height,
          .depth  = (header.flags & dds::header::flag::has_depth) ? header.depth : 1,
       };
-      out.format     = header.to_vulkan_format();
       out.is_cubemap = (header.capabilities[1] & dds::header::capabilities_1::is_cubemap);
+      out.format     = header.to_vulkan_format();
+      if (out.format == VK_FORMAT_UNDEFINED) {
+         //
+         // DDS files can define color components in varying orders, but Vulkan basically 
+         // only has formats defined for RGBA. However, by swizzling the image components, 
+         // we can handle other orders.
+         //
+         const auto& pf = header.format;
+         if (pf.has_rgb_bitcount() && !pf.channels_overlap()) {
+            const auto bitcount = pf.uniform_channel_bitcount();
+            if (bitcount) {
+               //
+               // The image has color channels that don't overlap, and all channels use 
+               // the same bitcount. We should be able to handle this through swizzling.
+               //
+               auto    sequence = pf.channel_sequence();
+               uint8_t count    = 0;
+               for (uint8_t i = 0; i < 4; ++i) {
+                  if (sequence[i].first != -1)
+                     ++count;
+                  else
+                     break;
+               }
+               //
+               VkFormat potential_format = VkFormat::VK_FORMAT_UNDEFINED;
+               switch (count) {
+                  case 1:
+                     switch (bitcount) {
+                        case  8: potential_format = VkFormat::VK_FORMAT_R8_UINT; break;
+                        case 16: potential_format = VkFormat::VK_FORMAT_R16_UINT; break;
+                        case 32: potential_format = VkFormat::VK_FORMAT_R32_UINT; break;
+                     }
+                     break;
+                  case 2:
+                     switch (bitcount) {
+                        case  8: potential_format = VkFormat::VK_FORMAT_R8G8_UINT; break;
+                        case 16: potential_format = VkFormat::VK_FORMAT_R16G16_UINT; break;
+                     }
+                     break;
+                  case 3:
+                     switch (bitcount) {
+                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8_UINT; break;
+                     }
+                     break;
+                  case 4:
+                     switch (bitcount) {
+                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8A8_UINT; break;
+                     }
+                     break;
+               }
+               if (potential_format != VkFormat::VK_FORMAT_UNDEFINED) {
+                  auto _set_swizzle = [](int8_t component, const int8_t key, VkComponentSwizzle& out) -> void {
+                     if (key == component) {
+                        out = VK_COMPONENT_SWIZZLE_IDENTITY;
+                        return;
+                     }
+                     switch (key) {
+                        case  0: out = VK_COMPONENT_SWIZZLE_R; break;
+                        case  1: out = VK_COMPONENT_SWIZZLE_G; break;
+                        case  2: out = VK_COMPONENT_SWIZZLE_B; break;
+                        case  3: out = VK_COMPONENT_SWIZZLE_A; break;
+                        case -1: out = VK_COMPONENT_SWIZZLE_ZERO; break;
+                     }
+                  };
+                  //
+                  _set_swizzle(0, sequence[0].first, out.swizzle.r);
+                  _set_swizzle(1, sequence[1].first, out.swizzle.g);
+                  _set_swizzle(2, sequence[2].first, out.swizzle.b);
+                  _set_swizzle(3, sequence[3].first, out.swizzle.a);
+               }
+            }
+         }
+      }
       //
       out.layer_count = 1;
       if (has_ext)
