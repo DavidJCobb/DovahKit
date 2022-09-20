@@ -12,7 +12,7 @@ namespace vulkanDK::dds {
       reader.unchecked_read(this->flags);
       reader.unchecked_read<std::endian::big>(this->four_cc);
       reader.unchecked_read(this->rgb_bitcount);
-      reader.unchecked_read(this->channel_masks.list);
+      reader.unchecked_read<std::endian::big>(this->channel_masks.list);
    }
 
    std::array<std::pair<int8_t, int>, 4> pixel_format::channel_sequence() const noexcept {

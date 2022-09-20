@@ -94,7 +94,9 @@ namespace vulkanDK::dds {
          }
       }
       //
-      // TODO: we can use the rest of the header to try and find a matching format
+      // The caller should use the rest of the header to find an appropriate format. 
+      // This will generally entail extra steps, such as the use of swizzling to 
+      // accommodate a color component order that isn't Vulkan-standard.
       //
       return VK_FORMAT_UNDEFINED;
    }

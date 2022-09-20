@@ -3821,6 +3821,11 @@ namespace vulkanDK {
             qDebug("[vulkanDK::surface_renderer::add_texture] No DDS data available.");
             return fail;
          }
+         const auto vulkan_metadata = image_metadata::from_dds_header(tex.metadata);
+         if (vulkan_metadata.format == VkFormat::VK_FORMAT_UNDEFINED) {
+            qDebug("[vulkanDK::surface_renderer::add_dds_texture] DDS texture format did not map to Vulkan: %s", qUtf8Printable(texture_path));
+            return fail;
+         }
          //
          // Create scene texture.
          //
@@ -3843,7 +3848,7 @@ namespace vulkanDK {
          target.content = owned_image_and_view(*this);
          try {
             auto& img = target.content;
-            img.metadata = image_metadata::from_dds_header(tex.metadata);
+            img.metadata = vulkan_metadata;
             img.metadata.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
             //
             img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);

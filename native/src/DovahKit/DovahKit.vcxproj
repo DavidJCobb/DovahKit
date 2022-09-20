@@ -1771,8 +1771,14 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="helpers\eight_cc.natvis" />
+    <Natvis Include="helpers\glm\mat.natvis" />
+    <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
+    <Natvis Include="vulkan\dds\header.natvis" />
+    <Natvis Include="vulkan\dds\pixel_format.natvis" />
     <Natvis Include="vulkan\rendered_landscape.natvis" />
+    <Natvis Include="vulkan\rendered_mesh.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

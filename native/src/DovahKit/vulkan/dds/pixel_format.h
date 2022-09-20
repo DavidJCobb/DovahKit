@@ -48,7 +48,7 @@ namespace vulkanDK::dds {
             uint32_t b;
             uint32_t a;
          };
-      } channel_masks;
+      } channel_masks; // we read these as big-endian.
 
       constexpr bool has_four_cc() const noexcept { return 0 != (this->flags & flag::has_four_cc); };
       constexpr bool has_rgb_bitcount() const noexcept { return 0 != (this->flags & (flag::uncompressed_rgb | flag::has_luminance | flag::has_yuv_colors)); };

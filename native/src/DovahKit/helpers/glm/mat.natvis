@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="glm::mat&lt;*,*,*,*&gt;">
+
+      <Intrinsic Name="_sign_of" Expression="(0 &lt; n) - (n &lt; 0)">
+         <Parameter Name="n" Type="int" />
+      </Intrinsic>
+      
+      <DisplayString>{{ size={$T1,d}x{$T2,d} (column-major) }}</DisplayString>
+      <Expand>
+         <Synthetic Name="[direction]">
+            <DisplayString>Matrix is column-major; displayed indices are [X][Y].</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[transform]" Condition="$T1 == 4 &amp;&amp; $T2 == 4">
+            <DisplayString>&lt;position and scale&gt;</DisplayString>
+            <Expand>
+               <Synthetic Name="[position]">
+                  <Expand>
+                     <Item Name="[x]">value[3].x</Item>
+                     <Item Name="[y]">value[3].y</Item>
+                     <Item Name="[z]">value[3].z</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[scale]">
+                  <Expand>
+                     <CustomListItems>
+                        <Variable Name="DBL_EPSILON" InitialValue="2.2204460492503131e-016"/>
+                        
+                        <Variable Name="axis"    InitialValue="0"/>
+                        <Variable Name="squared" InitialValue="(double)0"/>
+                        <Variable Name="sq_half" InitialValue="(double)0"/>
+                        <Variable Name="n"       InitialValue="(int64_t)0"/>
+                        <Variable Name="f"       InitialValue="(double)0"/>
+                        <Variable Name="iters"   InitialValue="0"/>
+                        <Loop Condition="axis &lt; 3">
+                           
+                           <!-- sqrt is unavailable here, so use the fast inverse square root -->
+                           <!--
+                              modified double-precision version; see page 10 of
+                              "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton–Raphson Corrections"
+                              by Walczyk, Moroz, and Cieslinski
+                           -->
+                           
+                           <Exec>squared = value[axis].x*value[axis].x + value[axis].y*value[axis].y + value[axis].z*value[axis].z + value[axis].w*value[axis].w</Exec>
+                           <If Condition="squared != 0">
+                              <Exec>sq_half = squared / 2.0</Exec>
+                              <Exec>n = *(int64_t*)&amp;squared</Exec>
+                              <Exec>n = 0x5FE6ED2102DCBFDA - (n &gt;&gt; 1)</Exec>
+                              <Exec>f = *(double*)&amp;n</Exec>
+                              <Exec>f = f * (1.5008789551163345 - (sq_half * f * f))</Exec>
+                              <Exec>f = f * (1.5000005796762576 - (sq_half * f * f))</Exec>
+                              <Exec>f = f * (1.5000000000002520 - (sq_half * f * f))</Exec>
+                              <Exec>f = f * (1.5000000000000000 - (sq_half * f * f))</Exec>
+                              
+                              <!-- from inverse square root (1 / sq) to square root: 1 / (1 / sq) == sq -->
+                              <Exec>f = 1 / f</Exec>
+
+                              <!-- inverting the inverse for a normal square root costs precision; round to hide it -->
+                              <Exec>f = f * 10000.0</Exec>
+                              <Exec>f = (int64_t)(f + ((0.5 - DBL_EPSILON) * _sign_of(f)))</Exec> <!-- round -->
+                              <Exec>f = f / 10000.0</Exec>
+                           </If>
+                           <If Condition="squared == 0">
+                              <Exec>f = 0</Exec>
+                           </If>
+                           
+                           <Item Name="[x]" Condition="axis == 0">f,g</Item>
+                           <Item Name="[y]" Condition="axis == 1">f,g</Item>
+                           <Item Name="[z]" Condition="axis == 2">f,g</Item>
+                           <Exec>++axis</Exec>
+                        </Loop>
+                     </CustomListItems>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <CustomListItems>
+            <Variable Name="x" InitialValue="0"/>
+            <Variable Name="y" InitialValue="0"/>
+            <Loop Condition="x &lt; $T1">
+               <Exec>y = 0</Exec>
+               <Loop Condition="y &lt; $T2">
+                  <Item Name="[{x,d}][{y,d}]">((const float*)(&amp;value[x]))[y]</Item>
+                  <Exec>++y</Exec>
+               </Loop>
+               <Exec>++x</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

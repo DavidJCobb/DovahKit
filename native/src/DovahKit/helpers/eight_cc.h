@@ -16,6 +16,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include <cstdint>
+#include <type_traits>
 
 namespace cobb {
    //
@@ -24,16 +25,13 @@ namespace cobb {
    // support eight-character literals, so we need a bit of a hack to make them work.
    //
    struct eight_cc {
-      private:
-         /*not constexpr!*/ uint64_t do_not_use_more_than_eight_chars() { return 0; }
       public:
          union {
             uint64_t value = 0;
-            uint32_t halves[2]; // for easier viewing in VS's debugger
             char     bytes[8];
          };
-         //
-         eight_cc() {}
+         
+         constexpr eight_cc() {}
          constexpr eight_cc(const char* s) {
             this->value = 0;
             if (!s)
@@ -44,21 +42,17 @@ namespace cobb {
                   break;
                this->value |= uint64_t(s[i]) << (0x08 * i);
             }
-            if (i == 8 && s[8]) // don't allow inputs longer than eight characters
-               //
-               // (static_assert) can't be given variables even if it's called inside of a 
-               // constexpr function, so instead, we just have to call a non-constexpr 
-               // function that does nothing (and so will hopefully be optimized out) and 
-               // whose name should clue a programmer into the problem.
-               // 
-               this->value += do_not_use_more_than_eight_chars();
+            if (std::is_constant_evaluated()) {
+               if (i == 8 && s[8]) // don't allow inputs longer than eight characters
+                  throw;
+            }
          }
-         //
-         inline constexpr eight_cc& operator=(const eight_cc& other) noexcept {
+         
+         constexpr eight_cc& operator=(const eight_cc& other) noexcept {
             this->value = other.value;
             return *this;
          }
-         //
-         inline constexpr operator uint64_t() const noexcept { return this->value; }
+         
+         constexpr operator uint64_t() const noexcept { return this->value; }
    };
 }

@@ -112,40 +112,44 @@ namespace vulkanDK {
                switch (count) {
                   case 1:
                      switch (bitcount) {
-                        case  8: potential_format = VkFormat::VK_FORMAT_R8_UINT; break;
-                        case 16: potential_format = VkFormat::VK_FORMAT_R16_UINT; break;
-                        case 32: potential_format = VkFormat::VK_FORMAT_R32_UINT; break;
+                        case  8: potential_format = VkFormat::VK_FORMAT_R8_UNORM; break;
+                        case 16: potential_format = VkFormat::VK_FORMAT_R16_UNORM; break;
+                        case 32: potential_format = VkFormat::VK_FORMAT_R32_UINT; break; // no UNORM variant. maybe not usable? UINT maps to [0, 255]... as in, the shader sees [0, 255] when it expects [0, 1].
                      }
                      break;
                   case 2:
                      switch (bitcount) {
-                        case  8: potential_format = VkFormat::VK_FORMAT_R8G8_UINT; break;
-                        case 16: potential_format = VkFormat::VK_FORMAT_R16G16_UINT; break;
+                        case  8: potential_format = VkFormat::VK_FORMAT_R8G8_UNORM; break;
+                        case 16: potential_format = VkFormat::VK_FORMAT_R16G16_UNORM; break;
                      }
                      break;
                   case 3:
                      switch (bitcount) {
-                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8_UINT; break;
+                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8_UNORM; break;
                      }
                      break;
                   case 4:
                      switch (bitcount) {
-                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8A8_UINT; break;
+                        case 8: potential_format = VkFormat::VK_FORMAT_R8G8B8A8_UNORM; break;
                      }
                      break;
                }
                if (potential_format != VkFormat::VK_FORMAT_UNDEFINED) {
                   auto _set_swizzle = [](int8_t component, const int8_t key, VkComponentSwizzle& out) -> void {
+                     /*//
                      if (key == component) {
                         out = VK_COMPONENT_SWIZZLE_IDENTITY;
                         return;
                      }
+                     //*/
                      switch (key) {
                         case  0: out = VK_COMPONENT_SWIZZLE_R; break;
                         case  1: out = VK_COMPONENT_SWIZZLE_G; break;
                         case  2: out = VK_COMPONENT_SWIZZLE_B; break;
                         case  3: out = VK_COMPONENT_SWIZZLE_A; break;
-                        case -1: out = VK_COMPONENT_SWIZZLE_ZERO; break;
+                        case -1:
+                           out = (component == 3) ? VK_COMPONENT_SWIZZLE_ONE : VK_COMPONENT_SWIZZLE_ZERO;
+                           break;
                      }
                   };
                   //
@@ -154,6 +158,7 @@ namespace vulkanDK {
                   _set_swizzle(2, sequence[2].first, out.swizzle.b);
                   _set_swizzle(3, sequence[3].first, out.swizzle.a);
                }
+               out.format = potential_format;
             }
          }
       }

@@ -23,6 +23,13 @@ namespace cobb {
          requires IsLiteralIsh<typename T::value_type> || OffersHook<checked, typename T::value_type>;
       };
       template<bool checked, typename T> concept AllowSimpleCall = IsLiteralIsh<T> || _AllowSimpleCallList<checked, T> || OffersHook<checked, T>;
+
+      template<typename T> concept _AllowEndiannessCallList = requires {
+         requires cobb::is_std_array<T>;
+         typename T::value_type;
+         requires IsLiteralIsh<typename T::value_type>;
+      };
+      template<typename T> concept AllowEndiannessCall = IsLiteralIsh<T> || _AllowEndiannessCallList<T>;
    }
 
    class generic_reader_ex {
@@ -181,7 +188,7 @@ namespace cobb {
          }
 
          // overload to require a specific endianness, overriding the one specified in the file header
-         template<std::endian E, typename T> requires impl::generic_reader_ex::IsLiteralIsh<T> inline void read(T& field) {
+         template<std::endian E, typename T> requires impl::generic_reader_ex::AllowEndiannessCall<T> inline void read(T& field) {
             this->require_size(sizeof(T));
             this->unchecked_read<E>(field);
          }
@@ -231,12 +238,24 @@ namespace cobb {
          }
 
          // overload to require a specific endianness, overriding the one specified in the file header
-         template<std::endian E, typename T> requires impl::generic_reader_ex::IsLiteralIsh<T> inline void unchecked_read(T& field) {
-            if constexpr (sizeof(T) == 1 || E == std::endian::native) {
+         template<std::endian E, typename T> requires impl::generic_reader_ex::AllowEndiannessCall<T> inline void unchecked_read(T& field) {
+            if constexpr (E == std::endian::native) {
                return this->unchecked_read(field);
             }
+            if constexpr (sizeof(T) == 1) {
+               return this->unchecked_read(field);
+            } else if constexpr (cobb::is_std_array<T>) {
+               if constexpr (sizeof(typename T::value_type) == 1) {
+                  return this->unchecked_read(field);
+               }
+            }
             this->unchecked_read(field);
-            field = cobb::endian_cast<E>(field);
+            if constexpr (cobb::is_std_array<T>) {
+               for(auto& item : field)
+                  item = cobb::endian_cast<E>(item);
+            } else {
+               field = cobb::endian_cast<E>(field);
+            }
          }
          #pragma endregion
    };
