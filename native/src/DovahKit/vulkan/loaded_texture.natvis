@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::loaded_texture">
+      <DisplayString>{{ {lifetime.life_state,en}; frames={(uint8_t)lifetime.sync_state.mask,bb}; path={path} }}</DisplayString>
+   </Type>
+</AutoVisualizer>

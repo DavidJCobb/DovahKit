@@ -2,15 +2,18 @@
 #include <chrono>
 #include <limits>
 #include <vector>
+#include "helpers/tuples/map_types.h"
+#include "helpers/class_map.h"
 #include "helpers/passkey.h"
-#include "buffer.h"
-#include "frustum.h"
-#include "loaded_texture.h"
-#include "rendered_bounds.h"
-#include "rendered_landscape.h"
-#include "rendered_light.h"
-#include "rendered_mesh.h"
-#include "scene_global_state.h"
+#include "./scene_entities/all_types.h"
+#include "./buffer.h"
+#include "./frustum.h"
+#include "./loaded_texture.h"
+#include "./rendered_bounds.h"
+#include "./rendered_landscape.h"
+#include "./rendered_light.h"
+#include "./rendered_mesh.h"
+#include "./scene_global_state.h"
 
 struct DKVulkanCameraUpdate;
 namespace nifDK {
@@ -20,6 +23,12 @@ namespace nifDK {
 namespace vulkanDK {
    class frame_in_flight;
    class surface_renderer;
+
+   namespace impl::_scene {
+      template<typename T> struct to_vector {
+         using type = std::vector<T>;
+      };
+   }
 
    class scene {
       public:
@@ -31,14 +40,14 @@ namespace vulkanDK {
          scene();
 
          std::chrono::steady_clock::time_point last_update = {};
-         std::vector<rendered_bounds>    bounds;     // bounding boxes, to indicate object selections
-         std::vector<rendered_landscape> landscapes; // heightmapped terrain generated from LAND forms
-         std::vector<rendered_light>     lights;     // in-scene light emitters, including ones that support shadow casting
-         std::vector<rendered_mesh>      meshes;
-         std::vector<loaded_texture>     textures;   // all textures used within the scene, aside from things like shadow maps that we generate and update during the render
+         struct {
+            cobb::tuples::map_types<impl::_scene::to_vector, scene_entities::all_types::as_tuple> lists;
+            cobb::class_map_from_class_array<size_t, scene_entities::all_types> pending_deletion_counts;
+         } entities;
          //
          struct {
-            float vertical_fov_degrees = 45.0F;
+            float  vertical_fov_degrees = 45.0F;
+            int8_t landscape_grid_side_length = 5;
          } config;
          struct {
             VkExtent2D bounds = {};
@@ -55,14 +64,14 @@ namespace vulkanDK {
          struct {
             buffer landscape_buffer; // indices; then all verts
          } coalesced;
-         struct {
-            size_t bounds     = 0; // count
-            size_t landscapes = 0; // count
-            size_t lights     = 0; // count
-            size_t meshes     = 0; // count
-            size_t textures   = 0; // count
-         } pending_deletions;
          frame_dirty_state light_shadow_state;
+
+         template<typename Entity> std::vector<Entity>& entities_of_type() {
+            return std::get<std::vector<Entity>>(this->entities.lists);
+         }
+         template<typename Entity> const std::vector<Entity>& entities_of_type() const {
+            return std::get<std::vector<Entity>>(this->entities.lists);
+         }
 
          void setup_landscape_buffer(surface_renderer&, size_t max_landscape_count);
 
@@ -81,20 +90,23 @@ namespace vulkanDK {
          void teardown(surface_renderer&);
          void update(); // anim state, etc.
 
-         size_t insert_new_bound();     // returns index of inserted item; index_of_none on failure
-         size_t insert_new_landscape(); // returns index of inserted item; index_of_none on failure
-         size_t insert_new_light();     // returns index of inserted item; index_of_none on failure
-         size_t insert_new_mesh();      // returns index of inserted item; index_of_none on failure
-         size_t insert_new_texture();   // returns index of inserted item; index_of_none on failure
+         // Attempts to insert a new scene entity of the given type. If successful, returns the 
+         // index of the inserted item, which will have its life state set to active (or active 
+         // and recycling). If unsuccessful, returns `index_of_none`.
+         template<typename Entity> size_t insert_new_scene_entity();
+
+         // If the specified texture is loaded, its index will be returned. If the texture is 
+         // pending deletion, it will be rescued from deletion.
+         size_t reuse_scene_texture(const QString& path);
+
+         template<typename Entity> size_t max_entity_slots() const noexcept;
+         template<typename Entity> size_t entity_slots_available() const noexcept;
 
          bool texture_dec_ref(renderer_passkey, loaded_texture&); // returns true if the texture will be marked for delete
 
          size_t landscape_buffer_vertex_index(size_t landscape_index) const;
          void update_single_landscape(surface_renderer&, size_t landscape_index);
-
-      protected:
-         size_t _empty_mesh_slot_count() const;
-      public:
-         size_t available_mesh_count() const;
    };
 }
+
+#include "scene.inl"

@@ -635,6 +635,7 @@
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
+    <ClCompile Include="vulkan\scene_entities\base.cpp" />
     <ClCompile Include="vulkan\scene_item_handle.cpp" />
     <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
@@ -792,6 +793,7 @@
     <ClInclude Include="helpers\class_array.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
+    <ClInclude Include="helpers\class_map.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
@@ -974,7 +976,20 @@
     <ClInclude Include="vulkan\rendered_mesh.h" />
     <ClInclude Include="vulkan\render_pass.h" />
     <ClInclude Include="vulkan\scene.h" />
+    <ClInclude Include="vulkan\scene_entities\all_types.h" />
+    <ClInclude Include="vulkan\scene_entities\base.h" />
+    <ClInclude Include="vulkan\scene_entities\concepts\has_frame_culling_data.h" />
+    <ClInclude Include="vulkan\scene_entities\concepts\has_frame_drawing_data.h" />
+    <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_descriptors.h" />
+    <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_resources.h" />
+    <ClInclude Include="vulkan\scene_entities\fif_sync_state.h" />
+    <ClInclude Include="vulkan\scene_entities\life_state.h" />
+    <ClInclude Include="vulkan\scene_entities\scene_limits.h" />
+    <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h" />
+    <ClInclude Include="vulkan\scene_entities\traits\owned_gpu_resource_type_of.h" />
     <ClInclude Include="vulkan\scene_frame_item.h" />
+    <ClInclude Include="vulkan\scene_frame_item_base.h" />
+    <ClInclude Include="vulkan\scene_frame_item_types.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\scene_item_handle.h" />
     <ClInclude Include="vulkan\shader_module.h" />
@@ -1763,6 +1778,9 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
+    <None Include="vulkan\frame_in_flight.inl" />
+    <None Include="vulkan\scene.inl" />
+    <None Include="vulkan\scene_entities\base.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\ScreenShot278.bmp" />
@@ -1777,8 +1795,10 @@
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="vulkan\dds\header.natvis" />
     <Natvis Include="vulkan\dds\pixel_format.natvis" />
+    <Natvis Include="vulkan\loaded_texture.natvis" />
     <Natvis Include="vulkan\rendered_landscape.natvis" />
     <Natvis Include="vulkan\rendered_mesh.natvis" />
+    <Natvis Include="vulkan\scene_entities\base.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

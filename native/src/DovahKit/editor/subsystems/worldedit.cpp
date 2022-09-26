@@ -421,29 +421,25 @@ namespace dovahkit::subsystems {
             cell_position.z = 0.0F; // our LAND loader resolves the base height
          }
       }
-      dovah::form_stub_helpers::for_each_child_form(&stub, [this, sr, &found_coc_marker, &refr_count, &centroid, &coc_pos, &coc_rot](dovah::form_stub* stub) {
-         if (stub->formType != dovah::form_type::reference)
-            return false;
-         //
-         cobb::vector3<float> pos;
-         cobb::vector3<float> rot;
-         bool is_coc;
-         //
-         if (!this->_load_refr(*stub, pos, rot, is_coc))
-            return false;
-         ++refr_count;
-         //
-         if (!found_coc_marker) {
-            if (is_coc) {
-               found_coc_marker = true;
-               coc_pos = { pos.x, pos.y, pos.z };
-               coc_rot = { rot.x, rot.y, rot.z };
-            } else {
-               centroid += glm::vec3{ pos.x, pos.y, pos.z };
-            }
+      for (auto& item : this->loaded_refs) {
+         if (!item.stub || item.stub->get_parent_form() != &stub)
+            continue;
+         auto* base = dovah::form_stub_helpers::get_base_form(item.stub);
+         if (!base)
+            continue;
+
+         cobb::vector3<float> pos = item.form->position;
+         cobb::vector3<float> rot = item.form->rotation;
+         bool is_coc = base->formID == dovah::hardcoded_form_ids::COCMarkerHeading;
+
+         if (is_coc) {
+            found_coc_marker = true;
+            coc_pos = { pos.x, pos.y, pos.z };
+            coc_rot = { rot.x, rot.y, rot.z };
+         } else {
+            centroid += glm::vec3{ pos.x, pos.y, pos.z };
          }
-         return false;
-      });
+      }
       //
       // Got the info we wanted.
       //

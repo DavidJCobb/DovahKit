@@ -5,8 +5,18 @@
 #include "image.h"
 #include "scene_frame_item.h"
 
+#include "./scene_entities/base.h"
+#include "./scene_entities/owned_gpu_resource_sets.h"
+
 namespace vulkanDK {
-   struct loaded_texture {
+   struct loaded_texture : public scene_entities::base {
+      public:
+         static constexpr const char* name_single = "texture";
+         static constexpr const char* name_plural = "textures";
+         //
+         static constexpr const bool owned_gpu_resources_are_coalesced   = false;
+         static constexpr const bool owned_gpu_resources_are_descriptors = true;
+         static constexpr const bool is_drawn = false;
       public:
          struct flag { // flags applied on the CPU, not within shaders
             enum type : uint32_t {
@@ -18,19 +28,13 @@ namespace vulkanDK {
       public:
          flags_t flags = 0;
          //
-         owned_image_and_view content;
+         scene_entities::owned_gpu_resource_sets<owned_image_and_view> owned_gpu_resources;
          //
          uint32_t w = 0;
          uint32_t h = 0;
          QString  path;
          //
-         frame_dirty_state      handled_frames; // for normal textures: frames that have had descriptors resynchronized. for pending-delete textures: frames that have unhooked this texture from their descriptors.
-         scene_frame_item_state life_state = scene_frame_item_state::empty;
          uint32_t refcount = 0;
-
-         inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
-         inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
-         inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
 
          void mark_for_delete();
          void reset();

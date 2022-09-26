@@ -1803,6 +1803,9 @@
     <ClCompile Include="nif\blocks\BSRangeNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\scene_entities\base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3932,6 +3935,48 @@
     <ClInclude Include="nif\blocks\BSDamageStage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\scene_frame_item_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_frame_item_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\class_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\life_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\fif_sync_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\concepts\has_frame_drawing_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\concepts\has_frame_culling_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\all_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\scene_limits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\traits\owned_gpu_resource_type_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4550,6 +4595,15 @@
     <None Include="shaders\rendered_landscape\shadows-caster.vert" />
     <None Include="shaders\rendered_landscape\shadows-caster.frag" />
     <None Include="shaders\rendered_landscape\shadows-caster.descriptors.glsl" />
+    <None Include="vulkan\frame_in_flight.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="vulkan\scene_entities\base.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="vulkan\scene.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -4572,5 +4626,7 @@
     <Natvis Include="helpers\eight_cc.natvis" />
     <Natvis Include="vulkan\rendered_mesh.natvis" />
     <Natvis Include="helpers\glm\mat.natvis" />
+    <Natvis Include="vulkan\scene_entities\base.natvis" />
+    <Natvis Include="vulkan\loaded_texture.natvis" />
   </ItemGroup>
 </Project>

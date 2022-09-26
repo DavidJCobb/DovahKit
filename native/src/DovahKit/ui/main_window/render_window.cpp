@@ -446,7 +446,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             }
          }
          //
-         sr->add_light(vulkanDK::rendered_light::shader_parameters{
+         sr->add_light({
             .transform = vulkanDK::glm_transform_from_beth(glm::fvec3{ 0, 0, 256 }, glm::fvec3{ 0, 0, 0 }, 1.0F),
             .color     = { 1.0F, 0.2F, 0.2F },
             .fade      = 1.0F,

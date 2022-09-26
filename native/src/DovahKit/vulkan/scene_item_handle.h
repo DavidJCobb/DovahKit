@@ -15,23 +15,24 @@ namespace vulkanDK {
       // templated on its own subclass) to prevent cross-assignment of different 
       // handle types.
       //
-      template<typename Self> class scene_item_handle {
+      template<typename Self, typename Entity> class scene_entity_handle {
          public:
             using surface_renderer_passkey = cobb::passkey<surface_renderer, Self>;
+            using value_type = Entity;
 
          protected:
             surface_renderer* owner = nullptr;
             size_t index = -1;
 
          public:
-            scene_item_handle() {}
-            scene_item_handle(surface_renderer& sr, size_t i) : owner(&sr), index(i) {}
+            scene_entity_handle() {}
+            scene_entity_handle(surface_renderer& sr, size_t i) : owner(&sr), index(i) {}
 
-            scene_item_handle(Self&& o) {
+            scene_entity_handle(Self&& o) {
                std::swap(owner, o.owner);
                std::swap(index, o.index);
             }
-            scene_item_handle& operator=(Self&& o) {
+            scene_entity_handle& operator=(Self&& o) {
                std::swap(owner, o.owner);
                std::swap(index, o.index);
                return *this;
@@ -55,9 +56,9 @@ namespace vulkanDK {
    }
 
    class rendered_bounds_handle;
-   class rendered_bounds_handle : public impl::scene_item_handle<rendered_bounds_handle> {
+   class rendered_bounds_handle : public impl::scene_entity_handle<rendered_bounds_handle, rendered_bounds> {
       public:
-         using scene_item_handle::scene_item_handle;
+         using scene_entity_handle::scene_entity_handle;
 
          rendered_bounds& operator*();
          rendered_bounds* operator->();
@@ -66,9 +67,9 @@ namespace vulkanDK {
    };
 
    class rendered_landscape_handle;
-   class rendered_landscape_handle : public impl::scene_item_handle<rendered_landscape_handle> {
+   class rendered_landscape_handle : public impl::scene_entity_handle<rendered_landscape_handle, rendered_landscape> {
       public:
-         using scene_item_handle::scene_item_handle;
+         using scene_entity_handle::scene_entity_handle;
 
          rendered_landscape& operator*();
          rendered_landscape* operator->();
@@ -77,9 +78,9 @@ namespace vulkanDK {
    };
 
    class rendered_light_handle;
-   class rendered_light_handle : public impl::scene_item_handle<rendered_light_handle> {
+   class rendered_light_handle : public impl::scene_entity_handle<rendered_light_handle, rendered_light> {
       public:
-         using scene_item_handle::scene_item_handle;
+         using scene_entity_handle::scene_entity_handle;
 
          rendered_light& operator*();
          rendered_light* operator->();
@@ -88,9 +89,9 @@ namespace vulkanDK {
    };
 
    class rendered_mesh_handle;
-   class rendered_mesh_handle : public impl::scene_item_handle<rendered_mesh_handle> {
+   class rendered_mesh_handle : public impl::scene_entity_handle<rendered_mesh_handle, rendered_mesh> {
       public:
-         using scene_item_handle::scene_item_handle;
+         using scene_entity_handle::scene_entity_handle;
 
          rendered_mesh& operator*();
          rendered_mesh* operator->();

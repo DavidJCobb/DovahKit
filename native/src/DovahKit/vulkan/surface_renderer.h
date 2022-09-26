@@ -267,7 +267,7 @@ namespace vulkanDK {
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
          rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
-         rendered_light_handle add_light(const rendered_light::shader_parameters&);
+         rendered_light_handle add_light(const rendered_light::frame_drawing_data_type&);
          void remove_nif(nifDK::file& model);
 
          void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
@@ -334,7 +334,6 @@ namespace vulkanDK {
 
          void _wait_on_all_frames_in_flight();
 
-         void _execute_pending_scene_deletions();
-         void _execute_pending_scene_reloads();
+         void _execute_pending_scene_entity_deletions();
    };
 }

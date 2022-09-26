@@ -72,6 +72,12 @@ namespace vulkanDK {
    }
 
 
+   frame_in_flight::frame_in_flight() {
+      // Initialize these to `true` so that we build indirect draw data on startup. Failing to do this 
+      // will result in any initial scene meshes failing to draw, and in us attempting thousands of 
+      // draws on zero-vertex "meshes" that the FiF will think exists.
+      this->state.scene_entity_draws_changed.for_each([](bool& flag) { flag = true; });
+   }
    frame_in_flight::~frame_in_flight() {
       if (!this->owner) {
          assert(this->fences.graphics == VK_NULL_HANDLE && "The owning surface renderer should've torn down its frames-in-flight before their own destructor ran.");
@@ -160,41 +166,45 @@ namespace vulkanDK {
          this->shader_params.active_caster_positions = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
          this->owner->set_debug_object_name(this->shader_params.active_caster_positions.handle, QString("Buffer: FIF %1 Active Caster Position Buffer").arg(this->my_index).toStdString());
       }
-      {
-         constexpr VkDeviceSize buffer_size = sizeof(rendered_mesh::cull_data) * config::max_rendered_meshes;
-         this->shader_params.mesh_bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
-         this->owner->set_debug_object_name(this->shader_params.mesh_bounds.handle, QString("Buffer: FIF %1 Mesh Bounds Buffer").arg(this->my_index).toStdString());
-      }
+      this->shader_params.scene_entity_frame_culling_data.for_each([this]<typename Entity>(buffer& buf) {
+         constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_culling_data_type);
+         buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+         this->owner->set_debug_object_name(
+            buf.handle, QString("Buffer: FIF %1 Frame Culling Data Buffer (%s)")
+               .arg(this->my_index)
+               .arg(Entity::name_plural)
+               .toStdString()
+         );
+      });
       //
       {
          constexpr VkDeviceSize buffer_size = sizeof(scene_global_state);
          this->shader_params.scene_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
-      {
-         constexpr VkDeviceSize buffer_size = config::max_rendered_bounds * sizeof(rendered_bounds::shader_parameters);
-         this->shader_params.scene_bounds = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.scene_bounds.handle, QString("Buffer: FIF %1 Scene rendered_bounds Buffer").arg(this->my_index).toStdString());
-      }
-      {
-         constexpr VkDeviceSize buffer_size = config::max_rendered_meshes * sizeof(rendered_mesh::shader_parameters);
-         this->shader_params.scene_meshes = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.scene_meshes.handle, QString("Buffer: FIF %1 Scene rendered_mesh Buffer").arg(this->my_index).toStdString());
-      }
-      {
-         constexpr VkDeviceSize buffer_size = config::max_landscapes * sizeof(rendered_landscape::shader_parameters);
-         this->shader_params.scene_landscapes = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.scene_landscapes.handle, QString("Buffer: FIF %1 Scene rendered_landscape Buffer").arg(this->my_index).toStdString());
-      }
-      {
-         constexpr VkDeviceSize buffer_size = config::max_rendered_lights * sizeof(rendered_light::shader_parameters);
-         this->shader_params.scene_lights = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         this->owner->set_debug_object_name(this->shader_params.scene_lights.handle, QString("Buffer: FIF %1 Scene rendered_light Buffer").arg(this->my_index).toStdString());
+      this->shader_params.scene_entity_frame_drawing_data.for_each([this]<typename Entity>(buffer& buf) {
+         constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_drawing_data_type);
+         buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(
+            buf.handle, QString("Buffer: FIF %1 Frame Drawing Data Buffer (%s)")
+               .arg(this->my_index)
+               .arg(Entity::name_plural)
+               .toStdString()
+         );
          //
-         auto* data = this->shader_params.scene_lights.map_memory();
-         memset(data, 0, buffer_size);
-         this->shader_params.scene_lights.unmap_memory(data);
-      }
+         if constexpr (!Entity::is_drawn) {
+            //
+            // If the entity is not drawn, and has frame drawing data, then it's likely that 
+            // the entity's "existence" is contingent on the content of its frame drawing data. 
+            // Ergo, zero-initialize that data.
+            // 
+            // Rendered lights are an example of this.
+            //
+            auto* data = buf.map_memory();
+            memset(data, 0, buffer_size);
+            buf.unmap_memory(data);
+         }
+      });
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
          this->shader_params.light_shadow_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -323,10 +333,10 @@ namespace vulkanDK {
 
    void frame_in_flight::prepare_for_render() {
       this->_update_shader_global_scene_state();
-      this->_update_shader_scene_bounds_buffer();
-      this->_update_shader_scene_landscapes_buffer();
-      this->_update_shader_scene_lights_buffer();
-      this->_update_shader_scene_meshes_buffer();
+      this->_update_scene_frame_items<rendered_bounds>();
+      this->_update_scene_frame_items<rendered_landscape>();
+      this->_update_scene_frame_items<rendered_light>();
+      this->_update_scene_frame_items<rendered_mesh>();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
       {
@@ -339,9 +349,9 @@ namespace vulkanDK {
                data[i] = glm::vec4(0, 0, 0, 0);
                continue;
             }
-            auto& light = scene.lights[light_index];
-            data[i]   = light.shader_params.transform[3];
-            data[i].w = light.shader_params.radius;
+            auto& light = scene.entities_of_type<rendered_light>()[light_index];
+            data[i]   = light.transform()[3];
+            data[i].w = light.frame_drawing_data.radius;
          }
          buffer.flush_memory();
          buffer.unmap_memory(data);
@@ -373,18 +383,20 @@ namespace vulkanDK {
          frame_in_flight::indirect_draw_buffers& idb,
          Pred&& predicate
       ) {
+         auto& all_meshes = scene.entities_of_type<rendered_mesh>();
+
          auto* params  = (VkDrawIndexedIndirectCommand*)staging_params.map_memory();
          auto& indices = *idb.mesh_indices.host;
          size_t i = 0; // index into scene mesh array
          size_t j = 0; // index into indirect draw parameter arrays
-         for (; i < scene.meshes.size(); ++i) {
-            auto& ro = scene.meshes[i];
+         for (; i < all_meshes.size(); ++i) {
+            auto& ro = all_meshes[i];
             if (!ro.active())
                continue;
             if (!predicate(ro))
                continue;
             params[j] = VkDrawIndexedIndirectCommand{
-               .indexCount    = ro.vertex_and_index_buffer.index_count,
+               .indexCount    = ro.vib().index_count,
                .instanceCount = 1,
                .firstIndex    = 0,
                .vertexOffset  = 0,
@@ -394,7 +406,7 @@ namespace vulkanDK {
             ++j;
          }
          //
-         if (size_t remaining = (config::max_rendered_meshes - j)) {
+         if (size_t remaining = (scene_entities::max_count_for_type<rendered_mesh> - j)) {
             memset(&params[j], 0, sizeof(VkDrawIndexedIndirectCommand) * remaining);
             //
             // CPU iteration on the index list stops at the first -1.
@@ -422,7 +434,7 @@ namespace vulkanDK {
       }
    }
    void frame_in_flight::prepare_indirect_draws() {
-      if (!this->state.scene_meshes_added_or_removed) {
+      if (!this->state.scene_entity_draws_changed.value_for<rendered_mesh>()) {
          return;
       }
       //
@@ -588,15 +600,22 @@ namespace vulkanDK {
       //
    }
    void frame_in_flight::record_graphics_commands() {
-      if (this->state.scene_meshes_added_or_removed || this->state.scene_landscapes_added_or_removed || this->state.must_re_record_graphics) {
+      if (
+         this->state.scene_entity_draws_changed.value_for<rendered_mesh>() ||
+         this->state.scene_entity_draws_changed.value_for<rendered_landscape>() ||
+         this->state.must_re_record_graphics
+      ) {
          this->state.must_re_record_graphics = false;
-         this->state.scene_bounds_added_or_removed     = false;
-         this->state.scene_meshes_added_or_removed     = false;
-         this->state.scene_landscapes_added_or_removed = false; // TODO: investigate a separate command buffer for landscapes
+         this->state.scene_entity_draws_changed.for_each([](bool& item) {
+            item = false;
+         });
          this->_record_scene_draw_commands();
       }
-      if (this->state.scene_bounds_added_or_removed) {
-         this->state.scene_bounds_added_or_removed = false;
+      //
+      // TODO: investigate a separate command buffer for landscapes
+      //
+      if (auto& flag = this->state.scene_entity_draws_changed.value_for<rendered_bounds>()) {
+         flag = false;
          this->_record_bounds_draw_commands();
       }
       if (auto& must = this->state.must_re_record_ui) {
@@ -628,11 +647,11 @@ namespace vulkanDK {
          size_t first_double_sided_draw = std::string::npos;
          //
          const auto& mesh_indices = *indirect_buffer.mesh_indices.host;
-         for (size_t i = 0; i < config::max_rendered_meshes; ++i) {
+         for (size_t i = 0; i < scene_entities::max_count_for_type<rendered_mesh>; ++i) {
             auto mi = mesh_indices[i];
             if (mi < 0)
                break;
-            auto& ro = scene.meshes[mi];
+            auto& ro = scene.entities_of_type<rendered_mesh>()[mi];
             if (ro.mesh_flags & rendered_mesh::mesh_flag::double_sided) {
                first_double_sided_draw = i;
                continue;
@@ -642,7 +661,7 @@ namespace vulkanDK {
             command_buffer.set_pipeline_push_constant(shader.pipeline.layout, push_constant_stages, _make_push_constant_for(ro, mi));
             {
                VkDeviceSize offset = 0;
-               auto& vib = ro.vertex_and_index_buffer;
+               auto& vib = ro.vib();
                vkCmdBindVertexBuffers(command_handle, 0, 1, &vib.buffer.handle, &offset);
                if (vib.wide_indices) {
                   vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT32);
@@ -669,7 +688,7 @@ namespace vulkanDK {
                auto mi = mesh_indices[i];
                if (mi < 0)
                   break;
-               auto& ro = scene.meshes[mi];
+               auto& ro = scene.entities_of_type<rendered_mesh>()[mi];
                if (!(ro.mesh_flags & rendered_mesh::mesh_flag::double_sided)) {
                   continue;
                }
@@ -678,7 +697,7 @@ namespace vulkanDK {
                command_buffer.set_pipeline_push_constant(shader.pipeline.layout, push_constant_stages, _make_push_constant_for(ro, mi));
                {
                   VkDeviceSize offset = 0;
-                  auto& vib = ro.vertex_and_index_buffer;
+                  auto& vib = ro.vib();
                   vkCmdBindVertexBuffers(command_handle, 0, 1, &vib.buffer.handle, &offset);
                   if (vib.wide_indices) {
                      vkCmdBindIndexBuffer(command_handle, vib.buffer.handle, vib.indices_at, VK_INDEX_TYPE_UINT32);
@@ -707,8 +726,9 @@ namespace vulkanDK {
          vkCmdBindVertexBuffers(command_handle, 0, 1, &scene.coalesced.landscape_buffer.handle, &offset);
          vkCmdBindIndexBuffer(command_handle, scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
          //
-         for (size_t i = 0; i < scene.landscapes.size(); ++i) {
-            auto& item = scene.landscapes[i];
+         auto& list = scene.entities_of_type<rendered_landscape>();
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
             if (!item.active())
                continue;
             for (size_t j = 0; j < 4; ++j) {
@@ -1058,6 +1078,8 @@ namespace vulkanDK {
       auto& ds    = this->descriptor_sets;
       auto& scene = sr.scene;
       //
+      auto& all_entities = scene.entities_of_type<rendered_bounds>();
+      //
       auto& command_buffer = this->graphics_commands.bounds;
       auto  command_handle = command_buffer.handle;
       //
@@ -1075,7 +1097,7 @@ namespace vulkanDK {
          std::array<VkClearValue, 0>{},
          VK_SUBPASS_CONTENTS_INLINE
       );
-      size_t count = scene.bounds.size();
+      size_t count = all_entities.size();
       {
          constexpr size_t axis_count     = 3;
          constexpr size_t lines_per_axis = 4;
@@ -1091,7 +1113,7 @@ namespace vulkanDK {
          //
          size_t first = std::string::npos;
          for (size_t i = 0; i < count; ++i) {
-            auto& item = scene.bounds[i];
+            auto& item = all_entities[i];
             if (first == std::string::npos) {
                if (item.active()) {
                   first = i;
@@ -1122,7 +1144,7 @@ namespace vulkanDK {
          //
          size_t first = std::string::npos;
          for (size_t i = 0; i < count; ++i) {
-            auto& item = scene.bounds[i];
+            auto& item = all_entities[i];
             if (first == std::string::npos) {
                if (item.active()) {
                   first = i;
@@ -1257,15 +1279,6 @@ namespace vulkanDK {
       }
    }
 
-   void frame_in_flight::on_scene_bounds_added_or_removed() {
-      this->state.scene_bounds_added_or_removed = true;
-   }
-   void frame_in_flight::on_scene_landscape_added_or_removed() {
-      this->state.scene_landscapes_added_or_removed = true;
-   }
-   void frame_in_flight::on_scene_meshes_added_or_removed() {
-      this->state.scene_meshes_added_or_removed = true;
-   }
    void frame_in_flight::invalidate_all_command_buffers() {
       this->command_buffers_invalid = true;
       this->state.recorded_compute_cull_commands = false;
@@ -1306,258 +1319,9 @@ namespace vulkanDK {
          }
       }
    }
-   void frame_in_flight::_update_shader_scene_bounds_buffer() {
-      using entry_type = rendered_bounds::shader_parameters;
-      constexpr auto entry_size = sizeof(entry_type);
-
-      auto& scene  = this->get_scene();
-      //
-      auto& ro     = scene.bounds;
-      auto  count  = ro.size();
-      assert(count <= config::max_rendered_bounds);
-      //
-      // Find the first scene item in need of an update.
-      //
-      size_t first_dirty = 0;
-      bool   any_dirty   = false;
-      for (size_t i = 0; i < count; ++i) {
-         auto& item = ro[i];
-         switch (item.life_state) {
-            case scene_frame_item_state::empty:
-               continue;
-            case scene_frame_item_state::pending_delete:
-               item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-         }
-         //
-         // Scene object is "active."
-         //
-         if (item.handled_frames.is_up_to_date(this->my_index))
-            continue;
-         first_dirty = i;
-         any_dirty   = true;
-         break;
-      }
-      //
-      if (any_dirty) {
-         //
-         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
-         //       only map the parts we need to update.
-         //
-         auto* params = (entry_type*)this->shader_params.scene_bounds.map_memory();
-         for (size_t i = first_dirty; i < count; ++i) {
-            auto& item = ro[i];
-            if (!item.active()) {
-               if (item.pending_delete())
-                  item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
-               continue;
-            auto& src = item.shader_params;
-            auto& dst = params[i];
-            memcpy(&dst, &src, entry_size);
-            //
-            item.handled_frames.set_up_to_date(this->my_index);
-         }
-         this->shader_params.scene_bounds.unmap_memory(params);
-      }
-   }
-   void frame_in_flight::_update_shader_scene_landscapes_buffer() {
-      using entry_type = rendered_landscape::shader_parameters;
-      constexpr auto entry_size = sizeof(entry_type);
-
-      auto& scene  = this->get_scene();
-      //
-      auto& list  = scene.landscapes;
-      auto  count = list.size();
-      //
-      // Find the first scene item in need of an update.
-      //
-      size_t first_dirty = 0;
-      bool   any_dirty   = false;
-      for (size_t i = 0; i < count; ++i) {
-         auto& item = list[i];
-         switch (item.life_state) {
-            case scene_frame_item_state::empty:
-               continue;
-            case scene_frame_item_state::pending_delete:
-               item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-         }
-         //
-         // Scene object is "active."
-         //
-         if (item.handled_frames.is_up_to_date(this->my_index))
-            continue;
-         first_dirty = i;
-         any_dirty   = true;
-         break;
-      }
-      //
-      if (any_dirty) {
-         //
-         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
-         //       only map the parts we need to update.
-         //
-         auto* params = (entry_type*)this->shader_params.scene_landscapes.map_memory();
-         for (size_t i = first_dirty; i < count; ++i) {
-            auto& item = list[i];
-            if (!item.active() && !item.pending_reload()) {
-               if (item.pending_delete())
-                  item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
-               continue;
-            auto& src = item.shader_params;
-            auto& dst = params[i];
-            memcpy(&dst, &src, entry_size);
-            if (item.pending_reload()) {
-               // if we had one coalesced landscape buffer per FiF, we'd update this FiF's buffer here
-            }
-            //
-            item.handled_frames.set_up_to_date(this->my_index);
-         }
-         this->shader_params.scene_landscapes.unmap_memory(params);
-      }
-   }
-   void frame_in_flight::_update_shader_scene_lights_buffer() {
-      using entry_type = rendered_light::shader_parameters;
-      constexpr auto entry_size = sizeof(entry_type);
-
-      constexpr bool map_only_what_is_necessary = false; // useless in VMA
-
-      auto& scene  = this->get_scene();
-      auto& buffer = this->shader_params.scene_lights;
-      //
-      auto& list   = scene.lights;
-      auto  count  = list.size();
-      assert(count <= config::max_rendered_lights);
-      //
-      // Find the first scene item in need of an update.
-      //
-      size_t first_dirty = 0;
-      bool   any_dirty   = false;
-      for (size_t i = 0; i < count; ++i) {
-         auto& item = list[i];
-         switch (item.life_state) {
-            case scene_frame_item_state::empty:
-               continue;
-            case scene_frame_item_state::pending_delete:
-               //
-               // For lights pending delete, we want to set the color and radius to 0. 
-               // This is so that shaders don't need to branch to check if the light 
-               // is active; they can just blindly run all lights.
-               //
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               break;
-            case scene_frame_item_state::active:
-               if (item.handled_frames.is_up_to_date(this->my_index))
-                  continue;
-               break;
-         }
-         first_dirty = i;
-         any_dirty   = true;
-         break;
-      }
-      //
-      if (any_dirty) {
-         //
-         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
-         //       only map the parts we need to update.
-         //
-         auto* data = (entry_type*)buffer.map_memory();
-         for (size_t i = first_dirty; i < count; ++i) {
-            auto& item = list[i];
-            if (!item.active() && !item.pending_delete()) // again, we want to do a one-time reset on shader params for lights pending deletion
-               continue;
-            if (item.handled_frames.is_up_to_date(this->my_index))
-               continue;
-            auto& src = list[i].shader_params;
-            auto& dst = data[i];
-            memcpy(&dst, &src, entry_size);
-            //
-            item.handled_frames.set_up_to_date(this->my_index);
-         }
-         buffer.unmap_memory(data);
-      }
-   }
-   void frame_in_flight::_update_shader_scene_meshes_buffer() {
-      using entry_type = rendered_mesh::shader_parameters;
-      constexpr auto entry_size = sizeof(entry_type);
-
-      auto& scene  = this->get_scene();
-      //
-      auto& ro     = scene.meshes;
-      auto  count  = ro.size();
-      assert(count <= config::max_rendered_meshes);
-      //
-      // Find the first scene item in need of an update.
-      //
-      size_t first_dirty = 0;
-      bool   any_dirty   = false;
-      for (size_t i = 0; i < count; ++i) {
-         auto& item = ro[i];
-         switch (item.life_state) {
-            case scene_frame_item_state::empty:
-               continue;
-            case scene_frame_item_state::pending_delete:
-               item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-         }
-         //
-         // Scene object is "active."
-         //
-         if (item.handled_frames.is_up_to_date(this->my_index))
-            continue;
-         first_dirty = i;
-         any_dirty   = true;
-         break;
-      }
-      //
-      if (any_dirty) {
-         //
-         // NOTE: VMA always maps entire buffers, so there's no point in trying to 
-         //       only map the parts we need to update.
-         //
-         auto* bounds = (rendered_mesh::cull_data*)this->shader_params.mesh_bounds.map_memory();
-         auto* params = (entry_type*)this->shader_params.scene_meshes.map_memory();
-         for (size_t i = first_dirty; i < count; ++i) {
-            auto& item = ro[i];
-            if (!item.active()) {
-               if (item.pending_delete())
-                  item.handled_frames.set_up_to_date(this->my_index);
-               continue;
-            }
-            if (item.handled_frames.is_up_to_date(this->my_index))
-               continue;
-            auto& src = item.shader_params;
-            auto& dst = params[i];
-            memcpy(&dst, &src, entry_size);
-            //
-            uint32_t cull_flags = 0;
-            if (item.mesh_flags & rendered_mesh::mesh_flag::culled_by_application)
-               cull_flags |= rendered_mesh::cull_flag::culled_by_application;
-            //
-            bounds[i] = {
-               .transform              = item.shader_params.transform,
-               .bounding_sphere_center = item.data.bounding_sphere.center,
-               .bounding_sphere_radius = sqrtf(item.data.bounding_sphere.radius_sq),
-               .flags                  = cull_flags,
-            };
-            //
-            item.handled_frames.set_up_to_date(this->my_index);
-         }
-         this->shader_params.mesh_bounds.flush_memory();
-         this->shader_params.mesh_bounds.unmap_memory(bounds);
-         this->shader_params.scene_meshes.unmap_memory(params);
-      }
-   }
    void frame_in_flight::_update_shader_texture_descriptors() {
       auto&    scene = this->get_scene();
-      auto&    list  = scene.textures;
+      auto&    list  = scene.entities_of_type<loaded_texture>();
       uint32_t size  = list.size();
       //
       bool  needs_null_texture = this->owner->needs_null_texture();
@@ -1573,12 +1337,12 @@ namespace vulkanDK {
       std::vector<pending_write> writes;
       for (uint32_t i = 0; i < size; ++i) {
          auto& item = list[i];
-         if (item.handled_frames.is_up_to_date(this->my_index))
+         if (item.lifetime.sync_state.is_up_to_date(this->my_index))
             continue;
          if (item.empty()) // deleted texture
             continue;
-         item.handled_frames.set_up_to_date(this->my_index); // this is only good for single-threaded; for multi-threaded we're gonna need to do this AFTER the descriptor writes go through
-         auto view = item.content.view;
+         item.lifetime.sync_state.set_up_to_date(this->my_index); // this is only good for single-threaded; for multi-threaded we're gonna need to do this AFTER the descriptor writes go through
+         auto view = item.owned_gpu_resources.current.view;
          if (item.pending_delete()) {
             if (needs_null_texture) {
                view = null_texture.view;

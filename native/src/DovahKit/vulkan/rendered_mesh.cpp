@@ -70,48 +70,69 @@ namespace vulkanDK {
       *this = std::move(o);
    }
    rendered_mesh& rendered_mesh::operator=(rendered_mesh&& o) noexcept {
+      base::operator=(std::move(o));
       {
-         auto& tm = this->data;
-         auto& om = o.data;
+         auto& tm = this->mesh_data;
+         auto& om = o.mesh_data;
          std::swap(tm.vertices, om.vertices);
          std::swap(tm.indices,  om.indices);
          tm.bounding_sphere = om.bounding_sphere;
       }
-      {
-         auto& tm = this->vertex_and_index_buffer;
-         auto& om = o.vertex_and_index_buffer;
-         std::swap(tm.buffer,       om.buffer);
-         std::swap(tm.indices_at,   om.indices_at);
-         std::swap(tm.index_count,  om.index_count);
-         std::swap(tm.wide_indices, om.wide_indices);
-      }
-      this->mesh_flags      = o.mesh_flags;
-      this->push_params     = o.push_params;
-      this->shader_params   = o.shader_params;
-      this->texture_indices = o.texture_indices;
-      this->handled_frames  = o.handled_frames;
+      this->mesh_flags = o.mesh_flags;
+      //
+      this->owned_gpu_resources = std::move(o.owned_gpu_resources);
+      this->push_params        = o.push_params;
+      this->frame_drawing_data = o.frame_drawing_data;
+      this->texture_indices    = o.texture_indices;
       std::swap(this->anim_state, o.anim_state);
-      std::swap(this->life_state, o.life_state);
       std::swap(this->owning_nif, o.owning_nif);
       //
       return *this;
    }
 
-   void rendered_mesh::_on_shader_parameter_change() {
-      if (this->pending_delete())
-         return;
-      this->handled_frames.set_all_out_of_date();
+   void rendered_mesh::mark_for_delete() {
+      base::_mark_for_delete<rendered_mesh>();
+      this->owning_nif = nullptr;
    }
-   //
+   void rendered_mesh::reset() {
+      base::_reset<rendered_mesh>();
+      //
+      this->owning_nif = nullptr;
+      if (auto*& p = this->anim_state) {
+         delete p;
+         p = nullptr;
+      }
+      this->mesh_flags = mesh_flag::all_default_flags;
+      this->mesh_data.vertices.clear();
+      this->mesh_data.indices.clear();
+      //
+      this->push_params = {};
+      this->texture_indices = decltype(texture_indices)();
+   }
+
+   rendered_mesh::frame_culling_data_type rendered_mesh::calculate_frame_culling_data() const {
+      cull_flags_t cull_flags = 0;
+      if (this->mesh_flags & mesh_flag::culled_by_application)
+         cull_flags |= cull_flag::culled_by_application;
+      
+      return {
+         .transform = this->frame_drawing_data.transform,
+         .bounding_sphere_center = this->mesh_data.bounding_sphere.center,
+         .bounding_sphere_radius = sqrtf(this->mesh_data.bounding_sphere.radius_sq),
+         .flags = cull_flags,
+      };
+   }
+   
+
    void rendered_mesh::set_transform(const glm::mat4& in) {
-      this->shader_params.transform = in;
-      this->_on_shader_parameter_change();
+      this->frame_drawing_data.transform = in;
+      this->on_frame_drawing_data_changed();
    }
 
    // Setup functions:
    void rendered_mesh::recalc_bounding_sphere() {
-      if (this->data.vertices.empty()) {
-         this->data.bounding_sphere = {
+      if (this->mesh_data.vertices.empty()) {
+         this->mesh_data.bounding_sphere = {
             .center    = { 0, 0, 0 },
             .radius_sq = 0,
          };
@@ -135,40 +156,40 @@ namespace vulkanDK {
       range x;
       range y;
       range z;
-      for (auto& v : this->data.vertices) {
+      for (auto& v : this->mesh_data.vertices) {
          x.consider(v.pos.x);
          y.consider(v.pos.y);
          z.consider(v.pos.z);
       }
-      this->data.bounding_box = {
+      this->mesh_data.bounding_box = {
          .min = { x.min, y.min, z.min },
          .max = { x.max, y.max, z.max },
       };
-      this->data.bounding_sphere = {
+      this->mesh_data.bounding_sphere = {
          .center    = { x.center(), y.center(), z.center() },
          .radius_sq = 0.0,
       };
       //
-      auto& bs = this->data.bounding_sphere;
-      for (auto& v : this->data.vertices) {
+      auto& bs = this->mesh_data.bounding_sphere;
+      for (auto& v : this->mesh_data.vertices) {
          float radius_sq = glm::distance2(bs.center, v.pos);
          bs.radius_sq = std::max(bs.radius_sq, radius_sq);
       }
-      this->shader_params.bounding_sphere_center = bs.center;
-      this->shader_params.bounding_sphere_radius = sqrt(bs.radius_sq);
+      this->frame_drawing_data.bounding_sphere_center = bs.center;
+      this->frame_drawing_data.bounding_sphere_radius = sqrt(bs.radius_sq);
    }
    //
    size_t rendered_mesh::total_size_for_setup() const {
-      return (sizeof(vertex) * this->data.vertices.size()) + this->data.indices.size_in_bytes();
+      return (sizeof(vertex) * this->mesh_data.vertices.size()) + this->mesh_data.indices.size_in_bytes();
    }
    void rendered_mesh::sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const {
-      v = this->data.vertices.size() * sizeof(vertex);
-      i = this->data.indices.size_in_bytes();
+      v = this->mesh_data.vertices.size() * sizeof(vertex);
+      i = this->mesh_data.indices.size_in_bytes();
       total = v + i;
    }
    void rendered_mesh::setup_vib_data_at(void* dest) const {
-      auto& vl = this->data.vertices;
-      auto& il = this->data.indices;
+      auto& vl = this->mesh_data.vertices;
+      auto& il = this->mesh_data.indices;
       //
       auto vs = vl.size() * sizeof(vertex);
       //
@@ -179,7 +200,7 @@ namespace vulkanDK {
    void rendered_mesh::draw_call(VkCommandBuffer command_buffer) {
       VkDeviceSize offset = 0;
       //
-      auto& vib = this->vertex_and_index_buffer;
+      auto& vib = this->owned_gpu_resources.current;
       //
       if (!this->active())
          return;
@@ -194,7 +215,7 @@ namespace vulkanDK {
    }
    VkDrawIndexedIndirectCommand rendered_mesh::make_indirect_draw_command() const {
       return VkDrawIndexedIndirectCommand{
-         .indexCount    = this->vertex_and_index_buffer.index_count,
+         .indexCount    = this->owned_gpu_resources.current.index_count,
          .instanceCount = 1,
          .firstIndex    = 0,
          .vertexOffset  = 0,
@@ -202,38 +223,10 @@ namespace vulkanDK {
       };
    }
 
-   void rendered_mesh::mark_for_delete() {
-      this->life_state = scene_frame_item_state::pending_delete;
-      this->handled_frames.set_all_out_of_date();
-      this->owning_nif = nullptr;
-   }
-   void rendered_mesh::reset() {
-      auto& vib = this->vertex_and_index_buffer;
-      vib.buffer       = buffer();
-      vib.index_count  = 0;
-      vib.indices_at   = 0;
-      vib.wide_indices = false;
-      //
-      if (auto*& p = this->anim_state) {
-         delete p;
-         p = nullptr;
-      }
-      this->mesh_flags    = mesh_flag::all_default_flags;
-      this->push_params   = {};
-      this->shader_params = {};
-      this->texture_indices = decltype(texture_indices)();
-      this->handled_frames = frame_dirty_state();
-      this->life_state = scene_frame_item_state::empty;
-      this->owning_nif = nullptr;
-      //
-      this->data.vertices.clear();
-      this->data.indices.clear();
-   }
-
    // geometry
    bool rendered_mesh::ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const {
       constexpr float epsilon = 0.0001;
-      auto& bound  = this->data.bounding_sphere;
+      auto& bound  = this->mesh_data.bounding_sphere;
       auto  center = glm::vec3(this->transform() * glm::vec4(bound.center, 1.0F));
       auto  scale  = glm::length(this->transform()[0]); // X-scale; Y-scale would be the length of column 1; Z-scale, column 2
       //
@@ -259,8 +252,8 @@ namespace vulkanDK {
       ray_direction = glm::normalize(ray_direction);
       glm::vec2 bary_position;
       //
-      auto& list = this->data.indices;
-      auto& vert = this->data.vertices;
+      auto& list = this->mesh_data.indices;
+      auto& vert = this->mesh_data.vertices;
       bool  hits = false;
       hit_distance = std::numeric_limits<float>::max();
       for (size_t i = 0; i + 2 < list.size(); i += 3) {
@@ -302,13 +295,13 @@ namespace vulkanDK {
          return false;
       if (!this->ray_intersects_bounding_sphere(ray_origin, ray_direction))
          return false;
-      if (this->data.bounding_sphere.radius_sq > (10000 * 10000)) {
+      if (this->mesh_data.bounding_sphere.radius_sq > (10000 * 10000)) {
          //
          // Massive triangles can cause ray/triangle intersection checks to behave 
          // erratically and produce both false positives and false negatives. Let's 
          // be a little more certain before we resort to trying them.
          //
-         if (!ray_intersects_obb(ray_origin, ray_direction, this->data.bounding_box.min, this->data.bounding_box.max, this->transform(), hit_distance))
+         if (!ray_intersects_obb(ray_origin, ray_direction, this->mesh_data.bounding_box.min, this->mesh_data.bounding_box.max, this->transform(), hit_distance))
             return false;
       }
       return this->ray_intersects_shape(ray_origin, ray_direction, hit_distance);

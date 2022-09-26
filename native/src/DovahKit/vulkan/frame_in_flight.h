@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../helpers/class_map.h"
 #include "_vulkan.h"
 #include "_util.h"
 #include "config/scene_limits.h"
@@ -8,6 +9,7 @@
 #include "surface_renderer_descriptor_group.h"
 #include "overlays/fps.h"
 #include "overlays/world_axes.h"
+#include "scene_entities/all_types.h"
 
 namespace vulkanDK {
    class descriptor_set;
@@ -108,7 +110,7 @@ namespace vulkanDK {
          };
 
       public:
-         frame_in_flight() {}
+         frame_in_flight();
          ~frame_in_flight();
       
       protected:
@@ -152,16 +154,14 @@ namespace vulkanDK {
             // For compute shaders:
             //
             buffer active_caster_positions; // position vectors for each active shadow caster, for the compute shader
-            buffer mesh_bounds; // per-mesh bounds for the compute shader
+            cobb::class_map_from_class_array<buffer, scene_entities::all_types_with_frame_culling_data> scene_entity_frame_culling_data;
             //
             // For graphics:
             //
-            buffer scene_data;       // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
-            buffer scene_bounds;     // glm::mat4[] array for rendered_bounds
-            buffer scene_meshes;     // rendered_mesh::shader_parameters[]
-            buffer scene_landscapes; // rendered_landscape::shader_parameters[]
-            buffer scene_lights;     // rendered_light::shader_parameters[]
+            buffer scene_data;        // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
             buffer light_shadow_data; // glm::mat4[] array: six view matrices per shadow caster
+            cobb::class_map_from_class_array<buffer, scene_entities::all_types_with_frame_drawing_data> scene_entity_frame_drawing_data;
+
          } shader_params;
          struct {
             overlays::fps        fps;
@@ -186,10 +186,8 @@ namespace vulkanDK {
 
       protected:
          struct {
-            bool recorded_compute_cull_commands    = false;
-            bool scene_bounds_added_or_removed     = true;
-            bool scene_landscapes_added_or_removed = true;
-            bool scene_meshes_added_or_removed     = true;
+            bool recorded_compute_cull_commands = false;
+            cobb::class_map_from_class_array<bool, scene_entities::all_types_that_are_drawn> scene_entity_draws_changed;
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
          } state;
@@ -206,9 +204,11 @@ namespace vulkanDK {
          void submit_compute_cull_commands();
          void submit_graphics_commands(const std::vector<VkCommandBuffer>& append_command_buffers = {});
 
-         void on_scene_bounds_added_or_removed();
-         void on_scene_landscape_added_or_removed();
-         void on_scene_meshes_added_or_removed();
+         template<typename Entity> void on_scene_entity_added_or_removed() {
+            if constexpr (scene_entities::all_types_that_are_drawn::contains_type<Entity>) {
+               this->state.scene_entity_draws_changed.value_for<Entity>() = true;
+            }
+         }
          void invalidate_all_command_buffers();
 
       protected:
@@ -222,10 +222,10 @@ namespace vulkanDK {
          //
          scene& get_scene();
          void _update_shader_global_scene_state();
-         void _update_shader_scene_bounds_buffer();
-         void _update_shader_scene_landscapes_buffer();
-         void _update_shader_scene_lights_buffer();
-         void _update_shader_scene_meshes_buffer();
          void _update_shader_texture_descriptors();
+
+         template<typename Entity> void _update_scene_frame_items();
    };
 }
+
+#include "./frame_in_flight.inl"

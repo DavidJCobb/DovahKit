@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="vulkanDK::rendered_mesh">
-      <DisplayString>{{ {life_state,en}; frames={(uint8_t)handled_frames.mask,bb}; position={{ {shader_params.transform.value[3].x}, {shader_params.transform.value[3].y}, {shader_params.transform.value[3].z} }}</DisplayString>
+      <DisplayString>{{ {lifetime.life_state,en}; frames={(uint8_t)lifetime.sync_state.mask,bb}; position={{ {frame_drawing_data.transform.value[3].x}, {frame_drawing_data.transform.value[3].y}, {frame_drawing_data.transform.value[3].z} }}</DisplayString>
    </Type>
 </AutoVisualizer>

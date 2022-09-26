@@ -235,8 +235,10 @@ namespace vulkanDK {
       this->light_shadow_state.set_all_out_of_date();
    }
    void scene::update_light_shadows(frame_in_flight& fif) {
+      auto& all_lights = this->entities_of_type<rendered_light>();
+
       this->light_shadow_state.set_up_to_date(fif.index());
-      //
+      
       struct _entry {
          size_t index    = index_of_none;
          float  distance = FLT_MAX;
@@ -249,8 +251,8 @@ namespace vulkanDK {
       };
       std::array<_entry, surface_renderer::shadow_caster_count> nearest = { _entry(), _entry(), _entry(), _entry() }; // sorted
       //
-      for (size_t i = 0; i < this->lights.size(); ++i) {
-         auto& light = this->lights[i];
+      for (size_t i = 0; i < all_lights.size(); ++i) {
+         auto& light = all_lights[i];
          if (!light.active())
             continue;
          if (!light.can_cast_shadows())
@@ -283,8 +285,8 @@ namespace vulkanDK {
             data[i] = { glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1), glm::mat4(1) };
             continue;
          }
-         assert(entry.index <= this->lights.size());
-         auto& light = this->lights[entry.index];
+         assert(entry.index <= all_lights.size());
+         auto& light = all_lights[entry.index];
          assert(light.active());
          //
          this->global_state.shadow_caster_index[i] = entry.index;
@@ -307,8 +309,8 @@ namespace vulkanDK {
                   0,       0,       draw_distance_near, 0
                );
             } else {
-               float a = draw_distance_near / (light.shader_params.radius - draw_distance_near);
-               float b = (light.shader_params.radius * draw_distance_near) / (light.shader_params.radius - draw_distance_near);
+               float a = draw_distance_near / (light.frame_drawing_data.radius - draw_distance_near);
+               float b = (light.frame_drawing_data.radius * draw_distance_near) / (light.frame_drawing_data.radius - draw_distance_near);
                proj = glm::mat4(
                   x_scale, 0,       0,  0,
                   0,       y_scale, 0,  0,
@@ -323,13 +325,13 @@ namespace vulkanDK {
             // Even though cubemaps are lefthanded, we need a righthanded perspective matrix in order 
             // to get the cubemap faces to face the right directions.
             //
-            proj = glm::perspectiveRH_ZO(cubemap_view_fov, aspect, near, light.shader_params.radius);
+            proj = glm::perspectiveRH_ZO(cubemap_view_fov, aspect, near, light.frame_drawing_data.radius);
          }
          if constexpr (!cubemaps_are_lefthanded) {
             proj[1][1] *= -1;
          }
          //
-         const auto inv_position = -glm::vec3(light.shader_params.transform[3]);
+         const auto inv_position = -glm::vec3(light.transform()[3]);
          for (int j = 0; j < 6; ++j) {
             data[i][j] = proj * glm::translate(common_cubemap_views[j], inv_position);
          }
@@ -398,20 +400,19 @@ namespace vulkanDK {
    }
 
    void scene::clear(surface_renderer& sr) {
-      this->bounds.clear();
-      this->lights.clear();
-      {
-         auto& list = this->meshes;
-         auto  size = list.size();
-         for (size_t i = 0; i < size; ++i) {
-            auto& mesh = list[i];
-            if (!mesh.owning_nif)
-               continue;
-            mesh.owning_nif->sever_connection_to({ sr, i });
+      scene_entities::all_types::for_each([&sr, this]<typename Entity>() {
+         auto& list = this->entities_of_type<Entity>();
+         if constexpr (std::is_same_v<Entity, rendered_mesh>) {
+            auto  size = list.size();
+            for (size_t i = 0; i < size; ++i) {
+               auto& mesh = list[i];
+               if (!mesh.owning_nif)
+                  continue;
+               mesh.owning_nif->sever_connection_to({ sr, i });
+            }
          }
-      }
-      this->meshes.clear();
-      this->textures.clear();
+         list.clear();
+      });
    }
    void scene::teardown(surface_renderer&sr) {
       this->clear(sr);
@@ -430,7 +431,7 @@ namespace vulkanDK {
       float elapsed = std::chrono::duration<float, std::chrono::seconds::period>(now - this->last_update).count();
       this->last_update = now;
       //
-      for (auto& mesh : this->meshes) {
+      for (auto& mesh : this->entities_of_type<rendered_mesh>()) {
          if (!mesh.anim_state)
             continue;
          if (!mesh.active())
@@ -448,80 +449,59 @@ namespace vulkanDK {
       }
    }
 
-   size_t scene::insert_new_bound() {
-      auto& list = this->bounds;
+   size_t scene::reuse_scene_texture(const QString& path) {
+      auto& list = this->entities_of_type<loaded_texture>();
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item.empty())
-            return i;
-      }
-      if (size >= config::max_rendered_bounds)
-         return index_of_none;
-      list.emplace_back();
-      return size;
-   }
-   size_t scene::insert_new_landscape() {
-      auto& list = this->landscapes;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item.empty())
-            return i;
-         if (item.pending_delete()) {
-            item.life_state = scene_frame_item_state::pending_reload;
-            return i;
+         auto& prior = list[i];
+         if (prior.path == path) {
+            if (prior.active()) {
+               return i;
+            }
+            if (prior.pending_delete()) {
+               if (!prior.owned_gpu_resources.current.empty()) {
+                  //
+                  // A pending-delete entity will have both "current" and "outdated" resources 
+                  // if it was marked for delete after recycling began, but before recycling 
+                  // could complete. These entitites should be considered irrecoverable and 
+                  // allowed to die.
+                  //
+                  continue;
+               }
+               if (prior.owned_gpu_resources.outdated.empty()) {
+                  #if _DEBUG
+                     //
+                     // Wait, what? This shouldn't happen.
+                     //
+                     __debugbreak();
+                  #endif
+                  continue;
+               }
+               //
+               // Rescue the texture from deletion, and reuse it.
+               //
+               std::swap(
+                  prior.owned_gpu_resources.current,
+                  prior.owned_gpu_resources.outdated
+               );
+               prior.lifetime.life_state = scene_entities::life_state::active;
+               prior.lifetime.sync_state.set_all_out_of_date();
+               --this->entities.pending_deletion_counts.value_for<loaded_texture>();
+               //
+               return i;
+            }
          }
       }
-      if (size >= config::max_landscapes)
-         return index_of_none;
-      list.emplace_back();
-      return size;
-   }
-   size_t scene::insert_new_light() {
-      auto& list = this->lights;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item.empty())
-            return i;
-      }
-      if (size >= config::max_rendered_lights)
-         return index_of_none;
-      list.emplace_back();
-      return size;
-   }
-   size_t scene::insert_new_mesh() {
-      auto& list = this->meshes;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item.empty())
-            return i;
-      }
-      if (size >= config::max_rendered_meshes)
-         return index_of_none;
-      list.emplace_back();
-      return size;
-   }
-   size_t scene::insert_new_texture() {
-      auto& list = this->textures;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i)
-         if (list[i].empty())
-            return i;
-      if (size >= config::max_loaded_textures)
-         return index_of_none;
-      list.emplace_back();
-      return size;
+      return index_of_none;
    }
 
    bool scene::texture_dec_ref(renderer_passkey, loaded_texture& tex) {
+      assert(tex.refcount != 0 && "About to decrement the refcount into the negatives!");
       if (--tex.refcount == 0) {
          if (tex.persist_for_life_of_renderer())
             return false;
          tex.mark_for_delete();
-         ++this->pending_deletions.textures;
+         ++this->entities.pending_deletion_counts.value_for<loaded_texture>();
          return true;
       }
       return false;
@@ -537,7 +517,7 @@ namespace vulkanDK {
 
       auto  staging = sr.create_buffer(v, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       void* data    = staging.map_memory();
-      auto& entry   = this->landscapes[landscape_index];
+      auto& entry   = this->entities_of_type<rendered_landscape>()[landscape_index];
       //
       memcpy(data, entry.vertices.data(), v);
       staging.unmap_memory(data);
@@ -550,18 +530,5 @@ namespace vulkanDK {
          };
          vkCmdCopyBuffer(scratch.handle, staging.handle, this->coalesced.landscape_buffer.handle, 1, &copy_region);
       });
-   }
-
-   size_t scene::_empty_mesh_slot_count() const {
-      auto&  list  = this->meshes;
-      size_t size  = list.size();
-      size_t count = 0;
-      for (auto& item : list)
-         if (item.empty())
-            ++count;
-      return count;
-   }
-   size_t scene::available_mesh_count() const {
-      return config::max_rendered_meshes - (this->meshes.size() - this->_empty_mesh_slot_count());
    }
 }

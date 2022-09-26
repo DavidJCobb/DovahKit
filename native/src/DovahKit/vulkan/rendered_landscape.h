@@ -5,19 +5,25 @@
 #include <glm/glm.hpp>
 #include "_vulkan.h"
 #include "helpers/array_of_n_values.h" // cobb
-#include "helpers/frame_dirty_state.h" // vulkan
-#include "helpers/vertex_index_list.h"
 #include "helpers/vertex_indices_for_quad_grid.h"
 #include "buffer.h"
 #include "vertex_landscape.h"
 #include "scene_frame_item.h"
+
+#include "./scene_entities/base.h"
 
 namespace dovah::loaded_forms {
    class Landscape;
 }
 
 namespace vulkanDK {
-   class rendered_landscape {
+   class rendered_landscape : public scene_entities::base {
+      public:
+         static constexpr const char* name_single = "landscape";
+         static constexpr const char* name_plural = "landscapes";
+         //
+         static constexpr const bool owned_gpu_resources_are_coalesced = true;
+         static constexpr const bool is_drawn = true;
       protected:
          static constexpr bool render_as_separated_quads = true;
       public:
@@ -42,7 +48,10 @@ namespace vulkanDK {
       public:
          rendered_landscape() {}
 
-         struct shader_parameters { // pass to the shader via a storage buffer
+         void mark_for_delete();
+         void reset();
+
+         struct frame_drawing_data_type { // pass to the shader via a storage buffer
             alignas(16) glm::vec3 position;
             alignas(4)  uint32_t  pad0C; // padding
             alignas(4)  std::array<int32_t, 4> diffuse_base = { -1, -1, -1, -1 }; // texture indices; one per quad
@@ -58,26 +67,15 @@ namespace vulkanDK {
          };
 
          std::array<vertex_landscape, vertices_per_mesh> vertices;
-         shader_parameters shader_params;
-         //
-         frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
-         scene_frame_item_state life_state = scene_frame_item_state::empty;
-
-         inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
-         inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
-         inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
-         inline bool pending_reload() const noexcept { return this->life_state == scene_frame_item_state::pending_reload; }
+         frame_drawing_data_type frame_drawing_data;
          
-         inline const glm::vec3& position() const noexcept { return this->shader_params.position; }
+         inline const glm::vec3& position() const noexcept { return this->frame_drawing_data.position; }
          void set_position(const glm::vec3&);
 
          void import_vertex_data_from_form(const loaded_form&);
          void setup_vertex_data_at(void*);
 
          [[nodiscard]] VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
-
-         void mark_for_delete();
-         void reset();
 
          glm::vec3 local_vertex_position(int quad, size_t quad_vertex_index) const;
          glm::vec3 local_vertex_position(size_t mesh_vertex_index) const;

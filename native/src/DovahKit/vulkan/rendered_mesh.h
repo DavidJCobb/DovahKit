@@ -10,6 +10,9 @@
 #include "vertex.h"
 #include "scene_frame_item.h"
 
+#include "./scene_entities/base.h"
+#include "./scene_entities/owned_gpu_resource_sets.h"
+
 // geometry
 #include "../helpers/vector3.h"
 
@@ -24,9 +27,13 @@ namespace vulkanDK {
       float elapsed  = 0.0;
    };
 
-   class rendered_mesh {
-      protected:
-         void _on_shader_parameter_change();
+   class rendered_mesh : public scene_entities::base {
+      public:
+         static constexpr const char* name_single = "mesh";
+         static constexpr const char* name_plural = "meshes";
+         //
+         static constexpr const bool owned_gpu_resources_are_coalesced = false;
+         static constexpr const bool is_drawn = true;
       public:
          rendered_mesh() {}
          ~rendered_mesh();
@@ -34,27 +41,31 @@ namespace vulkanDK {
          rendered_mesh(rendered_mesh&&) noexcept;
          rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
-         struct cull_flag {
-            enum type : uint32_t {
-               culled_by_application = 0x00000001,
-            };
-         };
-         using cull_flags_t = std::underlying_type_t<cull_flag::type>;
+         void mark_for_delete();
+         void reset();
 
-         struct mesh_flag { // flags applied on the CPU, not within shaders
-            enum type : uint32_t {
-               requires_oit          = 0x00000001,
-               double_sided          = 0x00000002,
-               cast_shadows          = 0x00000004,
-               is_decal              = 0x00000008,
-               culled_by_application = 0x00000010,
+         #pragma region Flags masks
+            struct cull_flag {
+               enum type : uint32_t {
+                  culled_by_application = 0x00000001,
+               };
             };
-            //
-            static constexpr uint32_t all_default_flags = cast_shadows;
-         };
-         using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
+            using cull_flags_t = std::underlying_type_t<cull_flag::type>;
 
-         struct shader_parameters { // pass to the shader via a storage buffer
+            struct mesh_flag { // flags applied on the CPU, not within shaders
+               enum type : uint32_t {
+                  requires_oit          = 0x00000001,
+                  double_sided          = 0x00000002,
+                  cast_shadows          = 0x00000004,
+                  is_decal              = 0x00000008,
+                  culled_by_application = 0x00000010,
+               };
+               static constexpr uint32_t all_default_flags = cast_shadows;
+            };
+            using mesh_flags_t = std::underlying_type_t<mesh_flag::type>;
+         #pragma endregion
+
+         struct frame_drawing_data_type { // pass to the shader via a storage buffer
             alignas(16) glm::mat4 transform;
             //
             alignas(16) glm::vec3 specular_color    = { 0, 0, 0 };
@@ -63,6 +74,12 @@ namespace vulkanDK {
             //
             alignas(16) glm::vec3 bounding_sphere_center = { 0, 0, 0 };
             alignas( 4) float     bounding_sphere_radius = 0;
+         };
+         struct frame_culling_data_type {
+            alignas(16) glm::mat4    transform;
+            alignas(16) glm::vec3    bounding_sphere_center = {};
+            alignas( 4) float        bounding_sphere_radius = 0;
+            alignas( 4) cull_flags_t flags = 0;
          };
          struct push_constant {
             alignas(4) int32_t  object_index;               // not meaningful on this object; ignored during the render process
@@ -73,11 +90,14 @@ namespace vulkanDK {
             alignas(4) VkBool32 enable_alpha_blending = VK_FALSE; // bools in GLSL are uint32_ts in SPIR-V
             alignas(4) VkBool32 receive_shadows       = VK_TRUE;  // bools in GLSL are uint32_ts in SPIR-V
          };
-         struct cull_data {
-            alignas(16) glm::mat4    transform;
-            alignas(16) glm::vec3    bounding_sphere_center = {};
-            alignas( 4) float        bounding_sphere_radius = 0;
-            alignas( 4) cull_flags_t flags = 0;
+
+         struct vertex_and_index_buffer {
+            buffer   buffer;
+            uint32_t indices_at   = 0;
+            uint32_t index_count  = 0;
+            bool     wide_indices = false;
+
+            inline bool empty() const noexcept { return this->buffer.empty(); }
          };
          
          mesh_flags_t mesh_flags = mesh_flag::all_default_flags;
@@ -93,15 +113,7 @@ namespace vulkanDK {
                glm::vec3 center    = { 0.0, 0.0, 0.0 };
                float     radius_sq = 0.0F; // radius squared is faster for many calculations
             } bounding_sphere;
-         } data;
-         struct {
-            buffer   buffer;
-            uint32_t indices_at   = 0;
-            uint32_t index_count  = 0;
-            bool     wide_indices = false;
-         } vertex_and_index_buffer;
-         shader_parameters shader_params;
-         push_constant     push_params;
+         } mesh_data;
          union {
             std::array<int32_t, 2> list = { -1, -1 };
             struct {
@@ -109,18 +121,20 @@ namespace vulkanDK {
                int32_t normals;
             };
          } texture_indices;
-         //
-         frame_dirty_state handled_frames; // for normal objects: frames that have had shader params synchronized. for pending-delete objects: frames that have been unhooked (when all are unhooked, we can delete the VIB)
-         scene_frame_item_state life_state = scene_frame_item_state::empty;
-         //
+
+         scene_entities::owned_gpu_resource_sets<vertex_and_index_buffer> owned_gpu_resources;
+         frame_drawing_data_type frame_drawing_data;
+         push_constant           push_params;
+         
          nifDK::file* owning_nif = nullptr;
          mesh_animation_state* anim_state = nullptr; // owns
 
-         inline bool active() const noexcept { return this->life_state == scene_frame_item_state::active; }
-         inline bool empty() const noexcept { return this->life_state == scene_frame_item_state::empty; }
-         inline bool pending_delete() const noexcept { return this->life_state == scene_frame_item_state::pending_delete; }
-         
-         inline const glm::mat4& transform() const noexcept { return this->shader_params.transform; }
+         [[nodiscard]] frame_culling_data_type calculate_frame_culling_data() const;
+
+         constexpr vertex_and_index_buffer& vib() noexcept { return this->owned_gpu_resources.current; }
+         constexpr const vertex_and_index_buffer& vib() const noexcept { return this->owned_gpu_resources.current; }
+
+         constexpr const glm::mat4& transform() const noexcept { return this->frame_drawing_data.transform; }
          void set_transform(const glm::mat4&);
 
          // Setup functions:
@@ -133,9 +147,6 @@ namespace vulkanDK {
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);
          [[nodiscard]] VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
-
-         void mark_for_delete();
-         void reset();
 
          // World-relative raycasts (uses the mesh's transform):
          bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const;

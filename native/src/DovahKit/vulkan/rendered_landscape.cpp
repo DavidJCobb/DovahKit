@@ -12,15 +12,16 @@
 #include <QDebug>
 
 namespace vulkanDK {
-   void rendered_landscape::_on_shader_parameter_change() {
-      if (this->pending_delete())
-         return;
-      this->handled_frames.set_all_out_of_date();
+   void rendered_landscape::mark_for_delete() {
+      base::_mark_for_delete<rendered_landscape>();
+   }
+   void rendered_landscape::reset() {
+      base::_reset<rendered_landscape>();
    }
 
    void rendered_landscape::set_position(const glm::vec3& pos) {
-      this->shader_params.position = pos;
-      this->_on_shader_parameter_change();
+      this->frame_drawing_data.position = pos;
+      this->on_frame_drawing_data_changed();
    }
 
    void rendered_landscape::import_vertex_data_from_form(const loaded_form& land) {
@@ -108,19 +109,6 @@ namespace vulkanDK {
    [[nodiscard]] VkDrawIndexedIndirectCommand rendered_landscape::make_indirect_draw_command() const;
    //*/
 
-   void rendered_landscape::mark_for_delete() {
-      this->life_state = scene_frame_item_state::pending_delete;
-      this->handled_frames.set_all_out_of_date();
-   }
-   void rendered_landscape::reset() {
-      this->handled_frames = frame_dirty_state();
-      this->life_state     = scene_frame_item_state::empty;
-      //
-      #if _DEBUG
-         this->shader_params = {};
-      #endif
-   }
-
    glm::vec3 rendered_landscape::local_vertex_position(int quad, size_t quad_vertex_index) const {
       quad_vertex_index = quad_vertex_index % vertices_per_quad;
       int   land_x = quad_vertex_index % vertices_per_quad_side + ((vertices_per_quad_side - 1) * (quad % 2));
@@ -137,7 +125,7 @@ namespace vulkanDK {
       return this->local_vertex_position(mesh_vertex_index / vertices_per_quad, mesh_vertex_index % vertices_per_quad);
    }
    glm::vec3 rendered_landscape::world_vertex_position(int quad, size_t quad_vertex_index) const {
-      return this->local_vertex_position(quad, quad_vertex_index) + this->shader_params.position;
+      return this->local_vertex_position(quad, quad_vertex_index) + this->frame_drawing_data.position;
    }
    glm::vec3 rendered_landscape::world_vertex_position(size_t mesh_vertex_index) const {
       return this->world_vertex_position(mesh_vertex_index / vertices_per_quad, mesh_vertex_index % vertices_per_quad);

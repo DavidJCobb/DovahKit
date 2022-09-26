@@ -52,6 +52,8 @@ namespace vulkanDK {
          } current;
          image_metadata metadata;
 
+         inline constexpr bool empty() const noexcept { return this->handle == VK_NULL_HANDLE && this->view == VK_NULL_HANDLE; }
+
          void create_basic_view(VkFormat, VkImageAspectFlags);
          void destroy_view();
 
@@ -74,6 +76,8 @@ namespace vulkanDK {
 
       public:
          VmaAllocation memory = VK_NULL_HANDLE;
+
+         inline constexpr bool empty() const noexcept { return image_and_view::empty() && this->memory == VK_NULL_HANDLE; }
 
          void create_image(const image_metadata&, VkMemoryPropertyFlags);
 
