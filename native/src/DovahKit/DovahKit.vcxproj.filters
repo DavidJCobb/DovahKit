@@ -1761,7 +1761,7 @@
     <ClCompile Include="editor\subsystems\worldedit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\scene_item_handle.cpp">
+    <ClCompile Include="vulkan\scene_entity_handle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nif\blocks\_DKVulkanInterface.cpp">
@@ -3290,9 +3290,6 @@
     <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\helpers\frame_dirty_state.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\swap_chain_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3456,9 +3453,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nif\reader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\scene_frame_item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nif\blocks\unknown.h">
@@ -3803,7 +3797,7 @@
     <ClInclude Include="dovahscript\wrappers\form\static\distant_lod_paths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\scene_item_handle.h">
+    <ClInclude Include="vulkan\scene_entity_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nif\blocks\_DKVulkanInterface.h">
@@ -3933,12 +3927,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nif\blocks\BSDamageStage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\scene_frame_item_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\scene_frame_item_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\class_map.h">
@@ -4628,5 +4616,7 @@
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="vulkan\scene_entities\base.natvis" />
     <Natvis Include="vulkan\loaded_texture.natvis" />
+    <Natvis Include="vulkan\scene_entities\fif_sync_state.natvis" />
+    <Natvis Include="vulkan\rendered_light.natvis" />
   </ItemGroup>
 </Project>

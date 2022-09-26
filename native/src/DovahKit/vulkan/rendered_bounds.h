@@ -1,7 +1,5 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "helpers/frame_dirty_state.h"
-#include "scene_frame_item.h"
 
 #include "./scene_entities/base.h"
 

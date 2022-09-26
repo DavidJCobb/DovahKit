@@ -1,9 +1,7 @@
 #pragma once
 #include <QString>
 #include "_vulkan.h"
-#include "helpers/frame_dirty_state.h"
 #include "image.h"
-#include "scene_frame_item.h"
 
 #include "./scene_entities/base.h"
 #include "./scene_entities/owned_gpu_resource_sets.h"

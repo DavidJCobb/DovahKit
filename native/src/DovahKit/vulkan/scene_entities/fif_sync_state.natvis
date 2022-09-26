@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::scene_entities::fif_sync_state">
+      <Intrinsic Name="_b" Expression="(int)((mask &amp; (mask_type(1) &lt;&lt; n)) != 0)">
+         <Parameter Name="n" Type="mask_type" />
+      </Intrinsic>
+
+      <DisplayString Condition="bitcount ==  1">{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  2">{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  3">{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  4">{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  5">{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  6">{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  7">{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  8">{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount ==  9">{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 10">{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 11">{_b(10),d}{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 12">{_b(11),d}{_b(10),d}{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 13">{_b(12),d}{_b(11),d}{_b(10),d}{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 14">{_b(13),d}{_b(12),d}{_b(11),d}{_b(10),d}{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 15">{_b(14),d}{_b(13),d}{_b(12),d}{_b(11),d}{_b(10),d}{_b(9),d}{_b(8),d}{_b(7),d}{_b(6),d}{_b(5),d}{_b(4),d}{_b(3),d}{_b(2),d}{_b(1),d}{_b(0),d}</DisplayString>
+      <DisplayString Condition="bitcount == 16">{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 17">{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 18">{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 19">{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 20">{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 21">{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 22">{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 23">{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 24">{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 25">{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 26">{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 27">{_b(26),d}{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 28">{_b(27),d}{_b(26),d}{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 29">{_b(28),d}{_b(27),d}{_b(26),d}{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 30">{_b(29),d}{_b(28),d}{_b(27),d}{_b(26),d}{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 31">{_b(30),d}{_b(29),d}{_b(28),d}{_b(27),d}{_b(26),d}{_b(25),d}{_b(24),d}{_b(23),d}{_b(22),d}{_b(21),d}{_b(20),d}{_b(19),d}{_b(18),d}{_b(17),d}{_b(16),d}{(uint16_t)mask,bb}</DisplayString>
+      <DisplayString Condition="bitcount == 32">{(uint32_t)mask,bb}</DisplayString>
+      <DisplayString>{mask,bb}</DisplayString>
+   </Type>
+</AutoVisualizer>

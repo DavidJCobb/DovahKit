@@ -1,16 +1,16 @@
 # DovahKit
 
-A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "Creation Kit" and "*Dovahkiin*," which means "Dragonborn" in the Dragon language.
+A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "Creation Kit" and "*Dovahkiin*," which in Skyrim's lore means "Dragonborn," the player-character's title, in the Dragon language.
 
-This tool was built using Visual Studio 2019. It dynamically links Qt.
+This tool was built using Visual Studio 2022. It dynamically links Qt.
 
 ## Build environment
 
-This program was built using Microsoft Visual Studio Community 2019 with the [Qt Visual Studio Tools](https://marketplace.visualstudio.com/items?itemName=TheQtCompany.QtVisualStudioTools2019) plug-in and Qt Designer. The [version of Qt used](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) was 5.15.2, 64-bit, for MSVC 2019 x64.
+This program was built using Microsoft Visual Studio Community 2022 with the [Qt Visual Studio Tools](https://marketplace.visualstudio.com/items?itemName=TheQtCompany.QtVisualStudioTools2022) plug-in and Qt Designer. The [version of Qt used](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) was 5.15.2, 64-bit, for MSVC 2019 x64.
 
 Lua is compiled as C++; this means that Lua errors properly unwind the stack (calling destructors within any C-functions we make available to Lua) instead of using setjmp/longjmp.
 
-I built DirectXTex using the `DirectXTex_Desktop_2019` project, suitable for programs meant to support Windows 7 SP1 or newer that are built with Visual Studio 2019. A guide to DirectXTex project files and Visual Studio setup can be found [on its own repo](https://github.com/Microsoft/DirectXTex/wiki/DirectXTex#adding-to-a-vs-solution). General setup requirements are also on that page.
+I built DirectXTex using the `DirectXTex_Desktop_2019` project, suitable for programs meant to support Windows 7 SP1 or newer that are built with Visual Studio 2019. Development started with Visual Studio 2019; when I updated to 2022, I upgraded the project as well. A guide to DirectXTex project files and Visual Studio setup can be found [on its own repo](https://github.com/Microsoft/DirectXTex/wiki/DirectXTex#adding-to-a-vs-solution). General setup requirements are also on that page.
 
 This program uses C++20 via the `/std:c++latest` compiler option. The included project files should take care of that for you.
 

@@ -9,13 +9,20 @@ namespace vulkanDK::scene_entities {
          //
          // Metaprogramming configuration, to be overridden on subclasses. See concepts 
          // for further information.
-         //
+
+         // Name values, for use in debug log messages.
          static constexpr const char* name_single = "<unnamed>";
          static constexpr const char* name_plural = "<unnamed>";
-         //
+         
          static constexpr const bool owned_gpu_resources_are_coalesced   = false;
+
          static constexpr const bool owned_gpu_resources_are_descriptors = false;
-         static constexpr const bool is_drawn = false; // is this entity rendered using a draw call?
+
+         // Is this entity rendered using a draw call? Affects how frame drawing data is updated for 
+         // the entity, whether command buffers are marked as outdated if the entity is created or 
+         // destroyed, and so on.
+         static constexpr const bool is_drawn = false;
+
          using frame_drawing_data_type = void;
          using frame_culling_data_type = void;
 

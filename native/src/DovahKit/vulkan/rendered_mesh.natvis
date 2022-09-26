@@ -1,6 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="vulkanDK::rendered_mesh">
-      <DisplayString>{{ {lifetime.life_state,en}; frames={(uint8_t)lifetime.sync_state.mask,bb}; position={{ {frame_drawing_data.transform.value[3].x}, {frame_drawing_data.transform.value[3].y}, {frame_drawing_data.transform.value[3].z} }}</DisplayString>
+      <DisplayString>{{ {lifetime.life_state,en}; frames={lifetime.sync_state}; position={{ {frame_drawing_data.transform.value[3].x}, {frame_drawing_data.transform.value[3].y}, {frame_drawing_data.transform.value[3].z} }}</DisplayString>
+      <Expand>
+         <Synthetic Name="[flags]">
+            <DisplayString>raw mask: {mesh_flags,x}</DisplayString>
+            <Expand>
+               <Item Name="requires_oit">(mesh_flags &amp; mesh_flag::requires_oit) != 0</Item>
+               <Item Name="double_sided">(mesh_flags &amp; mesh_flag::double_sided) != 0</Item>
+               <Item Name="cast_shadows">(mesh_flags &amp; mesh_flag::cast_shadows) != 0</Item>
+               <Item Name="is_decal">    (mesh_flags &amp; mesh_flag::is_decal) != 0</Item>
+               <Item Name="culled_by_application">(mesh_flags &amp; mesh_flag::culled_by_application) != 0</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[textures]">
+            <DisplayString>{{ diffuse={texture_indices.diffuse,d}, normals={texture_indices.normals,d} }}</DisplayString>
+            <Expand>
+               <Item Name="diffuse">texture_indices.diffuse,d</Item>
+               <Item Name="normals">texture_indices.normals,d</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[shader parameters]">
+            <Expand>
+               <Synthetic Name="[alpha]">
+                  <Expand>
+                     <Item Name="blending">push_params.enable_alpha_blending != 0</Item>
+                     <Item Name="testing threshold">push_params.alpha_test_threshold,g</Item>
+                     <Item Name="testing operation">push_params.alpha_test_operation</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[shadows]">
+                  <Expand>
+                     <Item Name="cast">(mesh_flags &amp; mesh_flag::cast_shadows) != 0</Item>
+                     <Item Name="receive">push_params.receive_shadows != 0</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[specular]">
+                  <DisplayString>rgb({(int)(frame_drawing_data.specular_color.r * 255),d}, {(int)(frame_drawing_data.specular_color.g * 255),d}, {(int)(frame_drawing_data.specular_color.b * 255),d}) strength {frame_drawing_data.specular_strength,g}</DisplayString>
+                  <Expand>
+                     <Item Name="color">frame_drawing_data.specular_color</Item>
+                     <Item Name="strength">frame_drawing_data.specular_strength,g</Item>
+                     <Item Name="exponent">frame_drawing_data.specular_exponent,g</Item>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[VIBs]">
+            <Expand>
+               <Item Name="current">owned_gpu_resources.current</Item>
+               <Item Name="outdated">owned_gpu_resources.outdated</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="mesh_data">mesh_data</Item>
+         <Item Name="frame_drawing_data">frame_drawing_data</Item>
+         <Item Name="push_params">push_params</Item>
+         <Item Name="owning_nif">owning_nif</Item>
+         <Item Name="anim_state">anim_state</Item>
+      </Expand>
    </Type>
 </AutoVisualizer>

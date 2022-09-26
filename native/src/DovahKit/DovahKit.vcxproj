@@ -636,7 +636,7 @@
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
     <ClCompile Include="vulkan\scene_entities\base.cpp" />
-    <ClCompile Include="vulkan\scene_item_handle.cpp" />
+    <ClCompile Include="vulkan\scene_entity_handle.cpp" />
     <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
@@ -958,7 +958,6 @@
     <ClInclude Include="vulkan\helpers\cubemap_helpers.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\extract_frustum_normals.h" />
-    <ClInclude Include="vulkan\helpers\frame_dirty_state.h" />
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
     <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
@@ -987,11 +986,8 @@
     <ClInclude Include="vulkan\scene_entities\scene_limits.h" />
     <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h" />
     <ClInclude Include="vulkan\scene_entities\traits\owned_gpu_resource_type_of.h" />
-    <ClInclude Include="vulkan\scene_frame_item.h" />
-    <ClInclude Include="vulkan\scene_frame_item_base.h" />
-    <ClInclude Include="vulkan\scene_frame_item_types.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
-    <ClInclude Include="vulkan\scene_item_handle.h" />
+    <ClInclude Include="vulkan\scene_entity_handle.h" />
     <ClInclude Include="vulkan\shader_module.h" />
     <ClInclude Include="vulkan\spir_v_entry_point.h" />
     <ClInclude Include="vulkan\spir_v_parser.h" />
@@ -1797,8 +1793,10 @@
     <Natvis Include="vulkan\dds\pixel_format.natvis" />
     <Natvis Include="vulkan\loaded_texture.natvis" />
     <Natvis Include="vulkan\rendered_landscape.natvis" />
+    <Natvis Include="vulkan\rendered_light.natvis" />
     <Natvis Include="vulkan\rendered_mesh.natvis" />
     <Natvis Include="vulkan\scene_entities\base.natvis" />
+    <Natvis Include="vulkan\scene_entities\fif_sync_state.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

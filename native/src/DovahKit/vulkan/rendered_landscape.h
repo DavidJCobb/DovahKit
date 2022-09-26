@@ -8,7 +8,6 @@
 #include "helpers/vertex_indices_for_quad_grid.h"
 #include "buffer.h"
 #include "vertex_landscape.h"
-#include "scene_frame_item.h"
 
 #include "./scene_entities/base.h"
 

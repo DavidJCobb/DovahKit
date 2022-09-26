@@ -3318,6 +3318,12 @@ namespace vulkanDK {
 
 
    void surface_renderer::draw_next_frame() {
+      #if _DEBUG
+         if (this->debug.debugbreak_queued_on_draw) {
+            this->debug.debugbreak_queued_on_draw = false;
+            __debugbreak();
+         }
+      #endif
       this->scene.update();
       //
       constexpr auto no_timeout = UINT64_MAX;
@@ -5042,6 +5048,11 @@ namespace vulkanDK {
       this->debug.draw_landscape_normals = v;
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.invalidate_all_command_buffers();
+   }
+   void surface_renderer::debug_break_on_next_draw() {
+      #if _DEBUG
+         this->debug.debugbreak_queued_on_draw = true;
+      #endif
    }
 
    void surface_renderer::_wait_on_all_frames_in_flight() {

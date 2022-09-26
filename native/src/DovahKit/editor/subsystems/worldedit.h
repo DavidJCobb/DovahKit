@@ -8,7 +8,7 @@
 #include "dovah/forms/Landscape.h"
 #include "dovah/forms/ObjectReference.h"
 #include "nif/file.h"
-#include "vulkan/scene_item_handle.h"
+#include "vulkan/scene_entity_handle.h"
 
 class DKVulkanView;
 namespace dovah {

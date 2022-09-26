@@ -4,11 +4,9 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "_vulkan.h"
-#include "helpers/frame_dirty_state.h"
 #include "helpers/vertex_index_list.h"
 #include "buffer.h"
 #include "vertex.h"
-#include "scene_frame_item.h"
 
 #include "./scene_entities/base.h"
 #include "./scene_entities/owned_gpu_resource_sets.h"

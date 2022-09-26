@@ -21,7 +21,7 @@
 #include "graphics_shader.h"
 #include "image.h"
 #include "scene.h"
-#include "scene_item_handle.h"
+#include "scene_entity_handle.h"
 #include "swap_chain_image.h"
 #include "surface_renderer_descriptor_group.h"
 //
@@ -198,6 +198,8 @@ namespace vulkanDK {
             PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
          } api_functions;
          struct {
+            bool debugbreak_queued_on_draw = false;
+            //
             bool   freeze_culling_updates     = false;
             size_t show_shadow_caster_culling = std::string::npos;
             //
@@ -282,6 +284,7 @@ namespace vulkanDK {
          void debug_set_culling_updates_frozen(bool);
          void debug_set_landscape_wireframes_visible(bool);
          void debug_set_landscape_normals_visible(bool);
+         void debug_break_on_next_draw();
 
       protected:
          void _init_surface(); // on init, and when the HWND changes

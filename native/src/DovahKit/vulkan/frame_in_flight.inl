@@ -38,7 +38,9 @@ namespace vulkanDK {
             case scene_entities::life_state::pending_delete:
                //
                // If the entity consists entirely of frame drawing data, then we want to give that data an 
-               // opportunity to clear.
+               // opportunity to clear. We need this for things like `rendered_light`, where the content 
+               // of its frame drawing data indicates whether it exists (e.g. a light that doesn't exist 
+               // has zero brightness).
                //
                if constexpr (!frame_drawing_data_only) {
                   sync_state.set_up_to_date(this->my_index);

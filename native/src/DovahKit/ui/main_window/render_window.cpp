@@ -505,4 +505,15 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       this->toolbar->addWidget(widget);
    }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Debugbreak on next draw");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         view->surfaceRenderer()->debug_break_on_next_draw();
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
+      //
+      this->toolbar->addWidget(button);
+   }
 }

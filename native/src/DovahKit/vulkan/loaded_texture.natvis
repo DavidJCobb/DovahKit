@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="vulkanDK::loaded_texture">
-      <DisplayString>{{ {lifetime.life_state,en}; frames={(uint8_t)lifetime.sync_state.mask,bb}; path={path} }}</DisplayString>
+      <DisplayString>{{ {lifetime.life_state,en}; frames={lifetime.sync_state}; path={path} }}</DisplayString>
+      <Expand>
+         <Synthetic Name="[flags]">
+            <DisplayString>raw mask: {flags,x}</DisplayString>
+            <Expand>
+               <Item Name="is_default_land_texture">(flags &amp; flag::is_default_land_texture) != 0</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[size]">
+            <DisplayString>{w,d}x{h,d}px</DisplayString>
+            <Expand>
+               <Item Name="w">w,d</Item>
+               <Item Name="h">h,d</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="path">path</Item>
+         <Item Name="refcount">refcount,d</Item>
+      </Expand>
    </Type>
 </AutoVisualizer>

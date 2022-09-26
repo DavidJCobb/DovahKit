@@ -6,6 +6,7 @@
 #include "helpers/class_map.h"
 #include "helpers/passkey.h"
 #include "./scene_entities/all_types.h"
+#include "./scene_entities/fif_sync_state.h"
 #include "./buffer.h"
 #include "./frustum.h"
 #include "./loaded_texture.h"
@@ -64,7 +65,7 @@ namespace vulkanDK {
          struct {
             buffer landscape_buffer; // indices; then all verts
          } coalesced;
-         frame_dirty_state light_shadow_state;
+         scene_entities::fif_sync_state light_shadow_state;
 
          template<typename Entity> std::vector<Entity>& entities_of_type() {
             return std::get<std::vector<Entity>>(this->entities.lists);

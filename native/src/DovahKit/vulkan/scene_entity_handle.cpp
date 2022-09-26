@@ -1,4 +1,4 @@
-#include "scene_item_handle.h"
+#include "scene_entity_handle.h"
 #include "scene.h"
 #include "surface_renderer.h"
 

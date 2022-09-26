@@ -18,9 +18,10 @@ namespace vulkanDK {
          if (item.pending_delete()) {
             if constexpr (scene_entities::concepts::owns_gpu_resources<Entity>) {
                //
-               // TODO: Do not recycle if the item has both a "current" and an "outdated" owned GPU 
-               // resource. This would imply that the item was already marked for recycle, and then 
-               // marked for deletion again before it could be recycled.
+               // Do not recycle if the entity has both a "current" and an "outdated" owned GPU resource. 
+               // This should only occur if a marked-for-delete entity is marked for recycle, and then 
+               // marked for deletion again before it can be recycled. Such entities should be considered 
+               // irrecoverable; just let them get deleted.
                //
                auto& res = item.owned_gpu_resources;
                if (res.has_current() && res.has_outdated()) {
