@@ -16,6 +16,14 @@
         <file>rendered_bounds/pivot/color.vert.spv</file>
         <file>rendered_landscape/color.frag.spv</file>
         <file>rendered_landscape/color.vert.spv</file>
+        <file>rendered_landscape/shadows-caster.frag.spv</file>
+        <file>rendered_landscape/shadows-caster.vert.spv</file>
+        <file>rendered_landscape/shadows-sun.vert.spv</file>
+        <file>rendered_landscape/normals.frag.spv</file>
+        <file>rendered_landscape/normals.geom.spv</file>
+        <file>rendered_landscape/normals.vert.spv</file>
+        <file>rendered_landscape/wireframe.frag.spv</file>
+        <file>rendered_landscape/wireframe.vert.spv</file>
         <file>rendered_mesh/bslp/color.vert.spv</file>
         <file>rendered_mesh/bslp/color-main.frag.spv</file>
         <file>rendered_mesh/bslp/color-oit.frag.spv</file>
@@ -25,13 +33,6 @@
         <file>rendered_mesh/bslp/shadows-sun.vert.spv</file>
         <file>util/full-screen-triangle.vert.spv</file>
         <file>util/oit-composite.frag.spv</file>
-        <file>rendered_landscape/wireframe.frag.spv</file>
-        <file>rendered_landscape/wireframe.vert.spv</file>
-        <file>rendered_landscape/normals.frag.spv</file>
-        <file>rendered_landscape/normals.geom.spv</file>
-        <file>rendered_landscape/normals.vert.spv</file>
-        <file>rendered_landscape/shadows-caster.frag.spv</file>
-        <file>rendered_landscape/shadows-caster.vert.spv</file>
-        <file>rendered_landscape/shadows-sun.vert.spv</file>
+        <file>util/scene-fog-color-far.frag.spv</file>
     </qresource>
 </RCC>

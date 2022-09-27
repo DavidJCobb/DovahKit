@@ -1,6 +1,6 @@
 #pragma once
+#include "_DKVulkanInterface.h"
 #include "NiGeometry.h"
-#include "vulkan/scene_item_handle.h"
 
 namespace nifDK::block_types {
    class NiTriBasedGeom : public NiGeometry, public virtual block_interfaces::_DKVulkanMeshInterface {

@@ -60,6 +60,7 @@ namespace vulkanDK {
          ~surface_renderer();
 
          static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
+         static constexpr graphics_shader::id_type scene_background_shader_id = "ScnBgClr";
          static constexpr graphics_shader::id_type main_shader_id             = "MeshColr";
          static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MeshOITc";
          static constexpr graphics_shader::id_type shader_id_mesh_shadows_sun = "MeshSdwS";
@@ -296,6 +297,7 @@ namespace vulkanDK {
          
          void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
          void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
+            void _setup_scene_background_shader();
             void _setup_oit_composite_shader();
             void _setup_rendered_mesh_shaders();
                void _setup_rendered_mesh_color_shader();

@@ -886,16 +886,36 @@ namespace vulkanDK {
                .extent = sr.surface_extent,
             },
             std::array{
-               VkClearValue{ .color = {
-                  scene.global_state.fog_color_far[0],
-                  scene.global_state.fog_color_far[1],
-                  scene.global_state.fog_color_far[2],
-                  1
-               } },
+               VkClearValue{ .color = { 0, 0, 0, 1 } },
                VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} }, // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
             },
             VK_SUBPASS_CONTENTS_INLINE
          );
+         //
+         {
+            //
+            // Scene background. We want to be able to adjust this in real-time without having 
+            // to re-record command buffers, so instead of using a VkClearValue, we're going to 
+            // draw a full-screen polygon that pulls the appropriate settings from the scene 
+            // global state. That way, just by changing the scene global state (which we copy 
+            // from the CPU to the GPU every frame), we can change the background color.
+            // 
+            // This will be useful for editing cell ambience, and for previewing different 
+            // weathers and times of day in exterior cells.
+            //
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *sr.get_graphics_shader(surface_renderer::scene_background_shader_id),
+               0,
+               std::array{ ds.scene_state }
+            );
+            //
+            // The shader doesn't actually take any vertex data as input, so all that matters 
+            // is that we fire off a draw operation with the right number of vertices. We don't 
+            // need to bind a vertex buffer, because nothing would be read from it; the shader's 
+            // vertex shader returns the appropriate vertex positions.
+            //
+            vkCmdDraw(command_handle, 3, 1, 0, 0);
+         }
          //
          bool last_was_decal   = false;
          auto set_decal_config = [command_handle, &last_was_decal](const rendered_mesh& ro) {
@@ -1047,11 +1067,21 @@ namespace vulkanDK {
             // Compositing:
             //
             {
+               //
+               // Here's where we use a full-screen polygon to get one fragment per drawn pixel, 
+               // such that we can perform our WBOIT blend operations per-pixel.
+               //
                command_buffer.bind_graphics_shader_and_descriptors(
                   *sr.get_graphics_shader(surface_renderer::oit_composite_shader_id),
                   0,
                   std::array{ ds.oit_compositing }
                );
+               //
+               // The shader doesn't actually take any vertex data as input, so all that matters 
+               // is that we fire off a draw operation with the right number of vertices. We don't 
+               // need to bind a vertex buffer, because nothing would be read from it; the shader's 
+               // vertex shader returns the appropriate vertex positions.
+               //
                vkCmdDraw(command_handle, 3, 1, 0, 0);
             }
             command_buffer.end_render_pass();

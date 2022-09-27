@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="vulkanDK::rendered_light">
-      <DisplayString>{{ {lifetime.life_state,en}; frames={lifetime.sync_state}; {frame_drawing_data.light_type,en}; position={{ {frame_drawing_data.transform.value[3]} }}</DisplayString>
+      <DisplayString>{{ {lifetime.life_state,en}; frames={lifetime.sync_state}; <!--
+         -->{frame_drawing_data.light_type,en}; <!--
+         -->position={{ {frame_drawing_data.transform.value[3]} }}<!--
+   --></DisplayString>
       <Expand>
          <Synthetic Name="[color]">
-            <DisplayString>rgb({(int)(frame_drawing_data.color.r * 255),d}, {(int)(frame_drawing_data.color.g * 255),d}, {(int)(frame_drawing_data.color.b * 255),d})</DisplayString>
+            <DisplayString>rgb(<!--
+               -->{(int)(frame_drawing_data.color.r * 255),d}, <!--
+               -->{(int)(frame_drawing_data.color.g * 255),d}, <!--
+               -->{(int)(frame_drawing_data.color.b * 255),d}<!--
+            -->)<!--
+         --></DisplayString>
          </Synthetic>
          <Item Name="frame_drawing_data">frame_drawing_data</Item>
       </Expand>

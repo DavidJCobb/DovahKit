@@ -26,7 +26,7 @@
                   <Expand>
                      <Item Name="blending">push_params.enable_alpha_blending != 0</Item>
                      <Item Name="testing threshold">push_params.alpha_test_threshold,g</Item>
-                     <Item Name="testing operation">push_params.alpha_test_operation</Item>
+                     <Item Name="testing operation">(nifDK::block_types::NiAlphaProperty::test_mode)push_params.alpha_test_operation,en</Item>
                   </Expand>
                </Synthetic>
                <Synthetic Name="[shadows]">
@@ -36,7 +36,12 @@
                   </Expand>
                </Synthetic>
                <Synthetic Name="[specular]">
-                  <DisplayString>rgb({(int)(frame_drawing_data.specular_color.r * 255),d}, {(int)(frame_drawing_data.specular_color.g * 255),d}, {(int)(frame_drawing_data.specular_color.b * 255),d}) strength {frame_drawing_data.specular_strength,g}</DisplayString>
+                  <DisplayString>rgb(<!--
+                     -->{(int)(frame_drawing_data.specular_color.r * 255),d}, <!--
+                     -->{(int)(frame_drawing_data.specular_color.g * 255),d}, <!--
+                     -->{(int)(frame_drawing_data.specular_color.b * 255),d}<!--
+                     -->) strength {frame_drawing_data.specular_strength,g}<!--
+               --></DisplayString>
                   <Expand>
                      <Item Name="color">frame_drawing_data.specular_color</Item>
                      <Item Name="strength">frame_drawing_data.specular_strength,g</Item>

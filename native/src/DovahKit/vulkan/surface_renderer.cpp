@@ -1121,6 +1121,46 @@ namespace vulkanDK {
       };
    }
 
+   void surface_renderer::_setup_scene_background_shader() {
+      assert(this->render_passes_by_name.main != nullptr);
+      //
+      auto* s = this->create_graphics_shader(scene_background_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main);
+      s->set_layout_info({ this->descriptor_set_layouts.scene_state.handle });
+      //
+      auto& options = s->options;
+      //
+      shader_module* vert = this->load_shader_module("shaders/util/full-screen-triangle.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/util/scene-fog-color-far.frag.spv");
+      {
+         assert(vert);
+         assert(frag);
+         this->set_debug_object_name(vert->handle, "Shader Module (Scene Background: util/full-screen-triangle.vert.spv)");
+         this->set_debug_object_name(frag->handle, "Shader Module (Scene Background: util/scene-fog-color-far.frag.spv)");
+      }
+      //
+      options.rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE; // the vertex shader produces a clockwise triangle
+      options.stages = {
+         {
+            .module           = frag,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module           = vert,
+            .entry_point_name = "main",
+            .stage            = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      options.color_blending.blends.emplace_back(graphics_shader::color_blend{});
+      options.depth.testing = false;
+      options.depth.writing = false;
+      options.depth.comparison = VK_COMPARE_OP_ALWAYS;
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout();
+   }
    void surface_renderer::_setup_oit_composite_shader() {
       if (!this->can_do_alpha()) {
          //
@@ -2010,6 +2050,8 @@ namespace vulkanDK {
       }
    #pragma endregion
    void surface_renderer::_setup_shaders() {
+      this->_setup_scene_background_shader();
+      //
       this->_setup_oit_composite_shader();
       //
       this->_setup_rendered_mesh_shaders();

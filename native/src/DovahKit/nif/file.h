@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "detailed_notice.h"
-#include "vulkan/scene_item_handle.h"
+#include "vulkan/scene_entity_handle.h"
 
 namespace dovah {
    class form_stub;

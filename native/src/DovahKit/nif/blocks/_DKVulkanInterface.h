@@ -1,5 +1,5 @@
 #pragma once
-#include "vulkan/scene_item_handle.h"
+#include "vulkan/scene_entity_handle.h"
 
 namespace nifDK::block_interfaces {
    // By virtually inheriting a subclass of this class, specific NIF blocks can store Vulkan-related 

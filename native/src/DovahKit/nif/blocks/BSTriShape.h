@@ -5,7 +5,6 @@
 #include "../types/BSVertexDesc.h"
 #include "../types/NiBound.h"
 #include "../types/Triangle.h"
-#include "vulkan/scene_item_handle.h"
 
 namespace nifDK::block_types {
    class BSDismemberSkinInstance;

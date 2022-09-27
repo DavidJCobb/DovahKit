@@ -1772,6 +1772,8 @@
     <None Include="shaders\util\full-screen-triangle.vert.spv" />
     <None Include="shaders\util\oit-composite.frag" />
     <None Include="shaders\util\oit-composite.frag.spv" />
+    <None Include="shaders\util\scene-fog-color-far.frag" />
+    <None Include="shaders\util\scene-fog-color-far.frag.spv" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="vulkan\frame_in_flight.inl" />
