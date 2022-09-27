@@ -61,11 +61,11 @@ namespace vulkanDK {
 
          static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
          static constexpr graphics_shader::id_type scene_background_shader_id = "ScnBgClr";
-         static constexpr graphics_shader::id_type main_shader_id             = "MeshColr";
-         static constexpr graphics_shader::id_type main_shader_oit_color_id   = "MeshOITc";
-         static constexpr graphics_shader::id_type shader_id_mesh_shadows_sun = "MeshSdwS";
+         static constexpr graphics_shader::id_type mesh_color_base_shader_id  = "MeshColr";
+         static constexpr graphics_shader::id_type mesh_color_oit_shader_id   = "MeshOITc";
+         static constexpr graphics_shader::id_type shader_id_mesh_shadows_sun    = "MeshSdwS";
+         static constexpr graphics_shader::id_type shader_id_mesh_shadows_caster = "MeshSdw0";
          static constexpr compute_shader::id_type  frustum_cull_shader_id     = "MeshClFs";
-         static constexpr graphics_shader::id_type light_shadow_map_shader_base_id   = "MeshSdw0";
          static constexpr compute_shader::id_type  shadow_caster_cull_shader_base_id = "MeshClS0";
          static constexpr graphics_shader::id_type bounding_box_shader_id     = "BoundBox";
          static constexpr graphics_shader::id_type bounding_origin_shader_id  = "BoundPvt";
@@ -73,7 +73,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type shader_id_landscape_shadows_sun    = "LandSdwS";
          static constexpr graphics_shader::id_type shader_id_landscape_shadows_caster = "LandSdw0";
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
-         static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // will not exist if geometry shaders aren't available on this hardware
+         static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // graphics_shader instance will not exist if geometry shaders aren't available on this hardware
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          

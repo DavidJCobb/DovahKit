@@ -215,6 +215,7 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
    switch (column) {
       case ColumnName: // editor ID
          switch (role) {
+            case Qt::ToolTipRole:
             case Qt::DisplayRole:
             case SortingRole:
             case FilteringRole:

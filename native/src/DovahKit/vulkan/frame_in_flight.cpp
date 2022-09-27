@@ -826,7 +826,7 @@ namespace vulkanDK {
          //
          for (size_t i = 0; i < surface_renderer::shadow_caster_count; ++i) {
             {  // Meshes
-               auto id = surface_renderer::light_shadow_map_shader_base_id;
+               auto id = surface_renderer::shader_id_mesh_shadows_caster;
                id.bytes[7] += i;
                //
                const auto* shader = sr.get_graphics_shader(id);
@@ -947,7 +947,7 @@ namespace vulkanDK {
          };
          vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // we have to set the initial state as well, so let's pick the value that matches (last_was_decal)
          {  // Meshes
-            const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_id);
+            const auto* shader = sr.get_graphics_shader(surface_renderer::mesh_color_base_shader_id);
             command_buffer.bind_graphics_shader_and_descriptors(
                *shader,
                0,
@@ -1042,7 +1042,7 @@ namespace vulkanDK {
             vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0); // binding the landscape shader wiped this state; need to reinitialize it
             last_was_decal = false;
             {
-               const auto* shader = sr.get_graphics_shader(surface_renderer::main_shader_oit_color_id);
+               const auto* shader = sr.get_graphics_shader(surface_renderer::mesh_color_oit_shader_id);
                command_buffer.bind_graphics_shader_and_descriptors(
                   *shader,
                   0,

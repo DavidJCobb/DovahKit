@@ -154,6 +154,10 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    bool edited  = item->is_active;
    bool deleted = (item->stub && item->stub->is_deleted());
    switch (role) {
+      case Qt::ToolTipRole:
+         if (column != 0)
+            break;
+         [[fallthrough]];
       case Qt::DisplayRole:
          switch (column) {
             case 0:

@@ -1225,7 +1225,7 @@ namespace vulkanDK {
       this->_setup_rendered_mesh_shadows_sun_shader();
    }
       void surface_renderer::_setup_rendered_mesh_color_shader() {
-         auto* s = this->create_graphics_shader(main_shader_id);
+         auto* s = this->create_graphics_shader(mesh_color_base_shader_id);
          s->set_render_pass(this->render_passes_by_name.main);
          s->set_layout_info(
             {  // Descriptor set layouts
@@ -1302,7 +1302,7 @@ namespace vulkanDK {
          }
          assert(this->render_passes_by_name.main_oit != nullptr);
          //
-         auto* s = this->create_graphics_shader(main_shader_oit_color_id);
+         auto* s = this->create_graphics_shader(mesh_color_oit_shader_id);
          s->set_render_pass(this->render_passes_by_name.main_oit, 0);
          s->set_layout_info(
             {  // Descriptor set layouts
@@ -1495,7 +1495,7 @@ namespace vulkanDK {
          //
          static_assert(shadow_caster_count < 10, "The way we generate shader IDs here won't work for 10 or more shadow casters.");
          for (size_t i = 0; i < shadow_caster_count; ++i) {
-            auto id = light_shadow_map_shader_base_id;
+            auto id = shader_id_mesh_shadows_caster;
             id.bytes[7] += i;
             //
             auto* s = this->create_graphics_shader(id);
