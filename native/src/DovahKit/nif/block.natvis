@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="nifDK::block" Inheritable="true">
+      <Intrinsic Name="_file_version" Expression="this->owner->header.version.value" />
+
+      <Intrinsic Name="_ni_version" Expression="(major &lt;&lt; 0x18) | (minor &lt;&lt; 0x10) | (c &lt;&lt; 0x08) | d">
+         <Parameter Name="major" Type="uint32_t" />
+         <Parameter Name="minor" Type="uint32_t" />
+         <Parameter Name="c" Type="uint32_t" />
+         <Parameter Name="d" Type="uint32_t" />
+      </Intrinsic>
+      
+      <Intrinsic Name="_user_version_1" Expression="this->owner->header.user_versions.primary" />
+      <Intrinsic Name="_user_version_2" Expression="this->owner->header.user_versions.secondary" />
+
+      <DisplayString>NIF Block</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

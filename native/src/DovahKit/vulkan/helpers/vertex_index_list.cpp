@@ -1,6 +1,8 @@
 #include "vertex_index_list.h"
 #include <algorithm>
 #include <cassert>
+#include <new>
+#include <stdexcept>
 #include <stdlib.h>
 //
 #include <intrin.h>
@@ -8,8 +10,12 @@
 
 namespace {
    uint32_t* _convert(uint16_t* list, size_t size, size_t capacity) {
+      assert(size <= capacity);
       auto*  out = (uint32_t*) malloc(sizeof(uint32_t) * capacity);
       size_t i   = 0;
+      if (!out) {
+         throw std::bad_alloc();
+      }
       //
       bool can_intrin = false;
       {
@@ -39,8 +45,12 @@ namespace {
    }
    //
    inline uint16_t* _convert(uint32_t* list, size_t size, size_t capacity) {
+      assert(size <= capacity);
       auto*  out = (uint16_t*) malloc(sizeof(uint16_t) * capacity);
       size_t i   = 0;
+      if (!out) {
+         throw std::bad_alloc();
+      }
       for (; i < size; ++i) {
          out[i] = list[i];
       }
@@ -51,9 +61,13 @@ namespace {
    }
 
    template<typename T> T* _reserve(const T* list, size_t size, size_t capacity) {
+      assert(size <= capacity);
       if (capacity == 0)
          return nullptr;
       auto* out = (T*) malloc(sizeof(T) * capacity);
+      if (!out) {
+         throw std::bad_alloc();
+      }
       if (list) {
          memcpy(out, list, sizeof(T) * size);
       } else {
@@ -73,6 +87,9 @@ namespace {
          return nullptr;
       size_t in_bytes = sizeof(T) * after;
       auto*  out      = (T*) malloc(in_bytes);
+      if (!out) {
+         throw std::bad_alloc();
+      }
       //
       size_t count = std::min(prior, after);
       if (prior) {
@@ -92,27 +109,33 @@ namespace vulkanDK {
       this->clear();
    }
 
-   vertex_index_list::vertex_index_list(size_t count, uint16_t value) {
+   vertex_index_list::vertex_index_list(size_t count, thin_type value) {
       this->_type      = value_type::thin;
       this->_size      = count;
       this->_capacity  = count;
-      this->_data.thin = (decltype(value)*) malloc(count * sizeof(decltype(value)));
+      this->_data.thin = (thin_type*) malloc(count * sizeof(thin_type));
+      if (!this->_data.thin) {
+         throw std::bad_alloc();
+      }
       //
       if (value == 0) {
-         memset(this->_data.untyped, 0, count * sizeof(decltype(value)));
+         memset(this->_data.untyped, 0, count * sizeof(thin_type));
       } else {
          for (size_t i = 0; i < count; ++i)
             this->_data.thin[i] = value;
       }
    }
-   vertex_index_list::vertex_index_list(size_t count, uint32_t value) {
+   vertex_index_list::vertex_index_list(size_t count, wide_type value) {
       this->_type      = value_type::thin;
       this->_size      = count;
       this->_capacity  = count;
-      this->_data.wide = (decltype(value)*) malloc(count * sizeof(decltype(value)));
+      this->_data.wide = (wide_type*) malloc(count * sizeof(wide_type));
+      if (!this->_data.wide) {
+         throw std::bad_alloc();
+      }
       //
       if (value == 0) {
-         memset(this->_data.untyped, 0, count * sizeof(decltype(value)));
+         memset(this->_data.untyped, 0, count * sizeof(wide_type));
       } else {
          for (size_t i = 0; i < count; ++i)
             this->_data.wide[i] = value;
@@ -194,8 +217,8 @@ namespace vulkanDK {
          //
          // Wide to thin:
          //
-         auto* old = this->_data.wide;
-         auto* now = _convert(old, this->_size);
+         wide_type* old = this->_data.wide;
+         thin_type* now = _convert(old, this->_size);
          this->_data.thin = now;
          this->_capacity  = this->_size;
          if (old)
@@ -204,8 +227,8 @@ namespace vulkanDK {
          //
          // Thin to wide:
          //
-         auto* old = this->_data.thin;
-         auto* now = _convert(old, this->_size);
+         thin_type* old = this->_data.thin;
+         wide_type* now = _convert(old, this->_size);
          this->_data.wide = now;
          this->_capacity  = this->_size;
          if (old)
@@ -261,12 +284,12 @@ namespace vulkanDK {
       }
    }
 
-   uint16_t* vertex_index_list::thin_data() const {
+   vertex_index_list::thin_type* vertex_index_list::thin_data() const {
       if (this->_type == value_type::thin)
          return this->_data.thin;
       return nullptr;
    }
-   uint32_t* vertex_index_list::wide_data() const {
+   vertex_index_list::wide_type* vertex_index_list::wide_data() const {
       if (this->_type == value_type::wide)
          return this->_data.wide;
       return nullptr;

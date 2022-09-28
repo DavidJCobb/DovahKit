@@ -10,6 +10,7 @@
 #include "./buffer.h"
 #include "./frustum.h"
 #include "./loaded_texture.h"
+#include "./loaded_texture_index.h"
 #include "./rendered_bounds.h"
 #include "./rendered_landscape.h"
 #include "./rendered_light.h"
@@ -35,6 +36,7 @@ namespace vulkanDK {
       public:
          static constexpr size_t index_of_none = std::numeric_limits<size_t>::max();
 
+         using loaded_texture_index_passkey = cobb::passkey<loaded_texture_index, scene>;
          using renderer_passkey = cobb::passkey<surface_renderer, scene>;
 
       public:
@@ -103,7 +105,11 @@ namespace vulkanDK {
          template<typename Entity> size_t max_entity_slots() const noexcept;
          template<typename Entity> size_t entity_slots_available() const noexcept;
 
-         bool texture_dec_ref(renderer_passkey, loaded_texture&); // returns true if the texture will be marked for delete
+      protected:
+         bool _texture_dec_ref_impl(loaded_texture&);
+      public:
+         bool texture_dec_ref(renderer_passkey, loaded_texture&);
+         bool texture_dec_ref(loaded_texture_index_passkey, size_t texture_index); // returns true if the texture will be marked for delete
 
          size_t landscape_buffer_vertex_index(size_t landscape_index) const;
          void update_single_landscape(surface_renderer&, size_t landscape_index);

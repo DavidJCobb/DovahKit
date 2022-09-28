@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="nifDK::block_types::BSShaderTextureSet" Inheritable="true">
+      <DisplayString>{type_name,nasb}</DisplayString>
+      <Expand>
+         <ExpandedItem>*(NiObject*)this,nd</ExpandedItem>
+         <Item Name="[diffuse]">textures.diffuse,nasb</Item>
+         <Item Name="[normal]">textures.normal,nasb</Item>
+         <Item Name="[glow]">textures.glow,nasb</Item>
+         <Item Name="[height]">textures.height,nasb</Item>
+         <Item Name="[cubemap]">textures.cubemap,nasb</Item>
+         <Item Name="[environment mask]">textures.environment_mask,nasb</Item>
+         <Item Name="[subsurface]">textures.subsurface,nasb</Item>
+         <Item Name="[backlighting]">textures.backlighting,nasb</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

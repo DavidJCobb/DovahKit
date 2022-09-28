@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "helpers/arrays/make.h"
 
 namespace vulkanDK::config {
    inline constexpr bool enable_validation_layers = false
@@ -8,7 +9,7 @@ namespace vulkanDK::config {
       #endif
    ;
 
-   const std::vector<const char*> desired_validation_layers = {
+   inline constexpr const auto desired_validation_layers = cobb::arrays::make(
       "VK_LAYER_KHRONOS_validation"
-   };
+   );
 }

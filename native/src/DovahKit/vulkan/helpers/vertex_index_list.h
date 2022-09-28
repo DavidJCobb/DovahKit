@@ -29,9 +29,12 @@ namespace vulkanDK {
             wide,
          };
 
+         using thin_type = uint16_t;
+         using wide_type = uint32_t;
+
          inline static size_t value_size(value_type t) noexcept {
             if (t == value_type::thin)
-               return sizeof(uint16_t);
+               return sizeof(thin_type);
             return sizeof(uint32_t);
          }
 
@@ -119,8 +122,8 @@ namespace vulkanDK {
          union {
             void* untyped = nullptr;
             //
-            uint16_t* thin;
-            uint32_t* wide;
+            thin_type* thin;
+            wide_type* wide;
          } _data;
          size_t _capacity = 0;
          size_t _size     = 0;
@@ -130,8 +133,8 @@ namespace vulkanDK {
          vertex_index_list() {}
          ~vertex_index_list();
 
-         explicit vertex_index_list(size_t count, uint16_t); // multiple of the same element
-         explicit vertex_index_list(size_t count, uint32_t); // multiple of the same element
+         explicit vertex_index_list(size_t count, thin_type); // multiple of the same element
+         explicit vertex_index_list(size_t count, wide_type); // multiple of the same element
 
          vertex_index_list(const vertex_index_list&);
          vertex_index_list& operator=(const vertex_index_list&);
@@ -143,7 +146,7 @@ namespace vulkanDK {
          template<typename T> requires (impl::vertex_index_list::is_list<T> && impl::vertex_index_list::value_type_is_usable<T>)
          vertex_index_list(const T& list) {
             using V = T::value_type;
-            constexpr auto vt = std::is_same_v<V, uint16_t> ? value_type::thin : value_type::wide;
+            constexpr auto vt = std::is_same_v<V, thin_type> ? value_type::thin : value_type::wide;
             //
             this->_type = vt;
             this->resize(list.size());
@@ -154,7 +157,7 @@ namespace vulkanDK {
          template<typename T> requires (impl::vertex_index_list::is_list<T> && impl::vertex_index_list::value_type_is_usable<T>)
          vertex_index_list& operator=(const T& list) {
             using V = T::value_type;
-            constexpr auto vt = std::is_same_v<V, uint16_t> ? value_type::thin : value_type::wide;
+            constexpr auto vt = std::is_same_v<V, thin_type> ? value_type::thin : value_type::wide;
             //
             if (this->_type != vt || this->_size < list.size()) {
                if (this->_data.untyped)
@@ -179,14 +182,14 @@ namespace vulkanDK {
          vertex_index_list& operator=(const std::initializer_list<int>& list) {
             bool is_wide = false;
             for (auto& v : list) {
-               if (v > std::numeric_limits<uint16_t>::max()) {
+               if (v > std::numeric_limits<thin_type>::max()) {
                   is_wide = true;
                   break;
                }
             }
             //
             auto vt = !is_wide ? value_type::thin : value_type::wide;
-            auto vs = !is_wide ? sizeof(uint16_t) : sizeof(uint32_t);
+            auto vs = !is_wide ? sizeof(thin_type) : sizeof(wide_type);
             //
             if (this->_type != vt || this->_size < list.size()) {
                delete this->_data.untyped;
@@ -225,33 +228,33 @@ namespace vulkanDK {
          inline size_t size() const noexcept { return this->_size; }
          inline value_type type() const noexcept { return this->_type; }
          inline const void* data() const noexcept { return this->_data.untyped; }
-         uint16_t* thin_data() const; // returns nullptr if the list is wide; may also be nullptr if the list is empty
-         uint32_t* wide_data() const; // returns nullptr if the list is thin; may also be nullptr if the list is empty
+         thin_type* thin_data() const; // returns nullptr if the list is wide; may also be nullptr if the list is empty
+         wide_type* wide_data() const; // returns nullptr if the list is thin; may also be nullptr if the list is empty
          //
          inline size_t value_size() const noexcept { return value_size(this->_type); }
          inline size_t size_in_bytes() const noexcept { return this->value_size() * this->size(); }
 
-         inline const uint32_t operator[](size_t i) const noexcept {
+         inline const wide_type operator[](size_t i) const noexcept {
             if (this->_type == value_type::thin)
                return this->_data.thin[i];
             return this->_data.wide[i];
          }
 
          inline size_t triangle_count() const noexcept { return this->size() / 3; }
-         inline std::array<uint32_t, 3> triangle_from(size_t i) const noexcept {
+         inline std::array<wide_type, 3> triangle_from(size_t i) const noexcept {
             if (this->_type == value_type::thin) {
-               return std::array<uint32_t, 3>{ this->_data.thin[i], this->_data.thin[i + 1], this->_data.thin[i + 2] };
+               return std::array<wide_type, 3>{ this->_data.thin[i], this->_data.thin[i + 1], this->_data.thin[i + 2] };
             } else {
-               return std::array<uint32_t, 3>{ this->_data.wide[i], this->_data.wide[i + 1], this->_data.wide[i + 2] };
+               return std::array<wide_type, 3>{ this->_data.wide[i], this->_data.wide[i + 1], this->_data.wide[i + 2] };
             }
          }
-         inline std::array<uint32_t, 3> triangle(size_t i) const noexcept {
+         inline std::array<wide_type, 3> triangle(size_t i) const noexcept {
             return this->triangle_from(i * 3);
          }
 
-         typed_range<uint16_t> as_thin_range() { return typed_range<uint16_t>(*this); }
-         const typed_range<const uint16_t> as_thin_range() const noexcept { return typed_range<const uint16_t>(*this); }
-         typed_range<uint32_t> as_wide_range() { return typed_range<uint32_t>(*this); }
-         const typed_range<const uint32_t> as_wide_range() const noexcept { return typed_range<const uint32_t>(*this); }
+         typed_range<thin_type> as_thin_range() { return typed_range<thin_type>(*this); }
+         const typed_range<const thin_type> as_thin_range() const noexcept { return typed_range<const thin_type>(*this); }
+         typed_range<wide_type> as_wide_range() { return typed_range<wide_type>(*this); }
+         const typed_range<const wide_type> as_wide_range() const noexcept { return typed_range<const wide_type>(*this); }
    };
 }

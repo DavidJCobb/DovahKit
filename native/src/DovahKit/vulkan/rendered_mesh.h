@@ -3,10 +3,11 @@
 #include <type_traits>
 #include <vector>
 #include <glm/glm.hpp>
-#include "_vulkan.h"
-#include "helpers/vertex_index_list.h"
-#include "buffer.h"
-#include "vertex.h"
+#include "./_vulkan.h"
+#include "./helpers/vertex_index_list.h"
+#include "./buffer.h"
+#include "./loaded_texture_index.h"
+#include "./vertex.h"
 
 #include "./scene_entities/base.h"
 #include "./scene_entities/owned_gpu_resource_sets.h"
@@ -80,9 +81,18 @@ namespace vulkanDK {
             alignas( 4) cull_flags_t flags = 0;
          };
          struct push_constant {
-            alignas(4) int32_t  object_index;               // not meaningful on this object; ignored during the render process
-            alignas(4) int32_t  texture_index;              // not meaningful on this object; ignored during the render process
-            alignas(4) int32_t  texture_normal_index  = -1; // not meaningful on this object; ignored during the render process
+            //
+            // These three values are not persistent; this entire push constant 
+            // is copied during the render process, and on the copy, these values 
+            // are overwritten with data stored elsewhere on the entity.
+            //
+            alignas(4) int32_t  object_index;
+            alignas(4) int32_t  texture_index;
+            alignas(4) int32_t  texture_normal_index  = -1;
+            //
+            // Values below are "persistent" and configure the rendered mesh 
+            // directly.
+            //
             alignas(4) float    alpha_test_threshold  =  0;
             alignas(4) int32_t  alpha_test_operation  =  0; // GL_ALWAYS
             alignas(4) VkBool32 enable_alpha_blending = VK_FALSE; // bools in GLSL are uint32_ts in SPIR-V
@@ -112,11 +122,13 @@ namespace vulkanDK {
                float     radius_sq = 0.0F; // radius squared is faster for many calculations
             } bounding_sphere;
          } mesh_data;
-         union {
-            std::array<int32_t, 2> list = { -1, -1 };
+         union texture_indices_union {
+            ~texture_indices_union() {}
+
+            std::array<loaded_texture_index, 2> list = { loaded_texture_index{}, {} };
             struct {
-               int32_t diffuse;
-               int32_t normals;
+               loaded_texture_index diffuse;
+               loaded_texture_index normals;
             };
          } texture_indices;
 

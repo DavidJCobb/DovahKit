@@ -3,11 +3,12 @@
 #include <cstdint>
 #include <type_traits>
 #include <glm/glm.hpp>
-#include "_vulkan.h"
-#include "helpers/array_of_n_values.h" // cobb
-#include "helpers/vertex_indices_for_quad_grid.h"
-#include "buffer.h"
-#include "vertex_landscape.h"
+#include "helpers/array_of_n_values.h"
+#include "./_vulkan.h"
+#include "./helpers/vertex_indices_for_quad_grid.h"
+#include "./buffer.h"
+#include "./loaded_texture_index.h"
+#include "./vertex_landscape.h"
 
 #include "./scene_entities/base.h"
 
@@ -44,6 +45,14 @@ namespace vulkanDK {
 
       protected:
          void _on_shader_parameter_change();
+
+         union blended_texture_list {
+            alignas(4) std::array<loaded_texture_index, max_usable_layers_per_quad * 4> all = cobb::array_of_n_values<max_usable_layers_per_quad * 4>(loaded_texture_index{});
+            alignas(4) std::array<std::array<loaded_texture_index, max_usable_layers_per_quad>, 4> by_quad;
+
+            ~blended_texture_list() {}
+         };
+
       public:
          rendered_landscape() {}
 
@@ -53,16 +62,10 @@ namespace vulkanDK {
          struct frame_drawing_data_type { // pass to the shader via a storage buffer
             alignas(16) glm::vec3 position;
             alignas(4)  uint32_t  pad0C; // padding
-            alignas(4)  std::array<int32_t, 4> diffuse_base = { -1, -1, -1, -1 }; // texture indices; one per quad
-            alignas(4)  std::array<int32_t, 4> normals_base = { -1, -1, -1, -1 }; // texture indices; one per quad
-            union {
-               alignas(4) std::array<int32_t, max_usable_layers_per_quad * 4> diffuse_blends = cobb::array_of_n_values<max_usable_layers_per_quad * 4>(-1);
-               alignas(4) std::array<std::array<int32_t, max_usable_layers_per_quad>, 4> diffuse_blends_by_quad;
-            };
-            union {
-               alignas(4) std::array<int32_t, max_usable_layers_per_quad * 4> normals_blends = cobb::array_of_n_values<max_usable_layers_per_quad * 4>(-1);
-               alignas(4) std::array<std::array<int32_t, max_usable_layers_per_quad>, 4> normals_blends_by_quad;
-            };
+            alignas(4)  std::array<loaded_texture_index, 4> diffuse_base = { loaded_texture_index{}, {}, {}, {} }; // texture indices; one per quad
+            alignas(4)  std::array<loaded_texture_index, 4> normals_base = { loaded_texture_index{}, {}, {}, {} }; // texture indices; one per quad
+            alignas(4)  blended_texture_list diffuse_blends;
+            alignas(4)  blended_texture_list normals_blends;
          };
 
          std::array<vertex_landscape, vertices_per_mesh> vertices;

@@ -48,6 +48,6 @@ namespace nifDK {
          //
          return nullptr;
       }
-      return new block_types::unknown_block();
+      return new block_types::unknown_block(type_name);
    }
 }

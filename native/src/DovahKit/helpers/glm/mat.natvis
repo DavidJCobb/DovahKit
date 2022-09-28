@@ -32,6 +32,7 @@
                         <Variable Name="n"       InitialValue="(int64_t)0"/>
                         <Variable Name="f"       InitialValue="(double)0"/>
                         <Variable Name="iters"   InitialValue="0"/>
+                        <Variable Name="x"       InitialValue="0"/>
                         <Loop Condition="axis &lt; 3">
                            
                            <!-- sqrt is unavailable here, so use the fast inverse square root -->
@@ -40,8 +41,19 @@
                               "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton–Raphson Corrections"
                               by Walczyk, Moroz, and Cieslinski
                            -->
+
+                           <Exec>x = 0</Exec>
+                           <Exec>squared = 0</Exec>
+                           <Loop Condition="x &lt; $T1">
+                              <!--
+                                 loop needed here because Condition attributes don't prevent parsing;
+                                 accessing e.g. value[axis].w breaks this natvis for any matrix type 
+                                 with less than four rows, even if Conditions specify that none of 
+                                 this should run for those
+                              -->
+                              <Exec>squared += (&amp;value[axis].x)[x] * (&amp;value[axis].x)[x]</Exec>
+                           </Loop>
                            
-                           <Exec>squared = value[axis].x*value[axis].x + value[axis].y*value[axis].y + value[axis].z*value[axis].z + value[axis].w*value[axis].w</Exec>
                            <If Condition="squared != 0">
                               <Exec>sq_half = squared / 2.0</Exec>
                               <Exec>n = *(int64_t*)&amp;squared</Exec>

@@ -28,6 +28,12 @@ namespace cobb::arrays {
       template<size_t N> struct is_string_literal<const char(&)[N]> {
          static constexpr bool value = true;
       };
+
+      template<typename... Types> using final_value_type = std::conditional_t<
+         (is_string_literal<Types>::value && ...),
+         const char*,
+         std::tuple_element_t<0, std::tuple<std::decay_t<Types>...>>
+      >;
    }
 
    //
@@ -36,15 +42,8 @@ namespace cobb::arrays {
    // as `const char*` and not `const char(&)[N]`.
    //
    template<typename... Types> requires (cobb::all_same<Types...> || (impl::_make::is_string_literal<Types>::value && ...))
-   constexpr std::array<std::tuple_element_t<0, std::tuple<std::decay_t<Types>...>>, sizeof...(Types)> make(Types&&... args) {
-      using base_value_type = std::tuple_element_t<0, std::tuple<std::decay_t<Types>...>>;
-      using value_type = std::conditional_t<
-         (impl::_make::is_string_literal<Types>::value && ...),
-         const char*,
-         base_value_type
-      >;
-      //
-      std::array<value_type, sizeof...(Types)> out = { args... };
+   constexpr std::array<impl::_make::final_value_type<Types...>, sizeof...(Types)> make(Types&&... args) {
+      std::array<impl::_make::final_value_type<Types...>, sizeof...(Types)> out = { args... };
       return out;
    };
 }

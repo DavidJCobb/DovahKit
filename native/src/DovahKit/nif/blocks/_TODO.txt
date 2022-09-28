@@ -1,0 +1,8 @@
+
+ - Block types not in NifSkope's nif.xml, found via reverse-engineering:
+
+    - bhkConvexTranslateShape
+    - bhkCylinderShape
+    - bhkFixedConstraint
+    - bhkGroupConstraint
+    - bhkTriangleShape

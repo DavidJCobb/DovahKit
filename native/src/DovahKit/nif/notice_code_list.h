@@ -20,6 +20,8 @@ namespace nifDK {
          unsupported_version          = 0x0000000B,
          unsupported_user_version_1   = 0x0000000C,
          unsupported_user_version_2   = 0x0000000D,
+         havok_motor_invalid_type     = 0x0000000E,
+         havok_constraint_invalid_target_count = 0x0000000F,
       };
    };
 }

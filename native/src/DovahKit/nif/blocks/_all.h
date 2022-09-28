@@ -8,6 +8,40 @@
    // Includes are organized by class hierarchy:
    //
    #include "NiObject.h"
+      #include "bhkRefObject.h"
+         #include "bhkSerializable.h"
+            #include "bhkBallSocketConstraintChain.h"
+            #include "bhkConstraint.h"
+               #include "bhkBallAndSocketConstraint.h"
+               #include "bhkHingeConstraint.h"
+               #include "bhkLimitedHingeConstraint.h"
+               #include "bhkMalleableConstraint.h"
+               #include "bhkPrismaticConstraint.h"
+               #include "bhkRagdollConstraint.h"
+               #include "bhkStiffSpringConstraint.h"
+            #include "bhkShape.h"
+               #include "bhkBvTreeShape.h"
+                  #include "bhkMoppBvTreeShape.h"
+               #include "bhkConvexSweepShape.h"
+               #include "bhkShapeCollection.h"
+                  #include "bhkListShape.h"
+                  #include "bhkNiTriStripsShape.h"
+               #include "bhkSphereRepShape.h"
+                  #include "bhkConvexShape.h"
+                     #include "bhkBoxShape.h"
+                     #include "bhkCapsuleShape.h"
+                     #include "bhkConvexVerticesShape.h"
+                     #include "bhkSphereShape.h"
+                  #include "bhkMultiSphereShape.h"
+               #include "bhkTransformShape.h"
+                  #include "bhkConvexTransformShape.h"
+            #include "bhkWorldObject.h"
+               #include "bhkEntity.h"
+                  #include "bhkRigidBody.h"
+                     #include "bhkRigidBodyT.h"
+               #include "bhkPhantom.h"
+                  #include "bhkShapePhantom.h"
+                     #include "bhkSimpleShapePhantom.h"
       #include "BSMultiBound.h"
       #include "BSShaderTextureSet.h"
       #include "NiCollisionObject.h"
@@ -19,6 +53,7 @@
       #include "NiGeometryData.h"
          #include "NiTriBasedGeomData.h"
             #include "NiTriShapeData.h"
+            #include "NiTriStripsData.h"
       #include "NiInterpolator.h"
       #include "NiObjectNET.h"
          #include "NiAVObject.h"
@@ -28,6 +63,7 @@
                #include "NiTriBasedGeom.h"
                   #include "BSLODTriShape.h"
                   #include "NiTriShape.h"
+                  #include "NiTriStrips.h"
             #include "NiNode.h"
                #include "BSFadeNode.h"
                #include "BSLeafAnimNode.h"
@@ -58,6 +94,40 @@ namespace nifDK {
    using all_block_types = cobb::class_list<
       block_types::unknown_block,
       //
+      block_types::bhkBallAndSocketConstraint,
+      block_types::bhkBallSocketConstraintChain,
+      block_types::bhkBoxShape,
+      block_types::bhkBvTreeShape,
+      block_types::bhkCapsuleShape,
+      block_types::bhkConstraint,
+      block_types::bhkConvexShape,
+      block_types::bhkConvexSweepShape,
+      block_types::bhkConvexTransformShape,
+      block_types::bhkConvexVerticesShape,
+      block_types::bhkEntity,
+      block_types::bhkHingeConstraint,
+      block_types::bhkLimitedHingeConstraint,
+      block_types::bhkListShape,
+      block_types::bhkMalleableConstraint,
+      block_types::bhkMoppBvTreeShape,
+      block_types::bhkMultiSphereShape,
+      block_types::bhkNiTriStripsShape,
+      block_types::bhkPhantom,
+      block_types::bhkPrismaticConstraint,
+      block_types::bhkRagdollConstraint,
+      block_types::bhkRefObject,
+      block_types::bhkRigidBody,
+      block_types::bhkRigidBodyT,
+      block_types::bhkSerializable,
+      block_types::bhkShape,
+      block_types::bhkShapeCollection,
+      block_types::bhkShapePhantom,
+      block_types::bhkSimpleShapePhantom,
+      block_types::bhkSphereRepShape,
+      block_types::bhkSphereShape,
+      block_types::bhkStiffSpringConstraint,
+      block_types::bhkTransformShape,
+      block_types::bhkWorldObject,
       block_types::BSBlastNode,
       block_types::BSDamageStage,
       block_types::BSDismemberSkinInstance,
@@ -105,7 +175,9 @@ namespace nifDK {
       block_types::NiTriBasedGeom,
       block_types::NiTriBasedGeomData,
       block_types::NiTriShape,
-      block_types::NiTriShapeData//,
+      block_types::NiTriShapeData,
+      block_types::NiTriStrips,
+      block_types::NiTriStripsData//,
    >;
 
    template<typename T> concept block_type_has_name = requires {

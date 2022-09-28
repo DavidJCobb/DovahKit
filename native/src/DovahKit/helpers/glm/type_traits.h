@@ -75,4 +75,27 @@ namespace cobb::glm {
 
       static constexpr bool is_contiguous = sizeof(type) == sizeof(F) * (C * R);
    };
+
+   //
+
+   namespace impl {
+      template<typename T> struct is_quat {
+         static constexpr bool value = false;
+      };
+      template<typename F, ::glm::qualifier Q> struct is_quat<typename ::glm::qua<F, Q>> {
+         static constexpr bool value = true;
+      };
+   }
+   template<typename T> constexpr bool is_quat = impl::is_quat<T>::value;
+
+   template<typename T> struct quat_traits;
+   template<typename F, ::glm::qualifier Q> struct quat_traits<typename ::glm::qua<F, Q>> {
+      using type = ::glm::qua<F, Q>;
+
+      using value_type = F;
+
+      static constexpr ::glm::length_t size = 4;
+
+      static constexpr bool is_contiguous = sizeof(type) == sizeof(F) * 4;
+   };
 }

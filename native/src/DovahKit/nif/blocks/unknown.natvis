@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="nifDK::block_types::unknown_block" Inheritable="true">
+      <DisplayString Condition="type_name.size() == 0">&lt;NIF block; no typename?&gt;</DisplayString>
+      <DisplayString>{type_name,nasb} &lt;unknown or not implemented&gt;</DisplayString>
+      <Expand>
+         <Item Name="[raw]">data,X</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

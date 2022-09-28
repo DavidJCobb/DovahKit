@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="nifDK::block_types::NiObjectNET" Inheritable="true">
+      <DisplayString Condition="name.size() == 0">{type_name,nasb}: &lt;unnamed&gt;</DisplayString>
+      <DisplayString>{type_name,nasb}: {name}</DisplayString>
+   </Type>
+</AutoVisualizer>

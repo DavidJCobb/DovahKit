@@ -5,6 +5,7 @@
 #include <string>
 #include <type_traits>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "helpers/byteswap.h"
 #include "helpers/endian.h"
 #include "helpers/passkey.h"
@@ -36,9 +37,9 @@ namespace nifDK {
       template<bool checked, typename T> concept _AllowSimpleCallList = requires {
          requires cobb::is_std_array<T> || cobb::is_std_vector<T>;
          typename T::value_type;
-         requires IsLiteralIsh<typename T::value_type> || OffersHook<checked, typename T::value_type> || cobb::glm::is_vec<typename T::value_type> || cobb::glm::is_mat<typename T::value_type>;
+         requires IsLiteralIsh<typename T::value_type> || OffersHook<checked, typename T::value_type> || cobb::glm::is_vec<typename T::value_type> || cobb::glm::is_mat<typename T::value_type> || cobb::glm::is_quat<typename T::value_type>;
       };
-      template<bool checked, typename T> concept AllowSimpleCall = IsLiteralIsh<T> || _AllowSimpleCallList<checked, T> || OffersHook<checked, T> || cobb::glm::is_vec<T> || cobb::glm::is_mat<T>;
+      template<bool checked, typename T> concept AllowSimpleCall = IsLiteralIsh<T> || _AllowSimpleCallList<checked, T> || OffersHook<checked, T> || cobb::glm::is_vec<T> || cobb::glm::is_mat<T> || cobb::glm::is_quat<T>;
    }
 
    class file_reader {
@@ -110,6 +111,13 @@ namespace nifDK {
                      v[i][j] = cobb::byteswap(v[i][j]);
                return;
             }
+            if constexpr (cobb::glm::is_quat<T>) {
+               v.x = cobb::byteswap(v.x);
+               v.y = cobb::byteswap(v.y);
+               v.z = cobb::byteswap(v.z);
+               v.w = cobb::byteswap(v.w);
+               return;
+            }
             if constexpr (IsLiteralIsh<T>) {
                if constexpr (std::is_bounded_array_v<T>) {
                   for (size_t i = 0; i < std::extent<T>::value; ++i)
@@ -154,6 +162,9 @@ namespace nifDK {
                   }
                   if constexpr (cobb::glm::is_mat<V>) {
                      return cobb::glm::mat_traits<V>::is_contiguous;
+                  }
+                  if constexpr (cobb::glm::is_quat<V>) {
+                     return cobb::glm::quat_traits<V>::is_contiguous;
                   }
                   if constexpr (OffersHook<checked, V>) {
                      return false;
@@ -218,6 +229,21 @@ namespace nifDK {
                   for (int i = 0; i < traits::cols; ++i)
                      for (int j = 0; j < traits::rows; ++j)
                         this->unchecked_read(v[i][j]);
+               }
+               // ...and fall through to endianness check.
+            } else if constexpr (cobb::glm::is_quat<T>) {
+               using traits = cobb::glm::quat_traits<T>;
+               constexpr auto bytes = sizeof(T::value_type) * traits::size;
+               if constexpr (checked) {
+                  this->_require_size(bytes);
+               }
+               if constexpr (sizeof(T) == bytes) {
+                  this->unchecked_read(&v, bytes);
+               } else {
+                  this->unchecked_read(v.x);
+                  this->unchecked_read(v.y);
+                  this->unchecked_read(v.y);
+                  this->unchecked_read(v.w);
                }
                // ...and fall through to endianness check.
             } else if constexpr (IsLiteralIsh<T>) {

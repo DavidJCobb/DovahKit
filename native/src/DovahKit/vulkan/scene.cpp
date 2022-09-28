@@ -495,7 +495,7 @@ namespace vulkanDK {
       return index_of_none;
    }
 
-   bool scene::texture_dec_ref(renderer_passkey, loaded_texture& tex) {
+   bool scene::_texture_dec_ref_impl(loaded_texture& tex) {
       assert(tex.refcount != 0 && "About to decrement the refcount into the negatives!");
       if (--tex.refcount == 0) {
          if (tex.persist_for_life_of_renderer())
@@ -505,6 +505,13 @@ namespace vulkanDK {
          return true;
       }
       return false;
+   }
+   bool scene::texture_dec_ref(renderer_passkey, loaded_texture& tex) {
+      return this->_texture_dec_ref_impl(tex);
+   }
+   bool scene::texture_dec_ref(loaded_texture_index_passkey, size_t texture_index) {
+      auto& tex = this->entities_of_type<loaded_texture>()[texture_index];
+      return this->_texture_dec_ref_impl(tex);
    }
 
    size_t scene::landscape_buffer_vertex_index(size_t landscape_index) const {

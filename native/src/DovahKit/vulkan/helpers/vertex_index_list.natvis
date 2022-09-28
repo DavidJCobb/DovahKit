@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::vertex_index_list">
+      <DisplayString>{{size = {_size}}}</DisplayString>
+      <Expand>
+         <Synthetic Name="[size]">
+            <DisplayString>{_size,d}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[capacity]">
+            <DisplayString>{_capacity,d}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[type]">
+            <DisplayString>{_type,en}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[triangles]" Condition="_size > 2">
+            <DisplayString>{_size / 3,d} triangles</DisplayString>
+            <Expand>
+               <IndexListItems Condition="_type == value_type::thin">
+                  <Size>_size / 3</Size>
+                  <ValueNode>(thin_type(*)[3])&amp;_data.thin[$i],na</ValueNode>
+               </IndexListItems>
+               <IndexListItems Condition="_type == value_type::wide">
+                  <Size>_size / 3</Size>
+                  <ValueNode>(wide_type(*)[3])&amp;_data.wide[$i],na</ValueNode>
+               </IndexListItems>
+            </Expand>
+         </Synthetic>
+         <ArrayItems Condition="_type == value_type::thin">
+            <Size>_size</Size>
+            <ValuePointer>_data.thin</ValuePointer>
+         </ArrayItems>
+         <ArrayItems Condition="_type == value_type::wide">
+            <Size>_size</Size>
+            <ValuePointer>_data.wide</ValuePointer>
+         </ArrayItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -2115,10 +2115,7 @@ namespace vulkanDK {
             auto  mi   = this->scene.insert_new_scene_entity<rendered_mesh>();
             auto& mesh = this->scene.entities_of_type<rendered_mesh>()[mi];
             auto& vib  = mesh.vib();
-            mesh.texture_indices.diffuse = ti;
-            {
-               ++this->scene.entities_of_type<loaded_texture>()[ti].refcount;
-            }
+            mesh.texture_indices.diffuse.set(*this, ti);
             //
             {
                constexpr float size = 99999;
@@ -3905,8 +3902,7 @@ namespace vulkanDK {
          //
          auto& ro  = this->scene.entities_of_type<rendered_mesh>()[object_index];
          auto& vib = ro.vib();
-         ro.texture_indices.diffuse = texture_index;
-         ++texture_item.refcount;
+         ro.texture_indices.diffuse.set(*this, texture_index);
          //
          glm::vec3 position = {};
          {
@@ -3999,18 +3995,9 @@ namespace vulkanDK {
       {
          auto& list = this->scene.entities_of_type<loaded_texture>();
          for (auto& ti : item.texture_indices.list) {
-            if (ti < 0)
+            if (ti.empty())
                continue;
-            assert(ti < list.size());
-            if (ti < list.size()) {
-               auto& tex = list[ti];
-               if (this->scene.texture_dec_ref({}, tex)) {
-                  if constexpr (debug_log_scene_object_lifetimes) {
-                     qDebug("[vulkanDK::scene_renderer::remove_mesh] Mesh %u used texture %u which is now unused; marking the texture for delete.", i, ti);
-                  }
-               }
-            }
-            ti = -1;
+            ti.clear(*this);
          }
       }
       //
@@ -4181,7 +4168,7 @@ namespace vulkanDK {
       if (handle.empty())
          return handle;
       //
-      auto _load_textures = [this](int32_t& diffuse, int32_t& normal, dovah::form_stub& ltex) {
+      auto _load_textures = [this](loaded_texture_index& diffuse, loaded_texture_index& normals, dovah::form_stub& ltex) {
          auto  load = ltex.load().ptr_cast<dovah::loaded_forms::LandTexture>();
          if (!load)
             return;
@@ -4192,21 +4179,17 @@ namespace vulkanDK {
          if (!txld)
             return;
          //
-         diffuse = this->add_dds_texture(QString("textures/") + txld->textures.diffuse.c_str());
-         normal  = this->add_dds_texture(QString("textures/") + txld->textures.normal.c_str());
-         //
-         auto& scene_textures = this->scene.entities_of_type<loaded_texture>();
-         ++scene_textures[diffuse].refcount;
-         ++scene_textures[normal].refcount;
+         diffuse.set(*this, this->add_dds_texture(QString("textures/") + txld->textures.diffuse.c_str()));
+         normals.set(*this, this->add_dds_texture(QString("textures/") + txld->textures.normal.c_str()));
       };
       //
       auto& sp = handle->frame_drawing_data;
       for (size_t i = 0; i < 4; ++i) {
-         sp.diffuse_base[i] = -1;
-         sp.normals_base[i] = -1;
+         sp.diffuse_base[i].clear(*this);
+         sp.normals_base[i].clear(*this);
          for (size_t j = 0; j < rendered_landscape::max_usable_layers_per_quad; ++j) {
-            sp.diffuse_blends_by_quad[i][j] = -1;
-            sp.normals_blends_by_quad[i][j] = -1;
+            sp.diffuse_blends.by_quad[i][j].clear(*this);
+            sp.normals_blends.by_quad[i][j].clear(*this);
          }
          //
          auto* ltex = land.default_quad_textures[i].get_form_stub();
@@ -4221,7 +4204,7 @@ namespace vulkanDK {
             auto* ltex = blend.texture.get_form_stub();
             if (!ltex)
                continue;
-            _load_textures(sp.diffuse_blends_by_quad[i][blend.layer], sp.normals_blends_by_quad[i][blend.layer], *ltex);
+            _load_textures(sp.diffuse_blends.by_quad[i][blend.layer], sp.normals_blends.by_quad[i][blend.layer], *ltex);
          }
       }
       //
@@ -4243,46 +4226,17 @@ namespace vulkanDK {
       auto& item = list[i];
       item.mark_for_delete();
       {
-         auto _dec_tex_ref = [this, i](loaded_texture& tex, size_t ti) {
-            if (this->scene.texture_dec_ref({}, tex)) {
-               if constexpr (debug_log_scene_object_lifetimes) {
-                  qDebug("[vulkanDK::scene_renderer::remove_landscape] Landscape %u used texture %u which is now unused; marking the texture for delete.", i, ti);
-               }
-            }
-         };
-         //
-         auto& list = this->scene.entities_of_type<loaded_texture>();
          for (auto& ti : item.frame_drawing_data.diffuse_base) {
-            if (ti < 0)
-               continue;
-            assert(ti < list.size());
-            if (ti < list.size())
-               _dec_tex_ref(list[ti], ti);
-            ti = -1;
+            ti.clear(*this);
          }
-         for (auto& ti : item.frame_drawing_data.diffuse_blends) {
-            if (ti < 0)
-               continue;
-            assert(ti < list.size());
-            if (ti < list.size())
-               _dec_tex_ref(list[ti], ti);
-            ti = -1;
+         for (auto& ti : item.frame_drawing_data.diffuse_blends.all) {
+            ti.clear(*this);
          }
          for (auto& ti : item.frame_drawing_data.normals_base) {
-            if (ti < 0)
-               continue;
-            assert(ti < list.size());
-            if (ti < list.size())
-               _dec_tex_ref(list[ti], ti);
-            ti = -1;
+            ti.clear(*this);
          }
-         for (auto& ti : item.frame_drawing_data.normals_blends) {
-            if (ti < 0)
-               continue;
-            assert(ti < list.size());
-            if (ti < list.size())
-               _dec_tex_ref(list[ti], ti);
-            ti = -1;
+         for (auto& ti : item.frame_drawing_data.normals_blends.all) {
+            ti.clear(*this);
          }
       }
       //
@@ -4396,11 +4350,8 @@ namespace vulkanDK {
       vib.buffer.copy_from(staging);
    }
    void surface_renderer::_handle_ni_textures(rendered_mesh& mesh, nifDK::block_types::BSShaderProperty* shader) {
-      size_t prior_diffuse = mesh.texture_indices.diffuse;
-      size_t prior_normals = mesh.texture_indices.normals;
-      //
-      size_t texture_index = scene::index_of_none;
-      size_t normals_index = scene::index_of_none;
+      auto texture_index = loaded_texture_index::none;
+      auto normals_index = loaded_texture_index::none;
       if (auto* lighting = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
          if (auto* textures = lighting->texture.paths) {
             const auto& diffuse = textures->textures.diffuse;
@@ -4422,18 +4373,8 @@ namespace vulkanDK {
             texture_index = this->add_dds_texture(texture.c_str());
          }
       }
-      mesh.texture_indices.diffuse = texture_index;
-      mesh.texture_indices.normals = normals_index;
-      if (texture_index != scene::index_of_none) {
-         ++this->scene.entities_of_type<loaded_texture>()[texture_index].refcount;
-         if (prior_diffuse != scene::index_of_none)
-            --this->scene.entities_of_type<loaded_texture>()[prior_diffuse].refcount;
-      }
-      if (normals_index != scene::index_of_none) {
-         ++this->scene.entities_of_type<loaded_texture>()[normals_index].refcount;
-         if (prior_normals != scene::index_of_none)
-            --this->scene.entities_of_type<loaded_texture>()[prior_normals].refcount;
-      }
+      mesh.texture_indices.diffuse.set(*this, texture_index);
+      mesh.texture_indices.normals.set(*this, normals_index);
    }
    rendered_mesh* surface_renderer::add_BSTriShape_mesh(nifDK::block_types::BSTriShape* data, glm::mat4 transform, size_t fallback_texture_index) {
       auto size = data->vertices.size();
@@ -4450,8 +4391,7 @@ namespace vulkanDK {
       //
       mesh.owning_nif = data->owner;
       mesh.frame_drawing_data.transform = transform;
-      mesh.texture_indices.diffuse = fallback_texture_index;
-      ++this->scene.entities_of_type<loaded_texture>()[fallback_texture_index].refcount;
+      mesh.texture_indices.diffuse.set(*this, fallback_texture_index);
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
@@ -4529,8 +4469,7 @@ namespace vulkanDK {
       //
       mesh.owning_nif = object->owner;
       mesh.frame_drawing_data.transform = transform;
-      mesh.texture_indices.diffuse = fallback_texture_index;
-      ++this->scene.entities_of_type<loaded_texture>()[fallback_texture_index].refcount;
+      mesh.texture_indices.diffuse.set(*this, fallback_texture_index);
       //
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
@@ -4747,15 +4686,23 @@ namespace vulkanDK {
             // now that we no longer need to keep it.
             //
             ++tex.refcount; // disgusting hack so we can just use dec ref to get consistent mark-for-delete behavior
-            this->scene.texture_dec_ref({}, tex);
+            this->scene.texture_dec_ref(scene::renderer_passkey{}, tex);
          }
       }
       //
       if (!already_diffuse) {
-         this->scene.global_state.default_land_diffuse_texture = diffuse.isEmpty() ? -1 : this->add_dds_texture(diffuse);
+         auto& ti = this->scene.global_state.default_land_diffuse_texture;
+         ti = diffuse.isEmpty() ? -1 : this->add_dds_texture(diffuse);
+         if (ti != -1) {
+            this->scene.entities_of_type<loaded_texture>()[ti].flags |= loaded_texture::flag::is_default_land_texture;
+         }
       }
       if (!already_normals) {
-         this->scene.global_state.default_land_normals_texture = normals.isEmpty() ? -1 : this->add_dds_texture(normals);
+         auto& ti = this->scene.global_state.default_land_normals_texture;
+         ti = normals.isEmpty() ? -1 : this->add_dds_texture(normals);
+         if (ti != -1) {
+            this->scene.entities_of_type<loaded_texture>()[ti].flags |= loaded_texture::flag::is_default_land_texture;
+         }
       }
    }
 
@@ -4868,8 +4815,7 @@ namespace vulkanDK {
             return;
          }
          auto& mesh = this->scene.entities_of_type<rendered_mesh>()[mesh_index];
-         mesh.texture_indices.diffuse = texture_index;
-         ++this->scene.entities_of_type<loaded_texture>()[texture_index].refcount;
+         mesh.texture_indices.diffuse.set(*this, texture_index);
          //
          // Vertices:
          //
@@ -4982,8 +4928,7 @@ namespace vulkanDK {
             return;
          }
          auto& mesh = this->scene.entities_of_type<rendered_mesh>()[mesh_index];
-         mesh.texture_indices.diffuse = texture_index;
-         ++this->scene.entities_of_type<loaded_texture>()[texture_index].refcount;
+         mesh.texture_indices.diffuse.set(*this, texture_index);
          //
          // Vertices:
          //

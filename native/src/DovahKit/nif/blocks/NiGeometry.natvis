@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="nifDK::block_types::NiGeometry" Inheritable="true">
+      <DisplayString>{type_name,nasb}: {name}</DisplayString>
+      <Expand>
+         <ExpandedItem>*(NiAVObject*)this,nd</ExpandedItem>
+         <Item Name="data">data</Item>
+         <Item Name="skin" Condition="_file_version() &gt;= _ni_version(3,3,0,13)">skin</Item>
+         <Item Name="shader" Condition="_file_version() &gt;= _ni_version(10,0,1,0) &amp;&amp; _file_version() &lt;= _ni_version(20,1,0,3)">shader</Item>
+         <Item Name="materials" Condition="_file_version() &gt;= _ni_version(20,2,0,5)">materials</Item>
+         <Item Name="properties" Condition="_file_version() &gt;= _ni_version(20,2,0,7) &amp;&amp; _user_version_1() == 12">properties,na</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

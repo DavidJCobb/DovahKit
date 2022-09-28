@@ -36,12 +36,7 @@
                   </Expand>
                </Synthetic>
                <Synthetic Name="[specular]">
-                  <DisplayString>rgb(<!--
-                     -->{(int)(frame_drawing_data.specular_color.r * 255),d}, <!--
-                     -->{(int)(frame_drawing_data.specular_color.g * 255),d}, <!--
-                     -->{(int)(frame_drawing_data.specular_color.b * 255),d}<!--
-                     -->) strength {frame_drawing_data.specular_strength,g}<!--
-               --></DisplayString>
+                  <DisplayString>rgb({(int)(frame_drawing_data.specular_color.r * 255),d}, {(int)(frame_drawing_data.specular_color.g * 255),d}, {(int)(frame_drawing_data.specular_color.b * 255),d}) strength {frame_drawing_data.specular_strength,g}</DisplayString>
                   <Expand>
                      <Item Name="color">frame_drawing_data.specular_color</Item>
                      <Item Name="strength">frame_drawing_data.specular_strength,g</Item>
