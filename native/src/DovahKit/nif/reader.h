@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "helpers/byteswap.h"
@@ -16,6 +17,7 @@
 #include "detailed_notice.h"
 #include "file.h"
 #include "blocks/_factory.h"
+#include "blocks/unknown.h"
 #include "types/Float16.h"
 
 namespace nifDK {
@@ -122,9 +124,9 @@ namespace nifDK {
                if constexpr (std::is_bounded_array_v<T>) {
                   for (size_t i = 0; i < std::extent<T>::value; ++i)
                      v[i] = cobb::byteswap(v[i]);
-                  return;
+               } else {
+                  v = cobb::byteswap(v);
                }
-               v = cobb::byteswap(v);
                return;
             }
          }
@@ -357,15 +359,33 @@ namespace nifDK {
             this->unchecked_read<E>(field);
          }
 
-         template<typename Desired> requires std::is_polymorphic_v<Desired> bool read_ref(Desired*& out) {
+         template<typename Desired> requires std::is_polymorphic_v<Desired>
+         bool read_ref(Desired*& out) {
             out = nullptr;
             //
             block* instance;
             if (!this->_read_ref(instance))
                return false;
+            if (!instance)
+               return true;
+            //
+            // Non-null reference. Validate the pointer's type.
+            //
             Desired* casted = dynamic_cast<Desired*>(instance);
-            if (!casted)
+            if (!casted) {
+               const auto& ref = *instance;
+               if (typeid(ref) == typeid(block_types::unknown_block)) {
+                  //
+                  // Mismatches are not an error (though we DO NOT WRITE THE POINTER) if the 
+                  // target block is an unknown block type. This ensures that if some block 
+                  // type A can refer to B, C, D, E, and F, we can at least implement base-
+                  // line support for A without immediately being obligated to implement 
+                  // full support for B through F.
+                  //
+                  return true;
+               }
                return false;
+            }
             out = casted;
             return true;
          }

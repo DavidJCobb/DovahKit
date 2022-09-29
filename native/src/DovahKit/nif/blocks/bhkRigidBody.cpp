@@ -20,9 +20,9 @@ namespace nifDK::block_types {
             reader.read(this->unk_int_2);
          }
          reader.read(this->response_alt);
-         if (reader.user_version<2>() > 34) {
-            reader.read(this->unk_int_3);
-         }
+      }
+      if (reader.user_version<2>() <= 34) {
+         reader.read(this->unk_int_3);
       }
       reader.read(this->translation);
       reader.read(this->rotation);

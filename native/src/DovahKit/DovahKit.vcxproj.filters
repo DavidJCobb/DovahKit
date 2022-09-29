@@ -1860,15 +1860,6 @@
     <ClCompile Include="nif\blocks\bhkConstraint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nif\types\LimitedHingeDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\MotorDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\blocks\bhkLimitedHingeConstraint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="nif\types\bhkPositionConstraintMotor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1876,30 +1867,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nif\types\bhkSpringDamperConstraintMotor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\BallAndSocketDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\HavokConstraintDescriptorVariant.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\MalleableDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\StiffSpringDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\PrismaticDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\HingeDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\RagdollDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nif\types\ConstraintData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -4175,15 +4142,6 @@
     <ClInclude Include="nif\blocks\bhkConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nif\blocks\bhkLimitedHingeConstraint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\LimitedHingeDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\MotorDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nif\types\bhkPositionConstraintMotor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -4193,31 +4151,7 @@
     <ClInclude Include="nif\types\bhkSpringDamperConstraintMotor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nif\types\MalleableDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\HavokConstraintDescriptorVariant.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\BallAndSocketDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nif\types\hkConstraintType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\StiffSpringDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\PrismaticDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\HingeDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\RagdollDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nif\types\ConstraintData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

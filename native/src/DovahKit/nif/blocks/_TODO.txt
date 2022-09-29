@@ -6,3 +6,94 @@
     - bhkFixedConstraint
     - bhkGroupConstraint
     - bhkTriangleShape
+
+ - Decoding Havok NIF blocks:
+
+    - Unk_28 is a getter for the size of the struct to read
+    - Unk_29 carries out the read
+    - Unk_2A may be post-read code (e.g. pointer fixups)
+    - Unk_2B is a getter for a pointer to the struct to read
+       - ...and it may create the struct when called, too
+    - Reading is basically just a blind memcpy
+
+    - Class hierarchies:
+
+       - hkConstraintCinfo (RTTI)
+          - hkConstraintInfo? (no RTTI)
+
+ - Researching Havok constraints
+
+    - Web searches turn up Havok strings buried in some executables -- those sites 
+      that'll take an EXE apart and dump all its data
+
+    - hkConstraintMotor may be what NifSkope calls MotorDescriptor
+
+    - These appear to be values in the hkConstraintType enum:
+
+         HK_CONSTRAINT_TYPE_BALLANDSOCKET
+         HK_CONSTRAINT_TYPE_BREAKABLE
+         HK_CONSTRAINT_TYPE_CONTACT
+         HK_CONSTRAINT_TYPE_GENERIC
+         HK_CONSTRAINT_TYPE_HINGE
+         HK_CONSTRAINT_TYPE_LIMITEDHINGE
+         HK_CONSTRAINT_TYPE_MALLEABLE
+         HK_CONSTRAINT_TYPE_POINTTOPATH
+         HK_CONSTRAINT_TYPE_POINTTOPLANE
+         HK_CONSTRAINT_TYPE_POWEREDHINGE
+         HK_CONSTRAINT_TYPE_POWEREDRAGDOLL
+         HK_CONSTRAINT_TYPE_PRISMATIC
+         HK_CONSTRAINT_TYPE_RAGDOLL
+         HK_CONSTRAINT_TYPE_STIFFSPRING
+         HK_CONSTRAINT_TYPE_WHEEL
+
+      Some of the ones not known to NifSkope (e.g. bhkWheelConstraint) exist 
+      in Skyrim.
+
+    - "Descriptor" data types are likely somewhere in:
+
+         hkBallAndSocketConstraintData
+         hkBallSocketChainData
+         hkBallSocketChainDataConstraintInfo
+         hkBreakableConstraintData
+         hkCallbackConstraintMotor
+         hkConstraintChainData
+         hkConstraintData
+         hkConstraintInfo
+         hkConstraintMotor
+         hkGenericConstraintData
+         hkHingeConstraintData
+         hkHingeConstraintDataConstraintBasisA
+         hkHingeConstraintDataConstraintBasisB
+         hkHingeLimitsData
+         hkHingeLimitsDataConstraintBasisA
+         hkHingeLimitsDataConstraintBasisB
+         hkLimitedForceConstraintMotor
+         hkLimitedHingeConstraintData
+         hkLimitedHingeConstraintDataConstraintBasisA
+         hkLimitedHingeConstraintDataConstraintBasisB
+         hkMalleableConstraintData
+         hkPointToPathConstraintData
+         hkPointToPlaneConstraintData
+         hkPositionConstraintMotor
+         hkPoweredHingeConstraintData
+         hkPoweredRagdollConstraintData
+         hkPrismaticConstraintData
+         hkPrismaticConstraintDataConstraintBasisA
+         hkPrismaticConstraintDataConstraintBasisB
+         hkPulleyConstraintData
+         hkRagdollConstraintData
+         hkRagdollConstraintDataConstraintBasisA
+         hkRagdollConstraintDataConstraintBasisB
+         hkRagdollLimitsData
+         hkRagdollLimitsDataConstraintBasisA
+         hkRagdollLimitsDataConstraintBasisB
+         hkRelativeOrientationConstraintData
+         hkRotationalConstraintData
+         hkSimpleContactConstraintDataInfo
+         hkSpringDamperConstraintMotor
+         hkSpringDamperMotor
+         hkStiffSpringConstraintData
+         hkVelocityConstraintMotor
+         hkWheelConstraintData
+         hkWheelConstraintDataConstraintBasisA
+         hkWheelConstraintDataConstraintBasisB

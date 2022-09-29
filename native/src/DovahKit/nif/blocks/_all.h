@@ -10,15 +10,7 @@
    #include "NiObject.h"
       #include "bhkRefObject.h"
          #include "bhkSerializable.h"
-            #include "bhkBallSocketConstraintChain.h"
             #include "bhkConstraint.h"
-               #include "bhkBallAndSocketConstraint.h"
-               #include "bhkHingeConstraint.h"
-               #include "bhkLimitedHingeConstraint.h"
-               #include "bhkMalleableConstraint.h"
-               #include "bhkPrismaticConstraint.h"
-               #include "bhkRagdollConstraint.h"
-               #include "bhkStiffSpringConstraint.h"
             #include "bhkShape.h"
                #include "bhkBvTreeShape.h"
                   #include "bhkMoppBvTreeShape.h"
@@ -94,8 +86,6 @@ namespace nifDK {
    using all_block_types = cobb::class_list<
       block_types::unknown_block,
       //
-      block_types::bhkBallAndSocketConstraint,
-      block_types::bhkBallSocketConstraintChain,
       block_types::bhkBoxShape,
       block_types::bhkBvTreeShape,
       block_types::bhkCapsuleShape,
@@ -105,16 +95,11 @@ namespace nifDK {
       block_types::bhkConvexTransformShape,
       block_types::bhkConvexVerticesShape,
       block_types::bhkEntity,
-      block_types::bhkHingeConstraint,
-      block_types::bhkLimitedHingeConstraint,
       block_types::bhkListShape,
-      block_types::bhkMalleableConstraint,
       block_types::bhkMoppBvTreeShape,
       block_types::bhkMultiSphereShape,
       block_types::bhkNiTriStripsShape,
       block_types::bhkPhantom,
-      block_types::bhkPrismaticConstraint,
-      block_types::bhkRagdollConstraint,
       block_types::bhkRefObject,
       block_types::bhkRigidBody,
       block_types::bhkRigidBodyT,
@@ -125,7 +110,6 @@ namespace nifDK {
       block_types::bhkSimpleShapePhantom,
       block_types::bhkSphereRepShape,
       block_types::bhkSphereShape,
-      block_types::bhkStiffSpringConstraint,
       block_types::bhkTransformShape,
       block_types::bhkWorldObject,
       block_types::BSBlastNode,

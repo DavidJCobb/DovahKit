@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "./bhkEntity.h"
 #include "../types/HavokMaterial.h"
 #include "../types/hkDeactivatorType.h"
@@ -24,7 +25,7 @@ namespace nifDK::block_types {
          collision_response response;
          uint32_t       unk_int_1;
          HavokFilter    filter;
-         uint8_t        pad0C;
+         uint8_t        pad0C[4];
          uint32_t       unk_int_2;
          collision_response response_alt;
          uint32_t       unk_int_3;
@@ -34,7 +35,7 @@ namespace nifDK::block_types {
             glm::fvec4 linear;
             glm::fvec4 angular;
          } velocity;
-         glm::fmat3x3 inertia_tensor;
+         glm::fmat3x4 inertia_tensor; // yes, 3x4; Havok uses tons of vec4s for SIMD shenanigans
          glm::fvec4 center_of_mass;
          float mass = 1.0F; // kilograms; 0 == immovable
          struct {
