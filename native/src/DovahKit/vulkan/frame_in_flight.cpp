@@ -167,7 +167,7 @@ namespace vulkanDK {
          this->owner->set_debug_object_name(this->shader_params.active_caster_positions.handle, QString("Buffer: FIF %1 Active Caster Position Buffer").arg(this->my_index).toStdString());
       }
       this->shader_params.scene_entity_frame_culling_data.for_each([this]<typename Entity>(buffer& buf) {
-         constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_culling_data_type);
+         constexpr VkDeviceSize buffer_size = scene_entities::max_count_for_type<Entity> * sizeof(Entity::frame_culling_data_type);
          buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
          this->owner->set_debug_object_name(
             buf.handle,
@@ -184,7 +184,7 @@ namespace vulkanDK {
          this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
       this->shader_params.scene_entity_frame_drawing_data.for_each([this]<typename Entity>(buffer& buf) {
-         constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_drawing_data_type);
+         constexpr VkDeviceSize buffer_size = scene_entities::max_count_for_type<Entity> * sizeof(Entity::frame_drawing_data_type);
          buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(
             buf.handle,
@@ -208,7 +208,7 @@ namespace vulkanDK {
          }
       });
       this->coalesced_vibs.fixed_length.for_each([this]<typename Entity>(buffer& buf) {
-         this->_resize_scene_entity_coalesced_vib<Entity>();
+         this->_allocate_scene_entity_coalesced_vib<Entity>();
       });
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
@@ -339,19 +339,7 @@ namespace vulkanDK {
 
    void frame_in_flight::prepare_for_render() {
       this->_update_shader_global_scene_state();
-      scene_entities::all_types_with_variable_max_counts::for_each([this]<typename Entity>() {
-         auto& change_flag = this->state.scene_entity_max_count_changed.value_for<Entity>();
-         if (!change_flag)
-            return;
-         if constexpr (scene_entities::concepts::has_frame_culling_data<Entity> || scene_entities::concepts::has_frame_drawing_data<Entity>) {
-            this->_resize_frame_data_buffers<Entity>();
-         }
-         change_flag = false;
-      });
       scene_entities::all_types_with_fixed_length_coalesced_vibs::for_each([this]<typename Entity>() {
-         if (this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>()) {
-            this->_resize_scene_entity_coalesced_vib<Entity>();
-         }
          this->_update_scene_entity_coalesced_vib<Entity>();
       });
       scene_entities::all_types_that_are_drawn::for_each([this]<typename Entity>(){

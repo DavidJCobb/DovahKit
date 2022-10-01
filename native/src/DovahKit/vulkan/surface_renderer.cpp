@@ -4700,14 +4700,6 @@ namespace vulkanDK {
          }
       }
    }
-   void surface_renderer::set_landscape_grid_side_count(size_t cells) {
-      if (this->scene.config.landscape_grid_side_count == cells)
-         return;
-      this->scene.config.landscape_grid_side_count = cells;
-
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.on_scene_entity_max_count_changed<rendered_landscape>();
-   }
 
    rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
       auto* base = refr.base_form.get_form_stub();

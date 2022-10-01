@@ -49,8 +49,7 @@ namespace vulkanDK {
          } entities;
          //
          struct {
-            float  vertical_fov_degrees      = 45.0F; // call scene::update_projection after setting
-            int8_t landscape_grid_side_count = config::initial_landscape_side_count; // must set via surface_renderer::set_landscape_grid_side_count
+            float  vertical_fov_degrees = 45.0F; // call scene::update_projection after setting
          } config;
          struct {
             VkExtent2D bounds = {};
@@ -96,7 +95,6 @@ namespace vulkanDK {
          // pending deletion, it will be rescued from deletion.
          size_t reuse_scene_texture(const QString& path);
 
-         template<typename Entity> size_t max_entity_slots() const noexcept;
          template<typename Entity> size_t entity_slots_available() const noexcept;
 
       protected:

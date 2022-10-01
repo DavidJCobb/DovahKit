@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include "helpers/math/sqrt.h"
 #include "helpers/enum_flags.h"
 #include "helpers/resizable_grid.h"
 #include "helpers/singleton_ex.h"
@@ -8,6 +9,7 @@
 #include "dovah/forms/Landscape.h"
 #include "dovah/forms/ObjectReference.h"
 #include "nif/file.h"
+#include "vulkan/config/scene_limits.h"
 #include "vulkan/scene_entity_handle.h"
 
 class DKVulkanView;
@@ -35,6 +37,8 @@ namespace dovahkit::subsystems {
             boost,
             precision,
          };
+
+         static constexpr const size_t max_grid_size = cobb::sqrt(vulkanDK::config::max_rendered_landscapes);
 
       protected:
          using form_stub       = dovah::form_stub;

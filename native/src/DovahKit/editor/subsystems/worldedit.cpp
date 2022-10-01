@@ -467,9 +467,6 @@ namespace dovahkit::subsystems {
 
    void worldedit::_on_renderer_attached() {
       this->_update_default_land_textures();
-      //
-      auto* sr = this->target_view->surfaceRenderer();
-      sr->set_landscape_grid_side_count(this->cell_grid_size());
    }
    void worldedit::_on_renderer_lost() {
       //
@@ -748,33 +745,41 @@ namespace dovahkit::subsystems {
          auto& src = this->loaded_cells;
          decltype(this->loaded_cells) dst;
          dst.resize(length);
-
-         if constexpr (debug_log_area_load_unload) {
-            qDebug("[Worldedit] Unloading %d cells due to grid size decreasing...", (prior_length * prior_length - length * length));
-         }
-         for (auto i = dst.left(); i < dst.right(); ++i) {
-            dst.at(i, i) = std::move(src.at(i, i));
-         }
-         for (auto x = dst.right(); x < src.right(); ++x) {
-            for (auto y = src.top(); y < src.bottom(); ++y) {
-               this->_unload_cell(src.at(x, y).stub);
-               this->_unload_cell(src.at(-x, y).stub);
+         //
+         if (this->target_area.world) {
+            if constexpr (debug_log_area_load_unload) {
+               qDebug("[Worldedit] Unloading %d cells due to grid size decreasing...", (prior_length * prior_length - length * length));
             }
-         }
-         for (auto y = dst.bottom(); y < src.bottom(); ++y) {
-            for (auto x = src.left(); x < src.right(); ++x) {
-               this->_unload_cell(src.at(x, y).stub);
-               this->_unload_cell(src.at(x, -y).stub);
+            for (auto i = dst.left(); i < dst.right(); ++i) {
+               dst.at(i, i) = std::move(src.at(i, i));
             }
-         }
-         this->loaded_cells = std::move(dst);
-      }
-      //
-      // Update the renderer.
-      //
-      if (this->target_view) {
-         if (auto* sr = this->target_view->surfaceRenderer()) {
-            sr->set_landscape_grid_side_count(length);
+            for (auto x = dst.right(); x < src.right(); ++x) {
+               for (auto y = src.top(); y < src.bottom(); ++y) {
+                  if (auto* stub = src.at(x, y).stub)
+                     this->_unload_cell(stub);
+                  if (auto* stub = src.at(-x, y).stub)
+                     this->_unload_cell(stub);
+               }
+            }
+            for (auto y = dst.bottom(); y < src.bottom(); ++y) {
+               for (auto x = src.left(); x < src.right(); ++x) {
+                  if (auto* stub = src.at(x, y).stub)
+                     this->_unload_cell(stub);
+                  if (auto* stub = src.at(x, -y).stub)
+                     this->_unload_cell(stub);
+               }
+            }
+            this->loaded_cells = std::move(dst);
+         } else {
+            dst.at(0, 0) = std::move(src.at(0, 0));
+            //
+            #if _DEBUG
+               this->loaded_cells.for_each([](auto& item, auto x, auto y) {
+                  if (x == 0 && y == 0)
+                     return;
+                  assert(!item.stub && "We weren't viewing a worldspace! There shouldn't be multiple cells loaded like this!");
+               });
+            #endif
          }
       }
       //
@@ -782,23 +787,24 @@ namespace dovahkit::subsystems {
       // been adjusted, to ensure we render properly. TODO: Can we make this optional?
       //
       if (length > prior_length) {
-         if constexpr (debug_log_area_load_unload) {
-            qDebug("[Worldedit] Loading %d cells due to grid size increasing...", (length * length - prior_length * prior_length));
-         }
-         const auto* world  = this->target_area.world;
-         const auto& gp_now = this->target_area.world_grid_pos;
-         this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
-            if (data.stub)
-               return;
-            auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
-            if (cell) {
-               if constexpr (debug_log_area_load_unload) {
-                  qDebug("[Worldedit] Loading cell at (%d, %d) due to grid size increasing...", (gp_now.x + x), (gp_now.y + y));
-               }
-               this->_load_cell(cell, x, y);
+         const auto* world = this->target_area.world;
+         if (world) {
+            if constexpr (debug_log_area_load_unload) {
+               qDebug("[Worldedit] Loading %d cells due to grid size increasing...", (length * length - prior_length * prior_length));
             }
-         });
-         this->_set_current_area_impl(this->target_area.world, this->target_area.world_grid_pos.x, this->target_area.world_grid_pos.y);
+            const auto& gp_now = this->target_area.world_grid_pos;
+            this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+               if (data.stub)
+                  return;
+               auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
+               if (cell) {
+                  if constexpr (debug_log_area_load_unload) {
+                     qDebug("[Worldedit] Loading cell at (%d, %d) due to grid size increasing...", (gp_now.x + x), (gp_now.y + y));
+                  }
+                  this->_load_cell(cell, x, y);
+               }
+            });
+         }
       }
    }
 

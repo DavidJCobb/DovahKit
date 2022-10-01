@@ -39,14 +39,8 @@ namespace vulkanDK {
             return i;
          }
       }
-      if constexpr (scene_entities::max_count_for_type<Entity> > 0) {
-         if (size >= scene_entities::max_count_for_type<Entity>)
-            return index_of_none;
-      } else {
-         auto max_count = this->max_entity_slots<Entity>();
-         if (max_count > 0 && size >= max_count)
-            return index_of_none;
-      }
+      if (size >= scene_entities::max_count_for_type<Entity>)
+         return index_of_none;
       auto& item = list.emplace_back();
       item.lifetime.life_state = scene_entities::life_state::active;
       item.lifetime.sync_state.set_all_out_of_date();
@@ -56,20 +50,8 @@ namespace vulkanDK {
       return size;
    }
 
-   template<typename Entity> size_t scene::max_entity_slots() const noexcept {
-      constexpr const size_t fixed_maximum = scene_entities::max_count_for_type<Entity>;
-      if (fixed_maximum)
-         return fixed_maximum;
-      //
-      // This entity count's maximum can vary depending on the scene configuration.
-      //
-      if constexpr (std::is_same_v<Entity, rendered_landscape>) {
-         return this->config.landscape_grid_side_count * this->config.landscape_grid_side_count;
-      }
-      return 0;
-   }
    template<typename Entity> size_t scene::entity_slots_available() const noexcept {
-      size_t max_slots = max_entity_slots<Entity>(); // the variable name `slots` cannot safely be used in any Qt-based program
+      size_t max_slots = scene_entities::max_count_for_type<Entity>; // the variable name `slots` cannot safely be used in any Qt-based program
       //
       auto&  list  = this->entities_of_type<Entity>();
       size_t size  = list.size();

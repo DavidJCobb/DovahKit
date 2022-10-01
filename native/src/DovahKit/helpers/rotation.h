@@ -16,6 +16,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include <array>
+#include "./math/rotation/unit_conversion.h"
 #include "matrix.h"
 #include "unreachable.h"
 
@@ -27,10 +28,10 @@ namespace cobb {
    inline constexpr double pi = 3.14159265358979323846;
 
    inline constexpr double degrees_to_radians(double degrees) noexcept {
-      return degrees * pi / 180.0;
+      return degrees * degrees_to_radians_mult;
    }
    inline constexpr double radians_to_degrees(double radians) noexcept {
-      return radians * 180.0 / pi;
+      return radians * radians_to_degrees_mult;
    }
 
    // Higher-precision degree/radian conversion function. Shouldn't be necessary in the 

@@ -190,7 +190,6 @@ namespace vulkanDK {
       protected:
          struct {
             bool recorded_compute_cull_commands = false;
-            cobb::class_map_from_class_array<bool, scene_entities::all_types_with_variable_max_counts> scene_entity_max_count_changed;
             cobb::class_map_from_class_array<bool, scene_entities::all_types_that_are_drawn> scene_entity_draws_changed;
             cobb::class_map_from_class_array<bool, scene_entities::all_types_with_fixed_length_coalesced_vibs> scene_entity_coalesced_vib_resize_needed;
             bool must_re_record_graphics = true;
@@ -217,14 +216,6 @@ namespace vulkanDK {
                this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>() = true;
             }
          }
-         template<typename Entity> void on_scene_entity_max_count_changed() {
-            if constexpr (scene_entities::all_types_with_variable_max_counts::contains_type<Entity>) {
-               this->state.scene_entity_max_count_changed.value_for<Entity>() = true;
-            }
-            if constexpr (scene_entities::all_types_with_fixed_length_coalesced_vibs::contains_type<Entity>) {
-               this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>() = true;
-            }
-         }
          void invalidate_all_command_buffers();
 
       protected:
@@ -247,9 +238,7 @@ namespace vulkanDK {
          [[nodiscard]] buffer _create_staging_buffer(VkDeviceSize size);
          void _set_debug_object_name(buffer&, const char*);
 
-         template<typename Entity> void _resize_frame_data_buffers();
-
-         template<typename Entity> void _resize_scene_entity_coalesced_vib();
+         template<typename Entity> void _allocate_scene_entity_coalesced_vib();
          template<typename Entity> void _update_scene_entity_coalesced_vib();
 
          template<typename Entity> void _update_drawn_scene_entity_frame_data();

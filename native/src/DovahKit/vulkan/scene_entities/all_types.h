@@ -7,9 +7,6 @@
 #include "./concepts/has_frame_drawing_data.h"
 
 namespace vulkanDK::scene_entities {
-   using all_types_with_variable_max_counts = all_types::filter_types<[]<typename T>() -> bool {
-      return max_count_for_type<T> == 0;
-   }>;
    using all_types_with_frame_culling_data = all_types::filter_types<[]<typename T>() -> bool {
       return concepts::has_frame_culling_data<T>;
    }>;
