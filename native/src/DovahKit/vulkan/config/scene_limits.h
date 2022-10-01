@@ -8,5 +8,5 @@ namespace vulkanDK::config {
 
    static constexpr size_t max_active_shadow_casters = 4;
 
-   static constexpr size_t max_landscapes = 5 * 5; // TODO: make this a configuration option on the renderer
+   static constexpr size_t initial_landscape_side_count = 5;
 }

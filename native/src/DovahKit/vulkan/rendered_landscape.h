@@ -24,6 +24,8 @@ namespace vulkanDK {
          //
          static constexpr const bool owned_gpu_resources_are_coalesced = true;
          static constexpr const bool is_drawn = true;
+         // See below for owned_gpu_resource_coalesce_settings.
+
       protected:
          static constexpr bool render_as_separated_quads = true;
       public:
@@ -43,13 +45,28 @@ namespace vulkanDK {
          static constexpr size_t cell_side_length = 4096;
          static constexpr size_t vertex_distance  = (cell_side_length / 32);
 
-      protected:
-         void _on_shader_parameter_change();
+      #pragma region Scene entity configuration: coalescing
+      public:
+         static constexpr const auto coalesced_vib_settings = scene_entities::coalesced_vib_settings{
+            .enabled = true,
+            //
+            .constant_shared_indices = true,
+            .fixed_vertex_count      = vertices_per_mesh,
+            .fixed_index_count       = indices_per_quad,
+         };
+         using coalesced_vertex_type = vertex_landscape;
+         using coalesced_index_type  = quad_vertex_index_type;
 
+         static void coalesce_constant_shared_indices_into(void* write_to);
+         void coalesce_vertices_into(void* write_to) const noexcept;
+      #pragma endregion
+
+      protected:
          union blended_texture_list {
             alignas(4) std::array<loaded_texture_index, max_usable_layers_per_quad * 4> all = cobb::array_of_n_values<max_usable_layers_per_quad * 4>(loaded_texture_index{});
             alignas(4) std::array<std::array<loaded_texture_index, max_usable_layers_per_quad>, 4> by_quad;
 
+            blended_texture_list() : all(cobb::array_of_n_values<std::tuple_size_v<decltype(all)>>(loaded_texture_index{})) {}
             ~blended_texture_list() {}
          };
 
@@ -75,9 +92,6 @@ namespace vulkanDK {
          void set_position(const glm::vec3&);
 
          void import_vertex_data_from_form(const loaded_form&);
-         void setup_vertex_data_at(void*);
-
-         [[nodiscard]] VkDrawIndexedIndirectCommand make_indirect_draw_command() const;
 
          glm::vec3 local_vertex_position(int quad, size_t quad_vertex_index) const;
          glm::vec3 local_vertex_position(size_t mesh_vertex_index) const;

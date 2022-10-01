@@ -83,6 +83,11 @@ namespace vulkanDK {
          vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
       });
    }
+   void buffer::copy_from(const buffer& source, VkBufferCopy copy_region) {
+      this->renderer->do_single_commands([this, &source, copy_region](command_buffer& scratch) {
+         vkCmdCopyBuffer(scratch.handle, source.handle, this->handle, 1, &copy_region);
+      });
+   }
 
    void* buffer::map_memory(VkDeviceSize offset, VkMemoryMapFlags flags) {
       assert(this->renderer);

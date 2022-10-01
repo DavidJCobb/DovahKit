@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
-#include "../helpers/class_map.h"
+#include "helpers/class_map.h"
+#include "./helpers/bundled_descriptor_buffer_write.h"
 #include "_vulkan.h"
 #include "_util.h"
 #include "config/scene_limits.h"
@@ -142,6 +143,9 @@ namespace vulkanDK {
             std::array<indirect_draw_buffers, config::max_active_shadow_casters> shadow_casters;
          } indirect_draw_commands;
          struct {
+            cobb::class_map_from_class_array<buffer, scene_entities::all_types_with_fixed_length_coalesced_vibs> fixed_length;
+         } coalesced_vibs;
+         struct {
             //
             // Each frustum is defined by four vec4s which are the inward-facing surface normals of 
             // the left, right, top, and bottom faces of the frustum.
@@ -161,7 +165,6 @@ namespace vulkanDK {
             buffer scene_data;        // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
             buffer light_shadow_data; // glm::mat4[] array: six view matrices per shadow caster
             cobb::class_map_from_class_array<buffer, scene_entities::all_types_with_frame_drawing_data> scene_entity_frame_drawing_data;
-
          } shader_params;
          struct {
             overlays::fps        fps;
@@ -187,7 +190,9 @@ namespace vulkanDK {
       protected:
          struct {
             bool recorded_compute_cull_commands = false;
+            cobb::class_map_from_class_array<bool, scene_entities::all_types_with_variable_max_counts> scene_entity_max_count_changed;
             cobb::class_map_from_class_array<bool, scene_entities::all_types_that_are_drawn> scene_entity_draws_changed;
+            cobb::class_map_from_class_array<bool, scene_entities::all_types_with_fixed_length_coalesced_vibs> scene_entity_coalesced_vib_resize_needed;
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
          } state;
@@ -208,6 +213,17 @@ namespace vulkanDK {
             if constexpr (scene_entities::all_types_that_are_drawn::contains_type<Entity>) {
                this->state.scene_entity_draws_changed.value_for<Entity>() = true;
             }
+            if constexpr (scene_entities::all_types_with_variable_length_coalesced_vibs::contains_type<Entity>) {
+               this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>() = true;
+            }
+         }
+         template<typename Entity> void on_scene_entity_max_count_changed() {
+            if constexpr (scene_entities::all_types_with_variable_max_counts::contains_type<Entity>) {
+               this->state.scene_entity_max_count_changed.value_for<Entity>() = true;
+            }
+            if constexpr (scene_entities::all_types_with_fixed_length_coalesced_vibs::contains_type<Entity>) {
+               this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>() = true;
+            }
          }
          void invalidate_all_command_buffers();
 
@@ -224,7 +240,19 @@ namespace vulkanDK {
          void _update_shader_global_scene_state();
          void _update_shader_texture_descriptors();
 
-         template<typename Entity> void _update_scene_frame_items();
+         // helper functions for the templated member functions defined in the INL file, to avoid 
+         // circular-dependency issues with calling `surface_renderer` member functions:
+         [[nodiscard]] VkDevice _logical_device_handle() const;
+         [[nodiscard]] buffer _create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+         [[nodiscard]] buffer _create_staging_buffer(VkDeviceSize size);
+         void _set_debug_object_name(buffer&, const char*);
+
+         template<typename Entity> void _resize_frame_data_buffers();
+
+         template<typename Entity> void _resize_scene_entity_coalesced_vib();
+         template<typename Entity> void _update_scene_entity_coalesced_vib();
+
+         template<typename Entity> void _update_drawn_scene_entity_frame_data();
    };
 }
 

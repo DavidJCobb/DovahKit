@@ -13,6 +13,9 @@ namespace vulkanDK {
          if (item.empty()) {
             item.lifetime.life_state = scene_entities::life_state::active;
             item.lifetime.sync_state.set_all_out_of_date();
+            if constexpr (scene_entities::all_types_with_coalesced_vibs::contains_type<Entity>) {
+               item.lifetime.coalescing.sync_state.set_all_out_of_date();
+            }
             return i;
          }
          if (item.pending_delete()) {
@@ -30,6 +33,9 @@ namespace vulkanDK {
             }
             item.lifetime.life_state = scene_entities::life_state::active_recycle;
             item.lifetime.sync_state.set_all_out_of_date();
+            if constexpr (scene_entities::all_types_with_coalesced_vibs::contains_type<Entity>) {
+               item.lifetime.coalescing.sync_state.set_all_out_of_date();
+            }
             return i;
          }
       }
@@ -44,6 +50,9 @@ namespace vulkanDK {
       auto& item = list.emplace_back();
       item.lifetime.life_state = scene_entities::life_state::active;
       item.lifetime.sync_state.set_all_out_of_date();
+      if constexpr (scene_entities::all_types_with_coalesced_vibs::contains_type<Entity>) {
+         item.lifetime.coalescing.sync_state.set_all_out_of_date();
+      }
       return size;
    }
 
@@ -55,7 +64,7 @@ namespace vulkanDK {
       // This entity count's maximum can vary depending on the scene configuration.
       //
       if constexpr (std::is_same_v<Entity, rendered_landscape>) {
-         return this->config.landscape_grid_side_length * this->config.landscape_grid_side_length;
+         return this->config.landscape_grid_side_count * this->config.landscape_grid_side_count;
       }
       return 0;
    }

@@ -196,7 +196,12 @@ namespace editor_helpers {
                      text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, which is not the correct type.");
                }
                //
-               text = text.arg(referrer).arg(subrecord).arg(referent).arg(desired).arg(notice.cause_subrecord_index);
+               text = text
+                  .replace("%1", referrer) // QString::arg nags about unused arguments so we have to do this garbage
+                  .replace("%2", subrecord)
+                  .replace("%3", referent)
+                  .replace("%4", desired)
+                  .replace("%5", QString::number(notice.cause_subrecord_index));
             }
             break;
          case notice_code::shout_has_wrong_word_count:

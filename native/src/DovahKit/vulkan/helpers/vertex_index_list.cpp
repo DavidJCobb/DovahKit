@@ -7,37 +7,16 @@
 //
 #include <intrin.h>
 #include "../../helpers/cpuinfo.h"
+#include "../../helpers/widen_u16_to_u32.h"
 
 namespace {
    uint32_t* _convert(uint16_t* list, size_t size, size_t capacity) {
       assert(size <= capacity);
-      auto*  out = (uint32_t*) malloc(sizeof(uint32_t) * capacity);
-      size_t i   = 0;
+      auto* out = (uint32_t*) malloc(sizeof(uint32_t) * capacity);
       if (!out) {
          throw std::bad_alloc();
       }
-      //
-      bool can_intrin = false;
-      {
-         auto& c = cobb::cpuinfo::get().extension_support;
-         can_intrin = c.sse_2 && c.sse_4_1;
-      }
-      if (can_intrin) {
-         for (; i + 7 < size; i += 8) {
-            auto here = (std::intptr_t)&out[i];
-            auto half = (std::intptr_t)&out[i] + (sizeof(uint32_t) * 4);
-
-            __m128i src = _mm_loadu_si128((__m128i*)&list[i]);
-            __m128i dst = _mm_cvtepu16_epi32(src); // convert first four uint16_ts
-            _mm_storeu_si128((__m128i*)here, dst);
-            src = _mm_srli_si128(src, 8);  // shift by 8 bytes
-            dst = _mm_cvtepu16_epi32(src); // convert second four uint16_ts
-            _mm_storeu_si128((__m128i*)half, dst);
-         }
-      }
-      for (; i < size; ++i) {
-         out[i] = list[i];
-      }
+      cobb::widen_u16_to_u32(size, list, out);
       return out;
    }
    inline uint32_t* _convert(uint16_t* list, size_t size) {

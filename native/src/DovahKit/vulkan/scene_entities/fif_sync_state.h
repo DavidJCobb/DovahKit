@@ -26,9 +26,16 @@ namespace vulkanDK::scene_entities {
          mask_type mask = 0;
 
       public:
-         constexpr bool is_up_to_date(uint16_t frame_index) const noexcept { return (mask & (mask_type(1) << frame_index)) != 0; }
+         static constexpr mask_type mask_for(uint8_t frame_index) {
+            return mask_type(1) << frame_index;
+         }
+
+         constexpr bool is_up_to_date(uint16_t frame_index) const noexcept { return (mask & mask_for(frame_index)) != 0; }
          constexpr void set_up_to_date(uint16_t frame_index) {
-            mask |= mask_type(1) << frame_index;
+            mask |= mask_for(frame_index);
+         }
+         constexpr void set_out_of_date(uint16_t frame_index) {
+            mask &= ~mask_for(frame_index);
          }
 
          constexpr void set_all_out_of_date() {

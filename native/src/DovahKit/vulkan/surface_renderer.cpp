@@ -643,7 +643,6 @@ namespace vulkanDK {
       for (auto& q : this->queues.list)
          q.setup_command_pools(this->logical_device);
       //
-      this->scene.setup_landscape_buffer(*this, config::max_landscapes);
       {  // swap chain
          this->_setup_sun_shadow_buffer();
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
@@ -2090,7 +2089,7 @@ namespace vulkanDK {
       {
          VkDeviceSize image_size = w * h * 4;
          //
-         auto staging = this->create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         auto staging = this->create_staging_buffer(image_size);
          //
          void* data = staging.map_memory();
          memset(data, 0, image_size);
@@ -2162,7 +2161,7 @@ namespace vulkanDK {
             VkDeviceSize buffer_size;
             mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
             //
-            auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto  staging = this->create_staging_buffer(buffer_size);
             void* data    = staging.map_memory();
             mesh.setup_vib_data_at(data);
             staging.unmap_memory(data);
@@ -3684,7 +3683,7 @@ namespace vulkanDK {
             //
             img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             {
-               auto  staging = this->create_buffer(tex.pixel_data_size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+               auto  staging = this->create_staging_buffer(tex.pixel_data_size());
                void* data    = staging.map_memory();
                memcpy(data, tex.pixel_data(), tex.pixel_data_size());
                staging.unmap_memory(data);
@@ -3752,7 +3751,7 @@ namespace vulkanDK {
       // We're gonna be setting up our image on a staging buffer, and then transferring that 
       // to the final (non-CPU-writeable) buffer.
       //
-      auto  staging = this->create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      auto  staging = this->create_staging_buffer(image_size);
       void* data    = staging.map_memory();
       memcpy(data, texture.constBits(), image_size);
       staging.unmap_memory(data);
@@ -3849,7 +3848,7 @@ namespace vulkanDK {
          //
          img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          {
-            auto  staging = this->create_buffer(tex.pixel_data_size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto  staging = this->create_staging_buffer(tex.pixel_data_size());
             void* data    = staging.map_memory();
             memcpy(data, tex.pixel_data(), tex.pixel_data_size());
             staging.unmap_memory(data);
@@ -3960,7 +3959,7 @@ namespace vulkanDK {
          VkDeviceSize buffer_size;
          ro.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
          //
-         auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         auto  staging = this->create_staging_buffer(buffer_size);
          void* data    = staging.map_memory();
          ro.setup_vib_data_at(data);
          staging.unmap_memory(data);
@@ -4209,10 +4208,6 @@ namespace vulkanDK {
       }
       //
       handle->import_vertex_data_from_form(land);
-      {
-         this->_wait_on_all_frames_in_flight(); // ensure that we don't write to the coalesced landscape buffer while it is in use // TODO: double-buffering to work around this?
-         this->scene.update_single_landscape(*this, handle.list_index({}));
-      }
       return handle;
    }
    void surface_renderer::remove_landscape(size_t i) {
@@ -4337,7 +4332,7 @@ namespace vulkanDK {
       VkDeviceSize buffer_size;
       mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
       //
-      auto  staging = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      auto  staging = this->create_staging_buffer(buffer_size);
       void* data    = staging.map_memory();
       mesh.setup_vib_data_at(data);
       staging.unmap_memory(data);
@@ -4705,6 +4700,14 @@ namespace vulkanDK {
          }
       }
    }
+   void surface_renderer::set_landscape_grid_side_count(size_t cells) {
+      if (this->scene.config.landscape_grid_side_count == cells)
+         return;
+      this->scene.config.landscape_grid_side_count = cells;
+
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_scene_entity_max_count_changed<rendered_landscape>();
+   }
 
    rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
       auto* base = refr.base_form.get_form_stub();
@@ -5071,17 +5074,6 @@ namespace vulkanDK {
                   }
                   item.lifetime.life_state = scene_entities::life_state::active;
                   ++deleted;
-                  if constexpr (Entity::owned_gpu_resources_are_coalesced) {
-                     //
-                     // HACK HACK HACK until we make coalesced buffers exist per-FiF!
-                     //
-                     if (!recycling) {
-                        this->_wait_on_all_frames_in_flight();
-                     }
-                     if constexpr (std::is_same_v<Entity, rendered_landscape>) {
-                        this->scene.update_single_landscape(*this, i);
-                     }
-                  }
                   recycling = true;
                }
                last_alive = i;

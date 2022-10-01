@@ -109,10 +109,13 @@ namespace dovahkit::subsystems {
 
          void _center_camera_on_cell(dovah::form_stub&);
 
+         void _on_renderer_attached();
          void _on_renderer_lost();
          void _update_default_land_textures();
 
          void _set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x = 0, int32_t grid_y = 0);
+
+         void _resize_cell_grid(size_t length);
          
       public:
          void center_on_refr(dovah::form_stub&);
@@ -125,6 +128,10 @@ namespace dovahkit::subsystems {
          bool is_cell_loaded(const dovah::form_stub*) const;
          bool is_current_cell(const dovah::form_stub*) const;
          bool is_ref_loaded(const dovah::form_stub*) const;
+
+         inline size_t cell_grid_size() const noexcept {
+            return this->loaded_cells.length();
+         }
 
       signals:
          void cellLoaded(dovah::form_stub&);
@@ -142,5 +149,6 @@ namespace dovahkit::subsystems {
          void toggleRefSelectionState(dovah::form_stub&);
          void deselectAllRefs();
          void replaceRefSelection(dovah::form_stub&);
+         void setCellGridSize(int);
    };
 }

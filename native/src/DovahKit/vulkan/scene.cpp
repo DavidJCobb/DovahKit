@@ -1,5 +1,4 @@
 #include "scene.h"
-#include "helpers/array_flatten.h" // cobb::array_flatten
 #include "frame_in_flight.h"
 #include "surface_renderer.h"
 //
@@ -25,11 +24,6 @@
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
 
-// landscape:
-#include "helpers/vertex_indices_for_quad_grid.h"
-#include "rendered_landscape.h"
-#include "vertex_landscape.h"
-
 #include <glm/gtx/matrix_decompose.hpp> // for debugging
 
 namespace {
@@ -47,24 +41,6 @@ namespace vulkanDK {
       this->camera.yaw   = glm::radians(-45.0F);
       this->camera.pitch = glm::radians(-45.0F);
       this->update_camera();
-   }
-
-   void scene::setup_landscape_buffer(surface_renderer& sr, size_t max_landscape_count) {
-      constexpr size_t indices_size = rendered_landscape::indices_per_quad * sizeof(rendered_landscape::quad_vertex_index_type);
-      constexpr size_t buffer_size  = ([indices_size]() {
-         constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
-         return indices_size + (v * config::max_landscapes);
-      })();
-      //
-      this->coalesced.landscape_buffer = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-      {
-         auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-         void* data    = staging.map_memory();
-         memset(data, 0, buffer_size);
-         memcpy(data, rendered_landscape::quad_vertex_indices.data(), indices_size);
-         staging.unmap_memory(data);
-         this->coalesced.landscape_buffer.copy_from(staging);
-      }
    }
 
    void scene::update_projection(VkExtent2D render_area) {
@@ -416,7 +392,6 @@ namespace vulkanDK {
    }
    void scene::teardown(surface_renderer&sr) {
       this->clear(sr);
-      this->coalesced = {};
    }
 
    void scene::update() {
@@ -512,30 +487,5 @@ namespace vulkanDK {
    bool scene::texture_dec_ref(loaded_texture_index_passkey, size_t texture_index) {
       auto& tex = this->entities_of_type<loaded_texture>()[texture_index];
       return this->_texture_dec_ref_impl(tex);
-   }
-
-   size_t scene::landscape_buffer_vertex_index(size_t landscape_index) const {
-      constexpr size_t i = rendered_landscape::indices_per_quad * sizeof(rendered_landscape::quad_vertex_index_type);
-      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
-      return i + (v * landscape_index);
-   }
-   void scene::update_single_landscape(surface_renderer& sr, size_t landscape_index) {
-      constexpr size_t v = sizeof(vertex_landscape) * rendered_landscape::vertices_per_mesh;
-
-      auto  staging = sr.create_buffer(v, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      void* data    = staging.map_memory();
-      auto& entry   = this->entities_of_type<rendered_landscape>()[landscape_index];
-      //
-      memcpy(data, entry.vertices.data(), v);
-      staging.unmap_memory(data);
-      //
-      sr.do_single_commands([this, &staging, landscape_index](command_buffer& scratch) {
-         auto copy_region = VkBufferCopy{
-            .srcOffset = 0,
-            .dstOffset = this->landscape_buffer_vertex_index(landscape_index),
-            .size      = v,
-         };
-         vkCmdCopyBuffer(scratch.handle, staging.handle, this->coalesced.landscape_buffer.handle, 1, &copy_region);
-      });
    }
 }

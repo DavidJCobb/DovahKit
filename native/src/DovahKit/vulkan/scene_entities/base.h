@@ -2,7 +2,19 @@
 #include "./fif_sync_state.h"
 #include "./life_state.h"
 
+namespace vulkanDK {
+   class scene;
+}
+
 namespace vulkanDK::scene_entities {
+   struct coalesced_vib_settings {
+      bool   enabled = false;
+      //
+      bool   constant_shared_indices = false; // true if all entities have the exact same indices and those indices never change
+      size_t fixed_vertex_count      = 0;     // vertex count per entity; 0 if the vertex count can vary between different entities
+      size_t fixed_index_count       = 0;     // index  count per entity; 0 to use the default (same as vertex count)
+   };
+
    // Base class for all scene entities.
    struct base {
       public:
@@ -14,7 +26,9 @@ namespace vulkanDK::scene_entities {
          static constexpr const char* name_single = "<unnamed>";
          static constexpr const char* name_plural = "<unnamed>";
          
-         static constexpr const bool owned_gpu_resources_are_coalesced   = false;
+         static constexpr const auto coalesced_vib_settings = scene_entities::coalesced_vib_settings{};
+         using coalesced_vertex_type = void;
+         using coalesced_index_type  = void;
 
          static constexpr const bool owned_gpu_resources_are_descriptors = false;
 
@@ -38,6 +52,9 @@ namespace vulkanDK::scene_entities {
          struct {
             life_state     life_state = life_state::empty;
             fif_sync_state sync_state;
+            struct {
+               fif_sync_state sync_state;
+            } coalescing;
          } lifetime;
 
          constexpr bool active() const noexcept {
@@ -56,6 +73,12 @@ namespace vulkanDK::scene_entities {
          inline void on_frame_drawing_data_changed() {
             this->lifetime.sync_state.set_all_out_of_date();
          }
+
+         #pragma region Member functions for coalesced resources
+         static void coalesce_constant_shared_indices_into(void* write_to) = delete;
+         void coalesce_indices_into(void* write_to) const noexcept = delete;
+         void coalesce_vertices_into(void* write_to) const noexcept = delete;
+         #pragma endregion
 
       protected:
          template<typename Subclass> void _mark_for_delete();

@@ -1,6 +1,6 @@
 #pragma once
 #include "../config/scene_limits.h"
-#include "./all_types.h"
+#include "./all_classes.h"
 
 namespace vulkanDK::scene_entities {
    // Use this for fixed, compile-time maximums on entity types.
@@ -19,7 +19,7 @@ namespace vulkanDK::scene_entities {
    // sets an initial maximum so that renderer setup can work.
    template<typename Entity> inline constexpr const size_t initial_cap_for_type = []() -> size_t {
       if constexpr (std::is_same_v<Entity, rendered_landscape>) {
-         return ::vulkanDK::config::max_landscapes;
+         return ::vulkanDK::config::initial_landscape_side_count * ::vulkanDK::config::initial_landscape_side_count;
       }
       return max_count_for_type<Entity>;
    }();

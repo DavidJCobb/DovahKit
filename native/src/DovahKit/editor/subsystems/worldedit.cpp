@@ -465,6 +465,12 @@ namespace dovahkit::subsystems {
       }
    }
 
+   void worldedit::_on_renderer_attached() {
+      this->_update_default_land_textures();
+      //
+      auto* sr = this->target_view->surfaceRenderer();
+      sr->set_landscape_grid_side_count(this->cell_grid_size());
+   }
    void worldedit::_on_renderer_lost() {
       //
       // Forcibly discard all handles to scene objects.
@@ -579,12 +585,14 @@ namespace dovahkit::subsystems {
             // New area overlaps the old. Unload only the cells that have shifted out of the 
             // loaded grid.
             //
-            this->loaded_cells.shift_by(-diff_x, -diff_y, [this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
-               if constexpr (debug_log_area_load_unload) {
-                  qDebug("[Worldedit] Unloading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
-               }
-               this->_unload_cell(data.stub);
-            });
+            if (diff_x || diff_y) {
+               this->loaded_cells.shift_by(-diff_x, -diff_y, [this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+                  if constexpr (debug_log_area_load_unload) {
+                     qDebug("[Worldedit] Unloading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
+                  }
+                  this->_unload_cell(data.stub);
+               });
+            }
             this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
                if (data.stub)
                   return;
@@ -725,6 +733,75 @@ namespace dovahkit::subsystems {
       emit this->currentAreaChanged(world ? world : cell);
    }
 
+   void worldedit::_resize_cell_grid(size_t length) {
+      size_t prior_length = this->loaded_cells.length();
+      if (length == prior_length)
+         return;
+      if (length > prior_length) {
+         assert((loaded_cell_grid_coord)length == length); // representable?
+         this->loaded_cells.resize(length);
+      } else {
+         //
+         // Shrinking the grid is more complicated, because we need to unload any cells 
+         // that would end up being dropped.
+         //
+         auto& src = this->loaded_cells;
+         decltype(this->loaded_cells) dst;
+         dst.resize(length);
+
+         if constexpr (debug_log_area_load_unload) {
+            qDebug("[Worldedit] Unloading %d cells due to grid size decreasing...", (prior_length * prior_length - length * length));
+         }
+         for (auto i = dst.left(); i < dst.right(); ++i) {
+            dst.at(i, i) = std::move(src.at(i, i));
+         }
+         for (auto x = dst.right(); x < src.right(); ++x) {
+            for (auto y = src.top(); y < src.bottom(); ++y) {
+               this->_unload_cell(src.at(x, y).stub);
+               this->_unload_cell(src.at(-x, y).stub);
+            }
+         }
+         for (auto y = dst.bottom(); y < src.bottom(); ++y) {
+            for (auto x = src.left(); x < src.right(); ++x) {
+               this->_unload_cell(src.at(x, y).stub);
+               this->_unload_cell(src.at(x, -y).stub);
+            }
+         }
+         this->loaded_cells = std::move(dst);
+      }
+      //
+      // Update the renderer.
+      //
+      if (this->target_view) {
+         if (auto* sr = this->target_view->surfaceRenderer()) {
+            sr->set_landscape_grid_side_count(length);
+         }
+      }
+      //
+      // We need to load new cells after the surface renderer's max land count has 
+      // been adjusted, to ensure we render properly. TODO: Can we make this optional?
+      //
+      if (length > prior_length) {
+         if constexpr (debug_log_area_load_unload) {
+            qDebug("[Worldedit] Loading %d cells due to grid size increasing...", (length * length - prior_length * prior_length));
+         }
+         const auto* world  = this->target_area.world;
+         const auto& gp_now = this->target_area.world_grid_pos;
+         this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
+            if (data.stub)
+               return;
+            auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
+            if (cell) {
+               if constexpr (debug_log_area_load_unload) {
+                  qDebug("[Worldedit] Loading cell at (%d, %d) due to grid size increasing...", (gp_now.x + x), (gp_now.y + y));
+               }
+               this->_load_cell(cell, x, y);
+            }
+         });
+         this->_set_current_area_impl(this->target_area.world, this->target_area.world_grid_pos.x, this->target_area.world_grid_pos.y);
+      }
+   }
+
    void worldedit::center_on_refr(dovah::form_stub& ref) {
       auto* cell = ref.get_parent_form();
       if (!cell || cell->formType != dovah::form_type::cell)
@@ -771,12 +848,12 @@ namespace dovahkit::subsystems {
       //
       DK3DInputHandler::get().setTargetView(&view);
       //
-      QObject::connect(&view, &DKVulkanView::rendererReady, this, &worldedit::_update_default_land_textures, Qt::UniqueConnection);
+      QObject::connect(&view, &DKVulkanView::rendererReady, this, &worldedit::_on_renderer_attached, Qt::UniqueConnection);
       if (auto* sr = view.surfaceRenderer()) {
          //
          // Renderer is already ready.
          //
-         this->_update_default_land_textures();
+         this->_on_renderer_attached();
       }
       //
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &worldedit::_on_renderer_lost);
@@ -1063,5 +1140,8 @@ namespace dovahkit::subsystems {
    void worldedit::replaceRefSelection(dovah::form_stub& stub) {
       this->deselectAllRefs();
       this->setRefSelectionState(stub, true);
+   }
+   void worldedit::setCellGridSize(int size) {
+      this->_resize_cell_grid(size);
    }
 }

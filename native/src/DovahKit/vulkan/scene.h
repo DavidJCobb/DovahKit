@@ -5,9 +5,9 @@
 #include "helpers/tuples/map_types.h"
 #include "helpers/class_map.h"
 #include "helpers/passkey.h"
+#include "./config/scene_limits.h"
 #include "./scene_entities/all_types.h"
 #include "./scene_entities/fif_sync_state.h"
-#include "./buffer.h"
 #include "./frustum.h"
 #include "./loaded_texture.h"
 #include "./loaded_texture_index.h"
@@ -49,8 +49,8 @@ namespace vulkanDK {
          } entities;
          //
          struct {
-            float  vertical_fov_degrees = 45.0F;
-            int8_t landscape_grid_side_length = 5;
+            float  vertical_fov_degrees      = 45.0F; // call scene::update_projection after setting
+            int8_t landscape_grid_side_count = config::initial_landscape_side_count; // must set via surface_renderer::set_landscape_grid_side_count
          } config;
          struct {
             VkExtent2D bounds = {};
@@ -63,10 +63,6 @@ namespace vulkanDK {
             glm::vec3 position = { 0, 0, 0 };
          } camera;
          scene_global_state global_state; // GPU-side state
-         //
-         struct {
-            buffer landscape_buffer; // indices; then all verts
-         } coalesced;
          scene_entities::fif_sync_state light_shadow_state;
 
          template<typename Entity> std::vector<Entity>& entities_of_type() {
@@ -75,8 +71,6 @@ namespace vulkanDK {
          template<typename Entity> const std::vector<Entity>& entities_of_type() const {
             return std::get<std::vector<Entity>>(this->entities.lists);
          }
-
-         void setup_landscape_buffer(surface_renderer&, size_t max_landscape_count);
 
          void update_projection(VkExtent2D render_area);
          void update_camera();
@@ -110,9 +104,6 @@ namespace vulkanDK {
       public:
          bool texture_dec_ref(renderer_passkey, loaded_texture&);
          bool texture_dec_ref(loaded_texture_index_passkey, size_t texture_index); // returns true if the texture will be marked for delete
-
-         size_t landscape_buffer_vertex_index(size_t landscape_index) const;
-         void update_single_landscape(surface_renderer&, size_t landscape_index);
    };
 }
 

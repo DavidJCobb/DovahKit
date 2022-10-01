@@ -170,7 +170,8 @@ namespace vulkanDK {
          constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_culling_data_type);
          buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
          this->owner->set_debug_object_name(
-            buf.handle, QString("Buffer: FIF %1 Frame Culling Data Buffer (%s)")
+            buf.handle,
+            QString("Buffer: FIF %1 Frame Culling Data Buffer (%2)")
                .arg(this->my_index)
                .arg(Entity::name_plural)
                .toStdString()
@@ -186,7 +187,8 @@ namespace vulkanDK {
          constexpr VkDeviceSize buffer_size = scene_entities::initial_cap_for_type<Entity> * sizeof(Entity::frame_drawing_data_type);
          buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(
-            buf.handle, QString("Buffer: FIF %1 Frame Drawing Data Buffer (%s)")
+            buf.handle,
+            QString("Buffer: FIF %1 Frame Drawing Data Buffer (%2)")
                .arg(this->my_index)
                .arg(Entity::name_plural)
                .toStdString()
@@ -204,6 +206,9 @@ namespace vulkanDK {
             memset(data, 0, buffer_size);
             buf.unmap_memory(data);
          }
+      });
+      this->coalesced_vibs.fixed_length.for_each([this]<typename Entity>(buffer& buf) {
+         this->_resize_scene_entity_coalesced_vib<Entity>();
       });
       {
          constexpr VkDeviceSize buffer_size = surface_renderer::shadow_caster_count * (6 * sizeof(glm::mat4));
@@ -297,6 +302,7 @@ namespace vulkanDK {
       this->indirect_draw_commands = {};
       this->idb_mesh_index_staging = {};
       this->idb_params_staging     = {};
+      this->coalesced_vibs  = {};
       this->shader_frustums = {};
       this->shader_params   = {};
       this->overlays = {};
@@ -333,10 +339,24 @@ namespace vulkanDK {
 
    void frame_in_flight::prepare_for_render() {
       this->_update_shader_global_scene_state();
-      this->_update_scene_frame_items<rendered_bounds>();
-      this->_update_scene_frame_items<rendered_landscape>();
-      this->_update_scene_frame_items<rendered_light>();
-      this->_update_scene_frame_items<rendered_mesh>();
+      scene_entities::all_types_with_variable_max_counts::for_each([this]<typename Entity>() {
+         auto& change_flag = this->state.scene_entity_max_count_changed.value_for<Entity>();
+         if (!change_flag)
+            return;
+         if constexpr (scene_entities::concepts::has_frame_culling_data<Entity> || scene_entities::concepts::has_frame_drawing_data<Entity>) {
+            this->_resize_frame_data_buffers<Entity>();
+         }
+         change_flag = false;
+      });
+      scene_entities::all_types_with_fixed_length_coalesced_vibs::for_each([this]<typename Entity>() {
+         if (this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>()) {
+            this->_resize_scene_entity_coalesced_vib<Entity>();
+         }
+         this->_update_scene_entity_coalesced_vib<Entity>();
+      });
+      scene_entities::all_types_that_are_drawn::for_each([this]<typename Entity>(){
+         this->_update_drawn_scene_entity_frame_data<Entity>();
+      });
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
       {
@@ -719,12 +739,30 @@ namespace vulkanDK {
          //
       }
 
-      void _record_landscape_draws(scene& scene, command_buffer& command_buffer) {
+      void _record_landscape_draws(const frame_in_flight& fif, const scene& scene, command_buffer& command_buffer) {
          auto command_handle = command_buffer.handle;
          //
-         VkDeviceSize offset = scene.landscape_buffer_vertex_index(0);
-         vkCmdBindVertexBuffers(command_handle, 0, 1, &scene.coalesced.landscape_buffer.handle, &offset);
-         vkCmdBindIndexBuffer(command_handle, scene.coalesced.landscape_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+         VkDeviceSize offset_i;
+         VkDeviceSize offset_v;
+         [](size_t landscape_index, VkDeviceSize& offset_i, VkDeviceSize& offset_v) constexpr -> void {
+            constexpr const auto& settings = rendered_landscape::coalesced_vib_settings;
+            static_assert(
+               settings.fixed_index_count && settings.fixed_vertex_count,
+               "Impossible to calculate non-fixed offsets without querying the max entity count on `scene`."
+            );
+            constexpr size_t i = settings.fixed_index_count  * sizeof(rendered_landscape::coalesced_index_type);
+            constexpr size_t v = settings.fixed_vertex_count * sizeof(rendered_landscape::coalesced_vertex_type);
+            if constexpr (settings.constant_shared_indices) {
+               offset_i = 0;
+               offset_v = i + (v * landscape_index);
+            } else {
+               offset_i = (i + v) * landscape_index;
+               offset_v = offset_i + i;
+            }
+         }(0, offset_i, offset_v);
+         auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
+         vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
+         vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
          //
          auto& list = scene.entities_of_type<rendered_landscape>();
          for (size_t i = 0; i < list.size(); ++i) {
@@ -788,7 +826,7 @@ namespace vulkanDK {
                0,
                std::array{ ds.scene_state, ds.all_landscapes }
             );
-            _record_landscape_draws(scene, command_buffer);
+            _record_landscape_draws(*this, scene, command_buffer);
          }
          command_buffer.end_render_pass();
          indirect_info.transfer_queue_ownership_to_compute(command_buffer.handle);
@@ -849,7 +887,7 @@ namespace vulkanDK {
                   0,
                   std::array{ ds.scene_state, ds.all_landscapes, ds.all_lights, ds.shadow_caster_map_render }
                );
-               _record_landscape_draws(scene, command_buffer);
+               _record_landscape_draws(*this, scene, command_buffer);
             }
             //
             if (i != surface_renderer::shadow_caster_count - 1)
@@ -990,7 +1028,7 @@ namespace vulkanDK {
                   ds.shadow_maps,
                }
             );
-            _record_landscape_draws(scene, command_buffer);
+            _record_landscape_draws(*this, scene, command_buffer);
             //
             // Debugging:
             //
@@ -1005,7 +1043,7 @@ namespace vulkanDK {
                //
                if (sr.debug.draw_landscape_wireframe) {
                   vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.handle);
-                  _record_landscape_draws(scene, command_buffer);
+                  _record_landscape_draws(*this, scene, command_buffer);
                }
                if (sr.debug.draw_landscape_normals) {
                   //
@@ -1014,7 +1052,7 @@ namespace vulkanDK {
                   //
                   if (const auto* ln_shader = sr.get_graphics_shader(surface_renderer::landscape_normals_shader_id)) {
                      vkCmdBindPipeline(command_handle, VK_PIPELINE_BIND_POINT_GRAPHICS, ln_shader->pipeline.handle);
-                     _record_landscape_draws(scene, command_buffer);
+                     _record_landscape_draws(*this, scene, command_buffer);
                   }
                }
             }
@@ -1436,5 +1474,18 @@ namespace vulkanDK {
       if constexpr (debug_log_scene_object_lifetimes) {
          qDebug("[vulkanDK::frame_in_flight::_update_shader_texture_descriptors] Invalidated command buffers.");
       }
+   }
+
+   [[nodiscard]] VkDevice frame_in_flight::_logical_device_handle() const {
+      return this->owner->logical_device;
+   }
+   [[nodiscard]] buffer frame_in_flight::_create_buffer(VkDeviceSize size, VkBufferUsageFlags u, VkMemoryPropertyFlags m) {
+      return this->owner->create_buffer(size, u, m);
+   }
+   [[nodiscard]] buffer frame_in_flight::_create_staging_buffer(VkDeviceSize size) {
+      return this->owner->create_staging_buffer(size);
+   }
+   void frame_in_flight::_set_debug_object_name(buffer& b, const char* name) {
+      this->owner->set_debug_object_name(b.handle, name);
    }
 }

@@ -231,6 +231,9 @@ namespace vulkanDK {
          bool needs_null_texture() const;
 
          [[nodiscard]] buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
+         [[nodiscard]] inline buffer create_staging_buffer(VkDeviceSize size) {
+            return this->create_buffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         }
          void set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name);
          template<typename T> void set_debug_object_name(T handle, const std::string& name) {
             this->set_debug_object_name((uint64_t)handle, debug_helper_typeof<T>, name);
@@ -274,6 +277,7 @@ namespace vulkanDK {
          void remove_nif(nifDK::file& model);
 
          void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
+         void set_landscape_grid_side_count(size_t);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);

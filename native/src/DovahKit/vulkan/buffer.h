@@ -32,6 +32,7 @@ namespace vulkanDK {
 
          void copy_from(const buffer& source);
          void copy_from(const buffer& source, VkDeviceSize);
+         void copy_from(const buffer& source, VkBufferCopy);
 
          void* map_memory(VkDeviceSize offset = 0, VkMemoryMapFlags = 0);
          void* map_memory(VkDeviceSize offset, VkDeviceSize length, VkMemoryMapFlags = 0);

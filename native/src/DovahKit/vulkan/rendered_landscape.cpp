@@ -12,6 +12,13 @@
 #include <QDebug>
 
 namespace vulkanDK {
+   /*static*/ void rendered_landscape::coalesce_constant_shared_indices_into(void* write_to) {
+      memcpy(write_to, rendered_landscape::quad_vertex_indices.data(), indices_per_quad * sizeof(coalesced_index_type));
+   }
+   void rendered_landscape::coalesce_vertices_into(void* write_to) const noexcept {
+      memcpy(write_to, this->vertices.data(), sizeof(coalesced_vertex_type) * vertices_per_mesh);
+   }
+
    void rendered_landscape::mark_for_delete() {
       base::_mark_for_delete<rendered_landscape>();
    }
@@ -99,15 +106,6 @@ namespace vulkanDK {
          }
       }
    }
-   void rendered_landscape::setup_vertex_data_at(void* dest) {
-      auto& vl = this->vertices;
-      auto  vs = loaded_form::total_vertex_count * sizeof(vertex_landscape);
-      memcpy((void*)dest, vl.data(), vs);
-   }
-
-   /*//
-   [[nodiscard]] VkDrawIndexedIndirectCommand rendered_landscape::make_indirect_draw_command() const;
-   //*/
 
    glm::vec3 rendered_landscape::local_vertex_position(int quad, size_t quad_vertex_index) const {
       quad_vertex_index = quad_vertex_index % vertices_per_quad;

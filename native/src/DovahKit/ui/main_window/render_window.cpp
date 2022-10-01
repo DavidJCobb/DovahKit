@@ -24,7 +24,9 @@
 
 #include <QBoxLayout>
 #include <QDialog>
+#include <QLabel>
 #include <QPushButton>
+#include <QSpinBox>
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
@@ -515,5 +517,21 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
       //
       this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* holder = new QWidget(this->toolbar);
+      auto* layout = new QHBoxLayout(holder);
+      layout->addWidget(new QLabel("uGrids: "));
+      auto* widget = new QSpinBox();
+      layout->addWidget(widget);
+      widget->setMinimum(1);
+      widget->setMaximum(25);
+      widget->setSingleStep(2);
+      widget->setValue(dovahkit::subsystems::worldedit::get().cell_grid_size());
+      QObject::connect(widget, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, view](int value) {
+         dovahkit::subsystems::worldedit::get().setCellGridSize(value);
+      });
+      this->toolbar->addWidget(holder);
    }
 }

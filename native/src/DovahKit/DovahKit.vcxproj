@@ -516,6 +516,7 @@
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="helpers\string\strieq_ascii.cpp" />
     <ClCompile Include="helpers\string\string_says_false.cpp" />
+    <ClCompile Include="helpers\widen_u16_to_u32.cpp" />
     <ClCompile Include="helpers\windows_environment.cpp" />
     <ClCompile Include="helpers\windows_ini.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
@@ -831,6 +832,7 @@
     <ClInclude Include="helpers\enum_flags.h" />
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
+    <ClInclude Include="helpers\offset_into.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
@@ -868,6 +870,7 @@
     <ClInclude Include="helpers\type_traits\value_type_of.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
+    <ClInclude Include="helpers\widen_u16_to_u32.h" />
     <ClInclude Include="nif\block.h" />
     <ClInclude Include="nif\blocks\bhkBoxShape.h" />
     <ClInclude Include="nif\blocks\bhkBvTreeShape.h" />
@@ -1015,6 +1018,7 @@
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustum.h" />
     <ClInclude Include="vulkan\graphics_shader.h" />
+    <ClInclude Include="vulkan\helpers\bundled_descriptor_buffer_write.h" />
     <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h" />
     <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />
     <ClInclude Include="vulkan\helpers\cubemap_helpers.h" />
@@ -1038,8 +1042,10 @@
     <ClInclude Include="vulkan\rendered_mesh.h" />
     <ClInclude Include="vulkan\render_pass.h" />
     <ClInclude Include="vulkan\scene.h" />
+    <ClInclude Include="vulkan\scene_entities\all_classes.h" />
     <ClInclude Include="vulkan\scene_entities\all_types.h" />
     <ClInclude Include="vulkan\scene_entities\base.h" />
+    <ClInclude Include="vulkan\scene_entities\coalesced_vib.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\has_frame_culling_data.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\has_frame_drawing_data.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_descriptors.h" />

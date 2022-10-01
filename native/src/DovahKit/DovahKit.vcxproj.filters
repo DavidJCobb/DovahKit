@@ -1869,6 +1869,9 @@
     <ClCompile Include="nif\types\bhkSpringDamperConstraintMotor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\widen_u16_to_u32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4152,6 +4155,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nif\types\hkConstraintType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\coalesced_vib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\widen_u16_to_u32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\offset_into.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\all_classes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\bundled_descriptor_buffer_write.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
