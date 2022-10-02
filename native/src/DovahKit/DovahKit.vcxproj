@@ -950,6 +950,7 @@
     <ClInclude Include="nif\blocks\NiTriShapeData.h" />
     <ClInclude Include="nif\blocks\NiTriStrips.h" />
     <ClInclude Include="nif\blocks\NiTriStripsData.h" />
+    <ClInclude Include="nif\blocks\_concepts.h" />
     <ClInclude Include="nif\blocks\_DKVulkanInterface.h" />
     <ClInclude Include="nif\detailed_notice.h" />
     <ClInclude Include="nif\notice_code_list.h" />

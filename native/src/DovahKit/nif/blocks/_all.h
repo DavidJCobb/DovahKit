@@ -1,7 +1,7 @@
 #pragma once
 #include <concepts>
 #include <string>
-#include "helpers/class_list.h"
+#include "helpers/class_array.h"
 #pragma region block types
    #include "unknown.h"
    //
@@ -83,7 +83,7 @@
 #pragma endregion
 
 namespace nifDK {
-   using all_block_types = cobb::class_list<
+   using all_block_types = cobb::class_array<
       block_types::unknown_block,
       //
       block_types::bhkBoxShape,
@@ -163,8 +163,6 @@ namespace nifDK {
       block_types::NiTriStrips,
       block_types::NiTriStripsData//,
    >;
-
-   template<typename T> concept block_type_has_name = requires {
-      { T::type_name } -> std::same_as<const char* const&>;
-   };
 }
+
+#include "./_concepts.h"

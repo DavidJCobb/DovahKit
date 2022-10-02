@@ -16,6 +16,7 @@
 #include "helpers/glm/type_traits.h"
 #include "detailed_notice.h"
 #include "file.h"
+#include "blocks/_concepts.h"
 #include "blocks/_factory.h"
 #include "blocks/unknown.h"
 #include "types/Float16.h"
@@ -79,8 +80,9 @@ namespace nifDK {
          file* subject = nullptr;
          detailed_notice error;
 
-         bool _read_ref(block*&);
+         void _read_ref(block*&);
          void _on_read_failure();
+         void _on_read_ref_mismatch(const char* expected, const char* actual);
 
          inline void _require_size(size_t s) {
             if (!this->is_in_bounds(s))
@@ -360,14 +362,13 @@ namespace nifDK {
          }
 
          template<typename Desired> requires std::is_polymorphic_v<Desired>
-         bool read_ref(Desired*& out) {
+         void read_ref(Desired*& out) {
             out = nullptr;
             //
             block* instance;
-            if (!this->_read_ref(instance))
-               return false;
+            this->_read_ref(instance);
             if (!instance)
-               return true;
+               return;
             //
             // Non-null reference. Validate the pointer's type.
             //
@@ -382,12 +383,23 @@ namespace nifDK {
                   // line support for A without immediately being obligated to implement 
                   // full support for B through F.
                   //
-                  return true;
+                  return;
                }
-               return false;
+               if constexpr (block_type_has_name<Desired>) {
+                  this->_on_read_ref_mismatch(
+                     Desired::type_name,
+                     get_block_typename(*instance)
+                  );
+               } else {
+                  this->_on_read_ref_mismatch(
+                     nullptr,
+                     get_block_typename(*instance)
+                  );
+               }
+               // exception will have been thrown by here
+               return;
             }
             out = casted;
-            return true;
          }
 
          void read_indexed_string(std::string&);

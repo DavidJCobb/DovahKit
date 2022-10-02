@@ -4208,6 +4208,9 @@
     <ClInclude Include="helpers\math\sqrt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nif\blocks\_concepts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

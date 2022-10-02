@@ -98,26 +98,34 @@ namespace nifDK {
          this->error.flags |= detailed_notice::flag::has_cause_block;
    }
 
-   bool file_reader::_read_ref(block*& out) {
+   void file_reader::_read_ref(block*& out) {
       out = nullptr;
       if (!this->is_in_bounds(4))
          this->_on_read_failure();
       int32_t index;
       this->unchecked_read(index);
       if (index == -1) // sentinel for "None"
-         return true;
+         return;
       //
       // NOTE: Refs should always point down the hierarchy; other types exist for back-references.
       //
       assert(this->subject && "You shouldn't be attempting to read refs except from a file's reader.");
       auto* instance = this->subject->block_by_index(index);
-      if (instance == nullptr)
-         return false;
+      if (instance == nullptr) {
+         this->raise_error(notice_code::block_ref_has_invalid_index);
+         throw read_error(this->error.code);
+      }
       out = instance;
-      return true;
+      return;
    }
    void file_reader::_on_read_failure() {
       this->raise_error(notice_code::stream_ended_early);
+      throw read_error(this->error.code);
+   }
+   void file_reader::_on_read_ref_mismatch(const char* expected, const char* actual) {
+      this->raise_error(notice_code::block_ref_has_incorrect_type);
+      this->error.typenames.expected = expected;
+      this->error.typenames.actual   = actual;
       throw read_error(this->error.code);
    }
 

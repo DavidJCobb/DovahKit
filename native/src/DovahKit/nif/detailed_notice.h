@@ -36,6 +36,10 @@ namespace nifDK {
       struct {
          std::vector<int32_t> block_indices;
       } relevant;
+      struct {
+         const char* expected = nullptr;
+         const char* actual   = nullptr;
+      } typenames;
 
       inline bool empty() const { return this->code == default_notice_code; }
    };

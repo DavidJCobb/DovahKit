@@ -58,6 +58,7 @@ namespace vulkanDK {
                   cast_shadows          = 0x00000004,
                   is_decal              = 0x00000008,
                   culled_by_application = 0x00000010,
+                  is_editor_marker      = 0x00000020, // is, or is inside of, any NiObjectNET with name "EditorMarker"
                };
                static constexpr uint32_t all_default_flags = cast_shadows;
             };

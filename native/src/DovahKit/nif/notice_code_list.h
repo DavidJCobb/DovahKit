@@ -22,6 +22,8 @@ namespace nifDK {
          unsupported_user_version_2   = 0x0000000D,
          havok_motor_invalid_type     = 0x0000000E,
          havok_constraint_invalid_target_count = 0x0000000F,
+         block_ref_has_incorrect_type = 0x00000010,
+         block_ref_has_invalid_index  = 0x00000011,
       };
    };
 }

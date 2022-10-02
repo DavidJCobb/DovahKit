@@ -2,6 +2,7 @@
 #include <chrono>
 #include <typeinfo>
 #include <QResource> // for loading shaders
+#include "helpers/string/strieq_ascii.h"
 #include "helpers/array_concat.h"
 //
 #include "DKVulkanInstance.h"
@@ -4192,9 +4193,9 @@ namespace vulkanDK {
          }
          //
          auto* ltex = land.default_quad_textures[i].get_form_stub();
-         if (!ltex)
-            continue;
-         _load_textures(sp.diffuse_base[i], sp.normals_base[i], *ltex);
+         if (ltex) {
+            _load_textures(sp.diffuse_base[i], sp.normals_base[i], *ltex);
+         }
          //
          auto& blends = land.alpha_layers_by_quad[i];
          for (auto& blend : blends) {
@@ -4314,15 +4315,19 @@ namespace vulkanDK {
          }
       }
       void _ni_triangles_to_mesh_triangles(const std::vector<nifDK::Triangle>& list, rendered_mesh& mesh) {
-         auto  size = list.size();
+         auto size = list.size();
          mesh.mesh_data.indices = vertex_index_list(size * 3, uint16_t(0));
          //
-         auto to = mesh.mesh_data.indices.as_thin_range();
-         for (size_t i = 0; i < size; ++i) {
-            auto& tri = list[i];
-            to[(i * 3) + 0] = tri.vertex_indices[0];
-            to[(i * 3) + 1] = tri.vertex_indices[1];
-            to[(i * 3) + 2] = tri.vertex_indices[2];
+         if constexpr (sizeof(nifDK::Triangle) == sizeof(uint16_t) * 3) {
+            memcpy(mesh.mesh_data.indices.thin_data(), list.data(), size * sizeof(uint16_t) * 3);
+         } else {
+            auto to = mesh.mesh_data.indices.as_thin_range();
+            for (size_t i = 0; i < size; ++i) {
+               auto& tri = list[i];
+               to[(i * 3) + 0] = tri.vertex_indices[0];
+               to[(i * 3) + 1] = tri.vertex_indices[1];
+               to[(i * 3) + 2] = tri.vertex_indices[2];
+            }
          }
       }
    }
@@ -4574,6 +4579,7 @@ namespace vulkanDK {
          struct _import_state {
             glm::mat4 transform;
             bool      is_culled = false;
+            bool      is_marker = false;
          };
          _import_state state;
          state.transform = glm_transform_from_beth(pos, rot, scale);
@@ -4583,6 +4589,9 @@ namespace vulkanDK {
             [](NiNode* node, _import_state& state) {
                state.transform  = state.transform * node->transform.to_matrix();
                state.is_culled |= ((node->flags & NiAVObject::flag::culled_by_application) != 0);
+               if (!state.is_marker) {
+                  state.is_marker = cobb::strieq_ascii(node->name, "EditorMarker");
+               }
             },
             [this, texture_index](NiAVObject* object, const _import_state& state) {
                if (&typeid(*object->parent) == &typeid(NiSwitchNode)) {
@@ -4604,6 +4613,13 @@ namespace vulkanDK {
                if (mesh) {
                   if (state.is_culled || (object->flags & NiAVObject::flag::culled_by_application))
                      mesh->mesh_flags |= rendered_mesh::mesh_flag::culled_by_application;
+                  //
+                  bool is_marker = state.is_marker;
+                  if (!is_marker) {
+                     is_marker = cobb::strieq_ascii(((NiObjectNET*)object)->name, "EditorMarker");
+                  }
+                  if (is_marker)
+                     mesh->mesh_flags |= rendered_mesh::mesh_flag::is_editor_marker;
                }
             }
          );

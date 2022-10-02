@@ -77,10 +77,19 @@ namespace cobb {
          
          template<auto Functor, typename... Args>
          static constexpr bool for_each_until_false(Args&&... args) {
-            return (Functor.template operator()<Types>(std::forward<Args>(args)...) || ...);
+            return (Functor.template operator()<Types>(std::forward<Args>(args)...) && ...);
          }
          template<typename Functor, typename... Args>
          static constexpr bool for_each_until_false(Functor&& f, Args&&... args) {
+            return (f.template operator()<Types>(std::forward<Args>(args)...) && ...);
+         }
+         
+         template<auto Functor, typename... Args>
+         static constexpr bool for_each_until_true(Args&&... args) {
+            return (Functor.template operator()<Types>(std::forward<Args>(args)...) || ...);
+         }
+         template<typename Functor, typename... Args>
+         static constexpr bool for_each_until_true(Functor&& f, Args&&... args) {
             return (f.template operator()<Types>(std::forward<Args>(args)...) || ...);
          }
 
