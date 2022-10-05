@@ -49,7 +49,7 @@ vec4 sample_diffuse(int texture_index) { // returns RGBA
    if (texture_index < 0) {
       //
       // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandDiffuseTexture. The 
-      // Creation Kit can serialize landscapes as being painted with texture index -1, 
+      // Creation Kit can serialize landscapes as being painted with a null land texture, 
       // which explicitly indicates that they should blend with the default texture.
       //
       texture_index = scene.default_land_diffuse_texture;
@@ -66,7 +66,7 @@ vec4 sample_normals(int texture_index) { // returns RGBA
    if (texture_index < 0) {
       //
       // This is a fallback to Skyrim.ini's [Landscape]sDefaultLandNormalTexture. The 
-      // Creation Kit can serialize landscapes as being painted with texture index -1, 
+      // Creation Kit can serialize landscapes as being painted with a null land texture, 
       // which explicitly indicates that they should blend with the default texture.
       //
       texture_index = scene.default_land_diffuse_texture;
