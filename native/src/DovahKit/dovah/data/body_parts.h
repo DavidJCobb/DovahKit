@@ -1,0 +1,38 @@
+#pragma once
+
+namespace dovah {
+   enum class body_part {
+      other,
+      head,
+      body,
+      spine_1,
+      spine_2,
+      left_arm_upper = 5,
+      left_arm_fore,
+      left_hand,
+      left_thigh,
+      left_calf,
+      left_foot,
+      right_arm_upper = 11,
+      right_arm_fore,
+      right_hand,
+      right_thigh,
+      right_calf,
+      right_foot,
+      tail            = 17,
+      shield          = 18,
+      quiver          = 19,
+      weapon          = 20,
+      ponytail,
+      wing,
+      pack,
+      chain,
+      addon_head      = 25,
+      addon_chest,
+      addon_arm,
+      addon_leg       = 28,
+      unused_29,
+      unused_30,
+      unused_31,
+   };
+}

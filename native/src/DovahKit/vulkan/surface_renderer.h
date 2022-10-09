@@ -72,6 +72,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type landscape_shader_id           = "LandColr";
          static constexpr graphics_shader::id_type shader_id_landscape_shadows_sun    = "LandSdwS";
          static constexpr graphics_shader::id_type shader_id_landscape_shadows_caster = "LandSdw0";
+         static constexpr graphics_shader::id_type landscape_border_shader_id    = "LandBrdr";
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
          static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // graphics_shader instance will not exist if geometry shaders aren't available on this hardware
 
@@ -311,6 +312,7 @@ namespace vulkanDK {
                void _setup_rendered_landscape_color_shader();
                void _setup_rendered_landscape_shadows_caster_shaders();
                void _setup_rendered_landscape_shadows_sun_shader();
+               void _setup_rendered_landscape_border_shader();
                void _setup_rendered_landscape_wireframe_shader();
                void _setup_rendered_landscape_normals_shader();
             void _setup_frustum_cull_shader();

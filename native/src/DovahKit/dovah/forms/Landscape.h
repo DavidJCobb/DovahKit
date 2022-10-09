@@ -78,14 +78,14 @@ namespace dovah::loaded_forms {
          template<typename T> using grid = cobb::corner_square_grid<T, vertices_per_side>;
 
          // Given a vertex index within a quad, retrieve a cell-relative position.
-         static void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
+         static constexpr void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
 
          // Given a quad-relative position for a vertex, retrieve a cell-relative position.
-         static void quad_coords_to_cell_coords(uint8_t quad, uint8_t& x, uint8_t& y);
+         static constexpr void quad_coords_to_cell_coords(uint8_t quad, uint8_t& x, uint8_t& y);
 
-         static bool quad_contains_cell_coords(uint8_t quad, uint8_t x, uint8_t y);
+         static constexpr bool quad_contains_cell_coords(uint8_t quad, uint8_t x, uint8_t y);
 
-         static void cell_coords_to_quad_coords(uint8_t quad, int8_t& x, int8_t& y); // negative == out-of-bounds
+         static constexpr void cell_coords_to_quad_coords(uint8_t quad, int8_t& x, int8_t& y); // negative == out-of-bounds
 
          struct vertex_color {
             uint8_t r = 255;
@@ -135,3 +135,5 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }
+
+#include "./Landscape.inl"

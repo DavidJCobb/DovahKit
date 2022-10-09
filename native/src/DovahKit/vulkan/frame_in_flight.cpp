@@ -743,10 +743,15 @@ namespace vulkanDK {
             if constexpr (settings.constant_shared_indices) {
                offset_i = 0;
                offset_v = i + (v * landscape_index);
+               if constexpr (settings.extra_shared_index_count > 0) {
+                  constexpr size_t esi = settings.extra_shared_index_count * sizeof(rendered_landscape::coalesced_index_type);
+                  offset_v += esi;
+               }
             } else {
                offset_i = (i + v) * landscape_index;
                offset_v = offset_i + i;
             }
+            offset_v += (offset_v % 4) ? (4 - (offset_v % 4)) : 0; // enforce alignment
          }(0, offset_i, offset_v);
          auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
          vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
@@ -758,7 +763,6 @@ namespace vulkanDK {
             if (!item.active())
                continue;
             for (size_t j = 0; j < 4; ++j) {
-               auto instance_index = i * 4 + j;
                vkCmdDrawIndexed(
                   command_handle,
                   (uint32_t)rendered_landscape::indices_per_quad,
@@ -768,6 +772,52 @@ namespace vulkanDK {
                   i * 4 + j
                );
             }
+         }
+      }
+
+      void _record_landscape_border_draws(const frame_in_flight& fif, const scene& scene, command_buffer& command_buffer) {
+         auto command_handle = command_buffer.handle;
+         //
+         VkDeviceSize offset_i;
+         VkDeviceSize offset_v;
+         [](size_t landscape_index, VkDeviceSize& offset_i, VkDeviceSize& offset_v) constexpr -> void {
+            constexpr const auto& settings = rendered_landscape::coalesced_vib_settings;
+            static_assert(
+               settings.fixed_index_count && settings.fixed_vertex_count,
+               "Impossible to calculate non-fixed offsets without querying the max entity count on `scene`."
+            );
+            constexpr size_t i = settings.fixed_index_count  * sizeof(rendered_landscape::coalesced_index_type);
+            constexpr size_t v = settings.fixed_vertex_count * sizeof(rendered_landscape::coalesced_vertex_type);
+            if constexpr (settings.constant_shared_indices) {
+               offset_i = i;
+               offset_v = i + (v * landscape_index);
+               if constexpr (settings.extra_shared_index_count > 0) {
+                  constexpr size_t esi = settings.extra_shared_index_count * sizeof(rendered_landscape::coalesced_index_type);
+                  offset_v += esi;
+               }
+            } else {
+               offset_i = (i + v) * landscape_index;
+               offset_v = offset_i + i;
+            }
+            offset_v += (offset_v % 4) ? (4 - (offset_v % 4)) : 0; // enforce alignment
+         }(0, offset_i, offset_v);
+         auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
+         vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
+         vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
+         //
+         auto& list = scene.entities_of_type<rendered_landscape>();
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& item = list[i];
+            if (!item.active())
+               continue;
+            vkCmdDrawIndexed(
+               command_handle,
+               (uint32_t)rendered_landscape::indices_per_line,
+               1,
+               0,
+               i * rendered_landscape::vertices_per_mesh,
+               i
+            );
          }
       }
    }
@@ -1017,6 +1067,21 @@ namespace vulkanDK {
                }
             );
             _record_landscape_draws(*this, scene, command_buffer);
+            {  // Borders
+
+               // TODO MAKE THIS SOMETHING WE CAN DISABLE
+
+               const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_border_shader_id);
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *shader,
+                  0,
+                  std::array{
+                     ds.scene_state,
+                     ds.all_landscapes,
+                  }
+               );
+               _record_landscape_border_draws(*this, scene, command_buffer);
+            }
             //
             // Debugging:
             //

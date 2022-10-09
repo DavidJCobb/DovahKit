@@ -10,9 +10,10 @@ namespace vulkanDK::scene_entities {
    struct coalesced_vib_settings {
       bool   enabled = false;
       //
-      bool   constant_shared_indices = false; // true if all entities have the exact same indices and those indices never change
-      size_t fixed_vertex_count      = 0;     // vertex count per entity; 0 if the vertex count can vary between different entities
-      size_t fixed_index_count       = 0;     // index  count per entity; 0 to use the default (same as vertex count)
+      bool   constant_shared_indices  = false; // true if all entities have the exact same indices and those indices never change
+      size_t extra_shared_index_count = 0;     // if `constant_shared_indices` is true, these are extra indices present between the shared indices and the vertices
+      size_t fixed_vertex_count       = 0;     // vertex count per entity; 0 if the vertex count can vary between different entities
+      size_t fixed_index_count        = 0;     // index  count per entity; 0 to use the default (same as vertex count)
    };
 
    // Base class for all scene entities.

@@ -4,7 +4,9 @@
 #include <type_traits>
 #include <glm/glm.hpp>
 #include "helpers/array_of_n_values.h"
+#include "dovah/forms/Landscape.h"
 #include "./_vulkan.h"
+#include "./helpers/land/vulkan_vertex_indices_for_outline.h"
 #include "./helpers/vertex_indices_for_quad_grid.h"
 #include "./buffer.h"
 #include "./loaded_texture_index.h"
@@ -30,7 +32,16 @@ namespace vulkanDK {
          static constexpr bool render_as_separated_quads = true;
       public:
          using loaded_form = dovah::loaded_forms::Landscape;
-         static constexpr size_t vertices_per_side = 33 + 1; // all quads overlap by one line of vertices on each axis; needed to avoid a gap in tris
+
+         static constexpr size_t cell_side_length = 4096;
+         static constexpr size_t vertex_distance = (cell_side_length / 32);
+
+         // All quads overlap by one line of vertices  on each axis;  this is needed to avoid a gap in tris. 
+         // In an ESP file, some vertex data is defined per-cell (e.g. heights) and some is defined per-quad 
+         // (e.g. texture blends).  We associate both sets of data with vertices in Vulkan, which means that 
+         // vertices at quad boundaries must be separate: two vertices that have the same position, but with 
+         // different texturing and blend information.
+         static constexpr size_t vertices_per_side = loaded_form::vertices_per_side + 1;
          static constexpr size_t vertices_per_mesh = vertices_per_side * vertices_per_side;
 
          static constexpr size_t vertices_per_quad_side  = 17;
@@ -42,17 +53,19 @@ namespace vulkanDK {
          static constexpr auto indices_per_quad    = std::tuple_size_v<decltype(quad_vertex_indices)>;
          using quad_vertex_index_type = decltype(quad_vertex_indices)::value_type;
 
-         static constexpr size_t cell_side_length = 4096;
-         static constexpr size_t vertex_distance  = (cell_side_length / 32);
+         static constexpr auto line_vertex_indices = helpers::land::line_vertex_indices;
+         static constexpr auto indices_per_line    = std::tuple_size_v<decltype(line_vertex_indices)>;
+         static_assert(std::is_same_v<decltype(line_vertex_indices)::value_type, quad_vertex_index_type>);
 
       #pragma region Scene entity configuration: coalescing
       public:
          static constexpr const auto coalesced_vib_settings = scene_entities::coalesced_vib_settings{
             .enabled = true,
             //
-            .constant_shared_indices = true,
-            .fixed_vertex_count      = vertices_per_mesh,
-            .fixed_index_count       = indices_per_quad,
+            .constant_shared_indices  = true,
+            .extra_shared_index_count = indices_per_line,
+            .fixed_vertex_count       = vertices_per_mesh,
+            .fixed_index_count        = indices_per_quad,
          };
          using coalesced_vertex_type = vertex_landscape;
          using coalesced_index_type  = quad_vertex_index_type;

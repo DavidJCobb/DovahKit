@@ -34,5 +34,7 @@
         <file>util/full-screen-triangle.vert.spv</file>
         <file>util/oit-composite.frag.spv</file>
         <file>util/scene-fog-color-far.frag.spv</file>
+        <file>rendered_landscape/border.frag.spv</file>
+        <file>rendered_landscape/border.vert.spv</file>
     </qresource>
 </RCC>

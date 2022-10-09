@@ -1,7 +1,9 @@
 #include "rendered_landscape.h"
+#include "helpers/offset_into.h"
 #include "dovah/forms/Landscape.h"
 #include "dovah/forms/LandTexture.h"
 #include "dovah/forms/TextureSet.h"
+#include "./helpers/land/vertex_index_conversions.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -13,7 +15,11 @@
 
 namespace vulkanDK {
    /*static*/ void rendered_landscape::coalesce_constant_shared_indices_into(void* write_to) {
-      memcpy(write_to, rendered_landscape::quad_vertex_indices.data(), indices_per_quad * sizeof(coalesced_index_type));
+      constexpr auto size_of_shared = quad_vertex_indices.size() * sizeof(coalesced_index_type);
+      constexpr auto size_of_extra  = line_vertex_indices.size() * sizeof(coalesced_index_type);
+      //
+      memcpy(write_to, quad_vertex_indices.data(), size_of_shared);
+      memcpy(cobb::offset_into(write_to, size_of_shared), line_vertex_indices.data(), size_of_extra);
    }
    void rendered_landscape::coalesce_vertices_into(void* write_to) const noexcept {
       memcpy(write_to, this->vertices.data(), sizeof(coalesced_vertex_type) * vertices_per_mesh);
@@ -32,7 +38,7 @@ namespace vulkanDK {
    }
 
    void rendered_landscape::import_vertex_data_from_form(const loaded_form& land) {
-      constexpr size_t centerline_index_src = 16;
+      constexpr size_t centerline_index_src = (loaded_form::vertices_per_side - 1) / 2;
       //
       auto& vl = this->vertices;
       for (size_t q = 0; q < 4; ++q) {
@@ -129,7 +135,7 @@ namespace vulkanDK {
       if (this->empty())
          return false;
       //
-      constexpr auto fourth_index_per_quad = ([]() {
+      constexpr auto fourth_index_per_quad = ([]() { // depends on tri handedness, etc.
          auto a = quad_vertex_indices[0];
          auto b = quad_vertex_indices[1];
          auto c = quad_vertex_indices[2];

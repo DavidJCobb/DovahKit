@@ -4211,6 +4211,15 @@
     <ClInclude Include="nif\blocks\_concepts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid_outline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\land\vertex_index_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\land\vulkan_vertex_indices_for_outline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4841,6 +4850,11 @@
     </None>
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="dovah\forms\Landscape.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="shaders\rendered_landscape\border.frag" />
+    <None Include="shaders\rendered_landscape\border.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

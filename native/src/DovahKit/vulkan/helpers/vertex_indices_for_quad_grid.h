@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <cstdint>
 
 namespace vulkanDK {
    template<size_t w, size_t h> extern constexpr size_t vertex_index_count_for_quad_grid = ([]() {

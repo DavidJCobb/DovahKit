@@ -1731,6 +1731,7 @@ namespace vulkanDK {
       this->_setup_rendered_landscape_color_shader();
       this->_setup_rendered_landscape_shadows_caster_shaders();
       this->_setup_rendered_landscape_shadows_sun_shader();
+      this->_setup_rendered_landscape_border_shader();
       this->_setup_rendered_landscape_wireframe_shader();
       this->_setup_rendered_landscape_normals_shader();
    }
@@ -1930,6 +1931,62 @@ namespace vulkanDK {
                .maxDepth = 1.0,
             },
          };
+         s->setup_pipeline_layout();
+      }
+      void surface_renderer::_setup_rendered_landscape_border_shader() {
+         auto* s = this->create_graphics_shader(landscape_border_shader_id);
+         s->set_render_pass(this->render_passes_by_name.main);
+         s->set_layout_info({
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.all_landscapes.handle,
+         });
+         //
+         auto& options = s->options;
+         //
+         shader_module* vert = this->load_shader_module("shaders/rendered_landscape/border.vert.spv");
+         shader_module* frag = this->load_shader_module("shaders/rendered_landscape/border.frag.spv");
+         {
+            assert(vert);
+            assert(frag);
+            this->set_debug_object_name(vert->handle, "Shader Module (Landscape Border Vert)");
+            this->set_debug_object_name(frag->handle, "Shader Module (Landscape Border Frag)");
+         }
+         //
+         options.stages = {
+            {
+               .module = frag,
+               .entry_point_name = "main",
+               .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+               .module = vert,
+               .entry_point_name = "main",
+               .stage = VK_SHADER_STAGE_VERTEX_BIT,
+            },
+         };
+         options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+         options.depth.comparison = VK_COMPARE_OP_LESS_OR_EQUAL; // include "equal" so the wireframe shows up over the actual landscape
+         if constexpr (config::use_inverted_depth) {
+            options.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
+         }
+         options.rasterization.cullMode = VK_CULL_MODE_NONE;
+         if (this->device_info->support.non_solid_polygon_fill_modes) {
+            options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+         } else {
+            //
+            // Rendering a bog-standard mesh as a wireframe isn't supported on this card? 
+            // We could construct a vertex buffer specifically designed for wireframes, 
+            // but instead, let's just fall back to a point cloud.
+            //
+            options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+         }
+         {
+            auto& vertex     = options.inputs.vertex;
+            auto  attributes = vertex_landscape::attribute_descriptions();
+            vertex.bindings.push_back(vertex_landscape::binding_description());
+            vertex.attributes.insert(vertex.attributes.end(), attributes.begin(), attributes.end());
+         }
+         //
          s->setup_pipeline_layout();
       }
       void surface_renderer::_setup_rendered_landscape_wireframe_shader() {

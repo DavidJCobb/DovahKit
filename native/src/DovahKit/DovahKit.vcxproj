@@ -1038,9 +1038,12 @@
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
     <ClInclude Include="vulkan\helpers\extract_frustum_normals.h" />
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
+    <ClInclude Include="vulkan\helpers\land\vertex_index_conversions.h" />
+    <ClInclude Include="vulkan\helpers\land\vulkan_vertex_indices_for_outline.h" />
     <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid.h" />
+    <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid_outline.h" />
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\loaded_texture_index.h" />
@@ -1767,6 +1770,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovah\forms\Landscape.inl" />
     <None Include="shaders\compute\culling\frustum.comp" />
     <None Include="shaders\compute\culling\frustum.comp.spv" />
     <None Include="shaders\compute\culling\shadows-caster.comp" />
@@ -1816,6 +1820,8 @@
     <None Include="shaders\rendered_bounds\pivot\color.frag.spv" />
     <None Include="shaders\rendered_bounds\pivot\color.vert" />
     <None Include="shaders\rendered_bounds\pivot\color.vert.spv" />
+    <None Include="shaders\rendered_landscape\border.frag" />
+    <None Include="shaders\rendered_landscape\border.vert" />
     <None Include="shaders\rendered_landscape\color.frag" />
     <None Include="shaders\rendered_landscape\color.frag.spv" />
     <None Include="shaders\rendered_landscape\color.fragment-input.glsl" />

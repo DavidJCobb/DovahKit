@@ -14,8 +14,8 @@
 namespace vulkanDK {
    namespace {
       struct _vib_size_info {
-         VkDeviceSize all_data      = 0;
-         VkDeviceSize all_indices   = 0;
+         VkDeviceSize all_data      = 0; // size of entire buffer
+         VkDeviceSize all_indices   = 0; // start offset for vertex data
          VkDeviceSize vb_per_entity = 0;
          VkDeviceSize ib_per_entity = 0;
       };
@@ -38,12 +38,15 @@ namespace vulkanDK {
             }
             if constexpr (!settings.constant_shared_indices) {
                si.all_indices = si.ib_per_entity * max_entity_count;
+               static_assert(settings.extra_shared_index_count == 0, "This feature is not supported when indices in general are not shared.");
             } else {
                si.all_indices   = si.ib_per_entity;
                si.ib_per_entity = 0;
+               si.all_indices   += sizeof(Entity::coalesced_index_type) * settings.extra_shared_index_count;
             }
-            si.all_data += si.all_indices;
          }
+         si.all_indices += (si.all_indices % 4) ? (4 - (si.all_indices % 4)) : 0; // align vertex data
+         si.all_data    += si.all_indices;
       }
    }
 
