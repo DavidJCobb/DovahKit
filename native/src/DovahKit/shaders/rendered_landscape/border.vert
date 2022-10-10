@@ -18,11 +18,15 @@ DECLARE_ALL_LANDSCAPES_PARAMS // landscapes[]
 
 #include "functions/calc_local_vertex_position.glsl"
 
-layout(location = 0) out VS_OUT {
-   flat int vs_out_is_alt; // TODO: don't make flat; interp within the frag shader
-};
+layout(location = 0) out vec4 out_color;
 
 void main() {
+   if ((scene.flags & SCENE_GLOBAL_STATE_FLAG_SHOW_LANDSCAPE_BORDERS) == 0) {
+      gl_Position = vec4(-2, -2, 0, 1); // off-screen i.e. skip drawing
+      out_color   = vec4(0, 0, 0, 0);
+      return;
+   }
+
    int vert_i33 = gl_VertexIndex % (34 * 34);
    int vert_i   = gl_VertexIndex % (17 * 17);
 
@@ -31,10 +35,10 @@ void main() {
    int land_y = vert_i / LANDSCAPE_QUAD_SIDE_VERTS + (LANDSCAPE_QUAD_SIDE_OFFSET * (quad / 2));
 
    int landscape_index = gl_InstanceIndex;
-
-   vs_out_is_alt = 0;
+   
+   out_color = vec4(scene.landscape_border_color_b, 1.0);
    if ((land_x % 2) != (land_y % 2)) {
-      vs_out_is_alt = 1;
+      out_color.rgb = scene.landscape_border_color_a;
    }
 
    vec3 pos_world = vec3(

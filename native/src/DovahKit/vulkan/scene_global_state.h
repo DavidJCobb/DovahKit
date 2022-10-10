@@ -11,6 +11,18 @@ namespace vulkanDK {
       //
       // Vulkan expects precise member aligmnent; see: <https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap15.html#interfaces-resources-layout>
       // 
+      
+      struct flag {
+         flag() = delete;
+         enum type : uint32_t {
+            show_landscape_borders = 0x00000001,
+         };
+
+         static constexpr const std::underlying_type_t<type> all_default = 0;
+      };
+      using flags_t = std::underlying_type_t<flag::type>;
+
+      // 
       // The "view" matrix isn't the camera matrix, nor the inverse of the camera matrix. 
       // Rather, it is the inverse of each part of the camera matrix:
       // 
@@ -27,6 +39,7 @@ namespace vulkanDK {
       alignas(16) glm::mat4 view;
       alignas(16) glm::mat4 proj;
       alignas(16) glm::vec3 camera_pos;
+      alignas( 4) flags_t   flags     = flag::all_default;
       alignas(16) glm::vec3 ambient_light_color = { 0, 0, 0 };
       alignas(16) glm::vec3 sun_dir   = glm::normalize(glm::vec3{ 0.1, 0, -1 }); // vector from sun to world
       alignas(16) glm::vec3 sun_color = { 1, 1, 1 };
@@ -42,7 +55,9 @@ namespace vulkanDK {
       alignas( 4) float     fog_max    = 1.0F; // max fog
       alignas( 4) float     interior_clip_distance = 0.0F; // maximum draw distance for interior cells only; unused if zero or negative
       //
-      alignas( 4) int32_t default_land_diffuse_texture = -1;
-      alignas( 4) int32_t default_land_normals_texture = -1;
+      alignas(16) glm::vec3 landscape_border_color_a     = { 1, 1, 0 };
+      alignas( 4) int32_t   default_land_diffuse_texture = -1;
+      alignas(16) glm::vec3 landscape_border_color_b     = { 0, 0, 0 };
+      alignas( 4) int32_t   default_land_normals_texture = -1;
    };
 }

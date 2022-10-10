@@ -4855,6 +4855,16 @@
     </None>
     <None Include="shaders\rendered_landscape\border.frag" />
     <None Include="shaders\rendered_landscape\border.vert" />
+    <None Include="shaders\rendered_landscape\border.frag.spv" />
+    <None Include="shaders\rendered_landscape\border.vert.spv" />
+    <None Include="shaders\rendered_landscape\normals.frag.spv" />
+    <None Include="shaders\rendered_landscape\normals.geom.spv" />
+    <None Include="shaders\rendered_landscape\normals.vert.spv" />
+    <None Include="shaders\rendered_landscape\shadows-caster.frag.spv" />
+    <None Include="shaders\rendered_landscape\shadows-caster.vert.spv" />
+    <None Include="shaders\rendered_landscape\shadows-sun.vert.spv" />
+    <None Include="shaders\rendered_landscape\wireframe.frag.spv" />
+    <None Include="shaders\rendered_landscape\wireframe.vert.spv" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

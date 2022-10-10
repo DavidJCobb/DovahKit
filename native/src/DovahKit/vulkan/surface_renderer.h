@@ -278,6 +278,7 @@ namespace vulkanDK {
          void remove_nif(nifDK::file& model);
 
          void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
+         void set_landscape_borders_visible(bool);
 
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);

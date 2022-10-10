@@ -4,41 +4,42 @@
 #include <QResource> // for loading shaders
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/array_concat.h"
+#include "helpers/miscellaneous.h" // cobb::edit_bit
 //
-#include "DKVulkanInstance.h"
-#include "compute_shader.h"
-#include "exceptions.h"
-#include "frame_in_flight.h"
-#include "physical_device.h"
-#include "queue_family_info.h"
-#include "render_pass.h"
-#include "shader_module.h"
-#include "vertex.h"
-#include "config/frames_in_flight.h"
-#include "config/scene_limits.h"
-#include "config/shadow_maps.h"
-#include "config/use_inverted_depth.h"
-#include "config/validation_layers.h"
-#include "helpers/convert_access_flags_and_pipeline_stages.h"
-#include "helpers/cubemap_helpers.h"
-#include "helpers/glm_transform_from_beth.h"
-#include "helpers/specialization_map_entry_for_member.h"
+#include "./DKVulkanInstance.h"
+#include "./compute_shader.h"
+#include "./exceptions.h"
+#include "./frame_in_flight.h"
+#include "./physical_device.h"
+#include "./queue_family_info.h"
+#include "./render_pass.h"
+#include "./shader_module.h"
+#include "./vertex.h"
+#include "./config/frames_in_flight.h"
+#include "./config/scene_limits.h"
+#include "./config/shadow_maps.h"
+#include "./config/use_inverted_depth.h"
+#include "./config/validation_layers.h"
+#include "./helpers/convert_access_flags_and_pipeline_stages.h"
+#include "./helpers/cubemap_helpers.h"
+#include "./helpers/glm_transform_from_beth.h"
+#include "./helpers/specialization_map_entry_for_member.h"
 
 // loading textures from files using Qt:
 #include <QBuffer>
 #include <QImage>
 #include <QImageReader>
 
-#include "loaded_texture.h"
-#include "rendered_mesh.h"
-#include "scene_global_state.h"
-#include "dds/texture.h"
+#include "./loaded_texture.h"
+#include "./rendered_mesh.h"
+#include "./scene_global_state.h"
+#include "./dds/texture.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "editor/subsystems/assets.h"
 //
 #include <QDir>
 #include <QFile>
-//
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -1970,16 +1971,7 @@ namespace vulkanDK {
             options.depth.comparison = VK_COMPARE_OP_GREATER_OR_EQUAL;
          }
          options.rasterization.cullMode = VK_CULL_MODE_NONE;
-         if (this->device_info->support.non_solid_polygon_fill_modes) {
-            options.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
-         } else {
-            //
-            // Rendering a bog-standard mesh as a wireframe isn't supported on this card? 
-            // We could construct a vertex buffer specifically designed for wireframes, 
-            // but instead, let's just fall back to a point cloud.
-            //
-            options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-         }
+         options.inputs.triangles.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
          {
             auto& vertex     = options.inputs.vertex;
             auto  attributes = vertex_landscape::attribute_descriptions();
@@ -4772,6 +4764,9 @@ namespace vulkanDK {
             this->scene.entities_of_type<loaded_texture>()[ti].flags |= loaded_texture::flag::is_default_land_texture;
          }
       }
+   }
+   void surface_renderer::set_landscape_borders_visible(bool v) {
+      cobb::edit_bit(this->scene.global_state.flags, scene_global_state::flag::show_landscape_borders, v);
    }
 
    rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {

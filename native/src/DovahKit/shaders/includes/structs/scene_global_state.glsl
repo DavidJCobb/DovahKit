@@ -8,6 +8,7 @@ struct scene_global_state {
    mat4 view;
    mat4 proj;
    vec3 camera_pos;
+   int  flags;
    vec3 ambient_light_color;
    vec3 sun_dir;
    vec3 sun_color;
@@ -23,8 +24,12 @@ struct scene_global_state {
    float fog_max;
    float interior_clip_distance;
    //
-   int default_land_diffuse_texture;
-   int default_land_normals_texture;
+   vec3 landscape_border_color_a;
+   int  default_land_diffuse_texture;
+   vec3 landscape_border_color_b;
+   int  default_land_normals_texture;
 };
+
+#define SCENE_GLOBAL_STATE_FLAG_SHOW_LANDSCAPE_BORDERS 0x00000001
 
 #endif

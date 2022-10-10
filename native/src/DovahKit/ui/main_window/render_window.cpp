@@ -522,7 +522,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    {
       auto* holder = new QWidget(this->toolbar);
       auto* layout = new QHBoxLayout(holder);
-      layout->addWidget(new QLabel("uGrids: "));
+      layout->addWidget(new QLabel("uGrids:  "));
       auto* widget = new QSpinBox();
       layout->addWidget(widget);
       widget->setMinimum(1);
@@ -533,5 +533,16 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          dovahkit::subsystems::worldedit::get().setCellGridSize(value);
       });
       this->toolbar->addWidget(holder);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Land borders");
+      button->setCheckable(true);
+      QObject::connect(button, &QAbstractButton::clicked, this, [view, button]() {
+         view->surfaceRenderer()->set_landscape_borders_visible(button->isChecked());
+      });
+      //
+      this->toolbar->addWidget(button);
    }
 }
