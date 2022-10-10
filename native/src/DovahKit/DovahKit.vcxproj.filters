@@ -4220,6 +4220,12 @@
     <ClInclude Include="vulkan\helpers\land\vulkan_vertex_indices_for_outline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\coalesced_vib_settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\traits\coalesced_vib_fixed_size_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -1,13 +1,14 @@
 #include "frame_in_flight.h"
 #include <cassert>
 #include "helpers/memset.h"
-#include "compute_shader.h"
-#include "exceptions.h"
-#include "surface_renderer.h"
-#include "config/scene_limits.h"
-#include "config/shadow_maps.h"
-#include "config/use_inverted_depth.h"
-#include "helpers/extract_frustum_normals.h"
+#include "./compute_shader.h"
+#include "./exceptions.h"
+#include "./surface_renderer.h"
+#include "./config/scene_limits.h"
+#include "./config/shadow_maps.h"
+#include "./config/use_inverted_depth.h"
+#include "./helpers/extract_frustum_normals.h"
+#include "./scene_entities/traits/coalesced_vib_fixed_size_info.h"
 
 namespace {
    static constexpr bool debug_log_scene_object_lifetimes = false;
@@ -730,32 +731,15 @@ namespace vulkanDK {
       void _record_landscape_draws(const frame_in_flight& fif, const scene& scene, command_buffer& command_buffer) {
          auto command_handle = command_buffer.handle;
          //
-         VkDeviceSize offset_i;
-         VkDeviceSize offset_v;
-         [](size_t landscape_index, VkDeviceSize& offset_i, VkDeviceSize& offset_v) constexpr -> void {
-            constexpr const auto& settings = rendered_landscape::coalesced_vib_settings;
-            static_assert(
-               settings.fixed_index_count && settings.fixed_vertex_count,
-               "Impossible to calculate non-fixed offsets without querying the max entity count on `scene`."
-            );
-            constexpr size_t i = settings.fixed_index_count  * sizeof(rendered_landscape::coalesced_index_type);
-            constexpr size_t v = settings.fixed_vertex_count * sizeof(rendered_landscape::coalesced_vertex_type);
-            if constexpr (settings.constant_shared_indices) {
-               offset_i = 0;
-               offset_v = i + (v * landscape_index);
-               if constexpr (settings.extra_shared_index_count > 0) {
-                  constexpr size_t esi = settings.extra_shared_index_count * sizeof(rendered_landscape::coalesced_index_type);
-                  offset_v += esi;
-               }
-            } else {
-               offset_i = (i + v) * landscape_index;
-               offset_v = offset_i + i;
-            }
-            offset_v += (offset_v % 4) ? (4 - (offset_v % 4)) : 0; // enforce alignment
-         }(0, offset_i, offset_v);
-         auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
-         vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
-         vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
+         {
+            constexpr const auto size_info = vulkanDK::scene_entities::traits::coalesced_vib_fixed_size_info<rendered_landscape>();
+            //
+            VkDeviceSize offset_i = 0;
+            VkDeviceSize offset_v = size_info.vertices_offset;
+            auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
+            vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
+            vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
+         }
          //
          auto& list = scene.entities_of_type<rendered_landscape>();
          for (size_t i = 0; i < list.size(); ++i) {
@@ -778,32 +762,15 @@ namespace vulkanDK {
       void _record_landscape_border_draws(const frame_in_flight& fif, const scene& scene, command_buffer& command_buffer) {
          auto command_handle = command_buffer.handle;
          //
-         VkDeviceSize offset_i;
-         VkDeviceSize offset_v;
-         [](size_t landscape_index, VkDeviceSize& offset_i, VkDeviceSize& offset_v) constexpr -> void {
-            constexpr const auto& settings = rendered_landscape::coalesced_vib_settings;
-            static_assert(
-               settings.fixed_index_count && settings.fixed_vertex_count,
-               "Impossible to calculate non-fixed offsets without querying the max entity count on `scene`."
-            );
-            constexpr size_t i = settings.fixed_index_count  * sizeof(rendered_landscape::coalesced_index_type);
-            constexpr size_t v = settings.fixed_vertex_count * sizeof(rendered_landscape::coalesced_vertex_type);
-            if constexpr (settings.constant_shared_indices) {
-               offset_i = i;
-               offset_v = i + (v * landscape_index);
-               if constexpr (settings.extra_shared_index_count > 0) {
-                  constexpr size_t esi = settings.extra_shared_index_count * sizeof(rendered_landscape::coalesced_index_type);
-                  offset_v += esi;
-               }
-            } else {
-               offset_i = (i + v) * landscape_index;
-               offset_v = offset_i + i;
-            }
-            offset_v += (offset_v % 4) ? (4 - (offset_v % 4)) : 0; // enforce alignment
-         }(0, offset_i, offset_v);
-         auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
-         vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
-         vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
+         {
+            constexpr const auto size_info = vulkanDK::scene_entities::traits::coalesced_vib_fixed_size_info<rendered_landscape>();
+            //
+            VkDeviceSize offset_i = size_info.additional_shared_index_sets[0].offset;
+            VkDeviceSize offset_v = size_info.vertices_offset;
+            auto& land_vib = fif.coalesced_vibs.fixed_length.value_for<rendered_landscape>();
+            vkCmdBindVertexBuffers(command_handle, 0, 1, &land_vib.handle, &offset_v);
+            vkCmdBindIndexBuffer(command_handle, land_vib.handle, offset_i, VK_INDEX_TYPE_UINT16);
+         }
          //
          auto& list = scene.entities_of_type<rendered_landscape>();
          for (size_t i = 0; i < list.size(); ++i) {

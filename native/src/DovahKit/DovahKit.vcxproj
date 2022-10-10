@@ -1062,6 +1062,7 @@
     <ClInclude Include="vulkan\scene_entities\all_types.h" />
     <ClInclude Include="vulkan\scene_entities\base.h" />
     <ClInclude Include="vulkan\scene_entities\coalesced_vib.h" />
+    <ClInclude Include="vulkan\scene_entities\coalesced_vib_settings.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\has_frame_culling_data.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\has_frame_drawing_data.h" />
     <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_descriptors.h" />
@@ -1070,6 +1071,7 @@
     <ClInclude Include="vulkan\scene_entities\life_state.h" />
     <ClInclude Include="vulkan\scene_entities\scene_limits.h" />
     <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h" />
+    <ClInclude Include="vulkan\scene_entities\traits\coalesced_vib_fixed_size_info.h" />
     <ClInclude Include="vulkan\scene_entities\traits\owned_gpu_resource_type_of.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\scene_entity_handle.h" />

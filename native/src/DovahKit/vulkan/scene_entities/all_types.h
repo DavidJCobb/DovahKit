@@ -20,9 +20,9 @@ namespace vulkanDK::scene_entities {
       return T::is_drawn && T::coalesced_vib_settings.enabled;
    } > ;
    using all_types_with_fixed_length_coalesced_vibs = all_types::filter_types<[]<typename T>() -> bool {
-      return all_types_with_coalesced_vibs::contains_type<T> && T::coalesced_vib_settings.fixed_vertex_count != 0;
+      return all_types_with_coalesced_vibs::contains_type<T> && T::coalesced_vib_settings.is_fixed_size();
    }>;
    using all_types_with_variable_length_coalesced_vibs = all_types::filter_types < []<typename T>() -> bool {
-      return all_types_with_coalesced_vibs::contains_type<T> && T::coalesced_vib_settings.fixed_vertex_count == 0;
+      return all_types_with_coalesced_vibs::contains_type<T> && !T::coalesced_vib_settings.is_fixed_size();
    } > ;
 }

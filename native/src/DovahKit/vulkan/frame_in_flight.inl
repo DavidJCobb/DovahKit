@@ -10,46 +10,9 @@
 #include "./scene_entities/concepts/has_frame_culling_data.h"
 #include "./scene_entities/concepts/has_frame_drawing_data.h"
 #include "./scene_entities/concepts/owns_gpu_resources.h"
+#include "./scene_entities/traits/coalesced_vib_fixed_size_info.h"
 
 namespace vulkanDK {
-   namespace {
-      struct _vib_size_info {
-         VkDeviceSize all_data      = 0; // size of entire buffer
-         VkDeviceSize all_indices   = 0; // start offset for vertex data
-         VkDeviceSize vb_per_entity = 0;
-         VkDeviceSize ib_per_entity = 0;
-      };
-
-      template<typename Entity>
-      void _get_vib_sizes(size_t max_entity_count, _vib_size_info& si) {
-         constexpr const auto& settings = Entity::coalesced_vib_settings;
-
-         si.vb_per_entity = sizeof(Entity::coalesced_vertex_type) * settings.fixed_vertex_count;
-         si.ib_per_entity = 0;
-
-         si.all_data    = max_entity_count * si.vb_per_entity;
-         si.all_indices = 0;
-         {
-            si.ib_per_entity = 0;
-            if constexpr (settings.fixed_index_count > 0) {
-               si.ib_per_entity += sizeof(Entity::coalesced_index_type) * settings.fixed_index_count;
-            } else {
-               si.ib_per_entity += sizeof(Entity::coalesced_index_type) * settings.fixed_vertex_count;
-            }
-            if constexpr (!settings.constant_shared_indices) {
-               si.all_indices = si.ib_per_entity * max_entity_count;
-               static_assert(settings.extra_shared_index_count == 0, "This feature is not supported when indices in general are not shared.");
-            } else {
-               si.all_indices   = si.ib_per_entity;
-               si.ib_per_entity = 0;
-               si.all_indices   += sizeof(Entity::coalesced_index_type) * settings.extra_shared_index_count;
-            }
-         }
-         si.all_indices += (si.all_indices % 4) ? (4 - (si.all_indices % 4)) : 0; // align vertex data
-         si.all_data    += si.all_indices;
-      }
-   }
-
    template<typename Entity>
    void frame_in_flight::_allocate_scene_entity_coalesced_vib() {
       constexpr const auto& settings = Entity::coalesced_vib_settings;
@@ -59,10 +22,9 @@ namespace vulkanDK {
          auto& buffer    = this->coalesced_vibs.fixed_length.value_for<Entity>();
          auto  max_count = scene_entities::max_count_for_type<Entity>;
 
-         _vib_size_info sizes;
-         _get_vib_sizes<Entity>(max_count, sizes);
+         constexpr auto sizes = scene_entities::traits::coalesced_vib_fixed_size_info<Entity>();
 
-         buffer = this->_create_buffer(sizes.all_data, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+         buffer = this->_create_buffer(sizes.total_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          this->_set_debug_object_name(
             buffer,
             QString("Buffer: FIF %1 Coalesced VIB Buffer, Fixed-Length (%1)")
@@ -73,7 +35,7 @@ namespace vulkanDK {
          );
 
          if constexpr (settings.constant_shared_indices) {
-            auto  staging = this->_create_staging_buffer(sizes.all_indices);
+            auto  staging = this->_create_staging_buffer(sizes.shared_indices_size);
             void* data    = staging.map_memory();
             Entity::coalesce_constant_shared_indices_into(data);
             staging.unmap_memory(data);
@@ -123,8 +85,7 @@ namespace vulkanDK {
 
          auto& coalesced_vib = this->coalesced_vibs.fixed_length.value_for<Entity>();
 
-         _vib_size_info sizes;
-         _get_vib_sizes<Entity>(scene_entities::max_count_for_type<Entity>, sizes);
+         constexpr auto sizes = scene_entities::traits::coalesced_vib_fixed_size_info<Entity>();
 
          //
          // We're only going to copy over everything at and after the first out-of-date entity, 
@@ -134,11 +95,11 @@ namespace vulkanDK {
 
          size_t count_to_update = (count - first_dirty);
          buffer staging_i;
-         buffer staging_v = this->_create_staging_buffer(sizes.vb_per_entity * count_to_update);
+         buffer staging_v = this->_create_staging_buffer(sizes.verts_bytes_per_entity * count_to_update);
          void*  memory_i;
          void*  memory_v  = staging_v.map_memory();
          if constexpr (!settings.constant_shared_indices) {
-            staging_i = this->_create_staging_buffer(sizes.ib_per_entity * count_to_update);
+            staging_i = this->_create_staging_buffer(sizes.index_bytes_per_entity * count_to_update);
             memory_i  = staging_i.map_memory();
          }
          
@@ -158,9 +119,9 @@ namespace vulkanDK {
             //*/
 
             if constexpr (!settings.constant_shared_indices) {
-               item.coalesce_indices_into(cobb::offset_into(memory_i, (i - first_dirty) * sizes.ib_per_entity));
+               item.coalesce_indices_into(cobb::offset_into(memory_i, (i - first_dirty) * sizes.index_bytes_per_entity));
             }
-            item.coalesce_vertices_into(cobb::offset_into(memory_v, (i - first_dirty) * sizes.vb_per_entity));
+            item.coalesce_vertices_into(cobb::offset_into(memory_v, (i - first_dirty) * sizes.verts_bytes_per_entity));
             
             item.lifetime.coalescing.sync_state.set_up_to_date(this->my_index);
          }
@@ -173,14 +134,14 @@ namespace vulkanDK {
          if constexpr (!settings.constant_shared_indices) {
             coalesced_vib.copy_from(staging_i, VkBufferCopy{
                .srcOffset = 0,
-               .dstOffset = (first_dirty * sizes.ib_per_entity),
-               .size = sizes.ib_per_entity * count_to_update,
+               .dstOffset = (first_dirty * sizes.index_bytes_per_entity),
+               .size = sizes.index_bytes_per_entity * count_to_update,
             });
          }
          coalesced_vib.copy_from(staging_v, VkBufferCopy{
             .srcOffset = 0,
-            .dstOffset = sizes.all_indices + (first_dirty * sizes.vb_per_entity),
-            .size      = sizes.vb_per_entity * count_to_update,
+            .dstOffset = sizes.vertices_offset + (first_dirty * sizes.verts_bytes_per_entity),
+            .size      = sizes.verts_bytes_per_entity * count_to_update,
          });
       } else {
          static_assert(scene_entities::all_types_with_fixed_length_coalesced_vibs::contains_type<Entity>, "VARIABLE-LENGTH COALESCED VIBS NOT IMPLEMENTED");

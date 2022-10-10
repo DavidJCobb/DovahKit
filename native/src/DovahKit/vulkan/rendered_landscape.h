@@ -59,13 +59,15 @@ namespace vulkanDK {
 
       #pragma region Scene entity configuration: coalescing
       public:
-         static constexpr const auto coalesced_vib_settings = scene_entities::coalesced_vib_settings{
+         static constexpr const auto coalesced_vib_settings = scene_entities::coalesced_vib_settings<1>{
             .enabled = true,
             //
-            .constant_shared_indices  = true,
-            .extra_shared_index_count = indices_per_line,
-            .fixed_vertex_count       = vertices_per_mesh,
-            .fixed_index_count        = indices_per_quad,
+            .additional_shared_index_sets = {
+               { indices_per_line },
+            },
+            .constant_shared_indices = true,
+            .fixed_vertex_count      = vertices_per_mesh,
+            .fixed_index_count       = indices_per_quad,
          };
          using coalesced_vertex_type = vertex_landscape;
          using coalesced_index_type  = quad_vertex_index_type;
