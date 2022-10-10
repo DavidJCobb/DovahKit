@@ -7,6 +7,12 @@ namespace DK3D::inputs {
       result.button.press_type = mod;
       return result;
    }
+   /*static*/ bound_input bound_input::from_key(Qt::Key k, button_press_type mod) {
+      bound_input result;
+      result.button.key        = k;
+      result.button.press_type = mod;
+      return result;
+   }
    /*static*/ bound_input bound_input::from_mouse_button(Qt::MouseButton b, button_press_type mod) {
       bound_input result;
       result.button.mouse      = b;

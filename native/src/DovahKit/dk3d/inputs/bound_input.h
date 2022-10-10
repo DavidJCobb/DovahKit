@@ -26,6 +26,7 @@ namespace DK3D::inputs {
       }
 
       static bound_input from_key(QChar, button_press_type mod = button_press_type::tap);
+      static bound_input from_key(Qt::Key, button_press_type mod = button_press_type::tap);
       static bound_input from_mouse_button(Qt::MouseButton, button_press_type mod = button_press_type::tap);
       static bound_input from_xinput_button(xinput_button, button_press_type mod = button_press_type::tap);
    };

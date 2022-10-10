@@ -6,6 +6,7 @@
 #include "../chrono.h"
 
 #include "attempt_on_screen_selection.h"
+#include "debug_dump_landscape_details.h"
 #include "debug_log.h"
 #include "debug_placeholder.h"
 #include "modify_camera_speed_flags.h"
@@ -15,6 +16,7 @@
 namespace DK3D {
    using all_tools = cobb::class_array<
       tools::attempt_on_screen_selection,
+      tools::debug_dump_landscape_details,
       tools::debug_log,
       tools::debug_placeholder,
       tools::modify_camera_speed_flags,

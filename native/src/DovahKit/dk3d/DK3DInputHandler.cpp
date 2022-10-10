@@ -107,6 +107,14 @@ DK3DInputHandler::DK3DInputHandler() {
                }
             )));
          }
+         root->append(*(new binds::nodes::input(
+            tr("Boost"),
+            DK3D::inputs::bound_input::from_key(Qt::Key::Key_Shift, DK3D::button_press_type::while_down),
+            &tools::modify_camera_speed_flags::get(),
+            tools::modify_camera_speed_flags::options{
+               .boost = bool_operation::set_true,
+            }
+         )));
       }
       //
       root->append(*(new binds::nodes::input(
@@ -125,6 +133,14 @@ DK3DInputHandler::DK3DInputHandler() {
          tools::attempt_on_screen_selection::options{
             .operation = selection_operation::toggle,
             .position  = pointer_position_type::mouse,
+         }
+      )));
+      root->append(*(new binds::nodes::input(
+         tr("DEBUG Landscape at Click"),
+         DK3D::inputs::bound_input::from_mouse_button(Qt::MouseButton::MiddleButton, DK3D::button_press_type::tap),
+         &tools::debug_dump_landscape_details::get(),
+         tools::debug_dump_landscape_details::options{
+            .position = pointer_position_type::mouse,
          }
       )));
    }

@@ -12,6 +12,7 @@
 #include "./frame_in_flight.h"
 #include "./physical_device.h"
 #include "./queue_family_info.h"
+#include "./raycast.h"
 #include "./render_pass.h"
 #include "./shader_module.h"
 #include "./vertex.h"
@@ -4161,6 +4162,34 @@ namespace vulkanDK {
       // If we reach this point, then there's nothing else obstructing the hit mesh.
       //
       return rendered_mesh_handle(*this, nearest);
+   }
+   void surface_renderer::do_raycast(raycast& rc) {
+      {
+         size_t nearest  = -1;
+         //
+         const auto& list = this->scene.entities_of_type<rendered_mesh>();
+         for (size_t i = 0; i < list.size(); ++i) {
+            const auto& entity = list[i];
+            auto hit = entity.do_raycast(rc);
+            if (rc.receive_hit(hit))
+               nearest = i;
+         }
+         if (nearest != -1)
+            rc.result.entity = rendered_mesh_handle{ *this, nearest };
+      }
+      {
+         size_t nearest = -1;
+         //
+         const auto& list = this->scene.entities_of_type<rendered_landscape>();
+         for (size_t i = 0; i < list.size(); ++i) {
+            const auto& entity = list[i];
+            auto hit = entity.do_raycast(rc);
+            if (rc.receive_hit(hit))
+               nearest = i;
+         }
+         if (nearest != -1)
+            rc.result.entity = rendered_landscape_handle{ *this, nearest };
+      }
    }
 
    rendered_bounds_handle surface_renderer::add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform) {

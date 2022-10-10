@@ -1875,6 +1875,12 @@
     <ClCompile Include="helpers\math\sincos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\raycast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dk3d\tools\debug_dump_landscape_details.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4224,6 +4230,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\scene_entities\traits\coalesced_vib_fixed_size_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\raycast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dk3d\tools\debug_dump_landscape_details.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

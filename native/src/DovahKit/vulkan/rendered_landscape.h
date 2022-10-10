@@ -19,6 +19,11 @@ namespace dovah::loaded_forms {
 }
 
 namespace vulkanDK {
+   class  raycast;
+   struct raycast_hit_data;
+}
+
+namespace vulkanDK {
    class rendered_landscape : public scene_entities::base {
       public:
          static constexpr const char* name_single = "landscape";
@@ -115,5 +120,7 @@ namespace vulkanDK {
 
          // World-relative raycasts (uses the mesh's transform):
          bool ray_intersects(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
+
+         raycast_hit_data do_raycast(const raycast&) const;
    };
 }

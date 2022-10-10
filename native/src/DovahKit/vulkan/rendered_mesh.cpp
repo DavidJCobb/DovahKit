@@ -1,12 +1,14 @@
 #include "rendered_mesh.h"
 #include "../helpers/math.h"
 #include "nif/file.h"
+#include "./raycast.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/normal.hpp>
 
 namespace {
    bool ray_intersects_obb(
@@ -305,5 +307,59 @@ namespace vulkanDK {
             return false;
       }
       return this->ray_intersects_shape(ray_origin, ray_direction, hit_distance);
+   }
+
+   raycast_hit_data rendered_mesh::do_raycast(const raycast& rc) const {
+      if (!this->active())
+         return {};
+
+      if (!this->ray_intersects_bounding_sphere(rc.origin, rc.direction))
+         return {};
+      if (this->mesh_data.bounding_sphere.radius_sq > (10000 * 10000)) {
+         //
+         // Massive triangles can cause ray/triangle intersection checks to behave 
+         // erratically and produce both false positives and false negatives. Let's 
+         // be a little more certain before we resort to trying them.
+         //
+         float hit_distance;
+         if (!ray_intersects_obb(rc.origin, rc.direction, this->mesh_data.bounding_box.min, this->mesh_data.bounding_box.max, this->transform(), hit_distance))
+            return {};
+      }
+
+      raycast_hit_data hit = {};
+
+      auto ray_direction = glm::normalize(rc.direction);
+
+      auto& list = this->mesh_data.indices;
+      auto& vert = this->mesh_data.vertices;
+      for (size_t i = 0; i + 2 < list.size(); i += 3) {
+         std::array<uint32_t, 3> indices = list.triangle_from(i);
+         glm::vec3 a = this->transform() * glm::vec4(vert[indices[0]].pos, 1.0F);
+         glm::vec3 b = this->transform() * glm::vec4(vert[indices[1]].pos, 1.0F);
+         glm::vec3 c = this->transform() * glm::vec4(vert[indices[2]].pos, 1.0F);
+         //
+         glm::vec2 bary_position;
+         float     distance;
+         //
+         bool result = glm::intersectRayTriangle(
+            rc.origin,
+            ray_direction,
+            a,
+            b,
+            c,
+            bary_position,
+            distance
+         );
+         if (!result || distance < 0)
+            continue;
+         if (distance >= hit.distance)
+            continue;
+         hit.bary_position  = bary_position;
+         hit.distance       = distance;
+         hit.position       = bary_position.x * a + bary_position.y * b + (1.0F - bary_position.x - bary_position.y) * c;
+         hit.surface_normal = glm::triangleNormal(a, b, c);
+      }
+
+      return hit;
    }
 }

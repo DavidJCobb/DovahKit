@@ -121,6 +121,7 @@
     <ClCompile Include="dk3d\inputs\bound_input.cpp" />
     <ClCompile Include="dk3d\input_result.cpp" />
     <ClCompile Include="dk3d\tools\attempt_on_screen_selection.cpp" />
+    <ClCompile Include="dk3d\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="dk3d\tools\debug_log.cpp" />
     <ClCompile Include="dk3d\tools\debug_placeholder.cpp" />
     <ClCompile Include="dk3d\tools\modify_camera_speed_flags.cpp" />
@@ -652,6 +653,7 @@
     <ClCompile Include="vulkan\overlays\world_axes.cpp" />
     <ClCompile Include="vulkan\physical_device.cpp" />
     <ClCompile Include="vulkan\queue_family_info.cpp" />
+    <ClCompile Include="vulkan\raycast.cpp" />
     <ClCompile Include="vulkan\rendered_bounds.cpp" />
     <ClCompile Include="vulkan\rendered_landscape.cpp" />
     <ClCompile Include="vulkan\rendered_light.cpp" />
@@ -770,6 +772,7 @@
     <ClInclude Include="dk3d\button_state.h" />
     <ClInclude Include="dk3d\input_result.h" />
     <ClInclude Include="dk3d\tools\attempt_on_screen_selection.h" />
+    <ClInclude Include="dk3d\tools\debug_dump_landscape_details.h" />
     <ClInclude Include="dk3d\tools\debug_log.h" />
     <ClInclude Include="dk3d\tools\debug_placeholder.h" />
     <ClInclude Include="dk3d\tools\modify_camera_speed_flags.h" />
@@ -1052,6 +1055,7 @@
     <ClInclude Include="vulkan\physical_device.h" />
     <ClInclude Include="vulkan\pipeline_stage_info.h" />
     <ClInclude Include="vulkan\queue_family_info.h" />
+    <ClInclude Include="vulkan\raycast.h" />
     <ClInclude Include="vulkan\rendered_bounds.h" />
     <ClInclude Include="vulkan\rendered_landscape.h" />
     <ClInclude Include="vulkan\rendered_light.h" />

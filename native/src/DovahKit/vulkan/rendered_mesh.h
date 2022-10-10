@@ -20,6 +20,11 @@ namespace nifDK {
 }
 
 namespace vulkanDK {
+   class  raycast;
+   struct raycast_hit_data;
+}
+
+namespace vulkanDK {
    struct mesh_animation_state {
       bool  playing  = true;
       float duration = 4.0;
@@ -124,9 +129,10 @@ namespace vulkanDK {
             } bounding_sphere;
          } mesh_data;
          union texture_indices_union {
+            texture_indices_union() : list({}) {}
             ~texture_indices_union() {}
 
-            std::array<loaded_texture_index, 2> list = { loaded_texture_index{}, {} };
+            std::array<loaded_texture_index, 2> list;
             struct {
                loaded_texture_index diffuse;
                loaded_texture_index normals;
@@ -163,5 +169,7 @@ namespace vulkanDK {
          bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const;
          bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
          bool ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const;
+
+         raycast_hit_data do_raycast(const raycast&) const;
    };
 }

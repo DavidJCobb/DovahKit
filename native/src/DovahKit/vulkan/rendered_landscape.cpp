@@ -4,12 +4,14 @@
 #include "dovah/forms/LandTexture.h"
 #include "dovah/forms/TextureSet.h"
 #include "./helpers/land/vertex_index_conversions.h"
+#include "./raycast.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/normal.hpp>
 
 #include <QDebug>
 
@@ -185,5 +187,70 @@ namespace vulkanDK {
          }
       }
       return hits;
+   }
+
+   raycast_hit_data rendered_landscape::do_raycast(const raycast& rc) const {
+      if (!this->active())
+         return {};
+      
+      constexpr auto fourth_index_per_quad = ([]() { // depends on tri handedness, etc.
+         auto a = quad_vertex_indices[0];
+         auto b = quad_vertex_indices[1];
+         auto c = quad_vertex_indices[2];
+         for (int i = 3; i < 6; ++i) {
+            auto d = quad_vertex_indices[i];
+            if (d != a && d != b && d != c)
+               return i;
+         }
+         throw;
+      })();
+
+      raycast_hit_data hit = {};
+
+      auto ray_direction = glm::normalize(rc.direction);
+      
+      for (size_t q = 0; q < 4; ++q) {
+         static_assert(indices_per_quad % 6 == 0, "A quad is two triangles is six indices, and there should only be quads.");
+         for (size_t i = 0; i + 5 < indices_per_quad; i += 6) {
+            auto a = this->world_vertex_position(q, quad_vertex_indices[i + 0]);
+            auto b = this->world_vertex_position(q, quad_vertex_indices[i + 1]);
+            auto c = this->world_vertex_position(q, quad_vertex_indices[i + 2]);
+            auto d = this->world_vertex_position(q, quad_vertex_indices[i + fourth_index_per_quad]);
+            //
+            glm::vec2 bary_position;
+            float     distance;
+            //
+            bool result = glm::intersectRayTriangle(
+               rc.origin,
+               ray_direction,
+               a, b, c,
+               bary_position,
+               distance
+            );
+            if (!result || distance < 0) { // GLM didn't implement their math properly; you can get a false-positive result with a negative distance, meaning the "hit position" is behind the ray
+               result = glm::intersectRayTriangle(
+                  rc.origin,
+                  ray_direction,
+                  b, c, d,
+                  bary_position,
+                  distance
+               );
+               if (!result || distance < 0) // GLM didn't implement their math properly; you can get a false-positive result with negative distance, meaning the "hit position" is behind the ray
+                  continue;
+               if (distance >= hit.distance)
+                  continue;
+               hit.surface_normal = glm::triangleNormal(b, c, d);
+               hit.position       = bary_position.x * b + bary_position.y * c + (1.0F - bary_position.x - bary_position.y) * d;
+            } else {
+               if (distance >= hit.distance)
+                  continue;
+               hit.surface_normal = glm::triangleNormal(a, b, c);
+               hit.position       = bary_position.x * a + bary_position.y * b + (1.0F - bary_position.x - bary_position.y) * c;
+            }
+            hit.bary_position = bary_position;
+            hit.distance      = distance;
+         }
+      }
+      return hit;
    }
 }
