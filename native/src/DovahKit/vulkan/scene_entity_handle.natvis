@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::impl::scene_entity_handle&lt;*&gt;">
+      <Intrinsic Name="_get_entity_lists" Expression="(std::vector&lt;$T2,std::allocator&lt;$T2&gt; &gt;*)&amp;owner-&gt;scene.entities.lists" />
+      
+      <DisplayString Condition="index == -1">{{ no entity }}</DisplayString>
+      <DisplayString>{{ entity #{index,d} }}</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+         <Item Name="[index]">index</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="vulkanDK::rendered_bounds_handle">
+      <Intrinsic Name="_entity_class_index" Expression="1" />
+      
+      <DisplayString Condition="index == -1">{{ no rendered_bounds }}</DisplayString>
+      <DisplayString>{{ rendered_bounds #{index,d} }}</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+         <Item Name="[index]">index</Item>
+         <Item Name="[entity]">_get_entity_lists()[_entity_class_index()][index]</Item>
+      </Expand>
+   </Type>
+
+   <Type Name="vulkanDK::rendered_landscape_handle">
+      <Intrinsic Name="_entity_class_index" Expression="2" />
+      
+      <DisplayString Condition="index == -1">{{ no rendered_landscape }}</DisplayString>
+      <DisplayString>{{ rendered_landscape #{index,d} }}</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+         <Item Name="[index]">index</Item>
+         <Item Name="[entity]">_get_entity_lists()[_entity_class_index()][index]</Item>
+      </Expand>
+   </Type>
+
+   <Type Name="vulkanDK::rendered_light_handle">
+      <Intrinsic Name="_entity_class_index" Expression="3" />
+      
+      <DisplayString Condition="index == -1">{{ no rendered_light }}</DisplayString>
+      <DisplayString>{{ rendered_light #{index,d} }}</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+         <Item Name="[index]">index</Item>
+         <Item Name="[entity]">_get_entity_lists()[_entity_class_index()][index]</Item>
+      </Expand>
+   </Type>
+
+   <Type Name="vulkanDK::rendered_mesh_handle">
+      <Intrinsic Name="_entity_class_index" Expression="4" />
+      
+      <DisplayString Condition="index == -1">{{ no rendered_mesh }}</DisplayString>
+      <DisplayString>{{ rendered_mesh #{index,d} }}</DisplayString>
+      <Expand>
+         <Item Name="[owner]">owner</Item>
+         <Item Name="[index]">index</Item>
+         <Item Name="[entity]">_get_entity_lists()[_entity_class_index()][index]</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

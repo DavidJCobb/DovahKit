@@ -1891,10 +1891,12 @@
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="helpers\eight_cc.natvis" />
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="helpers\glm\vec.natvis" />
+    <Natvis Include="helpers\grid.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="nif\block.natvis" />
     <Natvis Include="nif\blocks\BSShaderTextureSet.natvis" />
@@ -1914,6 +1916,7 @@
     <Natvis Include="vulkan\rendered_mesh.natvis" />
     <Natvis Include="vulkan\scene_entities\base.natvis" />
     <Natvis Include="vulkan\scene_entities\fif_sync_state.natvis" />
+    <Natvis Include="vulkan\scene_entity_handle.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

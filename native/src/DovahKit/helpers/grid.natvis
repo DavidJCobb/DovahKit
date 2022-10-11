@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::grid&lt;*,*&gt;">
+      <Intrinsic Name="_coords_to_index" Expression="(x - left) + ((y - top) * width)">
+         <Parameter Name="x" Type="signed int" />
+         <Parameter Name="y" Type="signed int" />
+      </Intrinsic>
+      
+      <DisplayString>{{ size={width,d}x{height,d}, area={area,d}, offset={left,d}x{top,d} }}</DisplayString>
+      <Expand>
+         <Synthetic Name="[flat]">
+            <Expand>
+               <CustomListItems>
+                  <Variable Name="x" InitialValue="0"/>
+                  <Variable Name="y" InitialValue="0"/>
+                  <Loop Condition="y &lt; height">
+                     <Exec>x = 0</Exec>
+                     <Loop Condition="x &lt; width">
+                        <Item Name="({x + left,d}, {y + top,d}) index {_coords_to_index(x + left, y + top),d}">_data[_coords_to_index(x + left, y + top)]</Item>
+                        <Exec>++x</Exec>
+                     </Loop>
+                     <Exec>++y</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[rows]">
+            <Expand>
+               <CustomListItems>
+                  <Variable Name="y" InitialValue="0"/>
+                  <Loop Condition="y &lt; height">
+                     <Item Name="(x, {y + top,d})">($T1*)&amp;_data[y * width],$T2</Item>
+                     <Exec>++y</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

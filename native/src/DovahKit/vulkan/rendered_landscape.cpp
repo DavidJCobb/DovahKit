@@ -97,13 +97,13 @@ namespace vulkanDK {
                continue;
             //
             auto& alphas = blend.opacities;
-            for (size_t y = 0; y < loaded_form::vertices_per_side; ++y) {
-               for (size_t x = 0; x < loaded_form::vertices_per_side; ++x) {
-                  auto f = alphas.item(x, y);
+            for (size_t y = 0; y < loaded_form::vertices_per_quad_side; ++y) {
+               for (size_t x = 0; x < loaded_form::vertices_per_quad_side; ++x) {
+                  auto f = alphas.item(x + offset_x, y + offset_y);
                   if (f <= 0)
                      continue;
                   //
-                  auto i = (q * vertices_per_quad) + ((y - offset_y) * vertices_per_quad_side) + (x - offset_x);
+                  auto i = (q * vertices_per_quad) + (y * vertices_per_quad_side) + x;
                   vl[i].blends[layer] = f;
                }
             }

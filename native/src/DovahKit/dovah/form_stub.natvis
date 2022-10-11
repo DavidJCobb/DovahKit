@@ -37,7 +37,7 @@
          </Synthetic>
          <Item Name="[source file]" Condition="!(flags &amp; flag::has_multiple_source_files)">file</Item>
          <Item Name="[addenda]" Condition="addenda != nullptr">addenda</Item>
-         <Item Name="[loaded form]" Condition="working_copy != nullptr">form</Item>
+         <Item Name="[loaded form]" Condition="form != nullptr">form</Item>
          <Item Name="[working copy]" Condition="working_copy != nullptr">working_copy</Item>
          <Synthetic Name="[use info]">
             <DisplayString>{outbound.size(),d} outbound refs; {inbound.size(),d} inbound</DisplayString>

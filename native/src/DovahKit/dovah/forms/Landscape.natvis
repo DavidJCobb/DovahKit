@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::Landscape::alpha_layer">
+      <DisplayString>layer {layer, d}: {texture.stub,na}</DisplayString>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::Landscape::vertex_color">
+      <DisplayString Condition="r==255&amp;&amp;g==255&amp;&amp;b==255">rgb(255, 255, 255) [white]</DisplayString>
+      <DisplayString Condition="r==0&amp;&amp;g==0&amp;&amp;b==0">rgb(0, 0, 0) [black]</DisplayString>
+      <DisplayString>rgb({(int)r,d}, {(int)g,d}, {(int)b,d})</DisplayString>
+   </Type>
+
+   <Type Name="dovah::loaded_forms::Landscape">
+      <DisplayString>[LAND:{stub.formID,8X}]{stub.editorID,sb}</DisplayString>
+      <Expand>
+         <Item Name="[heightmap]" Condition="(land_flags &amp; land_flag::has_heightmap) != 0">heightmap.heights</Item>
+         <Item Name="[normals]" Condition="(land_flags &amp; land_flag::has_heightmap) != 0">heightmap.normals</Item>
+         <Item Name="[vertex colors]" Condition="(land_flags &amp; land_flag::has_colors) != 0">heightmap.colors</Item>
+         <Synthetic Name="[texture painting]">
+            <Expand>
+               <Synthetic Name="[0: bottom left]">
+                  <DisplayString>base {default_quad_textures[0].stub,na} with additional layers</DisplayString>
+                  <Expand>
+                     <Item Name="[default texture]">default_quad_textures[0].stub,na</Item>
+                     <Item Name="[alpha blends]">alpha_layers_by_quad[0]</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[1: bottom right]">
+                  <DisplayString>base {default_quad_textures[1].stub,na} with additional layers</DisplayString>
+                  <Expand>
+                     <Item Name="[default texture]">default_quad_textures[1].stub,na</Item>
+                     <Item Name="[alpha blends]">alpha_layers_by_quad[1]</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[2: top left]">
+                  <DisplayString>base {default_quad_textures[2].stub,na} with additional layers</DisplayString>
+                  <Expand>
+                     <Item Name="[default texture]">default_quad_textures[2].stub,na</Item>
+                     <Item Name="[alpha blends]">alpha_layers_by_quad[2]</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[3: top right]">
+                  <DisplayString>base {default_quad_textures[3].stub,na} with additional layers</DisplayString>
+                  <Expand>
+                     <Item Name="[default texture]">default_quad_textures[3].stub,na</Item>
+                     <Item Name="[alpha blends]">alpha_layers_by_quad[3]</Item>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Item Name="[hkMoppCode (raw)]">mpcd</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

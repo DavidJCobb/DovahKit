@@ -4919,5 +4919,8 @@
     <Natvis Include="nif\blocks\NiObjectNET.natvis" />
     <Natvis Include="nif\blocks\NiProperty.natvis" />
     <Natvis Include="nif\blocks\unknown.natvis" />
+    <Natvis Include="helpers\grid.natvis" />
+    <Natvis Include="dovah\forms\Landscape.natvis" />
+    <Natvis Include="vulkan\scene_entity_handle.natvis" />
   </ItemGroup>
 </Project>

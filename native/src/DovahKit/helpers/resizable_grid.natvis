@@ -14,12 +14,19 @@
    <Type Name="cobb::resizable_square_grid&lt;*,*&gt;">
       <DisplayString>{{ size={(int)_length,d}x{(int)_length,d}, area={(int)_length*(int)_length,d} }}</DisplayString>
       <Expand>
-         <ArrayItems Condition="_length > 0">
-            <Direction>Forward</Direction>
-            <Rank>_length > 1 ? 2 : 1</Rank>
-            <Size>_length</Size>
-            <ValuePointer>_data,na</ValuePointer>
-         </ArrayItems>
+         <CustomListItems>
+            <Variable Name="half" InitialValue="($T2)(_length / 2)"/>
+            <Variable Name="x"    InitialValue="($T2)0"/>
+            <Variable Name="y"    InitialValue="($T2)0"/>
+            <Loop Condition="x &lt; _length">
+               <Exec>y = 0</Exec>
+               <Loop Condition="y &lt; _length">
+                  <Item Name="({x - half,d}, {y - half,d})">_data[x + (y * _length)]</Item>
+                  <Exec>++y</Exec>
+               </Loop>
+               <Exec>++x</Exec>
+            </Loop>
+         </CustomListItems>
       </Expand>
    </Type>
 </AutoVisualizer>
