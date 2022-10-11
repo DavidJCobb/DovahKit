@@ -69,7 +69,7 @@ vec4 sample_normals(int texture_index) { // returns RGBA
       // Creation Kit can serialize landscapes as being painted with a null land texture, 
       // which explicitly indicates that they should blend with the default texture.
       //
-      texture_index = scene.default_land_diffuse_texture;
+      texture_index = scene.default_land_normals_texture;
       if (texture_index < 0)
          //
          // No default texture loaded. Go with vertical normals.
