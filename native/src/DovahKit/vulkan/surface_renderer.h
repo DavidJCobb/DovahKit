@@ -79,6 +79,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type landscape_border_shader_id    = "LandBrdr";
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
          static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // graphics_shader instance will not exist if geometry shaders aren't available on this hardware
+         static constexpr graphics_shader::id_type debug_grid_color_shader_id = "GridColr";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -134,6 +135,7 @@ namespace vulkanDK {
          //
          cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
          //
+         buffer debug_grid_index_buffer;
          owned_image_and_view null_texture;
          VkSampler raw_pixel_texture_sampler;
          //
@@ -304,6 +306,8 @@ namespace vulkanDK {
 
          void _setup_raw_pixel_texture_sampler();
          void _teardown_raw_pixel_texture_sampler();
+
+         void _setup_debug_grid_index_buffer();
          
          void _define_render_passes(); // creates the render_pass wrappers; however, the data needed to instantiate wrapped VkRenderPasses won't be available yet (see _setup_render_passes)
          void _setup_shaders();        // requires that the render pass wrappers exist; wrapped VkRenderPasses don't need to exist yet
@@ -324,6 +328,7 @@ namespace vulkanDK {
             void _setup_frustum_cull_shader();
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();
+            void _setup_debug_grid_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

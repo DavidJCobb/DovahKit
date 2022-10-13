@@ -2,6 +2,7 @@
 #include <chrono>
 #include <typeinfo>
 #include <QResource> // for loading shaders
+#include "helpers/arrays/make.h"
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/array_concat.h"
 #include "helpers/miscellaneous.h" // cobb::edit_bit
@@ -17,6 +18,7 @@
 #include "./shader_module.h"
 #include "./vertex.h"
 #include "./config/frames_in_flight.h"
+#include "./config/grid.h"
 #include "./config/scene_limits.h"
 #include "./config/shadow_maps.h"
 #include "./config/use_inverted_depth.h"
@@ -615,6 +617,20 @@ namespace vulkanDK {
       }
    }
 
+   void surface_renderer::_setup_debug_grid_index_buffer() {
+      constexpr std::array<uint16_t, 6> indices = { 0, 1, 2, 2, 3, 0 };
+      constexpr size_t buffer_size = indices.size() * sizeof(decltype(indices)::value_type);
+
+      this->debug_grid_index_buffer = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+      auto  staging = this->create_staging_buffer(buffer_size);
+      void* data    = staging.map_memory();
+      memcpy(data, indices.data(), buffer_size);
+      staging.unmap_memory(data);
+      //
+      this->debug_grid_index_buffer.copy_from(staging);
+   }
+
    void surface_renderer::setup() {
       if (this->logical_device == VK_NULL_HANDLE) {
          return;
@@ -664,6 +680,7 @@ namespace vulkanDK {
       }
       this->_setup_light_shadow_resources();
       this->_create_null_texture();
+      this->_setup_debug_grid_index_buffer(); // requires command pools for the buffer write-via-copy
       this->scene.update_projection(this->surface_extent); // requires extent size
       this->_setup_initial_scene();
       this->_initialize_descriptor_sets();
@@ -2099,6 +2116,96 @@ namespace vulkanDK {
          s->setup_pipeline_layout();
       }
    #pragma endregion
+   void surface_renderer::_setup_debug_grid_shader() {
+      if constexpr (config::debug_grid_uses_wboit) {
+         if (!this->can_do_alpha()) {
+            return;
+         }
+         assert(this->render_passes_by_name.main_oit != nullptr);
+      }
+      //
+      auto* s = this->create_graphics_shader(debug_grid_color_shader_id);
+      if constexpr (config::debug_grid_uses_wboit) {
+         s->set_render_pass(this->render_passes_by_name.main_oit, 0);
+      } else {
+         s->set_render_pass(this->render_passes_by_name.main);
+      }
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.scene_state.handle,
+         }
+      );
+      //
+      auto& options = s->options;
+      //
+      shader_module* vert = this->load_shader_module("shaders/bespoke/grid/color.vert.spv");
+      shader_module* frag;
+      if constexpr (config::debug_grid_uses_wboit) {
+         frag = this->load_shader_module("shaders/bespoke/grid/color-oit.frag.spv");
+         assert(frag);
+         this->set_debug_object_name(frag->handle, "Shader Module (Grid Color: bespoke/grid/color-oit.frag.spv)");
+      } else {
+         frag = this->load_shader_module("shaders/bespoke/grid/color-main.frag.spv");
+         assert(frag);
+         this->set_debug_object_name(frag->handle, "Shader Module (Grid Color: bespoke/grid/color-main.frag.spv)");
+      }
+      assert(vert);
+      this->set_debug_object_name(vert->handle, "Shader Module (Grid Color: rendered_mesh/bslp/color.vert.spv)");
+      //
+      options.stages = {
+         {
+            .module              = frag,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module              = vert,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      options.rasterization.cullMode = VK_CULL_MODE_NONE; // no backface culling
+      if constexpr (config::debug_grid_uses_wboit) {
+         options.color_blending.blends.emplace_back(graphics_shader::color_blend{ // accumulator
+            .source = {
+               .color = VK_BLEND_FACTOR_ONE,
+               .alpha = VK_BLEND_FACTOR_ONE,
+            },
+            .destination = {
+               .color = VK_BLEND_FACTOR_ONE,
+               .alpha = VK_BLEND_FACTOR_ONE,
+            },
+            .operations = {
+               .color = VK_BLEND_OP_ADD,
+               .alpha = VK_BLEND_OP_ADD,
+            },
+         });
+         options.color_blending.blends.emplace_back(graphics_shader::color_blend{ // reveal
+            .source = {
+               .color = VK_BLEND_FACTOR_ZERO,
+               .alpha = VK_BLEND_FACTOR_ZERO,
+            },
+            .destination = {
+               .color = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+               .alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+            },
+            .operations = {
+               .color = VK_BLEND_OP_ADD,
+               .alpha = VK_BLEND_OP_ADD,
+            },
+         });
+      } else {
+         options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend); // needed for alpha testing to work
+      }
+      if constexpr (config::use_inverted_depth) {
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout();
+
+   }
    void surface_renderer::_setup_shaders() {
       this->_setup_scene_background_shader();
       //
@@ -2109,6 +2216,8 @@ namespace vulkanDK {
       this->_setup_frustum_cull_shader();
       this->_setup_shadow_caster_cull_shaders();
       this->_setup_scene_bounds_shaders();
+      //
+      this->_setup_debug_grid_shader();
       //
       // FPS counter:
       //
@@ -2155,6 +2264,9 @@ namespace vulkanDK {
       this->set_debug_object_name(nt.view,   "Null Texture View");
    }
    void surface_renderer::_setup_initial_scene() {
+      return;
+
+
       auto device = this->logical_device;
       //
       // Scene floor:
@@ -2463,6 +2575,17 @@ namespace vulkanDK {
                };
                for (size_t i = 0; i < out.size(); ++i)
                   out[i].dstBinding = i;
+               //
+               // A descriptor write must write to at least one descriptor, i.e. the 
+               // descriptorCount can't be zero. However, if we haven't loaded any 
+               // textures yet, then it will be. Work around this with a "dumb" 
+               // redundant write (we're storing all our VkWriteDescriptorSet structs 
+               // in a fixed-length array, so actually varying their number is tricky 
+               // but not worth a refactor).
+               //
+               if (out[1].descriptorCount == 0)
+                  out[1] = out[0];
+               //
                return out;
             })(),
             //
@@ -3217,6 +3340,7 @@ namespace vulkanDK {
       //
       this->scene.teardown(*this);
       this->null_texture.teardown();
+      this->debug_grid_index_buffer = {};
       {
          auto& list = this->graphics_shaders;
          for (auto* e : list)

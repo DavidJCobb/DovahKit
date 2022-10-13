@@ -4238,6 +4238,9 @@
     <ClInclude Include="dk3d\tools\debug_dump_landscape_details.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\config\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4883,6 +4886,14 @@
     <None Include="shaders\rendered_landscape\shadows-sun.vert.spv" />
     <None Include="shaders\rendered_landscape\wireframe.frag.spv" />
     <None Include="shaders\rendered_landscape\wireframe.vert.spv" />
+    <None Include="shaders\bespoke\grid\color.fragment-input.glsl" />
+    <None Include="shaders\bespoke\grid\color.vert" />
+    <None Include="shaders\bespoke\grid\color-base.frag.glsl" />
+    <None Include="shaders\bespoke\grid\color-oit.frag" />
+    <None Include="shaders\bespoke\grid\color-main.frag" />
+    <None Include="shaders\bespoke\grid\color.vert.spv" />
+    <None Include="shaders\bespoke\grid\color-main.frag.spv" />
+    <None Include="shaders\bespoke\grid\color-oit.frag.spv" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

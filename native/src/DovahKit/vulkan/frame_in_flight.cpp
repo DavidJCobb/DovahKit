@@ -4,6 +4,7 @@
 #include "./compute_shader.h"
 #include "./exceptions.h"
 #include "./surface_renderer.h"
+#include "./config/grid.h"
 #include "./config/scene_limits.h"
 #include "./config/shadow_maps.h"
 #include "./config/use_inverted_depth.h"
@@ -1019,6 +1020,10 @@ namespace vulkanDK {
                   }
                );
             }
+            if (last_was_decal) {
+               vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
+               last_was_decal = false;
+            }
          }
          {  // Landscape
             const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_shader_id);
@@ -1035,9 +1040,6 @@ namespace vulkanDK {
             );
             _record_landscape_draws(*this, scene, command_buffer);
             {  // Borders
-
-               // TODO MAKE THIS SOMETHING WE CAN DISABLE
-
                const auto* shader = sr.get_graphics_shader(surface_renderer::landscape_border_shader_id);
                command_buffer.bind_graphics_shader_and_descriptors(
                   *shader,
@@ -1076,6 +1078,19 @@ namespace vulkanDK {
                   }
                }
             }
+         }
+         if constexpr (!config::debug_grid_uses_wboit) {
+            //
+            // Draw debug grid (without WBOIT).
+            //
+            command_buffer.bind_graphics_shader_and_descriptors(
+               *sr.get_graphics_shader(surface_renderer::debug_grid_color_shader_id),
+               0,
+               std::array{ ds.scene_state }
+            );
+            // Shader takes no vertex data as input, so doesn't matter what vertex buffer is bound.
+            vkCmdBindIndexBuffer(command_handle, sr.debug_grid_index_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdDrawIndexed(command_handle, 6, 1, 0, 0, 0);
          }
          command_buffer.end_render_pass();
          //
@@ -1119,6 +1134,23 @@ namespace vulkanDK {
                      set_decal_config(ro);
                   }
                );
+               if (last_was_decal) {
+                  vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
+                  last_was_decal = false;
+               }
+            }
+            if constexpr (config::debug_grid_uses_wboit) {
+               //
+               // Draw debug grid (with WBOIT).
+               //
+               command_buffer.bind_graphics_shader_and_descriptors(
+                  *sr.get_graphics_shader(surface_renderer::debug_grid_color_shader_id),
+                  0,
+                  std::array{ ds.scene_state }
+               );
+               // Shader takes no vertex data as input, so doesn't matter what vertex buffer is bound.
+               vkCmdBindIndexBuffer(command_handle, sr.debug_grid_index_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+               vkCmdDrawIndexed(command_handle, 6, 1, 0, 0, 0);
             }
             command_buffer.next_render_subpass();
             //
@@ -1145,10 +1177,6 @@ namespace vulkanDK {
             command_buffer.end_render_pass();
          }
          indirect_info.transfer_queue_ownership_to_compute(command_handle);
-         //
-         if (last_was_decal) {
-            vkCmdSetDepthBias(command_handle, 0.0, 0.0, 0.0);
-         }
          //
          // Done!
          //

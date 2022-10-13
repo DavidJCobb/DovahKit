@@ -14,15 +14,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - Cell View
-//
-//     - Implement the "Sort loaded at top" checkbox.
-//
-//        - Can't, until we have a render window that supports worldspaces. Once the 
-//          render window is ready, we can update CellListModelItem::cellIsLoaded, 
-//          and also update the list model proxy to prioritize that above all other 
-//          sorting.
-//
 //  - The TESFilePicker widget should allow the user to browse through loose files and 
 //    files in the loaded BSAs.
 //
@@ -917,13 +908,19 @@
 int main(int argc, char* argv[]) {
    QApplication a(argc, argv);
    //
-   #if _DEBUG // log all qt resources to the "output" tab in the debugger
-      qDebug() << "Dumping list of all Qt resources...";
-      QDirIterator it(":", QDirIterator::Subdirectories);
-      while (it.hasNext()) {
-         qDebug() << it.next();
+   #if _DEBUG
+   {
+      static constexpr bool print_all_qt_resources = false;
+
+      if constexpr (print_all_qt_resources) {
+         qDebug() << "Dumping list of all Qt resources...";
+         QDirIterator it(":", QDirIterator::Subdirectories);
+         while (it.hasNext()) {
+            qDebug() << it.next();
+         }
+         qDebug() << "All Qt resources dumped.";
       }
-      qDebug() << "All Qt resources dumped.";
+   }
    #endif
    //
    MainWindow w;

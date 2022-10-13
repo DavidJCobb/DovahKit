@@ -1016,6 +1016,7 @@
     <ClInclude Include="vulkan\compute_shader.h" />
     <ClInclude Include="vulkan\config\antialiasing.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
+    <ClInclude Include="vulkan\config\grid.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\shadow_maps.h" />
@@ -1777,6 +1778,14 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="shaders\bespoke\grid\color-main.frag" />
+    <None Include="shaders\bespoke\grid\color-main.frag.spv" />
+    <None Include="shaders\bespoke\grid\color-oit.frag" />
+    <None Include="shaders\bespoke\grid\color-base.frag.glsl" />
+    <None Include="shaders\bespoke\grid\color-oit.frag.spv" />
+    <None Include="shaders\bespoke\grid\color.fragment-input.glsl" />
+    <None Include="shaders\bespoke\grid\color.vert" />
+    <None Include="shaders\bespoke\grid\color.vert.spv" />
     <None Include="shaders\compute\culling\frustum.comp" />
     <None Include="shaders\compute\culling\frustum.comp.spv" />
     <None Include="shaders\compute\culling\shadows-caster.comp" />

@@ -36,5 +36,8 @@
         <file>util/scene-fog-color-far.frag.spv</file>
         <file>rendered_landscape/border.frag.spv</file>
         <file>rendered_landscape/border.vert.spv</file>
+        <file>bespoke/grid/color.vert.spv</file>
+        <file>bespoke/grid/color-main.frag.spv</file>
+        <file>bespoke/grid/color-oit.frag.spv</file>
     </qresource>
 </RCC>

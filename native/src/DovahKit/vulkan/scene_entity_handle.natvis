@@ -2,6 +2,13 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="vulkanDK::impl::scene_entity_handle&lt;*&gt;">
       <Intrinsic Name="_get_entity_lists" Expression="(std::vector&lt;$T2,std::allocator&lt;$T2&gt; &gt;*)&amp;owner-&gt;scene.entities.lists" />
+      <!--
+         this intrinsic assumes that tuples lay out their elements sequentially, and that vectors are always the same size regardless 
+         of templated type. if ever those assumptions stop being true, this will break
+         
+         we can't access things the "clean" way, because we can't use std::get in natvis and we can't use decltype (or any similar 
+         feature) in natvis (which would allow us to cast the tuple to its base class, as STL std::tuple natvis does)
+      -->
       
       <DisplayString Condition="index == -1">{{ no entity }}</DisplayString>
       <DisplayString>{{ entity #{index,d} }}</DisplayString>
