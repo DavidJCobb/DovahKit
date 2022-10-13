@@ -54,8 +54,9 @@ namespace vulkanDK {
             //
             std::array<descriptor_set_layout, 2> list;
             struct {
-               layout_with_size<2> compute_cull_frustum;
+               layout_with_size<3> compute_cull_frustum;
                   // - compute_frustum_culling_main
+                  // - compute_frustum_culling_main_oit
                   // - compute_frustum_culling_sun
                layout_with_size<config::max_active_shadow_casters> compute_cull_caster;
                   // - compute_shadow_caster_culls[i]
@@ -84,9 +85,10 @@ namespace vulkanDK {
          //
          // Sets that share a layout.
          //
-         std::array<VkDescriptorSet, 2 + config::max_active_shadow_casters> list = {};
+         std::array<VkDescriptorSet, 3 + config::max_active_shadow_casters> list = {};
          struct {
             VkDescriptorSet compute_frustum_culling_main;
+            VkDescriptorSet compute_frustum_culling_main_oit;
             VkDescriptorSet compute_frustum_culling_sun;
             std::array<VkDescriptorSet, config::max_active_shadow_casters> compute_shadow_caster_culls;
          };

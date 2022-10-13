@@ -16,9 +16,10 @@ namespace vulkanDK {
          flag() = delete;
          enum type : uint32_t {
             show_landscape_borders = 0x00000001,
+            show_debug_grid        = 0x00000002,
          };
 
-         static constexpr const std::underlying_type_t<type> all_default = 0;
+         static constexpr const std::underlying_type_t<type> all_default = show_debug_grid;
       };
       using flags_t = std::underlying_type_t<flag::type>;
 

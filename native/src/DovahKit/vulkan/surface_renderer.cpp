@@ -2443,6 +2443,16 @@ namespace vulkanDK {
             .offset = 0,
             .range  = VK_WHOLE_SIZE,
          };
+         auto culling_mesh_params_main_oit_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.main_oit.params.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE, // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto culling_mesh_indices_main_oit_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.indirect_draw_commands.main_oit.mesh_indices.gpu.handle,
+            .offset = 0,
+            .range  = VK_WHOLE_SIZE,
+         };
          auto culling_mesh_params_sun_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.indirect_draw_commands.sun_shadows.params.handle,
             .offset = 0,
@@ -2708,6 +2718,50 @@ namespace vulkanDK {
                      .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                      .pImageInfo       = nullptr,
                      .pBufferInfo      = &culling_mesh_params_main_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               for (size_t i = 0; i < out.size(); ++i)
+                  out[i].dstBinding = i;
+               return out;
+            })(),
+            ([&frame, &frustum_main_buffer_info, &mesh_bounds_buffer_info, &culling_mesh_indices_main_oit_buffer_info, &culling_mesh_params_main_oit_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.sharing_sets.compute_frustum_culling_main_oit;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // storage buffer object: frustum plane normals
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &frustum_main_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // storage buffer object: rendered_mesh::cull_data[]
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &mesh_bounds_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // storage buffer object: object index buffer
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &culling_mesh_indices_main_oit_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+                  VkWriteDescriptorSet{ // storage buffer object: object index buffer
+                     .dstSet           = descriptor_set,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &culling_mesh_params_main_oit_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                };
@@ -4920,6 +4974,10 @@ namespace vulkanDK {
    }
    void surface_renderer::set_landscape_borders_visible(bool v) {
       cobb::edit_bit(this->scene.global_state.flags, scene_global_state::flag::show_landscape_borders, v);
+   }
+
+   void surface_renderer::set_debug_grid_visible(bool v) {
+      cobb::edit_bit(this->scene.global_state.flags, scene_global_state::flag::show_debug_grid, v);
    }
 
    rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {

@@ -31,5 +31,6 @@ struct scene_global_state {
 };
 
 #define SCENE_GLOBAL_STATE_FLAG_SHOW_LANDSCAPE_BORDERS 0x00000001
+#define SCENE_GLOBAL_STATE_FLAG_SHOW_DEBUG_GRID        0x00000002
 
 #endif

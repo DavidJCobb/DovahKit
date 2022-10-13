@@ -22,6 +22,7 @@
 #include "nif/blocks/NiGeometryData.h"
 #include "vulkan/config/scene_limits.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
+#include "vulkan/raycast.h"
 #include "vulkan/rendered_light.h"
 #include "vulkan/surface_renderer.h"
 #include "widgets/DKVulkanView.h"
@@ -669,12 +670,16 @@ namespace dovahkit::subsystems {
             emit this->currentCellChanged(cell);
          }
       }
-      //
-      // Set lighting and fog params.
-      //
       if (this->target_view) {
          auto* sr = this->target_view->surfaceRenderer();
          if (sr) {
+            //
+            // Hide the debug grid if we're loading any environment; show it if we're nowhere.
+            //
+            sr->set_debug_grid_visible(!cell && !world);
+            //
+            // Set lighting and fog params.
+            //
             auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
                return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
             };
@@ -1006,6 +1011,54 @@ namespace dovahkit::subsystems {
                //
                static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
             }
+         }
+      }
+      #pragma endregion
+      #pragma region debug_dump_landscape_details
+      if (sr) {
+         const auto& data = results.get_member<DK3D::tools::debug_dump_landscape_details>();
+         if (data.exists && data.position == DK3D::pointer_position_type::mouse) {
+            vulkanDK::raycast rc(*sr);
+            rc.set_screen_relative_raycast(data.mouse.x(), data.mouse.y());
+
+            sr->do_raycast(rc);
+            if (rc.result.hit) {
+               if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(rc.result.entity)) {
+                  auto handle = std::get<vulkanDK::rendered_landscape_handle>(rc.result.entity);
+                  auto pos    = rc.result.hit.position - handle->frame_drawing_data.position;
+                  
+                  qDebug(
+                     "Hit landscape at (%g, %g, %g).",
+                     handle->frame_drawing_data.position.x,
+                     handle->frame_drawing_data.position.y,
+                     handle->frame_drawing_data.position.z
+                  );
+                  qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
+                  
+                  pos /= vulkanDK::rendered_landscape::vertex_distance;
+
+                  int x = pos.x;
+                  int y = pos.y;
+                  qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
+
+                  if (x > 0 && y > 0 && x < 33 && y < 33) {
+                     vulkanDK::vertex_landscape* vert = nullptr;
+
+                     #if _DEBUG
+                        //
+                        // TODO: console-print the vert attributes
+                        //
+                        __debugbreak();
+                     #endif
+
+                  }
+               }
+            }
+         } else {
+            //
+            // TODO
+            //
+            static_assert(!require_complete_implementation, "TODO: Support performing a query at the reticle.");
          }
       }
       #pragma endregion

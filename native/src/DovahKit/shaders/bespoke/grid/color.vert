@@ -18,6 +18,11 @@ layout(location = 0) out VS_OUT {
 #define GRID_EXTENT 4096
 
 void main() {
+   if ((scene.flags & SCENE_GLOBAL_STATE_FLAG_SHOW_DEBUG_GRID) == 0) {
+      gl_Position = vec4(-2, -2, 0, 1); // place off-screen, to hide
+      return;
+   }
+
    gl_Position = vec4(GRID_EXTENT, GRID_EXTENT, 0, 1);
    if (gl_VertexIndex < 2)
       gl_Position.y *= -1.0;

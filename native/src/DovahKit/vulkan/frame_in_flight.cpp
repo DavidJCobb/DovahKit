@@ -511,16 +511,17 @@ namespace vulkanDK {
       const auto* frustum_cull_shader = this->owner->get_compute_shader(surface_renderer::frustum_cull_shader_id);
       assert(frustum_cull_shader);
       #pragma region Frustum culling: main
-      {  // Main
-         auto& command_buffer = this->compute_commands.frustum_cull_main;
-         auto  command_handle = command_buffer.handle;
-         auto& indirect_info  = this->indirect_draw_commands.main;
+      {  // Main (base and OIT)
+         auto& command_buffer  = this->compute_commands.frustum_cull_main;
+         auto  command_handle  = command_buffer.handle;
+         auto& indirect_info_a = this->indirect_draw_commands.main;
+         auto& indirect_info_b = this->indirect_draw_commands.main_oit;
          //
          command_buffer.reset(0);
          if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to begin recording command buffer (main).");
          }
-         indirect_info.transfer_queue_ownership_to_compute(command_handle);
+         indirect_info_a.transfer_queue_ownership_to_compute(command_handle);
          command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_main });
          vkCmdDispatch(
             command_handle,
@@ -528,7 +529,16 @@ namespace vulkanDK {
             1,
             1
          );
-         indirect_info.transfer_queue_ownership_to_graphics(command_handle);
+         indirect_info_a.transfer_queue_ownership_to_graphics(command_handle);
+         indirect_info_b.transfer_queue_ownership_to_compute(command_handle);
+         command_buffer.bind_compute_shader_and_descriptors(*frustum_cull_shader, 0, std::array{ this->descriptor_sets.sharing_sets.compute_frustum_culling_main_oit });
+         vkCmdDispatch(
+            command_handle,
+            config::max_rendered_meshes / frustum_cull_shader->metadata.local_size.x,
+            1,
+            1
+         );
+         indirect_info_b.transfer_queue_ownership_to_graphics(command_handle);
          if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
             throw result_exception(result, "[vulkanDK::frame_in_flight::record_compute_cull_commands] Failed to record a command buffer (main).");
          }
