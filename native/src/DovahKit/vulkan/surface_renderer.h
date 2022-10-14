@@ -171,6 +171,12 @@ namespace vulkanDK {
             } oit;
          } canvas;
          struct {
+            command_buffer commands;
+            VkFence        fence = VK_NULL_HANDLE;
+            buffer         staging;
+            cobb::class_map_from_class_array<size_t, scene_entities::all_types_with_owned_gpu_resources> pending_upload_counts;
+         } uploading;
+         struct {
             VkSwapchainKHR handle = VK_NULL_HANDLE;
             VkFormat       format = VK_FORMAT_UNDEFINED;
             //
@@ -357,6 +363,8 @@ namespace vulkanDK {
 
          void _wait_on_all_frames_in_flight();
 
+         [[nodiscard]] bool _execute_pending_scene_entity_gpu_uploads(); // returns true if any commands are recorded
+         void _wait_on_pending_scene_entity_gpu_uploads();
          void _execute_pending_scene_entity_deletions();
    };
 }

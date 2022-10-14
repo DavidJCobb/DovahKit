@@ -204,7 +204,7 @@ namespace vulkanDK {
       //
       auto& vib = this->owned_gpu_resources.current;
       //
-      if (!this->active())
+      if (!this->active() || this->pending_gpu_upload())
          return;
       //
       vkCmdBindVertexBuffers(command_buffer, 0, 1, &vib.buffer.handle, &offset);
@@ -310,7 +310,7 @@ namespace vulkanDK {
    }
 
    raycast_hit_data rendered_mesh::do_raycast(const raycast& rc) const {
-      if (!this->active())
+      if (!this->active() || this->pending_gpu_upload())
          return {};
 
       if (!this->ray_intersects_bounding_sphere(rc.origin, rc.direction))

@@ -662,6 +662,16 @@ namespace vulkanDK {
       for (auto& q : this->queues.list)
          q.setup_command_pools(this->logical_device);
       //
+      this->uploading.commands = command_buffer(*this);
+      {
+         auto fence_info = VkFenceCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+         };
+         vkCreateFence(this->logical_device, &fence_info, nullptr, &this->uploading.fence);
+      }
+      //
       {  // swap chain
          this->_setup_sun_shadow_buffer();
          this->_setup_swap_chain_instance();         // sets up format, extent size, and handle
@@ -2264,82 +2274,11 @@ namespace vulkanDK {
       this->set_debug_object_name(nt.view,   "Null Texture View");
    }
    void surface_renderer::_setup_initial_scene() {
-      return;
-
-
-      auto device = this->logical_device;
       //
-      // Scene floor:
-      //
-      {
-         auto ti = this->add_texture(":/shaders/white.png");
-         { // Mesh: floor
-            auto  mi   = this->scene.insert_new_scene_entity<rendered_mesh>();
-            auto& mesh = this->scene.entities_of_type<rendered_mesh>()[mi];
-            auto& vib  = mesh.vib();
-            mesh.texture_indices.diffuse.set(*this, ti);
-            //
-            {
-               constexpr float size = 99999;
-               mesh.mesh_data.vertices = {  // Vertices
-                  {
-                     .pos    = { -size, -size, 0 },
-                     .color  = { 1.0, 0.6, 0.0, 1.0 },
-                     .uv     = { 1, 0 },
-                     .normal    = { 0, 0, 1 },
-                     .tangent   = { 1, 0, 0 },
-                     .bitangent = { 0, 1, 0 },
-                  },
-                  {
-                     .pos    = { size, -size, 0 },
-                     .color  = { 1.0, 0.6, 0.0, 1.0 },
-                     .uv     = { 0, 0 },
-                     .normal    = { 0, 0, 1 },
-                     .tangent   = { 1, 0, 0 },
-                     .bitangent = { 0, 1, 0 },
-                  },
-                  {
-                     .pos    = { size, size, 0 },
-                     .color  = { 1.0, 0.6, 0.0, 1.0 },
-                     .uv     = { 0, 1 },
-                     .normal    = { 0, 0, 1 },
-                     .tangent   = { 1, 0, 0 },
-                     .bitangent = { 0, 1, 0 },
-                  },
-                  {
-                     .pos    = { -size, size, 0 },
-                     .color  = { 1.0, 0.6, 0.0, 1.0 },
-                     .uv     = { 1, 1 },
-                     .normal    = { 0, 0, 1 },
-                     .tangent   = { 1, 0, 0 },
-                     .bitangent = { 0, 1, 0 },
-                  },
-               };
-            }
-            mesh.mesh_data.indices  = { 0, 1, 2, 2, 3, 0 };
-            mesh.recalc_bounding_sphere();
-            //
-            VkDeviceSize buffer_size_v;
-            VkDeviceSize buffer_size_i;
-            VkDeviceSize buffer_size;
-            mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-            //
-            auto  staging = this->create_staging_buffer(buffer_size);
-            void* data    = staging.map_memory();
-            mesh.setup_vib_data_at(data);
-            staging.unmap_memory(data);
-            //
-            vib.wide_indices = mesh.mesh_data.indices.type() == vertex_index_list::value_type::wide;
-            vib.indices_at   = buffer_size_v;
-            vib.index_count  = mesh.mesh_data.indices.size();
-            vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            vib.buffer.copy_from(staging);
-            //
-            mesh.frame_drawing_data.transform = glm::mat4(1);
-         }
-      }
-      //
-      // Done.
+      // For now, a no-op; we don't use an initial scene, in part because we don't actually need one 
+      // and in part because (possibly due to us not needing one, and me having no real-world case to 
+      // think about) I can't figure out the logistics of how we'd clean it up when Worldedit asks us 
+      // to start rendering real environments.
       //
    }
    void surface_renderer::_initialize_descriptor_sets() {
@@ -3396,6 +3335,13 @@ namespace vulkanDK {
       this->null_texture.teardown();
       this->debug_grid_index_buffer = {};
       {
+         if (auto& fence = this->uploading.fence; fence != VK_NULL_HANDLE) {
+            vkDestroyFence(this->logical_device, fence, nullptr);
+            fence = VK_NULL_HANDLE;
+         }
+         this->uploading = {};
+      }
+      {
          auto& list = this->graphics_shaders;
          for (auto* e : list)
             delete e;
@@ -3619,6 +3565,8 @@ namespace vulkanDK {
          time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
       }
       //
+      bool perform_scene_entity_gpu_uploads = this->_execute_pending_scene_entity_gpu_uploads();
+      //
       // If this frame-in-flight is still being used to render and present another swap 
       // chain image, wait for it to finish. We'll also advance the current frame counter 
       // here.
@@ -3672,6 +3620,10 @@ namespace vulkanDK {
             throw result_exception(result, "[vulkanDK::surface_renderer::draw_next_frame] Failed to acquire swap chain image!");
       }
       auto& sci = sc.images[sc_image_index];
+      //
+      if (perform_scene_entity_gpu_uploads) {
+         this->_wait_on_pending_scene_entity_gpu_uploads();
+      }
       //
       // The acquired  image is initially in the VK_IMAGE_LAYOUT_UNDEFINED  layout, which 
       // we can't really use.  We have to transition it to a usable  layout before we can 
@@ -4588,6 +4540,13 @@ namespace vulkanDK {
       }
    }
    void surface_renderer::_create_mesh_vib(rendered_mesh& mesh) {
+      if (mesh.active() && !mesh.pending_gpu_upload()) {
+         mesh.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+         ++this->uploading.pending_upload_counts.value_for<rendered_mesh>();
+         return;
+      }
+      __debugbreak(); // should be unreachable: uploads should be done all at once
+
       VkDeviceSize buffer_size_v;
       VkDeviceSize buffer_size_i;
       VkDeviceSize buffer_size;
@@ -5321,6 +5280,103 @@ namespace vulkanDK {
          item.fences.wait_on_all(this->logical_device);
    }
 
+   bool surface_renderer::_execute_pending_scene_entity_gpu_uploads() {
+      VkDeviceSize total_staging_size = 0;
+
+      this->uploading.pending_upload_counts.for_each([this, &total_staging_size]<typename Entity>(size_t& pending_upload_count) {
+         if (pending_upload_count <= 0)
+            return;
+         auto& list = this->scene.entities_of_type<Entity>();
+         for (const auto& entity : list) {
+            if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
+               continue;
+            if constexpr (std::is_same_v<Entity, rendered_mesh>) {
+               VkDeviceSize buffer_size_v;
+               VkDeviceSize buffer_size_i;
+               VkDeviceSize buffer_size;
+               entity.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
+               if (auto misalign = buffer_size % 8; misalign) {
+                  buffer_size += 8 - misalign;
+               }
+               total_staging_size += buffer_size;
+            }
+         }
+      });
+
+      if (total_staging_size <= 0)
+         return false;
+
+      auto& staging = this->uploading.staging;
+      staging = this->create_staging_buffer(total_staging_size);
+      auto* staging_data = staging.map_memory();
+
+      auto& commands = this->uploading.commands;
+      commands.top_level_begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+      VkDeviceSize offset = 0;
+      this->uploading.pending_upload_counts.for_each([this, &commands, &staging, staging_data, &offset]<typename Entity>(size_t& pending_upload_count) {
+         if (pending_upload_count <= 0)
+            return;
+         auto& list = this->scene.entities_of_type<Entity>();
+         for (auto& entity : list) {
+            if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
+               continue;
+            --pending_upload_count;
+            if constexpr (std::is_same_v<Entity, rendered_mesh>) {
+               VkDeviceSize buffer_size_v;
+               VkDeviceSize buffer_size_i;
+               VkDeviceSize buffer_size;
+               entity.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
+               entity.setup_vib_data_at(cobb::offset_into(staging_data, offset));
+               
+               auto& vib = entity.vib();
+               vib.wide_indices = entity.mesh_data.indices.type() == vertex_index_list::value_type::wide;
+               vib.indices_at   = buffer_size_v;
+               vib.index_count  = entity.mesh_data.indices.size();
+               vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+               auto copy_region = VkBufferCopy{
+                  .srcOffset = offset,
+                  .dstOffset = 0,
+                  .size      = buffer_size,
+               };
+               vkCmdCopyBuffer(commands.handle, staging.handle, entity.vib().buffer.handle, 1, &copy_region);
+
+               if (auto misalign = buffer_size % 8; misalign) {
+                  buffer_size += 8 - misalign;
+               }
+               offset += buffer_size;
+
+               entity.lifetime.life_state = scene_entities::life_state::active;
+            }
+         }
+      });
+
+      staging.unmap_memory(staging_data);
+      commands.finish();
+
+      {
+         auto submit_info = VkSubmitInfo{
+            .sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .commandBufferCount = 1,
+            .pCommandBuffers    = &commands.handle,
+         };
+         vkResetFences(this->logical_device, 1, &this->uploading.fence);
+         if (auto result = vkQueueSubmit(this->queues.graphics.handle, 1, &submit_info, this->uploading.fence); result != VK_SUCCESS) {
+            throw result_exception(result, "[surface_renderer::_execute_pending_scene_entity_gpu_uploads] Submission failed.");
+         }
+         if (auto result = vkWaitForFences(this->logical_device, 1, &this->uploading.fence, VK_FALSE, UINT64_MAX); result != VK_SUCCESS) {
+            throw result_exception(result, "[surface_renderer::_execute_pending_scene_entity_gpu_uploads] Wait-for-completion failed.");
+         }
+      }
+      return true;
+   }
+   void surface_renderer::_wait_on_pending_scene_entity_gpu_uploads() {
+      if (auto result = vkWaitForFences(this->logical_device, 1, &this->uploading.fence, VK_FALSE, UINT64_MAX); result != VK_SUCCESS) {
+         throw result_exception(result, "[surface_renderer::_execute_pending_scene_entity_gpu_uploads] Wait-for-completion failed.");
+      }
+      this->uploading.staging = {}; // free the staging buffer after the GPU-to-GPU copy is complete
+   }
    void surface_renderer::_execute_pending_scene_entity_deletions() {
       this->scene.entities.pending_deletion_counts.for_each([this]<typename Entity>(size_t& pending_deletion_count) {
          if (pending_deletion_count <= 0)

@@ -8,6 +8,10 @@ namespace vulkanDK::scene_entities {
       // The scene frame item should be used when rendering the scene.
       active,
 
+      // The scene frame item ordinarily should be used when rendering the scene, 
+      // except that its owned resources have not yet been uploaded to the GPU.
+      active_pending_upload,
+
       // The scene frame item is pending deletion. Its life state will change to 
       // "empty" and its owned GPU-side resources will be wholly deleted once it 
       // is no longer in use by any frame in flight.

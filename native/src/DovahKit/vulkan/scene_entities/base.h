@@ -55,10 +55,12 @@ namespace vulkanDK::scene_entities {
                using enum life_state;
                case active:
                case active_recycle:
+               case active_pending_upload:
                   return true;
             }
             return false;
          }
+         constexpr bool pending_gpu_upload() const noexcept { return this->lifetime.life_state == life_state::active_pending_upload; }
          constexpr bool empty() const noexcept { return this->lifetime.life_state == life_state::empty; }
          constexpr bool pending_delete() const noexcept { return this->lifetime.life_state == life_state::pending_delete; }
          constexpr bool recycle_in_progress() const noexcept { return this->lifetime.life_state == life_state::active_recycle; }

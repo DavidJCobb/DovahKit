@@ -401,7 +401,7 @@ namespace vulkanDK {
          size_t j = 0; // index into indirect draw parameter arrays
          for (; i < all_meshes.size(); ++i) {
             auto& ro = all_meshes[i];
-            if (!ro.active())
+            if (!ro.active() || ro.pending_gpu_upload())
                continue;
             if (!predicate(ro))
                continue;
