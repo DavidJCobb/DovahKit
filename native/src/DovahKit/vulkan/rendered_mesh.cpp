@@ -1,7 +1,11 @@
 #include "rendered_mesh.h"
-#include "../helpers/math.h"
+#include "helpers/math.h"
+#include "helpers/offset_into.h"
 #include "nif/file.h"
+#include "./command_buffer.h"
 #include "./raycast.h"
+#include "./surface_renderer.h"
+#include "./scene_entities/owned_gpu_resource_upload_operation.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -198,6 +202,30 @@ namespace vulkanDK {
       memcpy((void*)((std::intptr_t)dest),      vl.data(), vs);
       memcpy((void*)((std::intptr_t)dest + vs), il.data(), il.size_in_bytes());
    }
+
+   #pragma region Member functions for owned GPU resources (esp. for uploading)
+   VkDeviceSize rendered_mesh::owned_gpu_resources_size() const noexcept {
+      return (sizeof(vertex) * this->mesh_data.vertices.size()) + this->mesh_data.indices.size_in_bytes();
+   }
+   void rendered_mesh::upload_owned_gpu_resources(scene_entities::owned_gpu_resource_upload_operation& upload) {
+      const auto&  list_v = this->mesh_data.vertices;
+      const auto&  list_i = this->mesh_data.indices;
+      VkDeviceSize size_v = this->mesh_data.vertices.size() * sizeof(vertex);
+      VkDeviceSize size_i = this->mesh_data.indices.size_in_bytes();
+      VkDeviceSize buffer_size = size_v + size_i;
+
+      upload.stage_data(list_v.data(), size_v);
+      upload.stage_data(list_i.data(), size_i);
+      
+      auto& vib = this->vib();
+      vib.wide_indices = this->mesh_data.indices.type() == vertex_index_list::value_type::wide;
+      vib.indices_at   = this->mesh_data.vertices.size() * sizeof(vertex);
+      vib.index_count  = this->mesh_data.indices.size();
+      vib.buffer       = upload.create_buffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+      upload.queue_upload_to_buffer(vib.buffer);
+   }
+   #pragma endregion
 
    void rendered_mesh::draw_call(VkCommandBuffer command_buffer) {
       VkDeviceSize offset = 0;

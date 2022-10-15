@@ -50,4 +50,21 @@ namespace vulkanDK::dds {
       }
       return s;
    }
+
+   texture::~texture() {
+      if (this->data) {
+         delete this->data;
+         this->data = nullptr;
+      }
+      this->size = 0;
+   }
+   texture::texture(texture&& other) noexcept {
+      *this = std::move(other);
+   }
+   texture& texture::operator=(texture&& other) noexcept {
+      std::swap(this->data, other.data);
+      std::swap(this->size, other.size);
+      std::swap(this->metadata, other.metadata);
+      return *this;
+   }
 }

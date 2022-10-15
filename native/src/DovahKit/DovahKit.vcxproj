@@ -552,6 +552,7 @@
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
     <ClCompile Include="nif\blocks\NiAlphaProperty.cpp" />
     <ClCompile Include="nif\blocks\NiAVObject.cpp" />
+    <ClCompile Include="nif\blocks\NiBillboardNode.cpp" />
     <ClCompile Include="nif\blocks\NiCollisionObject.cpp" />
     <ClCompile Include="nif\blocks\NiDynamicEffect.cpp" />
     <ClCompile Include="nif\blocks\NiExtraData.cpp" />
@@ -661,6 +662,7 @@
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
     <ClCompile Include="vulkan\scene_entities\base.cpp" />
+    <ClCompile Include="vulkan\scene_entities\owned_gpu_resource_upload_operation.cpp" />
     <ClCompile Include="vulkan\scene_entity_handle.cpp" />
     <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
@@ -933,6 +935,7 @@
     <ClInclude Include="nif\blocks\BSXFlags.h" />
     <ClInclude Include="nif\blocks\NiAlphaProperty.h" />
     <ClInclude Include="nif\blocks\NiAVObject.h" />
+    <ClInclude Include="nif\blocks\NiBillboardNode.h" />
     <ClInclude Include="nif\blocks\NiCollisionObject.h" />
     <ClInclude Include="nif\blocks\NiDynamicEffect.h" />
     <ClInclude Include="nif\blocks\NiExtraData.h" />
@@ -1023,6 +1026,7 @@
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
+    <ClInclude Include="vulkan\data\vulkan_formats.h" />
     <ClInclude Include="vulkan\dds\load_exception.h" />
     <ClInclude Include="vulkan\dds\dxgi_format.h" />
     <ClInclude Include="vulkan\dds\header.h" />
@@ -1074,6 +1078,7 @@
     <ClInclude Include="vulkan\scene_entities\concepts\owns_gpu_resources.h" />
     <ClInclude Include="vulkan\scene_entities\fif_sync_state.h" />
     <ClInclude Include="vulkan\scene_entities\life_state.h" />
+    <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_upload_operation.h" />
     <ClInclude Include="vulkan\scene_entities\scene_limits.h" />
     <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h" />
     <ClInclude Include="vulkan\scene_entities\traits\coalesced_vib_fixed_size_info.h" />

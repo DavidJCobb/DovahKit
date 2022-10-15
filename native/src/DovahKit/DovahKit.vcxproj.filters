@@ -1881,6 +1881,12 @@
     <ClCompile Include="dk3d\tools\debug_dump_landscape_details.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\scene_entities\owned_gpu_resource_upload_operation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\NiBillboardNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4239,6 +4245,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\config\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_upload_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\data\vulkan_formats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\NiBillboardNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

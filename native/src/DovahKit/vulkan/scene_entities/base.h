@@ -5,6 +5,10 @@
 
 namespace vulkanDK {
    class scene;
+   class surface_renderer;
+   namespace scene_entities {
+      class owned_gpu_resource_upload_operation;
+   }
 }
 
 namespace vulkanDK::scene_entities {
@@ -73,6 +77,12 @@ namespace vulkanDK::scene_entities {
          static void coalesce_constant_shared_indices_into(void* write_to) = delete;
          void coalesce_indices_into(void* write_to) const noexcept = delete;
          void coalesce_vertices_into(void* write_to) const noexcept = delete;
+         #pragma endregion
+
+         #pragma region Member functions for owned GPU resources (esp. for uploading)
+         VkDeviceSize owned_gpu_resources_size() const noexcept = delete;
+         VkDeviceSize owned_gpu_resource_upload_alignment() const noexcept { return 8; }
+         void upload_owned_gpu_resources(owned_gpu_resource_upload_operation&) = delete;
          #pragma endregion
 
       protected:

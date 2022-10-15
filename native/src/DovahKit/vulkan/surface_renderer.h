@@ -174,7 +174,10 @@ namespace vulkanDK {
             command_buffer commands;
             VkFence        fence = VK_NULL_HANDLE;
             buffer         staging;
+            //
             cobb::class_map_from_class_array<size_t, scene_entities::all_types_with_owned_gpu_resources> pending_upload_counts;
+            //
+            owned_image_and_view pending_texture_placeholder;
          } uploading;
          struct {
             VkSwapchainKHR handle = VK_NULL_HANDLE;

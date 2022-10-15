@@ -27,6 +27,7 @@
 #include "./helpers/cubemap_helpers.h"
 #include "./helpers/glm_transform_from_beth.h"
 #include "./helpers/specialization_map_entry_for_member.h"
+#include "./scene_entities/owned_gpu_resource_upload_operation.h"
 
 // loading textures from files using Qt:
 #include <QBuffer>
@@ -662,14 +663,41 @@ namespace vulkanDK {
       for (auto& q : this->queues.list)
          q.setup_command_pools(this->logical_device);
       //
-      this->uploading.commands = command_buffer(*this);
       {
-         auto fence_info = VkFenceCreateInfo{
-            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-         };
-         vkCreateFence(this->logical_device, &fence_info, nullptr, &this->uploading.fence);
+         this->uploading.commands = command_buffer(*this);
+         {
+            auto fence_info = VkFenceCreateInfo{
+               .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+               .pNext = nullptr,
+               .flags = 0,
+            };
+            vkCreateFence(this->logical_device, &fence_info, nullptr, &this->uploading.fence);
+         }
+         {
+            auto texture = QImage(1, 1, QImage::Format::Format_RGBA8888);
+            texture.setPixelColor(0, 0, QColor::fromRgb(0, 0, 255));
+            //
+            auto  staging = this->create_staging_buffer(texture.sizeInBytes());
+            void* data    = staging.map_memory();
+            memcpy(data, texture.constBits(), texture.sizeInBytes());
+            staging.unmap_memory(data);
+            //
+            auto& target = this->uploading.pending_texture_placeholder;
+            target = owned_image_and_view(*this);
+            target.create_image(
+               {
+                  .extent = {
+                     .width  = 1,
+                     .height = 1,
+                  },
+                  .format = VK_FORMAT_R8G8B8A8_SRGB,
+                  .usage  = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+               },
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+               );
+            target.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
+            target.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+         }
       }
       //
       {  // swap chain
@@ -4021,6 +4049,17 @@ namespace vulkanDK {
       //
       // Create Vulkan data:
       //
+      {
+         auto* copy = malloc(tex.size); // give it its own data, instead of pulling from the soon-to-be-deleted BSA archived file
+         memcpy(copy, tex.data, tex.size);
+         tex.data = copy;
+         //
+         target.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+         target.prepare_for_gpu_upload(vulkan_metadata, std::move(tex));
+         ++this->uploading.pending_upload_counts.value_for<loaded_texture>();
+         
+         return texture_index;
+      }
       target.owned_gpu_resources.current = owned_image_and_view(*this);
       try {
          auto& img = target.owned_gpu_resources.current;
@@ -5290,15 +5329,11 @@ namespace vulkanDK {
          for (const auto& entity : list) {
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;
-            if constexpr (std::is_same_v<Entity, rendered_mesh>) {
-               VkDeviceSize buffer_size_v;
-               VkDeviceSize buffer_size_i;
-               VkDeviceSize buffer_size;
-               entity.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-               if (auto misalign = buffer_size % 8; misalign) {
-                  buffer_size += 8 - misalign;
-               }
-               total_staging_size += buffer_size;
+            auto size  = entity.owned_gpu_resources_size();
+            total_staging_size += size;
+            auto align = entity.owned_gpu_resource_upload_alignment();
+            if (auto misalign = total_staging_size % align; misalign) {
+               total_staging_size += (align - misalign);
             }
          }
       });
@@ -5308,13 +5343,14 @@ namespace vulkanDK {
 
       auto& staging = this->uploading.staging;
       staging = this->create_staging_buffer(total_staging_size);
-      auto* staging_data = staging.map_memory();
 
       auto& commands = this->uploading.commands;
       commands.top_level_begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-      VkDeviceSize offset = 0;
-      this->uploading.pending_upload_counts.for_each([this, &commands, &staging, staging_data, &offset]<typename Entity>(size_t& pending_upload_count) {
+      auto upload = scene_entities::owned_gpu_resource_upload_operation(*this);
+      upload.staging.data = staging.map_memory();
+
+      this->uploading.pending_upload_counts.for_each([this, &upload]<typename Entity>(size_t& pending_upload_count) {
          if (pending_upload_count <= 0)
             return;
          auto& list = this->scene.entities_of_type<Entity>();
@@ -5322,38 +5358,17 @@ namespace vulkanDK {
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;
             --pending_upload_count;
-            if constexpr (std::is_same_v<Entity, rendered_mesh>) {
-               VkDeviceSize buffer_size_v;
-               VkDeviceSize buffer_size_i;
-               VkDeviceSize buffer_size;
-               entity.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-               entity.setup_vib_data_at(cobb::offset_into(staging_data, offset));
-               
-               auto& vib = entity.vib();
-               vib.wide_indices = entity.mesh_data.indices.type() == vertex_index_list::value_type::wide;
-               vib.indices_at   = buffer_size_v;
-               vib.index_count  = entity.mesh_data.indices.size();
-               vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-               auto copy_region = VkBufferCopy{
-                  .srcOffset = offset,
-                  .dstOffset = 0,
-                  .size      = buffer_size,
-               };
-               vkCmdCopyBuffer(commands.handle, staging.handle, entity.vib().buffer.handle, 1, &copy_region);
-
-               if (auto misalign = buffer_size % 8; misalign) {
-                  buffer_size += 8 - misalign;
-               }
-               offset += buffer_size;
-
-               entity.lifetime.life_state = scene_entities::life_state::active;
-            }
+            
+            upload.align_to({}, entity.owned_gpu_resource_upload_alignment());
+            entity.upload_owned_gpu_resources(upload);
+            upload.next({});
+            if (entity.lifetime.life_state == scene_entities::life_state::pending_delete) // entities may mark themselves for delete on failure
+               continue;
+            entity.lifetime.life_state = scene_entities::life_state::active;
          }
       });
 
-      staging.unmap_memory(staging_data);
-      commands.finish();
+      upload.finish_queueing();
 
       {
          auto submit_info = VkSubmitInfo{

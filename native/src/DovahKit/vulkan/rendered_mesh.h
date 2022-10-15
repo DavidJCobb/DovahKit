@@ -20,6 +20,7 @@ namespace nifDK {
 }
 
 namespace vulkanDK {
+   class  command_buffer;
    class  raycast;
    struct raycast_hit_data;
 }
@@ -160,6 +161,11 @@ namespace vulkanDK {
          size_t total_size_for_setup() const;
          void sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const;
          void setup_vib_data_at(void*) const;
+
+         #pragma region Member functions for owned GPU resources (esp. for uploading)
+         VkDeviceSize owned_gpu_resources_size() const noexcept;
+         void upload_owned_gpu_resources(scene_entities::owned_gpu_resource_upload_operation&);
+         #pragma endregion
 
          // Caller should bind descriptor sets, send necessary push constants, etc., before calling this
          void draw_call(VkCommandBuffer);

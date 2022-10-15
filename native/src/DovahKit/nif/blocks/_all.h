@@ -64,6 +64,7 @@
                #include "BSRangeNode.h"
                   #include "BSBlastNode.h"
                      #include "BSDamageStage.h"
+               #include "NiBillboardNode.h"
                #include "NiSwitchNode.h"
          #include "NiProperty.h"
             #include "NiAlphaProperty.h"
@@ -135,6 +136,7 @@ namespace nifDK {
       block_types::BSXFlags,
       block_types::NiAlphaProperty,
       block_types::NiAVObject,
+      block_types::NiBillboardNode,
       block_types::NiCollisionObject,
       block_types::NiDynamicEffect,
       block_types::NiExtraData,
