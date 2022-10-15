@@ -176,7 +176,17 @@ namespace vulkanDK {
             buffer         staging;
             //
             cobb::class_map_from_class_array<size_t, scene_entities::all_types_with_owned_gpu_resources> pending_upload_counts;
-            //
+            
+            // At some point, we want to implement spreading out GPU data uploads over multiple frames. 
+            // If we have 500 MB of data to upload, we shouldn't rig up a 500 MB staging buffer and use 
+            // 1 GB VRAM concurrently just to get all that data onto the GPU in a single frame, right?
+            // 
+            // Once we do, we'll need to manage asynchronicity with respect to textures. The easiest 
+            // way is: when a texture is marked as pending, immediately update descriptors to upload a 
+            // placeholder texture, so that meshes which use the texture don't fail to render. Then, 
+            // when the texture loads, update descriptors again.
+            // 
+            // This here is that placeholder texture.
             owned_image_and_view pending_texture_placeholder;
          } uploading;
          struct {
@@ -283,7 +293,7 @@ namespace vulkanDK {
          void remove_landscape(size_t);
       
       protected:
-         void _create_mesh_vib(rendered_mesh&);
+         void _queue_mesh_vib_creation(rendered_mesh&);
          void _handle_ni_textures(rendered_mesh&, nifDK::block_types::BSShaderProperty*);
          rendered_mesh* add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index);
          rendered_mesh* add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index);

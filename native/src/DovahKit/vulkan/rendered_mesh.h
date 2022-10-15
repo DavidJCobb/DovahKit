@@ -157,10 +157,6 @@ namespace vulkanDK {
 
          // Setup functions:
          void recalc_bounding_sphere(); // does not count transforms, though member functions which use it should apply transforms
-         //
-         size_t total_size_for_setup() const;
-         void sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const;
-         void setup_vib_data_at(void*) const;
 
          #pragma region Member functions for owned GPU resources (esp. for uploading)
          VkDeviceSize owned_gpu_resources_size() const noexcept;

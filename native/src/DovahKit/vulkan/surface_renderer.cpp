@@ -4047,48 +4047,22 @@ namespace vulkanDK {
       target.h    = tex.metadata.height;
       target.path = texture_path;
       //
-      // Create Vulkan data:
+      // Queue transfer to the GPU:
+      // 
+      // Right now, `tex` is borrowing a buffer directly from the BSA-archived file, and that 
+      // buffer's gonna get deleted when we're done with the BSA data. We can't simply "steal" 
+      // it from the BSA-archived file object, because it may actually be shared with the BSA 
+      // itself (i.e. if the file is uncompressed). We have to instead just copy the buffer.
       //
-      {
-         auto* copy = malloc(tex.size); // give it its own data, instead of pulling from the soon-to-be-deleted BSA archived file
-         memcpy(copy, tex.data, tex.size);
-         tex.data = copy;
-         //
-         target.lifetime.life_state = scene_entities::life_state::active_pending_upload;
-         target.prepare_for_gpu_upload(vulkan_metadata, std::move(tex));
-         ++this->uploading.pending_upload_counts.value_for<loaded_texture>();
-         
-         return texture_index;
-      }
-      target.owned_gpu_resources.current = owned_image_and_view(*this);
-      try {
-         auto& img = target.owned_gpu_resources.current;
-         img.metadata = vulkan_metadata;
-         img.metadata.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-         //
-         img.create_image(img.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-         {
-            auto  staging = this->create_staging_buffer(tex.pixel_data_size());
-            void* data    = staging.map_memory();
-            memcpy(data, tex.pixel_data(), tex.pixel_data_size());
-            staging.unmap_memory(data);
-            //
-            img.overwrite_from_staging_buffer(staging, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
-         }
-         img.create_basic_view(img.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
-         //
-         #if _DEBUG
-            this->set_debug_object_name(img.handle, QString("2D Image <Tex %1> <%2>").arg(texture_index).arg(target.path).toStdString());
-            this->set_debug_object_name(img.view,   QString("Image View <Tex %1> <%2>").arg(texture_index).arg(target.path).toStdString());
-         #endif
-      } catch (std::runtime_error& e) {
-         qDebug("[vulkanDK::scene_renderer::add_dds_texture] Exception thrown while trying to create a new texture.");
-         target.owned_gpu_resources.current.teardown();
-         target.mark_for_delete();
-         return fail;
-      }
+      auto* copy = malloc(tex.size);
+      memcpy(copy, tex.data, tex.size);
+      tex.data = copy;
       //
-      // Success!
+      target.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+      target.prepare_for_gpu_upload(vulkan_metadata, std::move(tex));
+      ++this->uploading.pending_upload_counts.value_for<loaded_texture>();
+      //
+      // And now we're done!
       //
       return texture_index;
    }
@@ -4126,8 +4100,6 @@ namespace vulkanDK {
          glm::vec3 position = {};
          {
             constexpr float radius = 5.0F;
-            //constexpr float radius = 0.0F;
-            //
             for (size_t j = 0; j < 3; ++j)
                position[j] = ((float)rand() / RAND_MAX) * radius - (radius / 2.0F);
          }
@@ -4174,21 +4146,7 @@ namespace vulkanDK {
             position
          );
          //
-         VkDeviceSize buffer_size_v;
-         VkDeviceSize buffer_size_i;
-         VkDeviceSize buffer_size;
-         ro.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-         //
-         auto  staging = this->create_staging_buffer(buffer_size);
-         void* data    = staging.map_memory();
-         ro.setup_vib_data_at(data);
-         staging.unmap_memory(data);
-         //
-         vib.wide_indices = ro.mesh_data.indices.type() == vertex_index_list::value_type::wide;
-         vib.indices_at   = buffer_size_v;
-         vib.index_count  = ro.mesh_data.indices.size();
-         vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-         vib.buffer.copy_from(staging);
+         this->_queue_mesh_vib_creation(ro);
          //
          if (!ro.anim_state)
             ro.anim_state = new mesh_animation_state; // for testing: spin the mesh
@@ -4578,30 +4536,10 @@ namespace vulkanDK {
          }
       }
    }
-   void surface_renderer::_create_mesh_vib(rendered_mesh& mesh) {
-      if (mesh.active() && !mesh.pending_gpu_upload()) {
-         mesh.lifetime.life_state = scene_entities::life_state::active_pending_upload;
-         ++this->uploading.pending_upload_counts.value_for<rendered_mesh>();
-         return;
-      }
-      __debugbreak(); // should be unreachable: uploads should be done all at once
-
-      VkDeviceSize buffer_size_v;
-      VkDeviceSize buffer_size_i;
-      VkDeviceSize buffer_size;
-      mesh.sizes_for_setup(buffer_size_v, buffer_size_i, buffer_size);
-      //
-      auto  staging = this->create_staging_buffer(buffer_size);
-      void* data    = staging.map_memory();
-      mesh.setup_vib_data_at(data);
-      staging.unmap_memory(data);
-      //
-      auto& vib = mesh.vib();
-      vib.wide_indices = mesh.mesh_data.indices.type() == vertex_index_list::value_type::wide;
-      vib.indices_at   = buffer_size_v;
-      vib.index_count  = mesh.mesh_data.indices.size();
-      vib.buffer       = this->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-      vib.buffer.copy_from(staging);
+   void surface_renderer::_queue_mesh_vib_creation(rendered_mesh& mesh) {
+      assert(mesh.active() && !mesh.pending_gpu_upload());
+      mesh.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+      ++this->uploading.pending_upload_counts.value_for<rendered_mesh>();
    }
    void surface_renderer::_handle_ni_textures(rendered_mesh& mesh, nifDK::block_types::BSShaderProperty* shader) {
       auto texture_index = loaded_texture_index::none;
@@ -4690,7 +4628,7 @@ namespace vulkanDK {
       //
       // Vulkan:
       //
-      this->_create_mesh_vib(mesh);
+      this->_queue_mesh_vib_creation(mesh);
       if constexpr (debug_log_mesh_loading)
          qDebug("[surface_renderer::add_BSTriShape_mesh] Vulkan setup complete for geometry: %s.", data->name.c_str());
       //
@@ -4793,7 +4731,7 @@ namespace vulkanDK {
       //
       // Vulkan:
       //
-      this->_create_mesh_vib(mesh);
+      this->_queue_mesh_vib_creation(mesh);
       if constexpr (debug_log_mesh_loading)
          qDebug("[surface_renderer::add_NiGeometry_mesh] Vulkan setup complete for geometry: %s.", object->name.c_str());
       //
@@ -5190,7 +5128,7 @@ namespace vulkanDK {
             mesh.recalc_bounding_sphere();
             mesh.frame_drawing_data.transform = glm::mat4(1.0F);
          }
-         this->_create_mesh_vib(mesh);
+         this->_queue_mesh_vib_creation(mesh);
          qDebug("Camera debug frustrum added.");
       }
       {  // Sun shadows
@@ -5282,7 +5220,7 @@ namespace vulkanDK {
             mesh.recalc_bounding_sphere();
             mesh.frame_drawing_data.transform = glm::mat4(1.0F);
          }
-         this->_create_mesh_vib(mesh);
+         this->_queue_mesh_vib_creation(mesh);
          qDebug("Sun shadow debug frustrum added.");
       }
       for (auto& fif : this->swap_chain.frames_in_flight)

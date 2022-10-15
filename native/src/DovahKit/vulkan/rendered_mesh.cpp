@@ -184,25 +184,7 @@ namespace vulkanDK {
       this->frame_drawing_data.bounding_sphere_center = bs.center;
       this->frame_drawing_data.bounding_sphere_radius = sqrt(bs.radius_sq);
    }
-   //
-   size_t rendered_mesh::total_size_for_setup() const {
-      return (sizeof(vertex) * this->mesh_data.vertices.size()) + this->mesh_data.indices.size_in_bytes();
-   }
-   void rendered_mesh::sizes_for_setup(VkDeviceSize& v, VkDeviceSize& i, VkDeviceSize& total) const {
-      v = this->mesh_data.vertices.size() * sizeof(vertex);
-      i = this->mesh_data.indices.size_in_bytes();
-      total = v + i;
-   }
-   void rendered_mesh::setup_vib_data_at(void* dest) const {
-      auto& vl = this->mesh_data.vertices;
-      auto& il = this->mesh_data.indices;
-      //
-      auto vs = vl.size() * sizeof(vertex);
-      //
-      memcpy((void*)((std::intptr_t)dest),      vl.data(), vs);
-      memcpy((void*)((std::intptr_t)dest + vs), il.data(), il.size_in_bytes());
-   }
-
+   
    #pragma region Member functions for owned GPU resources (esp. for uploading)
    VkDeviceSize rendered_mesh::owned_gpu_resources_size() const noexcept {
       return (sizeof(vertex) * this->mesh_data.vertices.size()) + this->mesh_data.indices.size_in_bytes();
