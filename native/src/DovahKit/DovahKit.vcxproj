@@ -817,7 +817,14 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit.h" />
+    <ClInclude Include="helpers\arrays\cast.h" />
+    <ClInclude Include="helpers\arrays\concat.h" />
+    <ClInclude Include="helpers\arrays\copy_matching.h" />
+    <ClInclude Include="helpers\arrays\count_matching.h" />
+    <ClInclude Include="helpers\arrays\filter.h" />
     <ClInclude Include="helpers\arrays\make.h" />
+    <ClInclude Include="helpers\arrays\map.h" />
+    <ClInclude Include="helpers\arrays\quicksort_ct.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_flatten.h" />
     <ClInclude Include="helpers\class_array.h" />
@@ -850,6 +857,8 @@
     <ClInclude Include="helpers\generic_reader.h" />
     <QtMoc Include="ui\form_windows\textureset.h" />
     <ClInclude Include="helpers\offset_into.h" />
+    <ClInclude Include="helpers\polyfills\msvc\consteval_compatible_optional.h" />
+    <ClInclude Include="helpers\polyfills\msvc\const_reference_nttp_decltype.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
@@ -863,6 +872,7 @@
     <ClInclude Include="helpers\string\strcmp.h" />
     <ClInclude Include="helpers\string\strieq_ascii.h" />
     <ClInclude Include="helpers\string\string_says_false.h" />
+    <ClInclude Include="helpers\string\string_to_integer.h" />
     <ClInclude Include="helpers\string\strlen.h" />
     <ClInclude Include="helpers\tuples\concat.h" />
     <ClInclude Include="helpers\tuples\contains_type_matching_functor.h" />
@@ -1027,6 +1037,7 @@
     <ClInclude Include="vulkan\config\validation_layers.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
     <ClInclude Include="vulkan\data\vulkan_formats.h" />
+    <ClInclude Include="vulkan\data\vulkan_format_info_from_format_name.h" />
     <ClInclude Include="vulkan\dds\load_exception.h" />
     <ClInclude Include="vulkan\dds\dxgi_format.h" />
     <ClInclude Include="vulkan\dds\header.h" />
@@ -1041,6 +1052,7 @@
     <ClInclude Include="vulkan\graphics_shader.h" />
     <ClInclude Include="vulkan\helpers\bundled_descriptor_buffer_write.h" />
     <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h" />
+    <ClInclude Include="vulkan\helpers\calc_texture_bytecount.h" />
     <ClInclude Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.h" />
     <ClInclude Include="vulkan\helpers\cubemap_helpers.h" />
     <ClInclude Include="vulkan\helpers\debug_helper_typeof.h" />
@@ -1923,6 +1935,8 @@
     <Natvis Include="vulkan\dds\header.natvis" />
     <Natvis Include="vulkan\dds\pixel_format.natvis" />
     <Natvis Include="vulkan\helpers\vertex_index_list.natvis" />
+    <Natvis Include="vulkan\image.natvis" />
+    <Natvis Include="vulkan\image_metadata.natvis" />
     <Natvis Include="vulkan\loaded_texture.natvis" />
     <Natvis Include="vulkan\loaded_texture_index.natvis" />
     <Natvis Include="vulkan\rendered_landscape.natvis" />

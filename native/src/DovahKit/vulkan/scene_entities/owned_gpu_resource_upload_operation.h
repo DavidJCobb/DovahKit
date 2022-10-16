@@ -1,8 +1,10 @@
 #pragma once
+#include <string>
 #include "helpers/passkey.h"
 #include "../_vulkan.h"
 #include "../buffer.h"
 #include "../image.h"
+#include "../surface_renderer.h"
 
 namespace vulkanDK {
    class command_buffer;
@@ -17,6 +19,7 @@ namespace vulkanDK::scene_entities {
 
       protected:
          surface_renderer& owner;
+         size_t current_entity_index = 0;
          struct {
             void*        data   = nullptr;
             VkDeviceSize start  = 0;
@@ -47,12 +50,19 @@ namespace vulkanDK::scene_entities {
          //
          void queue_upload_to_buffer(buffer& dst, VkDeviceSize size = VK_WHOLE_SIZE);
          void queue_upload_to_image(owned_image_and_view& dst, VkImageAspectFlags, VkImageLayout, VkAccessFlags);
+         //
+         void set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name);
+         template<typename T> void set_debug_object_name(T handle, const std::string& name) {
+            this->set_debug_object_name((uint64_t)handle, debug_helper_typeof<T>, name);
+         }
 
          //
          // Then, SR moves on to next:
          //
          void next(surface_renderer_passkey);
          void align_to(surface_renderer_passkey, VkDeviceSize);
+         void set_entity_index(surface_renderer_passkey, size_t v) { this->current_entity_index = v; }
+         size_t get_entity_index() const noexcept { return this->current_entity_index; }
 
          void finish_queueing();
    };

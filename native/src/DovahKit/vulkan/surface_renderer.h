@@ -271,8 +271,7 @@ namespace vulkanDK {
          [[nodiscard]] compute_shader* create_compute_shader(cobb::eight_cc id);
          [[nodiscard]] compute_shader* get_compute_shader(cobb::eight_cc id) const;
 
-         // TODO: fully decouple scenes from scene renderers; make it possible to have multiple scene renderers point to the same scene
-         size_t add_texture(const QString& texture_path);
+         size_t add_texture(const QString& texture_path); // for testing and internal use only; should eventually be phased out, tbh
          size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
          void add_mesh(const QString& texture_path);
          void remove_mesh(size_t);

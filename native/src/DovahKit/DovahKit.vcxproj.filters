@@ -4256,6 +4256,42 @@
     <ClInclude Include="nif\blocks\NiBillboardNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\data\vulkan_format_info_from_format_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\string_to_integer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\calc_texture_bytecount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\cast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\concat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\copy_matching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\count_matching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\polyfills\msvc\const_reference_nttp_decltype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\polyfills\msvc\consteval_compatible_optional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\quicksort_ct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4948,5 +4984,7 @@
     <Natvis Include="helpers\grid.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="vulkan\scene_entity_handle.natvis" />
+    <Natvis Include="vulkan\image_metadata.natvis" />
+    <Natvis Include="vulkan\image.natvis" />
   </ItemGroup>
 </Project>

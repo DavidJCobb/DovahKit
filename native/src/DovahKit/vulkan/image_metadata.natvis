@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="vulkanDK::image_metadata">
+
+      <Intrinsic Name="_usage_bit" Expression="(usage &amp; bit) != 0">
+         <Parameter Name="bit" Type="VkImageUsageFlagBits" />
+      </Intrinsic>
+      <Intrinsic Name="_sample_bit" Expression="(samples &amp; bit) != 0">
+         <Parameter Name="bit" Type="VkSampleCountFlagBits" />
+      </Intrinsic>
+
+      <Intrinsic Name="_swizzle_char" Expression="
+         v == VK_COMPONENT_SWIZZLE_IDENTITY ? 'x' :
+            v == VK_COMPONENT_SWIZZLE_ZERO ? '0' :
+               v == VK_COMPONENT_SWIZZLE_ONE ? '1' :
+                  v == VK_COMPONENT_SWIZZLE_R ? 'r' : 
+                     v == VK_COMPONENT_SWIZZLE_G ? 'g' :
+                        v == VK_COMPONENT_SWIZZLE_B ? 'b' :
+                           v == VK_COMPONENT_SWIZZLE_A ? 'a' :
+                              '?'
+      ">
+         <Parameter Name="v" Type="VkComponentSwizzle" />
+      </Intrinsic>
+      
+      <Expand>
+         <Item Name="dimensions">dimensions</Item>
+         <Synthetic Name="extent">
+            <DisplayString Condition="extent.depth == 1">{extent.width,d}x{extent.height,d}</DisplayString>
+            <DisplayString>{extent.width,d}x{extent.height,d}x{extent.depth,d}</DisplayString>
+            <Expand>
+               <Item Name="width">extent.width</Item>
+               <Item Name="height">extent.height</Item>
+               <Item Name="depth">extent.depth</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="format">format,e</Item>
+         <Item Name="is_cubemap">is_cubemap</Item>
+         <Item Name="layer_count">layer_count,d</Item>
+         <Item Name="mipmap_count">mipmap_count,d</Item>
+         <Synthetic Name="samples">
+            <DisplayString Condition="samples == 0">none</DisplayString>
+            <DisplayString Condition="samples == (1 &lt;&lt; __log2(samples))">{samples,e}</DisplayString>
+            <DisplayString>{samples}</DisplayString>
+            <Expand>
+               <Item Name="1 sample" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,x</Item>
+               <Item Name="2 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT,x</Item>
+               <Item Name="4 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT,x</Item>
+               <Item Name="8 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT,x</Item>
+               <Item Name="16 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT,x</Item>
+               <Item Name="32 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT,x</Item>
+               <Item Name="64 samples" Condition="_sample_bit(VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT)">VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT,x</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="sharing">sharing,e</Item>
+         <Synthetic Name="swizzle">
+            <DisplayString>r, g, b, a -&gt; {_swizzle_char(swizzle.r),sb}, {_swizzle_char(swizzle.g),sb}, {_swizzle_char(swizzle.b),sb}, {_swizzle_char(swizzle.a),sb}</DisplayString>
+            <Expand>
+               <Item Name="r">swizzle.r,e</Item>
+               <Item Name="g">swizzle.g,e</Item>
+               <Item Name="b">swizzle.b,e</Item>
+               <Item Name="a">swizzle.a,e</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="tiling">tiling,e</Item>
+         <Synthetic Name="usage">
+            <DisplayString>{usage}</DisplayString>
+            <Expand>
+               <Item Name="VK_IMAGE_USAGE_TRANSFER_SRC_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_TRANSFER_DST_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_STORAGE_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_SAMPLED_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,x</Item>
+               <Item Name="VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT" Condition="_usage_bit(VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)">VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,x</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

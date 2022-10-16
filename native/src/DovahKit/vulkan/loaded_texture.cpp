@@ -1,5 +1,6 @@
 #include "loaded_texture.h"
 #include <stdexcept>
+#include <QString>
 #include "./scene_entities/owned_gpu_resource_upload_operation.h"
 #include "./data/vulkan_formats.h"
 
@@ -41,6 +42,10 @@ namespace vulkanDK {
       try {
          image.create_image(image.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          image.create_basic_view(image.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
+         #if _DEBUG
+            upload.set_debug_object_name(image.handle, QString("2D Image <Tex %1> <%2>").arg(upload.get_entity_index()).arg(this->path).toStdString());
+            upload.set_debug_object_name(image.view,   QString("Image View <Tex %1> <%2>").arg(upload.get_entity_index()).arg(this->path).toStdString());
+         #endif
          upload.queue_upload_to_image(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
       } catch (std::runtime_error& e) {
          qDebug("[vulkanDK::loaded_texture::owned_gpu_resources_size] Exception thrown while trying to upload to the GPU.");

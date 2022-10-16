@@ -3914,8 +3914,6 @@ namespace vulkanDK {
       //
       QImage texture;
       {
-         //auto path      = QLatin1Literal("shaders/") + texture_path;
-         //auto bytearray = QResource(path).uncompressedData();
          auto file = QFile(texture_path);
          if (!file.open(QIODevice::ReadOnly)) {
             qDebug("[vulkanDK::surface_renderer::add_texture] Failed to open test image.");
@@ -4026,7 +4024,7 @@ namespace vulkanDK {
          qDebug("[vulkanDK::surface_renderer::add_dds_texture] No DDS data available: %s", qUtf8Printable(texture_path));
          return fail;
       }
-      const auto vulkan_metadata = image_metadata::from_dds_header(tex.metadata);
+      const auto vulkan_metadata = image_metadata::from_dds_header(tex.metadata, tex.pixel_data_size());
       if (vulkan_metadata.format == VkFormat::VK_FORMAT_UNDEFINED) {
          qDebug("[vulkanDK::surface_renderer::add_dds_texture] DDS texture format did not map to Vulkan: %s", qUtf8Printable(texture_path));
          return fail;
@@ -5292,12 +5290,14 @@ namespace vulkanDK {
          if (pending_upload_count <= 0)
             return;
          auto& list = this->scene.entities_of_type<Entity>();
-         for (auto& entity : list) {
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto& entity = list[i];
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;
             --pending_upload_count;
             
             upload.align_to({}, entity.owned_gpu_resource_upload_alignment());
+            upload.set_entity_index({}, i);
             entity.upload_owned_gpu_resources(upload);
             upload.next({});
             if (entity.lifetime.life_state == scene_entities::life_state::pending_delete) // entities may mark themselves for delete on failure

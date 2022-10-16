@@ -118,7 +118,7 @@ namespace vulkanDK {
          .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
          .magFilter        = VK_FILTER_LINEAR,
          .minFilter        = VK_FILTER_LINEAR,
-         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+         .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_NEAREST,
          .addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
          .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
          .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
@@ -128,7 +128,7 @@ namespace vulkanDK {
          .compareEnable    = VK_FALSE,
          .compareOp        = VK_COMPARE_OP_ALWAYS,
          .minLod           = 0.0,
-         .maxLod           = 0.0,
+         .maxLod           = VK_LOD_CLAMP_NONE,
          .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
          .unnormalizedCoordinates = VK_FALSE, // true: coordinates are [0, width], etc; false: coordinates are [0, 1]
       };

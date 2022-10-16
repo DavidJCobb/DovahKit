@@ -1,4 +1,5 @@
 #include "owned_gpu_resource_upload_operation.h"
+#include <vector>
 #include "../buffer.h"
 #include "../surface_renderer.h"
 
@@ -51,31 +52,50 @@ namespace vulkanDK::scene_entities {
       dst.current.layout = VK_IMAGE_LAYOUT_UNDEFINED;
       dst.transition_layout(commands, aspect, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT);
       //
+      std::vector<VkBufferImageCopy> mip_levels;
+      //
       {
-         auto region = VkBufferImageCopy{
-            .bufferOffset      = this->staging.start + this->command_info.offset,
-            .bufferRowLength   = 0, // amount of padding bytes between rows?
-            .bufferImageHeight = 0, // amount of padding bytes... somewhere?
-            .imageSubresource  = {
-               .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-               .mipLevel       = 0,
-               .baseArrayLayer = 0,
-               .layerCount     = dst.metadata.layer_count,
-            },
-            .imageOffset = { 0, 0, 0 },
-            .imageExtent = dst.metadata.extent,
-         };
-         vkCmdCopyBufferToImage(
-            commands.handle,
-            _get_staging_buffer().handle,
-            dst.handle,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region
-         );
+         std::vector<size_t> mipmap_level_offsets;
+         dst.metadata.get_mip_level_offsets(mipmap_level_offsets);
+         mip_levels.resize(mipmap_level_offsets.size());
+         
+         auto base_offset = this->staging.start + this->command_info.offset;
+         auto extent = dst.metadata.extent;
+
+         for (size_t i = 0; i < mip_levels.size(); ++i) {
+            auto& item = mip_levels[i];
+            item = VkBufferImageCopy{
+               .bufferOffset      = base_offset + mipmap_level_offsets[i],
+               .bufferRowLength   = 0, // amount of padding bytes between rows?
+               .bufferImageHeight = 0, // amount of padding bytes... somewhere?
+               .imageSubresource  = {
+                  .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                  .mipLevel       = (uint32_t)i,
+                  .baseArrayLayer = 0,
+                  .layerCount     = dst.metadata.layer_count,
+               },
+               .imageOffset = { 0, 0, 0 },
+               .imageExtent = extent,
+            };
+            extent.width  /= 2;
+            extent.height /= 2;
+         }
       }
+      vkCmdCopyBufferToImage(
+         commands.handle,
+         _get_staging_buffer().handle,
+         dst.handle,
+         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+         mip_levels.size(),
+         mip_levels.data()
+      );
       dst.transition_layout(commands, aspect, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, access);
    }
+
+   void owned_gpu_resource_upload_operation::set_debug_object_name(uint64_t handle, VkObjectType type, const std::string& name) {
+      this->owner.set_debug_object_name(handle, type, name);
+   }
+
    void owned_gpu_resource_upload_operation::finish_queueing() {
       _get_staging_buffer().unmap_memory(this->staging.data);
       this->staging.data = nullptr;

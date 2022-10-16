@@ -8,6 +8,10 @@
 #include "./scene_entities/owned_gpu_resource_sets.h"
 #include "./dds/texture.h"
 
+namespace vulkanDK::scene_entities {
+   class owned_gpu_resource_upload_operation;
+}
+
 namespace vulkanDK {
    struct loaded_texture : public scene_entities::base {
       public:

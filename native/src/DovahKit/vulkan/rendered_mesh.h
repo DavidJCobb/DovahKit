@@ -23,6 +23,10 @@ namespace vulkanDK {
    class  command_buffer;
    class  raycast;
    struct raycast_hit_data;
+
+   namespace scene_entities {
+      class owned_gpu_resource_upload_operation;
+   }
 }
 
 namespace vulkanDK {

@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "_vulkan.h"
 #include "_memory.h"
 #include "_util.h"
@@ -29,8 +30,10 @@ namespace vulkanDK {
       VkImageTiling         tiling       = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
       VkImageUsageFlags     usage        = 0;
 
-      static image_metadata from_dds_header(const dds::header&);
+      static image_metadata from_dds_header(const dds::header&, size_t pixel_data_size = 0);
       VkImageCreateInfo create_image_info() const;
+
+      void get_mip_level_offsets(std::vector<size_t>&);
    };
 
    class image_and_view : no_copy {

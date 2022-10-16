@@ -18,6 +18,7 @@
          </Synthetic>
          <Item Name="path">path</Item>
          <Item Name="refcount">refcount,d</Item>
+         <Item Name="[loaded]" Condition="owned_gpu_resources.current.handle != 0">owned_gpu_resources.current</Item>
       </Expand>
    </Type>
 </AutoVisualizer>

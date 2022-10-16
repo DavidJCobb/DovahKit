@@ -1,20 +1,22 @@
 #include "image.h"
 #include <algorithm>
 #include <cassert>
-#include "buffer.h"
-#include "command_buffer.h"
-#include "exceptions.h"
-#include "physical_device.h"
-#include "surface_renderer.h"
+#include "./buffer.h"
+#include "./command_buffer.h"
+#include "./exceptions.h"
+#include "./physical_device.h"
+#include "./surface_renderer.h"
 //
-#include "dds/header.h"
-#include "helpers/convert_access_flags_and_pipeline_stages.h"
+#include "./data/vulkan_formats.h"
+#include "./dds/header.h"
+#include "./helpers/calc_texture_bytecount.h"
+#include "./helpers/convert_access_flags_and_pipeline_stages.h"
 
 namespace {
    VkResult _create_basic_view(VkDevice device, VkImage& image, VkImageView& view, const vulkanDK::image_metadata& meta, VkImageAspectFlags aspect) {
       assert(view == VK_NULL_HANDLE);
       //
-      VkImageViewType vt;
+      VkImageViewType vt = VK_IMAGE_VIEW_TYPE_2D;
       switch (meta.dimensions) {
          case VK_IMAGE_TYPE_1D:
             vt = VK_IMAGE_VIEW_TYPE_1D;
@@ -59,7 +61,8 @@ namespace {
 }
 
 namespace vulkanDK {
-   /*static*/ image_metadata image_metadata::from_dds_header(const dds::header& header) {
+   #pragma region image_metadata
+   /*static*/ image_metadata image_metadata::from_dds_header(const dds::header& header, size_t pixel_data_size) {
       image_metadata out;
       //
       bool has_ext = header.has_extended_header();
@@ -169,7 +172,7 @@ namespace vulkanDK {
       if (out.is_cubemap)
          out.layer_count *= 6;
       //
-      out.mipmap_count = header.mipmap_count + 1; // TODO: Are we sure DDS mip level counts start at 0 for files that use mipmaps?
+      out.mipmap_count = header.mipmap_count;
       out.mipmap_count = std::min(
          out.mipmap_count,
          std::min(
@@ -177,6 +180,49 @@ namespace vulkanDK {
             std::bit_width(header.height)
          )
       );
+      {
+         //
+         // Mipmaps are messy for two reasons. First: a DDS file may specify the "has 
+         // mipmaps" flags but leave the mipmap count at zero, to imply that the file 
+         // contains mipmaps all the way down to 1x1. Second: to transfer mipmaps to 
+         // the GPU via Vulkan, we have to know the file offsets of each mipmap level. 
+         // Those can be computed easily for all known texture formats.
+         //
+         auto size_query = helpers::get_texture_bytecount_calc_function(out.format);
+         if (size_query == nullptr) {
+            //
+            // We won't be able to figure out the mipmap levels' file offsets, so we 
+            // have to use only the top-level texture.
+            //
+            out.mipmap_count = 1;
+         } else {
+            if (header.mipmap_count == 0 && pixel_data_size != 0) {
+               //
+               // Our mipmap count is zero. We have the total size of all image data, 
+               // across all mipmap levels, so let's see if that size suggests that 
+               // we have mipmap levels.
+               // 
+               // Adding mipmaps down to 1x1px will increase a file's size by 33%. We 
+               // can get the size of the top-level image, and see if our file size 
+               // is roughly 33% larger than that (with a little leeway for safety).
+               //
+               size_t expected_top_level_size = 0;
+               if ((header.flags & dds::header::flag::has_linear_size) && header.linear_size != 0) {
+                  expected_top_level_size = header.linear_size;
+               } else {
+                  expected_top_level_size = size_query(out.extent.width, out.extent.height);
+               }
+               expected_top_level_size *= out.layer_count;
+               //
+               if (pixel_data_size >= expected_top_level_size * 1.30) {
+                  //
+                  // Mipmaps probably extend down to 1x1.
+                  //
+                  out.mipmap_count = std::bit_width(std::min(header.width, header.height));
+               }
+            }
+         }
+      }
       //
       return out;
    }
@@ -205,6 +251,32 @@ namespace vulkanDK {
       //
       return out;
    }
+
+   void image_metadata::get_mip_level_offsets(std::vector<size_t>& out) {
+      out.clear();
+      out.resize(this->mipmap_count);
+      out[0] = 0;
+
+      auto calc = helpers::get_texture_bytecount_calc_function(this->format);
+      if (!calc) {
+         out.resize(1);
+         return;
+      }
+      auto w = this->extent.width;
+      auto h = this->extent.height;
+      for (size_t i = 1; i < this->mipmap_count; ++i) {
+         out[i] = out[i - 1];
+         out[i] += calc(w, h) * this->layer_count;
+         //
+         // Divide these afterward: we want the offset of each level, not the 
+         // size. The offset of a mip level is the cumulative size of all the 
+         // previous levels.
+         //
+         w /= 2;
+         h /= 2;
+      }
+   }
+   #pragma endregion
 
    #pragma region image_and_view
    image_and_view::~image_and_view() {

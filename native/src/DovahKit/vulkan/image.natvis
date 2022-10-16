@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="vulkanDK::owned_image_and_view">
+      <Expand>
+         <ExpandedItem>*(vulkanDK::image_and_view*)this,nd</ExpandedItem>
+         <Item Name="memory">memory</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>
