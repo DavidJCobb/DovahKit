@@ -4779,7 +4779,7 @@ namespace vulkanDK {
       if constexpr (debug_log_nif_to_meshes_time) {
          _debug_time_end = std::chrono::steady_clock::now();
          qDebug(
-            "[surface_renderer::add_nif] NIF took %.02f ms to load.\n - %s",
+            "[surface_renderer::add_nif] NIF took %.02f ms to process into scene entities.\n - %s",
             std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
             model.root_node ? model.root_node->name.c_str() : "<no root node>"
          );

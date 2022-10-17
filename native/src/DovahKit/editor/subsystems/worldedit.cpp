@@ -10,6 +10,7 @@
 #include "dovah/forms/ObjectReference.h"
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
+#include "dovah/utils/world_coordinate_to_grid_coordinate.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
@@ -36,6 +37,15 @@ namespace {
    static constexpr bool debug_log_mesh_load_unload = false;
 }
 
+#include <chrono>
+#include "helpers/dummy_of.h"
+namespace {
+   static constexpr bool debug_log_nif_loading_times = true;
+   //
+   template<bool Enable>
+   using _debug_log_timestamp = cobb::dummy_type_if_false<Enable, std::chrono::time_point<std::chrono::steady_clock>>;
+}
+
 namespace {
    static constexpr auto max_selected_refr_count = vulkanDK::config::max_rendered_bounds;
 
@@ -48,6 +58,13 @@ namespace {
 
 namespace {
    bool _load_refr_model(nifDK::file& model, dovah::loaded_forms::components::model& src) {
+      using debug_timestamp_t = _debug_log_timestamp<debug_log_nif_loading_times>;
+      debug_timestamp_t _debug_time_start;
+      debug_timestamp_t _debug_time_end;
+      if constexpr (debug_log_nif_loading_times) {
+         _debug_time_start = std::chrono::steady_clock::now();
+      }
+      //
       std::filesystem::path path = std::string("meshes") + (src.model_path[0] == '/' || src.model_path[0] == '\\' ? "" : "\\") + src.model_path;
       std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
       if (!file) {
@@ -64,8 +81,18 @@ namespace {
          #endif
          return false;
       }
-      if constexpr (debug_log_mesh_load_unload)
+      if constexpr (debug_log_nif_loading_times) {
+         _debug_time_end = std::chrono::steady_clock::now();
+         qDebug(
+            "[surface_renderer::add_nif] NIF took %.02f ms to extract from the BSA and parse.\n - %s <%s>",
+            std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
+            model.root_node ? model.root_node->name.c_str() : "<no root node>",
+            src.model_path.c_str()
+         );
+      }
+      if constexpr (debug_log_mesh_load_unload) {
          qDebug("NIF parsed. Passing to surface_renderer...");
+      }
       return true;
    }
 }
@@ -879,6 +906,11 @@ namespace dovahkit::subsystems {
       DK3DInputHandler::get().update(results, delta);
       //
       auto* sr = view.surfaceRenderer();
+      if (!sr)
+         //
+         // Don't execute commands "blind." If there's no renderer, exit.
+         //
+         return;
       //
       #pragma region modify_camera_speed_flags
       //
@@ -1046,8 +1078,8 @@ namespace dovahkit::subsystems {
          // Process (un)loading cells as the camera moves.
          //
          const auto& camera_pos = sr->scene.camera.position;
-         int32_t cgx = camera_pos.x / dovah::loaded_forms::Cell::side_length;
-         int32_t cgy = camera_pos.y / dovah::loaded_forms::Cell::side_length;
+         int32_t cgx = dovah::world_coordinate_to_grid_coordinate(camera_pos.x);
+         int32_t cgy = dovah::world_coordinate_to_grid_coordinate(camera_pos.y);
 
          auto& gp = this->target_area.world_grid_pos;
          if (cgx != gp.x || cgy != gp.y) {

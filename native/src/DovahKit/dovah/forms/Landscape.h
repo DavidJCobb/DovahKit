@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Form.h"
-#include "_common.h"
-#include "components/bounds.h"
-#include "components/model.h"
-#include "../../helpers/grid.h"
-#include "../../helpers/vector3.h"
+#include "dovah/core_constants/exterior_cell_side_length.h"
+#include "./Form.h"
+#include "./_common.h"
+#include "./components/bounds.h"
+#include "./components/model.h"
+#include "helpers/grid.h"
+#include "helpers/vector3.h"
 
 namespace dovah::loaded_forms {
    //
@@ -38,6 +39,8 @@ namespace dovah::loaded_forms {
 
          static constexpr int vertices_per_side  = 33;
          static constexpr int total_vertex_count = vertices_per_side * vertices_per_side;
+
+         static constexpr int vertex_distance = (dovah::core_constants::exterior_cell_side_length) / (vertices_per_side - 1);
 
          static constexpr int vertices_per_quad_side  = 17;
          static constexpr int total_quad_vertex_count = vertices_per_quad_side * vertices_per_quad_side;

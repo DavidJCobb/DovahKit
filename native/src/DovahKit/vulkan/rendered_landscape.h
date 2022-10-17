@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <glm/glm.hpp>
 #include "helpers/array_of_n_values.h"
+#include "dovah/core_constants/exterior_cell_side_length.h"
 #include "dovah/forms/Landscape.h"
 #include "./_vulkan.h"
 #include "./helpers/land/vulkan_vertex_indices_for_outline.h"
@@ -38,8 +39,8 @@ namespace vulkanDK {
       public:
          using loaded_form = dovah::loaded_forms::Landscape;
 
-         static constexpr size_t cell_side_length = 4096;
-         static constexpr size_t vertex_distance = (cell_side_length / 32);
+         static constexpr size_t cell_side_length = dovah::core_constants::exterior_cell_side_length;
+         static constexpr size_t vertex_distance  = loaded_form::vertex_distance;
 
          // All quads overlap by one line of vertices  on each axis;  this is needed to avoid a gap in tris. 
          // In an ESP file, some vertex data is defined per-cell (e.g. heights) and some is defined per-quad 

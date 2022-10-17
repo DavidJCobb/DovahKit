@@ -1719,9 +1719,6 @@
     <ClCompile Include="dovah\forms\MiscItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\utils\world_position_to_grid_coordinates.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4305,6 +4302,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\dummy_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\core_constants\exterior_cell_side_length.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\world_coordinate_to_grid_coordinate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

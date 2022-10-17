@@ -1,14 +1,16 @@
 #pragma once
+#include <bit>
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Form.h"
-#include "_common.h"
-#include "components/bounds.h"
-#include "components/extra_data.h"
-#include "components/interior_lighting.h"
-#include "components/papyrus.h"
-#include "../../helpers/vector3.h"
+#include "helpers/vector3.h"
+#include "dovah/core_constants/exterior_cell_side_length.h"
+#include "./Form.h"
+#include "./_common.h"
+#include "./components/bounds.h"
+#include "./components/extra_data.h"
+#include "./components/interior_lighting.h"
+#include "./components/papyrus.h"
 
 namespace dovah::loaded_forms {
    class Cell : public Form {
@@ -16,7 +18,7 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::cell;
          Cell(const constructor_params& c) : Form(form_type, c) {};
 
-         static constexpr int side_length = 4096; // Cells are squares. How long, in world units, is one edge?
+         static constexpr int side_length = dovah::core_constants::exterior_cell_side_length; // Cells are squares. How long, in world units, is one edge?
 
          static constexpr float inherit_water_height = (float) uint32_t(0x80000000);
          static constexpr float absent_water_height  = (float) FLT_MAX;

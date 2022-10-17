@@ -440,7 +440,6 @@
     <ClCompile Include="dovah\utils\game_asset_path_validation.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
-    <ClCompile Include="dovah\utils\world_position_to_grid_coordinates.cpp" />
     <ClCompile Include="editor\asset_manager\asset.cpp" />
     <ClCompile Include="editor\asset_manager\asset_manager.cpp" />
     <ClCompile Include="editor\asset_manager\data\dds.cpp" />
@@ -797,6 +796,7 @@
     <ClInclude Include="dovahscript\wrappers\form\static\directional_material.h" />
     <ClInclude Include="dovahscript\wrappers\form\static\distant_lod_paths.h" />
     <ClInclude Include="dovahscript\wrappers\form\statik.h" />
+    <ClInclude Include="dovah\core_constants\exterior_cell_side_length.h" />
     <ClInclude Include="dovah\data\body_parts.h" />
     <ClInclude Include="dovah\data\collision_layers.h" />
     <ClInclude Include="dovah\forms\Door.h" />
@@ -809,6 +809,7 @@
     <ClInclude Include="dovah\utils\game_asset_path_validation.h" />
     <QtMoc Include="editor\asset_manager\asset_manager.h" />
     <QtMoc Include="editor\asset_manager\asset.h" />
+    <ClInclude Include="dovah\utils\world_coordinate_to_grid_coordinate.h" />
     <ClInclude Include="dovah\utils\world_position_to_grid_coordinates.h" />
     <ClInclude Include="editor\asset_manager\data\dds.h" />
     <ClInclude Include="editor\asset_manager\data\form_textureset.h" />
