@@ -254,6 +254,7 @@ namespace vulkanDK {
          bool can_do_alpha() const;
          VkExtent2D desired_surface_size() const;
          VkFormat find_depth_format() const;
+         VkDeviceSize max_upload_buffer_size() const; // query the soft maximum size for the staging buffer used for uploads
          bool needs_null_texture() const;
 
          [[nodiscard]] buffer create_buffer(VkDeviceSize size, VkBufferUsageFlags, VkMemoryPropertyFlags);
@@ -271,13 +272,11 @@ namespace vulkanDK {
          [[nodiscard]] compute_shader* create_compute_shader(cobb::eight_cc id);
          [[nodiscard]] compute_shader* get_compute_shader(cobb::eight_cc id) const;
 
-         size_t add_texture(const QString& texture_path); // for testing and internal use only; should eventually be phased out, tbh
-         size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
-         void add_mesh(const QString& texture_path);
+         [[nodiscard]] size_t add_texture(const QString& texture_path); // for testing and internal use only; should eventually be phased out, tbh
+         [[nodiscard]] size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
+         void lookup_or_reserve_dds_texture(QString texture_path, size_t& texture_entity_index, bool& already_existed);
          void remove_mesh(size_t);
-         void remove_last_mesh();
          void remove_light(size_t);
-         void remove_last_light();
          void set_animation_paused(size_t mesh, bool paused);
          //
          void surface_position_to_world_ray(int viewport_x, int viewport_y, glm::vec3& eye_position, glm::vec3& eye_direction) const;

@@ -11,8 +11,8 @@
 #include <QToolButton>
 #include "editor/subsystems/worldedit.h"
 #include "widgets/DKVulkanView.h"
-#include "../../vulkan/rendered_light.h"
-#include "../../vulkan/surface_renderer.h"
+#include "vulkan/rendered_light.h"
+#include "vulkan/surface_renderer.h"
 
 #include "editor/core.h"
 
@@ -30,17 +30,10 @@
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
-#include "dovah/forms/Cell.h"
 #include "dovah/forms/Form.h"
-#include "dovah/forms/ObjectReference.h"
-#include "dovah/forms/components/extra_data/scale.h"
 #include "dovah/forms/components/model.h"
 #include "ui/generic/FormPicker.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
-
-namespace {
-   static constexpr bool use_new_renderer = true;
-}
 
 RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    this->setWindowTitle(tr("Render Window"));
@@ -69,41 +62,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       layout->addWidget(sb, 0);
    }
 
-   for (size_t i = 0; i < 3; ++i) {
-      auto* button = new QToolButton(this->toolbar);
-      button->setText(QString("Pause #%1").arg(i));
-      button->setCheckable(true);
-      QObject::connect(button, &QAbstractButton::toggled, this, [this, view, i](bool checked) {
-         view->surfaceRenderer()->set_animation_paused(i, checked);
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_MediaPause));
-      //
-      this->toolbar->addWidget(button);
-   }
-   //
-   {
-      auto* button = new QToolButton(this->toolbar);
-      button->setText("New Object");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         auto path = QFileDialog::getOpenFileName(this, "Texture file", "", "Image (*.dds, *.png, *.bmp)");
-         if (path.isEmpty())
-            return;
-         view->surfaceRenderer()->add_mesh(path);
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_FileDialogNewFolder));
-      //
-      this->toolbar->addWidget(button);
-   }
-   {
-      auto* button = new QToolButton(this->toolbar);
-      button->setText("Delete Last Object");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         view->surfaceRenderer()->remove_last_mesh();
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_BrowserStop));
-      //
-      this->toolbar->addWidget(button);
-   }
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Set Camera Position");
@@ -269,125 +227,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
             qDebug("NIF parsed. Passing to surface_renderer...");
             view->surfaceRenderer()->add_nif(model);
          });
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
-      //
-      this->toolbar->addWidget(button);
-   }
-   //
-   {
-      auto* button = new QToolButton(this->toolbar);
-      button->setText("Import cell...");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         auto& editor = DovahKitCore::get();
-         if (!editor.has_data()) {
-            QMessageBox::critical(this, "Error", "Load data first, so we have base forms to import.");
-            return;
-         }
-         auto input = QInputDialog::getText(this, "Select cell", "Cell editor ID or form ID");
-         if (input.isEmpty())
-            return;
-         dovah::bare_form_id_t formID = input.toUInt(nullptr, 16);
-         if (!formID) {
-            QMessageBox::critical(this, "Error", "Input was zero or not a form ID.");
-            return;
-         }
-         //
-         auto* cell = editor.get_form_of_probable_type(dovah::form_type::cell, formID);
-         if (!cell) {
-            QMessageBox::critical(this, "Error", "Form doesn't exist.");
-            return;
-         }
-         if (cell->formType != dovah::form_type::cell) {
-            QMessageBox::critical(this, "Error", "Form is not a cell.");
-            return;
-         }
-         //
-         auto* sr = view->surfaceRenderer();
-         dovah::form_stub_helpers::for_each_child_form(cell, [this, sr](dovah::form_stub* stub) {
-            if (stub->formType != dovah::form_type::reference)
-               return false;
-            auto* base = dovah::form_stub_helpers::get_base_form(stub);
-            if (!base)
-               return false;
-            //
-            if (base->formType == dovah::form_type::light) {
-               auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
-               if (!loaded)
-                  return false;
-               sr->add_light(*loaded);
-               return false;
-            }
-            //
-            auto loaded_base = base->load();
-            if (!loaded_base)
-               return false;
-            auto* form_model = loaded_base->get_model();
-            if (!form_model || form_model->model_path.empty())
-               return false;
-            //
-            auto loaded = stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
-            if (!loaded)
-               return false;
-            //
-            float scale = loaded->get_scale();
-            //
-            nifDK::file model;
-            {
-               std::filesystem::path path = std::string("meshes") + (form_model->model_path[0] == '/' || form_model->model_path[0] == '\\' ? "" : "\\") + form_model->model_path;
-               std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset(path));
-               if (!file) {
-                  qDebug("Failed to open NIF file: <%s>", path.string().c_str());
-                  return false;
-               }
-               model.read((void*)file->data(), file->size());
-               //
-               auto& error = model.read_error();
-               if (error.code != nifDK::default_notice_code) {
-                  qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
-                  #if _DEBUG
-                     __debugbreak();
-                  #endif
-                  return false;
-               }
-            }
-            qDebug("NIF parsed. Passing to surface_renderer...");
-            sr->add_nif(
-               model,
-               glm::vec3{ loaded->position.x, loaded->position.y, loaded->position.z },
-               glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z },
-               scale
-            );
-            //
-            return false;
-         });
-         {
-            auto _to_vec = [](const dovah::loaded_forms::color_t& color) {
-               return glm::vec3{ (float)color.r / 255.0F, (float)color.g / 255.0F, (float)color.b / 255.0F };
-            };
-            //
-            auto  loaded = cell->load().ptr_cast<dovah::loaded_forms::Cell>();
-            auto& sgs    = sr->scene.global_state;
-            {
-               auto& lt = loaded->interior.lighting;
-               sgs.ambient_light_color = _to_vec(lt.ambient);
-               sgs.sun_color      = _to_vec(lt.directional);
-               // TODO: sgs.sun_dir
-               sgs.fog_color_near = _to_vec(lt.fog_color_near);
-               sgs.fog_color_far  = _to_vec(lt.fog_color_far);
-               sgs.fog_plane_near = lt.fog_distance_near;
-               sgs.fog_plane_far  = lt.fog_distance_far;
-               sgs.fog_power      = lt.fog_power;
-               sgs.fog_max        = lt.fog_max;
-               sgs.interior_clip_distance = lt.fog_distance_clip;
-            }
-            if (loaded->interior.lighting_template) {
-               // TODO: load the LTMP and use its params
-               //       for now, we just reset some fields to safe defaults
-               //sgs.fog_max = 0;
-               sgs.interior_clip_distance = 0;
-            }
-         }
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
       //

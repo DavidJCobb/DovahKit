@@ -1,0 +1,328 @@
+#pragma once
+#include <array>
+#include <type_traits>
+#include <vector>
+#include "./type_traits/set_const.h"
+
+namespace cobb {
+   //
+   // Defines a container consisting of an std::array and a std::vector paired together. 
+   // Elements will be stored in the std::array until it is full, after which they will 
+   // be stored in the std::vector.
+   // 
+   // The `LocalCapacity` template parameter defines the size of the array.
+   // 
+   // If the container is `Contiguous`, then list items are guaranteed to be arranged 
+   // contiguously in memory. This means that when the array's capacity is exceeded, 
+   // all list items are moved to the vector and stored there.
+   //
+   template<typename T, size_t LocalCapacity, bool Contiguous>
+   class small_vector {
+      public:
+         using value_type = T;
+         using size_type  = size_t;
+
+         using reference = value_type&;
+         using const_reference = const value_type&;
+
+         static constexpr const size_type local_capacity = LocalCapacity;
+         static constexpr const bool      contiguous     = Contiguous;
+
+      protected:
+         static constexpr const bool _can_move = std::is_move_assignable_v<value_type>;
+         static constexpr const bool _can_copy = std::is_copy_assignable_v<value_type>;
+
+      protected:
+         template<bool is_const> class _iterator_base {
+            friend class indexed_list;
+            protected:
+               using value_pointer = std::add_pointer_t<cobb::set_const<value_type*, is_const>>;
+
+               struct _if_contiguous {
+                  value_pointer item = nullptr;
+
+                  bool operator==(const _if_contiguous& o) const noexcept { return item == o.item; }
+                  bool operator<(const _if_contiguous& o) const noexcept { return item < o.item; }
+               };
+               struct _if_disjoint {
+                  small_vector& owner;
+                  size_type     index;
+
+                  bool operator==(const _if_disjoint& o) const noexcept { return &owner == &o.owner && index == o.index; }
+                  bool operator<(const _if_disjoint& o) const noexcept { return index < o.index; }
+               };
+
+               using access_type = std::add_pointer_t<cobb::set_const<value_type*, is_const>>;
+
+               std::conditional_t<contiguous, _if_contiguous, _if_disjoint> data;
+
+               void _add(size_t n) {
+                  if constexpr (contiguous) {
+                     this->data.item += n;
+                  } else {
+                     this->data.index += n;
+                  }
+               }
+               void _sub(size_t n) {
+                  if constexpr (contiguous) {
+                     this->data.item -= n;
+                  } else {
+                     this->data.index -= n;
+                  }
+               }
+
+            public:
+               _iterator_base() requires (contiguous) {}
+               _iterator_base(std::nullptr_t) requires (contiguous) : data{ nullptr } {}
+               _iterator_base(value_type* r) requires (contiguous) : data{ r } {}
+
+               _iterator_base(small_vector& o) requires (!contiguous) : data{ o, 0 } {}
+               _iterator_base(small_vector& o, size_t i) requires (!contiguous) : data{ o, i } {}
+
+               value_type* operator->() const noexcept {
+                  if constexpr (contiguous) {
+                     return *this->data.item;
+                  } else {
+                     return this->data.owner[this->data.index];
+                  }
+               }
+               value_type& operator*() const noexcept {
+                  if constexpr (contiguous) {
+                     return *this->data.item;
+                  } else {
+                     return this->data.owner[this->data.index];
+                  }
+               }
+               value_type& operator[](size_t i) const noexcept {
+                  if constexpr (contiguous) {
+                     return *(this->data.item + i);
+                  } else {
+                     return this->data.owner[this->data.index + i];
+                  }
+               }
+
+               _iterator_base& operator+=(size_t i) noexcept { _add(i); return *this; }
+               _iterator_base& operator-=(size_t i) noexcept { _sub(i); return *this; }
+               _iterator_base operator+(size_t i) const noexcept {
+                  return (_iterator_base{ *this }) += i;
+               }
+               _iterator_base operator-(size_t i) const noexcept {
+                  return (_iterator_base{ *this }) -= i;
+               }
+               _iterator_base& operator++() noexcept { _add(1); return *this; }
+               _iterator_base& operator--() noexcept { _sub(1); return *this; }
+               
+               auto operator<=>(const _iterator_base&) const = default;
+         };
+         template<bool is_const> class _reverse_iterator_base : public _iterator_base<is_const> {
+            public:
+               using _iterator_base<is_const>::iterator;
+            
+               _reverse_iterator_base& operator+=(size_t i) noexcept { return _iterator_base::operator-=(i); }
+               _reverse_iterator_base& operator-=(size_t i) noexcept { return _iterator_base::operator+=(i); }
+               _reverse_iterator_base operator+(size_t i) const noexcept { return _iterator_base::operator-(i); }
+               _reverse_iterator_base operator-(size_t i) const noexcept { return _iterator_base::operator+(i); }
+               _reverse_iterator_base& operator++() noexcept { return _iterator_base::operator--(); }
+               _reverse_iterator_base& operator--() noexcept { return _iterator_base::operator++(); }
+         };
+
+      public:
+         using iterator       = _iterator_base<false>;
+         using const_iterator = _iterator_base<true>;
+         using reverse_iterator       = _reverse_iterator_base<false>;
+         using const_reverse_iterator = _reverse_iterator_base<true>;
+
+      protected:
+         union {
+            bool _do_not_initialize = 0;
+            std::array<T, local_capacity> _local;
+         };
+         size_t _local_size = 0; // for contiguous lists, 0 if empty or if heap is in use. for non-contiguous, equals number of elements stored locally
+         std::vector<T> _heap;
+
+         const small_vector* _const_this() {
+            return const_cast<const small_vector*>(this);
+         }
+         template<typename It> It _iterator_at(const size_type i) const noexcept {
+            if constexpr (contiguous) {
+               if (this->empty())
+                  return It(nullptr);
+               return It(&this->operator[](i));
+            } else {
+               if (this->empty())
+                  return It(*this);
+               return It(*this, i);
+            }
+         }
+         void _transfer_local_to_heap() requires(contiguous && (_can_move || _can_copy)) {
+            this->_heap.resize(_local_size);
+            for (size_t i = 0; i < _local_size; ++i) {
+               if constexpr (_can_move) {
+                  this->_heap[i] = std::move(this->_local[i]);
+               } else if constexpr (_can_copy) {
+                  this->_heap[i] = this->_local[i];
+               }
+               this->_local[i].~value_type();
+            }
+            _local_size = 0;
+         }
+
+      public:
+         small_vector() {}
+         ~small_vector() {
+            this->clear();
+         }
+
+         inline constexpr size_t size() const noexcept {
+            if constexpr (contiguous) {
+               if (_local_size)
+                  return _local_size;
+               return _heap.size();
+            } else {
+               return _local_size + _heap.size();
+            }
+         }
+         inline constexpr bool empty() const noexcept {
+            if (_local_size)
+               return false;
+            if constexpr (contiguous) {
+               return _heap.empty();
+            } else {
+               return true;
+            }
+         }
+
+         void clear() {
+            for (size_t i = 0; i < _local_size; ++i) {
+               _local[i].~value_type();
+            }
+            _local_size = 0;
+            _heap.clear();
+         }
+
+         constexpr const_reference operator[](size_type i) const {
+            if constexpr (contiguous) {
+               if (_local_size)
+                  return _local[i];
+               return _heap[i];
+            } else {
+               if (i <= local_capacity) {
+                  return _local[i];
+               }
+               i -= local_capacity;
+               return _heap[i];
+            }
+         }
+         constexpr reference operator[](size_type i) {
+            return const_cast<reference>(_const_this()->operator[](i));
+         }
+
+      protected:
+         template<typename... Args>
+         constexpr reference _emplace_back_local(Args&&... args) {
+            auto& out = _local[_local_size];
+            out = value_type(std::forward<Args>(args)...);
+            ++_local_size;
+            return out;
+         }
+      public:
+         template<typename... Args>
+         constexpr reference emplace_back(Args&&... args) {
+            if constexpr (contiguous) {
+               if (_local_size) {
+                  if (_local_size == local_capacity) {
+                     _transfer_local_to_heap();
+                     return _heap.emplace_back(std::forward<Args>(args)...);
+                  }
+                  return _emplace_back_local(std::forward<Args>(args)...);
+               }
+               if (_heap.empty()) {
+                  return _emplace_back_local(std::forward<Args>(args)...);
+               } else {
+                  return _heap.emplace_back(std::forward<Args>(args)...);
+               }
+               return;
+            } else {
+               if (_local_size < local_capacity) {
+                  return _emplace_back_local(std::forward<Args>(args)...);
+               }
+               return _heap.emplace_back(std::forward<Args>(args)...);
+            }
+         }
+
+         constexpr const_reference front() const {
+            return operator[](0);
+         }
+         constexpr reference front() {
+            return const_cast<reference>(_const_this()->front());
+         }
+         constexpr const_reference back() const {
+            return operator[](size() - 1);
+         }
+         constexpr reference back() {
+            return const_cast<reference>(_const_this()->back());
+         }
+
+      protected:
+         template<typename VT> constexpr void _push_back_local(VT&& v) {
+            _local[_local_size] = std::forward<VT>(v);
+            ++_local_size;
+         }
+         template<typename VT> constexpr void _push_back_impl(VT&& v) {
+            if constexpr (contiguous) {
+               if (_local_size) {
+                  if (_local_size == local_capacity) {
+                     _transfer_local_to_heap();
+                     _heap.push_back(std::forward<VT>(v));
+                     return;
+                  }
+                  _push_back_local(std::forward<VT>(v));
+                  return;
+               }
+               if (_heap.empty()) {
+                  _push_back_local(std::forward<VT>(v));
+               } else {
+                  _heap.push_back(std::forward<VT>(v));
+               }
+               return;
+            } else {
+               if (_local_size < local_capacity) {
+                  _push_back_local(std::forward<VT>(v));
+                  return;
+               }
+               _heap.push_back(std::forward<VT>(v));
+            }
+         }
+      public:
+         constexpr void push_back(value_type&& v) requires (_can_move) {
+            _push_back_impl(std::forward<value_type>(v));
+         }
+         constexpr void push_back(const value_type& v) requires (_can_copy) {
+            _push_back_impl(std::forward<value_type>(v));
+         }
+
+         constexpr void swap(small_vector& other) {
+            _heap.swap(other._heap);
+            _local.swap(other._local);
+            std::swap(this->_local_size, other._local_size);
+         }
+
+         #pragma region iterators
+         iterator begin() noexcept { return this->_iterator_at<iterator>(0); }
+         iterator end()   noexcept { return this->_iterator_at<iterator>(this->_size); }
+         const_iterator cbegin() const noexcept { return this->_iterator_at<const_iterator>(0); }
+         const_iterator cend()   const noexcept { return this->_iterator_at<const_iterator>(this->_size); }
+         reverse_iterator rbegin() noexcept { return this->_iterator_at<reverse_iterator>(this->_size - 1); }
+         reverse_iterator rend()   noexcept { return this->_iterator_at<reverse_iterator>(-1); }
+         const_reverse_iterator rcbegin() const noexcept { return this->_iterator_at<const_reverse_iterator>(this->_size - 1); }
+         const_reverse_iterator rcend()   const noexcept { return this->_iterator_at<const_reverse_iterator>(-1); }
+         //
+         // Const overloads for non-"c" iterator functions:
+         //
+         const_iterator begin() const noexcept { return this->cbegin(); }
+         const_iterator end()   const noexcept { return this->cend(); }
+         const_reverse_iterator rbegin() const noexcept { return this->rcbegin(); }
+         const_reverse_iterator rend()   const noexcept { return this->rcend(); }
+         #pragma endregion
+   };
+}

@@ -11,6 +11,13 @@ namespace vulkanDK::scene_entities {
       return this->owner.uploading.staging;
    }
 
+   void owned_gpu_resource_upload_operation::set_max_capacity(surface_renderer_passkey, VkDeviceSize cap) {
+      this->max_capacity = cap;
+   }
+   bool owned_gpu_resource_upload_operation::has_room_for_more(surface_renderer_passkey) const {
+      return this->staging.start < this->max_capacity;
+   }
+
    void owned_gpu_resource_upload_operation::stage_data(const void* src, size_t src_size) {
       memcpy(cobb::offset_into(this->staging.data, this->staging.start + this->staging.offset), src, src_size);
       this->staging.size   += src_size;

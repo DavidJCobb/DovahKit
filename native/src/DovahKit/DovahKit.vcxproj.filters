@@ -4292,6 +4292,15 @@
     <ClInclude Include="helpers\arrays\quicksort_ct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\small_vector.h.bak">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\set_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\small_vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

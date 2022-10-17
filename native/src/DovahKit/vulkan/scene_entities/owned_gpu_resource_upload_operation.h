@@ -19,7 +19,8 @@ namespace vulkanDK::scene_entities {
 
       protected:
          surface_renderer& owner;
-         size_t current_entity_index = 0;
+         size_t       current_entity_index = 0;
+         VkDeviceSize max_capacity = VK_WHOLE_SIZE;
          struct {
             void*        data   = nullptr;
             VkDeviceSize start  = 0;
@@ -36,6 +37,9 @@ namespace vulkanDK::scene_entities {
 
       public:
          owned_gpu_resource_upload_operation(surface_renderer& sr) : owner(sr) {}
+
+         void set_max_capacity(surface_renderer_passkey, VkDeviceSize);
+         bool has_room_for_more(surface_renderer_passkey) const;
 
          //
          // An entity should do this first

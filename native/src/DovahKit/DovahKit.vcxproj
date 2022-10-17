@@ -868,6 +868,8 @@
     <ClInclude Include="helpers\simd\shuffle.h" />
     <ClInclude Include="helpers\simd\sum_register.h" />
     <ClInclude Include="helpers\singleton_ex.h" />
+    <ClInclude Include="helpers\small_vector.h" />
+    <ClInclude Include="helpers\small_vector.h.bak" />
     <ClInclude Include="helpers\sorted_list.h" />
     <ClInclude Include="helpers\string\strcmp.h" />
     <ClInclude Include="helpers\string\strieq_ascii.h" />
@@ -893,6 +895,7 @@
     <ClInclude Include="helpers\type_traits\is_std_array.h" />
     <ClInclude Include="helpers\type_traits\is_std_tuple.h" />
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
+    <ClInclude Include="helpers\type_traits\set_const.h" />
     <ClInclude Include="helpers\type_traits\strip_enum.h" />
     <ClInclude Include="helpers\type_traits\value_type_of.h" />
     <ClInclude Include="helpers\unreachable.h" />

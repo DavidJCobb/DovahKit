@@ -1475,6 +1475,8 @@ namespace vulkanDK {
             } else {
                view = VK_NULL_HANDLE;
             }
+         } else if (item.pending_gpu_upload()) {
+            view = this->owner->uploading.pending_texture_placeholder.view;
          }
          if constexpr (debug_log_scene_object_lifetimes) {
             qDebug("[vulkanDK::frame_in_flight::_update_shader_texture_descriptors] Updating scene texture %u (deleted: %u).", i, item.pending_delete());

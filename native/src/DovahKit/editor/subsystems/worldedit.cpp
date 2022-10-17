@@ -540,8 +540,6 @@ namespace dovahkit::subsystems {
                world = nullptr;
          } else if (cell_or_world->formType == dovah::form_type::worldspace) {
             world = cell_or_world;
-            if (this->target_area.world == world)
-               return;
          } else {
             assert(false && "Worldedit was asked to load an area, but the provided form is not a cell or worldspace.");
          }
@@ -577,6 +575,9 @@ namespace dovahkit::subsystems {
          //
          auto diff_x = gp_now.x - gp_old.x;
          auto diff_y = gp_now.y - gp_old.y;
+         if (!world_changed && diff_x == 0 && diff_y == 0) {
+            return;
+         }
          auto length = this->loaded_cells.length();
          if (!world_changed && std::abs(diff_x) < length && std::abs(diff_y) < length) {
             //
@@ -739,57 +740,32 @@ namespace dovahkit::subsystems {
       size_t prior_length = this->loaded_cells.length();
       if (length == prior_length)
          return;
-      if (length > prior_length) {
-         assert((loaded_cell_grid_coord)length == length); // representable?
-         this->loaded_cells.resize(length);
-      } else {
+      if (!this->target_area.world) {
          //
-         // Shrinking the grid is more complicated, because we need to unload any cells 
-         // that would end up being dropped.
+         // Fast path when viewing interiors:
          //
-         auto& src = this->loaded_cells;
-         decltype(this->loaded_cells) dst;
-         dst.resize(length);
-         //
-         if (this->target_area.world) {
-            if constexpr (debug_log_area_load_unload) {
-               qDebug("[Worldedit] Unloading %d cells due to grid size decreasing...", (prior_length * prior_length - length * length));
-            }
-            for (auto i = dst.left(); i < dst.right(); ++i) {
-               dst.at(i, i) = std::move(src.at(i, i));
-            }
-            for (auto x = dst.right(); x < src.right(); ++x) {
-               for (auto y = src.top(); y < src.bottom(); ++y) {
-                  if (auto* stub = src.at(x, y).stub)
-                     this->_unload_cell(stub);
-                  if (auto* stub = src.at(-x, y).stub)
-                     this->_unload_cell(stub);
-               }
-            }
-            for (auto y = dst.bottom(); y < src.bottom(); ++y) {
-               for (auto x = src.left(); x < src.right(); ++x) {
-                  if (auto* stub = src.at(x, y).stub)
-                     this->_unload_cell(stub);
-                  if (auto* stub = src.at(x, -y).stub)
-                     this->_unload_cell(stub);
-               }
-            }
-            this->loaded_cells = std::move(dst);
-         } else {
-            dst.at(0, 0) = std::move(src.at(0, 0));
-            //
-            #if _DEBUG
-               this->loaded_cells.for_each([](auto& item, auto x, auto y) {
-                  if (x == 0 && y == 0)
-                     return;
-                  assert(!item.stub && "We weren't viewing a worldspace! There shouldn't be multiple cells loaded like this!");
-               });
-            #endif
+         #if _DEBUG
+            this->loaded_cells.for_each([](auto& item, auto x, auto y) {
+               if (x == 0 && y == 0)
+                  return;
+               assert(!item.stub && "We weren't viewing a worldspace! There shouldn't be multiple cells loaded like this!");
+            });
+         #endif
+         auto cell_info = std::move(this->loaded_cells.at(0, 0));
+         this->loaded_cells = loaded_cell_grid(length);
+         this->loaded_cells.at(0, 0) = std::move(cell_info);
+         return;
+      }
+      if (length < prior_length) {
+         if constexpr (debug_log_area_load_unload) {
+            qDebug("[Worldedit] Unloading %d cells due to grid size decreasing...", (prior_length * prior_length - length * length));
          }
       }
+      this->loaded_cells.resize(length, [this](cell& item) {
+         this->_unload_cell(item);
+      });
       //
-      // We need to load new cells after the surface renderer's max land count has 
-      // been adjusted, to ensure we render properly. TODO: Can we make this optional?
+      // If the grid has been made larger, load the new cells.
       //
       if (length > prior_length) {
          const auto* world = this->target_area.world;

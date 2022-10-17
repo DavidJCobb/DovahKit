@@ -4,8 +4,17 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include "./unreachable.h"
 
 namespace cobb {
+   namespace impl::_resizable_grid {
+      struct dummy {};
+
+      struct no_op_functor {
+         template<typename T> void operator()(T&) {}
+      };
+   }
+
    template<typename T, typename CoordinateType = int32_t> requires std::is_signed_v<CoordinateType>
    class resizable_grid {
       public:
@@ -218,7 +227,9 @@ namespace cobb {
 
 
    //
-   // A resizable square grid centered on (0, 0).
+   // A resizable square grid centered on (0, 0). If the grid length is an even number, 
+   // then the grid biases toward the upper-left (i.e. the center is closer to the lower-
+   // right corner).
    //
    template<typename T, typename CoordinateType = int32_t> requires std::is_signed_v<CoordinateType>
    class resizable_square_grid {
@@ -227,6 +238,15 @@ namespace cobb {
          using coordinate_type = CoordinateType;
          using length_type     = std::make_unsigned_t<CoordinateType>;
          using size_type       = std::size_t;
+         
+      protected:
+         static constexpr const bool _can_default = std::is_default_constructible_v<value_type>;
+         static constexpr const bool _can_copy    = std::is_copy_constructible_v<value_type> || std::is_copy_assignable_v<value_type>;
+         static constexpr const bool _can_move    = std::is_move_constructible_v<value_type> || std::is_move_assignable_v<value_type>;
+
+         struct _no_op_destroy_functor {
+            void operator()(value_type&) {}
+         };
          
       protected:
          template<bool Const> class _base_iterator {
@@ -262,76 +282,206 @@ namespace cobb {
          value_type* _data = nullptr;
          length_type _length = 0;
 
-         __declspec(allocator) static constexpr value_type* _alloc(size_t count) {
-            return new value_type[count];
+         __declspec(allocator) static constexpr value_type* _alloc(size_t count, bool skip_construct = false) {
+            if (std::is_constant_evaluated()) {
+               if (skip_construct)
+                  throw; // not supported in constexpr
+               return new value_type[count];
+            } else {
+               auto* result = (value_type*)malloc(sizeof(value_type) * count);
+               if (!skip_construct) {
+                  new (result) value_type[count];
+               }
+               return result;
+            }
          }
-         static constexpr void _free(value_type* memory) {
-            delete[] memory;
+         static constexpr void _free(value_type* memory, size_t count, bool skip_destruct = false) {
+            if (std::is_constant_evaluated()) {
+               if (skip_destruct)
+                  throw; // not supported in constexpr
+               delete[] memory;
+            } else {
+               if (!skip_destruct) {
+                  for (size_t i = 0; i < count; ++i)
+                     std::destroy_at<value_type>(memory + i);
+               }
+               free(memory);
+            }
          }
 
          static constexpr value_type& _item_in_new_grid(value_type* buffer, length_type length, length_type x, length_type y) {
             return buffer[x + (y * length)];
          }
-         constexpr value_type& _zero_based_item(length_type x, length_type y) noexcept {
-            return this->data()[x + (y * this->length())];
-         }
 
-         constexpr void _resize_impl(length_type new_length, auto NewSlotFunctor, auto PreservedStripFunctor) {
-            if (new_length == this->_length)
+         template<typename Functor>
+         static constexpr void _for_perimeter(value_type* buffer, length_type outer_length, length_type inner_length, Functor&& functor) {
+            size_t margin_start = (outer_length - inner_length + 1) / 2; // + 1 to bias to the left
+            size_t margin_end   = (outer_length - inner_length) / 2;
+
+            for (size_t y = 0; y < margin_start; ++y) { // old top row(s), downward
+               for (size_t x = 0; x < outer_length; ++x) {
+                  auto& item = buffer[y * outer_length + x];
+                  functor(item);
+               }
+            }
+            for (size_t inv_y = 0; inv_y < margin_end; ++inv_y) { // old bottom row(s), upward
+               size_t y = outer_length - inv_y - 1;
+               for (size_t x = 0; x < outer_length; ++x) {
+                  auto& item = buffer[y * outer_length + x];
+                  functor(item);
+               }
+            }
+            //
+            auto y_end = outer_length - margin_end;
+            for (size_t x = 0; x < margin_start; ++x) { // old left col(s), rightward
+               for (size_t y = margin_start; y < y_end; ++y) {
+                  auto& item = buffer[y * outer_length + x];
+                  functor(item);
+               }
+            }
+            for (size_t inv_x = 0; inv_x < margin_end; ++inv_x) { // old right col(s), leftward
+               size_t x = outer_length - inv_x - 1;
+               for (size_t y = margin_start; y < y_end; ++y) {
+                  auto& item = buffer[y * outer_length + x];
+                  functor(item);
+               }
+            }
+         }
+         //
+         template<typename InitializeNewTo = impl::_resizable_grid::dummy, typename DestroyFunctor = impl::_resizable_grid::dummy>
+         constexpr void _resize_impl(length_type new_length, const InitializeNewTo& values, DestroyFunctor destroy_functor = {}) {
+            auto old_length = this->_length;
+            if (new_length == old_length)
                return;
             if (new_length == 0) {
                this->clear_and_collapse();
                return;
             }
-            auto* move_to = _alloc(new_length * new_length);
-            if (new_length > this->_length) {
-               //
-               // Expanding the grid.
-               //
-               if (this->_length) {
-                  length_type pad_a = (new_length - this->_length) / 2;
-                  length_type pad_b = pad_a + this->_length;
-                  //
-                  for (length_type y2 = 0; y2 < pad_a; ++y2) // new rows on top
-                     for (length_type x2 = 0; x2 < new_length; ++x2)
-                        NewSlotFunctor(&_item_in_new_grid(move_to, new_length, x2, y2));
-                  //
-                  for (length_type y1 = 0, y2 = pad_a; y1 < this->_length; ++y1, ++y2) { // expanded rows in middle
-                     for (length_type x2 = 0; x2 < pad_a; ++x2) // new columns on left
-                        NewSlotFunctor(&_item_in_new_grid(move_to, new_length, x2, y2));
-                     //
-                     PreservedStripFunctor(&_item_in_new_grid(move_to, new_length, pad_a, y2), &this->_zero_based_item(0, y1), this->_length);
-                     //
-                     for (length_type x2 = pad_b; x2 < new_length; ++x2) // new columns on right
-                        NewSlotFunctor(&_item_in_new_grid(move_to, new_length, x2, y2));
-                  }
-                  //
-                  for (length_type y2 = pad_b; y2 < new_length; ++y2) // new rows on bottom
-                     for (length_type x2 = 0; x2 < new_length; ++x2)
-                        NewSlotFunctor(&_item_in_new_grid(move_to, new_length, x2, y2));
-               } else {
-                  //
-                  // Grid was zero-size.
-                  //
-                  for (length_type y = 0; y < new_length; ++y)
-                     for (length_type x = 0; x < new_length; ++x)
-                        NewSlotFunctor(&_item_in_new_grid(move_to, new_length, x, y));
-               }
-            } else {
-               //
-               // Shrinking the grid.
-               //
-               length_type skip_a = (this->_length - new_length) / 2;
-               length_type skip_b = skip_a + new_length;
-               //
-               for (length_type y1 = skip_a, y2 = 0; y1 < skip_b; ++y1, ++y2) {
-                  PreservedStripFunctor(&_item_in_new_grid(move_to, new_length, 0, y2), &this->_zero_based_item(skip_a, y1), new_length);
-               }
-            }
-            if (this->_data)
-               _free(this->_data);
-            this->_data   = move_to;
             this->_length = new_length;
+            if (new_length > old_length) {
+               //
+               // Enlarging the grid.
+               //
+               value_type* src_buffer = this->_data;
+               value_type* dst_buffer = nullptr;
+               if constexpr (std::is_trivially_copyable_v<value_type>) {
+                  if (std::is_constant_evaluated()) {
+                     dst_buffer = _alloc(new_length * new_length);
+                     this->_data = dst_buffer;
+                  } else {
+                     dst_buffer = this->_data = (value_type*)realloc(this->_data, sizeof(value_type) * new_length * new_length);
+                  }
+               } else {
+                  dst_buffer = this->_data = _alloc(new_length * new_length, true);
+               }
+               if (!src_buffer) {
+                  //
+                  // The grid was empty with a zero-size buffer.
+                  //
+                  for (size_t i = 0; i < new_length * new_length; ++i) {
+                     auto& item = dst_buffer[i];
+                     if constexpr (std::is_same_v< InitializeNewTo, impl::_resizable_grid::dummy>) {
+                        std::construct_at<value_type>(&item);
+                     } else {
+                        std::construct_at<value_type>(&item, values);
+                     }
+                  }
+                  if constexpr (std::is_trivially_copyable_v<value_type>) {
+                     if (!std::is_constant_evaluated()) {
+                        return; // used realloc; don't need to free old memory
+                     }
+                  }
+                  return;
+               }
+               //
+               // First, copy the old rows into where they need to go.
+               //
+               size_t prior_count  = old_length * old_length;
+               size_t margin_start = (new_length - old_length + 1) / 2; // + 1 to bias to the left
+               size_t margin_end   = (new_length - old_length) / 2;
+               for (size_t inv_src_y = 0; inv_src_y < old_length; ++inv_src_y) { // go in reverse order
+                  size_t src_y = old_length - inv_src_y - 1;
+                  size_t dst_y = margin_start + src_y;
+                  auto&  src   = src_buffer[src_y * old_length];
+                  auto&  dst   = dst_buffer[dst_y * new_length + margin_start];
+                  if constexpr (std::is_trivially_copyable_v<value_type>) {
+                     if (!std::is_constant_evaluated()) {
+                        memcpy(&dst, &src, sizeof(value_type) * old_length);
+                        continue;
+                     }
+                  }
+                  for (size_t x = 0; x < old_length; ++x) {
+                     auto& s = (&src)[x];
+                     auto& d = (&dst)[x];
+                     std::construct_at<value_type>(&d, std::move(s));
+                  }
+               }
+               //
+               // Initialize new items:
+               //
+               _for_perimeter(
+                  dst_buffer,
+                  new_length,
+                  old_length,
+                  [&values](value_type& item) {
+                     if constexpr (std::is_same_v< InitializeNewTo, impl::_resizable_grid::dummy>) {
+                        std::construct_at<value_type>(&item);
+                     } else {
+                        std::construct_at<value_type>(&item, values);
+                     }
+                  }
+               );
+               //
+               if (std::is_constant_evaluated()) {
+                  _free(src_buffer, old_length * old_length);
+               }
+               return;
+            }
+            if (new_length < old_length) {
+               value_type* src_buffer = this->_data;
+               value_type* dst_buffer = _alloc(new_length * new_length, !std::is_constant_evaluated());
+               this->_data = dst_buffer;
+               
+               size_t margin_start = (old_length - new_length + 1) / 2; // + 1 to bias to the left
+               size_t margin_end   = (old_length - new_length) / 2;
+               for (length_type y = 0; y < new_length; ++y) {
+                  size_t src_y = margin_start + y;
+                  size_t dst_y = y;
+                  auto&  src   = src_buffer[src_y * old_length + margin_start];
+                  auto&  dst   = dst_buffer[dst_y * new_length];
+                  if constexpr (std::is_trivially_copyable_v<value_type>) {
+                     if (!std::is_constant_evaluated()) {
+                        memcpy(&dst, &src, sizeof(value_type) * new_length);
+                        continue;
+                     }
+                  }
+                  for (size_t x = 0; x < new_length; ++x) {
+                     auto& s = (&src)[x];
+                     auto& d = (&dst)[x];
+                     std::construct_at<value_type>(&d, std::move(s));
+                  }
+               }
+               //
+               // Destroy old items:
+               //
+               _for_perimeter(
+                  src_buffer,
+                  old_length,
+                  new_length,
+                  [&destroy_functor](value_type& item) {
+                     if constexpr (!std::is_same_v< DestroyFunctor, impl::_resizable_grid::dummy>) {
+                        destroy_functor(item);
+                     }
+                     if (!std::is_constant_evaluated()) {
+                        std::destroy_at(&item);
+                     }
+                  }
+               );
+               //
+               _free(src_buffer, old_length * old_length);
+               return;
+            }
+            cobb::unreachable();
          }
 
       public:
@@ -363,6 +513,12 @@ namespace cobb {
             auto half = this->length() / 2;
             return this->data()[(x + half) + ((y + half) * this->length())];
          }
+         constexpr value_type& from_corner(length_type x, length_type y) noexcept {
+            return this->data()[x + (y * this->length())];
+         }
+         constexpr const value_type& from_corner(length_type x, length_type y) const noexcept {
+            return this->data()[x + (y * this->length())];
+         }
          
          iterator begin() { return iterator{ _data }; }
          iterator end() { return iterator{ _data + area() }; }
@@ -388,45 +544,42 @@ namespace cobb {
          }
          constexpr void clear_and_collapse() {
             if (this->_data) {
-               _free(this->_data);
+               _free(this->_data, this->_length * this->_length);
                this->_data = nullptr;
             }
             this->_length = 0;
          }
 
-         constexpr void resize(length_type new_length) requires (std::is_default_constructible_v<value_type> && std::is_move_constructible_v<value_type>) {
+         constexpr void resize(length_type new_length) requires (_can_default || _can_move) {
             this->_resize_impl(
                new_length,
-               [](value_type* item) {
-                  std::construct_at<value_type>(item);
-               },
-               [](value_type* dst, value_type* src, length_type count) {
-                  if constexpr (std::is_trivially_copyable_v<value_type>) {
-                     if (!std::is_constant_evaluated()) {
-                        memcpy(dst, src, sizeof(T) * (size_t)count);
-                        return;
-                     }
-                  }
-                  for (length_type i = 0; i < count; ++i)
-                     std::construct_at<value_type>(&dst[i], std::move(src[i]));
+               impl::_resizable_grid::dummy{},
+               [](value_type& to_destroy) {}
+            );
+         }
+
+         template<typename DestroyFunctor = _no_op_destroy_functor> requires (!std::is_same_v<DestroyFunctor, value_type>)
+         constexpr void resize(length_type new_length, const DestroyFunctor& destroy = {})
+            requires (_can_default || _can_move)
+         {
+            this->_resize_impl(
+               new_length,
+               impl::_resizable_grid::dummy{},
+               [&destroy](value_type& to_destroy) {
+                  destroy(to_destroy);
                }
             );
          }
-         constexpr void resize(length_type new_length, const value_type& v) requires (std::is_copy_constructible_v<value_type> && std::is_move_constructible_v<value_type>) {
+
+         template<typename DestroyFunctor = _no_op_destroy_functor> requires (!std::is_same_v<DestroyFunctor, value_type>)
+         constexpr void resize(length_type new_length, const value_type& v, const DestroyFunctor& destroy = {})
+            requires (_can_copy && _can_move)
+         {
             this->_resize_impl(
                new_length,
-               [&v](value_type* item) {
-                  std::construct_at<value_type>(item, v);
-               },
-               [&v](value_type* dst, value_type* src, length_type count) {
-                  if constexpr (std::is_trivially_copyable_v<value_type>) {
-                     if (!std::is_constant_evaluated()) {
-                        memcpy(dst, src, sizeof(T) * (size_t)count);
-                        return;
-                     }
-                  }
-                  for (length_type i = 0; i < count; ++i)
-                     std::construct_at<value_type>(&dst[i], std::move(src[i]));
+               v,
+               [&destroy](value_type& to_destroy) {
+                  destroy(to_destroy);
                }
             );
          }
@@ -455,7 +608,7 @@ namespace cobb {
             auto* working = _alloc(length * length);
             for (length_type y = 0; y < length; ++y) {
                for (length_type x = 0; x < length; ++x) {
-                  auto& src = _zero_based_item(x, y);
+                  auto& src = from_corner(x, y);
                   auto* dst = lookup(working, x + x_delta, y + y_delta);
                   if (dst) {
                      *dst = std::move(src);
@@ -464,7 +617,7 @@ namespace cobb {
                   }
                }
             }
-            _free(this->_data);
+            _free(this->_data, this->_length * this->_length);
             this->_data = working;
          }
    };

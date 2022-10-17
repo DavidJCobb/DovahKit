@@ -138,8 +138,14 @@ namespace vulkanDK {
          auto& e = pd.support.descriptor_bindings;
          if (!e.runtime_array || !e.variable_count)
             return false;
-         if (e.max_bound_descriptor_sets < 6)
+         if (e.max_bound_descriptor_sets < 8) {
+            //
+            // TODO: Can we generate this at compile-time from the shaders, somehow? Like, if 
+            // we define our shaders as constexpr metadata? I really don't like the idea that 
+            // I might forget to update this at some point.
+            //
             return false;
+         }
          //
          auto& t = e.maximums_by_descriptor_type;
          if (t.input_attachment < 2) // highest needed: 2 for OIT compositing
@@ -3765,6 +3771,9 @@ namespace vulkanDK {
       }
       return fmt;
    }
+   VkDeviceSize surface_renderer::max_upload_buffer_size() const {
+      return 200 * 1024/*KB to MB*/ * 1024/*B to KB*/;
+   }
    bool surface_renderer::needs_null_texture() const {
       return this->device_info->support.descriptor_bindings.null_handles == false;
    }
@@ -4064,94 +4073,48 @@ namespace vulkanDK {
       //
       return texture_index;
    }
-   void surface_renderer::add_mesh(const QString& texture_path) {
-      size_t texture_index = this->add_texture(texture_path);
-      if (texture_index == scene::index_of_none) {
-         qDebug("Cannot add new rendered object: failed to add its texture.");
-         return;
-      }
-      auto&  texture_item = this->scene.entities_of_type<loaded_texture>()[texture_index];
-      size_t object_index = this->scene.insert_new_scene_entity<rendered_mesh>();
-      if (object_index == scene::index_of_none) {
-         qDebug("Cannot add new rendered objects. Maximum has been reached.");
-         if (texture_item.refcount == 0) {
-            //
-            // This texture was created for us, but we never got a chance to use it. Mark it 
-            // for deletion.
-            //
-            texture_item.mark_for_delete();
-         }
-         return;
-      }
-      if constexpr (debug_log_scene_object_lifetimes) {
-         qDebug("[vulkanDK::scene_renderer::add_mesh] Creating new mesh at index %u with texture index %u.", object_index, texture_index);
-      }
-      QSize texture_size = { (int)texture_item.w, (int)texture_item.h }; // just used to size the quad so we maintain aspect ratio
-      {  // Create model
-         if (!texture_size.isValid())
-            texture_size = { 1, 1 };
-         //
-         auto& ro  = this->scene.entities_of_type<rendered_mesh>()[object_index];
-         auto& vib = ro.vib();
-         ro.texture_indices.diffuse.set(*this, texture_index);
-         //
-         glm::vec3 position = {};
-         {
-            constexpr float radius = 5.0F;
-            for (size_t j = 0; j < 3; ++j)
-               position[j] = ((float)rand() / RAND_MAX) * radius - (radius / 2.0F);
-         }
-         //
-         float hfwc = ((float)texture_size.height() / texture_size.width()) / 2; // height-for-width, centered
-         ro.mesh_data.vertices = {
-            vertex{
-               .pos    = { -0.5f, -hfwc, 0.0 },
-               .color  = { 1, 1, 1, 1 },
-               .uv     = { 1, 0 },
-               .normal    = { 0, 0, 1 },
-               .tangent   = { 1, 0, 0 },
-               .bitangent = { 0, 1, 0 },
-            },
-            vertex{
-               .pos    = { 0.5f, -hfwc, 0.0 },
-               .color  = { 1, 1, 1, 1 },
-               .uv     = { 0, 0 },
-               .normal    = { 0, 0, 1 },
-               .tangent   = { 1, 0, 0 },
-               .bitangent = { 0, 1, 0 },
-            },
-            vertex{
-               .pos    = { 0.5f, hfwc, 0.0 },
-               .color  = { 1, 1, 1, 1 },
-               .uv     = { 0, 1 },
-               .normal    = { 0, 0, 1 },
-               .tangent   = { 1, 0, 0 },
-               .bitangent = { 0, 1, 0 },
-            },
-            vertex{
-               .pos    = { -0.5f, hfwc, 0.0 },
-               .color  = { 1, 1, 1, 1 },
-               .uv     = { 1, 1 },
-               .normal    = { 0, 0, 1 },
-               .tangent   = { 1, 0, 0 },
-               .bitangent = { 0, 1, 0 },
-            },
-         };
-         ro.mesh_data.indices = { 0, 1, 2, 2, 3, 0 };
-         ro.recalc_bounding_sphere();
-         ro.frame_drawing_data.transform = glm::translate(
-            glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            position
-         );
-         //
-         this->_queue_mesh_vib_creation(ro);
-         //
-         if (!ro.anim_state)
-            ro.anim_state = new mesh_animation_state; // for testing: spin the mesh
-      }
+   void surface_renderer::lookup_or_reserve_dds_texture(QString texture_path, size_t& texture_entity_index, bool& already_existed) {
       //
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.on_scene_entity_added_or_removed<rendered_mesh>();
+      // This function is used to support multi-threaded loading of NIFs and their referenced 
+      // textures. If we want to load both NIFs and textures in a multithreaded manner, then 
+      // it is easiest to coordinate loading if we behave as follows:
+      // 
+      //  - If the texture file doesn't exist or does not use the DDS extension, then fail 
+      //    immediately and return index-of-none.
+      // 
+      //  - If the texture file is already loaded, return its index.
+      // 
+      //  - If we have reached the max texture count, return index-of-none.
+      // 
+      //  - Otherwise, reserve a new texture index and return it. Even if the DDS file later 
+      //    fails to load (e.g. invalid file data), this texture index will remain in use 
+      //    until all referencing meshes are gone.
+      // 
+      // That way, we don't need to handle complex interdependencies between resources that 
+      // are loaded on different threads, and whatnot.
+      //
+      already_existed = false;
+      if (!texture_path.endsWith(".dds", Qt::CaseInsensitive)) {
+         texture_entity_index = scene::index_of_none;
+         return;
+      }
+      texture_path = QDir::cleanPath(texture_path).toLower();
+      //
+      // Check for an already-existing texture:
+      //
+      texture_entity_index = this->scene.reuse_scene_texture(texture_path);
+      if (texture_entity_index != scene::index_of_none) {
+         if constexpr (debug_log_scene_object_lifetimes) {
+            qDebug("[vulkanDK::scene_renderer::lookup_or_reserve_dds_texture] Reusing texture index %u for texture path <%s>", texture_entity_index, qUtf8Printable(texture_path));
+         }
+         already_existed = true;
+         return;
+      }
+      texture_entity_index = this->scene.insert_new_scene_entity<loaded_texture>();
+      if (texture_entity_index == scene::index_of_none) {
+         qDebug("[vulkanDK::scene_renderer::lookup_or_reserve_dds_texture] Cannot add new rendered textures. Maximum has been reached.");
+         return;
+      }
    }
    void surface_renderer::remove_mesh(size_t i) {
       auto& list = this->scene.entities_of_type<rendered_mesh>();
@@ -4179,19 +4142,6 @@ namespace vulkanDK {
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_scene_entity_added_or_removed<rendered_mesh>();
    }
-   void surface_renderer::remove_last_mesh() {
-      auto& list = this->scene.entities_of_type<rendered_mesh>();
-      auto  size = list.size();
-      if (size == 0)
-         return;
-      for (size_t i = size - 1; i >= 0; --i) {
-         auto& item = list[i];
-         if (!item.active())
-            continue;
-         this->remove_mesh(i);
-         return;
-      }
-   }
    void surface_renderer::remove_light(size_t i) {
       auto& list = this->scene.entities_of_type<rendered_light>();
       if (i >= list.size())
@@ -4205,19 +4155,6 @@ namespace vulkanDK {
          this->scene.mark_light_shadows_dirty();
       }
       item.mark_for_delete();
-   }
-   void surface_renderer::remove_last_light() {
-      auto& list = this->scene.entities_of_type<rendered_light>();
-      auto  size = list.size();
-      if (size == 0)
-         return;
-      for (size_t i = size - 1; i >= 0; --i) {
-         auto& item = list[i];
-         if (!item.active())
-            continue;
-         this->remove_light(i);
-         return;
-      }
    }
    void surface_renderer::set_animation_paused(size_t i, bool paused) {
       auto& list = this->scene.entities_of_type<rendered_mesh>();
@@ -5257,9 +5194,12 @@ namespace vulkanDK {
 
    bool surface_renderer::_execute_pending_scene_entity_gpu_uploads() {
       VkDeviceSize total_staging_size = 0;
+      VkDeviceSize max_staging_size   = this->max_upload_buffer_size();
 
-      this->uploading.pending_upload_counts.for_each([this, &total_staging_size]<typename Entity>(size_t& pending_upload_count) {
+      this->uploading.pending_upload_counts.for_each([this, &total_staging_size, max_staging_size]<typename Entity>(size_t& pending_upload_count) {
          if (pending_upload_count <= 0)
+            return;
+         if (total_staging_size >= max_staging_size)
             return;
          auto& list = this->scene.entities_of_type<Entity>();
          for (const auto& entity : list) {
@@ -5271,6 +5211,8 @@ namespace vulkanDK {
             if (auto misalign = total_staging_size % align; misalign) {
                total_staging_size += (align - misalign);
             }
+            if (total_staging_size >= max_staging_size)
+               break;
          }
       });
 
@@ -5284,22 +5226,29 @@ namespace vulkanDK {
       commands.top_level_begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
       auto upload = scene_entities::owned_gpu_resource_upload_operation(*this);
+      upload.set_max_capacity({}, max_staging_size);
       upload.staging.data = staging.map_memory();
 
       this->uploading.pending_upload_counts.for_each([this, &upload]<typename Entity>(size_t& pending_upload_count) {
          if (pending_upload_count <= 0)
+            return;
+         if (!upload.has_room_for_more({}))
             return;
          auto& list = this->scene.entities_of_type<Entity>();
          for (size_t i = 0; i < list.size(); ++i) {
             auto& entity = list[i];
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;
+            if (!upload.has_room_for_more({}))
+               break;
+
             --pending_upload_count;
             
             upload.align_to({}, entity.owned_gpu_resource_upload_alignment());
             upload.set_entity_index({}, i);
             entity.upload_owned_gpu_resources(upload);
             upload.next({});
+
             if (entity.lifetime.life_state == scene_entities::life_state::pending_delete) // entities may mark themselves for delete on failure
                continue;
             entity.lifetime.life_state = scene_entities::life_state::active;
@@ -5353,6 +5302,7 @@ namespace vulkanDK {
                      item.owned_gpu_resources.destroy_outdated();
                   }
                   item.lifetime.life_state = scene_entities::life_state::active;
+                  item.lifetime.sync_state.set_all_out_of_date();
                   ++deleted;
                   recycling = true;
                }
