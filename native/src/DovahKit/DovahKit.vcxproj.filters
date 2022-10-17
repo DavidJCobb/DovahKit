@@ -4301,6 +4301,12 @@
     <ClInclude Include="helpers\small_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\dummy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\dummy_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -5,6 +5,7 @@
 #include "helpers/arrays/make.h"
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/array_concat.h"
+#include "helpers/dummy_of.h"
 #include "helpers/miscellaneous.h" // cobb::edit_bit
 //
 #include "./DKVulkanInstance.h"
@@ -79,6 +80,20 @@ namespace {
    static constexpr bool debug_log_mesh_loading             = false;
    static constexpr bool debug_log_scene_object_lifetimes   = false;
    static constexpr bool debug_object_names_fallback_to_log = false; // logs objects' debug names when the relevant extension isn't supported; log spam on window resize; use only when needed
+
+   // Tool for testing whether the staging buffer size cap works.
+   static constexpr bool debug_use_tiny_staging_buffer_for_entity_uploads = false && 
+      #if _DEBUG
+         true
+      #else
+         false
+      #endif
+   ;
+
+   static constexpr bool debug_log_nif_to_meshes_time = true;
+
+   template<bool Enable>
+   using _debug_log_timestamp = cobb::dummy_type_if_false<Enable, std::chrono::time_point<std::chrono::steady_clock>>;
 }
 
 namespace {
@@ -3772,6 +3787,9 @@ namespace vulkanDK {
       return fmt;
    }
    VkDeviceSize surface_renderer::max_upload_buffer_size() const {
+      if constexpr (debug_use_tiny_staging_buffer_for_entity_uploads) {
+         return 1 * 1024/*B to KB*/;
+      }
       return 200 * 1024/*KB to MB*/ * 1024/*B to KB*/;
    }
    bool surface_renderer::needs_null_texture() const {
@@ -4692,10 +4710,17 @@ namespace vulkanDK {
          }
       }
       //
-      size_t texture_index;
+      using debug_timestamp_t = _debug_log_timestamp<debug_log_nif_to_meshes_time>;
+      debug_timestamp_t _debug_time_start;
+      debug_timestamp_t _debug_time_end;
+      if constexpr (debug_log_nif_to_meshes_time) {
+         _debug_time_start = std::chrono::steady_clock::now();
+      }
+      //
+      size_t fallback_texture_index;
       {
-         texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
-         if (texture_index == scene::index_of_none) {
+         fallback_texture_index = this->add_texture(QLatin1Literal(":/shaders/white.png"));
+         if (fallback_texture_index == scene::index_of_none) {
             qDebug("Cannot add new rendered object: failed to add its texture.");
             return false;
          }
@@ -4720,7 +4745,7 @@ namespace vulkanDK {
                   state.is_marker = cobb::strieq_ascii(node->name, "EditorMarker");
                }
             },
-            [this, texture_index](NiAVObject* object, const _import_state& state) {
+            [this, fallback_texture_index](NiAVObject* object, const _import_state& state) {
                if (&typeid(*object->parent) == &typeid(NiSwitchNode)) {
                   //
                   // For NiSwitchNodes, only import the current child. (TODO: Instead, import all children 
@@ -4732,9 +4757,9 @@ namespace vulkanDK {
                }
                rendered_mesh* mesh = nullptr;
                if (auto* geom = dynamic_cast<NiGeometry*>(object)) {
-                  mesh = this->add_NiGeometry_mesh(geom, state.transform, texture_index);
+                  mesh = this->add_NiGeometry_mesh(geom, state.transform, fallback_texture_index);
                } else if (auto* geom = dynamic_cast<BSTriShape*>(object)) {
-                  mesh = this->add_BSTriShape_mesh(geom, state.transform, texture_index);
+                  mesh = this->add_BSTriShape_mesh(geom, state.transform, fallback_texture_index);
                }
                //
                if (mesh) {
@@ -4751,11 +4776,19 @@ namespace vulkanDK {
             }
          );
       }
+      if constexpr (debug_log_nif_to_meshes_time) {
+         _debug_time_end = std::chrono::steady_clock::now();
+         qDebug(
+            "[surface_renderer::add_nif] NIF took %.02f ms to load.\n - %s",
+            std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
+            model.root_node ? model.root_node->name.c_str() : "<no root node>"
+         );
+      }
       if constexpr (debug_log_mesh_loading)
          qDebug("[surface_renderer::add_nif] Done processing the NIF.");
 
       {
-         auto& tex = this->scene.entities_of_type<loaded_texture>()[texture_index];
+         auto& tex = this->scene.entities_of_type<loaded_texture>()[fallback_texture_index];
          if (tex.refcount == 0) {
             //
             // Means this model failed to produce any meshes (AND no other meshes loaded via 
@@ -5229,19 +5262,26 @@ namespace vulkanDK {
       upload.set_max_capacity({}, max_staging_size);
       upload.staging.data = staging.map_memory();
 
-      this->uploading.pending_upload_counts.for_each([this, &upload]<typename Entity>(size_t& pending_upload_count) {
+      size_t deferred_entity_count = 0;
+      this->uploading.pending_upload_counts.for_each([this, &upload, &deferred_entity_count]<typename Entity>(size_t& pending_upload_count) {
          if (pending_upload_count <= 0)
             return;
          if (!upload.has_room_for_more({}))
             return;
+         //
+         bool any_of_this_type = false;
+         //
          auto& list = this->scene.entities_of_type<Entity>();
          for (size_t i = 0; i < list.size(); ++i) {
             auto& entity = list[i];
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;
-            if (!upload.has_room_for_more({}))
+            if (!upload.has_room_for_more({})) {
+               ++deferred_entity_count;
                break;
+            }
 
+            any_of_this_type = true;
             --pending_upload_count;
             
             upload.align_to({}, entity.owned_gpu_resource_upload_alignment());
@@ -5252,8 +5292,17 @@ namespace vulkanDK {
             if (entity.lifetime.life_state == scene_entities::life_state::pending_delete) // entities may mark themselves for delete on failure
                continue;
             entity.lifetime.life_state = scene_entities::life_state::active;
+            entity.lifetime.sync_state.set_all_out_of_date();
+         }
+
+         if (any_of_this_type) {
+            for (auto& fif : this->swap_chain.frames_in_flight)
+               fif.on_scene_entity_owned_gpu_resource_upload_complete<Entity>();
          }
       });
+      if (deferred_entity_count) {
+         qDebug("[surface_renderer::_execute_pending_scene_entity_gpu_uploads] Staging buffer soft cap reached; %d entity CPU-to-GPU uploads pushed to next frame.", deferred_entity_count);
+      }
 
       upload.finish_queueing();
 

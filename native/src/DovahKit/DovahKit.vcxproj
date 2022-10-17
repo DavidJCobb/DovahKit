@@ -832,6 +832,7 @@
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\class_map.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
+    <ClInclude Include="helpers\dummy_of.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
@@ -850,6 +851,7 @@
     <ClInclude Include="helpers\math\sine.h" />
     <ClInclude Include="helpers\math\sqrt.h" />
     <ClInclude Include="helpers\memset.h" />
+    <ClInclude Include="helpers\dummy.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />

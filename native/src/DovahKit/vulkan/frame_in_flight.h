@@ -216,6 +216,12 @@ namespace vulkanDK {
                this->state.scene_entity_coalesced_vib_resize_needed.value_for<Entity>() = true;
             }
          }
+         template<typename Entity> requires (scene_entities::all_types_with_owned_gpu_resources::contains_type<Entity>)
+         void on_scene_entity_owned_gpu_resource_upload_complete() {
+            if constexpr (scene_entities::all_types_that_are_drawn::contains_type<Entity>) {
+               this->state.scene_entity_draws_changed.value_for<Entity>() = true;
+            }
+         }
          void invalidate_all_command_buffers();
 
       protected:
