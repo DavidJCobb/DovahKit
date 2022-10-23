@@ -631,6 +631,8 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
+    <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
+    <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
     <ClCompile Include="vulkan\compute_shader.cpp" />
@@ -834,6 +836,8 @@
     <ClInclude Include="helpers\class_map.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\dummy_of.h" />
+    <ClInclude Include="helpers\dynamic_exact_cast.h" />
+    <ClInclude Include="helpers\dynamic_fast_cast.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
@@ -862,6 +866,7 @@
     <ClInclude Include="helpers\offset_into.h" />
     <ClInclude Include="helpers\polyfills\msvc\consteval_compatible_optional.h" />
     <ClInclude Include="helpers\polyfills\msvc\const_reference_nttp_decltype.h" />
+    <ClInclude Include="helpers\qt\delete_later_deleter.h" />
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
@@ -1030,6 +1035,8 @@
     <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h" />
     <QtMoc Include="ui\options_3d_input_window\localization.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
+    <ClInclude Include="vulkan\asset_loading\reserve_meshes_for_nif.h" />
+    <ClInclude Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\compute_shader.h" />
@@ -1066,6 +1073,7 @@
     <ClInclude Include="vulkan\helpers\glm_transform_from_beth.h" />
     <ClInclude Include="vulkan\helpers\land\vertex_index_conversions.h" />
     <ClInclude Include="vulkan\helpers\land\vulkan_vertex_indices_for_outline.h" />
+    <ClInclude Include="vulkan\helpers\mesh\vertices_from_NiTriShapeData.h" />
     <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid.h" />
@@ -1083,6 +1091,7 @@
     <ClInclude Include="vulkan\rendered_landscape.h" />
     <ClInclude Include="vulkan\rendered_light.h" />
     <ClInclude Include="vulkan\rendered_mesh.h" />
+    <ClInclude Include="vulkan\rendered_nif.h" />
     <ClInclude Include="vulkan\render_pass.h" />
     <ClInclude Include="vulkan\scene.h" />
     <ClInclude Include="vulkan\scene_entities\all_classes.h" />

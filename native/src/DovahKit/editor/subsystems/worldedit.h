@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include "helpers/math/sqrt.h"
+#include "helpers/qt/delete_later_deleter.h"
 #include "helpers/enum_flags.h"
 #include "helpers/resizable_grid.h"
 #include "helpers/singleton_ex.h"
@@ -10,6 +11,7 @@
 #include "dovah/forms/ObjectReference.h"
 #include "nif/file.h"
 #include "vulkan/config/scene_limits.h"
+#include "vulkan/rendered_nif.h"
 #include "vulkan/scene_entity_handle.h"
 
 class DKVulkanView;
@@ -45,6 +47,9 @@ namespace dovahkit::subsystems {
          using loaded_land_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::Landscape>;
          using loaded_refr_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::ObjectReference>;
 
+         //using refr_nif_ptr = std::unique_ptr<nifDK::file>;
+         using refr_nif_ptr = std::unique_ptr<vulkanDK::rendered_nif, cobb::qt::delete_later_deleter<vulkanDK::rendered_nif>>;
+
          struct selected_refr_info {
             selected_refr_info();
             selected_refr_info(form_stub* f, vulkanDK::rendered_bounds_handle h) : stub(f), handle(h) {}
@@ -63,7 +68,7 @@ namespace dovahkit::subsystems {
          struct refr {
             form_stub*      stub = nullptr;
             loaded_refr_ptr form;
-            std::unique_ptr<nifDK::file> nif;
+            refr_nif_ptr    nif;
             struct {
                vulkanDK::rendered_light_handle light;
             } vulkan_handles;

@@ -20,6 +20,7 @@
 #include "fps_tracker.h"
 #include "graphics_shader.h"
 #include "image.h"
+#include "rendered_nif.h"
 #include "scene.h"
 #include "scene_entity_handle.h"
 #include "swap_chain_image.h"
@@ -33,6 +34,9 @@ class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
 namespace dovah {
    namespace loaded_forms {
+      namespace components {
+         class model;
+      }
       class Landscape;
       class ObjectReference;
    }
@@ -297,6 +301,7 @@ namespace vulkanDK {
          rendered_mesh* add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index = scene::index_of_none);
       public:
          bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
+         rendered_nif* add_nif(dovah::loaded_forms::components::model& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
          rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
          rendered_light_handle add_light(const rendered_light::frame_drawing_data_type&);
          void remove_nif(nifDK::file& model);

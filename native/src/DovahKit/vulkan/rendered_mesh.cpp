@@ -1,9 +1,9 @@
 #include "rendered_mesh.h"
 #include "helpers/math.h"
 #include "helpers/offset_into.h"
-#include "nif/file.h"
 #include "./command_buffer.h"
 #include "./raycast.h"
+#include "./rendered_nif.h"
 #include "./surface_renderer.h"
 #include "./scene_entities/owned_gpu_resource_upload_operation.h"
 

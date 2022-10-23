@@ -37,15 +37,6 @@ namespace {
    static constexpr bool debug_log_mesh_load_unload = false;
 }
 
-#include <chrono>
-#include "helpers/dummy_of.h"
-namespace {
-   static constexpr bool debug_log_nif_loading_times = true;
-   //
-   template<bool Enable>
-   using _debug_log_timestamp = cobb::dummy_type_if_false<Enable, std::chrono::time_point<std::chrono::steady_clock>>;
-}
-
 namespace {
    static constexpr auto max_selected_refr_count = vulkanDK::config::max_rendered_bounds;
 
@@ -54,47 +45,6 @@ namespace {
    static constexpr float move_speed_mult_boost     = 2.0F;
 
    static constexpr float turn_speed_per_second = glm::radians<float>(90);
-}
-
-namespace {
-   bool _load_refr_model(nifDK::file& model, dovah::loaded_forms::components::model& src) {
-      using debug_timestamp_t = _debug_log_timestamp<debug_log_nif_loading_times>;
-      debug_timestamp_t _debug_time_start;
-      debug_timestamp_t _debug_time_end;
-      if constexpr (debug_log_nif_loading_times) {
-         _debug_time_start = std::chrono::steady_clock::now();
-      }
-      //
-      std::filesystem::path path = std::string("meshes") + (src.model_path[0] == '/' || src.model_path[0] == '\\' ? "" : "\\") + src.model_path;
-      std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
-      if (!file) {
-         qDebug("Failed to open NIF file: <%s>", path.string().c_str());
-         return false;
-      }
-      model.read((void*)file->data(), file->size());
-      //
-      auto& error = model.read_error();
-      if (error.code != nifDK::default_notice_code) {
-         qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
-         #if _DEBUG
-            __debugbreak();
-         #endif
-         return false;
-      }
-      if constexpr (debug_log_nif_loading_times) {
-         _debug_time_end = std::chrono::steady_clock::now();
-         qDebug(
-            "[surface_renderer::add_nif] NIF took %.02f ms to extract from the BSA and parse.\n - %s <%s>",
-            std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
-            model.root_node ? model.root_node->name.c_str() : "<no root node>",
-            src.model_path.c_str()
-         );
-      }
-      if constexpr (debug_log_mesh_load_unload) {
-         qDebug("NIF parsed. Passing to surface_renderer...");
-      }
-      return true;
-   }
 }
 
 namespace dovahkit::subsystems {
@@ -167,7 +117,7 @@ namespace dovahkit::subsystems {
       glm::mat4 transform = vulkanDK::glm_transform_from_beth(item.form->position, item.form->rotation, item.form->get_scale());
       glm::vec3 bounds_min;
       glm::vec3 bounds_max;
-      if (item.nif) {
+      if (item.nif && !item.nif->is_loaded()) {
          auto& bnd = item.nif->bounds;
          bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
          bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
@@ -343,30 +293,20 @@ namespace dovahkit::subsystems {
       //
       float scale = loaded->get_scale();
       //
-      auto* model = new nifDK::file;
-      if (!_load_refr_model(*model, *form_model)) {
-         delete model;
+      auto* model = sr->add_nif(*form_model, loaded->position.to_struct<glm::vec3>(), loaded->rotation.to_struct<glm::vec3>(), scale);
+      if (!model) {
          return false;
       }
       model->owning_form = &stub;
-      if (form_model->supports_texture_swaps) {
-         model->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)form_model);
-      }
       //
       auto& item = this->loaded_refs.emplace_back();
       item.stub = &stub;
       item.form = stub.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
       item.nif.reset(model);
       //
-      out_pos = loaded->position;
-      out_rot = loaded->rotation;
+      out_pos    = loaded->position;
+      out_rot    = loaded->rotation;
       out_is_coc = base->formID == dovah::hardcoded_form_ids::COCMarkerHeading;
-      sr->add_nif(
-         *model,
-         glm::vec3{ loaded->position.x, loaded->position.y, loaded->position.z },
-         glm::vec3{ loaded->rotation.x, loaded->rotation.y, loaded->rotation.z },
-         scale
-      );
       return true;
    }
    void worldedit::_load_cell(dovah::form_stub* cell, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy) {

@@ -15,14 +15,11 @@
 // geometry
 #include "../helpers/vector3.h"
 
-namespace nifDK {
-   class file;
-}
-
 namespace vulkanDK {
    class  command_buffer;
    class  raycast;
    struct raycast_hit_data;
+   class  rendered_nif;
 
    namespace scene_entities {
       class owned_gpu_resource_upload_operation;
@@ -148,7 +145,7 @@ namespace vulkanDK {
          frame_drawing_data_type frame_drawing_data;
          push_constant           push_params;
          
-         nifDK::file* owning_nif = nullptr;
+         rendered_nif* owning_nif = nullptr;
          mesh_animation_state* anim_state = nullptr; // owns
 
          [[nodiscard]] frame_culling_data_type calculate_frame_culling_data() const;

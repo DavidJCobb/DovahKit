@@ -1884,6 +1884,12 @@
     <ClCompile Include="nif\blocks\NiBillboardNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4308,6 +4314,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\utils\world_coordinate_to_grid_coordinate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\mesh\vertices_from_NiTriShapeData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\dynamic_exact_cast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\dynamic_fast_cast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\rendered_nif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\delete_later_deleter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\reserve_meshes_for_nif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

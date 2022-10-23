@@ -91,6 +91,7 @@ namespace {
    ;
 
    static constexpr bool debug_log_nif_to_meshes_time = true;
+   static constexpr bool debug_log_nif_loading_times  = true;
 
    template<bool Enable>
    using _debug_log_timestamp = cobb::dummy_type_if_false<Enable, std::chrono::time_point<std::chrono::steady_clock>>;
@@ -4434,7 +4435,7 @@ namespace vulkanDK {
                }
                mesh.frame_drawing_data.specular_color    = { casted->specular.color.r, casted->specular.color.g, casted->specular.color.b };
                mesh.frame_drawing_data.specular_exponent = casted->material.glossiness;
-               mesh.frame_drawing_data.specular_strength = casted->specular.strength;
+               mesh.frame_drawing_data.specular_strength = casted->specular.strength / 1000.0F; // NIF uses 999 for max brightness?
             } else if (auto* casted = dynamic_cast<const nifDK::block_types::BSEffectShaderProperty*>(shader)) {
                shader_flags     = casted->shader_flags;
                has_shader_flags = true;
@@ -4508,10 +4509,6 @@ namespace vulkanDK {
                normals_index = this->add_dds_texture(normals.c_str());
             }
          }
-         //
-         mesh.frame_drawing_data.specular_strength = lighting->specular.strength / 1000.0F; // NIF uses 999 for max brightness?
-         mesh.frame_drawing_data.specular_color    = { lighting->specular.color.r, lighting->specular.color.g, lighting->specular.color.b };
-         mesh.frame_drawing_data.specular_exponent = lighting->material.glossiness;
       } else if (auto* effect = dynamic_cast<nifDK::block_types::BSEffectShaderProperty*>(shader)) {
          const auto& texture = effect->texture.path;
          if (!texture.empty()) {
@@ -4619,6 +4616,11 @@ namespace vulkanDK {
       bool enable_vertex_alpha = false;
       bool enable_vertex_color = false;
       _handle_ni_shader_properties(mesh, geom->properties.alpha, geom->properties.shader, enable_vertex_alpha, enable_vertex_color);
+      {  // Triangles
+         _ni_triangles_to_mesh_triangles(data->triangles, mesh);
+         if constexpr (debug_log_mesh_loading)
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+      }
       {  // Vertices
          mesh.mesh_data.vertices.resize(size);
          auto& vl = data->vertices;
@@ -4666,11 +4668,6 @@ namespace vulkanDK {
       }
       if constexpr (debug_log_mesh_loading)
          qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", size);
-      {  // Triangles
-         _ni_triangles_to_mesh_triangles(data->triangles, mesh);
-         if constexpr (debug_log_mesh_loading)
-            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
-      }
       {  // Bounding sphere
          auto& dst = mesh.mesh_data.bounding_sphere;
          auto& src = data->bounds;
@@ -4803,6 +4800,57 @@ namespace vulkanDK {
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_scene_entity_added_or_removed<rendered_mesh>();
       return true;
+   }
+   rendered_nif* surface_renderer::add_nif(dovah::loaded_forms::components::model& model, const glm::vec3& pos, const glm::vec3& rot, float scale) {
+      rendered_nif* nif = nullptr;
+      {  // Load model
+         using debug_timestamp_t = _debug_log_timestamp<debug_log_nif_loading_times>;
+         debug_timestamp_t _debug_time_start;
+         debug_timestamp_t _debug_time_end;
+         if constexpr (debug_log_nif_loading_times) {
+            _debug_time_start = std::chrono::steady_clock::now();
+         }
+         //
+         std::filesystem::path path = std::string("meshes") + (model.model_path[0] == '/' || model.model_path[0] == '\\' ? "" : "\\") + model.model_path;
+         std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
+         if (!file) {
+            qDebug("Failed to open NIF file: <%s>", path.string().c_str());
+            return nullptr;
+         }
+         nif = new rendered_nif;
+         nif->read((void*)file->data(), file->size());
+         nif->multi_thread_state.loaded = true;
+         //
+         auto& error = nif->read_error();
+         if (error.code != nifDK::default_notice_code) {
+            qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
+            #if _DEBUG
+               __debugbreak();
+            #endif
+            delete nif;
+            return nullptr;
+         }
+         if constexpr (debug_log_nif_loading_times) {
+            _debug_time_end = std::chrono::steady_clock::now();
+            qDebug(
+               "[surface_renderer::add_nif] NIF took %.02f ms to extract from the BSA and parse.\n - %s <%s>",
+               std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
+               nif->root_node ? nif->root_node->name.c_str() : "<no root node>",
+               path.string().c_str()
+            );
+         }
+      }
+      if (model.supports_texture_swaps) {
+         nif->apply_texture_swaps(*((const dovah::loaded_forms::components::model_ts*)&model));
+      }
+      //
+      this->add_nif(
+         *nif,
+         pos,
+         rot,
+         scale
+      );
+      return nif;
    }
    void surface_renderer::remove_nif(nifDK::file& model) {
       if (!model.root_node) {
