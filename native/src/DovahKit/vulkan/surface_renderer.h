@@ -6,25 +6,28 @@
 #include <QPointer>
 #include <QWidget>
 #include <glm/glm.hpp>
-#include "_vulkan.h"
-#include "_memory.h"
-#include "_util.h"
-#include "helpers/debug_helper_typeof.h"
-#include "config/frames_in_flight.h"
-#include "config/scene_limits.h"
-#include "abstract_renderer.h"
-#include "buffer.h"
-#include "command_buffer.h"
-#include "compute_shader.h"
-#include "descriptor_definitions.h"
-#include "fps_tracker.h"
-#include "graphics_shader.h"
-#include "image.h"
-#include "rendered_nif.h"
-#include "scene.h"
-#include "scene_entity_handle.h"
-#include "swap_chain_image.h"
-#include "surface_renderer_descriptor_group.h"
+#include "./_vulkan.h"
+#include "./_memory.h"
+#include "./_util.h"
+#include "./helpers/debug_helper_typeof.h"
+#include "./asset_loading/queued_nif_load.h"
+#include "./asset_loading/worker_thread_for_meshes.h"
+#include "./asset_loading/worker_thread_for_nifs.h"
+#include "./asset_loading/worker_thread_for_textures.h"
+#include "./config/frames_in_flight.h"
+#include "./config/scene_limits.h"
+#include "./abstract_renderer.h"
+#include "./buffer.h"
+#include "./command_buffer.h"
+#include "./compute_shader.h"
+#include "./descriptor_definitions.h"
+#include "./fps_tracker.h"
+#include "./graphics_shader.h"
+#include "./image.h"
+#include "./scene.h"
+#include "./scene_entity_handle.h"
+#include "./swap_chain_image.h"
+#include "./surface_renderer_descriptor_group.h"
 //
 #include "helpers/constexpr_optional_type.h"
 //
@@ -52,6 +55,7 @@ namespace nifDK {
 
 namespace vulkanDK {
    class raycast;
+   class rendered_nif;
 }
 
 namespace vulkanDK {
@@ -174,6 +178,12 @@ namespace vulkanDK {
                owned_image_and_view reveal;
             } oit;
          } canvas;
+         struct {
+            std::array<std::vector<asset_loading::queued_nif_load>, 4> mesh_batches;
+            size_t mesh_next_batch_index = 0;
+            std::array<std::vector<size_t>, 4> texture_batches;
+            size_t texture_next_batch_index = 0;
+         } loading;
          struct {
             command_buffer commands;
             VkFence        fence = VK_NULL_HANDLE;
@@ -378,6 +388,8 @@ namespace vulkanDK {
          void _end_one_time_commands(command_buffer&, queue&);
 
          void _wait_on_all_frames_in_flight();
+
+         void _execute_asset_multithreaded_load();
 
          [[nodiscard]] bool _execute_pending_scene_entity_gpu_uploads(); // returns true if any commands are recorded
          void _wait_on_pending_scene_entity_gpu_uploads();

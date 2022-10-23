@@ -1,12 +1,16 @@
 #pragma once
 
 namespace vulkanDK::scene_entities {
-   enum class life_state {
+   enum class life_state : uint8_t {
       // The scene frame item is "inactive" or "dead."
       empty,
 
       // The scene frame item should be used when rendering the scene.
       active,
+
+      // The scene frame item ordinarily should be used when rendering the scene, 
+      // except that the CPU is loading its resources in the background.
+      active_background_loading,
 
       // The scene frame item ordinarily should be used when rendering the scene, 
       // except that its owned resources have not yet been uploaded to the GPU.
@@ -16,11 +20,5 @@ namespace vulkanDK::scene_entities {
       // "empty" and its owned GPU-side resources will be wholly deleted once it 
       // is no longer in use by any frame in flight.
       pending_delete,
-
-      // The scene frame item was pending deletion, but has been recycled and 
-      // made active. The owned GPU-side resources that were pending deletion are 
-      // still pending deletion; when they are finally deleted, its life state 
-      // will change to "active."
-      active_recycle,
    };
 };

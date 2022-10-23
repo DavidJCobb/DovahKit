@@ -633,6 +633,9 @@
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_meshes.cpp" />
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_nifs.cpp" />
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_textures.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
     <ClCompile Include="vulkan\compute_shader.cpp" />
@@ -1035,8 +1038,12 @@
     <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h" />
     <QtMoc Include="ui\options_3d_input_window\localization.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
+    <ClInclude Include="vulkan\asset_loading\queued_nif_load.h" />
     <ClInclude Include="vulkan\asset_loading\reserve_meshes_for_nif.h" />
     <ClInclude Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.h" />
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_meshes.h" />
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_nifs.h" />
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_textures.h" />
     <ClInclude Include="vulkan\buffer.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\compute_shader.h" />

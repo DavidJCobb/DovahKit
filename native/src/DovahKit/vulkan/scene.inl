@@ -31,7 +31,8 @@ namespace vulkanDK {
                   continue;
                }
             }
-            item.lifetime.life_state = scene_entities::life_state::active_recycle;
+            item.lifetime.life_state = scene_entities::life_state::active;
+            item.lifetime.recycling  = true;
             item.lifetime.sync_state.set_all_out_of_date();
             if constexpr (scene_entities::all_types_with_coalesced_vibs::contains_type<Entity>) {
                item.lifetime.coalescing.sync_state.set_all_out_of_date();

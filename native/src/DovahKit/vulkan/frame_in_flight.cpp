@@ -400,7 +400,7 @@ namespace vulkanDK {
          size_t j = 0; // index into indirect draw parameter arrays
          for (; i < all_meshes.size(); ++i) {
             auto& ro = all_meshes[i];
-            if (!ro.active() || ro.pending_gpu_upload())
+            if (!ro.ready())
                continue;
             if (!predicate(ro))
                continue;
@@ -754,7 +754,7 @@ namespace vulkanDK {
          auto& list = scene.entities_of_type<rendered_landscape>();
          for (size_t i = 0; i < list.size(); ++i) {
             auto& item = list[i];
-            if (!item.active())
+            if (!item.ready())
                continue;
             for (size_t j = 0; j < 4; ++j) {
                vkCmdDrawIndexed(

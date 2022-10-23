@@ -47,8 +47,16 @@ namespace vulkanDK::scene_entities {
 
       public:
          struct {
-            life_state     life_state = life_state::empty;
+
+            life_state life_state = life_state::empty;
+
+            // If true, then the entity was pending deletion, but has been recycled and 
+            // made active; the owned GPU-side resources that were pending deletion are 
+            // still pending deletion.
+            bool recycling = false;
+
             fif_sync_state sync_state;
+
             struct {
                fif_sync_state sync_state;
             } coalescing;
@@ -58,16 +66,17 @@ namespace vulkanDK::scene_entities {
             switch (lifetime.life_state) {
                using enum life_state;
                case active:
-               case active_recycle:
+               case active_background_loading:
                case active_pending_upload:
                   return true;
             }
             return false;
          }
+         constexpr bool ready() const noexcept { return this->lifetime.life_state == life_state::active; }
          constexpr bool pending_gpu_upload() const noexcept { return this->lifetime.life_state == life_state::active_pending_upload; }
          constexpr bool empty() const noexcept { return this->lifetime.life_state == life_state::empty; }
          constexpr bool pending_delete() const noexcept { return this->lifetime.life_state == life_state::pending_delete; }
-         constexpr bool recycle_in_progress() const noexcept { return this->lifetime.life_state == life_state::active_recycle; }
+         constexpr bool recycle_in_progress() const noexcept { return this->lifetime.recycling; }
 
          inline void on_frame_drawing_data_changed() {
             this->lifetime.sync_state.set_all_out_of_date();

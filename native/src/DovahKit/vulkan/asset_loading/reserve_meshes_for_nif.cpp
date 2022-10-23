@@ -62,6 +62,7 @@ namespace vulkanDK::asset_loading {
             intfc->vulkan_state.mesh_handle = rendered_mesh_handle(sr, mesh_index);
             //
             auto& mesh = sr.scene.entities_of_type<rendered_mesh>()[mesh_index];
+            mesh.lifetime.life_state = scene_entities::life_state::active_background_loading;
             mesh.owning_nif = &nif;
             //
             reserve_mesh_textures_given_ni_shader(sr, mesh, shader);

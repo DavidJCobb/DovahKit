@@ -1,5 +1,7 @@
 #include "surface_renderer.h"
+#include <array>
 #include <chrono>
+#include <optional>
 #include <typeinfo>
 #include <QResource> // for loading shaders
 #include "helpers/arrays/make.h"
@@ -37,6 +39,7 @@
 
 #include "./loaded_texture.h"
 #include "./rendered_mesh.h"
+#include "./rendered_nif.h"
 #include "./scene_global_state.h"
 #include "./dds/texture.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
@@ -50,6 +53,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+#include "./asset_loading/reserve_meshes_for_nif.h"
+#include "./asset_loading/worker_thread_for_meshes.h"
+#include "./asset_loading/worker_thread_for_nifs.h"
+#include "./asset_loading/worker_thread_for_textures.h"
 
 // loading NIFs
 #include "nif/file.h"
@@ -3623,6 +3631,13 @@ namespace vulkanDK {
       //
       auto& fif = sc.frames_in_flight[sc.current_frame];
       sc.current_frame = (sc.current_frame + 1) % sc.frames_in_flight.size();
+      {
+         //
+         // But hold on! While we wait, let's get some work done. We may have assets that 
+         // we need to load on multiple threads.
+         //
+         this->_execute_asset_multithreaded_load();
+      }
       fif.fences.wait_on_all(this->logical_device);
       //
       // Next, let's acquire a swap chain image to use for this frame.
@@ -4129,11 +4144,21 @@ namespace vulkanDK {
          already_existed = true;
          return;
       }
+      //
+      // Reserve a new texture, and queue it for multi-threaded loading.
+      //
       texture_entity_index = this->scene.insert_new_scene_entity<loaded_texture>();
       if (texture_entity_index == scene::index_of_none) {
          qDebug("[vulkanDK::scene_renderer::lookup_or_reserve_dds_texture] Cannot add new rendered textures. Maximum has been reached.");
          return;
       }
+      auto& target = this->scene.entities_of_type<loaded_texture>()[texture_entity_index];
+      target.path = texture_path;
+      target.lifetime.life_state = scene_entities::life_state::active_background_loading;
+      //
+      auto& idx = this->loading.texture_next_batch_index;
+      this->loading.texture_batches[this->loading.texture_next_batch_index].push_back(texture_entity_index);
+      idx = (idx + 1) % this->loading.texture_batches.size();
    }
    void surface_renderer::remove_mesh(size_t i) {
       auto& list = this->scene.entities_of_type<rendered_mesh>();
@@ -4531,7 +4556,7 @@ namespace vulkanDK {
       auto& mesh       = this->scene.entities_of_type<rendered_mesh>()[mesh_index];
       data->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
-      mesh.owning_nif = data->owner;
+      mesh.owning_nif = (rendered_nif*)data->owner; // TODO: unsafe; remove
       mesh.frame_drawing_data.transform = transform;
       mesh.texture_indices.diffuse.set(*this, fallback_texture_index);
       //
@@ -4609,7 +4634,7 @@ namespace vulkanDK {
       auto& mesh       = this->scene.entities_of_type<rendered_mesh>()[mesh_index];
       geom->vulkan_state.mesh_handle = rendered_mesh_handle(*this, mesh_index);
       //
-      mesh.owning_nif = object->owner;
+      mesh.owning_nif = (rendered_nif*)object->owner; // TODO: unsafe; remove
       mesh.frame_drawing_data.transform = transform;
       mesh.texture_indices.diffuse.set(*this, fallback_texture_index);
       //
@@ -4802,54 +4827,20 @@ namespace vulkanDK {
       return true;
    }
    rendered_nif* surface_renderer::add_nif(dovah::loaded_forms::components::model& model, const glm::vec3& pos, const glm::vec3& rot, float scale) {
-      rendered_nif* nif = nullptr;
-      {  // Load model
-         using debug_timestamp_t = _debug_log_timestamp<debug_log_nif_loading_times>;
-         debug_timestamp_t _debug_time_start;
-         debug_timestamp_t _debug_time_end;
-         if constexpr (debug_log_nif_loading_times) {
-            _debug_time_start = std::chrono::steady_clock::now();
-         }
-         //
-         std::filesystem::path path = std::string("meshes") + (model.model_path[0] == '/' || model.model_path[0] == '\\' ? "" : "\\") + model.model_path;
-         std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
-         if (!file) {
-            qDebug("Failed to open NIF file: <%s>", path.string().c_str());
-            return nullptr;
-         }
-         nif = new rendered_nif;
-         nif->read((void*)file->data(), file->size());
-         nif->multi_thread_state.loaded = true;
-         //
-         auto& error = nif->read_error();
-         if (error.code != nifDK::default_notice_code) {
-            qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
-            #if _DEBUG
-               __debugbreak();
-            #endif
-            delete nif;
-            return nullptr;
-         }
-         if constexpr (debug_log_nif_loading_times) {
-            _debug_time_end = std::chrono::steady_clock::now();
-            qDebug(
-               "[surface_renderer::add_nif] NIF took %.02f ms to extract from the BSA and parse.\n - %s <%s>",
-               std::chrono::duration<double, std::chrono::milliseconds::period>(_debug_time_end - _debug_time_start).count(),
-               nif->root_node ? nif->root_node->name.c_str() : "<no root node>",
-               path.string().c_str()
-            );
-         }
+      auto* nif = new rendered_nif;
+      {
+         nif->multi_thread_state.manager = this;
+
+         auto item = asset_loading::queued_nif_load{
+            .form_data = &model,
+            .nif       = nif,
+            .transform = glm_transform_from_beth(pos, rot, scale),
+         };
+
+         auto& idx = this->loading.mesh_next_batch_index;
+         this->loading.mesh_batches[this->loading.mesh_next_batch_index].push_back(item);
+         idx = (idx + 1) % this->loading.mesh_batches.size();
       }
-      if (model.supports_texture_swaps) {
-         nif->apply_texture_swaps(*((const dovah::loaded_forms::components::model_ts*)&model));
-      }
-      //
-      this->add_nif(
-         *nif,
-         pos,
-         rot,
-         scale
-      );
       return nif;
    }
    void surface_renderer::remove_nif(nifDK::file& model) {
@@ -5271,6 +5262,65 @@ namespace vulkanDK {
    void surface_renderer::_wait_on_all_frames_in_flight() {
       for (auto& item : this->swap_chain.frames_in_flight)
          item.fences.wait_on_all(this->logical_device);
+   }
+
+   void surface_renderer::_execute_asset_multithreaded_load() {
+      using texture_worker_t = asset_loading::worker_thread_for_textures;
+
+      bool any_meshes = false;
+      bool any_textures = false;
+      for (size_t i = 0; i < 4; ++i) {
+         if (!this->loading.mesh_batches[i].empty())
+            any_meshes = true;
+         if (!this->loading.texture_batches[i].empty())
+            any_textures = true;
+      }
+      if (!any_meshes && !any_textures) {
+         return;
+      }
+
+      using maybe_textures = std::optional<std::array<texture_worker_t, 4>>;
+
+      std::array<texture_worker_t, 4> texture_workers = {
+         texture_worker_t{*this, 0},
+         texture_worker_t{*this, 1},
+         texture_worker_t{*this, 2},
+         texture_worker_t{*this, 3},
+      };
+      if (any_textures) {
+         for (auto& worker : texture_workers)
+            worker.start();
+      }
+      if (any_meshes) {
+         {
+            using worker_t = asset_loading::worker_thread_for_nifs;
+            std::array<worker_t, 4> workers = { worker_t{*this, 0}, worker_t{*this, 1}, worker_t{*this, 2}, worker_t{*this, 3} };
+            for (auto& worker : workers)
+               worker.start();
+            for (auto& worker : workers)
+               worker.wait();
+         }
+         {
+            using worker_t = asset_loading::worker_thread_for_meshes;
+            std::array<worker_t, 4> workers = { worker_t{*this, 0}, worker_t{*this, 1}, worker_t{*this, 2}, worker_t{*this, 3} };
+            for (auto& worker : workers)
+               worker.start();
+            for (auto& worker : workers)
+               worker.wait();
+         }
+         //
+         for (auto& list : this->loading.mesh_batches)
+            list.clear();
+         this->loading.mesh_next_batch_index = 0;
+      }
+      if (any_textures) {
+         for (auto& worker : texture_workers)
+            worker.wait();
+         //
+         for (auto& list : this->loading.texture_batches)
+            list.clear();
+         this->loading.texture_next_batch_index = 0;
+      }
    }
 
    bool surface_renderer::_execute_pending_scene_entity_gpu_uploads() {

@@ -1890,6 +1890,15 @@
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_meshes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_nifs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\asset_loading\worker_thread_for_textures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4335,6 +4344,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_meshes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_nifs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\worker_thread_for_textures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\queued_nif_load.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
