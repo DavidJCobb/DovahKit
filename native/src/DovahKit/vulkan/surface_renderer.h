@@ -286,41 +286,50 @@ namespace vulkanDK {
          [[nodiscard]] compute_shader* create_compute_shader(cobb::eight_cc id);
          [[nodiscard]] compute_shader* get_compute_shader(cobb::eight_cc id) const;
 
-         [[nodiscard]] size_t add_texture(const QString& texture_path); // for testing and internal use only; should eventually be phased out, tbh
-         [[nodiscard]] size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
-         void lookup_or_reserve_dds_texture(QString texture_path, size_t& texture_entity_index, bool& already_existed);
-         void remove_mesh(size_t);
-         void remove_light(size_t);
+      protected:
+         void _queue_mesh_vib_creation(rendered_mesh&);
+      public:
+
+         #pragma region Functions in file: surface_renderer.scene_entity_mgmt.cpp
+            [[nodiscard]] size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
+            void lookup_or_reserve_dds_texture(QString texture_path, size_t& texture_entity_index, bool& already_existed);
+
+            rendered_bounds_handle add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
+            void remove_bounds(size_t);
+
+            rendered_landscape_handle add_landscape(const glm::vec3& position);
+            rendered_landscape_handle add_landscape(const glm::vec3& position, const dovah::loaded_forms::Landscape&);
+            void remove_landscape(size_t);
+
+            rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
+            rendered_light_handle add_light(const rendered_light::frame_drawing_data_type&);
+            void remove_light(size_t);
+
+            // Arguably this should only be used internally; arguably we should phase it out so we don't 
+            // even need to keep it for that.
+            void remove_mesh(size_t);
+
+            rendered_nif* add_nif(
+               dovah::form_stub& stub,
+               dovah::loaded_forms::components::model& model,
+               const glm::vec3& pos = glm::vec3(0, 0, 0),
+               const glm::vec3& rot = glm::vec3(0, 0, 0),
+               float scale = 1.0F
+            );
+            void remove_nif(rendered_nif& model);
+
+            void _execute_asset_multithreaded_load();
+
+            [[nodiscard]] bool _execute_pending_scene_entity_gpu_uploads(); // returns true if any commands are recorded
+            void _wait_on_pending_scene_entity_gpu_uploads();
+            void _execute_pending_scene_entity_deletions();
+         #pragma endregion
+
          void set_animation_paused(size_t mesh, bool paused);
-         //
+
          void surface_position_to_world_ray(int viewport_x, int viewport_y, glm::vec3& eye_position, glm::vec3& eye_direction) const;
          rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
          void do_raycast(raycast&);
-
-         rendered_bounds_handle add_bounds(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
-         void remove_bounds(size_t);
-
-         rendered_landscape_handle add_landscape(const glm::vec3& position);
-         rendered_landscape_handle add_landscape(const glm::vec3& position, const dovah::loaded_forms::Landscape&);
-         void remove_landscape(size_t);
-      
-      protected:
-         void _queue_mesh_vib_creation(rendered_mesh&);
-         void _handle_ni_textures(rendered_mesh&, nifDK::block_types::BSShaderProperty*);
-         rendered_mesh* add_BSTriShape_mesh(nifDK::block_types::BSTriShape* object, glm::mat4 transform, size_t fallback_texture_index = scene::index_of_none);
-         rendered_mesh* add_NiGeometry_mesh(nifDK::block_types::NiGeometry* object, glm::mat4 transform, size_t fallback_texture_index = scene::index_of_none);
-      public:
-         bool add_nif(nifDK::file& model, const glm::vec3& pos = glm::vec3(0, 0, 0), const glm::vec3& rot = glm::vec3(0, 0, 0), float scale = 1.0F);
-         rendered_nif* add_nif(
-            dovah::form_stub& stub,
-            dovah::loaded_forms::components::model& model,
-            const glm::vec3& pos = glm::vec3(0, 0, 0),
-            const glm::vec3& rot = glm::vec3(0, 0, 0),
-            float scale = 1.0F
-         );
-         rendered_light_handle add_light(dovah::loaded_forms::ObjectReference&); // just for testing purposes
-         rendered_light_handle add_light(const rendered_light::frame_drawing_data_type&);
-         void remove_nif(nifDK::file& model);
 
          void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
          void set_landscape_borders_visible(bool);
@@ -392,13 +401,5 @@ namespace vulkanDK {
 
          command_buffer _begin_one_time_commands(queue&);
          void _end_one_time_commands(command_buffer&, queue&);
-
-         void _wait_on_all_frames_in_flight();
-
-         void _execute_asset_multithreaded_load();
-
-         [[nodiscard]] bool _execute_pending_scene_entity_gpu_uploads(); // returns true if any commands are recorded
-         void _wait_on_pending_scene_entity_gpu_uploads();
-         void _execute_pending_scene_entity_deletions();
    };
 }

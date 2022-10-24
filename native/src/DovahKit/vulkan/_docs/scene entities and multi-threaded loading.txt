@@ -1,0 +1,124 @@
+
+=== LOADING A NIF TREE ========================================================
+
+Outside code can  ask the `surface_renderer`  to import a  form's 3D model into 
+the scene at a desired position, rotation,  and scale. In order to do this, the 
+caller must provide both the form stub and the loaded form's model data. Things 
+are done this way for a few reasons.
+
+The `surface_renderer` needs access to the form's model data not just to pull a 
+model path, but  also to apply any relevant model texture swaps.  The form stub 
+is needed so that `surface_renderer`  can store a  `dovah::loaded_form_ptr`, to 
+ensure that the form model data isn't unloaded out from under the renderer.
+
+Once outside code calls `surface_renderer::add_nif`, the renderer will allocate 
+a `rendered_nif` on the heap, queue it to load, and return it immediately. It's 
+important to understand that the NIF  data isn't actually loaded at this stage. 
+The renderer will  load all queued NIFs on the next frame draw,  but this means 
+that the  unloaded `rendered_nif` is  accessible at  least until execution flow 
+returns to the top-level Qt event loop. As such, although the renderer does not 
+load assets  "in the background" in a  traditional sense (as of  this writing), 
+asset loading is still  asynchronous and must to at least  some extent have the 
+same safeguards (at least for "the outside world") as are needed for background 
+loads.
+
+With these basic facts established, let's move on to the high-level process for 
+carrying out the asynchronous loading of a NIF and its associated resources.
+
+When a `rendered_nif` is first created,  we add it to one of multiple queues on 
+the `surface_renderer`.  We then return the `rendered_nif` pointer immediately. 
+Later on, we'll process these queues when starting the next frame draw.
+
+The load queues are processed as follows.
+
+   1. We create one worker  thread per queue, and have  each of these "load the 
+      NIF."  The precise operational definition of  "loading" entails: bringing 
+      the NIF file into memory (either by extracting it from a loaded BSA or by 
+      pulling a loose file); parsing its contents, and storing a tree of loaded 
+      NIF blocks inside of the `rendered_nif`.
+
+      These workers access the queues directly on the surface renderer.
+
+   2. We wait on all workers.  When a worker thread finishes, we loop over each 
+      of the `rendered_nif` objects under its control. At this stage, we return 
+      to the main thread and for each `rendered_nif`,...
+
+  2a. We apply any relevant texture swaps to the in-memory NIF.
+
+       * This needs to be  done on the main thread because  loading form stubs' 
+         full form data is not thread-safe. We have to load TextureSet forms to 
+         process the texture swap data.
+
+  2b. We reserve `rendered_mesh` and `loaded_texture`  entities for the NIF. We 
+      do this by looping over the NIF's  flat block list, looking for any block 
+      that can be used to generate a  `rendered_mesh`. If one is found, we pull 
+      its shader options (if any) and look for texture paths. Those are in turn 
+      used to  handle the `rendered_mesh` entity's associated textures:  if any 
+      textures are already loaded,  we pull them;  else,  we reserve a spot for 
+      the texture (if  the path isn't  obviously invalid), queue the texture to 
+      be loaded off-thread, and move on.
+
+      When we reserve a  `rendered_mesh` slot, we also  associate the NIF block 
+      with the slot, and the slot with the NIF tree as a whole.
+
+       * Entities must be created on the main thread,  or else we need to add a 
+         mutex to their lists.
+
+   3. After all "NIF loading"  workers have joined,  we discard them, but we do 
+      not yet empty the queues of NIFs to load.  There is still more work to be 
+      done.
+
+      If any `loaded_texture` entities have  been queued to load asynchronously 
+      (i.e. during Step 2b), then we spin up some "load texture" workers and we 
+      start them. Like the "load NIF" workers,  these will access queues stored 
+      in the `surface_renderer`.
+
+   4. Either way, we now create "copy data to mesh"  worker threads. These will 
+      scan over each `rendered_nif` and look for blocks that have an associated 
+      `rendered_mesh`. For each such block,  we will copy vertex and index data 
+      (along with similar information, like bounds) from the NIF block into the 
+      `rendered_mesh`.
+
+      Where Step 2b  iterated over every NIF's flat block list,  Step 4 instead 
+      iterates over the NIF's node tree, starting from the root node. This lets 
+      us also apply appropriate transforms to each `rendered_mesh`.
+
+   5. We wait on all workers from Steps 3  (if applicable) and 4. When the Step 
+      4 workers have finished,  we mark the `rendered_nif`  instances as having 
+      finished asynchronous loading.
+      
+
+=== REVISIONS NEEDED ==========================================================
+
+The use of QObjects may not be appropriate here.  The intention was as follows:
+
+ - Offer a simple way to register for notifications when a NIF finishes loading 
+   off-thread.  This would allow Worldedit to update relevant state  (e.g. if a 
+   REFR is selected before its model has loaded).
+
+ - Ensure that NIFs can't be deleted  out from under the multi-threaded loading 
+   process (particularly if we go with background  loads down the line). If any 
+   outside actors (e.g. Worldedit) use QObject::deleteLater, and if we move the 
+   NIFs to the worker threads during loading,  then deletions would be deferred 
+   until control reaches the thread's top-level event loop -- in essense, until 
+   the thread is finished processing an entire batch of NIFs.
+
+The second rationale has four defects:
+
+ - We never actually move `rendered_nif` instances to the worker threads.
+
+ - We use two different sets of workers  to load the NIF itself, versus to copy 
+   its data into `rendered_mesh` entities for use with the renderer. When going 
+   from one set of workers to the next, we have to return to the main thread.
+
+ - The junction between those  workers means that a  NIF can be deleted between 
+   the "load the NIF"  half of the load process and the "prepare  it for use in 
+   Vulkan" half of the load process, so we can still have NIFs deleted out from 
+   under us.
+
+ - After the load process wraps up, the  `surface_renderer` has to do some more 
+   bookkeeping (e.g. marking NIFs as no longer in use by the load process), but 
+   the NIF  could have been deleted when control returned to the  last workers' 
+   event loops (i.e.  when those  workers finished,  but before the main thread 
+   got a chance to react to them).
+

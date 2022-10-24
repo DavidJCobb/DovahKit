@@ -1899,6 +1899,15 @@
     <ClCompile Include="vulkan\asset_loading\worker_thread_for_textures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\surface_renderer.shader_dfn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\surface_renderer.render_passes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\surface_renderer.scene_entity_mgmt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4361,6 +4370,9 @@
     <ClInclude Include="vulkan\config\throttle_fps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\config\order_independent_transparency.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4887,6 +4899,7 @@
     <Text Include="helpers\simd\_notes.txt" />
     <Text Include="helpers\tuples\docs.txt" />
     <Text Include="nif\blocks\_TODO.txt" />
+    <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />

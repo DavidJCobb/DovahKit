@@ -122,14 +122,6 @@ namespace vulkanDK {
          cs.yaw   += z;
          cs.roll  += y;
          cs.pitch += x;
-         //
-         /*//
-         constexpr float min_pitch = -85;
-         constexpr float max_pitch =  85;
-         constexpr float cursed_pitch_extent_a = glm::radians<float>(90 - -min_pitch);
-         constexpr float cursed_pitch_extent_b = glm::radians<float>(-(90 + max_pitch));
-         cs.pitch = std::clamp(cs.pitch, std::min(cursed_pitch_extent_a, cursed_pitch_extent_b), std::max(cursed_pitch_extent_a, cursed_pitch_extent_b));
-         //*/
       }
       if (do_move) {
          //

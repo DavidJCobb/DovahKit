@@ -39,6 +39,7 @@ namespace vulkanDK::asset_loading {
          _fail_texture_load(this->owner, entity);
          return;
       }
+
       dds::texture tex;
       tex.data = file->data();
       tex.size = file->size();

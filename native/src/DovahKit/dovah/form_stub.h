@@ -405,10 +405,26 @@ namespace dovah {
          loaded_form_ptr(form_stub* stub) : wrapped(_type_check(stub)) {
             this->_inc();
          };
-         template<typename other_form_t> loaded_form_ptr(loaded_form_ptr<other_form_t>&& other) {
+         loaded_form_ptr(const loaded_form_ptr& other) {
+            this->wrapped = other.wrapped;
+            this->_inc();
+         }
+         loaded_form_ptr(loaded_form_ptr&& other) noexcept {
             this->wrapped = other.wrapped;
             other.wrapped = nullptr;
          }
+
+         template<typename other_form_t> requires (!std::is_same_v<other_form_t, wrapped_type>)
+         loaded_form_ptr(const loaded_form_ptr<other_form_t>& other) {
+            this->wrapped = _type_check(other.wrapped);
+            this->_inc();
+         }
+         template<typename other_form_t> requires (!std::is_same_v<other_form_t, wrapped_type>)
+         loaded_form_ptr(loaded_form_ptr<other_form_t>&& other) {
+            this->wrapped = _type_check(other.wrapped);
+            other.wrapped = nullptr;
+         }
+
          ~loaded_form_ptr() {
             this->_dec();
             this->wrapped = nullptr;
@@ -424,19 +440,19 @@ namespace dovah {
             return (loaded_form_t*)this->wrapped->form;
          }
 
-         loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) noexcept {
+         loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) {
             this->_dec();
             this->wrapped = _type_check(stub);
             this->_inc();
             return *this;
          }
-         loaded_form_ptr<loaded_form_t>& operator=(const loaded_form_ptr<loaded_form_t>& other) noexcept {
+         loaded_form_ptr<loaded_form_t>& operator=(const loaded_form_ptr<loaded_form_t>& other) {
             this->_dec();
             this->wrapped = other.wrapped;
             this->_inc();
             return *this;
          }
-         loaded_form_ptr<loaded_form_t>& operator=(loaded_form_ptr<loaded_form_t>&& other) noexcept {
+         loaded_form_ptr<loaded_form_t>& operator=(loaded_form_ptr<loaded_form_t>&& other) {
             this->_dec();
             this->wrapped = other.wrapped;
             other.wrapped = nullptr;

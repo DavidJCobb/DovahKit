@@ -671,6 +671,9 @@
     <ClCompile Include="vulkan\spir_v_parser.cpp" />
     <ClCompile Include="vulkan\surface_renderer.cpp" />
     <ClCompile Include="vulkan\shader_module.cpp" />
+    <ClCompile Include="vulkan\surface_renderer.render_passes.cpp" />
+    <ClCompile Include="vulkan\surface_renderer.scene_entity_mgmt.cpp" />
+    <ClCompile Include="vulkan\surface_renderer.shader_dfn.cpp" />
     <ClCompile Include="vulkan\surface_renderer_descriptor_group.cpp" />
     <ClCompile Include="vulkan\surface_support_info.cpp" />
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
@@ -1051,6 +1054,7 @@
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\grid.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
+    <ClInclude Include="vulkan\config\order_independent_transparency.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\shadow_maps.h" />
     <ClInclude Include="vulkan\config\throttle_fps.h" />
@@ -1814,6 +1818,7 @@
     <Text Include="vulkan\_docs\GLM.txt" />
     <Text Include="vulkan\_docs\how to measure FPS.txt" />
     <Text Include="vulkan\_docs\order-independent transparency.txt" />
+    <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
