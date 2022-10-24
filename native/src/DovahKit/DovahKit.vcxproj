@@ -1053,6 +1053,7 @@
     <ClInclude Include="vulkan\config\is_righthanded.h" />
     <ClInclude Include="vulkan\config\scene_limits.h" />
     <ClInclude Include="vulkan\config\shadow_maps.h" />
+    <ClInclude Include="vulkan\config\throttle_fps.h" />
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />

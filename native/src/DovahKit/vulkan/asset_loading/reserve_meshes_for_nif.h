@@ -7,5 +7,5 @@ namespace vulkanDK {
 }
 
 namespace vulkanDK::asset_loading {
-   extern void reserve_meshes_for_nif(surface_renderer&, rendered_nif&, const glm::mat4& root_transform);
+   extern void reserve_meshes_for_nif(surface_renderer&, rendered_nif&);
 }

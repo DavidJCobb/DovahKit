@@ -24,6 +24,7 @@ namespace vulkanDK::asset_loading {
          };
          //
          entity.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+         entity.lifetime.sync_state.set_all_out_of_date();
          entity.prepare_for_gpu_upload(vulkan_metadata, std::move(error));
          ++sr.uploading.pending_upload_counts.value_for<loaded_texture>();
       }
@@ -74,6 +75,7 @@ namespace vulkanDK::asset_loading {
       tex.data = copy;
       //
       entity.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+      entity.lifetime.sync_state.set_all_out_of_date();
       entity.prepare_for_gpu_upload(vulkan_metadata, std::move(tex));
       ++this->owner.uploading.pending_upload_counts.value_for<loaded_texture>();
    }

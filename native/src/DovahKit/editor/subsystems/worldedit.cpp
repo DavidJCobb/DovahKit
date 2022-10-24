@@ -117,7 +117,7 @@ namespace dovahkit::subsystems {
       glm::mat4 transform = vulkanDK::glm_transform_from_beth(item.form->position, item.form->rotation, item.form->get_scale());
       glm::vec3 bounds_min;
       glm::vec3 bounds_max;
-      if (item.nif && !item.nif->is_loaded()) {
+      if (item.nif && !item.nif->is_background_loading()) {
          auto& bnd = item.nif->bounds;
          bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
          bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
@@ -293,7 +293,7 @@ namespace dovahkit::subsystems {
       //
       float scale = loaded->get_scale();
       //
-      auto* model = sr->add_nif(*form_model, loaded->position.to_struct<glm::vec3>(), loaded->rotation.to_struct<glm::vec3>(), scale);
+      auto* model = sr->add_nif(*base, *form_model, loaded->position.to_struct<glm::vec3>(), loaded->rotation.to_struct<glm::vec3>(), scale);
       if (!model) {
          return false;
       }

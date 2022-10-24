@@ -12,7 +12,7 @@
 #include "./reserve_mesh_textures_given_ni_shader.h"
 
 namespace vulkanDK::asset_loading {
-   void reserve_meshes_for_nif(surface_renderer& sr, rendered_nif& nif, const glm::mat4& root_transform) {
+   void reserve_meshes_for_nif(surface_renderer& sr, rendered_nif& nif) {
       if (!nif.root_node) {
          qDebug("[vulkanDK::asset_loading::reserve_meshes_for_nif] Model has no root node.");
          return;

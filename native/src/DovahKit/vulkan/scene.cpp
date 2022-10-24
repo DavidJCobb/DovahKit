@@ -1,6 +1,6 @@
 #include "scene.h"
-#include "frame_in_flight.h"
-#include "surface_renderer.h"
+#include "./frame_in_flight.h"
+#include "./surface_renderer.h"
 //
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -10,19 +10,20 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
 //
-#include "config/is_righthanded.h"
-#include "config/scene_limits.h"
-#include "config/shadow_maps.h"
-#include "config/use_inverted_depth.h"
-#include "helpers/cubemap_helpers.h"
-#include "helpers/extract_frustum_normals.h"
-#include "data/DKVulkanCameraUpdate.h"
+#include "./config/is_righthanded.h"
+#include "./config/scene_limits.h"
+#include "./config/shadow_maps.h"
+#include "./config/use_inverted_depth.h"
+#include "./helpers/cubemap_helpers.h"
+#include "./helpers/extract_frustum_normals.h"
+#include "./data/DKVulkanCameraUpdate.h"
 
 // for NIF support
 #include "nif/file.h"
 #include "nif/blocks/NiNode.h"
 #include "nif/blocks/NiGeometry.h"
 #include "nif/blocks/NiGeometryData.h"
+#include "./rendered_nif.h"
 
 #include <glm/gtx/matrix_decompose.hpp> // for debugging
 
@@ -446,7 +447,10 @@ namespace vulkanDK {
                if (prior.owned_gpu_resources.outdated.empty()) {
                   #if _DEBUG
                      //
-                     // Wait, what? This shouldn't happen.
+                     // Wait, what? This shouldn't happen. If the entity is pending delete, 
+                     // then it wasn't marked as being recycled, so it should either have no 
+                     // outdated resources, or have both current and outdated resources, per 
+                     // above.
                      //
                      __debugbreak();
                   #endif

@@ -24,6 +24,7 @@
 #include "./config/grid.h"
 #include "./config/scene_limits.h"
 #include "./config/shadow_maps.h"
+#include "./config/throttle_fps.h"
 #include "./config/use_inverted_depth.h"
 #include "./config/validation_layers.h"
 #include "./helpers/convert_access_flags_and_pipeline_stages.h"
@@ -3737,7 +3738,14 @@ namespace vulkanDK {
       //
       auto time_after = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
       {
-         this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(time_after - time_prior).count();
+         auto diff = time_after - time_prior;
+         this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(diff).count();
+         if constexpr (config::throttle_frame_rate_to_1000) {
+            constexpr auto ms = std::chrono::milliseconds{ 1 };
+            if (diff < ms) {
+               std::this_thread::sleep_for(ms - diff);
+            }
+         }
          this->state.last_frame_at   = time_after;
          //
          this->state.fps.next_delta(this->state.last_frame_time);
@@ -4826,13 +4834,22 @@ namespace vulkanDK {
          fif.on_scene_entity_added_or_removed<rendered_mesh>();
       return true;
    }
-   rendered_nif* surface_renderer::add_nif(dovah::loaded_forms::components::model& model, const glm::vec3& pos, const glm::vec3& rot, float scale) {
+   rendered_nif* surface_renderer::add_nif(
+      dovah::form_stub& stub,
+      dovah::loaded_forms::components::model& model,
+      const glm::vec3& pos,
+      const glm::vec3& rot,
+      float scale
+   ) {
       auto* nif = new rendered_nif;
       {
          nif->multi_thread_state.manager = this;
 
          auto item = asset_loading::queued_nif_load{
-            .form_data = &model,
+            .form_data = {
+               .loaded_form = &stub,
+               .model       = &model,
+            },
             .nif       = nif,
             .transform = glm_transform_from_beth(pos, rot, scale),
          };
@@ -5279,17 +5296,14 @@ namespace vulkanDK {
          return;
       }
 
-      using maybe_textures = std::optional<std::array<texture_worker_t, 4>>;
+      using maybe_textures = std::array<std::optional<texture_worker_t>, 4>;
 
-      std::array<texture_worker_t, 4> texture_workers = {
-         texture_worker_t{*this, 0},
-         texture_worker_t{*this, 1},
-         texture_worker_t{*this, 2},
-         texture_worker_t{*this, 3},
-      };
+      maybe_textures texture_workers;
       if (any_textures) {
-         for (auto& worker : texture_workers)
-            worker.start();
+         for(size_t i = 0; i < texture_workers.size(); ++i) {
+            auto& worker = texture_workers[i];
+            worker.emplace(*this, i).start();
+         }
       }
       if (any_meshes) {
          {
@@ -5297,8 +5311,23 @@ namespace vulkanDK {
             std::array<worker_t, 4> workers = { worker_t{*this, 0}, worker_t{*this, 1}, worker_t{*this, 2}, worker_t{*this, 3} };
             for (auto& worker : workers)
                worker.start();
-            for (auto& worker : workers)
-               worker.wait();
+            for (size_t i = 0; i < workers.size(); ++i) {
+               workers[i].wait();
+               //
+               // When NIFs are loaded, we need to apply texture swaps (when necessary) and create 
+               // `rendered_mesh`es and `loaded_texture`s for them. We'll load the contents of those 
+               // scene entities later.
+               //
+               auto& list = this->loading.mesh_batches[i];
+               for (auto& item : list) {
+                  auto& model = *item.form_data.model;
+                  if (model.supports_texture_swaps) {
+                     item.nif->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)&model);
+                  }
+                  item.form_data.loaded_form = nullptr; // allow the form to unload, if nothing else is using it
+                  asset_loading::reserve_meshes_for_nif(*this, *item.nif);
+               }
+            }
          }
          {
             using worker_t = asset_loading::worker_thread_for_meshes;
@@ -5309,17 +5338,27 @@ namespace vulkanDK {
                worker.wait();
          }
          //
-         for (auto& list : this->loading.mesh_batches)
+         for (auto& list : this->loading.mesh_batches) {
+            for (auto& item : list) {
+               item.nif->multi_thread_state.manager = nullptr; // signal that background loading is over
+            }
             list.clear();
+         }
          this->loading.mesh_next_batch_index = 0;
       }
       if (any_textures) {
          for (auto& worker : texture_workers)
-            worker.wait();
+            worker.value().wait();
          //
          for (auto& list : this->loading.texture_batches)
             list.clear();
          this->loading.texture_next_batch_index = 0;
+      }
+      for (auto& fif : this->swap_chain.frames_in_flight) {
+         if (any_textures)
+            fif.on_scene_entity_added_or_removed<loaded_texture>();
+         if (any_meshes)
+            fif.on_scene_entity_added_or_removed<rendered_mesh>();
       }
    }
 
@@ -5444,7 +5483,7 @@ namespace vulkanDK {
                item.reset();
                ++deleted;
             } else {
-               if (item.recycle_in_progress()) {
+               if (item.active() && item.recycle_in_progress()) {
                   if constexpr (scene_entities::concepts::owns_gpu_resources<Entity>) {
                      item.owned_gpu_resources.destroy_outdated();
                   }

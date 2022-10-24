@@ -12,6 +12,7 @@ namespace vulkanDK::scene_entities {
       auto* self = (Subclass*)this;
       //
       this->lifetime.life_state = life_state::pending_delete;
+      this->lifetime.recycling  = false;
       this->lifetime.sync_state.set_all_out_of_date();
       if constexpr (concepts::owns_gpu_resources<Subclass>) {
          if (!self->owned_gpu_resources.has_outdated())

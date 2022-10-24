@@ -25,11 +25,13 @@ namespace vulkanDK::asset_loading {
             --sr.uploading.pending_upload_counts.value_for<rendered_mesh>();
          }
          mesh.lifetime.life_state = scene_entities::life_state::pending_delete;
+         mesh.lifetime.sync_state.set_all_out_of_date();
          ++sr.scene.entities.pending_deletion_counts.value_for<rendered_mesh>();
       }
       void _queue_mesh_for_transfer(surface_renderer& sr, rendered_mesh& mesh) {
          assert(mesh.active());
          mesh.lifetime.life_state = scene_entities::life_state::active_pending_upload;
+         mesh.lifetime.sync_state.set_all_out_of_date();
          ++sr.uploading.pending_upload_counts.value_for<rendered_mesh>();
       }
 

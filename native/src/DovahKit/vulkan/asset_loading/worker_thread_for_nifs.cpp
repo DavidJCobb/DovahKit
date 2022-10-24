@@ -6,14 +6,15 @@
 #include "editor/subsystems/assets.h"
 
 namespace vulkanDK::asset_loading {
-   void worker_thread_for_nifs::_load_single_nif(const queued_nif_load& item) {
+   void worker_thread_for_nifs::_load_single_nif(queued_nif_load& item) {
       assert(item.nif);
-      assert(item.form_data);
+      assert(item.form_data.loaded_form);
+      assert(item.form_data.model);
       auto& nif   = *item.nif;
-      auto& model = *item.form_data;
-      assert(nif.root_node);
+      auto& model = *item.form_data.model;
 
       std::filesystem::path path = std::string("meshes") + (model.model_path[0] == '/' || model.model_path[0] == '\\' ? "" : "\\") + model.model_path;
+      //
       std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
       if (!file) {
          qDebug("Failed to open NIF file: <%s>", path.string().c_str());
@@ -30,9 +31,6 @@ namespace vulkanDK::asset_loading {
          return;
       }
 
-      if (model.supports_texture_swaps) {
-         nif.apply_texture_swaps(*((const dovah::loaded_forms::components::model_ts*)&model));
-      }
       nif.multi_thread_state.loaded = true;
    }
 

@@ -21,7 +21,7 @@ namespace vulkanDK::asset_loading {
          worker_thread_for_nifs(surface_renderer& sr, size_t batch_index) : owner(sr), index(batch_index) {}
 
       protected:
-         void _load_single_nif(const queued_nif_load&);
+         void _load_single_nif(queued_nif_load&);
 
          virtual void run() override;
    };

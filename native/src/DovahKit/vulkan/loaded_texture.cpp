@@ -39,6 +39,7 @@ namespace vulkanDK {
       auto& image = this->owned_gpu_resources.current;
       image.metadata       = qu.metadata;
       image.metadata.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+      this->queued_upload.reset();
       try {
          image.create_image(image.metadata, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
          image.create_basic_view(image.metadata.format, VK_IMAGE_ASPECT_COLOR_BIT);
