@@ -73,6 +73,9 @@ computed_light calc_all_light_and_shadow(
       #endif
       #endif
          for(int i = 0; i < MAX_LIGHTS; ++i) {
+            if (scene_lights[i].radius <= 0) {
+               continue;
+            }
             int light_type = scene_lights[i].type;
             //
             computed_light current;
@@ -160,6 +163,9 @@ computed_light calc_all_light_and_shadow(
       #if PRE_CHECK_AND_SKIP_SHADOW_CASTER_CALCS != 0
       } else {
          for(int i = 0; i < MAX_LIGHTS; ++i) {
+            if (scene_lights[i].radius <= 0) {
+               continue;
+            }
             int light_type = scene_lights[i].type;
             //
             computed_light current;

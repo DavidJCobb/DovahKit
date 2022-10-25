@@ -103,6 +103,7 @@ namespace vulkanDK::scene_entities {
          // to ensure proper management of owned GPU-side resources and so on.
          void mark_for_delete() { _mark_for_delete<base>(); }
          void reset() { _reset<base>(); }
+         void reset_for_recycle() {}
    };
 }
 

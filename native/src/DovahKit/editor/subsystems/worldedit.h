@@ -48,7 +48,7 @@ namespace dovahkit::subsystems {
          using loaded_refr_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::ObjectReference>;
 
          //using refr_nif_ptr = std::unique_ptr<nifDK::file>;
-         using refr_nif_ptr = std::unique_ptr<vulkanDK::rendered_nif, cobb::qt::delete_later_deleter<vulkanDK::rendered_nif>>;
+         using refr_nif_ptr = std::unique_ptr<vulkanDK::rendered_nif, vulkanDK::rendered_nif::deleter>;
 
          struct selected_refr_info {
             selected_refr_info();

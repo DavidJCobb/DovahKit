@@ -100,9 +100,7 @@ namespace vulkanDK {
       base::_mark_for_delete<rendered_mesh>();
       this->owning_nif = nullptr;
    }
-   void rendered_mesh::reset() {
-      base::_reset<rendered_mesh>();
-      //
+   void rendered_mesh::reset_for_recycle() {
       this->owning_nif = nullptr;
       if (auto*& p = this->anim_state) {
          delete p;
@@ -114,6 +112,10 @@ namespace vulkanDK {
       //
       this->push_params = {};
       this->texture_indices = decltype(texture_indices)();
+   }
+   void rendered_mesh::reset() {
+      base::_reset<rendered_mesh>();
+      this->reset_for_recycle();
    }
 
    rendered_mesh::frame_culling_data_type rendered_mesh::calculate_frame_culling_data() const {

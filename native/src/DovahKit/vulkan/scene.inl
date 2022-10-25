@@ -37,6 +37,7 @@ namespace vulkanDK {
             if constexpr (scene_entities::all_types_with_coalesced_vibs::contains_type<Entity>) {
                item.lifetime.coalescing.sync_state.set_all_out_of_date();
             }
+            item.reset_for_recycle();
             return i;
          }
       }

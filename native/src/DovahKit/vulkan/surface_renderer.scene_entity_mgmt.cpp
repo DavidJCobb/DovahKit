@@ -459,6 +459,7 @@ namespace vulkanDK {
       auto* nif = new rendered_nif;
       {
          nif->multi_thread_state.manager = this;
+         nif->multi_thread_state.flags |= rendered_nif::loading_flag::load_queued;
 
          auto item = asset_loading::queued_nif_load{
             .form_data = {
@@ -553,11 +554,15 @@ namespace vulkanDK {
                //
                auto& list = this->loading.mesh_batches[i];
                for (auto& item : list) {
+                  if (!item.nif->did_load_succeed()) {
+                     continue;
+                  }
                   auto& model = *item.form_data.model;
                   if (model.supports_texture_swaps) {
                      item.nif->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)&model);
                   }
                   item.form_data.loaded_form = nullptr; // allow the form to unload, if nothing else is using it
+                  item.nif->multi_thread_state.flags |= rendered_nif::loading_flag::generating_meshes;
                   asset_loading::reserve_meshes_for_nif(*this, *item.nif);
                }
             }
@@ -585,8 +590,9 @@ namespace vulkanDK {
          //
          for (auto& list : this->loading.mesh_batches) {
             for (auto& item : list) {
-               item.nif->moveToThread(QThread::currentThread());
-               item.nif->multi_thread_state.manager = nullptr; // signal that background loading is over
+               auto& mts = item.nif->multi_thread_state;
+               mts.flags &= ~rendered_nif::loading_flag::is_in_background_use;
+               mts.manager = nullptr;
             }
             list.clear();
          }

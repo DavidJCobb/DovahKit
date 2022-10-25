@@ -1908,6 +1908,9 @@
     <ClCompile Include="vulkan\surface_renderer.scene_entity_mgmt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\rendered_nif.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">

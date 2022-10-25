@@ -117,11 +117,14 @@ namespace dovahkit::subsystems {
       glm::mat4 transform = vulkanDK::glm_transform_from_beth(item.form->position, item.form->rotation, item.form->get_scale());
       glm::vec3 bounds_min;
       glm::vec3 bounds_max;
-      if (item.nif && !item.nif->is_background_loading()) {
+      if (item.nif && item.nif->did_load_succeed()) {
          auto& bnd = item.nif->bounds;
          bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
          bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
       } else {
+         //
+         // TODO: Pull OBND and use it.
+         //
          bounds_min = { -128, -128, -128 };
          bounds_max = {  128,  128,  128 };
       }
@@ -171,9 +174,9 @@ namespace dovahkit::subsystems {
                sr->remove_nif(*refr.nif);
          }
       }
+      refr.nif.reset();
       refr.stub = nullptr;
       refr.form = nullptr;
-      refr.nif.reset();
    }
    void worldedit::_unload_refr(dovah::form_stub& stub) {
       auto&  list = this->loaded_refs;

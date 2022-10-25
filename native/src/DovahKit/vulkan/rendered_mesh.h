@@ -48,6 +48,7 @@ namespace vulkanDK {
          rendered_mesh& operator=(rendered_mesh&&) noexcept;
 
          void mark_for_delete();
+         void reset_for_recycle();
          void reset();
 
          #pragma region Flags masks

@@ -13,11 +13,14 @@ namespace vulkanDK::asset_loading {
       auto& nif   = *item.nif;
       auto& model = *item.form_data.model;
 
+      nif.multi_thread_state.flags |= rendered_nif::loading_flag::loading;
+
       std::filesystem::path path = std::string("meshes") + (model.model_path[0] == '/' || model.model_path[0] == '\\' ? "" : "\\") + model.model_path;
       //
       std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
       if (!file) {
          qDebug("Failed to open NIF file: <%s>", path.string().c_str());
+         nif.multi_thread_state.flags ^= (rendered_nif::loading_flag::loading | rendered_nif::loading_flag::load_failure);
          return;
       }
 
@@ -28,16 +31,18 @@ namespace vulkanDK::asset_loading {
          #if _DEBUG
             __debugbreak();
          #endif
+         nif.multi_thread_state.flags ^= (rendered_nif::loading_flag::loading | rendered_nif::loading_flag::load_failure);
          return;
       }
 
-      nif.multi_thread_state.loaded = true;
+      nif.multi_thread_state.flags ^= (rendered_nif::loading_flag::loading | rendered_nif::loading_flag::load_success);
    }
 
    void worker_thread_for_nifs::run() {
       auto& list = this->owner.loading.mesh_batches[this->index];
       for (auto& item : list) {
-         if (item.nif->is_background_load_canceled()) {
+         if (item.nif->is_cancel_requested()) {
+            item.nif->multi_thread_state.flags |= rendered_nif::loading_flag::load_canceled;
             continue;
          }
          this->_load_single_nif(item);

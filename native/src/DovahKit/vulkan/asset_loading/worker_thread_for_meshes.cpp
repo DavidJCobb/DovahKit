@@ -81,7 +81,7 @@ namespace vulkanDK::asset_loading {
                // enable alpha blending in order to see vertex alpha values cause any transparency.
                //
                if (shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::vertex_alpha) {
-                  enable_vertex_alpha = true;
+                  enable_vertex_alpha = alpha != nullptr;
                }
                if (shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::decal) {
                   mesh.mesh_flags |= rendered_mesh::mesh_flag::is_decal;
@@ -345,12 +345,14 @@ namespace vulkanDK::asset_loading {
                }
             }
          );
+         nif.multi_thread_state.flags &= ~rendered_nif::loading_flag::generating_meshes;
       }
    }
    void worker_thread_for_meshes::run() {
       auto& list = this->owner.loading.mesh_batches[this->index];
       for (auto& item : list) {
-         if (item.nif->is_background_load_canceled()) {
+         if (item.nif->is_cancel_requested()) {
+            item.nif->multi_thread_state.flags &= ~rendered_nif::loading_flag::generating_meshes;
             continue;
          }
          this->_load_single_nif(item);

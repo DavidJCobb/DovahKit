@@ -663,6 +663,7 @@
     <ClCompile Include="vulkan\rendered_landscape.cpp" />
     <ClCompile Include="vulkan\rendered_light.cpp" />
     <ClCompile Include="vulkan\rendered_mesh.cpp" />
+    <ClCompile Include="vulkan\rendered_nif.cpp" />
     <ClCompile Include="vulkan\render_pass.cpp" />
     <ClCompile Include="vulkan\scene.cpp" />
     <ClCompile Include="vulkan\scene_entities\base.cpp" />
