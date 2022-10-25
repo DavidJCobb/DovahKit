@@ -559,7 +559,7 @@ namespace dovahkit::subsystems {
                   if constexpr (debug_log_area_load_unload) {
                      qDebug("[Worldedit] Unloading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
                   }
-                  this->_unload_cell(data.stub);
+                  this->_unload_cell(data);
                });
             }
             this->loaded_cells.for_each([this, world, &gp_now](worldedit::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {

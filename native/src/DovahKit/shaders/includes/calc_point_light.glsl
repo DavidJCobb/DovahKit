@@ -20,6 +20,12 @@ computed_light calc_point_light(
    float distance          = length(tangent_light_dir);
    float attenuate         = 1.0 - smoothstep(0.0, light.radius, distance);
    tangent_light_dir = normalize(tangent_light_dir);
+   if (distance > light.radius) {
+      computed_light no_op;
+      no_op.diffuse  = vec3(0, 0, 0);
+      no_op.specular = vec3(0, 0, 0);
+      return no_op;
+   }
    return calc_base_light(
       tangent_light_dir,
       tangent_view_dir,

@@ -741,6 +741,7 @@ namespace vulkanDK {
                      item.owned_gpu_resources.destroy_outdated();
                   }
                   item.lifetime.life_state = scene_entities::life_state::active;
+                  item.lifetime.recycling  = false;
                   item.lifetime.sync_state.set_all_out_of_date();
                   ++deleted;
                   recycling = true;

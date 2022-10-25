@@ -346,6 +346,7 @@ namespace vulkanDK {
       scene_entities::all_types_that_are_drawn::for_each([this]<typename Entity>(){
          this->_update_drawn_scene_entity_frame_data<Entity>();
       });
+      this->_update_drawn_scene_entity_frame_data<rendered_light>();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
       this->owner->scene.update_light_shadows(*this);
       {

@@ -21,6 +21,12 @@ computed_light calc_spot_light(
    //
    // Spotlights shine out to (radius + 16) units away from the light position.
    //
+   if (distance > light.radius + 16) {
+      computed_light no_op;
+      no_op.diffuse  = vec3(0, 0, 0);
+      no_op.specular = vec3(0, 0, 0);
+      return no_op;
+   }
    float attenuate = clamp(1.0 - distance / (light.radius + 16), 0.0, 1.0);
    attenuate *= attenuate;
    //
