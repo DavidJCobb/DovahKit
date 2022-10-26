@@ -30,7 +30,7 @@ compact_light_and_shadow_inputs prep_all_light_and_shadow(
       int light_index = scene.shadow_caster_index[i];
       if (light_index >= 0) {
          vec3  vector_to_light      = pos_world - vec3(scene_lights[light_index].transform[3]);
-         float light_distance_ratio = length(result.vector_to_light[i]) / scene_lights[light_index].radius;
+         float light_distance_ratio = length(vector_to_light) / scene_lights[light_index].radius;
          //
          result.vector_to_light[i] = vec4(vector_to_light, light_distance_ratio);
          result.light_space_pos[i] = vec3(scene_lights[i].transform_inv * vec4(pos_world, 1.0));
