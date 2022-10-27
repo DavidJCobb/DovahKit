@@ -31,6 +31,7 @@ computed_light calc_directional_light_and_shadow(
    vec4  light_space_pos, // light-space vertex position
    vec3  light_color,
    vec3  normal,          // surface normal
+   vec3  normal_geo_only, // surface normal NOT including normal map
    vec3  view_dir,        // tangent-space view direction
    float specular_exponent,
    sampler2D shadow_map
@@ -39,8 +40,9 @@ computed_light calc_directional_light_and_shadow(
    //
    light_dir = -normalize(light_dir);
    //
-   float str_diff = max(dot(normal, light_dir) - calc_directional_shadow(normal, light_dir, light_space_pos, shadow_map), 0.0);
-   float str_spec = calc_specular_strength(normal, light_dir, view_dir, specular_exponent);
+   float shadow   = calc_directional_shadow(normal, normal_geo_only, light_dir, light_space_pos, shadow_map);
+   float str_diff = max(dot(normal, light_dir) - shadow, 0.0);
+   float str_spec = max(calc_specular_strength(normal, light_dir, view_dir, specular_exponent) - shadow, 0.0);
    //
    result.diffuse  = str_diff * light_color;
    result.specular = str_spec * light_color;

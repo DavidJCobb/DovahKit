@@ -49,6 +49,7 @@ computed_light calc_all_light_and_shadow(
          light_inputs.sun_shadow_vert_pos,
          scene.sun_color,
          texture_normal,
+         light_inputs.tangent_space[2],
          tangent_view_dir,
          specular_exponent,
          sun_shadow_map
@@ -133,6 +134,7 @@ computed_light calc_all_light_and_shadow(
                //
                shadow = calc_point_shadow(
                   texture_normal,
+                  light_inputs.tangent_space[2],
                   light_inputs.tangent_light_dir[j],
                   light_inputs.light_distance_ratio[j],
                   light_inputs.vector_to_light[j],

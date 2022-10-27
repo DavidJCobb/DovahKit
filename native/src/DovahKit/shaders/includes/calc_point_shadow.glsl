@@ -9,13 +9,22 @@
 // shadow values range from 0 (bright) to 1 (shadowed)
 float calc_point_shadow(
    vec3        normal,               // surface normal
+   vec3        normal_geo_only,      // surface normal NOT including normal map
    vec3        light_dir,            // light direction, in surface tangent space
    float       light_distance_ratio, // distance to light / light radius
    vec3        vector_to_light,      // non-normalized vector to the light
    samplerCube shadow_map
 ) {
    #if USE_POINT_SHADOW_DEPTH_BIAS
-      float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // a small offset is needed to prevent self-shadowing
+      //
+      // A small offset is needed to prevent self-shadowing and "shadow acne." The formula 
+      // here scales the depth bias based on the angle between the light and the surface: 
+      // the more directly the light strikes the surface, the smaller the bias.
+      //
+      // Because we want to scale the bias based on the physical surface, we need the 
+      // normal vector from the geometry, without influence from the normal map texture.
+      //
+      float bias = max(0.05 * (1.0 - dot(normal_geo_only, light_dir)), 0.005);
    #else
       const float bias = 0.0;
    #endif
