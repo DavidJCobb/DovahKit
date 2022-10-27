@@ -24,6 +24,8 @@ namespace vulkanDK {
             surface_renderer* owner = nullptr;
             size_t index = -1;
 
+            Self& as_self() { return *(Self*)this; }
+
          public:
             scene_entity_handle() {}
             scene_entity_handle(surface_renderer& sr, size_t i) : owner(&sr), index(i) {}
@@ -52,6 +54,15 @@ namespace vulkanDK {
             inline bool empty() const noexcept {
                return owner == nullptr || index == -1;
             }
+
+            Entity* entity() {
+               if (empty())
+                  return nullptr;
+               // 1. Cast to CRTP self-type to get access ot operator*
+               // 2. Dereference self to invoke operator*, getting an Entity&
+               // 3. Return address of the Entity&.
+               return std::addressof(*as_self());
+            };
       };
    }
 

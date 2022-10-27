@@ -4376,6 +4376,9 @@
     <ClInclude Include="vulkan\config\order_independent_transparency.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\tuples\for_each_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

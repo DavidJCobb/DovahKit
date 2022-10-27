@@ -5,13 +5,17 @@
       <Intrinsic Name="_sign_of" Expression="(0 &lt; n) - (n &lt; 0)">
          <Parameter Name="n" Type="int" />
       </Intrinsic>
+
+      <Intrinsic Name="_fabs" Expression="(n &lt; 0) ? -n : n">
+         <Parameter Name="n" Type="double" />
+      </Intrinsic>
       
       <DisplayString>{{ size={$T1,d}x{$T2,d} (column-major) }}</DisplayString>
       <Expand>
          <Synthetic Name="[direction]">
             <DisplayString>Matrix is column-major; displayed indices are [X][Y].</DisplayString>
          </Synthetic>
-         <Synthetic Name="[transform]" Condition="$T1 == 4 &amp;&amp; $T2 == 4">
+         <Synthetic Name="[transform]" Condition="$T1 &gt;= 3 &amp;&amp; $T2 &gt;= 3">
             <DisplayString>&lt;position and scale&gt;</DisplayString>
             <Expand>
                <Synthetic Name="[position]">
@@ -19,6 +23,185 @@
                      <Item Name="[x]">value[3].x</Item>
                      <Item Name="[y]">value[3].y</Item>
                      <Item Name="[z]">value[3].z</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[rotation]">
+                  <DisplayString>&lt;euler XYZ lefthanded&gt;</DisplayString>
+                  <Expand>
+                     <CustomListItems>
+                        <Variable Name="TAYLOR_ITERATIONS" InitialValue="10"/>
+                        <Variable Name="EPSILON" InitialValue="0.0005"/>
+                        <Variable Name="RAD_TO_DEG_MULT" InitialValue="57.295779513082320876798154814105170332405472466564"/>
+                        
+                        <Variable Name="angle"   InitialValue="0"/>
+                        <Variable Name="i"       InitialValue="1"/>
+                        <Variable Name="n"       InitialValue="1"/>
+                        <Variable Name="sign"    InitialValue="-1"/>
+                        <Variable Name="numer"   InitialValue="1.0"/>
+                        <Variable Name="numer_b" InitialValue="1.0"/>
+                        <Variable Name="denom"   InitialValue="1.0"/>
+                        <Variable Name="denom_b" InitialValue="1.0"/>
+                        <Variable Name="cosY"    InitialValue="1.0"/>
+                        
+                        <Variable Name="u" InitialValue="0.0"/>
+                        <Variable Name="v" InitialValue="0.0"/>
+
+                        <Variable Name="euler_x" InitialValue="0.0"/>
+                        <Variable Name="euler_y" InitialValue="0.0"/>
+                        <Variable Name="euler_z" InitialValue="0.0"/>
+                        
+                        <!-- euler_y = asin(-value[2][0]) -->
+                        <Exec>angle   = -value[2].x</Exec>
+                        <!-- fmod -->
+                        <If Condition="angle &gt; 1.0">
+                           <Exec>angle -= (uint64_t)angle</Exec>
+                        </If>
+                        <If Condition="angle &lt; -1.0">
+                           <Exec>angle += (uint64_t)_fabs(angle)</Exec>
+                        </If>
+                        <!-- /fmod -->
+                        <Exec>euler_y = angle</Exec>
+                        <Exec>numer   = angle</Exec>
+                        <Exec>numer_b = 1</Exec>
+                        <Exec>denom   = 1</Exec>
+                        <Exec>denom_b = 1</Exec>
+                        <Exec>i = 1</Exec>
+                        <Loop Condition="i &lt; TAYLOR_ITERATIONS">
+                           <Exec>n = 2 * (i - 1) + 1</Exec>
+                           <Loop Condition="n &lt;= 2 * i">
+                              <Exec>numer_b *= n</Exec>
+                              <Exec>++n</Exec>
+                           </Loop>
+
+                           <Exec>numer *= angle * angle</Exec>
+
+                           <Exec>denom_b *= denom_b</Exec> <!-- == pow(4, i) -->
+                           <Exec>denom   *= i</Exec>       <!--  == factorial(i) -->
+
+                           <Exec>euler_y += (numer * numer_b) / (denom_b * (denom * denom) * (2 * i + 1))</Exec>
+                           
+                           <Exec>++i</Exec>
+                        </Loop>
+                        <!-- /asin -->
+
+                        <!-- cosY = cos(value[2][0]) -->
+                        <Exec>angle = _fabs(value[2].x)</Exec>
+                        <Exec>cosY  = 1</Exec>
+                        <Exec>numer = 1</Exec>
+                        <Exec>denom = 1</Exec>
+                        <Exec>i = 1</Exec>
+                        <Loop Condition="i &lt; TAYLOR_ITERATIONS">
+                           <Exec>numer *= angle * angle</Exec>
+                           <!-- factorial -->
+                           <Exec>n = 2 * (i - 1) + 1</Exec>
+                           <Loop Condition="n &lt;= 2 * i">
+                              <Exec>denom *= n</Exec>
+                              <Exec>++n</Exec>
+                           </Loop>
+                           <!-- /factorial -->
+                           <Exec>cosY += ((double)sign * numer * denom)</Exec>
+                           
+                           <Exec>++i</Exec>
+                           <Exec>sign = -sign</Exec>
+                        </Loop>
+                        <!-- /cosine -->
+                        
+                        <If Condition="_fabs(cosY) &gt; EPSILON">
+                           <Exec>u = value[2].z / cosY</Exec>
+                           <Exec>v = value[2].y / cosY</Exec>
+                           <!-- atan2 -->
+                           <If Condition="_fabs(u) &lt; EPSILON">
+                              <Exec>euler_x = 1.57079637</Exec>
+                              <If Condition="v &lt; 0">
+                                 <Exec>euler_x = -1.57079637</Exec>
+                              </If>
+                           </If>
+                           <If Condition="_fabs(u) &gt; EPSILON">
+                              <!-- atan -->
+                              <Exec>angle = v / u</Exec>
+                              <!-- fmod -->
+                              <If Condition="angle &gt; 1.0">
+                                 <Exec>angle -= (uint64_t)angle</Exec>
+                              </If>
+                              <If Condition="angle &lt; -1.0">
+                                 <Exec>angle += (uint64_t)_fabs(angle)</Exec>
+                              </If>
+                              <!-- /fmod -->
+                              <Exec>euler_x = angle</Exec>
+                              <Exec>numer   = angle</Exec>
+                              <Exec>sign = -1</Exec>
+                              <Exec>i = 1</Exec>
+                              <Loop Condition="i &lt; TAYLOR_ITERATIONS">
+                                 <Exec>numer   *= angle * angle</Exec>
+                                 <Exec>euler_x += numer / (2 * i + 1)</Exec>
+                                 <Exec>++i</Exec>
+                                 <Exec>sign = -sign</Exec>
+                              </Loop>
+                              <!-- /atan -->
+                              <If Condition="u &lt; 0">
+                                 <If Condition="v &gt;= 0">
+                                    <Exec>euler_x += 3.14159274</Exec>
+                                 </If>
+                                 <If Condition="v &lt; 0">
+                                    <Exec>euler_x -= 3.14159274</Exec>
+                                 </If>
+                              </If>
+                           </If>
+                           <!-- /atan2 -->
+                           
+                           <Exec>u = value[0].x / cosY</Exec>
+                           <Exec>v = value[1].x / cosY</Exec>
+                        </If>
+                        <If Condition="_fabs(cosY) &lt; EPSILON">
+                           <Exec>euler_x = 0</Exec>
+                           <Exec>u =  value[1].y</Exec>
+                           <Exec>v = -value[0].y</Exec>
+                        </If>
+                        
+                        <!-- atan2 -->
+                        <If Condition="_fabs(u) &lt; EPSILON">
+                           <Exec>euler_z = 1.57079637</Exec>
+                           <If Condition="v &lt; 0">
+                              <Exec>euler_z = -1.57079637</Exec>
+                           </If>
+                        </If>
+                        <If Condition="_fabs(u) &gt; EPSILON">
+                           <!-- atan -->
+                           <Exec>angle = v / u</Exec>
+                           <!-- fmod -->
+                           <If Condition="angle &gt; 1.0">
+                              <Exec>angle -= (uint64_t)angle</Exec>
+                           </If>
+                           <If Condition="angle &lt; -1.0">
+                              <Exec>angle += (uint64_t)_fabs(angle)</Exec>
+                           </If>
+                           <!-- /fmod -->
+                           <Exec>euler_z = angle</Exec>
+                           <Exec>numer   = angle</Exec>
+                           <Exec>sign = -1</Exec>
+                           <Exec>i = 1</Exec>
+                           <Loop Condition="i &lt; TAYLOR_ITERATIONS">
+                              <Exec>numer   *= angle * angle</Exec>
+                              <Exec>euler_z += numer / (2 * i + 1)</Exec>
+                              <Exec>++i</Exec>
+                              <Exec>sign = -sign</Exec>
+                           </Loop>
+                           <!-- /atan -->
+                           <If Condition="u &lt; 0">
+                              <If Condition="v &gt;= 0">
+                                 <Exec>euler_z += 3.14159274</Exec>
+                              </If>
+                              <If Condition="v &lt; 0">
+                                 <Exec>euler_z -= 3.14159274</Exec>
+                              </If>
+                           </If>
+                        </If>
+                        <!-- /atan2 -->
+
+                        <Item Name="[x-deg]">euler_x * RAD_TO_DEG_MULT,g</Item>
+                        <Item Name="[y-deg]">euler_y * RAD_TO_DEG_MULT,g</Item>
+                        <Item Name="[z-deg]">euler_z * RAD_TO_DEG_MULT,g</Item>
+                     </CustomListItems>
                   </Expand>
                </Synthetic>
                <Synthetic Name="[scale]">

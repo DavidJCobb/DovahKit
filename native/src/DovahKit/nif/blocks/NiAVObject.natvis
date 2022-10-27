@@ -4,6 +4,9 @@
       <DisplayString>{type_name,nasb}: {name}</DisplayString>
       <Expand>
          <ExpandedItem>*(NiObjectNET*)this,nd</ExpandedItem>
+         <Item Name="flags">flags</Item>
+         <Item Name="transform">transform</Item>
+         <Item Name="collision">collision</Item>
       </Expand>
    </Type>
 </AutoVisualizer>

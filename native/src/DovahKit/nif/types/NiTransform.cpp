@@ -24,7 +24,14 @@ namespace nifDK {
       glm::mat4 out = glm::mat4(this->rotation);
       out = glm::transpose(out); // GLM is column-major; NiMatrix33 is row-major.
       //
-      // Skyrim uses lefthanded XYZ Euler, where Z+ is upward, Y+ is forward, and X+ is right.
+      // Skyrim uses lefthanded XYZ Euler, where Z+ is upward, Y+ is forward, and X+ is right. 
+      // GLM, on the other hand, is righthanded by default. This means that we need to convert 
+      // our handedness.
+      // 
+      // Sadly, there's no quick shortcut. Given separate matrices for X, Y, and Z, you can 
+      // swap handedness by taking the transpose of each... but that doesn't work once they've 
+      // been multiplied together. We have to extract our Euler values, negate them all, and 
+      // then combine them back into a new matrix.
       //
       {
          constexpr float EPSILON = 0.000001;
@@ -63,15 +70,15 @@ namespace nifDK {
             // If we can isolate sinX and cosX, then we  can pass those into atan2 (as X and Y 
             // arguments, respectively) to compute X itself.
             //
-            u = out[2][2] /  cosY; // u == cosX
-            v = out[2][1] / -cosY; // v == sinX
+            u = out[2][2] / cosY; // u == cosX
+            v = out[2][1] / cosY; // v == sinX
             x = atan2(v, u);
             //
             // And with the other two elements,  the top-left and top-center, we can get Z the 
             // same way.
             //
-            u = out[0][0] /  cosY; // u == cosZ
-            v = out[1][0] / -cosY; // v == sinZ
+            u = out[0][0] / cosY; // u == cosZ
+            v = out[1][0] / cosY; // v == sinZ
             z = atan2(v, u);
          } else {
             //
@@ -81,7 +88,7 @@ namespace nifDK {
             //
             z = 0;
             u = out[1][1]; // -sinX*sinY*sinZ + cosX*cosZ == -sinX*sinY*0 + cosX*1 == cosX
-            v = out[1][2]; //  cosX*sinY*sinZ + sinX*cosZ ==  cosX*sinY*0 + sinX*1 == sinX
+            v = -out[0][1]; //  cosX*sinY*sinZ + sinX*cosZ ==  cosX*sinY*0 + sinX*1 == sinX
             x = atan2(v, u);
          }
          //

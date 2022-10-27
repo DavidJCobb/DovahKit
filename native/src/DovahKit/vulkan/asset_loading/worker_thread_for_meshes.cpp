@@ -327,8 +327,10 @@ namespace vulkanDK::asset_loading {
 
                rendered_mesh* mesh = nullptr;
                if (auto* geom = dynamic_cast<NiTriBasedGeom*>(object)) {
+                  mesh = geom->vulkan_state.mesh_handle.entity();
                   _load_NiTriBasedGeom(this->owner, *geom->vulkan_state.mesh_handle, *geom, state.transform);
                } else if (auto* geom = dynamic_cast<BSTriShape*>(object)) {
+                  mesh = geom->vulkan_state.mesh_handle.entity();
                   _load_BSTriShape(this->owner, *geom->vulkan_state.mesh_handle, *geom, state.transform);
                }
                //

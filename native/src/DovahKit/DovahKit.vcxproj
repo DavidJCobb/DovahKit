@@ -896,6 +896,7 @@
     <ClInclude Include="helpers\tuples\filter_types.h" />
     <ClInclude Include="helpers\tuples\filter_values_by_type.h" />
     <ClInclude Include="helpers\tuples\first_index_of_type.h" />
+    <ClInclude Include="helpers\tuples\for_each_value.h" />
     <ClInclude Include="helpers\tuples\index_of_first_matching_type.h" />
     <ClInclude Include="helpers\tuples\indices_of_matching_types.h" />
     <ClInclude Include="helpers\tuples\map_types.h" />
