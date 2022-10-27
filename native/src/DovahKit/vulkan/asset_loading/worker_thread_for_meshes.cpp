@@ -308,7 +308,13 @@ namespace vulkanDK::asset_loading {
          nif.root_node->walk_tree(
             state,
             [](NiNode* node, _import_state& state) {
-               state.transform  = state.transform * node->transform.to_matrix();
+               if (node->parent) {
+                  //
+                  // NOTE: The root node's NIF-side transform is not honored. It gets 
+                  // wholly replaced by the REFR's transform.
+                  //
+                  state.transform = state.transform * node->transform.to_matrix();
+               }
                state.is_culled |= ((node->flags & NiAVObject::flag::culled_by_application) != 0);
                if (!state.is_marker) {
                   state.is_marker = cobb::strieq_ascii(node->name, "EditorMarker");
