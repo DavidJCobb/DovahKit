@@ -333,14 +333,11 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       // A ref is filtered from display in Cell View, but is then modified in such a 
       // way that it is no longer filtered out.
       //
-      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](const dovah::form_stub* stub) {
-         if (!dovah::form_type_info::form_type_is_reference(stub->formType))
-            return;
-         auto* cell = stub->get_parent_form();
-         if (!cell || cell != this->ui.cellList->formStub())
-            return;
-
-         // TODO
+      QObject::connect(this->ui.referenceList, &CellRefList::editedFormNoLongerFiltered, this, [this](dovah::form_stub* stub) {
+         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         if (worldedit.is_ref_selected(stub)) {
+            this->ui.referenceList->selectStub(stub, QItemSelectionModel::SelectionFlag::Select);
+         }
       });
    }
    #pragma endregion

@@ -4,6 +4,7 @@
 #include <vector>
 #include <QAbstractItemModel>
 #include <QLineEdit>
+#include <QPointer>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
@@ -15,6 +16,8 @@ namespace dovah {
    class form_stub;
 }
 class BasicFormTypeTree;
+
+class CellRefListModelProxy;
 
 class CellRefListModel;
 class CellRefListModelItem {
@@ -61,6 +64,8 @@ class CellRefListModel : public QAbstractTableModel {
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
       const form_stub* last_used_cell = nullptr;
+      //
+      QPointer<CellRefListModelProxy> proxy;
       
       void _insertItem(const form_stub*, bool queued);
       
@@ -79,20 +84,28 @@ class CellRefListModel : public QAbstractTableModel {
          this->clear();
       }
       
-      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      virtual QModelIndex parent(const QModelIndex& index) const override;
-      virtual int rowCount(const QModelIndex& parent) const override;
-      virtual int columnCount(const QModelIndex& item) const override { return ColumnCount; }
+      #pragma region Overrides
+      virtual int           columnCount(const QModelIndex& item) const override { return ColumnCount; }
+      virtual QVariant      data(const QModelIndex& index, int role) const override;
       virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
-      virtual QVariant data(const QModelIndex& index, int role) const override;
-      inline const item_type* row(int rowIndex) const noexcept;
-      //
-      virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-      //
+      virtual QVariant      headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+      virtual QModelIndex   index(int row, int column, const QModelIndex& parent) const override;
+      virtual QModelIndex   parent(const QModelIndex& index) const override;
+      virtual int           rowCount(const QModelIndex& parent) const override;
+      #pragma endregion
+      
       void insertItem(dovah::form_stub*);
       void rebuild(const dovah::form_stub* cell);
+      const item_type* row(int rowIndex) const noexcept;
 
       QModelIndex index(const form_stub&) const;
+
+      // required for the `formNoLongerFiltered` signal
+      // ugly, but needed to handle that sanely from `formModified`
+      void makeAwareOfProxy(CellRefListModelProxy*);
+
+   signals:
+      void editedFormNoLongerFiltered(dovah::form_stub*); // fired when a form is modified and this causes it to no longer be filtered
 };
 
 class CellRefListModelProxy : public QSortFilterProxyModel {
@@ -141,11 +154,12 @@ class CellRefList : public QTableView {
       void rebuildModel();
       void clear();
       void refilterModelByText(const QString&);
-      void selectStub(dovah::form_stub*, QItemSelectionModel::SelectionFlags);
+      void selectStub(const dovah::form_stub*, QItemSelectionModel::SelectionFlags);
       void textFilterChanged();
       void textFilterFinished();
 
    signals:
+      void editedFormNoLongerFiltered(dovah::form_stub*); // fired when a form is modified and this causes it to no longer be filtered
       void filterChanged();
       void selectionChanged(const std::vector<dovah::form_stub*>& selected, const std::vector<dovah::form_stub*>& deselected);
       void userInitiatedSelectionChanged(const std::vector<dovah::form_stub*>& selected, const std::vector<dovah::form_stub*>& deselected);

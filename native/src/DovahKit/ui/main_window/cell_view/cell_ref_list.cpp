@@ -7,6 +7,7 @@
 #include "editor/open_window_for_form.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
+#include "widgets/DKHeaderView.h"
 #include "../../generic/QItemSelectionModelEx.h"
 
 CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
@@ -62,11 +63,18 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
       if (item->stub == stub) {
+         bool was_filtered = false;
+         if (this->proxy) {
+            was_filtered = !this->proxy->filterAcceptsRow(i, {});
+         }
          item->update();
          auto root  = QModelIndex();
          auto start = this->index(i, 0, root);
          auto end   = this->index(i, this->columnCount(root), root);
          emit dataChanged(start, end);
+         if (was_filtered) {
+            emit this->editedFormNoLongerFiltered(const_cast<dovah::form_stub*>(stub));
+         }
          break;
       }
    }
@@ -123,27 +131,7 @@ void CellRefListModel::_insertItem(const form_stub* stub, bool queued) {
    }
 }
 
-QModelIndex CellRefListModel::index(int row, int column, const QModelIndex& parent) const {
-   if (!this->hasIndex(row, column, parent))
-      return QModelIndex();
-   item_type* childItem = this->children.value(row);
-   if (childItem)
-      return this->createIndex(row, column, childItem);
-   return QModelIndex();
-}
-QModelIndex CellRefListModel::parent(const QModelIndex& index) const {
-   return QModelIndex();
-}
-int CellRefListModel::rowCount(const QModelIndex& parent) const {
-   if (parent.column() > 0)
-      return 0;
-   return this->children.size();
-}
-Qt::ItemFlags CellRefListModel::flags(const QModelIndex& index) const {
-   if (!index.isValid())
-      return Qt::NoItemFlags;
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
-}
+#pragma region Overrides
 QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
       return QVariant();
@@ -181,7 +169,7 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
          break;
       case Qt::TextAlignmentRole:
          if (column == ColumnFormType)
-            return (Qt::Alignment::Int)(Qt::AlignBaseline | Qt::AlignHCenter);
+            return (Qt::Alignment::Int)(Qt::AlignHCenter);
          break;
       case SortingRole: // used for sorting
          switch (column) {
@@ -202,10 +190,11 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    }
    return QVariant();
 }
-inline const CellRefListModel::item_type* CellRefListModel::row(int rowIndex) const noexcept {
-   return this->children.value(rowIndex);
+Qt::ItemFlags CellRefListModel::flags(const QModelIndex& index) const {
+   if (!index.isValid())
+      return Qt::NoItemFlags;
+   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
 }
-//
 QVariant CellRefListModel::headerData(int section, Qt::Orientation orientation, int role) const {
    if (orientation != Qt::Orientation::Horizontal)
       return QVariant();
@@ -220,6 +209,23 @@ QVariant CellRefListModel::headerData(int section, Qt::Orientation orientation, 
    }
    return QVariant();
 }
+QModelIndex CellRefListModel::index(int row, int column, const QModelIndex& parent) const {
+   if (!this->hasIndex(row, column, parent))
+      return QModelIndex();
+   const auto* childItem = this->children.value(row);
+   if (childItem)
+      return this->createIndex(row, column, (void*)childItem);
+   return QModelIndex();
+}
+QModelIndex CellRefListModel::parent(const QModelIndex& index) const {
+   return {};
+}
+int CellRefListModel::rowCount(const QModelIndex& parent) const {
+   if (parent.column() > 0)
+      return 0;
+   return this->children.size();
+}
+#pragma endregion
 
 void CellRefListModel::insertItem(dovah::form_stub* stub) {
    this->_insertItem(stub, false);
@@ -262,6 +268,9 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
    queue.clear();
    this->endInsertRows();
 }
+const CellRefListModel::item_type* CellRefListModel::row(int rowIndex) const noexcept {
+   return this->children.value(rowIndex);
+}
 
 QModelIndex CellRefListModel::index(const form_stub& stub) const {
    const auto& list = this->children;
@@ -271,6 +280,10 @@ QModelIndex CellRefListModel::index(const form_stub& stub) const {
          return this->index((int)i, 0, {});
    }
    return {};
+}
+
+void CellRefListModel::makeAwareOfProxy(CellRefListModelProxy* proxy) {
+   this->proxy = proxy;
 }
 #pragma endregion
 
@@ -303,28 +316,41 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    auto underlying = new model_type;
    auto proxy      = new CellRefListModelProxy(this);
    proxy->setSourceModel(underlying);
+   underlying->makeAwareOfProxy(proxy);
    this->setModel(proxy);
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
    this->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
    this->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
-   //
-   auto header  = this->horizontalHeader();
-   auto metrics = QFontMetrics(this->font());
-   header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
-   header->setMinimumSectionSize(2);
-   header->resizeSection(1, metrics.boundingRect("00000000").width() * 1.5F + 4);
-   header->resizeSection(2, metrics.boundingRect("Weapon").width() * 1.5F + 4);
-   header->setSectionResizeMode(0, QHeaderView::Interactive);
-   header->setSectionResizeMode(1, QHeaderView::Interactive);
-   header->setSectionResizeMode(2, QHeaderView::Interactive);
-   header->setStretchLastSection(false);
+   {
+      auto* header = new DKHeaderView(Qt::Horizontal, this);
+      header->setFlexResizeEnabled(true);
+      {
+         auto* old = this->horizontalHeader();
+         header->setHighlightSections(old->highlightSections());
+         header->setSortIndicatorShown(old->isSortIndicatorShown());
+         header->setSectionsClickable(old->sectionsClickable());
+      }
+      this->setHorizontalHeader(header);
+      //
+      auto metrics = QFontMetrics(this->font());
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+      header->setMinimumSectionSize(2);
+      header->setColumnFlex(model_type::ColumnName,     1, 0);
+      header->setColumnFlex(model_type::ColumnFormID,   0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4);
+      header->setColumnFlex(model_type::ColumnFormType, 0, 0, metrics.boundingRect("Weapon").width() * 1.5F + 4);
+      header->modSectionSizeTo(model_type::ColumnFormID, 4); // mimics a user resize and shrinks the column
+      for(int i = 0; i < model_type::ColumnCount; ++i)
+         header->setSectionResizeMode(i, QHeaderView::Interactive);
+      header->setStretchLastSection(false);
+   }
+
+   // forward signal to outside world
+   QObject::connect(underlying, &model_type::editedFormNoLongerFiltered, this, &CellRefList::editedFormNoLongerFiltered);
 
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
-      auto stub = this->formStub();
-      if (!stub)
-         return;
-      open_edit_dialog_for_form(stub, this);
+      if (auto stub = this->formStub())
+         open_edit_dialog_for_form(stub, this);
    });
    {
       auto* sm = this->selectionModel();
@@ -416,7 +442,7 @@ void CellRefList::refilterModelByText(const QString& text) {
    wrapper->setFilterFixedString(text);
    emit this->filterChanged();
 }
-void CellRefList::selectStub(dovah::form_stub* stub, QItemSelectionModel::SelectionFlags flags) {
+void CellRefList::selectStub(const dovah::form_stub* stub, QItemSelectionModel::SelectionFlags flags) {
    auto* sm = this->selectionModel();
    if (!sm)
       return;
