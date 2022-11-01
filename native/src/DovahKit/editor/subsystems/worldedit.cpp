@@ -1142,6 +1142,17 @@ namespace dovahkit::subsystems {
       return false;
    }
 
+   std::vector<dovah::form_stub*> worldedit::get_selected_refs() const {
+      std::vector<dovah::form_stub*> out;
+      out.reserve(this->state.selection.refs.size());
+
+      for (const auto& item : this->state.selection.refs)
+         if (item.stub)
+            out.push_back(item.stub);
+
+      return out;
+   }
+
    void worldedit::setRefSelectionState(dovah::form_stub& stub, bool state) {
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)

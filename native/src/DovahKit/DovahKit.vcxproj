@@ -605,6 +605,7 @@
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
@@ -1027,6 +1028,7 @@
     <ClInclude Include="nif\types\SkyrimShaderPropertyFlags.h" />
     <ClInclude Include="nif\types\Triangle.h" />
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
+    <QtMoc Include="ui\generic\QItemSelectionModelEx.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />

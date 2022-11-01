@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <QObject>
 #include "helpers/math/sqrt.h"
 #include "helpers/qt/delete_later_deleter.h"
@@ -151,6 +152,8 @@ namespace dovahkit::subsystems {
          bool is_current_cell(const dovah::form_stub*) const;
          bool is_ref_loaded(const dovah::form_stub*) const;
          bool is_ref_selected(const dovah::form_stub*) const;
+
+         std::vector<dovah::form_stub*> get_selected_refs() const;
 
          inline size_t cell_grid_size() const noexcept {
             return this->loaded_cells.length();

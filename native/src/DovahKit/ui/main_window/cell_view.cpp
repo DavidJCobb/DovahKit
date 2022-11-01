@@ -10,6 +10,7 @@
 
 CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
+   auto& editor    = DovahKitCore::get();
    auto& worldedit = dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
    //
    this->ui.worldspace->addFormType(dovah::form_type::worldspace);
@@ -216,8 +217,35 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       //
       // CASE 3:
       // The selection is modified within Cell View.
+      // 
+      // We have to use the `userInitiatedSelectionChanged` signal instead of the 
+      // `selectionChanged` signal in order to avoid mishandling cases where a ref 
+      // is removed from the ref list in Cell View. This can occur for a few reasons 
+      // and none of them are cases we want to sync into Worldview:
+      // 
+      //  - Filtering the ref list works by removing rows from the table. This will 
+      //    trigger automated deselection of those rows. However, the refs still 
+      //    exist, and should not be deselected in Worldedit.
+      // 
+      //  - If Worldedit or the ref properties dialog are used to move a ref into a 
+      //    different, but loaded, cell, then the ref's row will be removed from the 
+      //    table. However, the ref is still accessible and should remain selected 
+      //    in Worldedit.
+      // 
+      //  - If a ref is deleted outright (i.e. form deletion), then its row will be 
+      //    removed from the table. However, Worldedit already listens for these 
+      //    deletions on its own; synchronization is not needed.
+      // 
+      // As such, we should respond only to user-initiated selection changes here. 
+      // CellRefList makes those available by replacing its default selection model 
+      // with an instance of QItemSelectionModel, a subclass that exposes a signal 
+      // for user-initiated selection changes. However, that is quite brittle (I had 
+      // to look at Qt's source code to determine the exact ways to expose that data), 
+      // so if this ever stops working properly (i.e. if Worldedit ever deselects a 
+      // ref in any of the above-listed situations), then check QItemSelectionModelEx 
+      // and see if anything has been broken e.g. by a Qt update.
       //
-      QObject::connect(this->ui.referenceList, &CellRefList::selectionChanged, [this](const auto& selected, const auto& deselected) {
+      QObject::connect(this->ui.referenceList, &CellRefList::userInitiatedSelectionChanged, [this](const auto& selected, const auto& deselected) {
          if (is_synchronizing)
             return;
          auto& worldedit = dovahkit::subsystems::worldedit::get();
@@ -300,12 +328,25 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
             this->ui.referenceList->selectStub(stub, QItemSelectionModel::SelectionFlag::Select);
          is_synchronizing = false;
       });
+      //
+      // CASE 6:
+      // A ref is filtered from display in Cell View, but is then modified in such a 
+      // way that it is no longer filtered out.
+      //
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](const dovah::form_stub* stub) {
+         if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+            return;
+         auto* cell = stub->get_parent_form();
+         if (!cell || cell != this->ui.cellList->formStub())
+            return;
+
+         // TODO
+      });
    }
    #pragma endregion
    //
    this->setAllEnableStates(false);
    //
-   auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
       this->ui.worldspace->populate();
       this->ui.cellList->rebuildModel();

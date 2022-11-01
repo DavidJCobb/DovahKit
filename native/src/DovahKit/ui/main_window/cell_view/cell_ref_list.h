@@ -148,6 +148,7 @@ class CellRefList : public QTableView {
    signals:
       void filterChanged();
       void selectionChanged(const std::vector<dovah::form_stub*>& selected, const std::vector<dovah::form_stub*>& deselected);
+      void userInitiatedSelectionChanged(const std::vector<dovah::form_stub*>& selected, const std::vector<dovah::form_stub*>& deselected);
       
    protected:
       const CellList* _cellSelector = nullptr;

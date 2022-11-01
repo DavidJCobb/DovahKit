@@ -1911,6 +1911,9 @@
     <ClCompile Include="vulkan\rendered_nif.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4837,6 +4840,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\worldedit.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\QItemSelectionModelEx.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

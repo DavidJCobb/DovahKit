@@ -7,6 +7,7 @@
 #include "editor/open_window_for_form.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
+#include "../../generic/QItemSelectionModelEx.h"
 
 CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
@@ -325,7 +326,50 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
          return;
       open_edit_dialog_for_form(stub, this);
    });
+   {
+      auto* sm = this->selectionModel();
+      if (sm)
+         sm->deleteLater();
+      auto* nsm = new QItemSelectionModelEx(this->model(), this);
+      this->setSelectionModel(nsm);
+   }
+   QObject::connect((QItemSelectionModelEx*)this->selectionModel(), &QItemSelectionModelEx::userInitiatedSelectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
+      if (this->receivers(SIGNAL(userInitiatedSelectionChanged)) <= 0)
+         //
+         // We should only do this work if something is actually connected to the signal we plan on emitting.
+         //
+         return;
+
+      std::vector<dovah::form_stub*> sel;
+      std::vector<dovah::form_stub*> desel;
+
+      auto* model = this->model();
+
+      auto proxy_qmi_list = selected.indexes();
+      sel.reserve(proxy_qmi_list.size());
+      for (const auto& qmi : proxy_qmi_list) {
+         auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+         if (stub)
+            sel.push_back(stub);
+      }
+      
+      proxy_qmi_list = deselected.indexes();
+      desel.reserve(proxy_qmi_list.size());
+      for (const auto& qmi : proxy_qmi_list) {
+         auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+         if (stub)
+            desel.push_back(stub);
+      }
+
+      emit this->userInitiatedSelectionChanged(sel, desel);
+   });
    QObject::connect(this->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
+      if (this->receivers(SIGNAL(selectionChanged)) <= 0)
+         //
+         // We should only do this work if something is actually connected to the signal we plan on emitting.
+         //
+         return;
+
       std::vector<dovah::form_stub*> sel;
       std::vector<dovah::form_stub*> desel;
 
