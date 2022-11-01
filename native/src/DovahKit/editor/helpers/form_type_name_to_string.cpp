@@ -2,148 +2,211 @@
 #include <QObject>
 
 namespace {
-   struct _name {
-      const dovah::form_type_t value;
-      const QString name;
+   constexpr const char* const translation_key = "form type names";
+
+   struct _name_base {
+      dovah::form_type_t value;
+      const char* name;
       //
-      _name(dovah::form_type_t ft, const char* n) : value(ft), name(QObject::tr(n, "form type names")) {}
+      constexpr _name_base(dovah::form_type_t ft, const char* n) : value(ft), name(n) {}
    };
-   std::array _names = {
-      _name{ dovah::form_type::acoustic_space,    "Acoustic Space" },
-      _name{ dovah::form_type::action,            "Action" },
-      _name{ dovah::form_type::activator,         "Activator" },
-      _name{ dovah::form_type::actor,             "Actor" },
-      _name{ dovah::form_type::actor_value_info,  "Actor Value" },
-      _name{ dovah::form_type::actor_base,        "ActorBase" },
-      _name{ dovah::form_type::addon_node,        "Add-on Node" },
-      _name{ dovah::form_type::ammo,              "Ammo" },
-      _name{ dovah::form_type::animation_prop,    "Animation Prop" },
-      _name{ dovah::form_type::apparatus,         "Apparatus" },
-      _name{ dovah::form_type::armor,             "Armor" },
-      _name{ dovah::form_type::armor_addon,       "ArmorAddon" },
-      _name{ dovah::form_type::art_object,        "Art Object" },
-      _name{ dovah::form_type::association_type,  "Association Type" },
-      _name{ dovah::form_type::body_part_data,    "BodyPartData" },
-      _name{ dovah::form_type::book,              "Book" },
-      _name{ dovah::form_type::camera_path,       "Camera Path" },
-      _name{ dovah::form_type::camera_shot,       "Camera Shot" },
-      _name{ dovah::form_type::cell,              "Cell" },
-      _name{ dovah::form_type::combat_class,      "Class" },
-      _name{ dovah::form_type::climate,           "Climate" },
-      _name{ dovah::form_type::collision_layer,   "Collision Layer" },
-      _name{ dovah::form_type::color,             "Color" },
-      _name{ dovah::form_type::combat_style,      "Combat Style" },
-      _name{ dovah::form_type::constructible_object, "Constructible Object" },
-      _name{ dovah::form_type::container,         "Container" },
-      _name{ dovah::form_type::debris,            "Debris" },
-      _name{ dovah::form_type::default_object_manager, "Default Objects" },
-      _name{ dovah::form_type::dialogue_branch,   "Dialogue Branch" },
-      _name{ dovah::form_type::dialogue_view,     "Dialogue View" },
-      _name{ dovah::form_type::door,              "Door" },
-      _name{ dovah::form_type::dual_cast_data,    "Dual Cast Data" },
-      _name{ dovah::form_type::effect_shader,     "EffectShader" },
-      _name{ dovah::form_type::enchantment,       "Enchantment" },
-      _name{ dovah::form_type::encounter_zone,    "Encounter Zone" },
-      _name{ dovah::form_type::equip_slot,        "Equip Slot" },
-      _name{ dovah::form_type::eyes,              "Eyes" },
-      _name{ dovah::form_type::explosion,         "Explosion" },
-      _name{ dovah::form_type::faction,           "Faction" },
-      _name{ dovah::form_type::flora,             "Flora" },
-      _name{ dovah::form_type::footstep,          "Footstep" },
-      _name{ dovah::form_type::footstep_set,      "Footstep Set" },
-      _name{ dovah::form_type::formlist,          "FormList" },
-      _name{ dovah::form_type::furniture,         "Furniture" },
-      _name{ dovah::form_type::setting,           "Game Setting" },
-      _name{ dovah::form_type::global,            "Global" },
-      _name{ dovah::form_type::grass,             "Grass" },
-      _name{ dovah::form_type::hazard,            "Hazard" },
-      _name{ dovah::form_type::head_part,         "HeadPart" },
-      _name{ dovah::form_type::idle,              "Idle" },
-      _name{ dovah::form_type::idle_marker,       "Idle Marker" },
-      _name{ dovah::form_type::imagespace,        "Imagespace" },
-      _name{ dovah::form_type::imagespace_modifier, "Imagespace Modifier" },
-      _name{ dovah::form_type::impact_data,       "Impact Data" },
-      _name{ dovah::form_type::impact_data_set,   "Impact Data Set" },
-      _name{ dovah::form_type::ingredient,        "Ingredient" },
-      _name{ dovah::form_type::key,               "Key" },
-      _name{ dovah::form_type::keyword,           "Keyword" },
-      _name{ dovah::form_type::land,              "Landscape" },
-      _name{ dovah::form_type::land_texture,      "LandTexture" },
-      _name{ dovah::form_type::leveled_character, "LeveledActor" },
-      _name{ dovah::form_type::leveled_item,      "LeveledItem" },
-      _name{ dovah::form_type::leveled_spell,     "LeveledSpell" },
-      _name{ dovah::form_type::light,             "Light" },
-      _name{ dovah::form_type::lighting_template, "Lighting Template" },
-      _name{ dovah::form_type::loading_screen,    "Loading Screen" },
-      _name{ dovah::form_type::location,          "Location" },
-      _name{ dovah::form_type::location_ref_type, "LocRefType" },
-      _name{ dovah::form_type::magic_effect,      "MagicEffect" },
-      _name{ dovah::form_type::material_object,   "Material Object" },
-      _name{ dovah::form_type::material_type,     "Material Type" },
-      _name{ dovah::form_type::menu_icon,         "Menu Icon" },
-      _name{ dovah::form_type::message,           "Message" },
-      _name{ dovah::form_type::misc_item,         "MiscItem" },
-      _name{ dovah::form_type::movable_static,    "MovableStatic" },
-      _name{ dovah::form_type::movement_type,     "Movement Type" },
-      _name{ dovah::form_type::music_track,       "Music Track" },
-      _name{ dovah::form_type::music_type,        "Music Type" },
-      _name{ dovah::form_type::navmesh,           "Navmesh" },
-      _name{ dovah::form_type::navmesh_info_map,  "NavMeshInfoMap" },
-      _name{ dovah::form_type::note,              "Note" },
-      _name{ dovah::form_type::reference,         "ObjectReference" },
-      _name{ dovah::form_type::missile,           "ObjectReference" },
-      _name{ dovah::form_type::arrow,             "ObjectReference" },
-      _name{ dovah::form_type::grenade,           "ObjectReference" },
-      _name{ dovah::form_type::beam,              "ObjectReference" },
-      _name{ dovah::form_type::flame,             "ObjectReference" },
-      _name{ dovah::form_type::cone,              "ObjectReference" },
-      _name{ dovah::form_type::barrier,           "ObjectReference" },
-      _name{ dovah::form_type::placed_hazard,     "ObjectReference" },
-      _name{ dovah::form_type::outfit,            "Outfit" },
-      _name{ dovah::form_type::package,           "Package" },
-      _name{ dovah::form_type::perk,              "Perk" },
-      _name{ dovah::form_type::projectile,        "Projectile" },
-      _name{ dovah::form_type::quest,             "Quest" },
-      _name{ dovah::form_type::race,              "Race" },
-      _name{ dovah::form_type::ragdoll,           "Ragdoll" },
-      _name{ dovah::form_type::reference_effect,  "ReferenceEffect" },
-      _name{ dovah::form_type::region,            "Region" },
-      _name{ dovah::form_type::relationship,      "Relationship" },
-      _name{ dovah::form_type::reverb_parameters, "Reverb Parameters" },
-      _name{ dovah::form_type::scene,             "Scene" },
-      _name{ dovah::form_type::script,            "Script" },
-      _name{ dovah::form_type::scroll,            "Scroll" },
-      _name{ dovah::form_type::shader_particle_geometry_data, "Shader Particle Geometry Data" },
-      _name{ dovah::form_type::shout,             "Shout" },
-      _name{ dovah::form_type::skill,             "Skill" },
-      _name{ dovah::form_type::soul_gem,          "Soul Gem" },
-      _name{ dovah::form_type::sound,             "Sound" },
-      _name{ dovah::form_type::sound_category,    "Sound Category" },
-      _name{ dovah::form_type::sound_descriptor,  "Sound Descriptor" },
-      _name{ dovah::form_type::sound_output_model, "Sound Output Model" },
-      _name{ dovah::form_type::spell,             "Spell" },
-      _name{ dovah::form_type::statik,            "Static" },
-      _name{ dovah::form_type::static_collection, "Static Collection" },
-      _name{ dovah::form_type::story_branch_node, "Story Manager Branch Node" },
-      _name{ dovah::form_type::story_event_node,  "Story Manager Event Node" },
-      _name{ dovah::form_type::story_quest_node,  "Story Manager Quest Node" },
-      _name{ dovah::form_type::talking_activator, "TalkingActivator" },
-      _name{ dovah::form_type::texture_set,       "TextureSet" },
-      _name{ dovah::form_type::topic,             "Topic" },
-      _name{ dovah::form_type::topic_info,        "TopicInfo" },
-      _name{ dovah::form_type::tree,              "Tree" },
-      _name{ dovah::form_type::voicetype,         "Voicetype" },
-      _name{ dovah::form_type::water_type,        "Water Type" },
-      _name{ dovah::form_type::weapon,            "Weapon" },
-      _name{ dovah::form_type::weather,           "Weather" },
-      _name{ dovah::form_type::word_of_power,     "Word of Power" },
-      _name{ dovah::form_type::worldspace,        "Worldspace" },
+   struct _name {
+      dovah::form_type_t value = dovah::form_type::none;
+      QString name;
+      //
+      _name() {}
+      _name(dovah::form_type_t ft, const char* n) : value(ft), name(QObject::tr(n, translation_key)) {}
+      _name(const _name_base& base) : value(base.value), name(QObject::tr(base.name, translation_key)) {}
+   };
+
+   constexpr const std::array _name_bases = {
+      _name_base{ dovah::form_type::acoustic_space,    "Acoustic Space" },
+      _name_base{ dovah::form_type::action,            "Action" },
+      _name_base{ dovah::form_type::activator,         "Activator" },
+      _name_base{ dovah::form_type::actor,             "Actor" },
+      _name_base{ dovah::form_type::actor_value_info,  "Actor Value" },
+      _name_base{ dovah::form_type::actor_base,        "ActorBase" },
+      _name_base{ dovah::form_type::addon_node,        "Add-on Node" },
+      _name_base{ dovah::form_type::ammo,              "Ammo" },
+      _name_base{ dovah::form_type::animation_prop,    "Animation Prop" },
+      _name_base{ dovah::form_type::apparatus,         "Apparatus" },
+      _name_base{ dovah::form_type::armor,             "Armor" },
+      _name_base{ dovah::form_type::armor_addon,       "ArmorAddon" },
+      _name_base{ dovah::form_type::art_object,        "Art Object" },
+      _name_base{ dovah::form_type::association_type,  "Association Type" },
+      _name_base{ dovah::form_type::body_part_data,    "BodyPartData" },
+      _name_base{ dovah::form_type::book,              "Book" },
+      _name_base{ dovah::form_type::camera_path,       "Camera Path" },
+      _name_base{ dovah::form_type::camera_shot,       "Camera Shot" },
+      _name_base{ dovah::form_type::cell,              "Cell" },
+      _name_base{ dovah::form_type::combat_class,      "Class" },
+      _name_base{ dovah::form_type::climate,           "Climate" },
+      _name_base{ dovah::form_type::collision_layer,   "Collision Layer" },
+      _name_base{ dovah::form_type::color,             "Color" },
+      _name_base{ dovah::form_type::combat_style,      "Combat Style" },
+      _name_base{ dovah::form_type::constructible_object, "Constructible Object" },
+      _name_base{ dovah::form_type::container,         "Container" },
+      _name_base{ dovah::form_type::debris,            "Debris" },
+      _name_base{ dovah::form_type::default_object_manager, "Default Objects" },
+      _name_base{ dovah::form_type::dialogue_branch,   "Dialogue Branch" },
+      _name_base{ dovah::form_type::dialogue_view,     "Dialogue View" },
+      _name_base{ dovah::form_type::door,              "Door" },
+      _name_base{ dovah::form_type::dual_cast_data,    "Dual Cast Data" },
+      _name_base{ dovah::form_type::effect_shader,     "EffectShader" },
+      _name_base{ dovah::form_type::enchantment,       "Enchantment" },
+      _name_base{ dovah::form_type::encounter_zone,    "Encounter Zone" },
+      _name_base{ dovah::form_type::equip_slot,        "Equip Slot" },
+      _name_base{ dovah::form_type::eyes,              "Eyes" },
+      _name_base{ dovah::form_type::explosion,         "Explosion" },
+      _name_base{ dovah::form_type::faction,           "Faction" },
+      _name_base{ dovah::form_type::flora,             "Flora" },
+      _name_base{ dovah::form_type::footstep,          "Footstep" },
+      _name_base{ dovah::form_type::footstep_set,      "Footstep Set" },
+      _name_base{ dovah::form_type::formlist,          "FormList" },
+      _name_base{ dovah::form_type::furniture,         "Furniture" },
+      _name_base{ dovah::form_type::setting,           "Game Setting" },
+      _name_base{ dovah::form_type::global,            "Global" },
+      _name_base{ dovah::form_type::grass,             "Grass" },
+      _name_base{ dovah::form_type::hazard,            "Hazard" },
+      _name_base{ dovah::form_type::head_part,         "HeadPart" },
+      _name_base{ dovah::form_type::idle,              "Idle" },
+      _name_base{ dovah::form_type::idle_marker,       "Idle Marker" },
+      _name_base{ dovah::form_type::imagespace,        "Imagespace" },
+      _name_base{ dovah::form_type::imagespace_modifier, "Imagespace Modifier" },
+      _name_base{ dovah::form_type::impact_data,       "Impact Data" },
+      _name_base{ dovah::form_type::impact_data_set,   "Impact Data Set" },
+      _name_base{ dovah::form_type::ingredient,        "Ingredient" },
+      _name_base{ dovah::form_type::key,               "Key" },
+      _name_base{ dovah::form_type::keyword,           "Keyword" },
+      _name_base{ dovah::form_type::land,              "Landscape" },
+      _name_base{ dovah::form_type::land_texture,      "LandTexture" },
+      _name_base{ dovah::form_type::leveled_character, "LeveledActor" },
+      _name_base{ dovah::form_type::leveled_item,      "LeveledItem" },
+      _name_base{ dovah::form_type::leveled_spell,     "LeveledSpell" },
+      _name_base{ dovah::form_type::light,             "Light" },
+      _name_base{ dovah::form_type::lighting_template, "Lighting Template" },
+      _name_base{ dovah::form_type::loading_screen,    "Loading Screen" },
+      _name_base{ dovah::form_type::location,          "Location" },
+      _name_base{ dovah::form_type::location_ref_type, "LocRefType" },
+      _name_base{ dovah::form_type::magic_effect,      "MagicEffect" },
+      _name_base{ dovah::form_type::material_object,   "Material Object" },
+      _name_base{ dovah::form_type::material_type,     "Material Type" },
+      _name_base{ dovah::form_type::menu_icon,         "Menu Icon" },
+      _name_base{ dovah::form_type::message,           "Message" },
+      _name_base{ dovah::form_type::misc_item,         "MiscItem" },
+      _name_base{ dovah::form_type::movable_static,    "MovableStatic" },
+      _name_base{ dovah::form_type::movement_type,     "Movement Type" },
+      _name_base{ dovah::form_type::music_track,       "Music Track" },
+      _name_base{ dovah::form_type::music_type,        "Music Type" },
+      _name_base{ dovah::form_type::navmesh,           "Navmesh" },
+      _name_base{ dovah::form_type::navmesh_info_map,  "NavMeshInfoMap" },
+      _name_base{ dovah::form_type::note,              "Note" },
+      _name_base{ dovah::form_type::potion,            "Potion" },
+      _name_base{ dovah::form_type::reference,         "ObjectReference" },
+      _name_base{ dovah::form_type::missile,           "ObjectReference" },
+      _name_base{ dovah::form_type::arrow,             "ObjectReference" },
+      _name_base{ dovah::form_type::grenade,           "ObjectReference" },
+      _name_base{ dovah::form_type::beam,              "ObjectReference" },
+      _name_base{ dovah::form_type::flame,             "ObjectReference" },
+      _name_base{ dovah::form_type::cone,              "ObjectReference" },
+      _name_base{ dovah::form_type::barrier,           "ObjectReference" },
+      _name_base{ dovah::form_type::placed_hazard,     "ObjectReference" },
+      _name_base{ dovah::form_type::outfit,            "Outfit" },
+      _name_base{ dovah::form_type::package,           "Package" },
+      _name_base{ dovah::form_type::perk,              "Perk" },
+      _name_base{ dovah::form_type::projectile,        "Projectile" },
+      _name_base{ dovah::form_type::quest,             "Quest" },
+      _name_base{ dovah::form_type::race,              "Race" },
+      _name_base{ dovah::form_type::ragdoll,           "Ragdoll" },
+      _name_base{ dovah::form_type::reference_effect,  "ReferenceEffect" },
+      _name_base{ dovah::form_type::region,            "Region" },
+      _name_base{ dovah::form_type::relationship,      "Relationship" },
+      _name_base{ dovah::form_type::reverb_parameters, "Reverb Parameters" },
+      _name_base{ dovah::form_type::scene,             "Scene" },
+      _name_base{ dovah::form_type::script,            "Script" },
+      _name_base{ dovah::form_type::scroll,            "Scroll" },
+      _name_base{ dovah::form_type::shader_particle_geometry_data, "Shader Particle Geometry Data" },
+      _name_base{ dovah::form_type::shout,             "Shout" },
+      _name_base{ dovah::form_type::skill,             "Skill" },
+      _name_base{ dovah::form_type::soul_gem,          "Soul Gem" },
+      _name_base{ dovah::form_type::sound,             "Sound" },
+      _name_base{ dovah::form_type::sound_category,    "Sound Category" },
+      _name_base{ dovah::form_type::sound_descriptor,  "Sound Descriptor" },
+      _name_base{ dovah::form_type::sound_output_model, "Sound Output Model" },
+      _name_base{ dovah::form_type::spell,             "Spell" },
+      _name_base{ dovah::form_type::statik,            "Static" },
+      _name_base{ dovah::form_type::static_collection, "Static Collection" },
+      _name_base{ dovah::form_type::story_branch_node, "Story Manager Branch Node" },
+      _name_base{ dovah::form_type::story_event_node,  "Story Manager Event Node" },
+      _name_base{ dovah::form_type::story_quest_node,  "Story Manager Quest Node" },
+      _name_base{ dovah::form_type::talking_activator, "TalkingActivator" },
+      _name_base{ dovah::form_type::texture_set,       "TextureSet" },
+      _name_base{ dovah::form_type::topic,             "Topic" },
+      _name_base{ dovah::form_type::topic_info,        "TopicInfo" },
+      _name_base{ dovah::form_type::tree,              "Tree" },
+      _name_base{ dovah::form_type::voicetype,         "Voicetype" },
+      _name_base{ dovah::form_type::water_type,        "Water Type" },
+      _name_base{ dovah::form_type::weapon,            "Weapon" },
+      _name_base{ dovah::form_type::weather,           "Weather" },
+      _name_base{ dovah::form_type::word_of_power,     "Word of Power" },
+      _name_base{ dovah::form_type::worldspace,        "Worldspace" },
       //
       // New to Skyrim Special:
       //
-      _name{ dovah::form_type::lens_flare,        "Lens Flare" },
-      _name{ dovah::form_type::volumetric_lighting, "Volumetric Lighting" },
+      _name_base{ dovah::form_type::lens_flare,        "Lens Flare" },
+      _name_base{ dovah::form_type::volumetric_lighting, "Volumetric Lighting" },
    };
+
+   namespace {
+      //
+      // Error checking: Did we forget to include a form type?
+      // 
+      // We use a constexpr variable here so that you can hover over its value in 
+      // Visual Studio and quickly see the first form type that's missing a name.
+      //
+      constexpr auto _missing_form_type = []() -> dovah::form_type::type {
+         for (const auto& ft : dovah::form_types) {
+            bool found = false;
+            //
+            switch (ft.formType) {
+               //
+               // We shouldn't have to include names for form types that correspond 
+               // to niche file format details rather than "real" forms.
+               //
+               case dovah::form_type::none:
+               case dovah::form_type::file_header:
+               case dovah::form_type::file_record_group:
+               case dovah::form_type::tlod:
+               case dovah::form_type::toft:
+                  found = true;
+                  break;
+            }
+            if (found)
+               continue;
+            //
+            for (const auto& item : _name_bases) {
+               if (item.value == ft.formType) {
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               return (dovah::form_type::type)ft.formType;
+         }
+         return dovah::form_type::none;
+      }();
+      static_assert(_missing_form_type == dovah::form_type::none, "A form type is missing from the name list.");
+   }
+
+   const std::array _names = [](){
+      constexpr const size_t size = std::tuple_size_v<decltype(_name_bases)>;
+
+      std::array<_name, size> out;
+      for (size_t i = 0; i < size; ++i) {
+         out[i] = _name_bases[i];
+      }
+      return out;
+   }();
 }
 
 namespace editor_helpers {

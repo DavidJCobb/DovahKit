@@ -2005,7 +2005,8 @@ namespace vulkanDK {
          time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
       }
       //
-      bool perform_scene_entity_gpu_uploads = this->_execute_pending_scene_entity_gpu_uploads();
+      bool perform_scene_entity_gpu_uploads    = this->_execute_pending_scene_entity_gpu_uploads();
+      bool will_perform_nif_multithreaded_load = !this->loading.meshes.empty();
       //
       // If this frame-in-flight is still being used to render and present another swap 
       // chain image, wait for it to finish. We'll also advance the current frame counter 
@@ -2132,6 +2133,11 @@ namespace vulkanDK {
          this->state.fps.next_delta(this->state.last_frame_time);
       }
       this->_execute_pending_scene_entity_deletions();
+      if (will_perform_nif_multithreaded_load) {
+         if (this->hooks.nif_batches.on_background_use_complete) {
+            (this->hooks.nif_batches.on_background_use_complete)();
+         }
+      }
    }
 
 

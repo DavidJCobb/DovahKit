@@ -193,9 +193,7 @@ namespace vulkanDK {
       target.path = texture_path;
       target.lifetime.life_state = scene_entities::life_state::active_background_loading;
       //
-      auto& idx = this->loading.texture_next_batch_index;
-      this->loading.texture_batches[this->loading.texture_next_batch_index].push_back(texture_entity_index);
-      idx = (idx + 1) % this->loading.texture_batches.size();
+      this->loading.textures.enqueue(texture_entity_index);
    }
    #pragma endregion
 
@@ -210,7 +208,7 @@ namespace vulkanDK {
          qDebug("[vulkanDK::scene_renderer::add_bounds] Creating new bound at index %u.", index);
       }
       auto& item = this->scene.entities_of_type<rendered_bounds>()[index];
-      item.set_shader_params(min, max, pivot_transform);
+      item.set_size_and_transform(min, max, pivot_transform);
       
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_scene_entity_added_or_removed<rendered_bounds>();
@@ -461,18 +459,14 @@ namespace vulkanDK {
          nif->multi_thread_state.manager = this;
          nif->multi_thread_state.flags |= rendered_nif::loading_flag::load_queued;
 
-         auto item = asset_loading::queued_nif_load{
+         this->loading.meshes.enqueue(asset_loading::queued_nif_load{
             .form_data = {
                .loaded_form = &stub,
                .model = &model,
             },
             .nif = nif,
             .transform = glm_transform_from_beth(pos, rot, scale),
-         };
-
-         auto& idx = this->loading.mesh_next_batch_index;
-         this->loading.mesh_batches[this->loading.mesh_next_batch_index].push_back(item);
-         idx = (idx + 1) % this->loading.mesh_batches.size();
+         });
       }
       return nif;
    }
@@ -503,19 +497,13 @@ namespace vulkanDK {
    void surface_renderer::_execute_asset_multithreaded_load() {
       using texture_worker_t = asset_loading::worker_thread_for_textures;
 
-      bool any_meshes = false;
-      bool any_textures = false;
-      for (size_t i = 0; i < 4; ++i) {
-         if (!this->loading.mesh_batches[i].empty())
-            any_meshes = true;
-         if (!this->loading.texture_batches[i].empty())
-            any_textures = true;
-      }
+      bool any_meshes   = !this->loading.meshes.empty();
+      bool any_textures = !this->loading.textures.empty();
       if (!any_meshes && !any_textures) {
          return;
       }
 
-      using maybe_textures = std::array<std::optional<texture_worker_t>, 4>;
+      using maybe_textures = std::array<std::optional<texture_worker_t>, config::asset_loading_thread_count>;
 
       maybe_textures texture_workers;
       if (any_textures) {
@@ -533,16 +521,22 @@ namespace vulkanDK {
             worker.reset();
          }
          //
-         for (auto& list : this->loading.texture_batches)
-            list.clear();
-         this->loading.texture_next_batch_index = 0;
+         this->loading.textures.clear();
          //
+         for (auto& fif : this->swap_chain.frames_in_flight) {
+            fif.on_scene_entity_added_or_removed<loaded_texture>();
+         }
          any_textures = false;
       }
       if (any_meshes) {
          {
             using worker_t = asset_loading::worker_thread_for_nifs;
-            std::array<worker_t, 4> workers = { worker_t{*this, 0}, worker_t{*this, 1}, worker_t{*this, 2}, worker_t{*this, 3} };
+            std::array<worker_t, config::asset_loading_thread_count> workers = {
+               worker_t{*this, 0},
+               worker_t{*this, 1},
+               worker_t{*this, 2},
+               worker_t{*this, 3},
+            };
             for (auto& worker : workers)
                worker.start();
             for (size_t i = 0; i < workers.size(); ++i) {
@@ -552,11 +546,14 @@ namespace vulkanDK {
                // `rendered_mesh`es and `loaded_texture`s for them. We'll load the contents of those 
                // scene entities later.
                //
-               auto& list = this->loading.mesh_batches[i];
+               bool  any_succeeded = false;
+               auto& list = this->loading.meshes.batches[i];
                for (auto& item : list) {
                   if (!item.nif->did_load_succeed()) {
                      continue;
                   }
+                  any_succeeded = true;
+                  //
                   auto& model = *item.form_data.model;
                   if (model.supports_texture_swaps) {
                      item.nif->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)&model);
@@ -565,14 +562,14 @@ namespace vulkanDK {
                   item.nif->multi_thread_state.flags |= rendered_nif::loading_flag::generating_meshes;
                   asset_loading::reserve_meshes_for_nif(*this, *item.nif);
                }
+               if (any_succeeded) {
+                  if (this->hooks.nif_batches.on_background_loaded) {
+                     (this->hooks.nif_batches.on_background_loaded)();
+                  }
+               }
             }
          }
-         for (auto& batch : this->loading.texture_batches) {
-            if (!batch.empty()) {
-               any_textures = true;
-               break;
-            }
-         }
+         any_textures = !this->loading.textures.empty(); // texture loads may have been queued while loading NIFs
          if (any_textures) {
             for (size_t i = 0; i < texture_workers.size(); ++i) {
                auto& worker = texture_workers[i];
@@ -581,30 +578,30 @@ namespace vulkanDK {
          }
          {
             using worker_t = asset_loading::worker_thread_for_meshes;
-            std::array<worker_t, 4> workers = { worker_t{*this, 0}, worker_t{*this, 1}, worker_t{*this, 2}, worker_t{*this, 3} };
+            std::array<worker_t, config::asset_loading_thread_count> workers = {
+               worker_t{*this, 0},
+               worker_t{*this, 1},
+               worker_t{*this, 2},
+               worker_t{*this, 3},
+            };
             for (auto& worker : workers)
                worker.start();
             for (auto& worker : workers)
                worker.wait();
          }
          //
-         for (auto& list : this->loading.mesh_batches) {
-            for (auto& item : list) {
-               auto& mts = item.nif->multi_thread_state;
-               mts.flags &= ~rendered_nif::loading_flag::is_in_background_use;
-               mts.manager = nullptr;
-            }
-            list.clear();
-         }
-         this->loading.mesh_next_batch_index = 0;
+         this->loading.meshes.for_each_queue_item([this](auto& item) {
+            auto& mts = item.nif->multi_thread_state;
+            mts.flags &= ~rendered_nif::loading_flag::is_in_background_use;
+            mts.manager = nullptr;
+         });
+         this->loading.meshes.clear();
          //
          if (any_textures) {
             for (auto& worker : texture_workers)
                worker.value().wait();
             //
-            for (auto& list : this->loading.texture_batches)
-               list.clear();
-            this->loading.texture_next_batch_index = 0;
+            this->loading.textures.clear();
          }
       }
       for (auto& fif : this->swap_chain.frames_in_flight) {

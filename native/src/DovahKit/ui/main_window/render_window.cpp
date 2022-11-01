@@ -46,6 +46,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    view->setInputHandlingEnabled(true);
    //
    layout->addWidget(view, 1);
+   view->setFocus(); // default focus within this window
    {
       auto& worldedit = dovahkit::subsystems::worldedit::get_or_create();
       worldedit.set_target_view(*view);
@@ -121,45 +122,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    //
    {
       auto* button = new QToolButton(this->toolbar);
-      button->setText("Load NIF...");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         if (!DovahKitCore::get().has_data()) {
-            QMessageBox::critical(this, "Error", "Load data first, so we know where to pull game textures from.");
-            return;
-         }
-         auto path = QFileDialog::getOpenFileName(this, "Model", "", "NetImmerse Format model (*.nif)");
-         if (path.isEmpty())
-            return;
-         nifDK::file model;
-         {
-            QFile file(path);
-            if (!file.open(QIODevice::ReadOnly)) {
-               QMessageBox::critical(this, "Error", "Failed to open NIF file.");
-               return;
-            }
-            QByteArray data = file.readAll();
-            model.read((void*)data.constData(), data.size());
-            //
-            auto& error = model.read_error();
-            if (error.code != nifDK::default_notice_code) {
-               qDebug("NIF parsing failed with error code %08X.", error.code);
-               QMessageBox::critical(this, "Error", QString("NIF parsing failed with error code %1").arg(error.code, 8, 16, QChar('0')));
-               #if _DEBUG
-                  __debugbreak();
-               #endif
-               return;
-            }
-         }
-         qDebug("NIF parsed. Passing to surface_renderer...");
-         view->surfaceRenderer()->add_nif(model);
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
-      //
-      this->toolbar->addWidget(button);
-   }
-   //
-   {
-      auto* button = new QToolButton(this->toolbar);
       button->setText("Import base form...");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
          if (!DovahKitCore::get().has_data()) {
@@ -204,28 +166,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
                QMessageBox::critical(this, "Error", "No model path set for this base form.");
                return;
             }
-            nifDK::file model;
-            {
-               std::filesystem::path path = std::string("meshes") + (form_model->model_path[0] == '/' || form_model->model_path[0] == '\\' ? "" : "\\") + form_model->model_path;
-               std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset(path));
-               if (!file) {
-                  QMessageBox::critical(this, "Error", "Failed to open NIF file.");
-                  return;
-               }
-               model.read((void*)file->data(), file->size());
-               //
-               auto& error = model.read_error();
-               if (error.code != nifDK::default_notice_code) {
-                  qDebug("NIF parsing failed with error code %08X.", error.code);
-                  QMessageBox::critical(this, "Error", QString("NIF parsing failed with error code %1").arg(error.code, 8, 16, QChar('0')));
-                  #if _DEBUG
-                     __debugbreak();
-                  #endif
-                  return;
-               }
-            }
-            qDebug("NIF parsed. Passing to surface_renderer...");
-            view->surfaceRenderer()->add_nif(model);
+            view->surfaceRenderer()->add_nif(*form, *form_model);
          });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_FileIcon));
@@ -238,63 +179,6 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setText("Debug frustrums");
       QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
          view->surfaceRenderer()->debug_show_frustrums();
-      });
-      button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
-      //
-      this->toolbar->addWidget(button);
-   }
-   //
-   {
-      auto* button = new QToolButton(this->toolbar);
-      button->setText("Spawn shadow-caster debug scene");
-      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
-         auto* sr = view->surfaceRenderer();
-         //
-         nifDK::file model;
-         {
-            std::unique_ptr<dovah::bsa_archived_file> file(DovahKitCore::get().lookup_game_asset("meshes/dungeons/genkit/genkitrmcorin01.nif"));
-            if (!file) {
-               qDebug("Failed to open NIF file");
-               return;
-            }
-            model.read((void*)file->data(), file->size());
-            //
-            auto& error = model.read_error();
-            if (error.code != nifDK::default_notice_code) {
-               qDebug("Failed to parse NIF file\n - Error code %08X.", error.code);
-               #if _DEBUG
-                  __debugbreak();
-               #endif
-               return;
-            }
-         }
-         constexpr auto model_size = 256.0F;
-         for (int j = 0; j < 2; ++j) {
-            for (int i = 0; i < 4; ++i) {
-               constexpr auto rotations = std::array{ 270, 180, 0, 90 };
-               auto x = model_size * (i % 2) - (model_size / 2);
-               auto y = model_size * (i / 2) - (model_size / 2);
-               if (j) {
-                  x *= 2;
-                  y *= 2;
-               }
-               sr->add_nif(
-                  model,
-                  glm::vec3{ x, y, j ? 1.0F : ((model_size / 2) + 1.0F) },
-                  glm::vec3{ 0, 0, glm::radians<float>(rotations[i]) },
-                  j ? 2.0 : 1.0
-               );
-            }
-         }
-         //
-         sr->add_light({
-            .transform = vulkanDK::glm_transform_from_beth(glm::fvec3{ 0, 0, 256 }, glm::fvec3{ 0, 0, 0 }, 1.0F),
-            .color     = { 1.0F, 0.2F, 0.2F },
-            .fade      = 1.0F,
-            .fov       = glm::radians(90.0F),
-            .radius    = 1024.0F,
-            .type      = vulkanDK::rendered_light::light_type::spot_shadow,
-         });
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_DriveCDIcon));
       //

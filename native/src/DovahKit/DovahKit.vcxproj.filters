@@ -4379,6 +4379,18 @@
     <ClInclude Include="helpers\tuples\for_each_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\surface_renderer_hooks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\function_pointer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\asset_loading\load_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\config\asset_loading.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4868,7 +4880,7 @@
     <Text Include="editor\scripting\_docs\lua-managed resources.txt" />
     <Text Include="dovah\_docs\form versions 43 and 44.txt" />
     <Text Include="dovah\_docs\persistent cells.txt" />
-    <Text Include="dovah\form stub addenda.txt" />
+    <Text Include="dovah\_docs\form stub addenda.txt" />
     <Text Include="dovahscript\_docs\abstract.txt" />
     <Text Include="dovahscript\_docs\userdata wrappers.txt" />
     <Text Include="dovahscript\_docs\lifetime management.txt" />

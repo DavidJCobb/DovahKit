@@ -62,7 +62,7 @@ As of this writing, the (form_stub_addenda) struct has the following fields:
 === Notes =====================================================================
 
 A common use case  for form stub addenda,  seen above, is cases  in which given 
-two forms we need to know which was  loaded earlier and which was loaded later. 
+two forms, we need to know which was loaded earlier and which was loaded later. 
 It is technically  possible to determine this by comparing  the files that each 
 form was  loaded from,  and by comparing their offsets  within those  files, if 
 they came from the same file. However, this  would take a significant amount of 

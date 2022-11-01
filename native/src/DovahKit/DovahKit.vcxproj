@@ -845,6 +845,7 @@
     <ClInclude Include="helpers\dummy_of.h" />
     <ClInclude Include="helpers\dynamic_exact_cast.h" />
     <ClInclude Include="helpers\dynamic_fast_cast.h" />
+    <ClInclude Include="helpers\function_pointer.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
@@ -1043,6 +1044,7 @@
     <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h" />
     <QtMoc Include="ui\options_3d_input_window\localization.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
+    <ClInclude Include="vulkan\asset_loading\load_queue.h" />
     <ClInclude Include="vulkan\asset_loading\queued_nif_load.h" />
     <ClInclude Include="vulkan\asset_loading\reserve_meshes_for_nif.h" />
     <ClInclude Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.h" />
@@ -1053,6 +1055,7 @@
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\compute_shader.h" />
     <ClInclude Include="vulkan\config\antialiasing.h" />
+    <ClInclude Include="vulkan\config\asset_loading.h" />
     <ClInclude Include="vulkan\config\frames_in_flight.h" />
     <ClInclude Include="vulkan\config\grid.h" />
     <ClInclude Include="vulkan\config\is_righthanded.h" />
@@ -1131,6 +1134,7 @@
     <ClInclude Include="vulkan\spir_v_parser.h" />
     <ClInclude Include="vulkan\surface_renderer.h" />
     <ClInclude Include="vulkan\surface_renderer_descriptor_group.h" />
+    <ClInclude Include="vulkan\surface_renderer_hooks.h" />
     <ClInclude Include="vulkan\surface_support_info.h" />
     <ClInclude Include="vulkan\swap_chain_image.h" />
     <ClInclude Include="vulkan\vertex.h" />
@@ -1774,7 +1778,7 @@
     <Text Include="dovahscript\_docs\ui - model observers.txt" />
     <Text Include="dovahscript\_docs\userdata wrappers.txt" />
     <Text Include="dovahscript\_docs\zombie wrappers.txt" />
-    <Text Include="dovah\form stub addenda.txt" />
+    <Text Include="dovah\_docs\form stub addenda.txt" />
     <Text Include="dovah\_docs\asset paths.txt" />
     <Text Include="dovah\_docs\avenues for further research.txt" />
     <Text Include="dovah\_docs\basics.txt" />

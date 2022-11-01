@@ -395,6 +395,7 @@ CellList::CellList(QWidget* parent) : QTableView(parent) {
    this->setModel(proxy);
    this->verticalHeader()->setDefaultSectionSize(0);
    this->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+   this->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
    {
       auto* header = new DKHeaderView(Qt::Horizontal, this);
       header->setFlexResizeEnabled(true);

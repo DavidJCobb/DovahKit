@@ -20,6 +20,9 @@ namespace dovah {
       class Landscape;
    }
 }
+namespace vulkanDK {
+   class surface_renderer;
+}
 
 namespace dovahkit::subsystems {
    class worldedit;
@@ -50,6 +53,13 @@ namespace dovahkit::subsystems {
          //using refr_nif_ptr = std::unique_ptr<nifDK::file>;
          using refr_nif_ptr = std::unique_ptr<vulkanDK::rendered_nif, vulkanDK::rendered_nif::deleter>;
 
+         enum class bounds_source {
+            undefined,
+            nif,  // We generated bounds information using the NIF's vertices.
+            obnd, // We generated bounds information using the base form's OBND.
+            none, // We were unable to generate bounds information and fell back to a default size.
+         };
+
          struct selected_refr_info {
             selected_refr_info();
             selected_refr_info(form_stub* f, vulkanDK::rendered_bounds_handle h) : stub(f), handle(h) {}
@@ -63,6 +73,7 @@ namespace dovahkit::subsystems {
 
             form_stub* stub = nullptr;
             vulkanDK::rendered_bounds_handle handle;
+            bool update_on_nif_load = false;
          };
 
          struct refr {
@@ -105,7 +116,7 @@ namespace dovahkit::subsystems {
             } selection;
          } state;
 
-         vulkanDK::rendered_bounds_handle _make_bounds_for(refr&);
+         vulkanDK::rendered_bounds_handle _make_bounds_for(const refr&, bounds_source& out);
          refr* _get_loaded_refr_info(const dovah::form_stub&);
          cell* _get_loaded_cell_info(const dovah::form_stub&);
          void _unload_refr(refr&, bool handle_deselection = true); // does not remove the refr from the loaded refs list; caller must do that
@@ -118,7 +129,9 @@ namespace dovahkit::subsystems {
 
          void _center_camera_on_cell(dovah::form_stub&);
 
+         static void _on_renderer_nif_batch_loaded();
          void _on_renderer_attached();
+         void _on_renderer_loss_imminent(vulkanDK::surface_renderer&);
          void _on_renderer_lost();
          void _update_default_land_textures();
 
@@ -137,6 +150,7 @@ namespace dovahkit::subsystems {
          bool is_cell_loaded(const dovah::form_stub*) const;
          bool is_current_cell(const dovah::form_stub*) const;
          bool is_ref_loaded(const dovah::form_stub*) const;
+         bool is_ref_selected(const dovah::form_stub*) const;
 
          inline size_t cell_grid_size() const noexcept {
             return this->loaded_cells.length();
@@ -151,6 +165,7 @@ namespace dovahkit::subsystems {
          void crossedIntoExteriorCell(dovah::form_stub* cell); // use if you need to know what cell is at the center of the loaded grid
          void refSelected(dovah::form_stub&);
          void refDeselected(dovah::form_stub&);
+         void refSelectionChanged(dovah::form_stub&, bool selected);
          void statusBarMessage(const QString& message, int display_time = 0);
 
       public slots:

@@ -18,10 +18,16 @@ namespace vulkanDK {
 
          frame_drawing_data_type frame_drawing_data;
 
+      protected:
+         glm::vec3 _min;
+         glm::vec3 _max;
+         glm::mat4 _pivot_transform;
+
+      public:
          void mark_for_delete();
          void reset();
 
-         void set_shader_params(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
-         void set_shader_params(const frame_drawing_data_type&);
+         void set_size(const glm::vec3& min, const glm::vec3& max);
+         void set_size_and_transform(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
    };
 }

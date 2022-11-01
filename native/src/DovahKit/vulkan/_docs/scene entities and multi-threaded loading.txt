@@ -90,6 +90,8 @@ The load queues are processed as follows.
 
 === REVISIONS NEEDED ==========================================================
 
+// TODO OUTDATED
+
 The use of QObjects may not be appropriate here.  The intention was as follows:
 
  - Offer a simple way to register for notifications when a NIF finishes loading 

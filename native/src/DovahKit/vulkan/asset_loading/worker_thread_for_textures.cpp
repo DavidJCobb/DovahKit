@@ -83,7 +83,7 @@ namespace vulkanDK::asset_loading {
 
    void worker_thread_for_textures::run() {
       auto& list  = this->owner.scene.entities_of_type<loaded_texture>();
-      auto& queue = this->owner.loading.texture_batches[this->index];
+      auto& queue = this->owner.loading.textures.batches[this->index];
       for (auto index : queue) {
          this->_load_single_texture(list[index]);
       }

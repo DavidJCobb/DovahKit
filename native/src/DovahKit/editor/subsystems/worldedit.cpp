@@ -101,11 +101,11 @@ namespace dovahkit::subsystems {
             return;
          }
       });
-      static_assert(!require_complete_implementation, "TODO: Hook our own selected/selected signals, and update selection effects in the renderer as appropriate.");
-         static_assert(!require_complete_implementation, "TODO: Add code to the renderer to show OBBs on specified meshes.");
    }
 
-   vulkanDK::rendered_bounds_handle worldedit::_make_bounds_for(refr& item) {
+   vulkanDK::rendered_bounds_handle worldedit::_make_bounds_for(const refr& item, bounds_source& src) {
+      src = bounds_source::undefined;
+      //
       vulkanDK::rendered_bounds_handle handle;
       if (!this->target_view)
          return {};
@@ -121,12 +121,14 @@ namespace dovahkit::subsystems {
          auto& bnd = item.nif->bounds;
          bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
          bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
+         src = bounds_source::nif;
       } else {
          //
          // TODO: Pull OBND and use it.
          //
          bounds_min = { -128, -128, -128 };
          bounds_max = {  128,  128,  128 };
+         src = bounds_source::none;
       }
       return sr->add_bounds(bounds_min, bounds_max, transform);
    }
@@ -408,6 +410,7 @@ namespace dovahkit::subsystems {
             coc_pos = { pos.x, pos.y, pos.z };
             coc_rot = { rot.x, rot.y, rot.z };
          } else {
+            ++refr_count;
             centroid += glm::vec3{ pos.x, pos.y, pos.z };
          }
       }
@@ -436,8 +439,40 @@ namespace dovahkit::subsystems {
       }
    }
 
+   /*static*/ void worldedit::_on_renderer_nif_batch_loaded() {
+      glm::vec3 bounds_min;
+      glm::vec3 bounds_max;
+
+      auto& self = worldedit::get();
+      for (auto& item : self.state.selection.refs) {
+         if (item.update_on_nif_load) {
+            auto* ref_info = self._get_loaded_refr_info(*item.stub);
+            assert(ref_info);
+
+            auto& bnd  = ref_info->nif->bounds;
+            bounds_min = { bnd.min.x, bnd.min.y, bnd.min.z };
+            bounds_max = { bnd.max.x, bnd.max.y, bnd.max.z };
+
+            item.handle->set_size(bounds_min, bounds_max);
+         }
+      }
+   }
    void worldedit::_on_renderer_attached() {
       this->_update_default_land_textures();
+      {
+         if (!this->target_view)
+            return;
+         auto* sr = this->target_view->surfaceRenderer();
+         if (!sr)
+            return;
+         auto& hooks = sr->get_hooks();
+         hooks.nif_batches.on_background_use_complete = &_on_renderer_nif_batch_loaded;
+      }
+   }
+   void worldedit::_on_renderer_loss_imminent(vulkanDK::surface_renderer& sr) {
+      auto& hooks = sr.get_hooks();
+      if (auto& hook = hooks.nif_batches.on_background_use_complete; hook == &_on_renderer_nif_batch_loaded)
+         hook = nullptr;
    }
    void worldedit::_on_renderer_lost() {
       //
@@ -813,6 +848,7 @@ namespace dovahkit::subsystems {
          this->_on_renderer_attached();
       }
       //
+      QObject::connect(&view, &DKVulkanView::rendererErrorKillImminent, this, &worldedit::_on_renderer_loss_imminent);
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &worldedit::_on_renderer_lost);
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          DK3DInputHandler::get().setTargetView(nullptr);
@@ -1099,10 +1135,19 @@ namespace dovahkit::subsystems {
             return true;
       return false;
    }
+   bool worldedit::is_ref_selected(const dovah::form_stub* ref) const {
+      for (auto& item : this->state.selection.refs)
+         if (item.stub == ref)
+            return true;
+      return false;
+   }
 
    void worldedit::setRefSelectionState(dovah::form_stub& stub, bool state) {
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)
+         //
+         // Ref isn't loaded. Ignore attempts to affect its selection state.
+         //
          return;
       auto& list = this->state.selection.refs;
       auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
@@ -1113,25 +1158,40 @@ namespace dovahkit::subsystems {
          if (list.size() >= max_selected_refr_count) {
             return;
          }
-         list.push_back({ &stub, _make_bounds_for(*ref_info) });
+         bounds_source source_info;
+         list.push_back({ &stub, _make_bounds_for(*ref_info, source_info) });
+         if (source_info != bounds_source::undefined && source_info != bounds_source::nif) {
+            list.back().update_on_nif_load = true;
+         }
          emit this->refSelected(stub);
+         emit this->refSelectionChanged(stub, true);
       } else {
          list.erase(it);
          emit this->refDeselected(stub);
+         emit this->refSelectionChanged(stub, false);
       }
    }
    void worldedit::toggleRefSelectionState(dovah::form_stub& stub) {
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)
+         //
+         // Ref isn't loaded. Ignore attempts to affect its selection state.
+         //
          return;
       auto& list = this->state.selection.refs;
       auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
       if (it == list.end()) {
-         list.push_back({ &stub, _make_bounds_for(*ref_info) });
+         bounds_source source_info;
+         list.push_back({ &stub, _make_bounds_for(*ref_info, source_info) });
+         if (source_info != bounds_source::undefined && source_info != bounds_source::nif) {
+            list.back().update_on_nif_load = true;
+         }
          emit this->refSelected(stub);
+         emit this->refSelectionChanged(stub, true);
       } else {
          list.erase(it);
          emit this->refDeselected(stub);
+         emit this->refSelectionChanged(stub, false);
       }
    }
    void worldedit::deselectAllRefs() {
@@ -1144,8 +1204,10 @@ namespace dovahkit::subsystems {
          deselected[i] = list[i].stub;
       list.clear();
       //
-      for (auto* stub : deselected)
+      for (auto* stub : deselected) {
          emit this->refDeselected(*stub);
+         emit this->refSelectionChanged(*stub, false);
+      }
    }
    void worldedit::replaceRefSelection(dovah::form_stub& stub) {
       this->deselectAllRefs();

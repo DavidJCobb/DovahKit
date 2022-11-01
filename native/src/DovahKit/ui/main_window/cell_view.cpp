@@ -1,15 +1,16 @@
 #include "cell_view.h"
+#include <type_traits>
 #include <QMenu>
-#include "../../helpers/qt/strings.h"
-#include "../../dovah/form_stub.h"
-#include "../../editor/core.h"
-#include "../../editor/open_window_for_form.h"
+#include "helpers/qt/strings.h"
+#include "dovah/form_stub.h"
+#include "editor/core.h"
+#include "editor/open_window_for_form.h"
 #include "../generic/FormsOfTypeCombobox.h"
 #include "editor/subsystems/worldedit.h"
 
 CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
-   dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
+   auto& worldedit = dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
    //
    this->ui.worldspace->addFormType(dovah::form_type::worldspace);
    this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
@@ -29,6 +30,10 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       this->ui.referenceList->setFormTypeFilter(ft);
    });
    QObject::connect(this->ui.cellList, &CellList::currentCellChanged, this, [this](const dovah::form_stub* cell) {
+      //
+      // When Cell View's selected cell changes, display its name as a heading above 
+      // the list of refs in the selected cell.
+      //
       auto    widget = this->ui.selectedCellName;
       QString text;
       if (cell) {
@@ -150,6 +155,133 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
             menu.exec(opener->mapToGlobal(pos));
          });
       #pragma endregion
+   #pragma endregion
+   //
+   #pragma region Synchronize Cell View and Worldedit selections
+   {
+      // ensure we don't cause Qt signal feedback loops with Cell View triggering 
+      // changes to Worldedit triggering changes to Cell View triggering changes 
+      // to Worldedit...
+      static bool is_synchronizing = false;
+      //
+      // VOCABULARY:
+      // 
+      // peek
+      //    Using Cell View to view the list of refs in a cell that isn't loaded 
+      //    in Worldedit (i.e. a cell that isn't in the Render Window).
+      // 
+      // -------------------------------------------------------------------------
+      // 
+      // CASE 1:
+      // Worldedit has refs selected in Cell A. We peeked Cell B, and then brought 
+      // Cell View back to Cell A. We should select, in Cell View, all refs that 
+      // are selected within Worldedit.
+      //
+      QObject::connect(this->ui.cellList, &CellList::currentCellChanged, this, [this](const dovah::form_stub* cell) {
+         if (is_synchronizing)
+            return;
+         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         if (!worldedit.is_cell_loaded(cell))
+            return;
+         auto* sel_model = this->ui.referenceList->selectionModel();
+         sel_model->clear();
+         //
+         is_synchronizing = true;
+         for (auto* stub : this->ui.referenceList->formStubs()) {
+            if (worldedit.is_ref_selected(stub)) {
+               this->ui.referenceList->selectStub(stub, QItemSelectionModel::SelectionFlag::Select);
+            }
+         }
+         is_synchronizing = false;
+      });
+      //
+      // CASE 2:
+      // We peeked Cell B while Cell A was loaded in Worldedit. Worldedit was then 
+      // used to load Cell B. We should select, in Worldedit, all refs that are 
+      // selected within Cell View.
+      //
+      QObject::connect(&worldedit, &std::decay_t<decltype(worldedit)>::cellLoaded, [this](dovah::form_stub& cell) {
+         if (is_synchronizing)
+            return;
+         auto* window_cell = this->ui.cellList->formStub();
+         if (window_cell != &cell)
+            return;
+         is_synchronizing = true;
+         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         for (auto* stub : this->ui.referenceList->selectedStubs()) {
+            worldedit.setRefSelectionState(*stub, true);
+         }
+         is_synchronizing = false;
+      });
+      //
+      // CASE 3:
+      // The selection is modified within Cell View.
+      //
+      QObject::connect(this->ui.referenceList, &CellRefList::selectionChanged, [this](const auto& selected, const auto& deselected) {
+         if (is_synchronizing)
+            return;
+         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         if (!selected.empty()) {
+            auto* window_cell = this->ui.cellList->formStub();
+            if (!worldedit.is_cell_loaded(window_cell)) {
+               //
+               // CASE 3a:
+               // The selection in Cell View is modified while peeking a cell that 
+               // isn't loaded in Worldeit. We should wholly replace Worldedit's 
+               // selection.
+               //
+               is_synchronizing = true;
+               worldedit.deselectAllRefs();
+               is_synchronizing = false;
+               return;
+            }
+         }
+         //
+         // CASE 3b:
+         // The selection in Cell View is modified while it's listing the refs in 
+         // a cell that Worldedit has loaded. We should synchronize changes to the 
+         // selection -- selections and deselections.
+         //
+         is_synchronizing = true;
+         for(auto* stub : selected)
+            if (stub)
+               worldedit.setRefSelectionState(*stub, true);
+         for (auto* stub : deselected)
+            if (stub)
+               worldedit.setRefSelectionState(*stub, false);
+         is_synchronizing = false;
+      });
+      //
+      // CASE 4:
+      // The selection is modified within Worldedit.
+      //
+      QObject::connect(&worldedit, &std::decay_t<decltype(worldedit)>::refSelectionChanged, [this](dovah::form_stub& refr, bool selected) {
+         if (is_synchronizing)
+            return;
+         auto* cell = refr.get_parent_form();
+         if (!cell)
+            return;
+         auto* window_cell = this->ui.cellList->formStub();
+         if (window_cell != cell) {
+            //
+            // CASE 4a:
+            // The selection in Worldedit is modified while peeking a cell that 
+            // isn't loaded in Worldeit. We should clear Cell View's selection.
+            //
+            this->ui.referenceList->selectStub(nullptr, QItemSelectionModel::SelectionFlag::Clear);
+            return;
+         }
+         //
+         // CASE 4b:
+         // The selection in Worldedit is modified while Cell View is listing the 
+         // refs in a cell that Worldedit has loaded. We should synchronize this 
+         // selection change into Cell View.
+         //
+         is_synchronizing = true;
+         this->ui.referenceList->selectStub(&refr, selected ? QItemSelectionModel::SelectionFlag::Select : QItemSelectionModel::SelectionFlag::Deselect);
+         is_synchronizing = false;
+      });
+   }
    #pragma endregion
    //
    this->setAllEnableStates(false);

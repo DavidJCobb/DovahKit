@@ -10,6 +10,7 @@
 #include "./_memory.h"
 #include "./_util.h"
 #include "./helpers/debug_helper_typeof.h"
+#include "./asset_loading/load_queue.h"
 #include "./asset_loading/queued_nif_load.h"
 #include "./config/frames_in_flight.h"
 #include "./abstract_renderer.h"
@@ -24,6 +25,7 @@
 #include "./scene_entity_handle.h"
 #include "./swap_chain_image.h"
 #include "./surface_renderer_descriptor_group.h"
+#include "./surface_renderer_hooks.h"
 //
 #include "helpers/constexpr_optional_type.h"
 //
@@ -66,6 +68,8 @@ namespace vulkanDK {
       public:
          surface_renderer(DKVulkanInstance&, DKVulkanView*);
          ~surface_renderer();
+
+         using nif_background_completion_handler_t = void(*)();
 
          static constexpr graphics_shader::id_type oit_composite_shader_id    = "OITCompo";
          static constexpr graphics_shader::id_type scene_background_shader_id = "ScnBgClr";
@@ -123,6 +127,7 @@ namespace vulkanDK {
             bool visible = false;
             WId  last_id = {};
          } widget;
+         surface_renderer_hooks hooks;
          //
          VkExtent2D surface_extent; // last extent we set ourselves up for
          union _ {
@@ -175,10 +180,8 @@ namespace vulkanDK {
             } oit;
          } canvas;
          struct {
-            std::array<std::vector<asset_loading::queued_nif_load>, 4> mesh_batches;
-            size_t mesh_next_batch_index = 0;
-            std::array<std::vector<size_t>, 4> texture_batches;
-            size_t texture_next_batch_index = 0;
+            asset_loading::load_queue<asset_loading::queued_nif_load> meshes;
+            asset_loading::load_queue<size_t> textures;
          } loading;
          struct {
             command_buffer commands;
@@ -286,6 +289,9 @@ namespace vulkanDK {
          void _queue_mesh_vib_creation(rendered_mesh&);
       public:
 
+         // Outside systems can listen for events on the surface renderer using this:
+         constexpr surface_renderer_hooks& get_hooks() { return this->hooks; }
+
          #pragma region Functions in file: surface_renderer.scene_entity_mgmt.cpp
             [[nodiscard]] size_t add_dds_texture(QString texture_path); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"
             void lookup_or_reserve_dds_texture(QString texture_path, size_t& texture_entity_index, bool& already_existed);
@@ -314,6 +320,7 @@ namespace vulkanDK {
             );
             void remove_nif(rendered_nif& model);
 
+            void _nif_multithreaded_load_pending();
             void _execute_asset_multithreaded_load();
 
             [[nodiscard]] bool _execute_pending_scene_entity_gpu_uploads(); // returns true if any commands are recorded

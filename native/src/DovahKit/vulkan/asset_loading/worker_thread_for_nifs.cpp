@@ -39,7 +39,7 @@ namespace vulkanDK::asset_loading {
    }
 
    void worker_thread_for_nifs::run() {
-      auto& list = this->owner.loading.mesh_batches[this->index];
+      auto& list = this->owner.loading.meshes.batches[this->index];
       for (auto& item : list) {
          if (item.nif->is_cancel_requested()) {
             item.nif->multi_thread_state.flags |= rendered_nif::loading_flag::load_canceled;

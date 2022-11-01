@@ -1,24 +1,24 @@
 #include "cell_ref_list.h"
 #include <QHeaderView>
-#include "../../../helpers/qt/strings.h"
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/form_identifiers_to_string.h"
-#include "../../../editor/open_window_for_form.h"
-#include "../../../dovah/form_stub.h"
-#include "../../../dovah/form_stub_helpers.h"
+#include "helpers/qt/strings.h"
+#include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/helpers/form_type_name_to_string.h"
+#include "editor/open_window_for_form.h"
+#include "dovah/form_stub.h"
+#include "dovah/form_stub_helpers.h"
 
 CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
    this->update();
 }
 dovah::form_type_t CellRefListModelItem::formType() const noexcept {
-   if (this->base)
-      return this->base->formType;
-   return dovah::form_type::none;
+   return this->baseType;
 }
 void CellRefListModelItem::update() {
    auto stub = this->stub;
    this->base = dovah::form_stub_helpers::get_base_form(stub);
+   this->baseType = this->base ? this->base->formType : dovah::form_type::none;
    //
    this->editorID = QString::fromUtf8(stub->get_editor_id());
    if (this->editorID.isEmpty() && this->base)
@@ -138,9 +138,6 @@ int CellRefListModel::rowCount(const QModelIndex& parent) const {
       return 0;
    return this->children.size();
 }
-int CellRefListModel::columnCount(const QModelIndex& item) const {
-   return 3;
-}
 Qt::ItemFlags CellRefListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
@@ -160,41 +157,47 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
          [[fallthrough]];
       case Qt::DisplayRole:
          switch (column) {
-            case 0:
+            case ColumnName:
                return tr("%1%2")
                   .arg(item->editorID)
                   .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
-            case 1:
+            case ColumnFormID:
                return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
-            case 2:
-               return editor_helpers::form_signature_to_string(item->stub);
+            case ColumnFormType:
+               return editor_helpers::form_type_name_to_string(item->baseType);
          }
          break;
       case Qt::DecorationRole:
-         if (column == 0) {
+         if (column == ColumnName) {
             //
             // TODO: icons per form type
             //
          }
          break;
       case Qt::ForegroundRole:
-         if (column == 1 && item->is_injected) // show injected forms' IDs in color
+         if (column == ColumnFormID && item->is_injected) // show injected forms' IDs in color
             return QColor::fromRgb(0x309000);
          break;
-      case Qt::UserRole: // used for sorting
+      case Qt::TextAlignmentRole:
+         if (column == ColumnFormType)
+            return (Qt::Alignment::Int)(Qt::AlignBaseline | Qt::AlignHCenter);
+         break;
+      case SortingRole: // used for sorting
          switch (column) {
-            case 0: return item->editorID;
-            case 1: return item->formID;
-            case 2: return item->formType();
+            case ColumnName:     return item->editorID;
+            case ColumnFormID:   return item->formID;
+            case ColumnFormType: return editor_helpers::form_type_name_to_string(item->baseType);
          }
          break;
-      case Qt::UserRole + 1: // used for filtering
+      case FilteringRole: // used for filtering
          switch (column) {
-            case 0: return item->editorID;
-            case 1: return editor_helpers::form_id_to_string(item->formID);
-            case 2: return QVariant();
+            case ColumnName:     return item->editorID;
+            case ColumnFormID:   return editor_helpers::form_id_to_string(item->formID);
+            case ColumnFormType: return QVariant();
          }
          break;
+      case FormStubRole:
+         return QVariant::fromValue<void*>(const_cast<dovah::form_stub*>(item->stub));
    }
    return QVariant();
 }
@@ -258,6 +261,16 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
    queue.clear();
    this->endInsertRows();
 }
+
+QModelIndex CellRefListModel::index(const form_stub& stub) const {
+   const auto& list = this->children;
+   for (size_t i = 0; i < list.size(); ++i) {
+      const auto& item = list[i];
+      if (item->stub == &stub)
+         return this->index((int)i, 0, {});
+   }
+   return {};
+}
 #pragma endregion
 
 #pragma region CellRefListModelProxy
@@ -293,22 +306,48 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
    this->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+   this->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
    //
    auto header  = this->horizontalHeader();
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
    header->resizeSection(1, metrics.boundingRect("00000000").width() * 1.5F + 4);
-   header->resizeSection(2, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-   header->setSectionResizeMode(0, QHeaderView::Stretch);
+   header->resizeSection(2, metrics.boundingRect("Weapon").width() * 1.5F + 4);
+   header->setSectionResizeMode(0, QHeaderView::Interactive);
    header->setSectionResizeMode(1, QHeaderView::Interactive);
    header->setSectionResizeMode(2, QHeaderView::Interactive);
+   header->setStretchLastSection(false);
 
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto stub = this->formStub();
       if (!stub)
          return;
       open_edit_dialog_for_form(stub, this);
+   });
+   QObject::connect(this->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
+      std::vector<dovah::form_stub*> sel;
+      std::vector<dovah::form_stub*> desel;
+
+      auto* model = this->model();
+
+      auto proxy_qmi_list = selected.indexes();
+      sel.reserve(proxy_qmi_list.size());
+      for (const auto& qmi : proxy_qmi_list) {
+         auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+         if (stub)
+            sel.push_back(stub);
+      }
+      
+      proxy_qmi_list = deselected.indexes();
+      desel.reserve(proxy_qmi_list.size());
+      for (const auto& qmi : proxy_qmi_list) {
+         auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+         if (stub)
+            desel.push_back(stub);
+      }
+
+      emit this->selectionChanged(sel, desel);
    });
    
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
@@ -331,6 +370,20 @@ void CellRefList::refilterModelByText(const QString& text) {
    if (!wrapper)
       return;
    wrapper->setFilterFixedString(text);
+}
+void CellRefList::selectStub(dovah::form_stub* stub, QItemSelectionModel::SelectionFlags flags) {
+   auto* sm = this->selectionModel();
+   if (!sm)
+      return;
+   if (!stub) {
+      if (flags & QItemSelectionModel::SelectionFlag::Clear) {
+         sm->clear();
+      }
+      return;
+   }
+   auto inner_qmi = this->unwrappedModel()->index(*stub);
+   auto proxy_qmi = this->proxyModel()->mapFromSource(inner_qmi);
+   sm->select(QItemSelection(proxy_qmi, proxy_qmi.siblingAtColumn(model_type::ColumnCount - 1)), flags);
 }
 void CellRefList::textFilterChanged() {
    auto& timer = *this->_filterThrottle;
@@ -362,6 +415,7 @@ void CellRefList::setFormTypeFilter(dovah::form_type_t ft) {
       return;
    proxy->setFormType(ft);
 }
+
 dovah::bare_form_id_t CellRefList::formID() const noexcept {
    const auto* item = this->_getCurrentItem();
    if (!item || !item->stub)
@@ -374,6 +428,37 @@ dovah::form_stub* CellRefList::formStub() const noexcept {
       return nullptr;
    return const_cast<dovah::form_stub*>(item->stub);
 }
+std::vector<dovah::form_stub*> CellRefList::formStubs() const {
+   std::vector<dovah::form_stub*> out;
+
+   auto* model  = this->model();
+   int   rows   = model->rowCount();
+   out.reserve(rows);
+   for (int i = 0; i < rows; ++i) {
+      auto  qmi  = model->index(i, 0);
+      auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+      if (stub)
+         out.push_back(stub);
+   }
+   return out;
+}
+std::vector<dovah::form_stub*> CellRefList::selectedStubs() const {
+   std::vector<dovah::form_stub*> out;
+
+   auto* model  = this->model();
+   auto  select = this->selectionModel()->selection().indexes();
+   if (select.size() <= 0)
+      return out;
+
+   out.reserve(select.size());
+   for (const auto& qmi : select) {
+      auto* stub = (dovah::form_stub*) model->data(qmi, model_type::FormStubRole).value<void*>();
+      if (stub)
+         out.push_back(stub);
+   }
+   return out;
+}
+
 void CellRefList::rebuildModel() {
    auto m = this->unwrappedModel();
    if (!m)
