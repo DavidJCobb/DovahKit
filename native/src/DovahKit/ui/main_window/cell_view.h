@@ -9,10 +9,10 @@ class CellViewWindow : public QWidget {
    //
    public:
       CellViewWindow(QWidget* parent = Q_NULLPTR);
-      //
+      
    private slots:
       void setAllEnableStates(bool);
-      //
+      
    private:
       Ui::CellViewWindow ui;
       struct {
@@ -27,6 +27,6 @@ class CellViewWindow : public QWidget {
          QAction* showUseInfo = nullptr;
          QAction* deleteForm  = nullptr;
       } refContextMenu;
-      //
+      
       void _setupContextMenu(QTableView*);
 };

@@ -281,6 +281,25 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          this->ui.referenceList->selectStub(&refr, selected ? QItemSelectionModel::SelectionFlag::Select : QItemSelectionModel::SelectionFlag::Deselect);
          is_synchronizing = false;
       });
+      //
+      // CASE 5:
+      // Cell View's ref list is filtered (by form type or by name). Worldedit's 
+      // selection is changed to include a ref currently filtered out from display 
+      // in Cell View. Then, Cell View is unfiltered. We need to select the ref at 
+      // that time.
+      //
+      QObject::connect(this->ui.referenceList, &CellRefList::filterChanged, [this]() {
+         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         if (!worldedit.is_cell_loaded(this->ui.cellList->formStub()))
+            return;
+         auto list = worldedit.get_selected_refs();
+         
+         is_synchronizing = true;
+         this->ui.referenceList->selectStub(nullptr, QItemSelectionModel::SelectionFlag::Clear);
+         for(auto* stub : list)
+            this->ui.referenceList->selectStub(stub, QItemSelectionModel::SelectionFlag::Select);
+         is_synchronizing = false;
+      });
    }
    #pragma endregion
    //

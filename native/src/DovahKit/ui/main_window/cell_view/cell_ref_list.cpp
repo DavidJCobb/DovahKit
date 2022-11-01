@@ -370,6 +370,7 @@ void CellRefList::refilterModelByText(const QString& text) {
    if (!wrapper)
       return;
    wrapper->setFilterFixedString(text);
+   emit this->filterChanged();
 }
 void CellRefList::selectStub(dovah::form_stub* stub, QItemSelectionModel::SelectionFlags flags) {
    auto* sm = this->selectionModel();
@@ -414,6 +415,7 @@ void CellRefList::setFormTypeFilter(dovah::form_type_t ft) {
    if (!proxy)
       return;
    proxy->setFormType(ft);
+   emit this->filterChanged();
 }
 
 dovah::bare_form_id_t CellRefList::formID() const noexcept {
