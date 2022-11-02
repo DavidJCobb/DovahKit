@@ -1,5 +1,6 @@
 #include "cell_ref_list.h"
 #include <QHeaderView>
+#include <QMetaMethod>
 #include "helpers/qt/strings.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
@@ -360,7 +361,8 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
       this->setSelectionModel(nsm);
    }
    QObject::connect((QItemSelectionModelEx*)this->selectionModel(), &QItemSelectionModelEx::userInitiatedSelectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
-      if (this->receivers(SIGNAL(userInitiatedSelectionChanged)) <= 0)
+      static const QMetaMethod _signal = QMetaMethod::fromSignal(&CellRefList::userInitiatedSelectionChanged);
+      if (!this->isSignalConnected(_signal))
          //
          // We should only do this work if something is actually connected to the signal we plan on emitting.
          //
@@ -390,7 +392,8 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
       emit this->userInitiatedSelectionChanged(sel, desel);
    });
    QObject::connect(this->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
-      if (this->receivers(SIGNAL(selectionChanged)) <= 0)
+      static const QMetaMethod _signal = QMetaMethod::fromSignal(&CellRefList::selectionChanged);
+      if (!this->isSignalConnected(_signal))
          //
          // We should only do this work if something is actually connected to the signal we plan on emitting.
          //

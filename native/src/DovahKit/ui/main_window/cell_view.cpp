@@ -13,6 +13,32 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    auto& editor    = DovahKitCore::get();
    auto& worldedit = dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
    //
+   {  // Splitter
+      //this->ui.splitter->setHandleWidth(2);
+      //this->ui.splitter->setStyleSheet("QSplitter::handle { border:1px solid palette(mid);border-top-width:0;border-bottom-width:0; }");
+      this->ui.splitter->setHandleWidth(1);
+      this->ui.splitter->setStyleSheet("QSplitter::handle { background:palette(mid); }");
+   }
+   {  // Layout
+      QTimer::singleShot(0, [this]() { // delay until initial size calcs are (hopefully) completed
+         // Make the top sections of each pane match row heights
+         QGridLayout* cell_layout = this->ui.cellTopElements;
+         QGridLayout* refr_layout = this->ui.refrTopElements;
+
+         int rows = std::min(cell_layout->rowCount(), refr_layout->rowCount());
+         for (int i = 0; i < rows; ++i) {
+            auto* a = cell_layout->itemAtPosition(i, 0);
+            auto* b = refr_layout->itemAtPosition(i, 0);
+            if (!a || !b)
+               continue;
+            auto ah = a->geometry().height();
+            auto bh = b->geometry().height();
+            cell_layout->setRowMinimumHeight(i, std::max(ah, bh));
+            refr_layout->setRowMinimumHeight(i, std::max(ah, bh));
+         }
+      });
+   }
+   //
    this->ui.worldspace->addFormType(dovah::form_type::worldspace);
    this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
    this->ui.worldspace->setAllowNone(true);
@@ -255,7 +281,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
                //
                // CASE 3a:
                // The selection in Cell View is modified while peeking a cell that 
-               // isn't loaded in Worldeit. We should wholly replace Worldedit's 
+               // isn't loaded in Worldedit. We should wholly replace Worldedit's 
                // selection.
                //
                is_synchronizing = true;
