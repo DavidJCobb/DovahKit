@@ -1,13 +1,13 @@
 #pragma once
 #include "tool_options_base.h"
 #include <QLineEdit>
-#include "../../../dk3d/tools/debug_placeholder.h"
+#include "editor/subsystems/worldinput/tools/debug_placeholder.h"
 
 namespace DK3DToolOptions {
    class DebugPlaceholder : public Base {
       Q_OBJECT;
       public:
-         using options_type = DK3D::tools::debug_placeholder::options;
+         using tool_type = dovahkit::subsystems::worldinput::tools::debug_placeholder;
       public:
          DebugPlaceholder(QWidget* parent = nullptr);
 
@@ -16,7 +16,7 @@ namespace DK3DToolOptions {
             QLineEdit* textbox = nullptr;
          } ui;
 
-         virtual void _readOptions(const DK3D::tools::opaque_option_union&) override;
-         virtual void _writeOptions(DK3D::tools::opaque_option_union&) override;
+         virtual void _readOptions(const opaque_option_union&) override;
+         virtual void _writeOptions(opaque_option_union&) override;
    };
 }

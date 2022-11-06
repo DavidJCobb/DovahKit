@@ -1,11 +1,13 @@
 #include "localization.h"
-#include "dk3d/tools/_all.h"
+#include "editor/subsystems/worldinput/tools/_all.h"
 
-/*static*/ QString DK3DLocalization::stringify_input(const DK3D::inputs::bound_input& bi) {
+using namespace dovahkit::subsystems::worldinput;
+
+/*static*/ QString DKWorldinputLocalization::stringify_input(const inputs::bound_input& bi) {
    if (bi.is_button()) {
       QString mod;
       switch (bi.button.press_type) {
-         using _ = DK3D::button_press_type;
+         using _ = button_press_type;
          case _::tap:
             mod = tr("Tap", "boolean input mod");
             break;
@@ -19,55 +21,55 @@
       QString button;
       if (!bi.button.key.empty()) {
          button = bi.button.key.toString();
-      } else if (bi.button.gamepad != DK3D::inputs::xinput_button::None) {
+      } else if (bi.button.gamepad != inputs::xinput_button::none) {
          switch (bi.button.gamepad) {
-            using _ = DK3D::inputs::xinput_button;
-            case _::A:
+            using _ = inputs::xinput_button;
+            case _::a:
                button = tr("A", "XInput button");
                break;
-            case _::B:
+            case _::b:
                button = tr("B", "XInput button");
                break;
-            case _::X:
+            case _::x:
                button = tr("X", "XInput button");
                break;
-            case _::Y:
+            case _::y:
                button = tr("Y", "XInput button");
                break;
-            case _::LT:
+            case _::trigger_left:
                button = tr("LT", "XInput button");
                break;
-            case _::RT:
+            case _::trigger_right:
                button = tr("RT", "XInput button");
                break;
-            case _::LB:
+            case _::bumper_left:
                button = tr("LB", "XInput button");
                break;
-            case _::RB:
+            case _::bumper_right:
                button = tr("RB", "XInput button");
                break;
-            case _::LS:
+            case _::stick_click_left:
                button = tr("LS-Click", "XInput button");
                break;
-            case _::RS:
+            case _::stick_click_right:
                button = tr("RS-Click", "XInput button");
                break;
-            case _::DPadUp:
+            case _::d_pad_up:
                button = tr("D-Pad Up", "XInput button");
                break;
-            case _::DPadDown:
+            case _::d_pad_down:
                button = tr("D-Pad Down", "XInput button");
                break;
-            case _::DPadLeft:
+            case _::d_pad_left:
                button = tr("D-Pad Left", "XInput button");
                break;
-            case _::DPadRight:
+            case _::d_pad_right:
                button = tr("D-Pad Right", "XInput button");
                break;
-            case _::Back:
+            case _::back:
                button = tr("Back", "XInput button");
                break;
-            case _::Start:
+            case _::start:
                button = tr("Start", "XInput button");
                break;
          }
@@ -99,7 +101,7 @@
       //
       bool has_axis = false;
       switch (bi.scalar.input) {
-         using _ = DK3D::scalar_control;
+         using _ = scalar_control;
          case _::mouse_move:
             control  = tr("Mouse-Move", "scalar control");
             has_axis = true;
@@ -122,7 +124,7 @@
       if (has_axis) {
          QString axis;
          switch (bi.scalar.axis) {
-            using _ = DK3D::axis2D;
+            using _ = axis2D;
             case _::x:
                axis = tr("Left/Right", "scalar axis");
                break;
@@ -138,7 +140,7 @@
    if (bi.is_vector()) {
       QString control;
       switch (bi.vector.input) {
-         using _ = DK3D::vector_control;
+         using _ = vector_control;
          case _::mouse_move:
             return tr("Mouse-Move", "vector control");
          case _::xinput_ls:
@@ -149,24 +151,30 @@
    }
    return tr("<none>");
 }
-/*static*/ QString DK3DLocalization::tool_name(DK3D::tool_id id) {
-switch (id) {
-   case DK3D::tools::id_of_none:
-      return tr("None", "tool name");
-      //
-   case DK3D::id_of_tool<DK3D::tools::debug_log>():
-      return tr("Debug Log", "tool name");
-   case DK3D::id_of_tool<DK3D::tools::debug_placeholder>():
-      return tr("Placeholder", "tool name");
-   case DK3D::id_of_tool<DK3D::tools::move_camera>():
-      return tr("Move Camera", "tool name");
-   case DK3D::id_of_tool<DK3D::tools::turn_camera>():
-      return tr("Turn Camera", "tool name");
+/*static*/ QString DKWorldinputLocalization::tool_name(tool_id id) {
+   using namespace dovahkit::subsystems::worldinput;
+
+   switch (id) {
+      case tools::id_of_none:
+         return tr("None", "tool name");
+         //
+      case id_of_tool<tools::attempt_on_screen_selection>():
+         return tr("Try Select ObjectReference", "tool name");
+      case id_of_tool<tools::debug_log>():
+         return tr("Debug Log", "tool name");
+      case id_of_tool<tools::debug_placeholder>():
+         return tr("Debug Placeholder", "tool name");
+      case id_of_tool<tools::modify_camera_speed_flags>():
+         return tr("Set Camera Speed Mode", "tool name");
+      case id_of_tool<tools::move_camera>():
+         return tr("Move Camera", "tool name");
+      case id_of_tool<tools::turn_camera>():
+         return tr("Turn Camera", "tool name");
+   }
+   return tr("<unknown>", "tool name");
 }
-return tr("<unknown>", "tool name");
-}
-/*static*/ QString DK3DLocalization::tool_name(const DK3D::tools::base* tool) {
+/*static*/ QString DKWorldinputLocalization::tool_name(const tools::base* tool) {
    if (!tool)
-      return tool_name(DK3D::tools::id_of_none);
-   return tool_name(DK3D::all_tool_instances::get().id_of(*tool));
+      return tool_name(tools::id_of_none);
+   return tool_name(all_tool_instances::get().id_of(*tool));
 }

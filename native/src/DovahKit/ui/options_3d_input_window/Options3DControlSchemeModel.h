@@ -1,7 +1,7 @@
 #pragma once
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
-#include "dk3d/bind_tree/tree.h"
+#include "editor/subsystems/worldinput/bind_tree/tree.h"
 
 class Options3DControlSchemeModel : public QAbstractItemModel {
    Q_OBJECT;
@@ -15,21 +15,21 @@ class Options3DControlSchemeModel : public QAbstractItemModel {
       Options3DControlSchemeModel(QObject* parent = nullptr);
       ~Options3DControlSchemeModel();
 
-      DK3D::input_device_type inputDevice() const { return this->_state.tree.device; }
-      const DK3D::binds::tree& tree() const { return this->_state.tree; }
+      dovahkit::subsystems::worldinput::input_device_type inputDevice() const { return this->_state.tree.device; }
+      const dovahkit::subsystems::worldinput::binds::tree& tree() const { return this->_state.tree; }
 
    public slots:
-      void setTree(const DK3D::binds::tree&);
+      void setTree(const dovahkit::subsystems::worldinput::binds::tree&);
 
    protected:
       struct {
-         DK3D::binds::tree tree = DK3D::binds::tree(DK3D::input_device_type::keyboard_mouse);
+         dovahkit::subsystems::worldinput::binds::tree tree = dovahkit::subsystems::worldinput::binds::tree(dovahkit::subsystems::worldinput::input_device_type::keyboard_mouse);
       } _state;
 
       bool is_real_root(const QModelIndex&) const;
       QModelIndex qmi_from_real_root(int col = 0) const { return this->createIndex(0, col, (void*)this); }
-      QModelIndex qmi_from_node(const DK3D::binds::node*, int col = 0) const;
-      DK3D::binds::node* node_from_qmi(const QModelIndex&) const;
+      QModelIndex qmi_from_node(const dovahkit::subsystems::worldinput::binds::node*, int col = 0) const;
+      dovahkit::subsystems::worldinput::binds::node* node_from_qmi(const QModelIndex&) const;
 
    public:
       virtual int columnCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -48,10 +48,10 @@ class Options3DControlSchemeModel : public QAbstractItemModel {
 
       void nonCursedMoveRow(const QModelIndex& source_parent, int row, const QModelIndex& dest_parent, int down);
 
-      inline DK3D::binds::node* node(const QModelIndex& qmi) const {
+      inline dovahkit::subsystems::worldinput::binds::node* node(const QModelIndex& qmi) const {
          return node_from_qmi(qmi);
       }
-      void setNodeEdited(const DK3D::binds::node* node) {
+      void setNodeEdited(const dovahkit::subsystems::worldinput::binds::node* node) {
          auto start = this->qmi_from_node(node, 0);
          auto end   = this->qmi_from_node(node, this->columnCount() - 1);
          emit this->dataChanged(start, end);

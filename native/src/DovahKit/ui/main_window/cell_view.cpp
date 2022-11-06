@@ -97,7 +97,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       this->ui.jumpToGrid->setEnabled(stub != nullptr);
    });
    QObject::connect(this->ui.jumpToGrid, &QPushButton::clicked, this, [this]() {
-      auto* world = this->ui.worldspace->formStub();
+      dovah::form_stub* world = this->ui.worldspace->formStub();
       if (!world)
          return;
       dovahkit::subsystems::worldedit::get().set_current_area(

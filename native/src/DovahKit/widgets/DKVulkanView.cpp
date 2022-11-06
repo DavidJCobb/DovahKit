@@ -2,14 +2,15 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QPainter>
-//#include "../dk3D/DK3DInputHandler.h"
-#include "../editor/subsystems/worldedit.h"
-#include "../vulkan/data/DKVulkanCameraUpdate.h"
-#include "../vulkan/DKVulkanInstance.h"
-#include "../vulkan/exceptions.h"
-#include "../vulkan/physical_device.h"
-#include "../vulkan/queue_family_info.h"
-#include "../vulkan/surface_renderer.h"
+#if !defined(QT_DESIGNER_LIB)
+   #include "editor/subsystems/worldedit.h"
+   #include "vulkan/data/DKVulkanCameraUpdate.h"
+   #include "vulkan/DKVulkanInstance.h"
+   #include "vulkan/exceptions.h"
+   #include "vulkan/physical_device.h"
+   #include "vulkan/queue_family_info.h"
+   #include "vulkan/surface_renderer.h"
+#endif
 
 namespace {
    constexpr int null_icon_render_bounds = 400;
@@ -24,17 +25,21 @@ DKVulkanView::DKVulkanView(QWidget* parent) : QWidget(parent) {
    //
    // Get instance; set up surface:
    //
-   auto& dkvi = DKVulkanInstance::get();
-   QObject::connect(&dkvi, &QObject::destroyed, this, []() {
-      assert(false && "A DKVulkanView and surface_renderer should never outlive the DKVulkanInstance!");
-   });
-   this->resetRenderer();
+   #if !defined(QT_DESIGNER_LIB)
+      auto& dkvi = DKVulkanInstance::get();
+      QObject::connect(&dkvi, &QObject::destroyed, this, []() {
+         assert(false && "A DKVulkanView and surface_renderer should never outlive the DKVulkanInstance!");
+      });
+      this->resetRenderer();
+   #endif
 }
 DKVulkanView::~DKVulkanView() {
-   if (auto* s = this->renderer) {
-      delete s;
-      this->renderer = nullptr;
-   }
+   #if !defined(QT_DESIGNER_LIB)
+      if (auto* s = this->renderer) {
+         delete s;
+         this->renderer = nullptr;
+      }
+   #endif
 }
 
 
@@ -59,16 +64,19 @@ void DKVulkanView::setRequireExactGPUMatch(bool em) {
 }
 
 void DKVulkanView::resetRenderer() {
+   #if !defined(QT_DESIGNER_LIB)
    if (this->renderer) {
       delete this->renderer;
       this->renderer = nullptr;
    }
+   #endif
    if (this->renderer_killed_due_to_error) {
       this->setAttribute(Qt::WA_OpaquePaintEvent, true);
       this->setAttribute(Qt::WA_PaintOnScreen,    true);
    }
    this->renderer_killed_due_to_error = false;
    //
+   #if !defined(QT_DESIGNER_LIB)
    auto& dkvi = DKVulkanInstance::get();
    this->renderer = new vulkanDK::surface_renderer(dkvi, this);
    //
@@ -127,6 +135,7 @@ void DKVulkanView::resetRenderer() {
    } catch (vulkanDK::exception& e) {
       this->_killRendererDueToError();
    }
+   #endif
 }
 
 void DKVulkanView::setInputHandlingEnabled(bool e) {
@@ -138,6 +147,7 @@ void DKVulkanView::setInputHandlingEnabled(bool e) {
       this->input_handling.focused = false;
 }
 
+#if !defined(QT_DESIGNER_LIB)
 void DKVulkanView::_inputPoll() {
    if (!this->input_handling.enabled || !this->input_handling.focused)
       return;
@@ -149,19 +159,23 @@ void DKVulkanView::_killRendererDueToError() {
    this->renderer_killed_due_to_error = true;
    if (!this->renderer)
       return;
+   emit this->rendererErrorKillImminent(*this->renderer);
    delete this->renderer;
    this->renderer = nullptr;
    this->setAttribute(Qt::WA_OpaquePaintEvent, false);
    this->setAttribute(Qt::WA_PaintOnScreen,    false);
    emit this->rendererKilledDueToError();
 }
+#endif
 
 #pragma region Events
 bool DKVulkanView::event(QEvent* event) {
    if (event->type() == QEvent::Type::WinIdChange) {
+      #if !defined(QT_DESIGNER_LIB)
       if (auto* s = this->renderer) {
          s->update_widget_id();
       }
+      #endif
    }
    return QWidget::event(event);
 }
@@ -206,38 +220,45 @@ void DKVulkanView::paintEvent(QPaintEvent* event) {
       }
       return;
    }
+   #if !defined(QT_DESIGNER_LIB)
    try {
       this->renderer->_on_repaint();
    } catch (vulkanDK::exception& e) {
       this->_killRendererDueToError();
    }
+   #endif
 }
 void DKVulkanView::resizeEvent(QResizeEvent* event) {
+   #if !defined(QT_DESIGNER_LIB)
    if (auto* s = this->renderer) {
       s->_on_visibility_change(this->size(), this->isVisible());
    }
+   #endif
 }
 void DKVulkanView::showEvent(QShowEvent* event) {
    this->timerID = this->startTimer(this->desiredFrameDelay(), Qt::PreciseTimer);
    //
+   #if !defined(QT_DESIGNER_LIB)
    if (auto* s = this->renderer) {
       s->_on_visibility_change(this->size(), this->isVisible());
    }
+   #endif
 }
 void DKVulkanView::timerEvent(QTimerEvent* event) {
+   #if !defined(QT_DESIGNER_LIB)
    this->_inputPoll();
+   #endif
    this->repaint();
 }
 
 void DKVulkanView::focusInEvent(QFocusEvent* event) {
    this->input_handling.focused = true;
-   //DK3DInputHandler::get().viewFocusChange(this, true);
 }
 void DKVulkanView::focusOutEvent(QFocusEvent* event) {
    this->input_handling.focused = false;
-   //DK3DInputHandler::get().viewFocusChange(this, false);
 }
 
+#if !defined(QT_DESIGNER_LIB)
 void DKVulkanView::mousePressEvent(QMouseEvent* event) {
    auto* s = this->renderer;
    if (!s)
@@ -247,4 +268,5 @@ void DKVulkanView::mousePressEvent(QMouseEvent* event) {
    if (!handle.empty())
       emit this->renderedMeshClicked(handle);
 }
+#endif
 #pragma endregion

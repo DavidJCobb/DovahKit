@@ -1,10 +1,19 @@
 #include "DKBoundInputWidget.h"
+#include <array>
 #include <QGridLayout>
 #include <QLabel>
 #include "helpers/qt/combobox.h"
 #if !defined(QT_DESIGNER_LIB)
-   #include "dk3d/enums/button_press_type.h"
+   #include "editor/subsystems/worldinput/enums/button_press_type.h"
+   #include "editor/subsystems/xinput/enums/button.h"
 #endif
+
+namespace xinput {
+   using namespace dovahkit::subsystems::xinput;
+}
+namespace worldinput {
+   using namespace dovahkit::subsystems::worldinput;
+}
 
 DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
    auto* layout = new QGridLayout(this);
@@ -13,9 +22,9 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
    auto& sw = this->subwidgets;
    {
       auto* widget = sw.control_type = new QComboBox(this);
-      widget->addItem(tr("Button or key"), (int)DK3D::control_type::button);
-      widget->addItem(tr("Move (1D)"),     (int)DK3D::control_type::scalar);
-      widget->addItem(tr("Move (2D)"),     (int)DK3D::control_type::vector);
+      widget->addItem(tr("Button or key"), (int)worldinput::control_type::button);
+      widget->addItem(tr("Move (1D)"),     (int)worldinput::control_type::scalar);
+      widget->addItem(tr("Move (2D)"),     (int)worldinput::control_type::vector);
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DKBoundInputWidget::_onControlTypeChange);
    }
    {
@@ -29,29 +38,29 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
       //
       picker->setAllowKeyCombinations(false);
       #if !defined(QT_DESIGNER_LIB)
-         type->addItem(tr("Tap"),   (int)DK3D::button_press_type::tap);
-         type->addItem(tr("Hold"),  (int)DK3D::button_press_type::hold);
-         type->addItem(tr("While"), (int)DK3D::button_press_type::while_down);
+         type->addItem(tr("Tap"),   (int)worldinput::button_press_type::tap);
+         type->addItem(tr("Hold"),  (int)worldinput::button_press_type::hold);
+         type->addItem(tr("While"), (int)worldinput::button_press_type::while_down);
       #endif
       //
       auto* widget = sw.boolean.xinput = new QComboBox(this);
       #if !defined(QT_DESIGNER_LIB)
-         widget->addItem(tr("A",                 "XInput button"), (int)DK3D::inputs::xinput_button::A);
-         widget->addItem(tr("B",                 "XInput button"), (int)DK3D::inputs::xinput_button::B);
-         widget->addItem(tr("X",                 "XInput button"), (int)DK3D::inputs::xinput_button::X);
-         widget->addItem(tr("Y",                 "XInput button"), (int)DK3D::inputs::xinput_button::Y);
-         widget->addItem(tr("Back",              "XInput button"), (int)DK3D::inputs::xinput_button::Back);
-         widget->addItem(tr("Start",             "XInput button"), (int)DK3D::inputs::xinput_button::Start);
-         widget->addItem(tr("D-Pad Up",          "XInput button"), (int)DK3D::inputs::xinput_button::DPadUp);
-         widget->addItem(tr("D-Pad Down",        "XInput button"), (int)DK3D::inputs::xinput_button::DPadDown);
-         widget->addItem(tr("D-Pad Left",        "XInput button"), (int)DK3D::inputs::xinput_button::DPadLeft);
-         widget->addItem(tr("D-Pad Right",       "XInput button"), (int)DK3D::inputs::xinput_button::DPadRight);
-         widget->addItem(tr("Left Stick Click",  "XInput button"), (int)DK3D::inputs::xinput_button::LS);
-         widget->addItem(tr("Right Stick Click", "XInput button"), (int)DK3D::inputs::xinput_button::RS);
-         widget->addItem(tr("Left Trigger",      "XInput button"), (int)DK3D::inputs::xinput_button::LT);
-         widget->addItem(tr("Right Trigger",     "XInput button"), (int)DK3D::inputs::xinput_button::RT);
-         widget->addItem(tr("Left Bumper",       "XInput button"), (int)DK3D::inputs::xinput_button::LB);
-         widget->addItem(tr("Right Bumper",      "XInput button"), (int)DK3D::inputs::xinput_button::RB);
+         widget->addItem(tr("A",                 "XInput button"), (int)xinput::button::a);
+         widget->addItem(tr("B",                 "XInput button"), (int)xinput::button::b);
+         widget->addItem(tr("X",                 "XInput button"), (int)xinput::button::x);
+         widget->addItem(tr("Y",                 "XInput button"), (int)xinput::button::y);
+         widget->addItem(tr("Back",              "XInput button"), (int)xinput::button::back);
+         widget->addItem(tr("Start",             "XInput button"), (int)xinput::button::start);
+         widget->addItem(tr("D-Pad Up",          "XInput button"), (int)xinput::button::d_pad_up);
+         widget->addItem(tr("D-Pad Down",        "XInput button"), (int)xinput::button::d_pad_down);
+         widget->addItem(tr("D-Pad Left",        "XInput button"), (int)xinput::button::d_pad_left);
+         widget->addItem(tr("D-Pad Right",       "XInput button"), (int)xinput::button::d_pad_right);
+         widget->addItem(tr("Left Stick Click",  "XInput button"), (int)xinput::button::stick_click_left);
+         widget->addItem(tr("Right Stick Click", "XInput button"), (int)xinput::button::stick_click_right);
+         widget->addItem(tr("Left Trigger",      "XInput button"), (int)xinput::button::trigger_left);
+         widget->addItem(tr("Right Trigger",     "XInput button"), (int)xinput::button::trigger_right);
+         widget->addItem(tr("Left Bumper",       "XInput button"), (int)xinput::button::bumper_left);
+         widget->addItem(tr("Right Bumper",      "XInput button"), (int)xinput::button::bumper_right);
       #endif
       layout->addWidget(widget);
       //
@@ -101,38 +110,38 @@ DKBoundInputWidget::DKBoundInputWidget(QWidget* parent) : QWidget(parent) {
    this->_onInputDeviceChange();
 }
 
-DK3D::inputs::bound_input DKBoundInputWidget::value() const {
-   DK3D::inputs::bound_input out;
+worldinput::inputs::bound_input DKBoundInputWidget::value() const {
+   bound_input out;
    //
    #if !defined(QT_DESIGNER_LIB)
-   switch ((DK3D::control_type)this->subwidgets.control_type->currentData().toInt()) {
-      case DK3D::control_type::button:
+   switch ((worldinput::control_type)this->subwidgets.control_type->currentData().toInt()) {
+      case worldinput::control_type::button:
          {
-            out.button.press_type = (DK3D::button_press_type)this->subwidgets.boolean.mod->currentData().toInt();
+            out.button.press_type = (worldinput::button_press_type)this->subwidgets.boolean.mod->currentData().toInt();
             switch (this->inputDevice()) {
-               case DK3D::input_device_type::keyboard_mouse:
+               case input_device_type::keyboard_mouse:
                   {
                      auto keys = this->subwidgets.boolean.control->keys();
                      if (!keys.empty())
                         out.button.key = keys[0];
                   }
                   break;
-               case DK3D::input_device_type::xinput:
-                  out.button.gamepad = (DK3D::inputs::xinput_button)this->subwidgets.boolean.xinput->currentData().toInt();
+               case input_device_type::xinput:
+                  out.button.gamepad = (xinput::button)this->subwidgets.boolean.xinput->currentData().toInt();
                   break;
             }
             return out;
          }
          break;
-      case DK3D::control_type::scalar:
+      case worldinput::control_type::scalar:
          {
-            out.scalar.input = (DK3D::scalar_control)this->subwidgets.scalar.control->currentData(ControlRole).toInt();
-            out.scalar.axis  = (DK3D::axis2D)this->subwidgets.scalar.control->currentData(AxisRole).toInt();
+            out.scalar.input = (worldinput::scalar_control)this->subwidgets.scalar.control->currentData(ControlRole).toInt();
+            out.scalar.axis  = (worldinput::axis2D)this->subwidgets.scalar.control->currentData(AxisRole).toInt();
          }
          break;
-      case DK3D::control_type::vector:
+      case worldinput::control_type::vector:
          {
-            out.vector.input = (DK3D::vector_control)this->subwidgets.vector.control->currentData().toInt();
+            out.vector.input = (worldinput::vector_control)this->subwidgets.vector.control->currentData().toInt();
          }
          break;
    }
@@ -140,17 +149,17 @@ DK3D::inputs::bound_input DKBoundInputWidget::value() const {
    //
    return out;
 }
-void DKBoundInputWidget::setInputDevice(DK3D::input_device_type d) {
+void DKBoundInputWidget::setInputDevice(input_device_type d) {
    if (this->state.inputDevice == d)
       return;
    this->state.inputDevice = d;
    this->_onInputDeviceChange();
 }
-void DKBoundInputWidget::setValue(const DK3D::inputs::bound_input& src) {
+void DKBoundInputWidget::setValue(const bound_input& src) {
    #if !defined(QT_DESIGNER_LIB)
    const auto blocker0 = QSignalBlocker(this->subwidgets.control_type);
    if (src.is_button()) {
-      cobb::qt::set_combobox_value(this->subwidgets.control_type, DK3D::control_type::button);
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, worldinput::control_type::button);
       this->_onControlTypeChange();
       //
       auto& b  = src.button;
@@ -162,18 +171,18 @@ void DKBoundInputWidget::setValue(const DK3D::inputs::bound_input& src) {
          //
          // TODO
          //
-      } else if (b.gamepad != DK3D::inputs::xinput_button::None) {
+      } else if (b.gamepad != xinput::button::none) {
          cobb::qt::set_combobox_value(sw.xinput, b.gamepad);
       }
       return;
    } else {
       auto& sw = this->subwidgets.boolean;
       sw.control->setKeys({});
-      cobb::qt::set_combobox_value(sw.mod,    DK3D::button_press_type::tap);
-      cobb::qt::set_combobox_value(sw.xinput, DK3D::inputs::xinput_button::A);
+      cobb::qt::set_combobox_value(sw.mod,    worldinput::button_press_type::tap);
+      cobb::qt::set_combobox_value(sw.xinput, xinput::button::a);
    }
    if (src.is_scalar()) {
-      cobb::qt::set_combobox_value(this->subwidgets.control_type, DK3D::control_type::scalar);
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, worldinput::control_type::scalar);
       this->_onControlTypeChange();
       //
       auto& s  = src.scalar;
@@ -182,13 +191,13 @@ void DKBoundInputWidget::setValue(const DK3D::inputs::bound_input& src) {
       auto* widget = sw.control;
       int   size   = widget->count();
       for (int i = 0; i < size; ++i) {
-         if ((DK3D::scalar_control)widget->itemData(i, ControlRole).toInt() != s.input)
+         if ((worldinput::scalar_control)widget->itemData(i, ControlRole).toInt() != s.input)
             continue;
          switch (s.input) {
-            case DK3D::scalar_control::xinput_ls:
-            case DK3D::scalar_control::xinput_rs:
-            case DK3D::scalar_control::mouse_move:
-               if ((DK3D::axis2D)widget->itemData(i, AxisRole).toInt() != s.axis)
+            case worldinput::scalar_control::xinput_ls:
+            case worldinput::scalar_control::xinput_rs:
+            case worldinput::scalar_control::mouse_move:
+               if ((worldinput::axis2D)widget->itemData(i, AxisRole).toInt() != s.axis)
                   continue;
                break;
          }
@@ -198,7 +207,7 @@ void DKBoundInputWidget::setValue(const DK3D::inputs::bound_input& src) {
       return;
    }
    if (src.is_vector()) {
-      cobb::qt::set_combobox_value(this->subwidgets.control_type, DK3D::control_type::vector);
+      cobb::qt::set_combobox_value(this->subwidgets.control_type, worldinput::control_type::vector);
       this->_onControlTypeChange();
       //
       auto& v  = src.vector;
@@ -208,11 +217,11 @@ void DKBoundInputWidget::setValue(const DK3D::inputs::bound_input& src) {
    } else {
       auto& sw = this->subwidgets.vector;
       switch (this->inputDevice()) {
-         case DK3D::input_device_type::keyboard_mouse:
-            cobb::qt::set_combobox_value(sw.control, DK3D::vector_control::mouse_move);
+         case input_device_type::keyboard_mouse:
+            cobb::qt::set_combobox_value(sw.control, worldinput::vector_control::mouse_move);
             break;
-         case DK3D::input_device_type::xinput:
-            cobb::qt::set_combobox_value(sw.control, DK3D::vector_control::xinput_ls);
+         case input_device_type::xinput:
+            cobb::qt::set_combobox_value(sw.control, worldinput::vector_control::xinput_ls);
             break;
       }
    }
@@ -223,14 +232,14 @@ void DKBoundInputWidget::_onControlTypeChange() {
    bool button = false;
    bool scalar = false;
    bool vector = false;
-   switch ((DK3D::control_type)this->subwidgets.control_type->currentData().toInt()) {
-      case DK3D::control_type::button:
+   switch ((worldinput::control_type)this->subwidgets.control_type->currentData().toInt()) {
+      case worldinput::control_type::button:
          button = true;
          break;
-      case DK3D::control_type::scalar:
+      case worldinput::control_type::scalar:
          scalar = true;
          break;
-      case DK3D::control_type::vector:
+      case worldinput::control_type::vector:
          vector = true;
          break;
    }
@@ -251,24 +260,24 @@ void DKBoundInputWidget::_onInputDeviceChange() {
    {
       auto* widget = this->subwidgets.boolean.control;
       auto* button = this->subwidgets.boolean.xinput;
-      widget->setHidden(id != DK3D::input_device_type::keyboard_mouse);
-      button->setHidden(id != DK3D::input_device_type::xinput);
+      widget->setHidden(id != input_device_type::keyboard_mouse);
+      button->setHidden(id != input_device_type::xinput);
    }
    #if !defined(QT_DESIGNER_LIB)
    {
       struct _VectorToScalar {
          const char* translation;
-         DK3D::scalar_control control;
-         DK3D::axis2D axis;
+         worldinput::scalar_control control;
+         worldinput::axis2D axis;
       };
-      //
+      
       auto*      widget  = this->subwidgets.scalar.control;
       const auto blocker = QSignalBlocker(widget);
       widget->clear();
-      if (id == DK3D::input_device_type::keyboard_mouse) {
+      if (id == input_device_type::keyboard_mouse) {
          constexpr auto vector_to_scalar_entries = std::array{
-            _VectorToScalar{ "Mouse X", DK3D::scalar_control::mouse_move, DK3D::axis2D::x },
-            _VectorToScalar{ "Mouse Y", DK3D::scalar_control::mouse_move, DK3D::axis2D::y },
+            _VectorToScalar{ "Mouse X", worldinput::scalar_control::mouse_move, worldinput::axis2D::x },
+            _VectorToScalar{ "Mouse Y", worldinput::scalar_control::mouse_move, worldinput::axis2D::y },
          };
          //
          for (size_t i = 0; i < vector_to_scalar_entries.size(); ++i) {
@@ -277,12 +286,12 @@ void DKBoundInputWidget::_onInputDeviceChange() {
             widget->setItemData(i, (int)entry.control, ControlRole);
             widget->setItemData(i, (int)entry.axis,    AxisRole);
          }
-      } else if (id == DK3D::input_device_type::xinput) {
+      } else if (id == input_device_type::xinput) {
          constexpr auto vector_to_scalar_entries = std::array{
-            _VectorToScalar{ "Left Stick X",  DK3D::scalar_control::xinput_ls, DK3D::axis2D::x },
-            _VectorToScalar{ "Left Stick Y",  DK3D::scalar_control::xinput_ls, DK3D::axis2D::y },
-            _VectorToScalar{ "Right Stick X", DK3D::scalar_control::xinput_rs, DK3D::axis2D::x },
-            _VectorToScalar{ "Right Stick Y", DK3D::scalar_control::xinput_rs, DK3D::axis2D::y },
+            _VectorToScalar{ "Left Stick X",  worldinput::scalar_control::xinput_ls, worldinput::axis2D::x },
+            _VectorToScalar{ "Left Stick Y",  worldinput::scalar_control::xinput_ls, worldinput::axis2D::y },
+            _VectorToScalar{ "Right Stick X", worldinput::scalar_control::xinput_rs, worldinput::axis2D::x },
+            _VectorToScalar{ "Right Stick Y", worldinput::scalar_control::xinput_rs, worldinput::axis2D::y },
          };
          //
          for (size_t i = 0; i < vector_to_scalar_entries.size(); ++i) {
@@ -291,19 +300,19 @@ void DKBoundInputWidget::_onInputDeviceChange() {
             widget->setItemData(i, (int)entry.control, ControlRole);
             widget->setItemData(i, (int)entry.axis,    AxisRole);
          }
-         widget->addItem(tr("Left Trigger"),  (int)DK3D::scalar_control::xinput_lt);
-         widget->addItem(tr("Right Trigger"), (int)DK3D::scalar_control::xinput_rt);
+         widget->addItem(tr("Left Trigger"),  (int)worldinput::scalar_control::xinput_lt);
+         widget->addItem(tr("Right Trigger"), (int)worldinput::scalar_control::xinput_rt);
       }
    }
    {
       auto*      widget  = this->subwidgets.vector.control;
       const auto blocker = QSignalBlocker(widget);
       widget->clear();
-      if (id == DK3D::input_device_type::keyboard_mouse) {
-         widget->addItem(tr("Mouse Move"), (int)DK3D::vector_control::mouse_move);
-      } else if (id == DK3D::input_device_type::xinput) {
-         widget->addItem(tr("Left Stick"),  (int)DK3D::vector_control::xinput_ls);
-         widget->addItem(tr("Right Stick"), (int)DK3D::vector_control::xinput_rs);
+      if (id == input_device_type::keyboard_mouse) {
+         widget->addItem(tr("Mouse Move"), (int)worldinput::vector_control::mouse_move);
+      } else if (id == input_device_type::xinput) {
+         widget->addItem(tr("Left Stick"),  (int)worldinput::vector_control::xinput_ls);
+         widget->addItem(tr("Right Stick"), (int)worldinput::vector_control::xinput_rs);
       }
    }
    #endif

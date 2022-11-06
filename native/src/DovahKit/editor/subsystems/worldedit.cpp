@@ -1,7 +1,5 @@
 #include "worldedit.h"
 #include <algorithm> // std::swap
-#include "dk3D/tools/_results.h"
-#include "dk3D/DK3DInputHandler.h"
 #include "dovah/forms/factories/hardcoded.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub_helpers.h"
@@ -14,6 +12,8 @@
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
+#include "editor/subsystems/worldinput/core.h"
+#include "editor/subsystems/worldinput/tools/_results.h"
 #include "editor/subsystems/game_inis.h"
 #include "helpers/qt/strings.h"
 #include "helpers/type_traits/value_type_of.h"
@@ -27,6 +27,11 @@
 #include "vulkan/rendered_light.h"
 #include "vulkan/surface_renderer.h"
 #include "widgets/DKVulkanView.h"
+
+#include "helpers/vector.h"
+namespace {
+   static constexpr const bool selection_vector_is_unordered = true;
+}
 
 namespace {
    static constexpr bool require_complete_implementation = false;
@@ -838,7 +843,7 @@ namespace dovahkit::subsystems {
       assert(this->target_view == nullptr);
       this->target_view = &view;
       //
-      DK3DInputHandler::get().setTargetView(&view);
+      worldinput::core::get().setTargetView(&view);
       //
       QObject::connect(&view, &DKVulkanView::rendererReady, this, &worldedit::_on_renderer_attached, Qt::UniqueConnection);
       if (auto* sr = view.surfaceRenderer()) {
@@ -851,7 +856,7 @@ namespace dovahkit::subsystems {
       QObject::connect(&view, &DKVulkanView::rendererErrorKillImminent, this, &worldedit::_on_renderer_loss_imminent);
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &worldedit::_on_renderer_lost);
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
-         DK3DInputHandler::get().setTargetView(nullptr);
+         worldinput::core::get().setTargetView(nullptr);
          this->target_view = nullptr;
          //
          this->_on_renderer_lost();
@@ -880,9 +885,9 @@ namespace dovahkit::subsystems {
          return;
       if (!view.isListeningForInput())
          return;
-      DK3D::combined_tool_results results;
+      worldinput::combined_tool_results results;
       double delta;
-      DK3DInputHandler::get().update(results, delta);
+      worldinput::core::get().update(results, delta);
       //
       auto* sr = view.surfaceRenderer();
       if (!sr)
@@ -896,12 +901,12 @@ namespace dovahkit::subsystems {
       // This must run before we apply camera movements.
       //
       {
-         const auto& data = results.get_member<DK3D::tools::modify_camera_speed_flags>();
+         const auto& data = results.get_member<worldinput::tools::modify_camera_speed_flags>();
          auto& mask = this->state.camera_speed;
          {
             constexpr auto flag = camera_speed_flags::boost;
             switch (data.boost) {
-               using enum DK3D::bool_operation;
+               using enum worldinput::bool_operation;
                case set_true:
                   mask.set<flag>();
                   break;
@@ -916,7 +921,7 @@ namespace dovahkit::subsystems {
          {
             constexpr auto flag = camera_speed_flags::precision;
             switch (data.precision) {
-               using enum DK3D::bool_operation;
+               using enum worldinput::bool_operation;
                case set_true:
                   mask.set<flag>();
                   break;
@@ -935,7 +940,7 @@ namespace dovahkit::subsystems {
          DKVulkanCameraUpdate update;
          update.delta_seconds = delta;
          {
-            const auto& data = results.get_member<DK3D::tools::move_camera>();
+            const auto& data = results.get_member<worldinput::tools::move_camera>();
             update.move.direction      = { data.x, data.y, data.z };
             update.move.scale_by_delta = false;
             //
@@ -950,7 +955,7 @@ namespace dovahkit::subsystems {
                update.move.speed *= move_speed_mult_precision;
          }
          {
-            const auto& data = results.get_member<DK3D::tools::turn_camera>();
+            const auto& data = results.get_member<worldinput::tools::turn_camera>();
             update.turn.roll  = data.roll;
             update.turn.pitch = data.pitch;
             update.turn.yaw   = data.yaw;
@@ -963,29 +968,29 @@ namespace dovahkit::subsystems {
       #pragma endregion
       #pragma region attempt_on_screen_selection
       {
-         const auto& data = results.get_member<DK3D::tools::attempt_on_screen_selection>();
+         const auto& data = results.get_member<worldinput::tools::attempt_on_screen_selection>();
          if (data.sweep) {
             //
             // TODO
             //
             static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
          } else {
-            if (data.position == DK3D::pointer_position_type::mouse) {
+            if (data.position == worldinput::pointer_position_type::mouse) {
                auto handle = sr->rendered_mesh_at(data.mouse.x(), data.mouse.y());
                if (!handle.empty()) {
                   if (auto* nif = handle->owning_nif) {
                      if (auto* stub = nif->owning_form) {
                         switch (data.operation) {
-                           case DK3D::selection_operation::no_op:
+                           case worldinput::selection_operation::no_op:
                               break;
-                           case DK3D::selection_operation::toggle:
+                           case worldinput::selection_operation::toggle:
                               this->toggleRefSelectionState(*stub);
                               break;
-                           case DK3D::selection_operation::add:
-                           case DK3D::selection_operation::remove:
-                              this->setRefSelectionState(*stub, data.operation == DK3D::selection_operation::add);
+                           case worldinput::selection_operation::add:
+                           case worldinput::selection_operation::remove:
+                              this->setRefSelectionState(*stub, data.operation == worldinput::selection_operation::add);
                               break;
-                           case DK3D::selection_operation::replace:
+                           case worldinput::selection_operation::replace:
                               this->replaceRefSelection(*stub);
                               break;
                         }
@@ -1003,8 +1008,8 @@ namespace dovahkit::subsystems {
       #pragma endregion
       #pragma region debug_dump_landscape_details
       if (sr) {
-         const auto& data = results.get_member<DK3D::tools::debug_dump_landscape_details>();
-         if (data.exists && data.position == DK3D::pointer_position_type::mouse) {
+         const auto& data = results.get_member<worldinput::tools::debug_dump_landscape_details>();
+         if (data.exists && data.position == worldinput::pointer_position_type::mouse) {
             vulkanDK::raycast rc(*sr);
             rc.set_screen_relative_raycast(data.mouse.x(), data.mouse.y());
 
@@ -1177,7 +1182,11 @@ namespace dovahkit::subsystems {
          emit this->refSelected(stub);
          emit this->refSelectionChanged(stub, true);
       } else {
-         list.erase(it);
+         if constexpr (selection_vector_is_unordered) {
+            cobb::unordered_erase(list, it);
+         } else {
+            list.erase(it);
+         }
          emit this->refDeselected(stub);
          emit this->refSelectionChanged(stub, false);
       }
@@ -1200,7 +1209,11 @@ namespace dovahkit::subsystems {
          emit this->refSelected(stub);
          emit this->refSelectionChanged(stub, true);
       } else {
-         list.erase(it);
+         if constexpr (selection_vector_is_unordered) {
+            cobb::unordered_erase(list, it);
+         } else {
+            list.erase(it);
+         }
          emit this->refDeselected(stub);
          emit this->refSelectionChanged(stub, false);
       }

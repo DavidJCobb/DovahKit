@@ -85,42 +85,5 @@ The load queues are processed as follows.
 
    5. We wait on all workers from Steps 3  (if applicable) and 4. When the Step 
       4 workers have finished,  we mark the `rendered_nif`  instances as having 
-      finished asynchronous loading.
+      finished background use.
       
-
-=== REVISIONS NEEDED ==========================================================
-
-// TODO OUTDATED
-
-The use of QObjects may not be appropriate here.  The intention was as follows:
-
- - Offer a simple way to register for notifications when a NIF finishes loading 
-   off-thread.  This would allow Worldedit to update relevant state  (e.g. if a 
-   REFR is selected before its model has loaded).
-
- - Ensure that NIFs can't be deleted  out from under the multi-threaded loading 
-   process (particularly if we go with background  loads down the line). If any 
-   outside actors (e.g. Worldedit) use QObject::deleteLater, and if we move the 
-   NIFs to the worker threads during loading,  then deletions would be deferred 
-   until control reaches the thread's top-level event loop -- in essense, until 
-   the thread is finished processing an entire batch of NIFs.
-
-The second rationale has four defects:
-
- - We never actually move `rendered_nif` instances to the worker threads.
-
- - We use two different sets of workers  to load the NIF itself, versus to copy 
-   its data into `rendered_mesh` entities for use with the renderer. When going 
-   from one set of workers to the next, we have to return to the main thread.
-
- - The junction between those  workers means that a  NIF can be deleted between 
-   the "load the NIF"  half of the load process and the "prepare  it for use in 
-   Vulkan" half of the load process, so we can still have NIFs deleted out from 
-   under us.
-
- - After the load process wraps up, the  `surface_renderer` has to do some more 
-   bookkeeping (e.g. marking NIFs as no longer in use by the load process), but 
-   the NIF  could have been deleted when control returned to the  last workers' 
-   event loops (i.e.  when those  workers finished,  but before the main thread 
-   got a chance to react to them).
-

@@ -2,7 +2,7 @@
 #include <chrono>
 #include <QWidget>
 #if !defined(QT_DESIGNER_LIB)
-   #include "vulkan/scene_item_handle.h"
+   #include "vulkan/scene_entity_handle.h"
 #endif
 
 namespace vulkanDK {
@@ -46,6 +46,7 @@ class DKVulkanView : public QWidget {
          void renderedMeshClicked(vulkanDK::rendered_mesh_handle);
       #endif
 
+      void rendererErrorKillImminent(vulkanDK::surface_renderer&);
       void rendererKilledDueToError();
 
    protected:
@@ -62,8 +63,10 @@ class DKVulkanView : public QWidget {
       } input_handling;
       bool renderer_killed_due_to_error = false;
 
+      #if !defined(QT_DESIGNER_LIB)
       void _inputPoll();
       void _killRendererDueToError();
+      #endif
 
       virtual bool event(QEvent*) override;
       virtual void hideEvent(QHideEvent* event) override;
@@ -75,5 +78,7 @@ class DKVulkanView : public QWidget {
       virtual void focusInEvent(QFocusEvent* event) override;
       virtual void focusOutEvent(QFocusEvent* event) override;
 
+      #if !defined(QT_DESIGNER_LIB)
       virtual void mousePressEvent(QMouseEvent* event) override;
+      #endif
 };

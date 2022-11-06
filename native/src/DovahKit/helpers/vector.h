@@ -15,6 +15,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <concepts>
 #include <vector>
 
 namespace cobb {
@@ -39,6 +40,15 @@ namespace cobb {
       std::rotate(first, middle, last);
    }
 
+   namespace impl::_unordered_erase::vector {
+      template<typename ValueType, typename UnaryPredicate> concept is_find_if_predicate =
+         requires(ValueType v, UnaryPredicate pred) {
+            { pred(v) } -> std::convertible_to<bool>;
+         } || requires(const ValueType& v, UnaryPredicate pred) {
+            { pred(v) } -> std::convertible_to<bool>;
+         };
+   }
+
    //
    // Quickly erase from an std::vector by avoiding having to shuffle all elements 
    // when erasing values from the middle: we just move the to-be-erased value to 
@@ -53,8 +63,16 @@ namespace cobb {
          v.erase(v.end() - 1);
       }
    }
-   template<typename T, class unary_predicate_t> void unordered_erase(std::vector<T>& v, unary_predicate_t functor) {
+   template<typename ValueType, class UnaryPredicate> requires impl::_unordered_erase::vector::is_find_if_predicate<ValueType, UnaryPredicate>
+   void unordered_erase(std::vector<ValueType>& v, UnaryPredicate functor) {
       auto it = std::find_if(v.begin(), v.end(), functor);
+      if (it != v.end()) {
+         std::iter_swap(it, v.end() - 1);
+         v.erase(v.end() - 1);
+      }
+   }
+
+   template<typename T> void unordered_erase(std::vector<T>& v, typename std::vector<T>::iterator& it) {
       if (it != v.end()) {
          std::iter_swap(it, v.end() - 1);
          v.erase(v.end() - 1);

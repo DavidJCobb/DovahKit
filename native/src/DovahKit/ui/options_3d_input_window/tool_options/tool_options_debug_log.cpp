@@ -1,10 +1,14 @@
 #include "tool_options_debug_log.h"
 #include <QGridLayout>
 #include <QLabel>
-#include "dk3d/tools/_options.h"
+#include "editor/subsystems/worldinput/tools/_options.h"
+
+namespace worldinput {
+   using namespace dovahkit::subsystems::worldinput;
+}
 
 namespace DK3DToolOptions {
-   DebugLog::DebugLog(QWidget* parent) : Base(DK3D::id_of_tool_options<options_type>(), parent) {
+   DebugLog::DebugLog(QWidget* parent) : Base(worldinput::id_of_tool<tool_type>(), parent) {
       /*QObject::connect(this, &Base::controlTypeChanged, this, [this]() {
       });*/
       //
@@ -18,15 +22,15 @@ namespace DK3DToolOptions {
       QObject::connect(this->ui.spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Base::edited); // signal-to-signal
    }
 
-   void DebugLog::_readOptions(const DK3D::tools::opaque_option_union& oou) {
-      const auto* o = DK3D::tools::option_union::as<options_type>(oou);
+   void DebugLog::_readOptions(const opaque_option_union& oou) {
+      const auto* o = worldinput::tools::option_union::as<tool_type>(oou);
       if (!o)
          return;
       const auto blocker = QSignalBlocker(this->ui.spinbox);
       this->ui.spinbox->setValue(o->number);
    }
-   void DebugLog::_writeOptions(DK3D::tools::opaque_option_union& oou) {
-      auto* o = DK3D::tools::option_union::as<options_type>(oou);
+   void DebugLog::_writeOptions(opaque_option_union& oou) {
+      auto* o = worldinput::tools::option_union::as<tool_type>(oou);
       if (!o)
          return;
       o->number = this->ui.spinbox->value();

@@ -1,23 +1,27 @@
 #include "Options3DControlSchemeModel.h"
-#include "dk3d/bind_tree/node.h"
-#include "dk3d/bind_tree/nodes/editor_mode.h"
-#include "dk3d/bind_tree/nodes/input.h"
-#include "dk3d/bind_tree/nodes/root.h"
-#include "dk3d/tools/_all.h"
-#include "localization.h"
+#include "editor/subsystems/worldinput/bind_tree/node.h"
+#include "editor/subsystems/worldinput/bind_tree/nodes/editor_mode.h"
+#include "editor/subsystems/worldinput/bind_tree/nodes/input.h"
+#include "editor/subsystems/worldinput/bind_tree/nodes/root.h"
+#include "editor/subsystems/worldinput/tools/_all.h"
+#include "./localization.h"
+
+namespace worldinput {
+   using namespace dovahkit::subsystems::worldinput;
+}
 
 Options3DControlSchemeModel::Options3DControlSchemeModel(QObject* parent) : QAbstractItemModel(parent) {
    {
       static bool _registered = false;
       if (!_registered) {
-         qRegisterMetaType<DK3D::inputs::bound_input>();
+         qRegisterMetaType<worldinput::inputs::bound_input>();
       }
    }
 }
 Options3DControlSchemeModel::~Options3DControlSchemeModel() {
 }
 
-void Options3DControlSchemeModel::setTree(const DK3D::binds::tree& tree) {
+void Options3DControlSchemeModel::setTree(const worldinput::binds::tree& tree) {
    this->beginResetModel();
    this->_state.tree = tree;
    this->endResetModel();
@@ -33,7 +37,7 @@ bool Options3DControlSchemeModel::is_real_root(const QModelIndex& qmi) const {
    //
    return qmi.internalPointer() == this && qmi.row() == 0;
 }
-QModelIndex Options3DControlSchemeModel::qmi_from_node(const DK3D::binds::node* node, int col) const {
+QModelIndex Options3DControlSchemeModel::qmi_from_node(const worldinput::binds::node* node, int col) const {
    if (!node)
       return QModelIndex();
    if (node == this->_state.tree.root)
@@ -43,12 +47,12 @@ QModelIndex Options3DControlSchemeModel::qmi_from_node(const DK3D::binds::node* 
       return QModelIndex();
    return this->createIndex(parent->index_of(*node), col, parent);
 }
-DK3D::binds::node* Options3DControlSchemeModel::node_from_qmi(const QModelIndex& qmi) const {
+worldinput::binds::node* Options3DControlSchemeModel::node_from_qmi(const QModelIndex& qmi) const {
    if (is_real_root(qmi))
       return this->_state.tree.root;
    if (!qmi.isValid())
       return nullptr;
-   const auto* node = (const DK3D::binds::node*)qmi.internalPointer();
+   const auto* node = (const worldinput::binds::node*)qmi.internalPointer();
    if (!node)
       return nullptr;
    const auto& kids = node->child_nodes();
@@ -70,11 +74,11 @@ QVariant Options3DControlSchemeModel::data(const QModelIndex& index, int role) c
    switch (role) {
       case Qt::DisplayRole:
          if (col == 0) {
-            if (node->type == DK3D::binds::node_type::root)
+            if (node->type == worldinput::binds::node_type::root)
                return tr("Global", "root node name");
-            if (auto* casted = node->as<DK3D::binds::nodes::editor_mode>()) {
+            if (auto* casted = node->as<worldinput::binds::nodes::editor_mode>()) {
                switch (casted->mode) {
-                  using _ = DK3D::editor_mode;
+                  using _ = worldinput::editor_mode;
                   case _::object:
                      return tr("Object Mode", "editor mode");
                   case _::landscape:
@@ -85,32 +89,32 @@ QVariant Options3DControlSchemeModel::data(const QModelIndex& index, int role) c
                return tr("? Mode", "editor mode (unknown)");
             }
          }
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             switch (col) {
                case 0:
                   return casted->name;
                case 1: // Tool name
-                  return DK3DLocalization::tool_name(casted->tool);
+                  return DKWorldinputLocalization::tool_name(casted->tool);
                case 2: // Mapped to
-                  return DK3DLocalization::stringify_input(casted->mapping);
+                  return DKWorldinputLocalization::stringify_input(casted->mapping);
             }
          }
          break;
       case BoundInputRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             return QVariant::fromValue(casted->mapping);
          }
          break;
       case InputNodeNameRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             return casted->name;
          }
          break;
       case InputNodeToolRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             if (!casted->tool)
-               return (int)DK3D::tools::id_of_none;
-            return (int) DK3D::all_tool_instances::get().id_of(*casted->tool);
+               return (int)worldinput::tools::id_of_none;
+            return (int) worldinput::all_tool_instances::get().id_of(*casted->tool);
          }
          break;
       case NodeTypeRole:
@@ -126,7 +130,7 @@ Qt::ItemFlags Options3DControlSchemeModel::flags(const QModelIndex& index) const
       return 0;
    }
    switch (node->type) {
-      using _ = DK3D::binds::node_type;
+      using _ = worldinput::binds::node_type;
       case _::root:
          return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
       case _::editor_mode:
@@ -199,30 +203,30 @@ bool Options3DControlSchemeModel::setData(const QModelIndex& index, const QVaria
       return false;
    switch (role) {
       case BoundInputRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
-            if (value.canConvert<DK3D::inputs::bound_input>()) {
-               auto v = value.value<DK3D::inputs::bound_input>();
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
+            if (value.canConvert<worldinput::inputs::bound_input>()) {
+               auto v = value.value<worldinput::inputs::bound_input>();
                casted->mapping = v;
                return true;
             }
          }
          break;
       case InputNodeNameRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             casted->name = value.toString();
             return true;
          }
          break;
       case InputNodeToolRole:
-         if (auto* casted = node->as<DK3D::binds::nodes::input>()) {
+         if (auto* casted = node->as<worldinput::binds::nodes::input>()) {
             if (!value.canConvert<int>())
                break;
-            DK3D::tool_id id   = value.toInt();
-            const auto*   tool = DK3D::all_tool_instances::get()[id];
+            worldinput::tool_id id   = value.toInt();
+            const auto*   tool = worldinput::all_tool_instances::get()[id];
             if (casted->tool == tool)
                return true;
             casted->tool   = tool;
-            casted->params = DK3D::tools::option_union::construct_for_type(id);;
+            casted->params = worldinput::tools::option_union::construct_for_type(id);;
             return true;
          }
          break;
@@ -278,7 +282,7 @@ bool Options3DControlSchemeModel::insertRows(int row, int count, const QModelInd
       return false;
    this->beginInsertRows(qmi_parent, row, row + count);
    while (count--) {
-      auto* child = new DK3D::binds::nodes::input;
+      auto* child = new worldinput::binds::nodes::input;
       parent->insert(*child, row);
    }
    this->endInsertRows();
@@ -325,7 +329,7 @@ bool Options3DControlSchemeTreeModel::filterAcceptsRow(int source_row, const QMo
    {
       auto dt = source->data(qmi, Options3DControlSchemeModel::NodeTypeRole);
       if (dt.isValid() && dt.type() == QMetaType::Int) {
-         using _ = DK3D::binds::node_type;
+         using _ = worldinput::binds::node_type;
          switch ((_)dt.value<int>()) {
             case _::editor_mode:
             case _::root:

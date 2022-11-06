@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovahkit::subsystems::worldinput::tools::option_union">
+      <DisplayString Condition="tag == (tool_id)-1">&lt;empty&gt;</DisplayString>
+      <DisplayString>has data</DisplayString>
+      <Expand>
+         <Item Name="tag">(int)tag,d</Item>
+         <Synthetic Name="[typed data views]">
+            <DisplayString>Can't identify the type in natvis, but here are views for each type</DisplayString>
+            <Expand>
+               <Item Optional="true" Name="[attempt_on_screen_selection]">(attempt_on_screen_selection::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[debug_dump_landscape_details]">(debug_dump_landscape_details::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[debug_log]">(debug_log::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[debug_placeholder]">(debug_placeholder::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[modify_camera_speed_flags]">(modify_camera_speed_flags::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[move_camera]">(move_camera::options*)&amp;data._Elems[0],na</Item>
+               <Item Optional="true" Name="[turn_camera]">(turn_camera::options*)&amp;data._Elems[0],na</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   <Type Name="dovahkit::subsystems::worldinput::tools::impl::option_union_base">
+      <DisplayString Condition="tag == (tool_id)-1">&lt;empty&gt;</DisplayString>
+      <DisplayString>has data</DisplayString>
+      <Expand>
+         <ExpandedItem>*(dovahkit::subsystems::worldinput::tools::option_union*)this,nd</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -22,7 +22,7 @@ namespace cobb {
    namespace ct { // namespace for compile-time code
       // Cosine function implemented via a Taylor series to an arbitrary number of iterations.
       // Slower than the built-in, but constexpr-compatible.
-      template<int iterations = 5, typename T> requires (std::is_arithmetic_v<T> && iterations > 1)
+      template<int iterations = 10, typename T> requires (std::is_arithmetic_v<T> && iterations > 1)
       constexpr T cosine(T angle) noexcept {
          int sign   = -1;
          T   result =  1;
@@ -38,7 +38,7 @@ namespace cobb {
       }
    }
 
-   template<int iterations = 5, typename T> requires (std::is_arithmetic_v<T> && iterations > 1)
+   template<int iterations = 10, typename T> requires (std::is_arithmetic_v<T> && iterations > 1)
    constexpr T cosine(T angle) noexcept {
       if (std::is_constant_evaluated()) {
          return ct::cosine(angle);

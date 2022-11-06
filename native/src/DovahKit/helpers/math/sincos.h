@@ -22,7 +22,7 @@ namespace cobb {
    namespace ct { // namespace for compile-time code
       // Combined sin/cos implementation which should use fewer compile-time steps, keeping you further 
       // from compiler safety limits meant to prevent infinite constexpr loops.
-      template<int iterations = 5, typename T, typename S, typename C> requires (std::is_arithmetic_v<T> && iterations > 1)
+      template<int iterations = 10, typename T, typename S, typename C> requires (std::is_arithmetic_v<T> && iterations > 1)
       constexpr void sincos(T angle, S& sin, C& cos) noexcept {
          sin = angle;
          cos = 1;
@@ -34,8 +34,8 @@ namespace cobb {
          for (int i = 1; i < iterations; ++i) {
             numer_s *= angle * -angle;
             numer_c *= angle * -angle;
-            int fac_s = 0;
-            int fac_c = 0;
+            unsigned int fac_s = 0;
+            unsigned int fac_c = 0;
             {
                int s = 2 * (i - 1);
                int e = 2 * i;
@@ -55,7 +55,7 @@ namespace cobb {
       }
    }
 
-   template<int iterations = 5, typename T, typename S, typename C> requires (std::is_arithmetic_v<T> && iterations > 1)
+   template<int iterations = 10, typename T, typename S, typename C> requires (std::is_arithmetic_v<T> && iterations > 1)
    constexpr void sincos(T angle, S& sin, C& cos) noexcept {
       if (std::is_constant_evaluated()) {
          ct::sincos(angle, sin, cos);

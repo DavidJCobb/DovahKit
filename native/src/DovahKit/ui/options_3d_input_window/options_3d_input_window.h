@@ -3,7 +3,7 @@
 #include "widgets/DKBoundInputWidget.h"
 
 class Options3DControlSchemeModel;
-namespace DK3D::binds {
+namespace dovahkit::subsystems::worldinput::binds {
    class tree;
    namespace nodes {
       class input;
@@ -34,17 +34,17 @@ class Options3DInputDialog : public QDialog {
          model_type* model = nullptr;
       } state;
 
-      DK3D::binds::nodes::input* selectedInputNode() const;
+      dovahkit::subsystems::worldinput::binds::nodes::input* selectedInputNode() const;
 
    public slots:
-      void setBindings(const DK3D::binds::tree&);
+      void setBindings(const dovahkit::subsystems::worldinput::binds::tree&);
 
    protected:
       void _updateBindListButtons(const QModelIndex& target = QModelIndex());
 
    protected slots:
       void bindingSelected();
-      void rebuildToolOptions(DK3D::binds::nodes::input* node = nullptr);
+      void rebuildToolOptions(dovahkit::subsystems::worldinput::binds::nodes::input* node = nullptr);
 
       void addBind();
       void deleteBind();

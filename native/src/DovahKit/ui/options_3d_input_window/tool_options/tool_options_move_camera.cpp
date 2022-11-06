@@ -2,14 +2,18 @@
 #include "helpers/qt/combobox.h"
 #include "helpers/qt/mass_block_signals.h"
 #include "helpers/qt/mass_set_visible.h"
-#include "dk3d/tools/_options.h"
+#include "editor/subsystems/worldinput/tools/_options.h"
+
+namespace worldinput {
+   using namespace dovahkit::subsystems::worldinput;
+}
 
 namespace {
    static constexpr float max_move_distance = 256.0F;
 }
 
 namespace DK3DToolOptions {
-   MoveCamera::MoveCamera(QWidget* parent) : Base(DK3D::id_of_tool_options<options_type>(), parent) {
+   MoveCamera::MoveCamera(QWidget* parent) : Base(worldinput::id_of_tool<tool_type>(), parent) {
       this->ui.setupUi(this);
       QObject::connect(this, &Base::controlTypeChanged, this, &MoveCamera::_onControlTypeChanged);
       //
@@ -27,10 +31,10 @@ namespace DK3DToolOptions {
       {  // Configure reference frames
          auto cfg = [this](QComboBox* widget) {
             widget->clear();
-            widget->addItem(tr("Camera",  "reference frame"), (int)DK3D::reference_frame::camera);
-            widget->addItem(tr("World",   "reference frame"), (int)DK3D::reference_frame::world);
-            widget->addItem(tr("Local",   "reference frame"), (int)DK3D::reference_frame::local);
-            widget->addItem(tr("Current", "reference frame"), (int)DK3D::reference_frame::current);
+            widget->addItem(tr("Camera",  "reference frame"), (int)worldinput::reference_frame::camera);
+            widget->addItem(tr("World",   "reference frame"), (int)worldinput::reference_frame::world);
+            widget->addItem(tr("Local",   "reference frame"), (int)worldinput::reference_frame::local);
+            widget->addItem(tr("Current", "reference frame"), (int)worldinput::reference_frame::current);
             QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.referenceFrame);
@@ -39,9 +43,9 @@ namespace DK3DToolOptions {
       {  // Configure 3D axes
          auto cfg = [this](QComboBox* widget) {
             widget->clear();
-            widget->addItem(tr("X", "3D axis"), (int)DK3D::axis3D::x);
-            widget->addItem(tr("Y", "3D axis"), (int)DK3D::axis3D::y);
-            widget->addItem(tr("Z", "3D axis"), (int)DK3D::axis3D::z);
+            widget->addItem(tr("X", "3D axis"), (int)worldinput::axis3D::x);
+            widget->addItem(tr("Y", "3D axis"), (int)worldinput::axis3D::y);
+            widget->addItem(tr("Z", "3D axis"), (int)worldinput::axis3D::z);
             QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          };
          cfg(this->ui.scalarAxis);
@@ -53,20 +57,20 @@ namespace DK3DToolOptions {
          //
          widget = this->ui.scalarSign;
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
+         widget->addItem(tr("Positive", "sign"), (int)worldinput::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)worldinput::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorXSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
+         widget->addItem(tr("Positive", "sign"), (int)worldinput::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)worldinput::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
          //
          widget = this->ui.vectorYSign; // TODO: we want different text for different scalar/vector controls
          widget->clear();
-         widget->addItem(tr("Positive", "sign"), (int)DK3D::sign::positive);
-         widget->addItem(tr("Negative", "sign"), (int)DK3D::sign::negative);
+         widget->addItem(tr("Positive", "sign"), (int)worldinput::sign::positive);
+         widget->addItem(tr("Negative", "sign"), (int)worldinput::sign::negative);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Base::edited); // signal-to-signal
       }
       //
@@ -74,9 +78,9 @@ namespace DK3DToolOptions {
    }
 
    void MoveCamera::_onControlTypeChanged() {
-      bool button = (this->controlType() == DK3D::control_type::button);
-      bool scalar = (this->controlType() == DK3D::control_type::scalar);
-      bool vector = (this->controlType() == DK3D::control_type::vector);
+      bool button = (this->controlType() == worldinput::control_type::button);
+      bool scalar = (this->controlType() == worldinput::control_type::scalar);
+      bool vector = (this->controlType() == worldinput::control_type::vector);
       //
       cobb::qt::set_visibility_of(button,
          this->ui.label_boolean,
@@ -93,8 +97,8 @@ namespace DK3DToolOptions {
       );
    }
 
-   void MoveCamera::_readOptions(const DK3D::tools::opaque_option_union& oou) {
-      const auto* o = DK3D::tools::option_union::as<options_type>(oou);
+   void MoveCamera::_readOptions(const worldinput::tools::opaque_option_union& oou) {
+      const auto* o = worldinput::tools::option_union::as<tool_type>(oou);
       if (!o)
          return;
       auto& options = *o;
@@ -120,7 +124,7 @@ namespace DK3DToolOptions {
       this->ui.booleanX->setValue(options.magnitudes.x);
       this->ui.booleanY->setValue(options.magnitudes.y);
       this->ui.booleanZ->setValue(options.magnitudes.z);
-      if (this->controlType() == DK3D::control_type::scalar) {
+      if (this->controlType() == worldinput::control_type::scalar) {
          cobb::qt::set_combobox_value(this->ui.scalarAxis, options.non_button.input_x);
          cobb::qt::set_combobox_value(this->ui.scalarSign, options.non_button.x_sign);
       } else {
@@ -130,26 +134,26 @@ namespace DK3DToolOptions {
          cobb::qt::set_combobox_value(this->ui.vectorYSign, options.non_button.y_sign);
       }
    }
-   void MoveCamera::_writeOptions(DK3D::tools::opaque_option_union& oou) {
-      auto* o = DK3D::tools::option_union::as<options_type>(oou);
+   void MoveCamera::_writeOptions(worldinput::tools::opaque_option_union& oou) {
+      auto* o = worldinput::tools::option_union::as<tool_type>(oou);
       if (!o)
          return;
       auto& out = *o;
       //
-      out.reference_frames.baseline  = (DK3D::reference_frame)this->ui.referenceFrame->currentData().toInt();
-      out.reference_frames.selection = (DK3D::reference_frame)this->ui.referenceFrameSel->currentData().toInt();
+      out.reference_frames.baseline  = (worldinput::reference_frame)this->ui.referenceFrame->currentData().toInt();
+      out.reference_frames.selection = (worldinput::reference_frame)this->ui.referenceFrameSel->currentData().toInt();
       out.also_translate_selection   = this->ui.alsoMoveSelection->isChecked();
       out.magnitudes.x = this->ui.booleanX->value();
       out.magnitudes.y = this->ui.booleanY->value();
       out.magnitudes.z = this->ui.booleanZ->value();
-      if (this->controlType() == DK3D::control_type::scalar) {
-         out.non_button.input_x = (DK3D::axis3D) this->ui.scalarAxis->currentData().toInt();
-         out.non_button.x_sign  = (DK3D::sign)   this->ui.scalarSign->currentData().toInt();
+      if (this->controlType() == worldinput::control_type::scalar) {
+         out.non_button.input_x = (worldinput::axis3D) this->ui.scalarAxis->currentData().toInt();
+         out.non_button.x_sign  = (worldinput::sign)   this->ui.scalarSign->currentData().toInt();
       } else {
-         out.non_button.input_x = (DK3D::axis3D) this->ui.vectorXAxis->currentData().toInt();
-         out.non_button.input_y = (DK3D::axis3D) this->ui.vectorYAxis->currentData().toInt();
-         out.non_button.x_sign  = (DK3D::sign)   this->ui.vectorXSign->currentData().toInt();
-         out.non_button.y_sign  = (DK3D::sign)   this->ui.vectorYSign->currentData().toInt();
+         out.non_button.input_x = (worldinput::axis3D) this->ui.vectorXAxis->currentData().toInt();
+         out.non_button.input_y = (worldinput::axis3D) this->ui.vectorYAxis->currentData().toInt();
+         out.non_button.x_sign  = (worldinput::sign)   this->ui.vectorXSign->currentData().toInt();
+         out.non_button.y_sign  = (worldinput::sign)   this->ui.vectorYSign->currentData().toInt();
       }
    }
 }

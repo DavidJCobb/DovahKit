@@ -1,42 +1,44 @@
 #include "options_3d_input_window.h"
-#pragma region Tool options
-   #include "tool_options/tool_options_base.h"
-   #include "tool_options/tool_options_debug_log.h"
-   #include "tool_options/tool_options_debug_placeholder.h"
-   #include "tool_options/tool_options_move_camera.h"
-   #include "tool_options/tool_options_turn_camera.h"
-#pragma endregion
 #include "helpers/qt/combobox.h"
-#include "dk3d/bind_tree/tree.h"
-#include "dk3d/bind_tree/node.h"
-#include "dk3d/bind_tree/nodes/input.h"
-#include "dk3d/tools/_all.h"
-#include "dk3d/inputs/bound_input.h"
-#include "dk3d/DK3DInputHandler.h"
-#include "Options3DControlSchemeModel.h"
-#include "localization.h"
+
+#include "editor/subsystems/worldinput/bind_tree/tree.h"
+#include "editor/subsystems/worldinput/bind_tree/node.h"
+#include "editor/subsystems/worldinput/bind_tree/nodes/input.h"
+#include "editor/subsystems/worldinput/tools/_all.h"
+#include "editor/subsystems/worldinput/inputs/bound_input.h"
+#include "editor/subsystems/worldinput/core.h"
+
+#include "./tool_options/tool_options_base.h"
+#include "./tool_options/_all.h"
+#include "./Options3DControlSchemeModel.h"
+#include "./localization.h"
+
+namespace worldinput {
+   using namespace dovahkit::subsystems::worldinput;
+}
 
 namespace {
    //
    // TODO: This window should be used for editing a single control scheme; the user should be able to 
    // pick the device and scheme to edit somewhere, so this should be set on the window as a parameter.
    //
-   constexpr auto HARDCODED_INPUT_DEVICE_TODO_CHANGE = DK3D::input_device_type::xinput;
+   constexpr auto HARDCODED_INPUT_DEVICE_TODO_CHANGE = worldinput::input_device_type::xinput;
 }
 
 namespace {
-   DK3DToolOptions::Base* spawn_tool_options(DK3D::tool_id id, QWidget* parent = nullptr) {
-      switch (id) {
-         case DK3D::id_of_tool<DK3DToolOptions::DebugLog::options_type>():
-            return new DK3DToolOptions::DebugLog(parent);
-         case DK3D::id_of_tool<DK3DToolOptions::DebugPlaceholder::options_type>():
-            return new DK3DToolOptions::DebugPlaceholder(parent);
-         case DK3D::id_of_tool<DK3DToolOptions::MoveCamera::options_type>():
-            return new DK3DToolOptions::MoveCamera(parent);
-         case DK3D::id_of_tool<DK3DToolOptions::TurnCamera::options_type>():
-            return new DK3DToolOptions::TurnCamera(parent);
-      }
-      return nullptr;
+   DK3DToolOptions::Base* spawn_tool_options(worldinput::tool_id id, QWidget* parent = nullptr) {
+      DK3DToolOptions::Base* result = nullptr;
+
+      DK3DToolOptions::all::for_each_until_true([id, parent, &result]<typename Current>() {
+         constexpr auto current_id = worldinput::id_of_tool<Current::tool_type>();
+         if (current_id == id) {
+            result = new Current(parent);
+            return true;
+         }
+         return false;
+      });
+
+      return result;
    }
 }
 
@@ -114,14 +116,11 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
       //
       auto* widget = this->ui.bindTool;
       widget->clear();
-      auto lambda = [widget](DK3D::tool_id id) {
-         widget->addItem(DK3DLocalization::tool_name(id), (int)id);
-      };
-      lambda(DK3D::tools::id_of_none);
-      lambda(DK3D::id_of_tool<DK3D::tools::debug_log>());
-      lambda(DK3D::id_of_tool<DK3D::tools::debug_placeholder>());
-      lambda(DK3D::id_of_tool<DK3D::tools::move_camera>());
-      lambda(DK3D::id_of_tool<DK3D::tools::turn_camera>());
+      widget->addItem(DKWorldinputLocalization::tool_name(worldinput::tools::id_of_none), (int)worldinput::tools::id_of_none);
+      DK3DToolOptions::all::for_each([this, widget]<typename CurrentUI>() {
+         constexpr auto tool_id = worldinput::id_of_tool<CurrentUI::tool_type>();
+         widget->addItem(DKWorldinputLocalization::tool_name(tool_id), (int)tool_id);
+      });
    }
    {  // input
       auto* widget = this->subwidgets.input = new DKBoundInputWidget(this);
@@ -129,7 +128,7 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
       assert(layout);
       layout->addWidget(widget, 2, 0, 1, 2);
       widget->setInputDevice(HARDCODED_INPUT_DEVICE_TODO_CHANGE);
-      QObject::connect(widget, &DKBoundInputWidget::valueChanged, this, [this](const DK3D::inputs::bound_input& bi) {
+      QObject::connect(widget, &DKBoundInputWidget::valueChanged, this, [this](const worldinput::inputs::bound_input& bi) {
          auto* widget = this->ui.bindList;
          auto* model  = this->state.model;
          auto* sm     = widget->selectionModel();
@@ -173,11 +172,11 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
    //
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
    QObject::connect(this->ui.buttonSave,   &QPushButton::clicked, this, [this]() {
-      DK3DInputHandler::get().setBindingsFor(HARDCODED_INPUT_DEVICE_TODO_CHANGE, this->state.model->tree());
+      worldinput::core::get().setBindingsFor(HARDCODED_INPUT_DEVICE_TODO_CHANGE, this->state.model->tree());
       this->accept();
    });
    //
-   this->setBindings(DK3DInputHandler::get().bindingsFor(HARDCODED_INPUT_DEVICE_TODO_CHANGE));
+   this->setBindings(worldinput::core::get().bindingsFor(HARDCODED_INPUT_DEVICE_TODO_CHANGE));
 }
 
 /*static*/ Options3DInputDialog* Options3DInputDialog::open(QWidget* parent) {
@@ -194,7 +193,7 @@ Options3DInputDialog::~Options3DInputDialog() {
    Options3DInputDialog::current_instance = nullptr;
 }
 
-void Options3DInputDialog::setBindings(const DK3D::binds::tree& tree) {
+void Options3DInputDialog::setBindings(const worldinput::binds::tree& tree) {
    this->state.model->setTree(tree);
 }
 
@@ -233,7 +232,7 @@ void Options3DInputDialog::_updateBindListButtons(const QModelIndex& current) {
    }
 }
 
-DK3D::binds::nodes::input* Options3DInputDialog::selectedInputNode() const {
+worldinput::binds::nodes::input* Options3DInputDialog::selectedInputNode() const {
    auto* sm = this->ui.bindList->selectionModel();
    if (!sm)
       return nullptr;
@@ -242,7 +241,7 @@ DK3D::binds::nodes::input* Options3DInputDialog::selectedInputNode() const {
       return nullptr;
    auto* raw = this->state.model->node(rows[0]);
    if (raw)
-      return raw->as<DK3D::binds::nodes::input>();
+      return raw->as<worldinput::binds::nodes::input>();
    return nullptr;
 }
 
@@ -251,12 +250,12 @@ void Options3DInputDialog::bindingSelected() {
    const auto blocker1 = QSignalBlocker(this->ui.bindTool);
    const auto blocker2 = QSignalBlocker(this->subwidgets.input);
    //
-   const DK3D::binds::nodes::input* node = this->selectedInputNode();
+   const worldinput::binds::nodes::input* node = this->selectedInputNode();
    this->ui.bindOptions->setEnabled(node != nullptr);
    if (!node) {
       this->ui.bindName->setText("");
       this->ui.bindTool->setCurrentIndex(0);
-      this->subwidgets.input->setValue(DK3D::inputs::bound_input());
+      this->subwidgets.input->setValue(worldinput::inputs::bound_input());
       this->rebuildToolOptions();
       return;
    }
@@ -267,8 +266,9 @@ void Options3DInputDialog::bindingSelected() {
    }
    if (node->tool) {
       this->rebuildToolOptions();
+      cobb::qt::set_combobox_value(this->ui.bindTool, worldinput::id_of_tool(node->tool));
    } else {
-      cobb::qt::set_combobox_value(this->ui.bindTool, DK3D::tools::id_of_none);
+      cobb::qt::set_combobox_value(this->ui.bindTool, worldinput::tools::id_of_none);
       //
       if (auto* w = this->subwidgets.tool_options) {
          w->setParent(nullptr);
@@ -277,7 +277,7 @@ void Options3DInputDialog::bindingSelected() {
       }
    }
 }
-void Options3DInputDialog::rebuildToolOptions(DK3D::binds::nodes::input* node) {
+void Options3DInputDialog::rebuildToolOptions(worldinput::binds::nodes::input* node) {
    if (!node)
       node = this->selectedInputNode();
    //
@@ -292,11 +292,12 @@ void Options3DInputDialog::rebuildToolOptions(DK3D::binds::nodes::input* node) {
       return;
    }
    //
-   auto& list = DK3D::all_tool_instances::get();
+   auto& list = worldinput::all_tool_instances::get();
    auto  id   = list.id_of(*node->tool);
    //
    to = spawn_tool_options(id, body);
    if (to) {
+      to->setControlType(node->mapping.get_control_type());
       to->showOptions(node->params);
       QObject::connect(to, &DK3DToolOptions::Base::edited, this, [this]() {
          auto* b = this->selectedInputNode();

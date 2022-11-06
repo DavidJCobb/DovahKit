@@ -1470,12 +1470,6 @@
     <ClCompile Include="helpers\qt\keycodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\DKXInputSubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\DK3DInputHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1483,15 +1477,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKBoundInputWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\tools\move_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\tools\debug_log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\tools\turn_camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_window\options_window.cpp">
@@ -1506,52 +1491,19 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dk3d\tools\debug_placeholder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dk3d\tools\_all.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\tools\_options.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\bind_tree\tree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\bind_tree\node.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\bind_tree\nodes\editor_mode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\devices\keyboard_mouse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\devices\xinput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\inputs\bound_input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\bind_tree\nodes\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_3d_input_window\localization.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\input_result.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\overlays\fps.cpp">
@@ -1767,9 +1719,6 @@
     <ClCompile Include="editor\helpers\form_identifiers_to_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dk3d\tools\modify_camera_speed_flags.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1777,9 +1726,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\rendered_bounds.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dk3d\tools\attempt_on_screen_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\rendered_landscape.cpp">
@@ -1875,9 +1821,6 @@
     <ClCompile Include="vulkan\raycast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dk3d\tools\debug_dump_landscape_details.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vulkan\scene_entities\owned_gpu_resource_upload_operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1912,6 +1855,72 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\bind_tree\tree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\devices\keyboard_mouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\devices\xinput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\worldinput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\inputs\bound_input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\input_result.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\attempt_on_screen_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\debug_dump_landscape_details.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\debug_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\debug_placeholder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\modify_camera_speed_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\move_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\turn_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\_all.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\tools\_options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\xinput\xinputDK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\xinput\gamepad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3410,106 +3419,19 @@
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dk3d\chrono.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\bitfield_array.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\defaults.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dk3d\tools\_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\_options.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\_all.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\move_camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\axis3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\sign.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\debug_log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\turn_camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\qt\mass_set_visible.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\debug_placeholder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\mass_block_signals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dk3d\bind_tree\tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\bind_tree\node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\bind_tree\nodes\root.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\bind_tree\nodes\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\bind_tree\nodes\input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\inputs\button.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\inputs\bound_input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\button_press_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\scalar_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\vector_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\devices\keyboard_mouse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\devices\xinput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\axis2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\control_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\enum_flags.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\camera_turn_axis.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\reference_frame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\input_device_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\copy_variadic_template_parameters.h">
@@ -3519,18 +3441,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\tuple_transform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\_results.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\button_release_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\button_state.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\input_result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\n_of_value.h">
@@ -3911,18 +3821,6 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dk3d\tools\modify_camera_speed_flags.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\bool_operation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\pointer_position_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\tools\attempt_on_screen_selection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\rendered_bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3936,9 +3834,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dk3d\enums\selection_operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\vertex_landscape.h">
@@ -4268,9 +4163,6 @@
     <ClInclude Include="vulkan\raycast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dk3d\tools\debug_dump_landscape_details.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\config\grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -4392,6 +4284,159 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\config\asset_loading.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\bind_tree\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\root.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\bind_tree\tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\chrono.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\defaults.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\devices\xinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\inputs\bound_input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\inputs\button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\devices\keyboard_mouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\button_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\input_result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\attempt_on_screen_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\debug_dump_landscape_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\debug_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\debug_placeholder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\modify_camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\move_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\turn_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\tools\_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\axis2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\axis3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\bool_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\button_press_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\button_release_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\camera_turn_axis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\control_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\input_device_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\pointer_position_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\reference_frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\scalar_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\selection_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\sign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\enums\vector_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\math\arcsine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\math\atan2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\enums\dll_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\gamepad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\enums\button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\enums\side.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\vibration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\chrono.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\config\trigger_threshold_for_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\xinput\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -4800,12 +4845,6 @@
     <QtMoc Include="widgets\DKVulkanView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\subsystems\DKXInputSubsystem.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="dk3d\DK3DInputHandler.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widgets\DKBoundInputWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -4843,6 +4882,18 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\worldinput\worldinput.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\xinput\xinputDK.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -4910,10 +4961,6 @@
     <Text Include="vulkan\_docs\GLM.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
     <Text Include="vulkan\_docs\an overview of 3D transforms.txt" />
-    <Text Include="dk3d\_docs\keyboard inputs.txt" />
-    <Text Include="dk3d\_docs\keyboard shortcuts - guidelines for defaults.txt" />
-    <Text Include="dk3d\_docs\strictly ordered tools.txt" />
-    <Text Include="dk3d\_docs\tools.txt" />
     <Text Include="dovah\_docs\avenues for further research.txt" />
     <Text Include="vulkan\_docs\axis conventions.txt" />
     <Text Include="vulkan\_docs\order-independent transparency.txt" />
@@ -4924,6 +4971,10 @@
     <Text Include="helpers\tuples\docs.txt" />
     <Text Include="nif\blocks\_TODO.txt" />
     <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
+    <Text Include="editor\subsystems\worldinput\_docs\keyboard inputs.txt" />
+    <Text Include="editor\subsystems\worldinput\_docs\keyboard shortcuts - guidelines for defaults.txt" />
+    <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
+    <Text Include="editor\subsystems\worldinput\_docs\tools.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -5051,6 +5102,9 @@
     <None Include="shaders\bespoke\grid\color.vert.spv" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
     <None Include="shaders\bespoke\grid\color-oit.frag.spv" />
+    <None Include="editor\subsystems\worldinput\tools\_options.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -5092,5 +5146,6 @@
     <Natvis Include="vulkan\scene_entity_handle.natvis" />
     <Natvis Include="vulkan\image_metadata.natvis" />
     <Natvis Include="vulkan\image.natvis" />
+    <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
   </ItemGroup>
 </Project>

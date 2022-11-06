@@ -2,7 +2,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #if !defined(QT_DESIGNER_LIB)
-   #include "../helpers/qt/keycodes.h"
+   #include "helpers/qt/keycodes.h"
 #else
    namespace cobb::qt {
       struct key {
