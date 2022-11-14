@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <windows.h>
-#include "../../../helpers/intrusive_windows_defines.h"
+#include "helpers/windows.h"
 #include "../../../lua.h"
 #include "../core/classes.h"
 

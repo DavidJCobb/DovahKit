@@ -12,9 +12,10 @@ namespace vulkanDK {
    struct surface_renderer_dsl_group {
       public:
          union {
-            std::array<T, 11> list = {};
+            std::array<T, 12> list = {};
             struct {
                T scene_state;
+               T gizmo_state;
                T shadow_caster_map_render;
                T shadow_maps;
                T all_textures;
@@ -32,6 +33,14 @@ namespace vulkanDK {
          surface_renderer_dsl_group() {}
          ~surface_renderer_dsl_group() {}
    };
+   static_assert(
+      []() -> bool {
+         using item_type = VkDescriptorSet;
+         using test_type = surface_renderer_dsl_group<item_type>;
+         return sizeof(test_type) == sizeof(item_type) * std::tuple_size_v<decltype(test_type::list)>;
+      }(),
+      "When adding or removing named elements to the list, don't forget to change the std::array size!"
+   );
 
    struct descriptor_set_layout_group : public surface_renderer_dsl_group<descriptor_set_layout> {
       using surface_renderer_dsl_group::surface_renderer_dsl_group;

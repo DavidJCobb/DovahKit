@@ -1,7 +1,7 @@
 #include "DovahscriptResource.h"
 #include <QPainter>
 #include "../../../../../DirectXTex/DirectXTex.h"
-#include "../../../../helpers/intrusive_windows_defines.h"
+#include "helpers/windows.h"
 #include "../../../constants/qt_graphics.h"
 
 #include "../resources.h"

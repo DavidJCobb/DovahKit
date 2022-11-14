@@ -6,12 +6,12 @@
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "../generic/FormsOfTypeCombobox.h"
-#include "editor/subsystems/worldedit.h"
+#include "editor/subsystems/worldedit/core.h"
 
 CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
    auto& editor    = DovahKitCore::get();
-   auto& worldedit = dovahkit::subsystems::worldedit::get_or_create(); // ensure the subsystem exists
+   auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create(); // ensure the subsystem exists
    //
    {  // Splitter
       //this->ui.splitter->setHandleWidth(2);
@@ -85,7 +85,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       widget->setText(text);
    });
    QObject::connect(this->ui.cellList, &CellList::renderRequested, this, [this](dovah::form_stub* cell) {
-      dovahkit::subsystems::worldedit::get().set_current_area(cell);
+      dovahkit::subsystems::worldedit::core::get().set_current_area(cell);
    });
    //
    QObject::connect(this->ui.loadedCellsAtTop, &QCheckBox::toggled, this, [this](bool checked) {
@@ -100,7 +100,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       dovah::form_stub* world = this->ui.worldspace->formStub();
       if (!world)
          return;
-      dovahkit::subsystems::worldedit::get().set_current_area(
+      dovahkit::subsystems::worldedit::core::get().set_current_area(
          world,
          this->ui.jumpToGridX->value(),
          this->ui.jumpToGridY->value()
@@ -207,7 +207,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->ui.cellList, &CellList::currentCellChanged, this, [this](const dovah::form_stub* cell) {
          if (is_synchronizing)
             return;
-         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          if (!worldedit.is_cell_loaded(cell))
             return;
          auto* sel_model = this->ui.referenceList->selectionModel();
@@ -234,7 +234,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          if (window_cell != &cell)
             return;
          is_synchronizing = true;
-         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          for (auto* stub : this->ui.referenceList->selectedStubs()) {
             worldedit.setRefSelectionState(*stub, true);
          }
@@ -274,7 +274,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->ui.referenceList, &CellRefList::userInitiatedSelectionChanged, [this](const auto& selected, const auto& deselected) {
          if (is_synchronizing)
             return;
-         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          if (!selected.empty()) {
             auto* window_cell = this->ui.cellList->formStub();
             if (!worldedit.is_cell_loaded(window_cell)) {
@@ -343,7 +343,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       // that time.
       //
       QObject::connect(this->ui.referenceList, &CellRefList::filterChanged, [this]() {
-         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          if (!worldedit.is_cell_loaded(this->ui.cellList->formStub()))
             return;
          auto list = worldedit.get_selected_refs();
@@ -360,7 +360,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       // way that it is no longer filtered out.
       //
       QObject::connect(this->ui.referenceList, &CellRefList::editedFormNoLongerFiltered, this, [this](dovah::form_stub* stub) {
-         auto& worldedit = dovahkit::subsystems::worldedit::get();
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          if (worldedit.is_ref_selected(stub)) {
             this->ui.referenceList->selectStub(stub, QItemSelectionModel::SelectionFlag::Select);
          }

@@ -2,8 +2,6 @@
 #include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
-#include "helpers/unreachable.h"
-#include "_vulkan.h"
 
 namespace vulkanDK {
    // Suitable for use as a uniform buffer object.

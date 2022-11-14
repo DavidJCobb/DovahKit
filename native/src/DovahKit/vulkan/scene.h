@@ -15,6 +15,7 @@
 #include "./rendered_landscape.h"
 #include "./rendered_light.h"
 #include "./rendered_mesh.h"
+#include "./scene_gizmo_state.h"
 #include "./scene_global_state.h"
 
 struct DKVulkanCameraUpdate;
@@ -62,6 +63,7 @@ namespace vulkanDK {
             glm::vec3 position = { 0, 0, 0 };
          } camera;
          scene_global_state global_state; // GPU-side state
+         scene_gizmo_state  gizmo_state;
          scene_entities::fif_sync_state light_shadow_state;
 
          template<typename Entity> std::vector<Entity>& entities_of_type() {

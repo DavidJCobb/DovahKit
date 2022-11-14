@@ -1,8 +1,7 @@
 #include "keyboard_mouse.h"
+#include "helpers/windows.h"
 #include "../defaults.h"
 #include "../inputs/button.h"
-#include <windows.h>
-#include "helpers/intrusive_windows_defines.h"
 #include <QCursor>
 
 namespace {

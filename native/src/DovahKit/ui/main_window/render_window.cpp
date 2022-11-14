@@ -9,7 +9,7 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QToolButton>
-#include "editor/subsystems/worldedit.h"
+#include "editor/subsystems/worldedit/core.h"
 #include "widgets/DKVulkanView.h"
 #include "vulkan/rendered_light.h"
 #include "vulkan/surface_renderer.h"
@@ -48,9 +48,9 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    layout->addWidget(view, 1);
    view->setFocus(); // default focus within this window
    {
-      auto& worldedit = dovahkit::subsystems::worldedit::get_or_create();
+      auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create();
       worldedit.set_target_view(*view);
-      QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::statusBarMessage, this, [this](const QString& message, int timeout) {
+      QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::statusBarMessage, this, [this](const QString& message, int timeout) {
          this->status->showMessage(message, timeout);
       });
    }
@@ -251,9 +251,9 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       widget->setMinimum(1);
       widget->setMaximum(25);
       widget->setSingleStep(2);
-      widget->setValue(dovahkit::subsystems::worldedit::get().cell_grid_size());
+      widget->setValue(dovahkit::subsystems::worldedit::core::get().cell_grid_size());
       QObject::connect(widget, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, view](int value) {
-         dovahkit::subsystems::worldedit::get().setCellGridSize(value);
+         dovahkit::subsystems::worldedit::core::get().setCellGridSize(value);
       });
       this->toolbar->addWidget(holder);
    }
@@ -264,6 +264,29 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       button->setCheckable(true);
       QObject::connect(button, &QAbstractButton::clicked, this, [view, button]() {
          view->surfaceRenderer()->set_landscape_borders_visible(button->isChecked());
+      });
+      //
+      this->toolbar->addWidget(button);
+   }
+   //
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Gizmo test");
+      button->setCheckable(true);
+      QObject::connect(button, &QAbstractButton::clicked, this, [view, button]() {
+         auto* sr = view->surfaceRenderer();
+         sr->set_gizmo_mode(button->isChecked() ? vulkanDK::gizmo_mode::translate : vulkanDK::gizmo_mode::none);
+      });
+      //
+      this->toolbar->addWidget(button);
+   }
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Gizmo test highlight");
+      button->setCheckable(true);
+      QObject::connect(button, &QAbstractButton::clicked, this, [view, button]() {
+         auto* sr = view->surfaceRenderer();
+         sr->set_gizmo_axis_highlighted(vulkanDK::axis3D::y, button->isChecked());
       });
       //
       this->toolbar->addWidget(button);

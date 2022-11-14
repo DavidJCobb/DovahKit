@@ -1,4 +1,5 @@
 #include "surface_renderer.h"
+#include <array>
 #include "./config/grid.h"
 #include "./config/shadow_maps.h"
 #include "./config/use_inverted_depth.h"
@@ -1072,8 +1073,68 @@ namespace vulkanDK {
       // And be sure to set up the pipeline layout when you're done!
       //
       s->setup_pipeline_layout();
-
    }
+
+   void surface_renderer::_setup_gizmo_shader() {
+      auto* s = this->create_graphics_shader(edit_gizmo_color_shader_id);
+      s->set_render_pass(this->render_passes_by_name.main);
+      s->set_layout_info(
+         {  // Descriptor set layouts
+            this->descriptor_set_layouts.scene_state.handle,
+            this->descriptor_set_layouts.gizmo_state.handle,
+         }
+      );
+      //
+      auto& options = s->options;
+      //
+      shader_module* vert = this->load_shader_module("shaders/gizmo/color.vert.spv");
+      shader_module* frag = this->load_shader_module("shaders/gizmo/color.frag.spv");
+      assert(frag);
+      this->set_debug_object_name(frag->handle, "Shader Module (Edit Gizmo Color: gizmo/color.frag.spv)");
+      assert(vert);
+      this->set_debug_object_name(vert->handle, "Shader Module (Edit Gizmo Color: gizmo/color.vert.spv)");
+      //
+      options.stages = {
+         {
+            .module              = frag,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
+         },
+         {
+            .module              = vert,
+            .entry_point_name    = "main",
+            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
+         },
+      };
+      options.color_blending.blends.emplace_back(graphics_shader::default_alpha_blend);
+      options.rasterization.cullMode = VK_CULL_MODE_NONE; // no backface culling
+      if constexpr (config::use_inverted_depth) {
+         options.depth.comparison = VK_COMPARE_OP_GREATER;
+      }
+      {
+         auto va = std::array{
+            VkVertexInputAttributeDescription{
+               .location = 0, // should match the location value in the shader's code
+               .binding  = 0,
+               .format   = VK_FORMAT_R32G32B32A32_SFLOAT, // vec4
+               .offset   = 0,
+            },
+         };
+
+         auto& vertex = options.inputs.vertex;
+         vertex.bindings.push_back(VkVertexInputBindingDescription{
+            .binding   = 0,
+            .stride    = sizeof(glm::vec4),
+            .inputRate = VK_VERTEX_INPUT_RATE_VERTEX, // used for non-instanced rendering
+         });
+         vertex.attributes.insert(vertex.attributes.end(), va.begin(), va.end());
+      }
+      //
+      // And be sure to set up the pipeline layout when you're done!
+      //
+      s->setup_pipeline_layout();
+   }
+
    void surface_renderer::_setup_shaders() {
       this->_setup_scene_background_shader();
       //
@@ -1086,6 +1147,8 @@ namespace vulkanDK {
       this->_setup_scene_bounds_shaders();
       //
       this->_setup_debug_grid_shader();
+      //
+      this->_setup_gizmo_shader();
       //
       // FPS counter:
       //

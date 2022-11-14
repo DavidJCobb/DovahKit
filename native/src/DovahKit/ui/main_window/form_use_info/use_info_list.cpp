@@ -1,11 +1,11 @@
 #include "use_info_list.h"
 #include <QHeaderView>
 #include <QLineEdit>
-#include "../../../helpers/qt/strings.h"
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/form_identifiers_to_string.h"
-#include "../../../editor/open_window_for_form.h"
-#include "../../../editor/subsystems/worldedit.h"
+#include "helpers/qt/strings.h"
+#include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/open_window_for_form.h"
+#include "editor/subsystems/worldedit/core.h"
 
 namespace {
    QString _format_cell(dovah::form_stub* cell) {
@@ -456,7 +456,7 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
          auto* stub = data->otherStub;
          if (stub) {
             if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
-               dovahkit::subsystems::worldedit::get_or_create().center_on_refr(*stub);
+               dovahkit::subsystems::worldedit::core::get_or_create().center_on_refr(*stub);
             } else {
                open_edit_dialog_for_form(data->otherStub, this);
             }

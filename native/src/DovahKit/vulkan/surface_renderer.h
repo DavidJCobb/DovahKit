@@ -19,6 +19,7 @@
 #include "./compute_shader.h"
 #include "./descriptor_definitions.h"
 #include "./fps_tracker.h"
+#include "./gizmo_buffer.h"
 #include "./graphics_shader.h"
 #include "./image.h"
 #include "./scene.h"
@@ -30,6 +31,9 @@
 #include "helpers/constexpr_optional_type.h"
 //
 #include "widgets/DKVulkanView.h"
+
+#include "./enums/axis3D.h"
+#include "./enums/gizmo_mode.h"
 
 class  DKVulkanInstance;
 struct DKVulkanCameraUpdate;
@@ -88,6 +92,7 @@ namespace vulkanDK {
          static constexpr graphics_shader::id_type landscape_wireframe_shader_id = "LandWire";
          static constexpr graphics_shader::id_type landscape_normals_shader_id   = "LandNrml"; // graphics_shader instance will not exist if geometry shaders aren't available on this hardware
          static constexpr graphics_shader::id_type debug_grid_color_shader_id = "GridColr";
+         static constexpr graphics_shader::id_type edit_gizmo_color_shader_id = "GizmoClr";
 
          using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::chrono::seconds::period>>;
          
@@ -145,6 +150,7 @@ namespace vulkanDK {
          cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
          //
          buffer debug_grid_index_buffer;
+         gizmo_buffer gizmo_buffer;
          owned_image_and_view null_texture;
          VkSampler raw_pixel_texture_sampler;
          //
@@ -215,13 +221,14 @@ namespace vulkanDK {
          std::vector<graphics_shader*> graphics_shaders;
          std::vector<compute_shader*>  compute_shaders;
          union {
-            std::array<render_pass*, 6> _list = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+            std::array<render_pass*, 7> _list = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
             struct {
                render_pass* main_shadow; // shadows for the directional sun
                render_pass* main_shadow_placed; // shadows for placed lights
                render_pass* main;
                render_pass* main_oit;
                render_pass* bounds;
+               render_pass* gizmo;
                render_pass* ui;
             };
          } render_passes_by_name;
@@ -342,6 +349,11 @@ namespace vulkanDK {
          void move_camera(const glm::vec3& move, const glm::vec3& turn_euler);
          void set_camera_position(const glm::vec3& pos);
 
+         gizmo_mode get_gizmo_mode() const;
+         void set_gizmo_mode(gizmo_mode);
+         bool is_gizmo_axis_highlighted(axis3D) const;
+         void set_gizmo_axis_highlighted(axis3D, bool);
+
          inline double last_frame_time() const { return this->state.last_frame_time; }
 
          void debug_show_frustrums(); // adds relevant frustrums to the scene as rendered_meshes.
@@ -381,6 +393,7 @@ namespace vulkanDK {
             void _setup_shadow_caster_cull_shaders();
             void _setup_scene_bounds_shaders();
             void _setup_debug_grid_shader();
+            void _setup_gizmo_shader();
          //
          void _create_null_texture(); // requires command pool
          void _setup_initial_scene(); // requires command pool for textures

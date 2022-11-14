@@ -20,13 +20,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace cobb {
    namespace windows_registry {
       #if UNICODE
-         using char_t    = wchar_t;
          using string_t  = std::wstring;
+         using char_t    = wchar_t;
       #else
-         using char_t    = char;
          using string_t  = std::string;
+         using char_t    = char;
       #endif
-      using cstring_t = const char_t*;
 
       enum class hkey {
          classes_root,
@@ -39,6 +38,6 @@ namespace cobb {
          users,
       };
       //
-      bool get_string_value(hkey, cstring_t key, cstring_t value, string_t& out);
+      bool get_string_value(hkey, const char_t* key, const char_t* value, string_t& out);
    }
 }

@@ -1,7 +1,7 @@
 #include "asset.h"
 #include "../../../DirectXTex/DirectXTex.h"
-#include "../../helpers/intrusive_windows_defines.h"
-#include "../../dovah/files/bsa/bsa_archived_file.h"
+#include "helpers/windows.h"
+#include "dovah/files/bsa/bsa_archived_file.h"
 #include "../core.h"
 #include "asset_manager.h"
 

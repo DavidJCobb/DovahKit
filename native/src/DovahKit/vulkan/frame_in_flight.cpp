@@ -184,6 +184,11 @@ namespace vulkanDK {
          this->shader_params.scene_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
          this->owner->set_debug_object_name(this->shader_params.scene_data.handle, QString("Buffer: FIF %1 Scene Global State Buffer").arg(this->my_index).toStdString());
       }
+      {
+         constexpr VkDeviceSize buffer_size = sizeof(scene_gizmo_state);
+         this->shader_params.gizmo_data = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+         this->owner->set_debug_object_name(this->shader_params.gizmo_data.handle, QString("Buffer: FIF %1 Scene Gizmo State Buffer").arg(this->my_index).toStdString());
+      }
       this->shader_params.scene_entity_frame_drawing_data.for_each([this]<typename Entity>(buffer& buf) {
          constexpr VkDeviceSize buffer_size = scene_entities::max_count_for_type<Entity> * sizeof(Entity::frame_drawing_data_type);
          buf = this->owner->create_buffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -348,6 +353,9 @@ namespace vulkanDK {
       });
       this->_update_drawn_scene_entity_frame_data<rendered_light>();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
+      if (this->state.must_update_gizmo_state) {
+         this->_update_shader_global_gizmo_state();
+      }
       this->owner->scene.update_light_shadows(*this);
       {
          auto& buffer = this->shader_params.active_caster_positions;
@@ -1198,6 +1206,7 @@ namespace vulkanDK {
       // Done with core commands.
       //
       this->_record_bounds_draw_commands();
+      this->_record_gizmo_draw_commands();
    }
    void frame_in_flight::_record_bounds_draw_commands() {
       auto& sr    = *this->owner;
@@ -1293,6 +1302,45 @@ namespace vulkanDK {
       //
       if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
          throw result_exception(result, "[vulkanDK::frame_in_flight::_record_bounds_draw_commands] Failed to record a command buffer.");
+      }
+   }
+   void frame_in_flight::_record_gizmo_draw_commands() {
+      auto& sr    = *this->owner;
+      auto& ds    = this->descriptor_sets;
+      auto& scene = sr.scene;
+      //
+      auto& command_buffer = this->graphics_commands.bounds;
+      auto  command_handle = command_buffer.handle;
+      //
+      command_buffer.reset(0);
+      if (auto result = command_buffer.top_level_begin(0); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_gizmo_draw_commands] Failed to begin recording command buffer.");
+      }
+      command_buffer.begin_render_pass(
+         *sr.render_passes_by_name.gizmo,
+         sr.canvas.main_framebuffer,
+         {
+            .offset = { 0, 0 },
+            .extent = sr.surface_extent,
+         },
+         std::array{
+            VkClearValue{ .color = { 0, 0, 0, 1 } },
+            VkClearValue{ .depthStencil = { config::use_inverted_depth ? 0.0 : 1.0, 0} }, // depth attachment uses VK_ATTACHMENT_LOAD_OP_CLEAR; this is the depth range to celar with
+         },
+         VK_SUBPASS_CONTENTS_INLINE
+      );
+      command_buffer.bind_graphics_shader_and_descriptors(
+         *sr.get_graphics_shader(surface_renderer::edit_gizmo_color_shader_id),
+         0,
+         std::array{ ds.scene_state, ds.gizmo_state }
+      );
+      sr.gizmo_buffer.record_draw(sr, command_buffer);
+      command_buffer.end_render_pass();
+      //
+      // Done!
+      //
+      if (auto result = command_buffer.finish(); result != VK_SUCCESS) {
+         throw result_exception(result, "[vulkanDK::frame_in_flight::_record_gizmo_draw_commands] Failed to record a command buffer.");
       }
    }
    void frame_in_flight::_record_ui_draw_commands() {
@@ -1405,6 +1453,10 @@ namespace vulkanDK {
       }
    }
 
+   void frame_in_flight::on_gizmo_mode_changed() {
+      this->state.must_re_record_graphics = true;
+      this->on_gizmo_state_changed();
+   }
    void frame_in_flight::invalidate_all_command_buffers() {
       this->command_buffers_invalid = true;
       this->state.recorded_compute_cull_commands = false;
@@ -1444,6 +1496,17 @@ namespace vulkanDK {
             buffer.unmap_memory(frustum);
          }
       }
+   }
+   void frame_in_flight::_update_shader_global_gizmo_state() {
+      this->state.must_update_gizmo_state = false;
+
+      auto& scene = this->get_scene();
+      auto& src = scene.gizmo_state;
+      auto& dst = this->shader_params.gizmo_data;
+      //
+      void* data = dst.map_memory();
+      memcpy(data, &src, sizeof(src));
+      dst.unmap_memory(data);
    }
    void frame_in_flight::_update_shader_texture_descriptors() {
       auto&    scene = this->get_scene();

@@ -3,9 +3,8 @@
 #include <cstdint>
 #include <QObject>
 #include <QVector>
-#include <windows.h> // required or the XInput header will make MSVC choke
+#include "helpers/windows.h" // the Windows header is required or the XInput header will make MSVC choke
 #include <xinput.h>
-#include "helpers/intrusive_windows_defines.h"
 #include "./enums/button.h"
 #include "./enums/dll_version.h"
 #include "./enums/side.h"

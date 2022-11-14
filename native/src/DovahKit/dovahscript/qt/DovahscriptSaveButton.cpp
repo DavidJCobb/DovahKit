@@ -6,8 +6,8 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include "../../../../DirectXTex/DirectXTex.h"
-#include "../../../helpers/arrays/make.h"
-#include "../../../helpers/intrusive_windows_defines.h"
+#include "helpers/arrays/make.h"
+#include "helpers/windows.h"
 
 namespace {
    constexpr const auto executable_binary_extensions = cobb::arrays::make(

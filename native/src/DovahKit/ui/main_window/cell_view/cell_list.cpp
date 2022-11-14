@@ -5,7 +5,7 @@
 #include "dovah/form_stub.h"
 #include "widgets/DKHeaderView.h"
 
-#include "editor/subsystems/worldedit.h"
+#include "editor/subsystems/worldedit/core.h"
 
 CellListModelItem::CellListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
@@ -23,7 +23,7 @@ void CellListModelItem::update() {
    this->updateRenderWindowState();
 }
 void CellListModelItem::updateRenderWindowState() {
-   auto& worldedit = dovahkit::subsystems::worldedit::get();
+   auto& worldedit = dovahkit::subsystems::worldedit::core::get();
    this->render_window_loaded = worldedit.is_cell_loaded(stub);
    if (this->render_window_loaded) {
       this->render_window_current = worldedit.is_current_cell(stub);
@@ -42,15 +42,15 @@ CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::formRenumbered,       this, &CellListModel::formRenumbered);
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, [this]() { this->rebuild(this->worldspace); });
    //
-   auto& worldedit = dovahkit::subsystems::worldedit::get_or_create();
-   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::cellLoaded, this, [this](dovah::form_stub& cell) {
+   auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create();
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::cellLoaded, this, [this](dovah::form_stub& cell) {
       this->cellRenderWindowLoadedStateChanged(cell, true);
    });
-   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::cellUnloaded, this, [this](dovah::form_stub& cell) {
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::cellUnloaded, this, [this](dovah::form_stub& cell) {
       this->cellRenderWindowLoadedStateChanged(cell, false);
    });
-   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::currentCellChanged,      this, &CellListModel::renderWindowCurrentCellChanged);
-   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::crossedIntoExteriorCell, this, &CellListModel::renderWindowCurrentCellChanged);
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::currentCellChanged,      this, &CellListModel::renderWindowCurrentCellChanged);
+   QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::crossedIntoExteriorCell, this, &CellListModel::renderWindowCurrentCellChanged);
 }
 
 void CellListModel::cellRenderWindowLoadedStateChanged(const dovah::form_stub& cell, bool loaded) {

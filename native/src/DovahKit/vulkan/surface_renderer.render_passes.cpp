@@ -379,6 +379,73 @@ namespace vulkanDK {
          };
       }
       {
+         auto* rp = this->render_passes_by_name.gizmo = new render_pass(*this);
+         rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
+            VkAttachmentDescription{ // color
+               .format         = VK_FORMAT_UNDEFINED,   // This needs to be set to the swap chain image format; see _setup_render_passes.
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
+               .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            },
+            VkAttachmentDescription{ // depth
+               .format         = this->find_depth_format(),
+               .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR, // reset depth buffer
+               .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after this render pass, so let the driver decide how best to discard it
+               .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+               .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+               .initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+               .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            },
+         };
+         rp->subpasses = {
+            {  // subpass
+               .bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS,
+               .attachments = {
+                  .color = { // there can be multiple color attachments
+                     VkAttachmentReference{
+                        .attachment = 0,
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                     }
+                  },
+                  .depth_stencil = VkAttachmentReference{ // there can only be one depth/stencil attachment
+                     .attachment = 1,
+                     .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                  },
+               },
+            },
+         };
+         rp->subpass_dependencies = {
+            VkSubpassDependency{
+               //
+               // Writing to the color attachment image  should be delayed until all operations 
+               // in the  "external" subpass  (e.g. transitioning to the desired initial  image 
+               // layout) are complete.
+               //
+               .srcSubpass      = VK_SUBPASS_EXTERNAL,
+               .dstSubpass      = 0,
+               .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+               .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            },
+            VkSubpassDependency{
+               .srcSubpass      = 0, // should be the last subpass in the list
+               .dstSubpass      = VK_SUBPASS_EXTERNAL,
+               .srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+               .dstStageMask    = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // wait until full command buffer is done
+               .srcAccessMask   = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+               .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+               .dependencyFlags = 0,
+            }
+         };
+      }
+      {
          auto* rp = this->render_passes_by_name.ui = new render_pass(*this);
          rp->attachments = { // ordered list; indices are referred to in the "attachment references" within subpass descriptions
             VkAttachmentDescription{ // color
@@ -394,7 +461,7 @@ namespace vulkanDK {
             VkAttachmentDescription{ // depth
                .format         = this->find_depth_format(),
                .samples        = VK_SAMPLE_COUNT_1_BIT, // related to multisampling
-               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+               .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR, // reset depth buffer
                .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE, // we won't use this data after subpass 0, where it's generated, so let the driver decide how best to discard it
                .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -446,14 +513,14 @@ namespace vulkanDK {
             }
          };
       }
-      this->render_passes = {
-         this->render_passes_by_name.main_shadow,
-         this->render_passes_by_name.main_shadow_placed,
-         this->render_passes_by_name.main,
-         this->render_passes_by_name.bounds,
-         this->render_passes_by_name.ui,
-         this->render_passes_by_name.main_oit,
-      };
+      //
+      // Register with abstract renderer:
+      //
+      auto& dst = this->render_passes;
+      auto& src = this->render_passes_by_name._list;
+      this->render_passes.resize(src.size());
+      for (size_t i = 0; i < src.size(); ++i)
+         dst[i] = src[i];
    }
    void surface_renderer::_setup_render_passes() {
       this->render_passes_by_name.main->attachments[0].format = this->swap_chain.format;
@@ -461,6 +528,7 @@ namespace vulkanDK {
          rp->attachments[2].format = this->swap_chain.format;
       }
       this->render_passes_by_name.bounds->attachments[0].format = this->swap_chain.format;
+      this->render_passes_by_name.gizmo->attachments[0].format = this->swap_chain.format;
       this->render_passes_by_name.ui->attachments[0].format = this->swap_chain.format;
       //
       // (Re)create the render passes within the GPU:
@@ -476,6 +544,7 @@ namespace vulkanDK {
          this->set_debug_object_name(rp->handle, "Render Pass: Main OIT");
       }
       this->set_debug_object_name(this->render_passes_by_name.bounds->handle, "Render Pass: Bounds");
+      this->set_debug_object_name(this->render_passes_by_name.gizmo->handle, "Render Pass: Gizmo");
       this->set_debug_object_name(this->render_passes_by_name.ui->handle,   "Render Pass: UI");
    }
 }

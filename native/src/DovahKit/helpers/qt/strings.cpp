@@ -16,8 +16,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "strings.h"
 
-#include <windows.h>
-#include "../intrusive_windows_defines.h"
+#include "../windows.h"
 
 namespace cobb::qt {
    QString four_cc_to_string(uint32_t signature) {

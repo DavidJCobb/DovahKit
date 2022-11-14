@@ -29,7 +29,6 @@
 #include "widgets/widget-models/DKBSACollectionModel.h"
 #include <QDebug>
 #include "subsystems/game_inis.h"
-#include "subsystems/worldedit.h"
 #include "asset_manager/asset_manager.h"
 
 #include "form_stub_meta_type.h"

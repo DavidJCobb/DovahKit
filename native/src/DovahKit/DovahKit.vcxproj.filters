@@ -1707,7 +1707,7 @@
     <ClCompile Include="dovahscript\wrappers\form\static\distant_lod_paths.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldedit.cpp">
+    <ClCompile Include="editor\subsystems\worldedit\worldedit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\scene_entity_handle.cpp">
@@ -1923,6 +1923,12 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\gizmo_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\windows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1931,7 +1937,7 @@
     <ClInclude Include="helpers\ini.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\intrusive_windows_defines.h">
+    <ClInclude Include="helpers\windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\memory.h">
@@ -4439,6 +4445,39 @@
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\math\geometry\generate_triangulated_n_gon_indices.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\meshes\gizmo_translate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\scene_gizmo_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmo_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\as_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\enums\axis3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\enums\gizmo_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4878,7 +4917,7 @@
     <QtMoc Include="ui\options_3d_input_window\localization.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\subsystems\worldedit.h">
+    <QtMoc Include="editor\subsystems\worldedit\worldedit.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h">
@@ -5103,6 +5142,15 @@
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
     <None Include="shaders\bespoke\grid\color-oit.frag.spv" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="shaders\gizmo\color.vert" />
+    <None Include="shaders\gizmo\color.vert.spv" />
+    <None Include="shaders\gizmo\color.frag" />
+    <None Include="shaders\gizmo\color.frag.spv" />
+    <None Include="shaders\includes\descriptor_sets\gizmo_state.glsl" />
+    <None Include="shaders\includes\structs\scene_gizmo_state.glsl" />
+    <None Include="vulkan\scene_gizmo_state.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

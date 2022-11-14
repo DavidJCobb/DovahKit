@@ -1,9 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <limits>
-#include <windows.h> // required or the XInput header will make MSVC choke
+#include "helpers/windows.h" // the Windows header is required or the XInput header will make MSVC choke
 #include <xinput.h>
-#include "helpers/intrusive_windows_defines.h"
 
 namespace dovahkit::subsystems::xinput {
    enum class button {

@@ -14,10 +14,9 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
-#include "windows_ini.h"
-#include "windows.h"
-#include "intrusive_windows_defines.h"
-#include "windows_environment.h"
+#include "./windows_ini.h"
+#include "./windows.h"
+#include "./windows_environment.h"
 
 namespace cobb {
    std::string read_single_ini_string_setting(const std::filesystem::path& file, const std::string& category, const std::string& key) {

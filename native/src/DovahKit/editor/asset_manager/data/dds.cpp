@@ -1,7 +1,7 @@
 #include "dds.h"
 #include "../../../../DirectXTex/DirectXTex.h"
-#include "../../../helpers/intrusive_windows_defines.h"
-#include "../../../dovah/files/bsa/bsa_archived_file.h"
+#include "helpers/windows.h"
+#include "dovah/files/bsa/bsa_archived_file.h"
 
 namespace {
    static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_B8G8R8A8_UNORM;

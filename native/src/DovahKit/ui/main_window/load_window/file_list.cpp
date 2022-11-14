@@ -6,8 +6,7 @@
 #include "../../../dovah/files/tes_file_reading/file_header.h"
 #include "../../../editor/core.h"
 
-#include "windows.h"
-#include "../../../helpers/intrusive_windows_defines.h"
+#include "helpers/windows.h"
 
 #pragma region LoadOrderFileListModel
 LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {

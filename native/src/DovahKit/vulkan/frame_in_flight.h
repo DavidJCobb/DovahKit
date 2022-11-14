@@ -162,7 +162,8 @@ namespace vulkanDK {
             //
             // For graphics:
             //
-            buffer scene_data;        // per-scene  data which can be updated without having to re-record command buffers (scene_global_state)
+            buffer scene_data;        // scene_global_state: per-scene data which can be updated without having to re-record command buffers
+            buffer gizmo_data;        // scene_gizmo_state
             buffer light_shadow_data; // glm::mat4[] array: six view matrices per shadow caster
             cobb::class_map_from_class_array<buffer, scene_entities::all_types_with_frame_drawing_data> scene_entity_frame_drawing_data;
          } shader_params;
@@ -194,6 +195,8 @@ namespace vulkanDK {
             cobb::class_map_from_class_array<bool, scene_entities::all_types_with_fixed_length_coalesced_vibs> scene_entity_coalesced_vib_resize_needed;
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
+            //
+            bool must_update_gizmo_state = true;
          } state;
       public:
          void prepare_for_render();
@@ -203,6 +206,7 @@ namespace vulkanDK {
          protected:
             void _record_scene_draw_commands();
                void _record_bounds_draw_commands();
+               void _record_gizmo_draw_commands();
             void _record_ui_draw_commands();
       public:
          void submit_compute_cull_commands();
@@ -222,6 +226,10 @@ namespace vulkanDK {
                this->state.scene_entity_draws_changed.value_for<Entity>() = true;
             }
          }
+         void on_gizmo_mode_changed();
+         void on_gizmo_state_changed() {
+            this->state.must_update_gizmo_state = true;
+         }
          void invalidate_all_command_buffers();
 
       protected:
@@ -235,6 +243,7 @@ namespace vulkanDK {
          //
          scene& get_scene();
          void _update_shader_global_scene_state();
+         void _update_shader_global_gizmo_state();
          void _update_shader_texture_descriptors();
 
          // helper functions for the templated member functions defined in the INL file, to avoid 

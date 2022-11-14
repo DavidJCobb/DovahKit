@@ -465,7 +465,7 @@
     <ClCompile Include="editor\script_packages\manifest_parser.cpp" />
     <ClCompile Include="editor\subsystems\assets.cpp" />
     <ClCompile Include="editor\subsystems\game_inis.cpp" />
-    <ClCompile Include="editor\subsystems\worldedit.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\worldedit.cpp" />
     <ClCompile Include="editor\subsystems\xinput\gamepad.cpp" />
     <ClCompile Include="editor\subsystems\xinput\xinputDK.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
@@ -478,6 +478,7 @@
     <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
     <ClCompile Include="helpers\lua\find_path_of.cpp" />
@@ -650,6 +651,7 @@
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\fps_tracker.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
+    <ClCompile Include="vulkan\gizmo_buffer.cpp" />
     <ClCompile Include="vulkan\graphics_shader.cpp" />
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
     <ClCompile Include="vulkan\helpers\extract_frustum_normals.cpp" />
@@ -757,6 +759,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h" />
+    <ClInclude Include="editor\subsystems\worldedit\core.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
+    <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\node.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\input.h" />
@@ -815,7 +821,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h" />
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
-    <QtMoc Include="editor\subsystems\worldedit.h" />
+    <QtMoc Include="editor\subsystems\worldedit\worldedit.h" />
     <ClInclude Include="editor\subsystems\worldinput\enums\axis2D.h" />
     <ClInclude Include="editor\subsystems\worldinput\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldinput\enums\bool_operation.h" />
@@ -850,6 +856,7 @@
     <ClInclude Include="helpers\arrays\quicksort_ct.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_flatten.h" />
+    <ClInclude Include="helpers\as_const.h" />
     <ClInclude Include="helpers\class_array.h" />
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
@@ -870,6 +877,7 @@
     <ClInclude Include="helpers\math\atan2.h" />
     <ClInclude Include="helpers\math\cosine.h" />
     <ClInclude Include="helpers\math\factorial.h" />
+    <ClInclude Include="helpers\math\geometry\generate_triangulated_n_gon_indices.h" />
     <ClInclude Include="helpers\math\pow.h" />
     <ClInclude Include="helpers\math\rotation\unit_conversion.h" />
     <ClInclude Include="helpers\math\round.h" />
@@ -1094,10 +1102,13 @@
     <ClInclude Include="vulkan\dds\texture.h" />
     <ClInclude Include="vulkan\descriptor_definitions.h" />
     <QtMoc Include="vulkan\DKVulkanInstance.h" />
+    <ClInclude Include="vulkan\enums\axis3D.h" />
+    <ClInclude Include="vulkan\enums\gizmo_mode.h" />
     <ClInclude Include="vulkan\exceptions.h" />
     <ClInclude Include="vulkan\fps_tracker.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustum.h" />
+    <ClInclude Include="vulkan\gizmo_buffer.h" />
     <ClInclude Include="vulkan\graphics_shader.h" />
     <ClInclude Include="vulkan\helpers\bundled_descriptor_buffer_write.h" />
     <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h" />
@@ -1117,6 +1128,7 @@
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\loaded_texture_index.h" />
+    <ClInclude Include="vulkan\meshes\gizmo_translate.h" />
     <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\overlays\world_axes.h" />
     <ClInclude Include="vulkan\physical_device.h" />
@@ -1146,6 +1158,7 @@
     <ClInclude Include="vulkan\scene_entities\owned_gpu_resource_sets.h" />
     <ClInclude Include="vulkan\scene_entities\traits\coalesced_vib_fixed_size_info.h" />
     <ClInclude Include="vulkan\scene_entities\traits\owned_gpu_resource_type_of.h" />
+    <ClInclude Include="vulkan\scene_gizmo_state.h" />
     <ClInclude Include="vulkan\scene_global_state.h" />
     <ClInclude Include="vulkan\scene_entity_handle.h" />
     <ClInclude Include="vulkan\shader_module.h" />
@@ -1698,7 +1711,7 @@
     <ClInclude Include="helpers\bitwise.h" />
     <ClInclude Include="helpers\files.h" />
     <ClInclude Include="helpers\ini.h" />
-    <ClInclude Include="helpers\intrusive_windows_defines.h" />
+    <ClInclude Include="helpers\windows.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
     <ClInclude Include="helpers\multiheap.h" />
@@ -1861,6 +1874,10 @@
     <None Include="shaders\compute\culling\frustum.comp.spv" />
     <None Include="shaders\compute\culling\shadows-caster.comp" />
     <None Include="shaders\compute\culling\shadows-caster.comp.spv" />
+    <None Include="shaders\gizmo\color.vert" />
+    <None Include="shaders\gizmo\color.vert.spv" />
+    <None Include="shaders\gizmo\color.frag" />
+    <None Include="shaders\gizmo\color.frag.spv" />
     <None Include="shaders\includes\alpha_testing_conditional_discard.glsl" />
     <None Include="shaders\includes\apply_scene_fog.glsl" />
     <None Include="shaders\includes\calc_all_light_and_shadow.glsl" />
@@ -1874,6 +1891,7 @@
     <None Include="shaders\includes\descriptor_sets\all_lights.glsl" />
     <None Include="shaders\includes\descriptor_sets\all_meshes.glsl" />
     <None Include="shaders\includes\descriptor_sets\all_textures.glsl" />
+    <None Include="shaders\includes\descriptor_sets\gizmo_state.glsl" />
     <None Include="shaders\includes\descriptor_sets\scene_state.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_caster_map_render.glsl" />
     <None Include="shaders\includes\descriptor_sets\shadow_maps.glsl" />
@@ -1888,6 +1906,7 @@
     <None Include="shaders\includes\structs\rendered_mesh_cull_data.glsl" />
     <None Include="shaders\includes\structs\rendered_mesh_push_constant.glsl" />
     <None Include="shaders\includes\structs\rendered_mesh_shader_params.glsl" />
+    <None Include="shaders\includes\structs\scene_gizmo_state.glsl" />
     <None Include="shaders\includes\structs\scene_global_state.glsl" />
     <None Include="shaders\includes\structs\VkDrawIndexedIndirectCommand.glsl" />
     <None Include="shaders\overlays\fps\main.frag" />
@@ -1964,6 +1983,7 @@
     <None Include="vulkan\frame_in_flight.inl" />
     <None Include="vulkan\scene.inl" />
     <None Include="vulkan\scene_entities\base.inl" />
+    <None Include="vulkan\scene_gizmo_state.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\ScreenShot278.bmp" />

@@ -3,8 +3,7 @@
 #include <QCoreApplication>
 #include <QKeyEvent>
 #include <QKeySequence>
-#include <windows.h>
-#include "../intrusive_windows_defines.h"
+#include "../windows.h"
 
 namespace {
    namespace mappings {
@@ -195,8 +194,8 @@ namespace cobb::qt {
          //
          // Attempt to get the key name from OS-level APIs first.
          //
-         TCHAR buffer[20];
-         auto len = GetKeyNameText((LONG)this->native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
+         WCHAR buffer[20];
+         auto len = GetKeyNameTextW((LONG)this->native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
          if (len) {
             if constexpr (std::is_same_v<TCHAR, WCHAR>) {
                return QString::fromUtf16((const char16_t*)buffer, len);
@@ -273,9 +272,9 @@ namespace cobb::qt {
          }
       }
       //
-      this->native.scan = MapVirtualKey(this->native.vk, 4);
+      this->native.scan = MapVirtualKeyW(this->native.vk, 4);
       if (this->native.scan == 0)
-         this->native.scan = MapVirtualKey(this->native.vk, MAPVK_VK_TO_VSC);
+         this->native.scan = MapVirtualKeyW(this->native.vk, MAPVK_VK_TO_VSC);
    }
 
    /*static*/ key key::from_windows_vk(int vk) {
@@ -284,9 +283,9 @@ namespace cobb::qt {
       key result;
       result.native.vk   = vk;
       result.code        = mappings::vk_to_qt[vk];
-      result.native.scan = MapVirtualKey(vk, 4);
+      result.native.scan = MapVirtualKeyW(vk, 4);
       if (result.native.scan == 0)
-         result.native.scan = MapVirtualKey(vk, MAPVK_VK_TO_VSC);
+         result.native.scan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       //
       switch (vk) {
          case VK_LCONTROL:
@@ -303,8 +302,8 @@ namespace cobb::qt {
             break;
       }
       if (result.code == (Qt::Key)0) {
-         TCHAR buffer[20];
-         auto len = GetKeyNameText((LONG)result.native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
+         WCHAR buffer[20];
+         auto len = GetKeyNameTextW((LONG)result.native.scan << 16, buffer, std::extent_v<decltype(buffer)>);
          if (len) {
             if constexpr (std::is_same_v<TCHAR, WCHAR>) {
                result.glyph = QString::fromUtf16((const char16_t*)buffer, len);
@@ -326,7 +325,7 @@ namespace cobb::qt {
       result.code        = (Qt::Key)event->key();
       //
       if (result.native.scan == 0)
-         result.native.scan = MapVirtualKey(result.native.vk, MAPVK_VK_TO_VSC);
+         result.native.scan = MapVirtualKeyW(result.native.vk, MAPVK_VK_TO_VSC);
       switch (result.native.vk) {
          case VK_LCONTROL:
          case VK_LMENU:

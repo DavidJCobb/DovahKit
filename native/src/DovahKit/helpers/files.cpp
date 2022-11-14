@@ -16,11 +16,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "files.h"
 //
-#include <windows.h>
+#include "./windows.h"
 #include <io.h>
 #include <memoryapi.h>
 #include <sys/stat.h>
-#include "intrusive_windows_defines.h"
 
 namespace cobb {
    mapped_file::~mapped_file() {
@@ -34,7 +33,7 @@ namespace cobb {
          UnmapViewOfFile(this->_view);
          this->_view = nullptr;
       }
-      HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+      HANDLE file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
       if (file == INVALID_HANDLE_VALUE) {
          this->_error = GetLastError();
          return;
@@ -46,7 +45,7 @@ namespace cobb {
          size = info.st_size;
       }
       this->_size = size;
-      HANDLE mapped_file = CreateFileMapping(file, NULL, PAGE_READONLY, (uint32_t)(size >> 0x20), (uint32_t)size, NULL);
+      HANDLE mapped_file = CreateFileMappingW(file, NULL, PAGE_READONLY, (uint32_t)(size >> 0x20), (uint32_t)size, NULL);
       CloseHandle(file);
       if (mapped_file == NULL) {
          this->_error = GetLastError();
@@ -77,7 +76,7 @@ namespace cobb {
          fseek(file, _pos, SEEK_SET);
       }
       this->_size = size;
-      HANDLE mapped_file = CreateFileMapping((HANDLE)_get_osfhandle(_fileno(file)), NULL, PAGE_READONLY, (uint32_t)(size >> 0x20), (uint32_t)size, NULL);
+      HANDLE mapped_file = CreateFileMappingW((HANDLE)_get_osfhandle(_fileno(file)), NULL, PAGE_READONLY, (uint32_t)(size >> 0x20), (uint32_t)size, NULL);
       if (mapped_file == NULL) {
          this->_error = GetLastError();
          return;

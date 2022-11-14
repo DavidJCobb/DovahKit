@@ -16,8 +16,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
 #include <cstdint>
-#include <windows.h>
-#include "intrusive_windows_defines.h"
+#include "./windows.h"
 
 namespace cobb {
    struct benchmark {

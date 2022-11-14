@@ -3,7 +3,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #if !defined(QT_DESIGNER_LIB)
-   #include "editor/subsystems/worldedit.h"
+   #include "editor/subsystems/worldedit/core.h"
    #include "vulkan/data/DKVulkanCameraUpdate.h"
    #include "vulkan/DKVulkanInstance.h"
    #include "vulkan/exceptions.h"
@@ -153,7 +153,7 @@ void DKVulkanView::_inputPoll() {
       return;
    if (!this->renderer)
       return;
-   dovahkit::subsystems::worldedit::get().view_input_poll_handler(*this);
+   dovahkit::subsystems::worldedit::core::get().view_input_poll_handler(*this);
 }
 void DKVulkanView::_killRendererDueToError() {
    this->renderer_killed_due_to_error = true;

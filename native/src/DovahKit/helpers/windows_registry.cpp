@@ -17,8 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include "windows_registry.h"
 #include <string>
-#include "windows.h"
-#include "intrusive_windows_defines.h"
+#include "./windows.h"
 
 namespace {
    using namespace cobb::windows_registry;
@@ -38,7 +37,7 @@ namespace {
    }
 
    void _shrink_to_null(string_t& out) {
-      auto i = out.find(char_t('\0'));
+      auto i = out.find(TCHAR('\0'));
       if (i == std::string::npos)
          return;
       out.resize(i);
@@ -63,7 +62,7 @@ namespace cobb::windows_registry {
       static constexpr hkey _invalid_hkey = (hkey)0x01234567;
    }
    //
-   bool get_string_value(hkey h, cstring_t subkey, cstring_t value, string_t& out) {
+   bool get_string_value(hkey h, const TCHAR* subkey, const TCHAR* value, string_t& out) {
       HKEY    handle;
       LSTATUS result = RegOpenKeyEx(_enum_to_win(h), subkey, 0, KEY_QUERY_VALUE | KEY_WOW64_32KEY, &handle);
       if (result != ERROR_SUCCESS)

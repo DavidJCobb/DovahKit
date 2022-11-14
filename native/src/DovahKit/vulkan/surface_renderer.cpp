@@ -193,6 +193,15 @@ namespace vulkanDK {
             .immutable_samplers = nullptr,
          },
       };
+      this->descriptor_set_layouts.gizmo_state.bindings = {
+         vulkanDK::descriptor_binding{ // uniform buffer object: vulkanDK::scene_gizmo_state
+            .index              = 0,
+            .type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .count              = 1,
+            .shader_stages      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .immutable_samplers = nullptr,
+         },
+      };
       this->descriptor_set_layouts.shadow_caster_map_render.bindings = {
          vulkanDK::descriptor_binding{ // storage buffer object: mat4[shadow_caster_count][6]
             .index              = 0,
@@ -675,6 +684,7 @@ namespace vulkanDK {
             target.create_basic_view(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
          }
       }
+      this->gizmo_buffer.setup(*this);
       //
       {  // swap chain
          this->_setup_sun_shadow_buffer();
@@ -788,6 +798,11 @@ namespace vulkanDK {
             .buffer = frame.shader_params.scene_data.handle,
             .offset = 0,
             .range  = sizeof(scene_global_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
+         };
+         auto gizmo_state_buffer_info = VkDescriptorBufferInfo{
+            .buffer = frame.shader_params.gizmo_data.handle,
+            .offset = 0,
+            .range  = sizeof(scene_gizmo_state), // if you want to always update the whole buffer, you can also pass VK_WHOLE_SIZE
          };
          auto shad_buffer_info = VkDescriptorBufferInfo{
             .buffer = frame.shader_params.light_shadow_data.handle,
@@ -903,7 +918,7 @@ namespace vulkanDK {
          //
          auto descriptor_writes = cobb::array_concat(
             //
-            // Scene state:
+            // Scene state and gizmo state:
             //
             ([&frame, &global_state_buffer_info]() {
                auto descriptor_set = frame.descriptor_sets.scene_state;
@@ -916,6 +931,22 @@ namespace vulkanDK {
                      .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                      .pImageInfo       = nullptr,
                      .pBufferInfo      = &global_state_buffer_info,
+                     .pTexelBufferView = nullptr,
+                  },
+               };
+               return out;
+            })(),
+            ([&frame, &gizmo_state_buffer_info]() {
+               auto descriptor_set = frame.descriptor_sets.gizmo_state;
+               auto out = std::array{
+                  VkWriteDescriptorSet{ // uniform buffer object
+                     .dstSet           = descriptor_set,
+                     .dstBinding       = 0,
+                     .dstArrayElement  = 0,
+                     .descriptorCount  = 1,
+                     .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                     .pImageInfo       = nullptr,
+                     .pBufferInfo      = &gizmo_state_buffer_info,
                      .pTexelBufferView = nullptr,
                   },
                };
@@ -1774,6 +1805,7 @@ namespace vulkanDK {
       this->scene.teardown(*this);
       this->null_texture.teardown();
       this->debug_grid_index_buffer = {};
+      this->gizmo_buffer = {};
       {
          if (auto& fence = this->uploading.fence; fence != VK_NULL_HANDLE) {
             vkDestroyFence(this->logical_device, fence, nullptr);
@@ -2441,6 +2473,25 @@ namespace vulkanDK {
    void surface_renderer::set_camera_position(const glm::vec3& position) {
       this->scene.camera.position = position;
       this->scene.update_camera();
+   }
+
+   gizmo_mode surface_renderer::get_gizmo_mode() const {
+      return this->scene.gizmo_state.get_mode();
+   }
+   void surface_renderer::set_gizmo_mode(gizmo_mode gm) {
+      this->scene.gizmo_state.set_mode(gm);
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_mode_changed();
+   }
+   bool surface_renderer::is_gizmo_axis_highlighted(axis3D a) const {
+      return this->scene.gizmo_state.is_axis_highlighted(a);
+   }
+   void surface_renderer::set_gizmo_axis_highlighted(axis3D a, bool v) {
+      this->scene.gizmo_state.set_axis_highlighted(a, v);
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_state_changed();
    }
 
    void surface_renderer::debug_show_frustrums() {

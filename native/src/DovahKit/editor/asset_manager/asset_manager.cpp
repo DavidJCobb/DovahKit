@@ -8,8 +8,7 @@
 #include "../../editor/core.h"
 
 // for DirectXTex and COM setup:
-#include <windows.h>
-#include "../../helpers/intrusive_windows_defines.h"
+#include "helpers/windows.h"
 
 namespace {
    // see also: the same constexpr value in asset.cpp
