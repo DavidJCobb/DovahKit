@@ -14,7 +14,56 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+
+/*
+
+   This header serves three functions:
+
+    - Include <Windows.h> for you.
+
+    - Undefine obnoxious macros like `min` and `max`.
+
+    - Systematically undefine all macros that alias old-style API names like 
+      FunctionA/FunctionW to Function, and then use `auto&` declarations to 
+      perform that aliasing in a manner that properly honors scope.
+
+   There are some inherent limits to doing this. Namely: some APIs require 
+   you to include static LIB files by configuring the linker, and attempting 
+   to reference these APIs in any way (even just pointing function references 
+   at them) will trigger a linker error if this is not done. As such, in order 
+   to restore the aliasing for these APIs, you must set preprocessor macros 
+   that this file will listen to; you can see them listed just below. (We also 
+   replicate some of the checks performed within the Windows headers themselves, 
+   to ensure we don't try to access any functions that are conditionally left 
+   undeclared by the official headers.)
+
+   The official Windows headers support a variety of macro-based switches that 
+   can disable declarations for categories of APIs. WIN32_LEAN_AND_MEAN is 
+   probably the best-known one, but there are also others with names of the 
+   form "NO<category>" e.g. "NOGDI".
+   
+   This header does not use #pragma once. It has incomplete support for the 
+   official macro-based switches; I say "incomplete" both because support has 
+   only been attempted for the following ones (with no attempts made to verify 
+   accuracy), and because all of these are still wrapped in one big include 
+   guard, so they wouldn't work anyway:
+
+    - NOCRYPT
+    - NOGDI
+    - NOIME
+    - NOUSER
+    - NOSERVICE
+    - WIN32_LEAN_AND_MEAN
+
+   In lieu of #pragma once, this header uses include guards to avoid any ODR 
+   violations.
+
+*/
+
+// #pragma once intentionally not used
+
 #include <Windows.h>
+
 #ifdef COBB_WIN32_INCLUDE_ADVANCED_API
    #pragma comment(lib, "Advapi32.lib")
 #endif
@@ -52,17 +101,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #undef max
 #undef near
 #undef far
+
 //
 // Bad macro names (to facilitate MIDL):
 //
 #undef small
-//
-// Bad macro names (ANSI/Unicode API names) are undef'd below. To call these 
-// APIs, you'll have to suffix them with A or W, or you'll have to write your 
-// own wrappers; the headers use include guards or #pragma once, so simply 
-// including them [again] won't work.
-//
-
 
 //
 // Several older Win32 APIs take string arguments, and so require different signatures 
@@ -703,16 +746,18 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       //
          
       #pragma region Commdlg.h
-         MAKE_WIN32_ALIAS(ChooseColor)
-         MAKE_WIN32_ALIAS(ChooseFont)
-         MAKE_WIN32_ALIAS(FindText)
-         MAKE_WIN32_ALIAS(GetFileTitle)
-         MAKE_WIN32_ALIAS(GetOpenFileName)
-         MAKE_WIN32_ALIAS(GetSaveFileName)
-         MAKE_WIN32_ALIAS(PageSetupDlg)
-         MAKE_WIN32_ALIAS(PrintDlg)
-         MAKE_WIN32_ALIAS(PrintDlgEx)
-         MAKE_WIN32_ALIAS(ReplaceText)
+         #if !defined(NOGDI) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_GDI)
+            MAKE_WIN32_ALIAS(ChooseColor)
+            MAKE_WIN32_ALIAS(ChooseFont)
+            MAKE_WIN32_ALIAS(FindText)
+            MAKE_WIN32_ALIAS(GetFileTitle)
+            MAKE_WIN32_ALIAS(GetOpenFileName)
+            MAKE_WIN32_ALIAS(GetSaveFileName)
+            MAKE_WIN32_ALIAS(PageSetupDlg)
+            MAKE_WIN32_ALIAS(PrintDlg)
+            MAKE_WIN32_ALIAS(PrintDlgEx)
+            MAKE_WIN32_ALIAS(ReplaceText)
+         #endif
       #pragma endregion
       #pragma region Datetimeapi.h
          MAKE_WIN32_ALIAS(GetDateFormat)
@@ -724,31 +769,33 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          #pragma endregion
       #endif
       #ifdef COBB_WIN32_INCLUDE_IMM
-         #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-            #pragma region Imm.h
-               MAKE_WIN32_ALIAS(ImmConfigureIME)
-               MAKE_WIN32_ALIAS(ImmEnumRegisterWord)
-               MAKE_WIN32_ALIAS(ImmEscape)
-               MAKE_WIN32_ALIAS(ImmGetCandidateList)
-               MAKE_WIN32_ALIAS(ImmGetCandidateListCount)
-               MAKE_WIN32_ALIAS(ImmGetCompositionFont)
-               MAKE_WIN32_ALIAS(ImmGetCompositionString)
-               MAKE_WIN32_ALIAS(ImmGetConversionList)
-               MAKE_WIN32_ALIAS(ImmGetDescription)
-               MAKE_WIN32_ALIAS(ImmGetGuideLine)
-               MAKE_WIN32_ALIAS(ImmGetIMEFileName)
-               MAKE_WIN32_ALIAS(ImmGetImeMenuItems)
-               MAKE_WIN32_ALIAS(ImmGetRegisterWordStyle)
-               MAKE_WIN32_ALIAS(ImmInstallIME)
-               MAKE_WIN32_ALIAS(ImmIsUIMessage)
-               MAKE_WIN32_ALIAS(ImmRegisterWord)
-               MAKE_WIN32_ALIAS(ImmSetCompositionFont)
-               MAKE_WIN32_ALIAS(ImmSetCompositionString)
-               MAKE_WIN32_ALIAS(ImmUnregisterWord)
-            #pragma endregion
-            #pragma region Immdev.h (excluding Imm.h)
-               MAKE_WIN32_ALIAS_A_ONLY(ImmRequestMessage)
-            #pragma endregion
+         #if !defined(NOIME) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_IME)
+            #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+               #pragma region Imm.h
+                  MAKE_WIN32_ALIAS(ImmConfigureIME)
+                  MAKE_WIN32_ALIAS(ImmEnumRegisterWord)
+                  MAKE_WIN32_ALIAS(ImmEscape)
+                  MAKE_WIN32_ALIAS(ImmGetCandidateList)
+                  MAKE_WIN32_ALIAS(ImmGetCandidateListCount)
+                  MAKE_WIN32_ALIAS(ImmGetCompositionFont)
+                  MAKE_WIN32_ALIAS(ImmGetCompositionString)
+                  MAKE_WIN32_ALIAS(ImmGetConversionList)
+                  MAKE_WIN32_ALIAS(ImmGetDescription)
+                  MAKE_WIN32_ALIAS(ImmGetGuideLine)
+                  MAKE_WIN32_ALIAS(ImmGetIMEFileName)
+                  MAKE_WIN32_ALIAS(ImmGetImeMenuItems)
+                  MAKE_WIN32_ALIAS(ImmGetRegisterWordStyle)
+                  MAKE_WIN32_ALIAS(ImmInstallIME)
+                  MAKE_WIN32_ALIAS(ImmIsUIMessage)
+                  MAKE_WIN32_ALIAS(ImmRegisterWord)
+                  MAKE_WIN32_ALIAS(ImmSetCompositionFont)
+                  MAKE_WIN32_ALIAS(ImmSetCompositionString)
+                  MAKE_WIN32_ALIAS(ImmUnregisterWord)
+               #pragma endregion
+               #pragma region Immdev.h (excluding Imm.h)
+                  MAKE_WIN32_ALIAS_A_ONLY(ImmRequestMessage)
+               #pragma endregion
+            #endif
          #endif
       #endif
       #pragma region Libloaderapi.h
@@ -772,32 +819,35 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          #pragma endregion
       #endif
       #ifdef COBB_WIN32_INCLUDE_SHELL_API
-         #pragma region Shellapi.h
-            MAKE_WIN32_ALIAS(CommandLineToArgv)
-            MAKE_WIN32_ALIAS(DoEnvironmentSubst)
-            MAKE_WIN32_ALIAS(DragQueryFile)
-            MAKE_WIN32_ALIAS(ExtractAssociatedIcon)
-            MAKE_WIN32_ALIAS(ExtractAssociatedIconEx)
-            MAKE_WIN32_ALIAS(ExtractIcon)
-            MAKE_WIN32_ALIAS(ExtractIconEx)
-            MAKE_WIN32_ALIAS(FindExecutable)
-            MAKE_WIN32_ALIAS(SHCreateProcessAsUser)
-            MAKE_WIN32_ALIAS(SHEmptyRecycleBin)
-            MAKE_WIN32_ALIAS(SHEnumerateUnreadMailAccounts)
-            MAKE_WIN32_ALIAS(SHFileOperation)
-            MAKE_WIN32_ALIAS(SHGetDiskFreeSpaceEx)
-            MAKE_WIN32_ALIAS(SHGetFileInfo)
-            MAKE_WIN32_ALIAS(SHGetNewLinkInfo)
-            MAKE_WIN32_ALIAS(SHGetUnreadMailCount)
-            MAKE_WIN32_ALIAS(SHInvokePrinterCommand)
-            MAKE_WIN32_ALIAS(SHQueryRecycleBin)
-            MAKE_WIN32_ALIAS(SHSetUnreadMailCount)
-            MAKE_WIN32_ALIAS(ShellAbout)
-            MAKE_WIN32_ALIAS(ShellExecute)
-            MAKE_WIN32_ALIAS(ShellExecuteEx)
-            MAKE_WIN32_ALIAS(ShellMessageBox)
-            MAKE_WIN32_ALIAS(Shell_NotifyIcon)
-         #pragma endregion
+         #if !defined(WIN32_LEAN_AND_MEAN) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_SHELL_API)
+            #define COBB_INCLUDE_GUARD_WIN32_ENCODING_SHELL_API
+            #pragma region Shellapi.h
+               MAKE_WIN32_ALIAS(CommandLineToArgv)
+               MAKE_WIN32_ALIAS(DoEnvironmentSubst)
+               MAKE_WIN32_ALIAS(DragQueryFile)
+               MAKE_WIN32_ALIAS(ExtractAssociatedIcon)
+               MAKE_WIN32_ALIAS(ExtractAssociatedIconEx)
+               MAKE_WIN32_ALIAS(ExtractIcon)
+               MAKE_WIN32_ALIAS(ExtractIconEx)
+               MAKE_WIN32_ALIAS(FindExecutable)
+               MAKE_WIN32_ALIAS(SHCreateProcessAsUser)
+               MAKE_WIN32_ALIAS(SHEmptyRecycleBin)
+               MAKE_WIN32_ALIAS(SHEnumerateUnreadMailAccounts)
+               MAKE_WIN32_ALIAS(SHFileOperation)
+               MAKE_WIN32_ALIAS(SHGetDiskFreeSpaceEx)
+               MAKE_WIN32_ALIAS(SHGetFileInfo)
+               MAKE_WIN32_ALIAS(SHGetNewLinkInfo)
+               MAKE_WIN32_ALIAS(SHGetUnreadMailCount)
+               MAKE_WIN32_ALIAS(SHInvokePrinterCommand)
+               MAKE_WIN32_ALIAS(SHQueryRecycleBin)
+               MAKE_WIN32_ALIAS(SHSetUnreadMailCount)
+               MAKE_WIN32_ALIAS(ShellAbout)
+               MAKE_WIN32_ALIAS(ShellExecute)
+               MAKE_WIN32_ALIAS(ShellExecuteEx)
+               MAKE_WIN32_ALIAS(ShellMessageBox)
+               MAKE_WIN32_ALIAS(Shell_NotifyIcon)
+            #pragma endregion
+         #endif
       #endif
       #pragma region Synchapi.h
          MAKE_WIN32_ALIAS(CreateEvent)
@@ -960,67 +1010,71 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       #pragma endregion
       #ifdef COBB_WIN32_INCLUDE_CRYPT
          #pragma region Wincrypt.h
-            MAKE_WIN32_ALIAS(CertAddEncodedCertificateToSystemStore)
-            MAKE_WIN32_ALIAS(CertGetNameString)
-            MAKE_WIN32_ALIAS(CertNameToStr)
-            MAKE_WIN32_ALIAS(CertOpenSystemStore)
-            MAKE_WIN32_ALIAS(CertRDNValueToStr)
-            MAKE_WIN32_ALIAS(CertStrToName)
-            MAKE_WIN32_ALIAS(CryptAcquireContext)
-            MAKE_WIN32_ALIAS(CryptBinaryToString)
-            MAKE_WIN32_ALIAS(CryptEnumProviderTypes)
-            MAKE_WIN32_ALIAS(CryptEnumProviders)
-            MAKE_WIN32_ALIAS(CryptGetDefaultProvider)
-            MAKE_WIN32_ALIAS(CryptRetrieveObjectByUrl)
-            MAKE_WIN32_ALIAS(CryptSetProvider)
-            MAKE_WIN32_ALIAS(CryptSetProviderEx)
-            MAKE_WIN32_ALIAS(CryptSignHash)
-            MAKE_WIN32_ALIAS(CryptStringToBinary)
-            MAKE_WIN32_ALIAS(CryptVerifySignature)
+            #if !defined(NOCRYPT) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_CRYPT)
+               MAKE_WIN32_ALIAS(CertAddEncodedCertificateToSystemStore)
+               MAKE_WIN32_ALIAS(CertGetNameString)
+               MAKE_WIN32_ALIAS(CertNameToStr)
+               MAKE_WIN32_ALIAS(CertOpenSystemStore)
+               MAKE_WIN32_ALIAS(CertRDNValueToStr)
+               MAKE_WIN32_ALIAS(CertStrToName)
+               MAKE_WIN32_ALIAS(CryptAcquireContext)
+               MAKE_WIN32_ALIAS(CryptBinaryToString)
+               MAKE_WIN32_ALIAS(CryptEnumProviderTypes)
+               MAKE_WIN32_ALIAS(CryptEnumProviders)
+               MAKE_WIN32_ALIAS(CryptGetDefaultProvider)
+               MAKE_WIN32_ALIAS(CryptRetrieveObjectByUrl)
+               MAKE_WIN32_ALIAS(CryptSetProvider)
+               MAKE_WIN32_ALIAS(CryptSetProviderEx)
+               MAKE_WIN32_ALIAS(CryptSignHash)
+               MAKE_WIN32_ALIAS(CryptStringToBinary)
+               MAKE_WIN32_ALIAS(CryptVerifySignature)
+            #endif
          #pragma endregion
       #endif
       #pragma region Wingdi.h
-         MAKE_WIN32_ALIAS(AddFontResource)
-         MAKE_WIN32_ALIAS(AddFontResourceEx)
-         MAKE_WIN32_ALIAS(CopyEnhMetaFile)
-         MAKE_WIN32_ALIAS(CopyMetaFile)
-         MAKE_WIN32_ALIAS(CreateDC)
-         MAKE_WIN32_ALIAS(CreateEnhMetaFile)
-         MAKE_WIN32_ALIAS(CreateFont)
-         MAKE_WIN32_ALIAS(CreateFontIndirect)
-         MAKE_WIN32_ALIAS(CreateFontIndirectEx)
-         MAKE_WIN32_ALIAS(CreateIC)
-         MAKE_WIN32_ALIAS(CreateMetaFile)
-         MAKE_WIN32_ALIAS(CreateScalableFontResource)
-         MAKE_WIN32_ALIAS(EnumFontFamilies)
-         MAKE_WIN32_ALIAS(EnumFontFamiliesEx)
-         MAKE_WIN32_ALIAS(EnumFonts)
-         MAKE_WIN32_ALIAS(ExtTextOut)
-         MAKE_WIN32_ALIAS(GetCharABCWidths)
-         MAKE_WIN32_ALIAS(GetCharABCWidthsFloat)
-         MAKE_WIN32_ALIAS(GetCharWidth)
-         MAKE_WIN32_ALIAS(GetCharWidth32)
-         MAKE_WIN32_ALIAS(GetCharWidthFloat)
-         MAKE_WIN32_ALIAS(GetCharacterPlacement)
-         MAKE_WIN32_ALIAS(GetEnhMetaFile)
-         MAKE_WIN32_ALIAS(GetEnhMetaFileDescription)
-         MAKE_WIN32_ALIAS(GetGlyphIndices)
-         MAKE_WIN32_ALIAS(GetGlyphOutline)
-         MAKE_WIN32_ALIAS(GetKerningPairs)
-         MAKE_WIN32_ALIAS(GetMetaFile)
-         MAKE_WIN32_ALIAS(GetObject)
-         MAKE_WIN32_ALIAS(GetOutlineTextMetrics)
-         MAKE_WIN32_ALIAS(GetTextExtentExPoint)
-         MAKE_WIN32_ALIAS(GetTextExtentPoint)
-         MAKE_WIN32_ALIAS(GetTextExtentPoint32)
-         MAKE_WIN32_ALIAS(GetTextFace)
-         MAKE_WIN32_ALIAS(GetTextMetrics)
-         MAKE_WIN32_ALIAS_A_ONLY(LineDD)
-         MAKE_WIN32_ALIAS(PolyTextOut)
-         MAKE_WIN32_ALIAS(RemoveFontResource)
-         MAKE_WIN32_ALIAS(RemoveFontResourceEx)
-         MAKE_WIN32_ALIAS(ResetDC)
-         MAKE_WIN32_ALIAS(TextOut)
+         #if !defined(NOGDI) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_GDI)
+            MAKE_WIN32_ALIAS(AddFontResource)
+            MAKE_WIN32_ALIAS(AddFontResourceEx)
+            MAKE_WIN32_ALIAS(CopyEnhMetaFile)
+            MAKE_WIN32_ALIAS(CopyMetaFile)
+            MAKE_WIN32_ALIAS(CreateDC)
+            MAKE_WIN32_ALIAS(CreateEnhMetaFile)
+            MAKE_WIN32_ALIAS(CreateFont)
+            MAKE_WIN32_ALIAS(CreateFontIndirect)
+            MAKE_WIN32_ALIAS(CreateFontIndirectEx)
+            MAKE_WIN32_ALIAS(CreateIC)
+            MAKE_WIN32_ALIAS(CreateMetaFile)
+            MAKE_WIN32_ALIAS(CreateScalableFontResource)
+            MAKE_WIN32_ALIAS(EnumFontFamilies)
+            MAKE_WIN32_ALIAS(EnumFontFamiliesEx)
+            MAKE_WIN32_ALIAS(EnumFonts)
+            MAKE_WIN32_ALIAS(ExtTextOut)
+            MAKE_WIN32_ALIAS(GetCharABCWidths)
+            MAKE_WIN32_ALIAS(GetCharABCWidthsFloat)
+            MAKE_WIN32_ALIAS(GetCharWidth)
+            MAKE_WIN32_ALIAS(GetCharWidth32)
+            MAKE_WIN32_ALIAS(GetCharWidthFloat)
+            MAKE_WIN32_ALIAS(GetCharacterPlacement)
+            MAKE_WIN32_ALIAS(GetEnhMetaFile)
+            MAKE_WIN32_ALIAS(GetEnhMetaFileDescription)
+            MAKE_WIN32_ALIAS(GetGlyphIndices)
+            MAKE_WIN32_ALIAS(GetGlyphOutline)
+            MAKE_WIN32_ALIAS(GetKerningPairs)
+            MAKE_WIN32_ALIAS(GetMetaFile)
+            MAKE_WIN32_ALIAS(GetObject)
+            MAKE_WIN32_ALIAS(GetOutlineTextMetrics)
+            MAKE_WIN32_ALIAS(GetTextExtentExPoint)
+            MAKE_WIN32_ALIAS(GetTextExtentPoint)
+            MAKE_WIN32_ALIAS(GetTextExtentPoint32)
+            MAKE_WIN32_ALIAS(GetTextFace)
+            MAKE_WIN32_ALIAS(GetTextMetrics)
+            MAKE_WIN32_ALIAS_A_ONLY(LineDD)
+            MAKE_WIN32_ALIAS(PolyTextOut)
+            MAKE_WIN32_ALIAS(RemoveFontResource)
+            MAKE_WIN32_ALIAS(RemoveFontResourceEx)
+            MAKE_WIN32_ALIAS(ResetDC)
+            MAKE_WIN32_ALIAS(TextOut)
+         #endif
       #pragma endregion
       #pragma region Winreg.h
          #pragma region System Services
@@ -1065,56 +1119,60 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       #pragma endregion
       #ifdef COBB_WIN32_INCLUDE_SCARD
          #pragma region Winscard.h
-            #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-               MAKE_WIN32_ALIAS(GetOpenCardName)
-               MAKE_WIN32_ALIAS(SCardAddReaderToGroup)
-               MAKE_WIN32_ALIAS(SCardConnect)
-               MAKE_WIN32_ALIAS(SCardForgetCardType)
-               MAKE_WIN32_ALIAS(SCardForgetReader)
-               MAKE_WIN32_ALIAS(SCardForgetReaderGroup)
-               MAKE_WIN32_ALIAS(SCardGetCardTypeProviderName)
-               MAKE_WIN32_ALIAS(SCardGetDeviceTypeId)
-               MAKE_WIN32_ALIAS(SCardGetProviderId)
-               MAKE_WIN32_ALIAS(SCardGetReaderDeviceInstanceId)
-               MAKE_WIN32_ALIAS(SCardGetReaderIcon)
-               MAKE_WIN32_ALIAS(SCardGetStatusChange)
-               MAKE_WIN32_ALIAS(SCardIntroduceCardType)
-               MAKE_WIN32_ALIAS(SCardIntroduceReader)
-               MAKE_WIN32_ALIAS(SCardIntroduceReaderGroup)
-               MAKE_WIN32_ALIAS(SCardListCards)
-               MAKE_WIN32_ALIAS(SCardListInterfaces)
-               MAKE_WIN32_ALIAS(SCardListReaderGroups)
-               MAKE_WIN32_ALIAS(SCardListReaders)
-               MAKE_WIN32_ALIAS(SCardListReadersWithDeviceInstanceId)
-               MAKE_WIN32_ALIAS(SCardLocateCards)
-               MAKE_WIN32_ALIAS(SCardLocateCardsByATR)
-               MAKE_WIN32_ALIAS(SCardReadCache)
-               MAKE_WIN32_ALIAS(SCardRemoveReaderFromGroup)
-               MAKE_WIN32_ALIAS(SCardSetCardTypeProviderName)
-               MAKE_WIN32_ALIAS(SCardStatus)
-               MAKE_WIN32_ALIAS(SCardUIDlgSelectCard)
-               MAKE_WIN32_ALIAS(SCardWriteCache)
+            #if !defined(NOCRYPT) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_CRYPT)
+               #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+                  MAKE_WIN32_ALIAS(GetOpenCardName)
+                  MAKE_WIN32_ALIAS(SCardAddReaderToGroup)
+                  MAKE_WIN32_ALIAS(SCardConnect)
+                  MAKE_WIN32_ALIAS(SCardForgetCardType)
+                  MAKE_WIN32_ALIAS(SCardForgetReader)
+                  MAKE_WIN32_ALIAS(SCardForgetReaderGroup)
+                  MAKE_WIN32_ALIAS(SCardGetCardTypeProviderName)
+                  MAKE_WIN32_ALIAS(SCardGetDeviceTypeId)
+                  MAKE_WIN32_ALIAS(SCardGetProviderId)
+                  MAKE_WIN32_ALIAS(SCardGetReaderDeviceInstanceId)
+                  MAKE_WIN32_ALIAS(SCardGetReaderIcon)
+                  MAKE_WIN32_ALIAS(SCardGetStatusChange)
+                  MAKE_WIN32_ALIAS(SCardIntroduceCardType)
+                  MAKE_WIN32_ALIAS(SCardIntroduceReader)
+                  MAKE_WIN32_ALIAS(SCardIntroduceReaderGroup)
+                  MAKE_WIN32_ALIAS(SCardListCards)
+                  MAKE_WIN32_ALIAS(SCardListInterfaces)
+                  MAKE_WIN32_ALIAS(SCardListReaderGroups)
+                  MAKE_WIN32_ALIAS(SCardListReaders)
+                  MAKE_WIN32_ALIAS(SCardListReadersWithDeviceInstanceId)
+                  MAKE_WIN32_ALIAS(SCardLocateCards)
+                  MAKE_WIN32_ALIAS(SCardLocateCardsByATR)
+                  MAKE_WIN32_ALIAS(SCardReadCache)
+                  MAKE_WIN32_ALIAS(SCardRemoveReaderFromGroup)
+                  MAKE_WIN32_ALIAS(SCardSetCardTypeProviderName)
+                  MAKE_WIN32_ALIAS(SCardStatus)
+                  MAKE_WIN32_ALIAS(SCardUIDlgSelectCard)
+                  MAKE_WIN32_ALIAS(SCardWriteCache)
+               #endif
             #endif
          #pragma endregion
       #endif
       #pragma region Winsvc.h
-         MAKE_WIN32_ALIAS(ChangeServiceConfig2)
-         MAKE_WIN32_ALIAS(ControlServiceEx)
-         MAKE_WIN32_ALIAS(EnumDependentServices)
-         MAKE_WIN32_ALIAS(EnumServicesStatus)
-         MAKE_WIN32_ALIAS(EnumServicesStatusEx)
-         MAKE_WIN32_ALIAS(GetServiceDisplayName)
-         MAKE_WIN32_ALIAS(GetServiceKeyName)
-         MAKE_WIN32_ALIAS(NotifyServiceStatusChange)
-         MAKE_WIN32_ALIAS(OpenSCManager)
-         MAKE_WIN32_ALIAS(OpenService)
-         MAKE_WIN32_ALIAS(QueryServiceConfig)
-         MAKE_WIN32_ALIAS(QueryServiceConfig2)
-         MAKE_WIN32_ALIAS(QueryServiceLockStatus)
-         MAKE_WIN32_ALIAS(RegisterServiceCtrlHandler)
-         MAKE_WIN32_ALIAS(RegisterServiceCtrlHandlerEx)
-         MAKE_WIN32_ALIAS(StartService)
-         MAKE_WIN32_ALIAS(StartServiceCtrlDispatcher)
+         #if !defined(NOSERVICE) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_SERVICE)
+            MAKE_WIN32_ALIAS(ChangeServiceConfig2)
+            MAKE_WIN32_ALIAS(ControlServiceEx)
+            MAKE_WIN32_ALIAS(EnumDependentServices)
+            MAKE_WIN32_ALIAS(EnumServicesStatus)
+            MAKE_WIN32_ALIAS(EnumServicesStatusEx)
+            MAKE_WIN32_ALIAS(GetServiceDisplayName)
+            MAKE_WIN32_ALIAS(GetServiceKeyName)
+            MAKE_WIN32_ALIAS(NotifyServiceStatusChange)
+            MAKE_WIN32_ALIAS(OpenSCManager)
+            MAKE_WIN32_ALIAS(OpenService)
+            MAKE_WIN32_ALIAS(QueryServiceConfig)
+            MAKE_WIN32_ALIAS(QueryServiceConfig2)
+            MAKE_WIN32_ALIAS(QueryServiceLockStatus)
+            MAKE_WIN32_ALIAS(RegisterServiceCtrlHandler)
+            MAKE_WIN32_ALIAS(RegisterServiceCtrlHandlerEx)
+            MAKE_WIN32_ALIAS(StartService)
+            MAKE_WIN32_ALIAS(StartServiceCtrlDispatcher)
+         #endif
       #pragma endregion
       #pragma region Winuser.h
          //
@@ -1123,157 +1181,187 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          // (formerly MSDN) divides the header up by category.
          //
          #pragma region Data Exchange
-            MAKE_WIN32_ALIAS(RegisterClipboardFormat)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(RegisterClipboardFormat)
+            #endif
          #pragma endregion
          #pragma region Dialog Boxes
-            MAKE_WIN32_ALIAS(CreateDialogIndirectParam)
-            MAKE_WIN32_ALIAS(CreateDialogParam)
-            MAKE_WIN32_ALIAS(DefDlgProc)
-            MAKE_WIN32_ALIAS(DialogBoxIndirectParam)
-            MAKE_WIN32_ALIAS(DialogBoxParam)
-            MAKE_WIN32_ALIAS(GetDlgItemText)
-            MAKE_WIN32_ALIAS(IsDialogMessage)
-            MAKE_WIN32_ALIAS(MessageBox)
-            MAKE_WIN32_ALIAS(MessageBoxEx)
-            MAKE_WIN32_ALIAS(MessageBoxIndirect)
-            MAKE_WIN32_ALIAS(SendDlgItemMessage)
-            MAKE_WIN32_ALIAS(SetDlgItemText)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(CreateDialogIndirectParam)
+               MAKE_WIN32_ALIAS(CreateDialogParam)
+               MAKE_WIN32_ALIAS(DefDlgProc)
+               MAKE_WIN32_ALIAS(DialogBoxIndirectParam)
+               MAKE_WIN32_ALIAS(DialogBoxParam)
+               MAKE_WIN32_ALIAS(GetDlgItemText)
+               MAKE_WIN32_ALIAS(IsDialogMessage)
+               MAKE_WIN32_ALIAS(MessageBox)
+               MAKE_WIN32_ALIAS(MessageBoxEx)
+               MAKE_WIN32_ALIAS(MessageBoxIndirect)
+               MAKE_WIN32_ALIAS(SendDlgItemMessage)
+               MAKE_WIN32_ALIAS(SetDlgItemText)
+            #endif
          #pragma endregion
          #pragma region Keyboard and Mouse Input
-            MAKE_WIN32_ALIAS(GetKeyNameText)
-            MAKE_WIN32_ALIAS(GetKeyboardLayoutName)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(GetKeyNameText)
+               MAKE_WIN32_ALIAS(GetKeyboardLayoutName)
+            #endif
             MAKE_WIN32_ALIAS(GetRawInputDeviceInfo)
-            MAKE_WIN32_ALIAS(LoadKeyboardLayout)
-            MAKE_WIN32_ALIAS(MapVirtualKey)
-            MAKE_WIN32_ALIAS(MapVirtualKeyEx)
-            MAKE_WIN32_ALIAS(VkKeyScan)
-            MAKE_WIN32_ALIAS(VkKeyScanEx)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(LoadKeyboardLayout)
+               MAKE_WIN32_ALIAS(MapVirtualKey)
+               MAKE_WIN32_ALIAS(MapVirtualKeyEx)
+               MAKE_WIN32_ALIAS(VkKeyScan)
+               MAKE_WIN32_ALIAS(VkKeyScanEx)
+            #endif
          #pragma endregion
          #pragma region Menus and Other Resources
-            MAKE_WIN32_ALIAS(AppendMenu)
-            MAKE_WIN32_ALIAS(CharLower)
-            MAKE_WIN32_ALIAS(CharLowerBuff)
-            MAKE_WIN32_ALIAS(CharNext)
-            MAKE_WIN32_ALIAS_A_ONLY(CharNextEx)
-            MAKE_WIN32_ALIAS(CharPrev)
-            MAKE_WIN32_ALIAS_A_ONLY(CharPrevEx)
-            MAKE_WIN32_ALIAS(CharToOem)
-            MAKE_WIN32_ALIAS(CharToOemBuff)
-            MAKE_WIN32_ALIAS(CharUpper)
-            MAKE_WIN32_ALIAS(CharUpperBuff)
-            MAKE_WIN32_ALIAS(CopyAcceleratorTable)
-            MAKE_WIN32_ALIAS(CreateAcceleratorTable)
-            MAKE_WIN32_ALIAS(GetIconInfoEx)
-            MAKE_WIN32_ALIAS(GetMenuItemInfo)
-            MAKE_WIN32_ALIAS(GetMenuString)
-            MAKE_WIN32_ALIAS(InsertMenu)
-            MAKE_WIN32_ALIAS(InsertMenuItem)
-            MAKE_WIN32_ALIAS(IsCharAlpha)
-            MAKE_WIN32_ALIAS(IsCharAlphaNumeric)
-            MAKE_WIN32_ALIAS(IsCharLower)
-            MAKE_WIN32_ALIAS(IsCharUpper)
-            MAKE_WIN32_ALIAS(LoadAccelerators)
-            MAKE_WIN32_ALIAS(LoadCursor)
-            MAKE_WIN32_ALIAS(LoadCursorFromFile)
-            MAKE_WIN32_ALIAS(LoadIcon)
-            MAKE_WIN32_ALIAS(LoadImage)
-            MAKE_WIN32_ALIAS(LoadMenu)
-            MAKE_WIN32_ALIAS(LoadMenuIndirect)
-            MAKE_WIN32_ALIAS(LoadString)
-            MAKE_WIN32_ALIAS(ModifyMenu)
-            MAKE_WIN32_ALIAS(OemToChar)
-            MAKE_WIN32_ALIAS(OemToCharBuff)
-            MAKE_WIN32_ALIAS(PrivateExtractIcons)
-            MAKE_WIN32_ALIAS(SetMenuItemInfo)
-            MAKE_WIN32_ALIAS(TranslateAccelerator)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(AppendMenu)
+               MAKE_WIN32_ALIAS(CharLower)
+               MAKE_WIN32_ALIAS(CharLowerBuff)
+               MAKE_WIN32_ALIAS(CharNext)
+               MAKE_WIN32_ALIAS(CharPrev)
+               MAKE_WIN32_ALIAS(CharToOem)
+               MAKE_WIN32_ALIAS(CharToOemBuff)
+               MAKE_WIN32_ALIAS(CharUpper)
+               MAKE_WIN32_ALIAS(CharUpperBuff)
+               MAKE_WIN32_ALIAS(CopyAcceleratorTable)
+               MAKE_WIN32_ALIAS(CreateAcceleratorTable)
+               MAKE_WIN32_ALIAS(GetIconInfoEx)
+               MAKE_WIN32_ALIAS(GetMenuItemInfo)
+               MAKE_WIN32_ALIAS(GetMenuString)
+               MAKE_WIN32_ALIAS(InsertMenu)
+               MAKE_WIN32_ALIAS(InsertMenuItem)
+               MAKE_WIN32_ALIAS(IsCharAlpha)
+               MAKE_WIN32_ALIAS(IsCharAlphaNumeric)
+               MAKE_WIN32_ALIAS(IsCharLower)
+               MAKE_WIN32_ALIAS(IsCharUpper)
+               MAKE_WIN32_ALIAS(LoadAccelerators)
+               MAKE_WIN32_ALIAS(LoadCursor)
+               MAKE_WIN32_ALIAS(LoadCursorFromFile)
+               MAKE_WIN32_ALIAS(LoadIcon)
+               MAKE_WIN32_ALIAS(LoadImage)
+               MAKE_WIN32_ALIAS(LoadMenu)
+               MAKE_WIN32_ALIAS(LoadMenuIndirect)
+               MAKE_WIN32_ALIAS(LoadString)
+               MAKE_WIN32_ALIAS(ModifyMenu)
+               MAKE_WIN32_ALIAS(OemToChar)
+               MAKE_WIN32_ALIAS(OemToCharBuff)
+               MAKE_WIN32_ALIAS(PrivateExtractIcons)
+               MAKE_WIN32_ALIAS(SetMenuItemInfo)
+               MAKE_WIN32_ALIAS(TranslateAccelerator)
+            #endif
          #pragma endregion
          #pragma region System Services
-            MAKE_WIN32_ALIAS(RegisterDeviceNotification)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(RegisterDeviceNotification)
+            #endif
          #pragma endregion
          #pragma region The Windows Shell
-            MAKE_WIN32_ALIAS(WinHelp)
+            #ifndef NOHELP
+               MAKE_WIN32_ALIAS(WinHelp)
+            #endif
          #pragma endregion
          #pragma region Window Stations and Desktops
-            MAKE_WIN32_ALIAS(CreateDesktop)
-            MAKE_WIN32_ALIAS(CreateDesktopEx)
-            MAKE_WIN32_ALIAS(CreateWindowStation)
-            MAKE_WIN32_ALIAS(EnumDesktops)
-            MAKE_WIN32_ALIAS(EnumWindowStations)
-            MAKE_WIN32_ALIAS(GetUserObjectInformation)
-            MAKE_WIN32_ALIAS(OpenDesktop)
-            MAKE_WIN32_ALIAS(OpenWindowStation)
-            MAKE_WIN32_ALIAS(SetUserObjectInformation)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(CreateDesktop)
+               MAKE_WIN32_ALIAS(CreateDesktopEx)
+               MAKE_WIN32_ALIAS(CreateWindowStation)
+               MAKE_WIN32_ALIAS(EnumDesktops)
+               MAKE_WIN32_ALIAS(EnumWindowStations)
+               MAKE_WIN32_ALIAS(GetUserObjectInformation)
+               MAKE_WIN32_ALIAS(OpenDesktop)
+               MAKE_WIN32_ALIAS(OpenWindowStation)
+               MAKE_WIN32_ALIAS(SetUserObjectInformation)
+            #endif
          #pragma endregion
          #pragma region Windows and Messages
-            MAKE_WIN32_ALIAS(BroadcastSystemMessage)
-            MAKE_WIN32_ALIAS(BroadcastSystemMessageEx)
-            MAKE_WIN32_ALIAS(CallMsgFilter)
-            MAKE_WIN32_ALIAS(CallWindowProc)
-            MAKE_WIN32_ALIAS(CreateMDIWindow)
-            MAKE_WIN32_ALIAS(CreateWindowEx)
-            MAKE_WIN32_ALIAS(DefFrameProc)
-            MAKE_WIN32_ALIAS(DefMDIChildProc)
-            MAKE_WIN32_ALIAS(DefWindowProc)
-            MAKE_WIN32_ALIAS(DispatchMessage)
-            MAKE_WIN32_ALIAS(EnumProps)
-            MAKE_WIN32_ALIAS(EnumPropsEx)
-            MAKE_WIN32_ALIAS(FindWindow)
-            MAKE_WIN32_ALIAS(FindWindowEx)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(BroadcastSystemMessage)
+               MAKE_WIN32_ALIAS(BroadcastSystemMessageEx)
+               MAKE_WIN32_ALIAS(CallMsgFilter)
+               MAKE_WIN32_ALIAS(CallWindowProc)
+               MAKE_WIN32_ALIAS(CreateMDIWindow)
+               MAKE_WIN32_ALIAS(CreateWindowEx)
+               MAKE_WIN32_ALIAS(DefFrameProc)
+               MAKE_WIN32_ALIAS(DefMDIChildProc)
+               MAKE_WIN32_ALIAS(DefWindowProc)
+               MAKE_WIN32_ALIAS(DispatchMessage)
+               MAKE_WIN32_ALIAS(EnumProps)
+               MAKE_WIN32_ALIAS(EnumPropsEx)
+               MAKE_WIN32_ALIAS(FindWindow)
+               MAKE_WIN32_ALIAS(FindWindowEx)
+            #endif
             MAKE_WIN32_ALIAS(GetAltTabInfo)
-            MAKE_WIN32_ALIAS(GetClassInfo)
-            MAKE_WIN32_ALIAS(GetClassInfoEx)
-            MAKE_WIN32_ALIAS(GetClassLong)
-            MAKE_WIN32_ALIAS(GetClassLongPtr)
-            MAKE_WIN32_ALIAS(GetClassName)
-            MAKE_WIN32_ALIAS(GetMessage)
-            MAKE_WIN32_ALIAS(GetProp)
-            MAKE_WIN32_ALIAS(GetWindowLong)
-            MAKE_WIN32_ALIAS(GetWindowLongPtr)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(GetClassInfo)
+               MAKE_WIN32_ALIAS(GetClassInfoEx)
+               MAKE_WIN32_ALIAS(GetClassLong)
+               MAKE_WIN32_ALIAS(GetClassLongPtr)
+               MAKE_WIN32_ALIAS(GetClassName)
+               MAKE_WIN32_ALIAS(GetMessage)
+               MAKE_WIN32_ALIAS(GetProp)
+               MAKE_WIN32_ALIAS(GetWindowLong)
+               MAKE_WIN32_ALIAS(GetWindowLongPtr)
+            #endif
             MAKE_WIN32_ALIAS(GetWindowModuleFileName)
-            MAKE_WIN32_ALIAS(GetWindowText)
-            MAKE_WIN32_ALIAS(GetWindowTextLength)
-            MAKE_WIN32_ALIAS(PeekMessage)
-            MAKE_WIN32_ALIAS(PostMessage)
-            MAKE_WIN32_ALIAS(PostThreadMessage)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(GetWindowText)
+               MAKE_WIN32_ALIAS(GetWindowTextLength)
+               MAKE_WIN32_ALIAS(PeekMessage)
+               MAKE_WIN32_ALIAS(PostMessage)
+               MAKE_WIN32_ALIAS(PostThreadMessage)
+            #endif
             MAKE_WIN32_ALIAS(RealGetWindowClass)
-            MAKE_WIN32_ALIAS(RegisterClass)
-            MAKE_WIN32_ALIAS(RegisterClassEx)
-            MAKE_WIN32_ALIAS(RegisterWindowMessage)
-            MAKE_WIN32_ALIAS(RemoveProp)
-            MAKE_WIN32_ALIAS(SendMessage)
-            MAKE_WIN32_ALIAS(SendMessageCallback)
-            MAKE_WIN32_ALIAS(SendMessageTimeout)
-            MAKE_WIN32_ALIAS(SendNotifyMessage)
-            MAKE_WIN32_ALIAS(SetClassLong)
-            MAKE_WIN32_ALIAS(SetClassLongPtr)
-            MAKE_WIN32_ALIAS(SetProp)
-            MAKE_WIN32_ALIAS(SetWindowLong)
-            MAKE_WIN32_ALIAS(SetWindowLongPtr)
-            MAKE_WIN32_ALIAS(SetWindowText)
-            MAKE_WIN32_ALIAS(SetWindowsHookEx)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(RegisterClass)
+               MAKE_WIN32_ALIAS(RegisterClassEx)
+               MAKE_WIN32_ALIAS(RegisterWindowMessage)
+               MAKE_WIN32_ALIAS(RemoveProp)
+               MAKE_WIN32_ALIAS(SendMessage)
+               MAKE_WIN32_ALIAS(SendMessageCallback)
+               MAKE_WIN32_ALIAS(SendMessageTimeout)
+               MAKE_WIN32_ALIAS(SendNotifyMessage)
+               MAKE_WIN32_ALIAS(SetClassLong)
+               MAKE_WIN32_ALIAS(SetClassLongPtr)
+               MAKE_WIN32_ALIAS(SetProp)
+               MAKE_WIN32_ALIAS(SetWindowLong)
+               MAKE_WIN32_ALIAS(SetWindowLongPtr)
+               MAKE_WIN32_ALIAS(SetWindowText)
+               MAKE_WIN32_ALIAS(SetWindowsHookEx)
+            #endif
             MAKE_WIN32_ALIAS(SystemParametersInfo)
-            MAKE_WIN32_ALIAS(UnregisterClass)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(UnregisterClass)
+            #endif
          #pragma endregion
          #pragma region Windows Controls
-            MAKE_WIN32_ALIAS(DlgDirList)
-            MAKE_WIN32_ALIAS(DlgDirListComboBox)
-            MAKE_WIN32_ALIAS(DlgDirSelectComboBoxEx)
-            MAKE_WIN32_ALIAS(DlgDirSelectEx)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(DlgDirList)
+               MAKE_WIN32_ALIAS(DlgDirListComboBox)
+               MAKE_WIN32_ALIAS(DlgDirSelectComboBoxEx)
+               MAKE_WIN32_ALIAS(DlgDirSelectEx)
+            #endif
          #pragma endregion
          #pragma region Windows GDI
             MAKE_WIN32_ALIAS(ChangeDisplaySettings)
             MAKE_WIN32_ALIAS(ChangeDisplaySettingsEx)
-            MAKE_WIN32_ALIAS(DrawState)
-            MAKE_WIN32_ALIAS(DrawText)
-            MAKE_WIN32_ALIAS(DrawTextEx)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(DrawState)
+               MAKE_WIN32_ALIAS(DrawText)
+               MAKE_WIN32_ALIAS(DrawTextEx)
+            #endif
             MAKE_WIN32_ALIAS(EnumDisplayDevices)
             MAKE_WIN32_ALIAS(EnumDisplaySettings)
             MAKE_WIN32_ALIAS(EnumDisplaySettingsEx)
             MAKE_WIN32_ALIAS(GetMonitorInfo)
-            MAKE_WIN32_ALIAS(GetTabbedTextExtent)
-            MAKE_WIN32_ALIAS(GrayString)
-            MAKE_WIN32_ALIAS(LoadBitmap)
-            MAKE_WIN32_ALIAS(TabbedTextOut)
+            #if !defined(NOUSER) && !defined(COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER)
+               MAKE_WIN32_ALIAS(GetTabbedTextExtent)
+               MAKE_WIN32_ALIAS(GrayString)
+               MAKE_WIN32_ALIAS(LoadBitmap)
+               MAKE_WIN32_ALIAS(TabbedTextOut)
+            #endif
          #pragma endregion
       #pragma endregion
       #ifdef COBB_WIN32_ENABLE_VERSION
@@ -1298,6 +1386,24 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          #pragma endregion
       #endif
 
+      #ifndef WIN32_LEAN_AND_MEAN
+         #ifndef NOCRYPT
+            #define COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_CRYPT
+         #endif
+         #ifndef NOGDI
+            #define COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_GDI
+         #endif
+      #endif
+      #ifndef NOIME
+         #define COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_IME
+      #endif
+      #ifndef NOUSER
+         #define COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_USER
+      #endif
+      #ifndef NOSERVICE
+         #define COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES_SERVICE
+      #endif
+
       #undef MAKE_WIN32_ALIAS
       #undef MAKE_WIN32_ALIAS_A_ONLY
       #pragma pop_macro("MAKE_WIN32_ALIAS")
@@ -1308,5 +1414,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       #endif
       
    #endif //COBB_INCLUDE_GUARD_WIN32_ENCODING_ALIASES
+
    #pragma endregion
 #endif
