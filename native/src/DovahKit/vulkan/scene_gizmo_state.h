@@ -14,16 +14,13 @@ namespace vulkanDK {
       struct flag {
          flag() = delete;
          enum type : uint32_t {
-            mode_translate   = 0x00000001,
-            mode_rotate      = 0x00000002,
-            mode_scale       = 0x00000004,
-            highlight_axis_x = 0x00000010,
-            highlight_axis_y = 0x00000020,
-            highlight_axis_z = 0x00000040,
+            reserved_bits_mode = 0b11,
+            highlight_axis_x   = 0x00000010,
+            highlight_axis_y   = 0x00000020,
+            highlight_axis_z   = 0x00000040,
          };
 
          static constexpr const std::underlying_type_t<type> all_default = 0;
-         static constexpr const std::underlying_type_t<type> all_modes = mode_translate | mode_rotate | mode_scale;
       };
       using flags_t = std::underlying_type_t<flag::type>;
 

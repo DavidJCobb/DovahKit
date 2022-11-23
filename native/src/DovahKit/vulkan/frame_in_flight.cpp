@@ -1454,7 +1454,7 @@ namespace vulkanDK {
    }
 
    void frame_in_flight::on_gizmo_mode_changed() {
-      this->state.must_re_record_graphics = true;
+      //this->state.must_re_record_graphics = true;
       this->on_gizmo_state_changed();
    }
    void frame_in_flight::invalidate_all_command_buffers() {

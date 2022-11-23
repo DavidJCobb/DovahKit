@@ -51,7 +51,7 @@ namespace vulkanDK::gizmos::meshes::translate {
       };
 
       static constexpr size_t vertices_per_arrowhead = options::arrowhead_verts + 1; // plus one for the tip
-      static constexpr size_t indices_per_arrowhead  = ((options::arrowhead_verts - 2) * 3) * (options::arrowhead_verts * 3);
+      static constexpr size_t indices_per_arrowhead  = cobb::geometry::triangle_indices_for_n_gon(options::arrowhead_verts) + (options::arrowhead_verts * 3);
 
       static constexpr size_t vertices_per_stem = x_stem_vertices.size();
       static constexpr size_t indices_per_stem  = x_stem_indices.size();

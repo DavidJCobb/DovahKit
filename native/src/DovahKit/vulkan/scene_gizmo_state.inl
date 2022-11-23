@@ -4,23 +4,16 @@
 #include "scene_gizmo_state.h"
 
 namespace vulkanDK {
+   static_assert((int)gizmo_mode::translate == 1, "If the underlying values for this enum have changed, then the shaders and the code here need updating.");
+   static_assert((int)gizmo_mode::rotate    == 2, "If the underlying values for this enum have changed, then the shaders and the code here need updating.");
+   static_assert((int)gizmo_mode::scale     == 3, "If the underlying values for this enum have changed, then the shaders and the code here need updating.");
+
    constexpr gizmo_mode scene_gizmo_state::get_mode() const noexcept {
-      if (this->flags & flag::mode_translate)
-         return gizmo_mode::translate;
-      if (this->flags & flag::mode_rotate)
-         return gizmo_mode::rotate;
-      if (this->flags & flag::mode_scale)
-         return gizmo_mode::scale;
-      return gizmo_mode::none;
+      return (gizmo_mode)(this->flags & flag::reserved_bits_mode);
    }
    constexpr void scene_gizmo_state::set_mode(gizmo_mode gm) noexcept {
-      this->flags &= ~flag::all_modes;
-      switch (gm) {
-         using enum gizmo_mode;
-         case translate: this->flags |= flag::mode_translate; break;
-         case rotate:    this->flags |= flag::mode_rotate;    break;
-         case scale:     this->flags |= flag::mode_scale;     break;
-      }
+      this->flags &= ~flag::reserved_bits_mode;
+      this->flags |= ((uint32_t)gm) & flag::reserved_bits_mode;
    }
 
    constexpr bool scene_gizmo_state::is_axis_highlighted(axis3D a) const noexcept {

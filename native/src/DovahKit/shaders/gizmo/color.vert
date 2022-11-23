@@ -18,29 +18,39 @@ layout(location = 0) in vec4 in_position;
 
 layout(location = 0) out vec4 out_color;
 
+//
+// in_position.w is formatted as follows:
+//
+//  - Low two bits indicate the axis (X/Y/Z) and are used for coloration
+//  - Next two bits indicate the gizmo model
+//
+
 void main() {
+   int metadata = int(in_position.w);
+   {
+      int vertex_model  = metadata >> 2;
+      int desired_model = (gizmo.flags & SCENE_GIZMO_STATE_FLAG_BITS_MODE);
+      if (vertex_model != desired_model) {
+         gl_Position = vec4(99, 99, 0, 0);
+         return;
+      }
+   }
+
    gl_Position = scene.proj * scene.view * gizmo.transform * vec4(in_position.xyz, 1.0);
    
    out_color = vec4(1, 1, 1, 1);
 
-   if (in_position.w == 0) {
+   int axis = metadata & 3;
+   if (axis == 0) {
       out_color.rgb = gizmo.color_x;
-   } else if (in_position.w == 1) {
+   } else if (axis == 1) {
       out_color.rgb = gizmo.color_y;
-   } else if (in_position.w == 2) {
+   } else if (axis == 2) {
       out_color.rgb = gizmo.color_z;
    }
 
-   // wouldn't it be great if we made a shader language that mimicked the aesthetics of C, but not for casting?
-   // inconsistency is always very helpful to programmers
-   int highlight_flag = 1 << 4 << int(in_position.w);
-
+   int highlight_flag = (1 << 4) << axis;
    if ((gizmo.flags & highlight_flag) == highlight_flag) {
       out_color.rgb = mix(out_color.rgb, gizmo.color_highlight.rgb, gizmo.color_highlight.a);
-   }
-
-   if ((gizmo.flags & SCENE_GIZMO_STATE_FLAG_MODE_ANY) == 0 ) {
-      // hide off-screen to skip fragment rendering
-      gl_Position = vec4(10, 10, 0, 1);
    }
 }
