@@ -651,7 +651,7 @@
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\fps_tracker.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
-    <ClCompile Include="vulkan\gizmo_buffer.cpp" />
+    <ClCompile Include="vulkan\gizmos\vib.cpp" />
     <ClCompile Include="vulkan\graphics_shader.cpp" />
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
     <ClCompile Include="vulkan\helpers\extract_frustum_normals.cpp" />
@@ -846,6 +846,7 @@
     <ClInclude Include="editor\subsystems\xinput\enums\side.h" />
     <ClInclude Include="editor\subsystems\xinput\gamepad.h" />
     <ClInclude Include="editor\subsystems\xinput\vibration.h" />
+    <ClInclude Include="helpers\align_offset.h" />
     <ClInclude Include="helpers\arrays\cast.h" />
     <ClInclude Include="helpers\arrays\concat.h" />
     <ClInclude Include="helpers\arrays\copy_matching.h" />
@@ -867,6 +868,7 @@
     <ClInclude Include="helpers\dynamic_fast_cast.h" />
     <ClInclude Include="helpers\function_pointer.h" />
     <ClInclude Include="helpers\generic_reader_ex.h" />
+    <ClInclude Include="helpers\glm\constexpr.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h" />
@@ -925,6 +927,7 @@
     <ClInclude Include="helpers\tuples\indices_of_matching_types.h" />
     <ClInclude Include="helpers\tuples\map_types.h" />
     <ClInclude Include="helpers\tuples\prepend.h" />
+    <ClInclude Include="helpers\tuples\reduce.h" />
     <ClInclude Include="helpers\tuples\unpack_types_into.h" />
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
@@ -1108,7 +1111,11 @@
     <ClInclude Include="vulkan\fps_tracker.h" />
     <ClInclude Include="vulkan\frame_in_flight.h" />
     <ClInclude Include="vulkan\frustum.h" />
-    <ClInclude Include="vulkan\gizmo_buffer.h" />
+    <ClInclude Include="vulkan\gizmos\index_type.h" />
+    <ClInclude Include="vulkan\gizmos\meshes\rotate.h" />
+    <ClInclude Include="vulkan\gizmos\meshes\translate.h" />
+    <ClInclude Include="vulkan\gizmos\vertex.h" />
+    <ClInclude Include="vulkan\gizmos\vib.h" />
     <ClInclude Include="vulkan\graphics_shader.h" />
     <ClInclude Include="vulkan\helpers\bundled_descriptor_buffer_write.h" />
     <ClInclude Include="vulkan\helpers\calculate_mesh_normals.h" />
@@ -1128,7 +1135,6 @@
     <ClInclude Include="vulkan\image.h" />
     <ClInclude Include="vulkan\loaded_texture.h" />
     <ClInclude Include="vulkan\loaded_texture_index.h" />
-    <ClInclude Include="vulkan\meshes\gizmo_translate.h" />
     <ClInclude Include="vulkan\overlays\fps.h" />
     <ClInclude Include="vulkan\overlays\world_axes.h" />
     <ClInclude Include="vulkan\physical_device.h" />
@@ -1862,6 +1868,7 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
+    <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
     <None Include="shaders\bespoke\grid\color-oit.frag" />

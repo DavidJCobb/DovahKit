@@ -1,12 +1,13 @@
 #pragma once
 #include <array>
 #include <numbers>
-#include <glm/glm.hpp>
 #include "helpers/math/geometry/generate_triangulated_n_gon_indices.h"
 #include "helpers/math/cosine.h"
 #include "helpers/math/sine.h"
+#include "../index_type.h"
+#include "../vertex.h"
 
-namespace vulkanDK::predefined_meshes::gizmo_translate {
+namespace vulkanDK::gizmos::meshes::translate {
    namespace options {
       constexpr float  stem_length      = 384;
       constexpr float  stem_radius      =   6;
@@ -50,32 +51,23 @@ namespace vulkanDK::predefined_meshes::gizmo_translate {
       };
 
       static constexpr size_t vertices_per_arrowhead = options::arrowhead_verts + 1; // plus one for the tip
-      static constexpr size_t indices_per_arrowhead = ((options::arrowhead_verts - 2) * 3) * (options::arrowhead_verts * 3);
+      static constexpr size_t indices_per_arrowhead  = ((options::arrowhead_verts - 2) * 3) * (options::arrowhead_verts * 3);
 
       static constexpr size_t vertices_per_stem = x_stem_vertices.size();
-      static constexpr size_t indices_per_stem = x_stem_indices.size();
+      static constexpr size_t indices_per_stem  = x_stem_indices.size();
 
       static constexpr size_t vertices_per_axis = vertices_per_arrowhead + vertices_per_stem;
-      static constexpr size_t indices_per_axis = indices_per_arrowhead + indices_per_stem;
+      static constexpr size_t indices_per_axis  = indices_per_arrowhead + indices_per_stem;
    }
-
-   struct vertex {
-      glm::vec4 position = { 0, 0, 0, 0 }; // W-component identifies the axis (0, 1, 2 == X, Y, Z)
-
-      constexpr vertex() {}
-      constexpr vertex(const glm::vec3& v) : position(v, 0) {}
-   };
 
    static constexpr const size_t vertex_count = impl::vertices_per_axis * 3;
    static constexpr const size_t index_count  = impl::indices_per_axis * 3;
    static constexpr const size_t vib_v_size   = sizeof(vertex) * vertex_count;
-   static constexpr const size_t vib_i_offset = vib_v_size + (2 - (vib_v_size % 2));
-   static constexpr const size_t vib_i_size   = sizeof(uint16_t) * index_count;
-   static constexpr const size_t vib_size     = vib_i_offset + vib_i_size;
+   static constexpr const size_t vib_i_size   = sizeof(index_type) * index_count;
 
    struct mesh_type {
-      std::array<vertex,   vertex_count> vertices;
-      std::array<uint16_t, index_count> indices;
+      std::array<vertex,     vertex_count> vertices;
+      std::array<index_type, index_count> indices;
    };
 
    constexpr mesh_type mesh = []() {

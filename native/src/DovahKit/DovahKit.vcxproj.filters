@@ -1923,10 +1923,10 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\gizmo_buffer.cpp">
+    <ClCompile Include="helpers\windows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\windows.cpp">
+    <ClCompile Include="vulkan\gizmos\vib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -4460,13 +4460,7 @@
     <ClInclude Include="helpers\math\geometry\generate_triangulated_n_gon_indices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\meshes\gizmo_translate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\scene_gizmo_state.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\gizmo_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\as_const.h">
@@ -4476,6 +4470,30 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\enums\gizmo_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmos\vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmos\meshes\translate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmos\meshes\rotate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmos\vib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\gizmos\index_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\glm\constexpr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\reduce.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\align_offset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -5153,6 +5171,7 @@
     <None Include="vulkan\scene_gizmo_state.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="helpers\windows.hint" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

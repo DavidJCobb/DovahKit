@@ -13,13 +13,13 @@
 #include "./asset_loading/load_queue.h"
 #include "./asset_loading/queued_nif_load.h"
 #include "./config/frames_in_flight.h"
+#include "./gizmos/vib.h"
 #include "./abstract_renderer.h"
 #include "./buffer.h"
 #include "./command_buffer.h"
 #include "./compute_shader.h"
 #include "./descriptor_definitions.h"
 #include "./fps_tracker.h"
-#include "./gizmo_buffer.h"
 #include "./graphics_shader.h"
 #include "./image.h"
 #include "./scene.h"
@@ -150,7 +150,7 @@ namespace vulkanDK {
          cobb::constexpr_optional<VmaAllocator, use_vma_library> allocator;
          //
          buffer debug_grid_index_buffer;
-         gizmo_buffer gizmo_buffer;
+         gizmos::vib gizmo_buffer;
          owned_image_and_view null_texture;
          VkSampler raw_pixel_texture_sampler;
          //

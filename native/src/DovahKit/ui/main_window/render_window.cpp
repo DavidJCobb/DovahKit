@@ -34,6 +34,7 @@
 #include "dovah/forms/components/model.h"
 #include "ui/generic/FormPicker.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
+#include "vulkan/enums/gizmo_mode.h"
 
 RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    this->setWindowTitle(tr("Render Window"));
@@ -290,5 +291,17 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       //
       this->toolbar->addWidget(button);
+   }
+   {
+      auto* widget = new QComboBox(this->toolbar);
+      widget->addItem("Translate", (int)vulkanDK::gizmo_mode::translate);
+      widget->addItem("Rotate", (int)vulkanDK::gizmo_mode::rotate);
+      widget->addItem("Scale", (int)vulkanDK::gizmo_mode::scale);
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, view, widget]() {
+         auto* sr = view->surfaceRenderer();
+         auto  i  = widget->currentData().toInt();
+         sr->set_gizmo_mode((vulkanDK::gizmo_mode)i);
+      });
+      this->toolbar->addWidget(widget);
    }
 }
