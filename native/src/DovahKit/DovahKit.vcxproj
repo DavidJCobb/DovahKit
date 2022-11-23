@@ -1113,6 +1113,7 @@
     <ClInclude Include="vulkan\frustum.h" />
     <ClInclude Include="vulkan\gizmos\index_type.h" />
     <ClInclude Include="vulkan\gizmos\meshes\rotate.h" />
+    <ClInclude Include="vulkan\gizmos\meshes\scale.h" />
     <ClInclude Include="vulkan\gizmos\meshes\translate.h" />
     <ClInclude Include="vulkan\gizmos\vertex.h" />
     <ClInclude Include="vulkan\gizmos\vib.h" />

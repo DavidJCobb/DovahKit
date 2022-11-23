@@ -8,6 +8,7 @@
 
 #include "./meshes/rotate.h"
 #include "./meshes/translate.h"
+#include "./meshes/scale.h"
 #include "./index_type.h"
 
 namespace vulkanDK::gizmos {
@@ -16,8 +17,8 @@ namespace vulkanDK::gizmos {
       // how the vertex shader culls out models we don't currently wish to show
       constexpr const auto& all_meshes = std::tie(
          meshes::translate::mesh,
-         meshes::rotate::mesh//,
-         //meshes::scale::mesh
+         meshes::rotate::mesh,
+         meshes::scale::mesh
       );
 
       static const constexpr size_t all_vertices_count = cobb::tuples::reduce<size_t>(all_meshes, [](size_t prev, const auto& mesh) {
