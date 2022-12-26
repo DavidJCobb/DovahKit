@@ -4,7 +4,9 @@
 #include "helpers/align_offset.h"
 #include "helpers/offset_into.h"
 #include "../command_buffer.h"
+#include "../raycast.h"
 #include "../surface_renderer.h"
+#include "../scene_gizmo_state.h"
 
 #include "./meshes/rotate.h"
 #include "./meshes/translate.h"
@@ -29,8 +31,8 @@ namespace vulkanDK::gizmos {
       });
 
       static constexpr struct coalesced_mesh_type {
-         std::array<vertex,     all_vertices_count> vertices = {};
-         std::array<index_type, all_indices_count>  indices  = {};
+         std::array<vertex, all_vertices_count> vertices = {};
+         std::array<index_type, all_indices_count>  indices = {};
       } coalesced_mesh = []() {
          coalesced_mesh_type result = {};
 
@@ -43,7 +45,7 @@ namespace vulkanDK::gizmos {
                dst = mesh.vertices[i];
 
                uint32_t w = dst.position.w;
-               w  = w & 0b11; // keep axis
+               w = w & 0b11; // keep axis
                w |= (model_index << 2);
                dst.position.w = w;
             }
@@ -63,9 +65,9 @@ namespace vulkanDK::gizmos {
 
    void vib::setup(surface_renderer& sr) {
       constexpr VkDeviceSize vib_i_offset = cobb::align_offset(all_vertices_count * sizeof(vertex), sizeof(index_type));
-      
+
       this->vertices_start = 0;
-      this->indices_start  = vib_i_offset;
+      this->indices_start = vib_i_offset;
 
       constexpr VkDeviceSize size = vib_i_offset + all_indices_count * sizeof(index_type);
 
@@ -75,8 +77,8 @@ namespace vulkanDK::gizmos {
       constexpr mesh_info info_translate = []() {
          using namespace meshes::translate;
          return mesh_info{
-            .first_index  = 0,
-            .index_count  = mesh.indices.size(),
+            .first_index = 0,
+            .index_count = mesh.indices.size(),
             .first_vertex = 0,
             .vertex_count = mesh.vertices.size(),
          };
@@ -84,8 +86,8 @@ namespace vulkanDK::gizmos {
       constexpr mesh_info info_rotate = [&prev = info_translate]() {
          using namespace meshes::rotate;
          return mesh_info{
-            .first_index  = prev.first_index + prev.index_count,
-            .index_count  = mesh.indices.size(),
+            .first_index = prev.first_index + prev.index_count,
+            .index_count = mesh.indices.size(),
             .first_vertex = prev.first_vertex + prev.vertex_count,
             .vertex_count = mesh.vertices.size(),
          };
@@ -93,8 +95,8 @@ namespace vulkanDK::gizmos {
       constexpr mesh_info info_scale = [&prev = info_rotate]() {
          //using namespace meshes::scale; // TODO
          return mesh_info{
-            .first_index  = prev.first_index + prev.index_count,
-            .index_count  = 0, // TODO
+            .first_index = prev.first_index + prev.index_count,
+            .index_count = 0, // TODO
             .first_vertex = prev.first_vertex + prev.vertex_count,
             .vertex_count = 0, // TODO
          };
@@ -102,13 +104,13 @@ namespace vulkanDK::gizmos {
       //
       this->meshes = {
          .translate = info_translate,
-         .rotate    = info_rotate,
-         .scale     = info_scale,
+         .rotate = info_rotate,
+         .scale = info_scale,
       };
 
       {
-         buffer staging      = sr.create_staging_buffer(size);
-         auto*  staging_data = staging.map_memory();
+         buffer staging = sr.create_staging_buffer(size);
+         auto* staging_data = staging.map_memory();
 
          memcpy(staging_data, coalesced_mesh.vertices.data(), coalesced_mesh.vertices.size() * sizeof(vertex));
          memcpy(cobb::offset_into(staging_data, vib_i_offset), coalesced_mesh.indices.data(), coalesced_mesh.indices.size() * sizeof(index_type));
@@ -136,5 +138,16 @@ namespace vulkanDK::gizmos {
          (uint32_t)0,
          0
       );
+   }
+
+   raycast_hit_data vib::do_raycast(const raycast& rc, const scene_gizmo_state& sgs, axis3D& out_which_axis) const {
+      switch (sgs.get_mode()) {
+         case gizmo_mode::none:
+            return {};
+         case gizmo_mode::translate:
+            return meshes::translate::do_raycast(sgs.transform, rc, out_which_axis);
+         // TODO
+      }
+      return {};
    }
 }

@@ -4,8 +4,14 @@
 #include "helpers/math/geometry/generate_triangulated_n_gon_indices.h"
 #include "helpers/math/cosine.h"
 #include "helpers/math/sine.h"
+#include "../../enums/axis3D.h"
 #include "../index_type.h"
 #include "../vertex.h"
+
+namespace vulkanDK {
+   class  raycast;
+   struct raycast_hit_data;
+}
 
 namespace vulkanDK::gizmos::meshes::translate {
    namespace options {
@@ -131,4 +137,11 @@ namespace vulkanDK::gizmos::meshes::translate {
 
       return out;
    }();
+
+   extern raycast_hit_data do_raycast(
+      const glm::mat4& transform,
+      const raycast&,
+      //
+      axis3D& out_which_axis
+   );
 }

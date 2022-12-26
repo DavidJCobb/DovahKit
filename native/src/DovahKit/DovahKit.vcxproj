@@ -478,6 +478,7 @@
     <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -651,6 +652,7 @@
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\fps_tracker.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
+    <ClCompile Include="vulkan\gizmos\meshes\translate.cpp" />
     <ClCompile Include="vulkan\gizmos\vib.cpp" />
     <ClCompile Include="vulkan\graphics_shader.cpp" />
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
@@ -879,8 +881,17 @@
     <ClInclude Include="helpers\math\atan2.h" />
     <ClInclude Include="helpers\math\cosine.h" />
     <ClInclude Include="helpers\math\factorial.h" />
+    <ClInclude Include="helpers\math\geometry\closest_points_on_lines.h" />
+    <ClInclude Include="helpers\math\geometry\ray_AABB_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_cone_intersection.h" />
     <ClInclude Include="helpers\math\geometry\generate_triangulated_n_gon_indices.h" />
+    <ClInclude Include="helpers\math\geometry\ray_cylinder_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_disc_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_OBB_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_plane_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_sphere_intersection.h" />
     <ClInclude Include="helpers\math\pow.h" />
+    <ClInclude Include="helpers\math\quadratic_roots.h" />
     <ClInclude Include="helpers\math\rotation\unit_conversion.h" />
     <ClInclude Include="helpers\math\round.h" />
     <ClInclude Include="helpers\math\sign.h" />
@@ -906,6 +917,7 @@
     <ClInclude Include="helpers\resizable_grid.h" />
     <ClInclude Include="helpers\simd\bytes_to_floats.h" />
     <ClInclude Include="helpers\simd\min_and_max.h" />
+    <ClInclude Include="helpers\simd\min_register.h" />
     <ClInclude Include="helpers\simd\shuffle.h" />
     <ClInclude Include="helpers\simd\sum_register.h" />
     <ClInclude Include="helpers\singleton_ex.h" />
@@ -1869,6 +1881,7 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
+    <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />

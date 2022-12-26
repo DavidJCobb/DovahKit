@@ -1,10 +1,14 @@
 #pragma once
 #include "../_vulkan.h"
+#include "../enums/axis3D.h"
 #include "../buffer.h"
 
 namespace vulkanDK {
-   class command_buffer;
-   class surface_renderer;
+   class  command_buffer;
+   class  raycast;
+   struct raycast_hit_data;
+   struct scene_gizmo_state;
+   class  surface_renderer;
 }
 
 namespace vulkanDK::gizmos {
@@ -30,5 +34,7 @@ namespace vulkanDK::gizmos {
       void setup(surface_renderer&);
 
       void record_draw(surface_renderer&, command_buffer&);
+
+      raycast_hit_data do_raycast(const raycast&, const scene_gizmo_state&, axis3D& out_which_axis) const;
    };
 }

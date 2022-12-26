@@ -887,6 +887,26 @@ namespace dovahkit::subsystems::worldedit {
          return;
       if (!view.isListeningForInput())
          return;
+      //
+      // Update edit gizmo mouseover state.
+      //
+      if (auto* sr = view.surfaceRenderer()) {
+         auto cursor_pos = view.mapFromGlobal(QCursor::pos());
+
+         vulkanDK::raycast rc(*sr);
+         rc.test_flags = vulkanDK::raycast::test_flag::edit_gizmo;
+         rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
+
+         sr->do_raycast(rc);
+         if (rc.result.hit) {
+            sr->replace_gizmo_axis_highlighted(rc.result.gizmo.axis);
+         } else {
+            sr->clear_all_gizmo_axis_highlighting();
+         }
+      }
+      //
+      // Update input state.
+      //
       worldinput::combined_tool_results results;
       double delta;
       worldinput::core::get().update(results, delta);

@@ -2367,7 +2367,21 @@ namespace vulkanDK {
       return rendered_mesh_handle(*this, nearest);
    }
    void surface_renderer::do_raycast(raycast& rc) {
-      {
+      if (rc.test_flags & raycast::test_flag::edit_gizmo) {
+         axis3D axis;
+         auto   hit = this->gizmo_buffer.do_raycast(rc, this->scene.gizmo_state, axis);
+         if (hit) {
+            rc.receive_hit(hit);
+            rc.result.gizmo.axis = axis;
+            rc.result.gizmo.mode = this->scene.gizmo_state.get_mode();
+            //
+            // The edit gizmo is visible through all other objects, so it should take priority over 
+            // those objects. If we get a result, stop immediately.
+            //
+            return;
+         }
+      }
+      if (rc.test_flags & raycast::test_flag::meshes) {
          size_t nearest  = -1;
          //
          const auto& list = this->scene.entities_of_type<rendered_mesh>();
@@ -2380,7 +2394,7 @@ namespace vulkanDK {
          if (nearest != -1)
             rc.result.entity = rendered_mesh_handle{ *this, nearest };
       }
-      {
+      if (rc.test_flags & raycast::test_flag::landscapes) {
          size_t nearest = -1;
          //
          const auto& list = this->scene.entities_of_type<rendered_landscape>();
@@ -2479,6 +2493,8 @@ namespace vulkanDK {
       return this->scene.gizmo_state.get_mode();
    }
    void surface_renderer::set_gizmo_mode(gizmo_mode gm) {
+      if (get_gizmo_mode() == gm)
+         return;
       this->scene.gizmo_state.set_mode(gm);
       //
       for (auto& fif : this->swap_chain.frames_in_flight)
@@ -2488,7 +2504,23 @@ namespace vulkanDK {
       return this->scene.gizmo_state.is_axis_highlighted(a);
    }
    void surface_renderer::set_gizmo_axis_highlighted(axis3D a, bool v) {
+      if (is_gizmo_axis_highlighted(a) == v)
+         return;
       this->scene.gizmo_state.set_axis_highlighted(a, v);
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_state_changed();
+   }
+   void surface_renderer::replace_gizmo_axis_highlighted(axis3D a) {
+      this->scene.gizmo_state.replace_axis_highlighted(a);
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_state_changed();
+   }
+   void surface_renderer::clear_all_gizmo_axis_highlighting() {
+      if (!(this->scene.gizmo_state.flags & scene_gizmo_state::flag::all_highlight))
+         return;
+      this->scene.gizmo_state.clear_all_axis_highlighting();
       //
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_gizmo_state_changed();

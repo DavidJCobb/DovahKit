@@ -37,6 +37,13 @@ namespace vulkanDK {
          this->flags &= ~flag;
       }
    }
+   constexpr void scene_gizmo_state::replace_axis_highlighted(axis3D a) noexcept {
+      this->flags &= ~(flag::all_highlight);
+      this->set_axis_highlighted(a, true);
+   }
+   constexpr void scene_gizmo_state::clear_all_axis_highlighting() noexcept {
+      this->flags &= ~(flag::all_highlight);
+   }
 
    constexpr const glm::vec3& scene_gizmo_state::axis_color(axis3D a) const noexcept {
       switch (a) {

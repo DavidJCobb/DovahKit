@@ -20,7 +20,8 @@ namespace vulkanDK {
             highlight_axis_z   = 0x00000040,
          };
 
-         static constexpr const std::underlying_type_t<type> all_default = 0;
+         static constexpr const std::underlying_type_t<type> all_default   = 0;
+         static constexpr const std::underlying_type_t<type> all_highlight = highlight_axis_x | highlight_axis_y | highlight_axis_z;
       };
       using flags_t = std::underlying_type_t<flag::type>;
 
@@ -40,6 +41,8 @@ namespace vulkanDK {
 
             constexpr bool is_axis_highlighted(axis3D) const noexcept;
             constexpr void set_axis_highlighted(axis3D, bool) noexcept;
+            constexpr void replace_axis_highlighted(axis3D) noexcept;
+            constexpr void clear_all_axis_highlighting() noexcept;
 
             constexpr const glm::vec3& axis_color(axis3D) const noexcept;
             constexpr glm::vec3& axis_color(axis3D) noexcept;

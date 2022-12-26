@@ -353,6 +353,8 @@ namespace vulkanDK {
          void set_gizmo_mode(gizmo_mode);
          bool is_gizmo_axis_highlighted(axis3D) const;
          void set_gizmo_axis_highlighted(axis3D, bool);
+         void replace_gizmo_axis_highlighted(axis3D);
+         void clear_all_gizmo_axis_highlighting();
 
          inline double last_frame_time() const { return this->state.last_frame_time; }
 
