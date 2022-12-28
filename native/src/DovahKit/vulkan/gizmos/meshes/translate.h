@@ -21,6 +21,8 @@ namespace vulkanDK::gizmos::meshes::translate {
       constexpr float  arrowhead_length =  96;
       constexpr size_t arrowhead_verts  =   6;
       constexpr bool   righthanded      = true;
+
+      constexpr float raycast_inflation = 6;
    }
 
    namespace impl {

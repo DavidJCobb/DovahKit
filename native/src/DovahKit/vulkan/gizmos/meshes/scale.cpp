@@ -1,10 +1,10 @@
-#include "translate.h"
+#include "scale.h"
 #include "../../raycast.h"
-#include "helpers/math/geometry/ray_cone_intersection.h"
+#include "helpers/math/geometry/ray_OBB_intersection.h"
 #include "helpers/math/geometry/ray_cylinder_intersection.h"
 #include "helpers/math/sqrt.h"
 
-namespace vulkanDK::gizmos::meshes::translate {
+namespace vulkanDK::gizmos::meshes::scale {
    extern raycast_hit_data do_raycast(
       const glm::mat4& transform,
       const raycast& rc,
@@ -46,27 +46,35 @@ namespace vulkanDK::gizmos::meshes::translate {
          }
       };
       auto test_head = [&rc, &out_which_axis, &transform, &out](glm::vec3 mult, axis3D which) {
-         constexpr auto distance_base = options::stem_length - options::raycast_inflation;
-         constexpr auto distance_tip  = options::stem_length + options::arrowhead_length + (options::raycast_inflation * 2);
+         constexpr auto aabb_min = glm::vec3(-1, -1, -1) * ((options::handle_width + options::raycast_inflation) / 2);
+         constexpr auto aabb_max = glm::vec3( 1,  1,  1) * ((options::handle_width + options::raycast_inflation) / 2);
 
-         auto base = glm::vec3(distance_base, distance_base, distance_base) * mult;
-         auto tip  = glm::vec3(distance_tip,  distance_tip,  distance_tip)  * mult;
+         constexpr auto box_center_distance = options::stem_length + (options::handle_width / 2);
 
-         base = glm::vec4(base, 0) * transform;
-         tip  = glm::vec4(tip,  0) * transform;
+         glm::mat4 box_transform = transform;
+         {
+            const auto& box_axis = [&transform, which]() {
+               switch (which) {
+                  case axis3D::x: return transform[0];
+                  case axis3D::y: return transform[1];
+                  case axis3D::z: return transform[2];
+               }
+            }();
+            box_transform[3] += box_axis * box_center_distance;
+         }
 
          float distance;
-         if (cobb::geometry::ray_cone_intersection(
+         if (cobb::geometry::ray_OBB_intersection(
             rc.origin,
             rc.direction,
-            tip,
-            base,
-            options::arrowhead_radius + options::raycast_inflation,
+            aabb_min,
+            aabb_max,
+            box_transform,
             false,
             distance
          )) {
             if (distance < out.distance) {
-               out.distance   = distance;
+               out.distance = distance;
                out_which_axis = which;
             }
          }

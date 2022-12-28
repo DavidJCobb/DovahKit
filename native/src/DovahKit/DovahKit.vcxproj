@@ -652,6 +652,8 @@
     <ClCompile Include="vulkan\DKVulkanInstance.cpp" />
     <ClCompile Include="vulkan\fps_tracker.cpp" />
     <ClCompile Include="vulkan\frame_in_flight.cpp" />
+    <ClCompile Include="vulkan\gizmos\meshes\rotate.cpp" />
+    <ClCompile Include="vulkan\gizmos\meshes\scale.cpp" />
     <ClCompile Include="vulkan\gizmos\meshes\translate.cpp" />
     <ClCompile Include="vulkan\gizmos\vib.cpp" />
     <ClCompile Include="vulkan\graphics_shader.cpp" />
@@ -881,7 +883,6 @@
     <ClInclude Include="helpers\math\atan2.h" />
     <ClInclude Include="helpers\math\cosine.h" />
     <ClInclude Include="helpers\math\factorial.h" />
-    <ClInclude Include="helpers\math\geometry\closest_points_on_lines.h" />
     <ClInclude Include="helpers\math\geometry\ray_AABB_intersection.h" />
     <ClInclude Include="helpers\math\geometry\ray_cone_intersection.h" />
     <ClInclude Include="helpers\math\geometry\generate_triangulated_n_gon_indices.h" />

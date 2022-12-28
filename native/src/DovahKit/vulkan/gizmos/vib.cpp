@@ -144,9 +144,12 @@ namespace vulkanDK::gizmos {
       switch (sgs.get_mode()) {
          case gizmo_mode::none:
             return {};
+         case gizmo_mode::rotate:
+            return meshes::rotate::do_raycast(sgs.transform, rc, out_which_axis);
+         case gizmo_mode::scale:
+            return meshes::scale::do_raycast(sgs.transform, rc, out_which_axis);
          case gizmo_mode::translate:
             return meshes::translate::do_raycast(sgs.transform, rc, out_which_axis);
-         // TODO
       }
       return {};
    }

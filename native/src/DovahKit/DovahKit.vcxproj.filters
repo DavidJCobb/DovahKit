@@ -1935,6 +1935,12 @@
     <ClCompile Include="vulkan\gizmos\meshes\translate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\gizmos\meshes\scale.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\gizmos\meshes\rotate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4503,9 +4509,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\gizmos\meshes\scale.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\math\geometry\closest_points_on_lines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\math\geometry\ray_AABB_intersection.h">

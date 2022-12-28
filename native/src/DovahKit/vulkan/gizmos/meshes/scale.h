@@ -1,7 +1,13 @@
 #pragma once
 #include <array>
+#include "../../enums/axis3D.h"
 #include "../index_type.h"
 #include "../vertex.h"
+
+namespace vulkanDK {
+   class  raycast;
+   struct raycast_hit_data;
+}
 
 namespace vulkanDK::gizmos::meshes::scale {
    namespace options {
@@ -9,6 +15,8 @@ namespace vulkanDK::gizmos::meshes::scale {
       constexpr float  stem_radius  =   6;
       constexpr float  handle_width =  48;
       constexpr bool   righthanded  = true;
+
+      constexpr float raycast_inflation = 6;
    }
 
    namespace impl {
@@ -135,4 +143,11 @@ namespace vulkanDK::gizmos::meshes::scale {
 
       return out;
    }();
+
+   extern raycast_hit_data do_raycast(
+      const glm::mat4& transform,
+      const raycast&,
+      //
+      axis3D& out_which_axis
+   );
 }

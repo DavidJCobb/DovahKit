@@ -5,8 +5,14 @@
 #include "helpers/math/cosine.h"
 #include "helpers/math/sine.h"
 #include "helpers/math/sqrt.h"
+#include "../../enums/axis3D.h"
 #include "../index_type.h"
 #include "../vertex.h"
+
+namespace vulkanDK {
+   class  raycast;
+   struct raycast_hit_data;
+}
 
 namespace vulkanDK::gizmos::meshes::rotate {
    namespace options {
@@ -106,4 +112,11 @@ namespace vulkanDK::gizmos::meshes::rotate {
 
       return out;
    }();
+
+   extern raycast_hit_data do_raycast(
+      const glm::mat4& transform,
+      const raycast&,
+      //
+      axis3D& out_which_axis
+   );
 }
