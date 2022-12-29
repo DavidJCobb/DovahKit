@@ -1,4 +1,6 @@
 #include "rendered_mesh.h"
+#include "helpers/math/geometry/ray_OBB_intersection.h"
+#include "helpers/math/geometry/ray_triangle_intersection.h"
 #include "helpers/math.h"
 #include "helpers/offset_into.h"
 #include "./command_buffer.h"
@@ -13,59 +15,6 @@
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/normal.hpp>
-
-namespace {
-   bool ray_intersects_obb(
-      const glm::vec3& ray_origin,
-      const glm::vec3& ray_direction,
-      const glm::vec3& local_aabb_min,
-      const glm::vec3& local_aabb_max,
-      const glm::mat4& transform,
-      float& distance
-   ) {
-      // http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
-      glm::vec3 world_pos = transform[3];
-      glm::vec3 delta     = world_pos - ray_origin;
-      //
-      float greatest_min = 0.0F;
-      float smallest_max  = std::numeric_limits<float>::max();
-      for (int i = 0; i < 3; ++i) {
-         glm::vec3 axis = transform[i];
-         float e = glm::dot(axis, delta);
-         float f = glm::dot(ray_direction, axis);
-         if (fabs(f) > std::numeric_limits<float>::epsilon()) {
-            //
-            // For the current axis, compute both ray/plane intersections; e.g. for the X-axis, 
-            // compute the intersections with the YZ plane.
-            //
-            float behind = (e + local_aabb_min[i]) / f;
-            float ahead  = (e + local_aabb_max[i]) / f;
-            if (behind > ahead){
-               std::swap(behind, ahead);
-            }
-            //
-            if (smallest_max > ahead)
-               smallest_max = ahead;
-            if (greatest_min < behind)
-               greatest_min = behind;
-            //
-            // If the nearest "far" intersection is ever closer than the nearest "near" 
-            // intersection, then there is no intersection.
-            //
-            if (smallest_max < greatest_min)
-               return false;
-         } else {
-            //
-            // Ray is parallel to the AABB.
-            //
-            if (-e + local_aabb_min[i] > 0.0f || -e + local_aabb_max[i] < 0.0f)
-               return false;
-         }
-      }
-      distance = greatest_min;
-      return true;
-   }
-}
 
 namespace vulkanDK {
    rendered_mesh::~rendered_mesh() {
@@ -315,8 +264,18 @@ namespace vulkanDK {
          // erratically and produce both false positives and false negatives. Let's 
          // be a little more certain before we resort to trying them.
          //
-         if (!ray_intersects_obb(ray_origin, ray_direction, this->mesh_data.bounding_box.min, this->mesh_data.bounding_box.max, this->transform(), hit_distance))
+         float distance;
+         if (!cobb::geometry::ray_OBB_intersection(
+            ray_origin,
+            ray_direction,
+            this->mesh_data.bounding_box.min,
+            this->mesh_data.bounding_box.max,
+            this->transform(),
+            true,
+            distance
+         )) {
             return false;
+         }
       }
       return this->ray_intersects_shape(ray_origin, ray_direction, hit_distance);
    }
@@ -334,8 +293,17 @@ namespace vulkanDK {
          // be a little more certain before we resort to trying them.
          //
          float hit_distance;
-         if (!ray_intersects_obb(rc.origin, rc.direction, this->mesh_data.bounding_box.min, this->mesh_data.bounding_box.max, this->transform(), hit_distance))
+         if (!cobb::geometry::ray_OBB_intersection(
+            rc.origin,
+            rc.direction,
+            this->mesh_data.bounding_box.min,
+            this->mesh_data.bounding_box.max,
+            this->transform(),
+            true,
+            hit_distance
+         )) {
             return {};
+         }
       }
 
       raycast_hit_data hit = {};
@@ -353,12 +321,13 @@ namespace vulkanDK {
          glm::vec2 bary_position;
          float     distance;
          //
-         bool result = glm::intersectRayTriangle(
+         bool result = cobb::geometry::ray_triangle_intersection(
             rc.origin,
             ray_direction,
             a,
             b,
             c,
+            false,
             bary_position,
             distance
          );

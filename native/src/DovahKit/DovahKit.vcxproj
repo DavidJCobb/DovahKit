@@ -891,6 +891,7 @@
     <ClInclude Include="helpers\math\geometry\ray_OBB_intersection.h" />
     <ClInclude Include="helpers\math\geometry\ray_plane_intersection.h" />
     <ClInclude Include="helpers\math\geometry\ray_sphere_intersection.h" />
+    <ClInclude Include="helpers\math\geometry\ray_triangle_intersection.h" />
     <ClInclude Include="helpers\math\pow.h" />
     <ClInclude Include="helpers\math\quadratic_roots.h" />
     <ClInclude Include="helpers\math\rotation\unit_conversion.h" />

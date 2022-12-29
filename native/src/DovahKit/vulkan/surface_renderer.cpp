@@ -2035,6 +2035,15 @@ namespace vulkanDK {
       auto& time_prior = this->state.last_frame_at;
       if (time_prior.time_since_epoch() == timestamp_t::duration::zero()) {
          time_prior = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+      } else {
+         if constexpr (config::throttle_frame_rate_to_1000) {
+            auto now  = std::chrono::time_point_cast<timestamp_t::duration>(timestamp_t::clock::now());
+            auto diff = now - time_prior;
+            constexpr auto ms = std::chrono::milliseconds{ 11 }; // ~90FPS
+            if (diff < ms) {
+               return;
+            }
+         }
       }
       //
       bool perform_scene_entity_gpu_uploads    = this->_execute_pending_scene_entity_gpu_uploads();
@@ -2154,12 +2163,6 @@ namespace vulkanDK {
       {
          auto diff = time_after - time_prior;
          this->state.last_frame_time = std::chrono::duration<double, std::chrono::seconds::period>(diff).count();
-         if constexpr (config::throttle_frame_rate_to_1000) {
-            constexpr auto ms = std::chrono::milliseconds{ 1 };
-            if (diff < ms) {
-               std::this_thread::sleep_for(ms - diff);
-            }
-         }
          this->state.last_frame_at   = time_after;
          //
          this->state.fps.next_delta(this->state.last_frame_time);

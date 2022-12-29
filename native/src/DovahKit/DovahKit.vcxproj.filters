@@ -4538,6 +4538,9 @@
     <ClInclude Include="helpers\simd\min_register.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\math\geometry\ray_triangle_intersection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
