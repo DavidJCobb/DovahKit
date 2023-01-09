@@ -77,8 +77,4 @@ class DKVulkanView : public QWidget {
 
       virtual void focusInEvent(QFocusEvent* event) override;
       virtual void focusOutEvent(QFocusEvent* event) override;
-
-      #if !defined(QT_DESIGNER_LIB)
-      virtual void mousePressEvent(QMouseEvent* event) override;
-      #endif
 };

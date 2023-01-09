@@ -171,9 +171,13 @@ namespace vulkanDK {
 
          // World-relative raycasts (uses the mesh's transform):
          bool ray_intersects_bounding_sphere(const cobb::vector3<float>& ray_origin, cobb::vector3<float> ray_direction) const;
-         bool ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
-         bool ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const;
 
+         // Sets barycentric position, hit distance, and hit position.
+         // Does not set surface normal. You should request that just from the final hit entity.
+         // Ignores backfaces.
          raycast_hit_data do_raycast(const raycast&) const;
+
+         // Returns world-relative surface normal, accounting for mesh's transform. Triangle index is NOT bounds-checked.
+         glm::vec3 triangle_surface_normal(size_t triangle_index) const;
    };
 }

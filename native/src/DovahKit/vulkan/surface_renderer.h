@@ -338,7 +338,6 @@ namespace vulkanDK {
          void set_animation_paused(size_t mesh, bool paused);
 
          void surface_position_to_world_ray(int viewport_x, int viewport_y, glm::vec3& eye_position, glm::vec3& eye_direction) const;
-         rendered_mesh_handle rendered_mesh_at(int viewport_x, int viewport_y); // returns -1 if none
          void do_raycast(raycast&);
 
          void set_default_land_textures(const QString& diffuse, const QString& normals); // path should be relative to, and not include, "data/"; fails if it doesn't start with "textures/"

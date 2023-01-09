@@ -123,6 +123,39 @@ int DKHeaderView::visibleLength() const noexcept {
    return vp->height();
 }
 
+int DKHeaderView::columnBasisFactor(int logicalIndex) const noexcept {
+   if (logicalIndex < 0)
+      return 0;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return 0;
+   if (logicalIndex >= list.size())
+      return 1;
+   return list[logicalIndex].basis;
+}
+int DKHeaderView::columnModFactor(int logicalIndex) const noexcept {
+   if (logicalIndex < 0)
+      return 0;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return 0;
+   if (logicalIndex >= list.size())
+      return 1;
+   return list[logicalIndex].mod;
+}
+void DKHeaderView::setColumnModFactor(int logicalIndex, int factor) {
+   if (logicalIndex < 0)
+      return;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return;
+   if (list.size() < count)
+      list.resize(count);
+   list[logicalIndex].mod = factor;
+}
 int DKHeaderView::columnGrowFactor(int logicalIndex) const noexcept {
    if (logicalIndex < 0)
       return 0;
@@ -148,7 +181,7 @@ void DKHeaderView::setColumnGrowFactor(int logicalIndex, int factor) {
 int DKHeaderView::columnShrinkFactor(int logicalIndex) const noexcept {
    if (logicalIndex < 0)
       return 0;
-   auto& list = this->_flexColumns;
+   auto& list  = this->_flexColumns;
    auto  count = this->count();
    if (logicalIndex >= count)
       return 0;

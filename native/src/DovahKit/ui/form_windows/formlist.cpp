@@ -1,8 +1,12 @@
 #include "formlist.h"
-#include "_base_cpp.h"
+#include "./_base_cpp.h"
+#include "editor/subsystems/gui_adjust/core.h"
 
-FormDialogFormList::FormDialogFormList(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogFormList, dovah::loaded_forms::FormList>(*this, stub);
+FormDialogFormList::FormDialogFormList(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
+   dovahkit::subsystems::gui_adjust::core::get_or_create().registerWidgets(*this, {
+      { "LstForms", this->ui.forms },
+   });
    //
    this->load();
 }

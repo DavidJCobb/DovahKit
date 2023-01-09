@@ -1,20 +1,20 @@
 #include "quest.h"
-#include "_base_cpp.h"
-#include "../../dovah/core.h"
-#include "../../dovah/form_stub_addenda.h"
-#include "../../helpers/qt/basic_bindings.h"
-#include "odds_and_ends/quest_tab_stages.h"
-#include "odds_and_ends/quest_tab_objectives.h"
+#include "./_base_cpp.h"
+#include "dovah/core.h"
+#include "dovah/form_stub_addenda.h"
+#include "helpers/qt/basic_bindings.h"
+#include "./odds_and_ends/quest_tab_stages.h"
+#include "./odds_and_ends/quest_tab_objectives.h"
 
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Quests is incomplete.");
 
-FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
-   form_dialog_helpers::initialize(*this);
+FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(dovah::form_type::quest, stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    //
    this->ui.textDisplayGlobals->setAllowedFormTypes({ dovah::form_type::global });
    {
-      using _e = form_t::quest_type::type;
+      using _e = loaded_form_type::quest_type::type;
       this->ui.questType->addItem(tr("None",                  "Quest Type"), _e::none);
       this->ui.questType->addItem(tr("Main",                  "Quest Type"), _e::main);
       this->ui.questType->addItem(tr("College of Winterhold", "Quest Type"), _e::mages_guild);
@@ -82,7 +82,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
          page->setLayout(layout);
       };
       //
-      auto& quest = *(form_t*)this->clone;
+      auto& quest = *(loaded_form_type*)this->clone;
       //
       _insert(1, (this->tabs.stages     = new QuestTabStages(*stub, quest)));
       _insert(2, (this->tabs.objectives = new QuestTabObjectives(*stub, quest)));
@@ -91,18 +91,18 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
 }
 void FormDialogQuest::_load_impl() {
    auto& editor  = DovahKitCore::get();
-   auto& working = *this->get_working_copy<form_t>();
+   auto& working = *this->get_working_copy<loaded_form_type>();
    //
    #pragma region Basic Data
       this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
       cobb::qt::bind(this->ui.editorCategory, working.filter);
       this->ui.name->setText(editor.convert_localized_string(working.name));
       cobb::qt::bind(this->ui.questType, working.quest_type);
-      cobb::qt::bind(this->ui.flagAllowRepeatedStages, working.flags, form_t::quest_flag::allow_repeated_stages);
-      cobb::qt::bind(this->ui.flagExcludeFromDialogueExport, working.flags, form_t::quest_flag::exclude_from_dialogue_export);
-      cobb::qt::bind(this->ui.flagRunOnce, working.flags, form_t::quest_flag::run_once);
-      cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, form_t::quest_flag::start_game_enabled);
-      cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, form_t::quest_flag::warn_on_alias_fill_failure);
+      cobb::qt::bind(this->ui.flagAllowRepeatedStages, working.flags, loaded_form_type::quest_flag::allow_repeated_stages);
+      cobb::qt::bind(this->ui.flagExcludeFromDialogueExport, working.flags, loaded_form_type::quest_flag::exclude_from_dialogue_export);
+      cobb::qt::bind(this->ui.flagRunOnce, working.flags, loaded_form_type::quest_flag::run_once);
+      cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, loaded_form_type::quest_flag::start_game_enabled);
+      cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, loaded_form_type::quest_flag::warn_on_alias_fill_failure);
       cobb::qt::bind(this->ui.eventType, working.event);
       this->ui.textDisplayGlobals->pullStubs(working.text_display_globals);
       //
@@ -132,7 +132,7 @@ void FormDialogQuest::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
-   auto& working = *this->form.ptr_cast<form_t>();
+   auto& working = *this->get_working_copy<loaded_form_type>();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());

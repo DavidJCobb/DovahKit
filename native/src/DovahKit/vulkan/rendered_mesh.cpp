@@ -195,8 +195,6 @@ namespace vulkanDK {
       //
       // Line/sphere intersection check:
       //
-      ray_direction.normalize();
-      //
       auto gap   = ray_origin - center;
       auto delta = std::pow(ray_direction.dot(gap), 2) - (gap.length_sq() - (bound.radius_sq * scale));
       //
@@ -210,74 +208,6 @@ namespace vulkanDK {
       //     - Two intersections (ray penetrates and exits sphere)
       //
       return (delta >= -epsilon);
-   }
-   bool rendered_mesh::ray_intersects_shape(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const {
-      ray_direction = glm::normalize(ray_direction);
-      glm::vec2 bary_position;
-      //
-      auto& list = this->mesh_data.indices;
-      auto& vert = this->mesh_data.vertices;
-      bool  hits = false;
-      hit_distance = std::numeric_limits<float>::max();
-      for (size_t i = 0; i + 2 < list.size(); i += 3) {
-         std::array<uint32_t, 3> indices = list.triangle_from(i);
-         glm::vec3 a = this->transform() * glm::vec4(vert[indices[0]].pos, 1.0F);
-         glm::vec3 b = this->transform() * glm::vec4(vert[indices[1]].pos, 1.0F);
-         glm::vec3 c = this->transform() * glm::vec4(vert[indices[2]].pos, 1.0F);
-         //
-         float distance;
-         bool  result = glm::intersectRayTriangle(
-            ray_origin,
-            ray_direction,
-            a,
-            b,
-            c,
-            bary_position,
-            distance
-         );
-         if (result) {
-            if (distance < 0) {
-               //
-               // So GLM didn't  manage to  implement  a ray/triangle  intersection check 
-               // properly. That's fun.
-               // 
-               // Specifically, it can return a true result but with a negative distance, 
-               // which means that the surface is actually BEHIND the ray, which means it 
-               // isn't the hit position and indeed, there wasn't a hit.
-               //
-               continue;
-            }
-            hits         = result;
-            hit_distance = std::min(distance, hit_distance);
-         }
-      }
-      return hits;
-   }
-   bool rendered_mesh::ray_intersects(const glm::vec3& ray_origin, const glm::vec3& ray_direction, float& hit_distance) const {
-      if (this->empty())
-         return false;
-      if (!this->ray_intersects_bounding_sphere(ray_origin, ray_direction))
-         return false;
-      if (this->mesh_data.bounding_sphere.radius_sq > (10000 * 10000)) {
-         //
-         // Massive triangles can cause ray/triangle intersection checks to behave 
-         // erratically and produce both false positives and false negatives. Let's 
-         // be a little more certain before we resort to trying them.
-         //
-         float distance;
-         if (!cobb::geometry::ray_OBB_intersection(
-            ray_origin,
-            ray_direction,
-            this->mesh_data.bounding_box.min,
-            this->mesh_data.bounding_box.max,
-            this->transform(),
-            true,
-            distance
-         )) {
-            return false;
-         }
-      }
-      return this->ray_intersects_shape(ray_origin, ray_direction, hit_distance);
    }
 
    raycast_hit_data rendered_mesh::do_raycast(const raycast& rc) const {
@@ -338,9 +268,23 @@ namespace vulkanDK {
          hit.bary_position  = bary_position;
          hit.distance       = distance;
          hit.position       = bary_position.x * a + bary_position.y * b + (1.0F - bary_position.x - bary_position.y) * c;
+         /*//
          hit.surface_normal = glm::triangleNormal(a, b, c);
+         //*/
+         hit.triangle_index = i / 3;
       }
 
       return hit;
+   }
+   glm::vec3 rendered_mesh::triangle_surface_normal(size_t triangle_index) const {
+      auto& list = this->mesh_data.indices;
+      auto& vert = this->mesh_data.vertices;
+
+      std::array<uint32_t, 3> indices = list.triangle_from(triangle_index);
+      glm::vec3 a = this->transform() * glm::vec4(vert[indices[0]].pos, 1.0F);
+      glm::vec3 b = this->transform() * glm::vec4(vert[indices[1]].pos, 1.0F);
+      glm::vec3 c = this->transform() * glm::vec4(vert[indices[2]].pos, 1.0F);
+
+      return glm::triangleNormal(a, b, c);
    }
 }

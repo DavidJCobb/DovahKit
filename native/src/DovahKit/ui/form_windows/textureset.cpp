@@ -1,30 +1,29 @@
 #include "textureset.h"
-#include "_base_cpp.h"
-#include "../../helpers/bitwise.h"
-#include "../../editor/asset_manager/asset_manager.h"
+#include "./_base_cpp.h"
+#include "helpers/bitwise.h"
+#include "editor/asset_manager/asset_manager.h"
 
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for TextureSets is incomplete: the preview pane is not yet functional.");
 
 namespace {
-   using form_type  = dovah::loaded_forms::TextureSet;
    using decal_type = dovah::loaded_forms::components::decal_data;
 
-   constexpr bool hide_inapplicable_paths = true;
+   constexpr const bool hide_inapplicable_paths = true;
 }
 
-FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogTextureSet, dovah::loaded_forms::TextureSet>(*this, stub);
+FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    //
    QObject::connect(this->ui.flagSpecular, &QCheckBox::toggled, this, [this](bool checked) {
-      cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::no_specular_map, !checked);
+      cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::no_specular_map, !checked);
    });
    QObject::connect(this->ui.flagSkinTexture, &QCheckBox::toggled, this, [this](bool checked) {
-      cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::is_skin_textures, checked);
+      cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::is_skin_textures, checked);
       this->refreshTextureList();
    });
    QObject::connect(this->ui.flagModelSpaceNormals, &QCheckBox::toggled, this, [this](bool checked) {
-      cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::has_model_space_normals, checked);
+      cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::has_model_space_normals, checked);
       this->refreshTextureList();
    });
    //
@@ -177,9 +176,9 @@ void FormDialogTextureSet::_load_impl() {
    //
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
    this->ui.editPath->setPath(QString());
-   this->ui.flagModelSpaceNormals->setChecked(this->form->texture_flags & form_type::texture_set_flag::has_model_space_normals);
-   this->ui.flagSkinTexture->setChecked(this->form->texture_flags & form_type::texture_set_flag::is_skin_textures);
-   this->ui.flagSpecular->setChecked(!(this->form->texture_flags & form_type::texture_set_flag::no_specular_map));
+   this->ui.flagModelSpaceNormals->setChecked(this->form->texture_flags & loaded_form_type::texture_set_flag::has_model_space_normals);
+   this->ui.flagSkinTexture->setChecked(this->form->texture_flags & loaded_form_type::texture_set_flag::is_skin_textures);
+   this->ui.flagSpecular->setChecked(!(this->form->texture_flags & loaded_form_type::texture_set_flag::no_specular_map));
    //
    this->ui.decalData->setChecked(this->form->decal_data != nullptr);
    if (this->form->decal_data) {
@@ -215,9 +214,9 @@ void FormDialogTextureSet::_save_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::has_model_space_normals, this->ui.flagModelSpaceNormals->isChecked());
-   cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::is_skin_textures,        this->ui.flagSkinTexture->isChecked());
-   cobb::edit_bit(this->form->texture_flags, form_type::texture_set_flag::no_specular_map,         !this->ui.flagSpecular->isChecked());
+   cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::has_model_space_normals, this->ui.flagModelSpaceNormals->isChecked());
+   cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::is_skin_textures,        this->ui.flagSkinTexture->isChecked());
+   cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::no_specular_map,         !this->ui.flagSpecular->isChecked());
    //
    auto* widget = this->ui.paths;
    this->form->texture_by_index<0>() = _get_row_value(widget, 0);

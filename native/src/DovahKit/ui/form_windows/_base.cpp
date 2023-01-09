@@ -1,16 +1,16 @@
 #include "_base.h"
-#include "../../editor/core.h"
-#include "../../dovah/forms/Form.h"
-#include "../../dovah/forms/components/extra_data/_templates.h"
+#include "editor/core.h"
+#include "dovah/forms/Form.h"
+#include "dovah/forms/components/extra_data/_templates.h"
 
-#pragma region FormDialogBaseTemplate
-FormDialogBaseTemplate::FormDialogBaseTemplate(dovah::form_stub* stub, QWidget* parent) : QDialog(parent) {}
-void FormDialogBaseTemplate::load() {
+#pragma region FormEditDialogBase
+FormEditDialogBase::FormEditDialogBase(dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent) {}
+void FormEditDialogBase::load() {
    if (!this->stub)
       return;
    this->_load_impl();
 }
-void FormDialogBaseTemplate::save() {
+void FormEditDialogBase::save() {
    if (!this->stub)
       return;
    auto& editor = DovahKitCore::get();
@@ -20,17 +20,25 @@ void FormDialogBaseTemplate::save() {
    emit editor.formModified(this->stub);
 }
 
-void FormDialogBaseTemplate::save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t id) {
+void FormEditDialogBase::accept() {
+   this->save();
+   QDialog::accept();
+}
+void FormEditDialogBase::reject() {
+   QDialog::reject();
+}
+
+void FormEditDialogBase::save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t id) {
    auto& editor = DovahKitCore::get();
    auto* value  = editor.get_form(id);
    this->save_form_id(target, value);
 }
-void FormDialogBaseTemplate::save_form_id(dovah::form_reference_t& target, dovah::form_stub* value) {
+void FormEditDialogBase::save_form_id(dovah::form_reference_t& target, dovah::form_stub* value) {
    assert(this->stub->form && "");
    target.set(*this->stub->form, value);
 }
 
-void FormDialogBaseTemplate::save_extra_form(dovah::bare_form_id_t formID, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {
+void FormEditDialogBase::save_extra_form(dovah::bare_form_id_t formID, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {
    using dummy_t = dovah::loaded_forms::components::formID_extra_data<0, extra_data_type::action>;
    //
    if (formID || !remove_if_no_form) {
@@ -41,7 +49,7 @@ void FormDialogBaseTemplate::save_extra_form(dovah::bare_form_id_t formID, extra
       extra.remove_by_type(et);
    }
 }
-void FormDialogBaseTemplate::save_extra_form(dovah::form_stub* stub, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {
+void FormEditDialogBase::save_extra_form(dovah::form_stub* stub, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {
    using dummy_t = dovah::loaded_forms::components::formID_extra_data<0, extra_data_type::action>;
    //
    if (stub || !remove_if_no_form) {
@@ -54,8 +62,8 @@ void FormDialogBaseTemplate::save_extra_form(dovah::form_stub* stub, extra_data_
 }
 #pragma endregion
 
-#pragma region FormDialogWorkingCopyBase
-FormDialogWorkingCopyBase::FormDialogWorkingCopyBase(dovah::form_type_t ft, dovah::form_stub* stub, QWidget* parent) : QDialog(parent), _allowed_form_type(ft) {
+#pragma region FormWorkingCopyEditDialogBase
+FormWorkingCopyEditDialogBase::FormWorkingCopyEditDialogBase(dovah::form_type_t ft, dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent), _allowed_form_type(ft) {
    if (stub->formType == ft) {
       this->stub = stub;
       this->form = this->stub->load();
@@ -85,7 +93,7 @@ FormDialogWorkingCopyBase::FormDialogWorkingCopyBase(dovah::form_type_t ft, dova
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete, this, _reload);
    QObject::connect(&editor, &DovahKitCore::dataSaveFailed,   this, _reload);
 }
-FormDialogWorkingCopyBase::~FormDialogWorkingCopyBase() {
+FormWorkingCopyEditDialogBase::~FormWorkingCopyEditDialogBase() {
    this->form  = nullptr;
    this->clone = nullptr;
    if (this->stub) {
@@ -94,11 +102,11 @@ FormDialogWorkingCopyBase::~FormDialogWorkingCopyBase() {
    }
 }
 
-void FormDialogWorkingCopyBase::accept() {
+void FormWorkingCopyEditDialogBase::accept() {
    this->save();
    QDialog::accept();
 }
-void FormDialogWorkingCopyBase::reject() {
+void FormWorkingCopyEditDialogBase::reject() {
    auto& editor = DovahKitCore::get();
    //
    emit editor.formWorkingCopyDeleteImminent(this->stub);
@@ -111,7 +119,7 @@ void FormDialogWorkingCopyBase::reject() {
    QDialog::reject();
 }
 
-void FormDialogWorkingCopyBase::load() {
+void FormWorkingCopyEditDialogBase::load() {
    if (!this->stub)
       return;
    this->form  = this->stub->load();
@@ -119,7 +127,7 @@ void FormDialogWorkingCopyBase::load() {
    assert(this->clone);
    this->_load_impl();
 }
-void FormDialogWorkingCopyBase::save() {
+void FormWorkingCopyEditDialogBase::save() {
    if (!this->stub)
       return;
    this->clone = nullptr;

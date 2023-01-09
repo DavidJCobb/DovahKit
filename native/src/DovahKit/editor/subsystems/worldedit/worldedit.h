@@ -154,7 +154,6 @@ namespace dovahkit::subsystems::worldedit {
          void refSelected(dovah::form_stub&);
          void refDeselected(dovah::form_stub&);
          void refSelectionChanged(dovah::form_stub&, bool selected);
-         void statusBarMessage(const QString& message, int display_time = 0);
 
       public slots:
          void setRefSelectionState(dovah::form_stub&, bool state);

@@ -32,6 +32,7 @@
 #include "dovah/form_stub_helpers.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/components/model.h"
+#include "editor/helpers/form_identifiers_to_string.h"
 #include "ui/generic/FormPicker.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 #include "vulkan/enums/gizmo_mode.h"
@@ -51,8 +52,23 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    {
       auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create();
       worldedit.set_target_view(*view);
-      QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::statusBarMessage, this, [this](const QString& message, int timeout) {
-         this->status->showMessage(message, timeout);
+      QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::refSelectionChanged, this, [this](dovah::form_stub& refr, bool selected) {
+         auto* base = dovah::form_stub_helpers::get_base_form(&refr);
+         if (!base)
+            return;
+
+         QString message;
+         if (selected) {
+            message = tr("Selected form %1 (base %2).");
+         } else {
+            message = tr("Deselected form %1 (base %2).");
+         }
+         this->status->showMessage(
+            message
+               .arg(editor_helpers::form_identifiers_to_string(&refr))
+               .arg(editor_helpers::form_identifiers_to_string(base)),
+            3000
+         );
       });
    }
    //

@@ -122,6 +122,8 @@ namespace vulkanDK {
          // World-relative raycasts (uses the mesh's transform):
          bool ray_intersects(const glm::vec3& ray_origin, glm::vec3 ray_direction, float& hit_distance) const;
 
+         // Sets barycentric position, hit distance, hit position, and hit surface normal.
+         // Hits backfaces.
          raycast_hit_data do_raycast(const raycast&) const;
    };
 }

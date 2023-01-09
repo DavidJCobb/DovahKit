@@ -257,16 +257,4 @@ void DKVulkanView::focusInEvent(QFocusEvent* event) {
 void DKVulkanView::focusOutEvent(QFocusEvent* event) {
    this->input_handling.focused = false;
 }
-
-#if !defined(QT_DESIGNER_LIB)
-void DKVulkanView::mousePressEvent(QMouseEvent* event) {
-   auto* s = this->renderer;
-   if (!s)
-      return;
-   auto pos    = event->localPos();
-   auto handle = s->rendered_mesh_at(pos.x(), pos.y());
-   if (!handle.empty())
-      emit this->renderedMeshClicked(handle);
-}
-#endif
 #pragma endregion

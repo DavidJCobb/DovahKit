@@ -111,6 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\input.cpp" />
@@ -763,6 +764,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h" />
+    <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
+    <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
@@ -1884,6 +1887,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
+    <None Include="helpers\small_vector.inl" />
     <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />

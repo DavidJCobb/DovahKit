@@ -863,23 +863,6 @@ namespace dovahkit::subsystems::worldedit {
          //
          this->_on_renderer_lost();
       });
-      //
-      QObject::connect(&view, &DKVulkanView::renderedMeshClicked, this, [this](vulkanDK::rendered_mesh_handle handle) {
-         assert(!handle.empty());
-         auto* nif = handle->owning_nif;
-         if (!nif)
-            return;
-         auto* stub = nif->owning_form;
-         if (!stub)
-            return;
-         auto* base = dovah::form_stub_helpers::get_base_form(stub);
-         emit this->statusBarMessage(
-            QString("Clicked on form %1 (base %2).")
-               .arg(editor_helpers::form_identifiers_to_string(stub))
-               .arg(editor_helpers::form_identifiers_to_string(base)),
-            3000
-         );
-      });
    }
 
    void core::view_input_poll_handler(DKVulkanView& view) {
@@ -998,7 +981,19 @@ namespace dovahkit::subsystems::worldedit {
             static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
          } else {
             if (data.position == worldinput::pointer_position_type::mouse) {
-               auto handle = sr->rendered_mesh_at(data.mouse.x(), data.mouse.y());
+               vulkanDK::rendered_mesh_handle handle = {};
+               {
+                  vulkanDK::raycast raycast(*sr);
+                  raycast.test_flags = 0;
+                  raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
+                  sr->do_raycast(raycast);
+
+                  if (raycast.result.hit) {
+                     auto& e = raycast.result.entity;
+                     if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
+                        handle = std::get<vulkanDK::rendered_mesh_handle>(e);
+                  }
+               }
                if (!handle.empty()) {
                   if (auto* nif = handle->owning_nif) {
                      if (auto* stub = nif->owning_form) {

@@ -1,9 +1,9 @@
 #include "word_of_power.h"
-#include "_base_cpp.h"
-#include "../../helpers/bitwise.h"
+#include "./_base_cpp.h"
+#include "helpers/bitwise.h"
 
-FormDialogWordOfPower::FormDialogWordOfPower(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogWordOfPower, dovah::loaded_forms::WordOfPower>(*this, stub);
+FormDialogWordOfPower::FormDialogWordOfPower(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    //
    this->load();
 }

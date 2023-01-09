@@ -2327,48 +2327,6 @@ namespace vulkanDK {
       );
       eye_direction = glm::normalize(eye_endpoint - eye_position);
    }
-   rendered_mesh_handle surface_renderer::rendered_mesh_at(int x, int y) {
-      glm::vec3 eye_position;
-      glm::vec3 eye_direction;
-      this->surface_position_to_world_ray(x, y, eye_position, eye_direction);
-      //
-      size_t nearest  = -1;
-      float  distance = std::numeric_limits<float>::max();
-      //
-      const auto& list = this->scene.entities_of_type<rendered_mesh>();
-      for (size_t i = 0; i < list.size(); ++i) {
-         const auto& mesh = list[i];
-         //
-         float hit_distance;
-         if (!mesh.ray_intersects(eye_position, eye_direction, hit_distance))
-            continue;
-         if (hit_distance < distance) {
-            distance = hit_distance;
-            nearest = i;
-         }
-      }
-      if (nearest == -1)
-         return {};
-      //
-      // Double-check that objects of other types (e.g. landscapes) aren't in front of the 
-      // hit mesh.
-      //
-      for (const auto& item : this->scene.entities_of_type<rendered_landscape>()) {
-         float hit_distance;
-         if (!item.ray_intersects(eye_position, eye_direction, hit_distance))
-            continue;
-         if (hit_distance < distance)
-            //
-            // There's a landscape in front of the nearest rendered mesh. Return a fail 
-            // result.
-            //
-            return {};
-      }
-      //
-      // If we reach this point, then there's nothing else obstructing the hit mesh.
-      //
-      return rendered_mesh_handle(*this, nearest);
-   }
    void surface_renderer::do_raycast(raycast& rc) {
       if (rc.test_flags & raycast::test_flag::edit_gizmo) {
          axis3D axis;
@@ -2394,8 +2352,10 @@ namespace vulkanDK {
             if (rc.receive_hit(hit))
                nearest = i;
          }
-         if (nearest != -1)
+         if (nearest != -1) {
+            rc.result.hit.surface_normal = list[nearest].triangle_surface_normal(rc.result.hit.triangle_index);
             rc.result.entity = rendered_mesh_handle{ *this, nearest };
+         }
       }
       if (rc.test_flags & raycast::test_flag::landscapes) {
          size_t nearest = -1;

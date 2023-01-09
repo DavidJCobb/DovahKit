@@ -1,9 +1,9 @@
 #include "color.h"
-#include "_base_cpp.h"
-#include "../../helpers/bitwise.h"
+#include "./_base_cpp.h"
+#include "helpers/bitwise.h"
 
-FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogColor, dovah::loaded_forms::Color>(*this, stub);
+FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    //
    this->ui.colorPicker->setHasAlpha(false);
    //

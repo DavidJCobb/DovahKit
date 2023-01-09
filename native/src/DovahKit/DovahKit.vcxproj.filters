@@ -1941,6 +1941,9 @@
     <ClCompile Include="vulkan\gizmos\meshes\rotate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4541,6 +4544,9 @@
     <ClInclude Include="helpers\math\geometry\ray_triangle_intersection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\gui_adjust\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -4998,6 +5004,9 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -5218,6 +5227,7 @@
     </None>
     <None Include="helpers\windows.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
+    <None Include="helpers\small_vector.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

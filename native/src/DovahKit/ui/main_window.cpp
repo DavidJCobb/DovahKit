@@ -332,7 +332,7 @@ void MainWindow::updateFormEditWindowList() {
    this->form_edit_window_menu->clear();
    //
    auto& editor = DovahKitCore::get();
-   editor.for_each_form_edit_dialog([this](FormDialogBaseTemplate* dialog) {
+   editor.for_each_form_edit_dialog([this](AbstractFormEditDialog* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)
          return false;

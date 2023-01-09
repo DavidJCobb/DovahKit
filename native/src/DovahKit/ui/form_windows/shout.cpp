@@ -1,8 +1,8 @@
 #include "shout.h"
-#include "_base_cpp.h"
+#include "./_base_cpp.h"
 
-FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogShout, dovah::loaded_forms::Shout>(*this, stub);
+FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    this->ui.word0->linkToForm(0, stub);
    this->ui.word1->linkToForm(1, stub);
    this->ui.word2->linkToForm(2, stub);

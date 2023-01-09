@@ -1,22 +1,22 @@
 #include "cell.h"
-#include "_base_cpp.h"
-#include "../../helpers/bitwise.h"
-#include "../../helpers/miscellaneous.h"
-#include "../../helpers/qt/spinbox.h"
-#include "../../helpers/qt/vector3.h"
-#include "../../dovah/forms/factories/hardcoded.h"
-#include "../../dovah/forms/components/extra_data/cell_acoustic_space.h"
-#include "../../dovah/forms/components/extra_data/cell_climate.h"
-#include "../../dovah/forms/components/extra_data/cell_imagespace.h"
-#include "../../dovah/forms/components/extra_data/cell_music_override.h"
-#include "../../dovah/forms/components/extra_data/cell_water_type.h"
-#include "../../dovah/forms/components/extra_data/encounter_zone.h"
-#include "../../dovah/forms/components/extra_data/interior_lock_list.h"
-#include "../../dovah/forms/components/extra_data/location.h"
-#include "../../dovah/forms/components/extra_data/ownership.h"
-#include "../../dovah/forms/components/extra_data/rank.h"
-#include "../../dovah/forms/components/extra_data/water_data.h"
-#include "../../dovah/forms/components/extra_data/water_environment_map.h"
+#include "./_base_cpp.h"
+#include "helpers/qt/spinbox.h"
+#include "helpers/qt/vector3.h"
+#include "helpers/bitwise.h"
+#include "helpers/miscellaneous.h"
+#include "dovah/forms/factories/hardcoded.h"
+#include "dovah/forms/components/extra_data/cell_acoustic_space.h"
+#include "dovah/forms/components/extra_data/cell_climate.h"
+#include "dovah/forms/components/extra_data/cell_imagespace.h"
+#include "dovah/forms/components/extra_data/cell_music_override.h"
+#include "dovah/forms/components/extra_data/cell_water_type.h"
+#include "dovah/forms/components/extra_data/encounter_zone.h"
+#include "dovah/forms/components/extra_data/interior_lock_list.h"
+#include "dovah/forms/components/extra_data/location.h"
+#include "dovah/forms/components/extra_data/ownership.h"
+#include "dovah/forms/components/extra_data/rank.h"
+#include "dovah/forms/components/extra_data/water_data.h"
+#include "dovah/forms/components/extra_data/water_environment_map.h"
 
 namespace {
    using form_flag = dovah::loaded_forms::Cell::form_flag;
@@ -46,8 +46,8 @@ namespace {
       target.b = c.blue();
    }
 }
-FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogCell, dovah::loaded_forms::Cell>(*this, stub);
+FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
+   form_dialog_helpers::initialize(*this, stub);
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {

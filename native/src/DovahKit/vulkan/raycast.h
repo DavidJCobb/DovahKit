@@ -13,8 +13,9 @@ namespace vulkanDK {
 namespace vulkanDK {
    struct raycast_hit_data {
       glm::vec2 bary_position  = glm::vec2{ 0, 0 };
-      float     distance       = std::numeric_limits<float>::max();
+      size_t    triangle_index = 0;
       glm::vec3 position;
+      float     distance       = std::numeric_limits<float>::max();
       glm::vec3 surface_normal = glm::vec3{ 0, 0, 0 };
 
       constexpr operator bool() const noexcept { return this->distance < std::numeric_limits<float>::max(); }

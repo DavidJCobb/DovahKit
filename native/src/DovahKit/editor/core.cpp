@@ -269,10 +269,10 @@ float DovahKitCore::assess_load_progress() const noexcept {
    return this->load_order->assess_load_progress();
 }
 
-bool DovahKitCore::for_each_form_edit_dialog(std::function<bool(FormDialogBaseTemplate*)> functor) {
+bool DovahKitCore::for_each_form_edit_dialog(std::function<bool(AbstractFormEditDialog*)> functor) {
    for (auto& pair : this->extant_form_edit_dialogs) {
       auto* dialog = pair.second;
-      auto* casted = dynamic_cast<FormDialogBaseTemplate*>(dialog);
+      auto* casted = dynamic_cast<AbstractFormEditDialog*>(dialog);
       if (casted)
          if ((functor)(casted))
             return true;

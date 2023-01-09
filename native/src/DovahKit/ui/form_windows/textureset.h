@@ -1,13 +1,13 @@
 #pragma once
-#include "_base.h"
+#include "./_base.h"
 #include <array>
-#include "../../dovah/forms/TextureSet.h"
-#include "../../editor/asset_manager/asset.h"
+#include "dovah/forms/TextureSet.h"
+#include "editor/asset_manager/asset.h"
 #include "ui_textureset.h"
 
-class FormDialogTextureSet : public FormDialogBaseTemplate {
+class FormDialogTextureSet : public FormEditDialogBase {
    Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG
+   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::TextureSet)
    public:
       FormDialogTextureSet(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       
@@ -16,7 +16,6 @@ class FormDialogTextureSet : public FormDialogBaseTemplate {
       
    protected:
       Ui::FormDialogTextureSet ui;
-      dovah::loaded_form_ptr<dovah::loaded_forms::TextureSet> form;
       std::array<DovahKitAssetReceptor, 8> loaded_textures;
       
       virtual void _load_impl() override;

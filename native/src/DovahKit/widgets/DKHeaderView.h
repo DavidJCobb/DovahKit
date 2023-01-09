@@ -15,6 +15,9 @@ class DKHeaderView : public QHeaderView {
       int totalRenderedColumnSizes() const noexcept;
       int visibleLength() const noexcept;
       
+      int  columnBasisFactor(int logicalIndex) const noexcept;
+      int  columnModFactor(int logicalIndex) const noexcept;
+      void setColumnModFactor(int logicalIndex, int factor);
       int  columnGrowFactor(int logicalIndex) const noexcept;
       void setColumnGrowFactor(int logicalIndex, int factor);
       int  columnShrinkFactor(int logicalIndex) const noexcept;
