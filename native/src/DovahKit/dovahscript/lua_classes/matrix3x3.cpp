@@ -96,6 +96,9 @@ namespace {
             cls::push_new_instance(L, raw);
             return 1;
          }
+         for (int y = 0; y < decltype(raw)::height; ++y)
+            for (int x = 0; x < decltype(raw)::width; ++x)
+               raw.data[y][x] = 0;
          cls::push_new_instance(L, {});
          return 1;
       }
@@ -147,17 +150,6 @@ namespace {
             }
          }
          return luaL_error(L, "righthand operand (%s) is ambiguous; pass a number or an explicit matrix3x3 or vector3 instance", lua_typename(L, rawtype));
-      }
-      int __tostring(lua_State* L) { // creates and returns new vector
-         lua_settop(L, 1);
-         lua_getfield(L, 1, "x");
-         lua_getfield(L, 1, "y");
-         lua_getfield(L, 1, "z");
-         double x = cobb::radians_to_degrees(lua_tonumber(L, 2));
-         double y = cobb::radians_to_degrees(lua_tonumber(L, 3));
-         double z = cobb::radians_to_degrees(lua_tonumber(L, 4));
-         lua_pushfstring(L, "(%fdeg, %fdeg, %fdeg)", x, y, z);
-         return 1;
       }
       int copy(lua_State* L) {
          cls::require_self_type(L);
@@ -289,7 +281,6 @@ namespace {
 namespace dovahscript::lua_classes {
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "__mul",              &_methods::__mul }, // creates new instance; does not modify self
-      { "__tostring",         &_methods::__tostring },
       { "copy",               &_methods::copy },
       { "determinant",        &_methods::determinant },
       { "mul",                &_methods::mul }, // modifies self (unless operand is not a matrix3x3)

@@ -277,13 +277,15 @@ namespace {
             int arg = 0;
          } error;
          int result = -1;
+         bool has_layout = false;
          {
             task_reference widget = (wrapped_type*)self.widget;
             auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &arg_a, &arg_b, &result, &error]() {
+            task->handler = [widget, &arg_a, &arg_b, &result, &error, &has_layout]() {
                auto* layout = widget->layout();
                if (!layout)
                   return;
+               has_layout = true;
                if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
                   if (arg_a.type() != QMetaType::QString) {
                      error.text = "axis name (\"row\" or \"col\" or \"column\") expected";
@@ -326,6 +328,8 @@ namespace {
             delete task;
          }
          if (result < 0) {
+            if (!has_layout)
+               return 0;
             if (error.arg > 0)
                cobb::lua::argerror(L, error.arg, error.text.c_str());
             cobb::lua::error(L, error.text.c_str());

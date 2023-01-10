@@ -213,7 +213,14 @@ namespace {
          if (size == buffer.size())
             return 0;
          self.managed_resource->modify_binary_script_side([size](QByteArray& buffer) {
+            auto prior = buffer.size();
             buffer.resize(size);
+            buffer.squeeze();
+            //
+            if (prior < size) {
+               auto diff = size - prior;
+               memset(buffer.data() + prior, 0, diff);
+            }
          });
          return 0;
       }

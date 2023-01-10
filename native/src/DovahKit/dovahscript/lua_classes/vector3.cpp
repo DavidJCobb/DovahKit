@@ -86,6 +86,21 @@ namespace {
          cls::push_new_instance(L, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
          return 1;
       }
+      int __mul(lua_State* L) { // creates and returns new vector
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "expected number");
+         auto scalar = lua_tonumber(L, 2);
+         lua_settop(L, 1);
+         //
+         for (const auto* name : axis_names) {
+            lua_getfield(L, 1, name);   // 3...
+            lua_pushnumber(L, scalar);    // 4...
+            lua_arith(L, LUA_OPMUL); // 3...
+         }
+         //
+         cls::push_new_instance(L, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+         return 1;
+      }
       int __sub(lua_State* L) { // creates and returns new vector
          return _simple_vector_operator_overload(L, LUA_OPSUB);
       }
@@ -175,6 +190,23 @@ namespace {
          cls::push_new_instance(L, x, y, z);
          return 1;
       }
+      int dot(lua_State* L) { // compute the dot product vector of two 3D vectors
+         cls::require_self_type(L);
+         cls::require_arg_type(L, 2);
+         lua_checkstack(L, 2);
+         lua_getfield(L, 1, "x");
+         lua_getfield(L, 2, "x");
+         lua_arith(L, LUA_OPMUL); // STACK: - [ self, other, (self.x * other.x) ] +
+         lua_getfield(L, 1, "y");
+         lua_getfield(L, 2, "y");
+         lua_arith(L, LUA_OPMUL); // STACK: - [ self, other, (self.x * other.x), (self.y * other.y)] +
+         lua_arith(L, LUA_OPADD); // STACK: - [ self, other, result] +
+         lua_getfield(L, 1, "z");
+         lua_getfield(L, 2, "z");
+         lua_arith(L, LUA_OPMUL); // STACK: - [ self, other, result, (self.z * other.z)] +
+         lua_arith(L, LUA_OPADD); // STACK: - [ self, other, result] +
+         return 1;
+      }
       int length(lua_State* L) {
          cls::require_self_type(L);
          lua_settop(L, 1);
@@ -207,6 +239,37 @@ namespace {
          //
          lua_Number length = x*x + y*y + z*z;
          lua_pushnumber(L, length);
+         return 1;
+      }
+      int mul(lua_State* L) { // modifies (self)
+         cls::require_self_type(L);
+         cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "expected number");
+         auto scalar = lua_tonumber(L, 2);
+         //
+         lua_settop(L, 1);
+         lua_getfield(L, 1, "set_xyz");
+         if (cobb::lua::is_invocable(L, -1)) {
+            lua_pushvalue(L, 1);
+            for (const auto* name : axis_names) {
+               lua_getfield(L, 1, name);
+               lua_pushnumber(L, scalar);
+               lua_arith(L, LUA_OPMUL);
+            }
+            lua_call(L, axis_names.size() + 1, 0);
+         } else {
+            //
+            // A subclass overrode (set_xyz) with an unusable value. Fall back to 
+            // setting fields one by one.
+            //
+            lua_pop(L, 1);
+            for (const auto* name : axis_names) {
+               lua_getfield(L, 1, name);
+               lua_pushnumber(L, scalar);
+               lua_arith(L, LUA_OPMUL);
+               lua_setfield(L, 1, name);
+            }
+         }
+         lua_settop(L, 1);
          return 1;
       }
       int normalize(lua_State* L) {
@@ -261,6 +324,64 @@ namespace {
          //
          lua_Number length = sqrt(x * x + y * y + z * z);
          cls::push_new_instance(L, x / length, y / length, z / length);
+         return 1;
+      }
+      int project(lua_State* L) {
+         cls::require_self_type(L);
+         cls::require_arg_type(L, 2);
+         lua_settop(L, 2);
+         lua_checkstack(L, 6);
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 1);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1); // a dot b
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 2);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1); // b dot b
+         //
+         lua_arith(L, LUA_OPDIV); // stack: [a, b, quotient]
+         lua_pushvalue(L, 3);     // stack: [a, b, q, q]
+         lua_getfield(L, 1, "x");
+         lua_arith(L, LUA_OPMUL); // stack: [a, b, q, q * x]
+         lua_pushvalue(L, 3);     // stack: [a, b, q, q * x, q]
+         lua_getfield(L, 1, "y");
+         lua_arith(L, LUA_OPMUL); // stack: [a, b, q, q * x, q * y]
+         lua_pushvalue(L, 3);     // stack: [a, b, q, q * x, q * y, q]
+         lua_getfield(L, 1, "z");
+         lua_arith(L, LUA_OPMUL); // stack: [a, b, q, q * x, q * y, q * z]
+         lua_setfield(L, 1, "z"); // stack: [a, b, q, q * x, q * y]
+         lua_setfield(L, 1, "y"); // stack: [a, b, q, q * x]
+         lua_setfield(L, 1, "x"); // stack: [a, b, q]
+         lua_settop(L, 1);
+         return 1;
+      }
+      int projected(lua_State* L) {
+         cls::require_self_type(L);
+         cls::require_arg_type(L, 2);
+         lua_settop(L, 2);
+         lua_checkstack(L, 6);
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 1);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1);
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 2);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1);
+         //
+         lua_Number dot_prod = lua_tonumber(L, 3);
+         lua_Number b_len_sq = lua_tonumber(L, 4);
+         lua_Number quotient = dot_prod / b_len_sq;
+         //
+         lua_getfield(L, 2, "x");
+         lua_getfield(L, 2, "y");
+         lua_getfield(L, 2, "z");
+         cls::push_new_instance(L, quotient * lua_tonumber(L, 5), quotient * lua_tonumber(L, 6), quotient * lua_tonumber(L, 7));
          return 1;
       }
       int set_xyz(lua_State* L) {
@@ -327,16 +448,20 @@ namespace dovahscript::lua_classes {
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "__add",          &_methods::__add }, // operator+
       { "__div",          &_methods::__div }, // operator/
+      { "__mul",          &_methods::__mul }, // operator*
       { "__sub",          &_methods::__sub }, // operator-
       { "__tostring",     &_methods::__tostring },
       { "add",            &_methods::add },   // operator+=
-      { "div",            &_methods::div },   // operator/=
       { "copy",           &_methods::copy },
       { "cross",          &_methods::cross },
+      { "div",            &_methods::div },   // operator/=
+      { "dot",            &_methods::dot },
       { "length",         &_methods::length },
       { "length_squared", &_methods::length_squared },
       { "normalize",      &_methods::normalize },  // modify the vector in-place
       { "normalized",     &_methods::normalized }, // return a normalized copy
+      { "project",        &_methods::project },
+      { "projected",      &_methods::projected },
       { "set_xyz",        &_methods::set_xyz },
       { "sub",            &_methods::sub },   // operator-=
    };

@@ -272,6 +272,31 @@ namespace {
          lua_pushvalue(L, 2);
          lua_call(L, 2, 1);
          //
+         lua_arith(L, LUA_OPDIV); // stack: [a, b, quotient]
+         lua_pushvalue(L, 3);     // stack: [a, b, q, q]
+         lua_getfield(L, 2, "x"); // stack: [a, b, q, q * x]
+         lua_pushvalue(L, 3);     // stack: [a, b, q, q * x, q]
+         lua_getfield(L, 2, "y"); // stack: [a, b, q, q * x, q * y]
+         //
+         _make_vector(L, lua_tonumber(L, 4), lua_tonumber(L, 5));
+         return 1;
+      }
+      int projected(lua_State* L) {
+         cls::require_self_type(L);
+         cls::require_arg_type(L, 2);
+         lua_settop(L, 2);
+         lua_checkstack(L, 5);
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 1);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1);
+         //
+         lua_pushcfunction(L, &dot);
+         lua_pushvalue(L, 2);
+         lua_pushvalue(L, 2);
+         lua_call(L, 2, 1);
+         //
          lua_Number dot_prod = lua_tonumber(L, 3);
          lua_Number b_len_sq = lua_tonumber(L, 4);
          lua_Number quotient = dot_prod / b_len_sq;
@@ -361,6 +386,7 @@ namespace dovahscript::lua_classes {
       { "normal",         &_methods::normal },
       { "rotate",         &_methods::rotate },
       { "project",        &_methods::project },
+      { "projected",      &_methods::projected },
       { "sub",            &_methods::sub },   // operator-=
    };
 
