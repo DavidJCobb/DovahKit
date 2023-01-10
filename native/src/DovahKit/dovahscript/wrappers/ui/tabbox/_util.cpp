@@ -34,10 +34,11 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
 
    extern void remove_tab_widget(lua_State* L, QTabWidget& parent, QWidget* target, int at) {
       bool err_out_of_bounds = false;
+      bool err_not_contained = false;
       //
       auto  widget = task_reference(&parent);
       auto* task   = new tasks::s2m::ui_write_lambda(true);
-      task->handler = [widget, at, target, &err_out_of_bounds]() mutable {
+      task->handler = [widget, at, target, &err_out_of_bounds, &err_not_contained]() mutable {
          if (!target) {
             target = widget->widget(at);
             if (!target) {
@@ -46,6 +47,10 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
             }
          } else {
             at = widget->indexOf(target);
+            if (at < 0) {
+               err_not_contained = true;
+               return;
+            }
          }
          widget->removeTab(target ? widget->indexOf(target) : at);
          target->setParent(nullptr);
@@ -57,5 +62,7 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
       //
       if (err_out_of_bounds)
          cobb::lua::error(L, "tab index %d is out of bounds", at + 1);
+      if (err_not_contained)
+         cobb::lua::error(L, "the specified tab doesn't belong to this tabbox");
    }
 }

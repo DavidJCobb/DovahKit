@@ -7,26 +7,6 @@ Represents a raster image &mdash; that is, an image made up of a grid of pixels.
 
 For consistency with Lua as a whole, the top-left pixel in a raster is at coordinates (1, 1). If a function expects coordinates, then passing non-integer, negative, zero, or out-of-bounds values will throw an error.
 
-All "color" arguments, unless otherwise stated, can be specified in any of the following formats. Passing an invalid color to a function that expects a color will throw an error.
-
-* A table containing fields "r", "g", "b", or "a", or indices 1, 2, 3, or 4. Named fields are preferred over indexed fields. Missing RGB components are treated as 0; a missing alpha will be treated as 255. Color components outside the range [0, 255] will throw an error.
-* A table with a "__tostring" metamethod; this method will be invoked, and the result will be handled as a string.
-* A string containing a six-digit (RGB) or eight-digit (RGBA) hexadecimal string with a leading hash sign, e.g. "#FF0000". If alpha is not specified, it defaults to 0xFF.
-* A string containing a three-digit (RGB) or four-digit (RGBA) hexadecimal string with a leading hash sign, e.g. "#F00". The digits will be doubled, e.g. "#F00" and "#FF0000" are equivalent. If alpha is not specified, it defaults to 0xFF.
-* A string containing a CSS `rgb()` or `rgba()` value, with comma or slash notation for the alpha supported. RGB values may use percentage or absolute notation, but they must all use the same notation. Alpha values may use either notation, regardless of what notation was used for RGB.
-* A string containing a CSS `hsl()` or `hsla()` value, with comma or slash notation for the alpha supported. The hue may use the `deg`, `rad`, `grad`, or `turn` units, or no unit (in which case degrees is assumed). The saturation and lightness must be percentages. The alpha may be a percentage or an absolute value.
-
-Examples of valid colors include:
-
-* \{ r = 255, g = 0, b = 0 }
-* \{ 255, 0, 0 }
-* "#F00" and "#F00F"
-* "#FF0000" and "#FF0000FF"
-* "rgb(255, 0, 0)"
-* "rgb(100%, 0%, 0%)"
-* "rgb(255 0 0 / 100%)"
-* "hsl(0.5turn, 50%, 50%)"
-
 ### Drawing options
 
 Functions that allow you to draw pixels or shapes will generally take an options table as an argument. The following options can be set on this table. Functions will list which options they require.

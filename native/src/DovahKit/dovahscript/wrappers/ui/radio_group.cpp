@@ -163,12 +163,8 @@ namespace {
    namespace _singleton_functions {
       int new_(lua_State* L) {
          core::subsystems::permissions::verify_ui_permissions();
-         //
-         QString text;
-         if (lua_gettop(L) > 0) {
-            luaL_argcheck(L, lua_isstring(L, 1), 1, "nil or string expected");
-            text = QString::fromUtf8(lua_tostring(L, 1));
-         }
+         if (lua_gettop(L) > 0)
+            cobb::lua::error(L, "the ui.%s.new function should not be called with a colon or passed any arguments", cls::global_name);
          //
          auto* task = new tasks::s2m::create_button_group;
          send_script_ui_task(*task);

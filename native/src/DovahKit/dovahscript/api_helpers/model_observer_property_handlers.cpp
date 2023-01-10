@@ -207,10 +207,10 @@ namespace dovahscript::api_helpers::moph {
       bool v_valid = false;
       auto align   = api_helpers::alignment_from_string(lua_tostring(L, stack_pos), h, v, h_valid, v_valid);
       if (!h_valid && _stricmp(h.c_str(), "unchanged") != 0) {
-         cobb::lua::warning(L, "%s is not a recognized horizontal text alignment keyowrd", h.c_str());
+         cobb::lua::warning(L, "%s is not a recognized horizontal text alignment keyword", h.c_str());
       }
       if (!v_valid && _stricmp(v.c_str(), "unchanged") != 0) {
-         cobb::lua::warning(L, "%s is not a recognized vertical text alignment keyowrd", v.c_str());
+         cobb::lua::warning(L, "%s is not a recognized vertical text alignment keyword", v.c_str());
       }
       return QVariant::fromValue<Qt::Alignment::Int>(align);
    }

@@ -173,15 +173,20 @@ namespace {
          //
          if (!self.widget)
             return 0;
-         auto  widget = task_reference((wrapped_type*) self.widget);
-         auto* task   = new tasks::s2m::ui_write_lambda(true); // removals must block
-         task->handler = [widget, index, observer]() {
+         auto  widget   = task_reference((wrapped_type*) self.widget);
+         auto* task     = new tasks::s2m::ui_write_lambda(true); // removals must block
+         bool  mismatch = false;
+         task->handler = [widget, index, observer, &mismatch]() {
             auto* proxy = (QSortFilterProxyModel*)widget->model();
             auto* model = (ObservableStandardItemModel*)proxy->sourceModel();
             //
             int row = index;
             QStandardItem* item = nullptr;
             if (observer) {
+               if (observer->model != model) {
+                  mismatch = true;
+                  return;
+               }
                item = observer->item();
                if (!item)
                   return;
@@ -219,6 +224,10 @@ namespace {
          };
          send_script_ui_task(*task);
          delete task;
+         //
+         if (mismatch) {
+            cobb::lua::argerror(L, 2, "the specified dropdown_item belongs to a different dropdown, not to this one");
+         }
          //
          core::subsystems::lifetime::get().zombify_all_invalid_model_observers();
          //
