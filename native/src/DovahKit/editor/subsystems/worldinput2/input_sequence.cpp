@@ -1,5 +1,6 @@
 #include "./input_sequence.h"
 #include <cassert>
+#include "./defaults.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::group
@@ -82,6 +83,21 @@ namespace dovahkit::subsystems::worldinput2 {
                }
                assert(item->state.frame_status == frame_status::down);
             }
+         } else {
+            assert(this->type == group_type::separated_ordered);
+            //
+            // For separated-and-ordered groups, there should be a limit on how much time can 
+            // elapse between keypresses. Take too long to input the next keypress, and we 
+            // should consider that as the sequence being interrupted.
+            //
+            if (this->state.current_item_index > 0) {
+               auto elapsed = elapsed_time(this->state.last_advancement, current_time);
+               if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
+                  this->state.frame_status         = frame_status::inactive;
+                  this->state.frame_status_changed = true;
+                  return group_update_result::interrupted;
+               }
+            }
          }
 
          auto result = current_item->update(current_time);
@@ -107,6 +123,7 @@ namespace dovahkit::subsystems::worldinput2 {
             case frame_status::released:
                if (this->type == group_type::separated_ordered) {
                   ++this->state.current_item_index;
+                  this->state.last_advancement = current_time;
                }
                if (this->state.current_item_index == this->children.size()) {
                   this->state.frame_status         = frame_status::released;
@@ -194,7 +211,7 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!this->root)
          return;
 
-      auto result = this->root->update();
+      auto result = this->root->update(current_time);
       if (result == group_update_result::interrupted) {
          this->_clear_all_progress();
          return;

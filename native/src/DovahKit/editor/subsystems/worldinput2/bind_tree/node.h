@@ -2,27 +2,33 @@
 #include <type_traits>
 #include <QVector>
 
-namespace dovahkit::subsystems::worldinput {
+namespace dovahkit::subsystems::worldinput2 {
    class core;
 }
 
-namespace dovahkit::subsystems::worldinput::binds {
+namespace dovahkit::subsystems::worldinput2::binds {
    enum class node_type {
       root,
+      //
+      bound_tool,
       editor_mode,
-      input,
+      modifier,
    };
 
    namespace nodes {
       class root;
+      class bound_tool;
       class editor_mode;
-      class input;
+      class modifier;
+
+      class abstract_input_node;
    }
    namespace impl {
       template<node_type nt> struct type_to_class;
       template<> struct type_to_class<node_type::root> { using type = nodes::root; };
+      template<> struct type_to_class<node_type::bound_tool> { using type = nodes::bound_tool; };
       template<> struct type_to_class<node_type::editor_mode> { using type = nodes::editor_mode; };
-      template<> struct type_to_class<node_type::input> { using type = nodes::input; };
+      template<> struct type_to_class<node_type::modifier> { using type = nodes::modifier; };
    }
    template<node_type nt> using type_to_class = impl::type_to_class<nt>::type;
 
@@ -48,21 +54,23 @@ namespace dovahkit::subsystems::worldinput::binds {
          inline const QVector<node*>& child_nodes() const noexcept { return this->children; }
 
          template<typename subclass> requires std::is_base_of_v<node, subclass> subclass* as() {
-            if (this->type == subclass::my_type)
-               return (subclass*)this;
-            return nullptr;
+            return const_cast<subclass*>(std::as_const(*this).as<subclass>());
          }
          template<typename subclass> requires std::is_base_of_v<node, subclass> const subclass* as() const {
-            if (this->type == subclass::my_type)
-               return (subclass*)this;
+            if constexpr (std::is_same_v<subclass, nodes::abstract_input_node>) {
+               switch (this->type) {
+                  case node_type::bound_tool:
+                  case node_type::modifier:
+                     return (subclass*)this;
+               }
+            } else {
+               if (this->type == subclass::my_type)
+                  return (subclass*)this;
+            }
             return nullptr;
          }
 
          node* clone() const;
-
-         // Used at the start of a frame, when traversing up from the active node to see if it and its ancestors are still active. 
-         // Only relevant for editor modes and modifiers.
-         virtual bool check_still_active(core&) const = 0;
 
          // Returns true if this node is a "parent" of some kind, or false otherwise.
          virtual bool is_valid_parent() const = 0;

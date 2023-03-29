@@ -1,6 +1,6 @@
 #include "node.h"
 
-namespace dovahkit::subsystems::worldinput::binds {
+namespace dovahkit::subsystems::worldinput2::binds {
    node::node(node_type t) : type(t) {}
    node::~node() {
       for (auto* p : this->children)

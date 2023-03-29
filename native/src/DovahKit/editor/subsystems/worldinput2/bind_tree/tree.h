@@ -2,7 +2,6 @@
 #include <vector>
 #include "../enums/input_device_type.h"
 
-struct DKVulkanCameraUpdate;
 namespace dovahkit::subsystems::worldinput2 {
    class combined_tool_results;
    namespace binds {
