@@ -1,0 +1,107 @@
+
+We store all input mappings for a given input device in a tree structure, where 
+each mapping is a single node. This has a number of benefits: we can group some 
+mappings based on  the current editor mode (e.g. object  editing versus navmesh 
+editing), and we can also create groupings to represent modifier keys. Consider 
+the following two lists of binds: in which one would it be easier to change the 
+modifier key?
+
+
+   FLAT LIST
+
+      Press [X + A]
+      Press [X + B]
+      Press [X + Y]
+
+
+   TREE
+
+      Modifier [X]...
+       - ...Press [A]
+       - ...Press [B]
+       - ...Press [Y]
+
+       
+== TREE STRUCTURE AND NODE TYPES ==============================================
+
+There are four types of nodes in the bind tree:  the root node; a node each for 
+the editor modes;  nodes for modifier keys;  and nodes for individual binds.
+
+Modifier  key nodes have input sequences  associated with them,  and always use 
+the Hold button press type. The existence of modifier keys requires us to draft 
+up some additional terminology:
+
+ - An input binding's "terminal inputs" are those inputs in its last concurrent 
+   group of buttons.
+
+ - An input binding's "absolute terminal inputs" are the terminal inputs of all 
+   ancestor nodes, prepended to the binding's own terminal inputs.
+
+   Using the notation from <bound inputs.txt>, consider the following tree:
+
+      Modifier {A + B}        // Node 1
+       - Bind {C + [D + E]}   // Node 2
+
+   The terminal inputs for Node 1 are "B."   Node 2 has terminal inputs "D + E" 
+   and absolute terminal inputs "B + D + E".
+
+
+
+By default, a node "inherits" the binds of its ancestors, with some exceptions:
+
+   Given some node N and its ancestors A,
+
+    - If a child node of N has inputs that would conflict with the inputs of a 
+      node in the ancestor A, then the conflicting children of N take priority 
+      and the conflicting children of A are not inherited.
+
+    - If N is set to inherit  by default, then it can  blacklist children in A 
+      to avoid inheriting them.
+
+    - If N is set not to inherit by default,  then it inherits only what child 
+      nodes from A it whitelists.
+
+
+
+
+
+== NODE TYPES =================================================================
+
+There are three types of nodes.
+
+
+   Tree root node
+
+      A general node with no special behavior,  other than that it can never be 
+      the active node [see below].
+
+   
+   Editor mode node
+
+      
+
+
+
+== EDGE-CASES =================================================================
+
+=== PARITY WITH SEAMLESS HOLD-SWITCHING =======================================
+
+In the <bound inputs.txt> document, we discussed the need for seamless switches 
+between Hold binds. Consider binds like these:
+
+   Bind #1: Hold [A + B]
+   Bind #2: Hold [B]
+
+If you press and hold B, then you'll activate Bind #2. If, while B is held, you 
+also press and hold A, then you'll  deactivate Bind #2 and activate Bind #1. If 
+you then release A, you'll deactivate Bind #1 and (re)activate Bind #2.
+
+Modifier keys require the same behavior. Consider the following:
+
+   Modifier [A]   // Modifier Node
+    - Hold [B]    // Bind #1
+
+   Hold [B]       // Bind #2
+   
+If you press and hold B,  then you'll  activate Bind #1.  If you then press and 
+hold A, then control transfers to the modifier node.

@@ -17,7 +17,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <tuple>
 #include <type_traits>
-#include "../type_traits/is_std_tuple.h"
 
 namespace cobb::tuples {
    namespace impl::_concat {

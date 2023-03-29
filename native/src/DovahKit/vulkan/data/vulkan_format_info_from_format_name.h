@@ -95,8 +95,8 @@ namespace vulkanDK::data {
             auto view_h = block_size_chunk.substr(i + 1);
             bool ok_w = true;
             bool ok_h = true;
-            size_t w = cobb::string_to_integer(view_w.data(), view_w.size(), &ok_w);
-            size_t h = cobb::string_to_integer(view_h.data(), view_h.size(), &ok_h);
+            size_t w = cobb::string_to_integer<size_t>(view_w.data(), view_w.size(), &ok_w);
+            size_t h = cobb::string_to_integer<size_t>(view_h.data(), view_h.size(), &ok_h);
             if (!ok_w || !ok_h)
                throw;
 

@@ -1,0 +1,402 @@
+#pragma once
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+#include <string>
+#include <type_traits>
+#include "./type_traits/set_const.h"
+#include "./type_traits/strip_enum.h"
+
+namespace cobb {
+   template<typename T, size_t count, size_t bits, typename UnitType = uint8_t>
+   requires (
+      (std::is_integral_v<T> || std::is_enum_v<T>) // value type must be a plain ol' number
+   && sizeof(T) <= 8 // must be possible to store the value type in a single integral during get/set operations
+   && std::is_integral_v<UnitType>
+   && bits > 0
+   )
+   class bitfield_array {
+      public:
+         using value_type = T;
+         using unit_type  = UnitType;
+         using size_type  = size_t;
+         static constexpr const size_t value_bitcount = bits;
+         static constexpr const size_t unit_bitcount  = sizeof(unit_type) * 8;
+      protected:
+         static constexpr size_t total_bitcount = count * value_bitcount;
+         static constexpr size_t unit_count     = (total_bitcount / unit_bitcount) + ((total_bitcount % unit_bitcount) ? 1 : 0);
+
+         static constexpr const bool is_signed_value_type = std::is_signed_v<strip_enum_t<value_type>>;
+
+         using underlying_integral_type = std::conditional_t<
+            (sizeof(value_type) > 4 && sizeof(value_type) <= 8),
+            uint64_t,
+            std::conditional_t<
+               (sizeof(value_type) > 2),
+               uint32_t,
+               std::conditional_t<(sizeof(value_type) == 2), uint16_t, uint8_t>
+            >
+         >;
+
+         static constexpr unit_type value_mask     = ((1 << value_bitcount) - 1);
+         static constexpr unit_type sign_bit_mask = 1 << (value_bitcount - 1);
+
+         static constexpr const unit_type unit_all_ones = unit_type(-1);
+
+         unit_type units[unit_count] = {};
+
+         template<bool Const> struct _value_wrapper_impl {
+            using owner_type = set_const<bitfield_array, Const>;
+
+            owner_type& target;
+            size_t index;
+
+            constexpr _value_wrapper_impl(owner_type& ba, size_t i) : target(ba), index(i) {}
+
+            constexpr _value_wrapper_impl& operator=(const value_type& v) {
+               target.set(index, v);
+               return *this;
+            }
+            constexpr operator value_type() const {
+               return target.get(index);
+            }
+         };
+         //
+         using value_wrapper = _value_wrapper_impl<false>;
+         using const_value_wrapper = _value_wrapper_impl<true>;
+
+         static constexpr underlying_integral_type _sign_extend_raw_bits(underlying_integral_type value) {
+            if constexpr (is_signed_value_type) {
+               if ((value & sign_bit_mask) == sign_bit_mask) {
+                  value = ~value_mask | value;
+               }
+            }
+            return value;
+         }
+
+         template<
+            typename SingleChunkFunctor,
+            typename LeadingBitsFunctor,
+            typename WholeChunkFunctor,
+            typename TrailingBitsFunctor
+         > constexpr void _access_element(
+            size_t index,
+            SingleChunkFunctor scf, // void functor(unit_type& unit)
+            LeadingBitsFunctor lbf, // void functor(unit_type& unit, uint8_t bitshift, uint8_t bitcount, size_t remaining_value_bits)
+            WholeChunkFunctor wcf,  // void functor(unit_type& unit, uint8_t trailing_bitcount, size_t whole_unit_bits_remaining)
+            TrailingBitsFunctor tbf // void functor(unit_type& unit, uint8_t bitshift, uint8_t bitcount)
+         ) {
+            size_t bitpos  = index * value_bitcount;
+            size_t bytepos = bitpos / unit_bitcount;
+
+            if constexpr (unit_bitcount == value_bitcount) {
+               scf(this->units[bytepos]);
+               return;
+            }
+            if constexpr ((unit_bitcount % value_bitcount) == 0) {
+               //
+               // Bits per unit is a multiple of item bitcount, so items will never be 
+               // split across multiple units.
+               //
+               lbf(this->units[bytepos], bitpos % unit_bitcount, value_bitcount, 0);
+               return;
+            } else {
+               size_t  remaining = value_bitcount;
+               uint8_t shift     = bitpos % unit_bitcount;
+               if (shift) {
+                  //
+                  // Handle leading unaligned bits first.
+                  //
+                  uint8_t unaligned_bitcount = unit_bitcount - shift;
+
+                  if (remaining <= unaligned_bitcount) {
+                     lbf(this->units[bytepos], shift, unaligned_bitcount, remaining);
+                     return;
+                  } else {
+                     lbf(this->units[bytepos], shift, unaligned_bitcount, unaligned_bitcount);
+                  }
+                  remaining -= unaligned_bitcount;
+                  ++bytepos;
+               }
+               //
+               // All operations from here on out will be unit-aligned. Let's handle 
+               // whole units, and then any trailing bits.
+               //
+               uint8_t trailing_bitcount = remaining % unit_bitcount;
+               {  // Write whole chunks.
+                  size_t rem_wholes = remaining - trailing_bitcount;
+                  while (rem_wholes) {
+                     wcf(this->units[bytepos++], trailing_bitcount, (rem_wholes -= unit_bitcount));
+                  }
+               }
+               if (trailing_bitcount == 0)
+                  return;
+               tbf(this->units[bytepos], shift, trailing_bitcount);
+            }
+         }
+
+      public:
+         constexpr bitfield_array() {}
+
+         constexpr value_type get(size_t i) const {
+            {
+               underlying_integral_type value = 0;
+               _access_element(
+                  i,
+                  [&value](const unit_type unit) {
+                     value = unit;
+                  },
+                  [&value](const unit_type unit, uint8_t bitshift, uint8_t bitcount, size_t remaining_value_bits) {
+                     value = unit;
+                     value = (value >> (unit_bitcount - bitshift - value_bitcount)) & value_bitcount;
+                     value <<= remaining_value_bits;
+                  },
+                  [&value](const unit_type unit, uint8_t trailing_bitcount, size_t whole_unit_bits_remaining) {
+                     value |= unit;
+                     if (whole_unit_bits_remaining)
+                        value <<= unit_bitcount;
+                  },
+                  [&value](const unit_type unit, uint8_t bitshift, uint8_t trailing_bitcount) {
+                     value <<= trailing_bitcount;
+
+                     auto mask = ((unit_type(1) << trailing_bitcount) - 1);
+                     mask <<= (unit_bitcount - trailing_bitcount);
+                     value |= unit & mask;
+                  }
+               );
+               value = _sign_extend_raw_bits(value);
+               return (T)value;
+            }
+
+            size_t bitpos  = i * value_bitcount;
+            size_t bytepos = bitpos / unit_bitcount;
+
+            underlying_integral_type value = 0; // TODO: use underlying integral type large enough to hold T
+            if constexpr ((unit_bitcount % value_bitcount) == 0) {
+               //
+               // Bits per unit is a multiple of item bitcount, so items will never be 
+               // split across multiple units.
+               //
+               value = this->units[bytepos];
+               if constexpr (unit_bitcount != value_bitcount) {
+                  //
+                  // Extra bits to the left of the item, within the current unit:
+                  //    == bitpos % unit_bitcount
+                  // 
+                  // Extra bits to the right of the item, within the current unit:
+                  //    == (bitpos + value_bitcount) % unit_bitcount
+                  //
+                  uint8_t shift_rhs = (bitpos + value_bitcount) % unit_bitcount;
+                  value = (value >> shift_rhs) & value_bitcount;
+               }
+            } else {
+               //
+               // Items may be split across multiple units.
+               //
+               size_t remaining = value_bitcount;
+               if (uint8_t shift = bitpos % unit_bitcount) {
+                  //
+                  // Not byte-aligned yet.
+                  //
+                  uint8_t unaligned_bitcount = unit_bitcount - shift;
+                  auto    unaligned_bits     = this->units[bytepos] & (unit_all_ones >> shift);
+                  if (value_bitcount <= unaligned_bitcount) {
+                     value = unaligned_bits >> (unaligned_bitcount - value_bitcount);
+                     return (T)_sign_extend_raw_bits(value);
+                  }
+                  value = unaligned_bits;
+                  bytepos   += 1;
+                  remaining -= unaligned_bitcount;
+                  value <<= remaining;
+               }
+               //
+               // All subsequent reads will be byte-aligned.
+               //
+               do {
+                  auto unit = this->units[bytepos];
+                  //
+                  if (remaining <= unit_bitcount) {
+                     auto mask = ((unit_type(1) << remaining) - 1);
+                     mask <<= (unit_bitcount - remaining);
+                     value |= unit & mask;
+                     break;
+                  }
+                  value |= unit;
+                  remaining -= unit_bitcount;
+                  value = value << remaining;
+                  ++bytepos;
+               } while (remaining > 0);
+            }
+            //
+            value = _sign_extend_raw_bits(value);
+            return (T)value;
+         }
+         constexpr void set(size_t i, T v) {
+            {
+               auto value = (underlying_integral_type)v;
+               _access_element(
+                  i,
+                  [value](unit_type& unit) {
+                     unit = value;
+                  },
+                  [value](unit_type& unit, uint8_t bitshift, uint8_t bitcount, size_t remaining_value_bits) {
+                     uint8_t unaligned_bitcount = unit_bitcount - bitshift;
+                     uint8_t element_ls         = (unaligned_bitcount - value_bitcount);
+                     unit &= ~(value_mask << element_ls);
+                     unit |= value << element_ls;
+                  },
+                  [value](unit_type& unit, uint8_t trailing_bitcount, size_t whole_unit_bits_remaining) {
+                     unit = value >> (trailing_bitcount + whole_unit_bits_remaining);
+                  },
+                  [value](unit_type& unit, uint8_t bitshift, uint8_t trailing_bitcount) {
+                     unit_type element_ls   = unit_bitcount - trailing_bitcount;
+                     unit_type element_mask = (unit_type(1) << trailing_bitcount) - 1; // only use the trailing bits.
+                     //
+                     unit &= ~(((unit_type(1) << trailing_bitcount) - 1) << element_ls);
+                     unit |= ((unit_type)value & element_mask) << element_ls;
+                  }
+               );
+               return;
+            }
+
+
+            size_t bitpos  = i * value_bitcount;
+            size_t bytepos = bitpos / unit_bitcount;
+            //
+            if constexpr ((unit_bitcount % value_bitcount) == 0) {
+               //
+               // Bits per unit is a multiple of item bitcount, so items will never be 
+               // split across multiple units.
+               //
+               auto& unit = this->units[bytepos];
+               if constexpr (unit_bitcount == value_bitcount) {
+                  unit = (unit_type)v;
+               } else {
+                  uint8_t shift      = bitpos % unit_bitcount;
+                  uint8_t element_ls = (unit_bitcount - shift - value_bitcount);
+                  unit &= ~(value_mask << element_ls);
+                  unit |= (underlying_integral_type)v << element_ls;
+               }
+               return;
+            } else {
+               underlying_integral_type value = (underlying_integral_type)v;
+               //
+               size_t remaining = value_bitcount;
+               if (uint8_t shift = bitpos % unit_bitcount) {
+                  //
+                  // Write unaligned bits first.
+                  //
+                  uint8_t unaligned_bitcount = unit_bitcount - shift;
+
+                  auto& unit = this->units[bytepos];
+                  if (remaining <= unaligned_bitcount) {
+                     //
+                     // All bits are unaligned and can fit within the first unit.
+                     //
+                     auto element_ls   = (unaligned_bitcount - value_bitcount);
+                     auto element_mask = value_mask << element_ls;
+                     unit = (unit & ~element_mask) | (value << element_ls);
+                     return;
+                  }
+                  uint8_t   written_bitcount = std::min((size_t)unaligned_bitcount, value_bitcount);
+                  unit_type written_bits     = value >> (value_bitcount - unaligned_bitcount);
+
+                  unit &= ~( (1 << written_bitcount) - 1 );
+                  unit |= written_bits;
+
+                  remaining -= written_bitcount;
+                  ++bytepos;
+               }
+               //
+               // All subsequent writes will be byte-aligned. Let's write whole 
+               // chunks, and then any trailing bits.
+               //
+               uint8_t trailing_bitcount = remaining % unit_bitcount;
+               {  // Write whole chunks.
+                  auto   value_lead = value >> trailing_bitcount;
+                  size_t rem_wholes = remaining - trailing_bitcount;
+                  while (rem_wholes) {
+                     this->units[bytepos++] = value_lead >> (rem_wholes -= unit_bitcount);
+                     value_lead &= (underlying_integral_type(1) << rem_wholes) - 1;
+                  }
+               }
+               if (trailing_bitcount == 0)
+                  return;
+               auto& unit = this->units[bytepos];
+
+               unit_type element_ls   = unit_bitcount - trailing_bitcount;
+               unit_type element_mask = (unit_type(1) << trailing_bitcount) - 1; // only use the trailing bits.
+               //
+               unit &= ~(((unit_type(1) << trailing_bitcount) - 1) << element_ls);
+               unit |= ((unit_type)value & element_mask) << element_ls;
+            }
+         }
+
+         constexpr bool is_nonzero(size_t i) const {
+            size_t bitpos = i * value_bitcount;
+            size_t bytepos = bitpos / unit_bitcount;
+
+            if constexpr (unit_bitcount == value_bitcount) {
+               return this->units[bytepos] != 0;
+            } else if constexpr ((unit_bitcount % value_bitcount) == 0) {
+               //
+               // Bits per unit is a multiple of item bitcount, so items will never be 
+               // split across multiple units.
+               //
+               // Extra bits to the left of the item, within the current unit:
+               //    == bitpos % unit_bitcount
+               // 
+               // Extra bits to the right of the item, within the current unit:
+               //    == (bitpos + value_bitcount) % unit_bitcount
+               //
+               uint8_t shift_rhs = (bitpos + value_bitcount) % unit_bitcount;
+               return ((this->units[bytepos] >> shift_rhs) & value_bitcount) != 0;
+            } else {
+               //
+               // Items may be split across multiple units.
+               //
+               size_t remaining = value_bitcount;
+               if (uint8_t shift = bitpos % unit_bitcount) {
+                  //
+                  // Not byte-aligned yet.
+                  //
+                  uint8_t   unaligned_bitcount = unit_bitcount - shift;
+                  unit_type unaligned_bits = this->units[bytepos] & (unit_all_ones >> shift);
+                  if (remaining < unaligned_bitcount) {
+                     unit_type value = unaligned_bits >> (unaligned_bitcount - remaining);
+                     return value != 0;
+                  }
+                  if (unaligned_bits != 0)
+                     return true;
+                  bytepos += 1;
+                  remaining -= unaligned_bitcount;
+               }
+               //
+               // All subsequent reads will be byte-aligned.
+               //
+               while (remaining > 0) {
+                  unit_type value = this->units[bytepos];
+                  if (remaining < unit_bitcount) {
+                     value = (value & ((1 << remaining) - 1));
+                  }
+                  if (value != 0)
+                     return true;
+                  remaining -= unit_bitcount;
+                  ++bytepos;
+               }
+            }
+            return false;
+         }
+
+         void clear() {
+            this->units = {};
+         }
+
+         constexpr value_wrapper operator[](int i) {
+            return value_wrapper(*this, i);
+         }
+         constexpr const_value_wrapper operator[](int i) const {
+            return const_value_wrapper(*this, i);
+         }
+   };
+}

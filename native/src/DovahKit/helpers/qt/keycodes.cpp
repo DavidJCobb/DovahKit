@@ -187,6 +187,28 @@ namespace cobb::qt {
       return !(*this == other);
    }
 
+   bool key::is_modifier_key() const noexcept {
+      switch (this->code) {
+         case Qt::Key::Key_Alt:
+         case Qt::Key::Key_Control:
+         case Qt::Key::Key_Shift:
+            return true;
+      }
+      switch (this->native.vk) {
+         case VK_MENU: // Alt
+         case VK_LMENU:
+         case VK_RMENU:
+         case VK_CONTROL:
+         case VK_LCONTROL:
+         case VK_RCONTROL:
+         case VK_SHIFT:
+         case VK_LSHIFT:
+         case VK_RSHIFT:
+            return true;
+      }
+      return false;
+   }
+
    QString key::toString(bool localize) const {
       if (!this->glyph.isEmpty())
          return this->glyph;

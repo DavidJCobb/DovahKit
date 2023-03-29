@@ -1944,6 +1944,28 @@
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\_docs\apis\wrappers\ui\image_widget.md" />
+    <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4547,6 +4569,66 @@
     <ClInclude Include="editor\subsystems\gui_adjust\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\inputs\bound_input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\devices\xinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\devices\keyboard_mouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\chrono.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\device_button_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\enums\button_release_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\defaults.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\uint_of_size.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bits\all_ones.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bits\replace_bits_at_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bits\replace_most_significant_bits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\devices\components\buttoned_device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5086,6 +5168,8 @@
     <Text Include="editor\subsystems\worldinput\_docs\keyboard shortcuts - guidelines for defaults.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\tools.txt" />
+    <Text Include="editor\subsystems\worldinput2\_docs\bound inputs.txt" />
+    <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -5228,6 +5312,60 @@
     <None Include="helpers\windows.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
+    <None Include="dovahscript\_docs\apis\classes\benchmark.md" />
+    <None Include="dovahscript\_docs\apis\classes\euler.md" />
+    <None Include="dovahscript\_docs\apis\classes\matrix3x3.md" />
+    <None Include="dovahscript\_docs\apis\classes\quaternion.md" />
+    <None Include="dovahscript\_docs\apis\classes\vector2.md" />
+    <None Include="dovahscript\_docs\apis\classes\vector3.md" />
+    <None Include="dovahscript\_docs\apis\common\alignment.md" />
+    <None Include="dovahscript\_docs\apis\common\color.md" />
+    <None Include="dovahscript\_docs\apis\libraries\dovah.md" />
+    <None Include="dovahscript\_docs\apis\libraries\dovah.package.md" />
+    <None Include="dovahscript\_docs\apis\libraries\form_types.md" />
+    <None Include="dovahscript\_docs\apis\libraries\ui.md" />
+    <None Include="dovahscript\_docs\apis\libraries\unscoped.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ini\setting.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\resource\binary_view.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\resource\dds.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\resource\dds_image_subresource.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\resource\raster.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\resource\unknown.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\button.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_layer.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_layer_group.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_text_data.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\checkbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\color_button.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\dropdown.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\dropdown_item.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\file_save_button.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\formpicker.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\groupbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\line.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\progress_bar.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\radio_button.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\radio_group.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\scrollbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\spinbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\tabbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\tabbox_tab.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_cell.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_col.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_row.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\text.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\textarea.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\textbox.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\widget.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\ui\window.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\unusual\font.md" />
+    <None Include="dovahscript\_docs\apis\wrappers\unusual\raster_draw_path.md" />
+    <None Include="helpers\bitfield_array.rewrite.h.bak" />
+    <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

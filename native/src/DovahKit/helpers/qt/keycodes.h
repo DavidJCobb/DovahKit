@@ -48,6 +48,7 @@ namespace cobb::qt {
       bool operator!=(const key& other) const;
 
       inline bool empty() const noexcept { return this->glyph.isEmpty() && (this->code == Qt::Key::Key_unknown || this->code == (Qt::Key)0); }
+      bool is_modifier_key() const noexcept;
 
       QString toString(bool localize = true) const;
 
