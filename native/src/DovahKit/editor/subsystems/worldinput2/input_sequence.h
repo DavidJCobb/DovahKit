@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "helpers/owned_ptr.h"
 #include "./inputs/button.h"
 #include "./chrono.h"
 
@@ -36,6 +37,8 @@ namespace dovahkit::subsystems::worldinput2 {
                inputs::button button; // for single controls only
                std::vector<group*> children; // except for single controls
 
+               ~group();
+
             protected:
                struct {
                   enum frame_status frame_status = frame_status::inactive;
@@ -61,9 +64,18 @@ namespace dovahkit::subsystems::worldinput2 {
                bool already_consumed() const; // TODO: requires some sort of access to the button states i.e. input device handler
                std::vector<inputs::button> terminal_inputs() const;
 
+               const group* last_terminal_input() const;
+               group* last_terminal_input() {
+                  return const_cast<group*>(std::as_const(*this).last_terminal_input());
+               }
+
+               void find_last_terminal_input(const group*& out, const group*& out_parent);
+
             protected:
                void _clear_all_progress();
                std::vector<group*> terminal_items() const;
+
+               group* _clone() const;
          };
 
       public:
@@ -78,5 +90,14 @@ namespace dovahkit::subsystems::worldinput2 {
 
          bool all_contents_inactive() const;
          void clear_all_progress();
+
+         input_sequence clone() const; // does not clone run-time-only state
+
+         // absolute = modifier << nested;
+         input_sequence operator<<(const input_sequence& nested) const;
+
+         // absolute = modifier.clone();
+         // absolute <<= nested;
+         input_sequence& operator<<=(const input_sequence& nested);
    };
 }

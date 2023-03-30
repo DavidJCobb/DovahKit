@@ -1,10 +1,17 @@
 #include "./input_sequence.h"
 #include <cassert>
+#include "helpers/unreachable.h"
 #include "./devices/abstract_device_handler.h"
 #include "./defaults.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::group
+   input_sequence::group::~group() {
+      for (auto* child : this->children)
+         delete child;
+      this->children.clear();
+   }
+
    input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, devices::abstract_device_handler& device) {
       this->state.frame_status_changed = false;
 
@@ -208,6 +215,60 @@ namespace dovahkit::subsystems::worldinput2 {
       return true;
    }
 
+   const input_sequence::group* input_sequence::group::last_terminal_input() const {
+      switch (this->type) {
+         case group_type::single_control:
+            return this;
+         case group_type::concurrent_unordered:
+            return this;
+         case group_type::concurrent_ordered:
+         case group_type::separated_ordered:
+            if (this->children.empty())
+               return nullptr;
+            return this->children.back();
+      }
+      cobb::unreachable();
+   }
+   void input_sequence::group::find_last_terminal_input(const group*& out, const group*& out_parent) {
+      out        = nullptr;
+      out_parent = nullptr;
+      switch (this->type) {
+         case group_type::single_control:
+         case group_type::concurrent_unordered:
+            out = this;
+            break;
+         case group_type::concurrent_ordered:
+         case group_type::separated_ordered:
+            if (this->children.empty())
+               break;
+            {
+               auto* last = this->children.back();
+               last->find_last_terminal_input(out, out_parent);
+               if (out == last)
+                  out_parent = this;
+            }
+            break;
+         default:
+            cobb::unreachable();
+      }
+   }
+
+   input_sequence::group* input_sequence::group::_clone() const {
+      auto* out = new group;
+
+      out->type = this->type;
+      if (this->type == group_type::single_control)
+         out->button = this->button;
+      else {
+         auto size = this->children.size();
+         out->children.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            out->children[i] = this->children[i]->_clone();
+      }
+
+      return out;
+   }
+
    void input_sequence::group::_clear_all_progress() {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
@@ -253,6 +314,60 @@ namespace dovahkit::subsystems::worldinput2 {
       this->state.frame_status_changed = false;
       if (auto* g = this->root)
          g->_clear_all_progress();
+   }
+
+   input_sequence input_sequence::clone() const {
+      //
+      // In the future, I want to use flat storage for input sequences and their groups. When I do, 
+      // cloning will become significantly easier. We won't need member functions on the groups, 
+      // nor recursion; it will be enough to just copy the entire flat range, sans run-time state.
+      //
+      input_sequence out;
+      out.root = this->root->_clone();
+      return out;
+   }
+
+   input_sequence input_sequence::operator<<(const input_sequence& nested) const {
+      return (this->clone() <<= nested);
+   }
+   input_sequence& input_sequence::operator<<=(const input_sequence& nested) {
+      group* last_terminal;
+      group* parent_of_last;
+      this->root->find_last_terminal_input(last_terminal, parent_of_last);
+      if (!last_terminal)
+         return *this;
+
+      group* wrap = nullptr;
+      switch (last_terminal->type) {
+         case group_type::single_control:
+         case group_type::concurrent_unordered:
+            {
+               auto* wrap = new group;
+               wrap->type = group_type::concurrent_ordered;
+               wrap->children.push_back(last_terminal);
+               wrap->children.push_back(nested.root->_clone());
+            }
+            break;
+         case group_type::concurrent_ordered:
+         case group_type::separated_ordered:
+         default:
+            cobb::unreachable();
+      }
+      if (parent_of_last) {
+         size_t i;
+         for (i = 0; i < parent_of_last->children.size(); ++i) {
+            if (parent_of_last->children[i] == last_terminal) {
+               break;
+            }
+         }
+         assert(i < parent_of_last->children.size());
+         parent_of_last->children[i] = wrap;
+      } else {
+         assert(last_terminal == this->root);
+         this->root = wrap;
+      }
+
+      return *this;
    }
    #pragma endregion
 }

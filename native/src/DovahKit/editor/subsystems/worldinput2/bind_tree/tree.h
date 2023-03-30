@@ -23,6 +23,8 @@ namespace dovahkit::subsystems::worldinput2::binds {
          tree(tree&&);
          tree& operator=(tree&& o);
 
+         ~tree();
+
          // -----
 
          input_device_type device_type;

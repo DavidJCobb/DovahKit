@@ -37,6 +37,13 @@ namespace dovahkit::subsystems::worldinput2::binds {
       std::swap(this->root,        o.root);
       return *this;
    }
+
+   tree::~tree() {
+      if (this->root) {
+         delete this->root;
+         this->root = nullptr;
+      }
+   }
    
    void tree::update(timestamp_t now, combined_tool_results& tap_results, combined_tool_results& while_results) {
       assert(this->root);
