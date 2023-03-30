@@ -25,7 +25,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          // -----
 
-         input_device_type device;
+         input_device_type device_type;
          nodes::root*      root   = nullptr;
 
          // If these binds cease to be active on this frame, then we must fire key-up invocations 
@@ -34,6 +34,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          // -----
 
-         void process(combined_tool_results& instant, combined_tool_results& while_down);
+         void update(timestamp_t now, combined_tool_results& instant, combined_tool_results& while_down);
    };
 }

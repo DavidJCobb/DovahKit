@@ -3,6 +3,10 @@
 #include "./inputs/button.h"
 #include "./chrono.h"
 
+namespace dovahkit::subsystems::worldinput2::devices {
+   class abstract_device_handler;
+}
+
 namespace dovahkit::subsystems::worldinput2 {
    class input_sequence {
       public:
@@ -42,7 +46,7 @@ namespace dovahkit::subsystems::worldinput2 {
                } state;
 
             public:
-               group_update_result update(timestamp_t current_time);
+               group_update_result update(timestamp_t current_time, devices::abstract_device_handler& device);
 
                constexpr bool is_ordered() const noexcept {
                   switch (this->type) {
@@ -53,6 +57,7 @@ namespace dovahkit::subsystems::worldinput2 {
                   return false;
                }
 
+               bool all_contents_inactive() const;
                bool already_consumed() const; // TODO: requires some sort of access to the button states i.e. input device handler
                std::vector<inputs::button> terminal_inputs() const;
 
@@ -69,8 +74,9 @@ namespace dovahkit::subsystems::worldinput2 {
          } state;
 
       public:
-         void update(timestamp_t current_time);
-      protected:
-         void _clear_all_progress();
+         void update(timestamp_t current_time, devices::abstract_device_handler& device);
+
+         bool all_contents_inactive() const;
+         void clear_all_progress();
    };
 }

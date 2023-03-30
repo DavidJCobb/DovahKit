@@ -6,6 +6,7 @@
 #include "../device_button_state.h"
 
 #include "./components/buttoned_device.h"
+#include "./abstract_device_handler.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    namespace inputs {
@@ -14,7 +15,7 @@ namespace dovahkit::subsystems::worldinput2 {
 }
 
 namespace dovahkit::subsystems::worldinput2::devices {
-   class keyboard_mouse {
+   class keyboard_mouse final : public abstract_device_handler {
       public:
          static constexpr size_t vk_code_count = 256;
 
@@ -53,9 +54,11 @@ namespace dovahkit::subsystems::worldinput2::devices {
          void ignore_all_down();
          void update(timestamp_t now);
 
+         virtual device_button_state get_state_of(const inputs::button&) const final;
+         virtual void consume(const inputs::button&) final;
+
          button_press_type release_type(const inputs::button&) const;
          bool is_down(const inputs::button&) const;
          timestamp_t down_when(const inputs::button&) const;
-         device_button_state key_down_state(const inputs::button&) const;
    };
 }

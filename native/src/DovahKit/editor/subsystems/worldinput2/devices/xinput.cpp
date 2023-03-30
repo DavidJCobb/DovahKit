@@ -75,6 +75,21 @@ namespace dovahkit::subsystems::worldinput2::devices {
       }
    }
 
+   device_button_state xinput::get_state_of(const inputs::button& button) const {
+      if (!this->is_connected)
+         return {};
+      auto i = _button_to_index(button);
+      if (i == no_button)
+         return {};
+      return this->buttons.get_button_state(i);
+   }
+   void xinput::consume(const inputs::button& button) {
+      auto i = _button_to_index(button);
+      if (i == no_button)
+         return;
+      this->buttons.flags[i] |= device_button_state::flag::consumed_on_this_frame;
+   }
+
    button_press_type xinput::release_type(const inputs::button& b) const {
       auto i = _button_to_index(b);
       if (i == no_button)
@@ -93,14 +108,5 @@ namespace dovahkit::subsystems::worldinput2::devices {
       if (i == no_button)
          return zero_timestamp;
       return this->buttons.start[i];
-   }
-
-   device_button_state xinput::key_down_state(const inputs::button& b) const {
-      if (!this->is_connected)
-         return {};
-      auto i = _button_to_index(b);
-      if (i == no_button)
-         return {};
-      return this->buttons.get_button_state(i);
    }
 }

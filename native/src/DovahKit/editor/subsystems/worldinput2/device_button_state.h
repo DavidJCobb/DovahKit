@@ -34,6 +34,9 @@ namespace dovahkit::subsystems::worldinput2 {
       constexpr bool is_down() const noexcept {
          return this->down_when != zero_timestamp;
       }
+      constexpr bool was_pressed_this_frame() const noexcept {
+         return (this->flags & flag::went_down_on_this_frame) != 0;
+      }
       constexpr bool was_released_this_frame() const noexcept {
          return !this->is_down() && this->release_type != button_press_type::none;
       }

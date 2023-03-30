@@ -142,6 +142,19 @@ namespace dovahkit::subsystems::worldinput2::devices {
       mouse.double_click_ms  = GetDoubleClickTime();
    }
 
+   device_button_state keyboard_mouse::get_state_of(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return {};
+      return this->buttons.get_button_state(vk);
+   }
+   void keyboard_mouse::consume(const inputs::button& button) {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return;
+      this->buttons.flags[vk] |= device_button_state::flag::consumed_on_this_frame;
+   }
+
    button_press_type keyboard_mouse::release_type(const inputs::button& button) const {
       auto vk = button_to_vk(button);
       if (vk < 0 || vk >= vk_code_count)
@@ -159,12 +172,5 @@ namespace dovahkit::subsystems::worldinput2::devices {
       if (vk < 0 || vk >= vk_code_count)
          return zero_timestamp;
       return this->buttons.start[vk];
-   }
-
-   device_button_state keyboard_mouse::key_down_state(const inputs::button& button) const {
-      auto vk = button_to_vk(button);
-      if (vk < 0)
-         return {};
-      return this->buttons.get_button_state(vk);
    }
 }

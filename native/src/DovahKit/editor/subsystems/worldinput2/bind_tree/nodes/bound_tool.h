@@ -2,7 +2,7 @@
 #include "./abstract_input_node.h"
 
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
-   class bound_tool : public abstract_input_node {
+   class bound_tool final : public abstract_input_node {
       public:
          static constexpr node_type my_type = node_type::bound_tool;
       public:

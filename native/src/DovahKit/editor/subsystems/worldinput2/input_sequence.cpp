@@ -1,21 +1,24 @@
 #include "./input_sequence.h"
 #include <cassert>
+#include "./devices/abstract_device_handler.h"
 #include "./defaults.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::group
-   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time) {
+   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, devices::abstract_device_handler& device) {
       this->state.frame_status_changed = false;
 
-      auto prior_fs = this->state.frame_status;
+      const auto prior_fs = this->state.frame_status;
 
       if (this->type == group_type::single_control) {
-         if (static_assert(false, "TODO: check if button is released this frame")) {
+         const auto bs = device.get_state_of(this->button);
+         //
+         if (bs.was_released_this_frame()) {
             this->state.frame_status         = frame_status::released;
             this->state.frame_status_changed = true;
-         } else if (static_assert(false, "TODO: check if button is down")) {
+         } else if (bs.is_down()) {
             this->state.frame_status         = frame_status::down;
-            this->state.frame_status_changed = static_assert(false, "TODO: get the device button state's 'down this frame' flag");
+            this->state.frame_status_changed = bs.was_pressed_this_frame();
          } else {
             this->state.frame_status         = frame_status::inactive;
             this->state.frame_status_changed = (prior_fs != frame_status::inactive);
@@ -46,7 +49,7 @@ namespace dovahkit::subsystems::worldinput2 {
             // terminal items were also down.
             assert(item->state.frame_status == frame_status::down);
 
-            auto result = item->update(current_time);
+            auto result = item->update(current_time, device);
             assert(result != group_update_result::interrupted);
             if (item->state.frame_status == frame_status::released) {
                this->state.frame_status         = frame_status::released;
@@ -69,7 +72,7 @@ namespace dovahkit::subsystems::worldinput2 {
                auto* item = this->children[i];
                assert(item->state.frame_status == frame_status::down);
 
-               auto result = item->update(current_time);
+               auto result = item->update(current_time, device);
                assert(result != group_update_result::interrupted);
                //
                // A result of interrupted should be impossible here: once an input sequence 
@@ -100,7 +103,7 @@ namespace dovahkit::subsystems::worldinput2 {
             }
          }
 
-         auto result = current_item->update(current_time);
+         auto result = current_item->update(current_time, device);
          if (result == group_update_result::interrupted) {
             this->state.frame_status         = frame_status::inactive;
             this->state.frame_status_changed = true;
@@ -143,7 +146,7 @@ namespace dovahkit::subsystems::worldinput2 {
          bool any_down_now = false; // true if any went down on this frame specifically
          bool any_inactive = false;
          for (auto* item : this->children) {
-            auto result = item->update(current_time);
+            auto result = item->update(current_time, device);
             if (result == group_update_result::interrupted) {
                this->state.frame_status         = frame_status::inactive;
                this->state.frame_status_changed = true;
@@ -195,6 +198,16 @@ namespace dovahkit::subsystems::worldinput2 {
       return group_update_result::not_interrupted;
    }
 
+   bool input_sequence::group::all_contents_inactive() const {
+      for (auto* item : this->children) {
+         if (item->state.frame_status != frame_status::inactive)
+            return false;
+         if (!item->all_contents_inactive())
+            return false;
+      }
+      return true;
+   }
+
    void input_sequence::group::_clear_all_progress() {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
@@ -207,28 +220,35 @@ namespace dovahkit::subsystems::worldinput2 {
    #pragma endregion
 
    #pragma region input_sequence
-   void input_sequence::update(timestamp_t current_time) {
+   void input_sequence::update(timestamp_t current_time, devices::abstract_device_handler& device) {
       if (!this->root)
          return;
 
-      auto result = this->root->update(current_time);
+      auto result = this->root->update(current_time, device);
       if (result == group_update_result::interrupted) {
-         this->_clear_all_progress();
+         this->clear_all_progress();
          return;
       }
       this->state.frame_status = this->root->state.frame_status;
       if (this->state.frame_status == frame_status::released) {
-         this->_clear_all_progress();
+         this->clear_all_progress();
          if (this->root->already_consumed() == false) {
             this->state.frame_status = frame_status::released;
-            for (auto& button : this->root->terminal_inputs()) {
-               static_assert(false, "TODO: Mark button as 'consumed' on its input device handler.");
+            for (const auto& button : this->root->terminal_inputs()) {
+               device.consume(button);
             }
          }
       }
    }
 
-   void input_sequence::_clear_all_progress() {
+   bool input_sequence::all_contents_inactive() const {
+      if (!this->root)
+         return true;
+      if (this->root->state.frame_status != frame_status::inactive)
+         return false;
+      return this->root->all_contents_inactive();
+   }
+   void input_sequence::clear_all_progress() {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
       if (auto* g = this->root)

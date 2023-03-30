@@ -13,6 +13,7 @@
 
 #include "./enums/bounds_generation_source.h"
 #include "./enums/camera_speed_flags.h"
+#include "./enums/editor_mode.h"
 #include "./grid_definitions.h"
 
 class DKVulkanView;
@@ -97,6 +98,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          struct {
             camera_speed_flags camera_speed;
+            editor_mode mode = editor_mode::objects;
             struct {
                std::vector<selected_refr_info> refs;
             } selection;
@@ -142,6 +144,10 @@ namespace dovahkit::subsystems::worldedit {
 
          inline size_t cell_grid_size() const noexcept {
             return this->loaded_cells.length();
+         }
+
+         inline editor_mode get_editor_mode() const {
+            return this->state.mode;
          }
 
       signals:

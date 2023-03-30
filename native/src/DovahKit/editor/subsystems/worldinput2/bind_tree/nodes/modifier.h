@@ -4,7 +4,7 @@
 #include "../../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
-   class modifier : public abstract_input_node {
+   class modifier final : public abstract_input_node {
       public:
          static constexpr node_type my_type = node_type::modifier;
       public:
