@@ -11,11 +11,13 @@ namespace dovahkit::subsystems::worldinput2::inputs {
       Qt::MouseButton mouse   = Qt::MouseButton::NoButton;
       xinput_button   gamepad = xinput_button::none;
 
-      inline bool empty() const noexcept {
+      constexpr bool operator==(const button& other) const = default;
+
+      constexpr bool empty() const noexcept {
          return key.empty() && (mouse == Qt::MouseButton::NoButton) && (gamepad == xinput_button::none);
       }
 
-      bool is_modifier_key() const noexcept {
+      inline bool is_modifier_key() const noexcept {
          return key.is_modifier_key() && (mouse == Qt::MouseButton::NoButton) && (gamepad == xinput_button::none);
       }
    };

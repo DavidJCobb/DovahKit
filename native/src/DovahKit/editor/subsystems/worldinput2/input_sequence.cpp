@@ -253,6 +253,124 @@ namespace dovahkit::subsystems::worldinput2 {
       }
    }
 
+   bool input_sequence::group::operator==(const group& other) const {
+      if (this->type != other.type)
+         return false;
+      if (this->type == group_type::single_control) {
+         if (this->button != other.button)
+            return false;
+      } else {
+         size_t size = this->children.size();
+         if (size != other.children.size())
+            return false;
+         for (size_t i = 0; i < size; ++i)
+            if (*this->children[i] != *other.children[i])
+               return false;
+      }
+      return true;
+   }
+   bool input_sequence::group::shallow_equals(const group& other) const {
+      if (this->type != other.type)
+         return false;
+      if (this->type == group_type::single_control) {
+         if (this->button != other.button)
+            return false;
+      } else {
+         size_t size = this->children.size();
+         if (size != other.children.size())
+            return false;
+      }
+      return true;
+   }
+   bool input_sequence::group::is_superset_of(const group& other) const {
+      if (this->type == group_type::single_control)
+         return false;
+      if (other.type == group_type::single_control) {
+         for (auto* child : this->children)
+            if (*child == other)
+               return true;
+      }
+      if (this->type == other.type) {
+         auto&  list_sup = this->children;
+         auto&  list_sub = other.children;
+         size_t size_sup = list_sup.size();
+         size_t size_sub = list_sub.size();
+         if (size_sup > size_sub) {
+            //
+            // It's possible that `this` is equal to `other` but with additional stuff 
+            // added. What that actually means depends on whether the groups are ordered.
+            //
+            if (this->is_ordered()) {
+               //
+               // Given two ordered groups U and V and two arbitrary indices I and J: 
+               // if the I-th element of U is equivalent to the (I + J)-th element in V 
+               // for all possible values of I (i.e. any that are valid indices in U) 
+               // and for any single value of J, then U is a subset of V.
+               // 
+               // In simpler terms: U is a subset of V if U's contents are equal, in 
+               // data and ordering, to any subrange (with equivalent length) of V.
+               //
+               for (size_t i = 0; i < size_sup; ++i) {
+                  bool shallow = list_sup[i]->shallow_equals(*list_sub[0]);
+                  if (!shallow)
+                     continue;
+                  for (size_t j = 0; j < size_sub; ++j) {
+                     shallow = list_sup[i + j]->shallow_equals(*list_sub[j]);
+                     if (!shallow)
+                        break;
+                  }
+                  if (!shallow)
+                     continue;
+
+                  bool deep = true;
+                  for (size_t j = 0; j < size_sub; ++j) {
+                     if (*list_sup[i + j] != *list_sub[j]) {
+                        deep = false;
+                        break;
+                     }
+                  }
+                  if (deep)
+                     return true;
+               }
+            } else {
+               //
+               // Given two unordered groups U and V: if for every element in U there 
+               // is at least one equivalent element in V, then U is a subset of V.
+               //
+               std::vector<bool> contained;
+               contained.resize(size_sub);
+               //
+               size_t contained_count = 0;
+
+               for (const auto* child : this->children) {
+                  for (size_t j = 0; j < size_sub; ++j) {
+                     if (contained[j])
+                        continue;
+                     if (*child == *other.children[j]) {
+                        contained[j] = true;
+                        break;
+                     }
+                  }
+                  if (++contained_count == size_sub) {
+                     return true;
+                  }
+               }
+            }
+            //
+         }
+         //
+         // If this group is not directly a superset of `other`, it may still contain 
+         // a child group that is a superset of `other`, so fall through here.
+         //
+      }
+
+      for (auto* child : this->children)
+         if (child->is_superset_of(other))
+            return true;
+
+      return false;
+   }
+
    input_sequence::group* input_sequence::group::_clone() const {
       auto* out = new group;
 
@@ -314,6 +432,45 @@ namespace dovahkit::subsystems::worldinput2 {
       this->state.frame_status_changed = false;
       if (auto* g = this->root)
          g->_clear_all_progress();
+   }
+
+   bool input_sequence::is_subset_of(const input_sequence& other) const {
+      if (!this->root || !other.root)
+         return false;
+
+      {  // Compare terminal inputs.
+         auto term_sub = this->root->terminal_inputs();
+         auto term_sup = other.root->terminal_inputs();
+         if (term_sub.size() < term_sup.size()) {
+            bool all = true;
+            for (const auto& a : term_sub) {
+               bool found = false;
+               for (const auto& b : term_sup) {
+                  if (a == b) {
+                     found = true;
+                     break;
+                  }
+               }
+               if (!found)
+                  all = false;
+            }
+            if (all)
+               return true;
+         }
+      }
+
+      // Compare full sequences:
+
+      {
+         // TODO: Once we switch to flat storage for ISG trees, we can check the total 
+         //       number of ISGs (child and descendant) in a sequence by just checking 
+         //       the length of the storage. This would allow us to early-out if the 
+         //       `other` sequence is shorter than `this`.
+      }
+      if (this->root->is_superset_of(*other.root))
+         return true;
+
+      return false;
    }
 
    input_sequence input_sequence::clone() const {

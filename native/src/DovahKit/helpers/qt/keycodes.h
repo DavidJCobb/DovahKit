@@ -43,9 +43,23 @@ namespace cobb::qt {
          uint32_t vk   = 0;
       } native;
 
-      // we can't default these if we have anonymous struct members, because C++ is absolute trash sometimes
-      bool operator==(const key& other) const;
-      bool operator!=(const key& other) const;
+      // we can't default these if we have anonymous struct members
+      constexpr bool operator==(const key& other) const {
+         if (native.vk != other.native.vk)
+            return false;
+         if (native.scan != other.native.scan)
+            return false;
+         if (native.vk == 0) {
+            //
+            // Only bother testing Qt information if the native information isn't available.
+            //
+            if (code != other.code)
+               return false;
+            if (glyph != other.glyph)
+               return false;
+         }
+         return true;
+      }
 
       inline bool empty() const noexcept { return this->glyph.isEmpty() && (this->code == Qt::Key::Key_unknown || this->code == (Qt::Key)0); }
       bool is_modifier_key() const noexcept;

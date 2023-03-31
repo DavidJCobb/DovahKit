@@ -71,6 +71,10 @@ namespace dovahkit::subsystems::worldinput2 {
 
                void find_last_terminal_input(const group*& out, const group*& out_parent);
 
+               bool operator==(const group&) const;
+               bool shallow_equals(const group&) const;
+               bool is_superset_of(const group&) const;
+
             protected:
                void _clear_all_progress();
                std::vector<group*> terminal_items() const;
@@ -90,6 +94,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
          bool all_contents_inactive() const;
          void clear_all_progress();
+
+         // invoke this on and with absolute input sequences, not relative
+         bool is_subset_of(const input_sequence&) const;
 
          input_sequence clone() const; // does not clone run-time-only state
 

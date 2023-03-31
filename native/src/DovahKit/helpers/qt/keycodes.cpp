@@ -167,26 +167,6 @@ namespace cobb::qt {
       this->update_native_data();
    }
 
-   bool key::operator==(const key& other) const {
-      if (native.vk != other.native.vk)
-         return false;
-      if (native.scan != other.native.scan)
-         return false;
-      if (native.vk == 0) {
-         //
-         // Only bother testing Qt information if the native information isn't available.
-         //
-         if (code != other.code)
-            return false;
-         if (glyph != other.glyph)
-            return false;
-      }
-      return true;
-   }
-   bool key::operator!=(const key& other) const {
-      return !(*this == other);
-   }
-
    bool key::is_modifier_key() const noexcept {
       switch (this->code) {
          case Qt::Key::Key_Alt:
