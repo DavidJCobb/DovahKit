@@ -488,6 +488,9 @@ namespace dovahkit::subsystems::worldinput2 {
       return (this->clone() <<= nested);
    }
    input_sequence& input_sequence::operator<<=(const input_sequence& nested) {
+      if (!nested.root)
+         return *this;
+
       group* last_terminal;
       group* parent_of_last;
       this->root->find_last_terminal_input(last_terminal, parent_of_last);
@@ -498,8 +501,48 @@ namespace dovahkit::subsystems::worldinput2 {
       switch (last_terminal->type) {
          case group_type::single_control:
          case group_type::concurrent_unordered:
-            {
-               auto* wrap = new group;
+            if (parent_of_last && parent_of_last->is_ordered()) {
+               //
+               // The parent input sequence must be entered before the child input sequence 
+               // can be entered; we join them using an ordered group. If the parent input 
+               // sequence already ends with an ordered group, then we can append to it 
+               // instead of creating a new (redundant) one.
+               //
+               if (nested.root->type == parent_of_last->type) {
+                  //
+                  // Example cases:
+                  // 
+                  //    [A + <B + C> + D] <<= [E + F]
+                  //       == [A + (B + C) + D + E + F]
+                  //       != [A + (B + C) + D + [E + F]]
+                  // 
+                  //    <A + B> <<= <C + D>
+                  //       == <A + B + C + D>
+                  //       != <A + B + <C + D>>
+                  //
+                  for (auto* child : nested.root->children) {
+                     parent_of_last->children.push_back(child->_clone());
+                  }
+               } else {
+                  //
+                  // Example cases:
+                  // 
+                  //    [A + <B + C> + D] <<= <E + F>
+                  //       == [A + <B + C> + D + <E + F>]
+                  // 
+                  //    <A + B> <<= [C + D]
+                  //       == <A + B + [C + D]>
+                  //
+                  parent_of_last->children.push_back(nested.root->_clone());
+               }
+               return *this;
+            } else {
+               //
+               // The parent input sequence does not end in an ordered group. As such, we 
+               // must take its last terminal input (whatever that may be) and wrap that 
+               // terminal input in a new ordered group.
+               //
+               wrap = new group;
                wrap->type = group_type::concurrent_ordered;
                wrap->children.push_back(last_terminal);
                wrap->children.push_back(nested.root->_clone());
@@ -510,18 +553,20 @@ namespace dovahkit::subsystems::worldinput2 {
          default:
             cobb::unreachable();
       }
-      if (parent_of_last) {
-         size_t i;
-         for (i = 0; i < parent_of_last->children.size(); ++i) {
-            if (parent_of_last->children[i] == last_terminal) {
-               break;
+      if (wrap) {
+         if (parent_of_last) {
+            size_t i;
+            for (i = 0; i < parent_of_last->children.size(); ++i) {
+               if (parent_of_last->children[i] == last_terminal) {
+                  break;
+               }
             }
+            assert(i < parent_of_last->children.size());
+            parent_of_last->children[i] = wrap;
+         } else {
+            assert(last_terminal == this->root);
+            this->root = wrap;
          }
-         assert(i < parent_of_last->children.size());
-         parent_of_last->children[i] = wrap;
-      } else {
-         assert(last_terminal == this->root);
-         this->root = wrap;
       }
 
       return *this;
