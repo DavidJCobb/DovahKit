@@ -216,20 +216,12 @@ namespace dovahkit::subsystems::worldinput2 {
    }
 
    const input_sequence::group* input_sequence::group::last_terminal_input() const {
-      switch (this->type) {
-         case group_type::single_control:
-            return this;
-         case group_type::concurrent_unordered:
-            return this;
-         case group_type::concurrent_ordered:
-         case group_type::separated_ordered:
-            if (this->children.empty())
-               return nullptr;
-            return this->children.back();
-      }
-      cobb::unreachable();
+      const group* out;
+      const group* parent;
+      this->find_last_terminal_input(out, parent);
+      return out;
    }
-   void input_sequence::group::find_last_terminal_input(const group*& out, const group*& out_parent) {
+   void input_sequence::group::find_last_terminal_input(const group*& out, const group*& out_parent) const {
       out        = nullptr;
       out_parent = nullptr;
       switch (this->type) {

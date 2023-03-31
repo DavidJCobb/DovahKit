@@ -52,5 +52,13 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
                casted->clear_descendants_progress();
             }
          }
+
+         static void do_conflict_resolution(
+            abstract_input_node& a,
+            abstract_input_node& b,
+
+            abstract_input_node*& winner,
+            bool& allow_activation
+         );
    };
 }

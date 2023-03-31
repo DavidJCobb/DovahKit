@@ -69,7 +69,7 @@ namespace dovahkit::subsystems::worldinput2 {
                   return const_cast<group*>(std::as_const(*this).last_terminal_input());
                }
 
-               void find_last_terminal_input(const group*& out, const group*& out_parent);
+               void find_last_terminal_input(const group*& out, const group*& out_parent) const;
 
                bool operator==(const group&) const;
                bool shallow_equals(const group&) const;
@@ -99,6 +99,12 @@ namespace dovahkit::subsystems::worldinput2 {
          bool is_subset_of(const input_sequence&) const;
 
          input_sequence clone() const; // does not clone run-time-only state
+
+         bool operator==(const input_sequence& other) const {
+            if (this->root && other.root)
+               return *(this->root) == *(other.root);
+            return this->root == other.root;
+         }
 
          // absolute = modifier << nested;
          input_sequence operator<<(const input_sequence& nested) const;
