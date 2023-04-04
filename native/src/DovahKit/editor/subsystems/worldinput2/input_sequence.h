@@ -63,13 +63,15 @@ namespace dovahkit::subsystems::worldinput2 {
                bool all_contents_inactive() const;
                bool already_consumed() const; // TODO: requires some sort of access to the button states i.e. input device handler
                std::vector<inputs::button> terminal_inputs() const;
+               size_t descendant_count() const;
+               size_t input_control_count() const;
 
-               const group* last_terminal_input() const;
-               group* last_terminal_input() {
-                  return const_cast<group*>(std::as_const(*this).last_terminal_input());
+               const group* final_group() const;
+               group* final_group() {
+                  return const_cast<group*>(std::as_const(*this).final_group());
                }
 
-               void find_last_terminal_input(const group*& out, const group*& out_parent) const;
+               void find_final_group(const group*& out, const group*& out_parent) const;
 
                bool operator==(const group&) const;
                bool shallow_equals(const group&) const;
@@ -87,6 +89,7 @@ namespace dovahkit::subsystems::worldinput2 {
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
+            timestamp_t went_down_at = zero_timestamp;
          } state;
 
       public:
@@ -95,8 +98,18 @@ namespace dovahkit::subsystems::worldinput2 {
          bool all_contents_inactive() const;
          void clear_all_progress();
 
+         std::vector<inputs::button> terminal_inputs() const;
+
+         const group* final_group() const;
+         group* final_group() {
+            return const_cast<group*>(std::as_const(*this).final_group());
+         }
+
          // invoke this on and with absolute input sequences, not relative
          bool is_subset_of(const input_sequence&) const;
+
+         size_t total_group_count() const;
+         size_t input_control_count() const;
 
          input_sequence clone() const; // does not clone run-time-only state
 

@@ -215,13 +215,36 @@ namespace dovahkit::subsystems::worldinput2 {
       return true;
    }
 
-   const input_sequence::group* input_sequence::group::last_terminal_input() const {
+   size_t input_sequence::group::descendant_count() const {
+      if (this->type == group_type::single_control)
+         return 0;
+      size_t count = 0;
+      for (const auto* item : this->children) {
+         ++count;
+         count += item->descendant_count();
+      }
+      return count;
+   }
+   size_t input_sequence::group::input_control_count() const {
+      if (this->type == group_type::single_control)
+         return 0;
+      size_t count = 0;
+      for (const auto* item : this->children) {
+         if (item->type == group_type::single_control)
+            ++count;
+         else
+            count += item->input_control_count();
+      }
+      return count;
+   }
+
+   const input_sequence::group* input_sequence::group::final_group() const {
       const group* out;
       const group* parent;
-      this->find_last_terminal_input(out, parent);
+      this->find_final_group(out, parent);
       return out;
    }
-   void input_sequence::group::find_last_terminal_input(const group*& out, const group*& out_parent) const {
+   void input_sequence::group::find_final_group(const group*& out, const group*& out_parent) const {
       out        = nullptr;
       out_parent = nullptr;
       switch (this->type) {
@@ -235,7 +258,7 @@ namespace dovahkit::subsystems::worldinput2 {
                break;
             {
                auto* last = this->children.back();
-               last->find_last_terminal_input(out, out_parent);
+               last->find_final_group(out, out_parent);
                if (out == last)
                   out_parent = this;
             }
@@ -401,10 +424,17 @@ namespace dovahkit::subsystems::worldinput2 {
          return;
       }
       this->state.frame_status = this->root->state.frame_status;
-      if (this->state.frame_status == frame_status::released) {
+      if (this->state.frame_status == frame_status::down) {
+         if (this->state.frame_status_changed) {
+            this->state.went_down_at = current_time;
+         }
+      } else if (this->state.frame_status == frame_status::released) {
+         auto down_at = this->state.went_down_at;
+
          this->clear_all_progress();
          if (this->root->already_consumed() == false) {
             this->state.frame_status = frame_status::released;
+            this->state.went_down_at = down_at;
             for (const auto& button : this->root->terminal_inputs()) {
                device.consume(button);
             }
@@ -422,8 +452,21 @@ namespace dovahkit::subsystems::worldinput2 {
    void input_sequence::clear_all_progress() {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
+      this->state.went_down_at         = zero_timestamp;
       if (auto* g = this->root)
          g->_clear_all_progress();
+   }
+
+   std::vector<inputs::button> input_sequence::terminal_inputs() const {
+      if (this->root)
+         return this->root->terminal_inputs();
+      return {};
+   }
+
+   const input_sequence::group* input_sequence::final_group() const {
+      if (!this->root)
+         return nullptr;
+      return this->root->final_group();
    }
 
    bool input_sequence::is_subset_of(const input_sequence& other) const {
@@ -465,6 +508,20 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
+   size_t input_sequence::total_group_count() const {
+      if (this->root) {
+         return 1 + this->root->descendant_count();
+      }
+      return 0;
+   }
+   size_t input_sequence::input_control_count() const {
+      if (!this->root)
+         return 0;
+      if (this->root->type == group_type::single_control)
+         return 1;
+      return this->root->input_control_count();
+   }
+
    input_sequence input_sequence::clone() const {
       //
       // In the future, I want to use flat storage for input sequences and their groups. When I do, 
@@ -485,7 +542,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       group* last_terminal;
       group* parent_of_last;
-      this->root->find_last_terminal_input(last_terminal, parent_of_last);
+      this->root->find_final_group(last_terminal, parent_of_last);
       if (!last_terminal)
          return *this;
 
