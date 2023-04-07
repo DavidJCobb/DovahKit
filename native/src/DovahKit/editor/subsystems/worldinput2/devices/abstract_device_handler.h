@@ -15,6 +15,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
          virtual ~abstract_device_handler();
 
          virtual device_button_state get_state_of(const inputs::button&) const = 0;
+         virtual bool is_consumed(const inputs::button&) const = 0;
          virtual void consume(const inputs::button&) = 0;
    };
 }

@@ -51,6 +51,14 @@ namespace dovahkit::subsystems::worldinput2 {
             public:
                group_update_result update(timestamp_t current_time, devices::abstract_device_handler& device);
 
+               constexpr bool is_concurrent() const noexcept {
+                  switch (this->type) {
+                     case group_type::concurrent_ordered:
+                     case group_type::concurrent_unordered:
+                        return true;
+                  }
+                  return false;
+               }
                constexpr bool is_ordered() const noexcept {
                   switch (this->type) {
                      case group_type::concurrent_ordered:
@@ -61,8 +69,8 @@ namespace dovahkit::subsystems::worldinput2 {
                }
 
                bool all_contents_inactive() const;
-               bool already_consumed() const; // TODO: requires some sort of access to the button states i.e. input device handler
-               std::vector<inputs::button> terminal_inputs() const;
+               bool already_consumed(const devices::abstract_device_handler&) const;
+               void terminal_inputs(std::vector<inputs::button>& append_to) const;
                size_t descendant_count() const;
                size_t input_control_count() const;
                bool is_or_contains_input_control(const inputs::button&) const;
@@ -80,7 +88,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
             protected:
                void _clear_all_progress();
-               std::vector<group*> terminal_items() const;
 
                group* _clone() const;
          };

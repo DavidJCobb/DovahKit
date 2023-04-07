@@ -148,6 +148,12 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return {};
       return this->buttons.get_button_state(vk);
    }
+   bool keyboard_mouse::is_consumed(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return {};
+      return this->buttons.is_consumed(vk);
+   }
    void keyboard_mouse::consume(const inputs::button& button) {
       auto vk = button_to_vk(button);
       if (vk < 0 || vk >= vk_code_count)

@@ -83,6 +83,14 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return {};
       return this->buttons.get_button_state(i);
    }
+   bool xinput::is_consumed(const inputs::button& button) const {
+      if (!this->is_connected)
+         return true;
+      auto i = _button_to_index(button);
+      if (i == no_button)
+         return {};
+      return this->buttons.is_consumed(i);
+   }
    void xinput::consume(const inputs::button& button) {
       auto i = _button_to_index(button);
       if (i == no_button)

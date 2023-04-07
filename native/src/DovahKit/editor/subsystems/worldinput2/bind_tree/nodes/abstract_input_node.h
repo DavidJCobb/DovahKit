@@ -14,6 +14,9 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          typename input_sequence    input_sequence;
 
          class input_sequence absolute_input_sequence() const;
+         std::vector<inputs::button> absolute_terminal_inputs() const {
+            return this->absolute_input_sequence().terminal_inputs();
+         }
 
          static bool does_press_delay_hold(
             timestamp_t current_time,
