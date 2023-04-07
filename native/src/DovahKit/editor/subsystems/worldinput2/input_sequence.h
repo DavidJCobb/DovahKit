@@ -65,6 +65,7 @@ namespace dovahkit::subsystems::worldinput2 {
                std::vector<inputs::button> terminal_inputs() const;
                size_t descendant_count() const;
                size_t input_control_count() const;
+               bool is_or_contains_input_control(const inputs::button&) const;
 
                const group* final_group() const;
                group* final_group() {

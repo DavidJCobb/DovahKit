@@ -2,7 +2,8 @@
 #include <algorithm>
 #include "helpers/passkey.h"
 #include "../devices/abstract_device_handler.h"
-#include "../worldinput2.h"
+#include "../defaults.h"
+#include "../core.h"
 #include "./node.h"
 #include "./nodes/bound_tool.h"
 #include "./nodes/editor_mode.h"
@@ -53,10 +54,11 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       auto current_editing_mode = worldedit::core::get().get_editor_mode();
 
-      std::vector<node*> eligible_binds;
+      std::vector<nodes::abstract_input_node*> eligible_binds;
       std::vector<nodes::abstract_input_node*> conflict_losing_binds;
+      std::vector<nodes::abstract_input_node*> pressed_down_nodes;
 
-      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &device, current_editing_mode](node* current) {
+      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, current_editing_mode](node* current) {
          auto recurse = [&](node* current, auto& recurse) mutable -> void {
             //
             for (auto* child : current->child_nodes()) {
@@ -75,13 +77,29 @@ namespace dovahkit::subsystems::worldinput2::binds {
                         auto& sequence = child_inode->input_sequence;
 
                         sequence.update(now, device);
-                        switch (child_inode->button_press_type) {
-                           case button_press_type::hold:
-                              matched = sequence.state.frame_status == input_sequence::frame_status::down;
-                              break;
-                           default:
-                              matched = sequence.state.frame_status == input_sequence::frame_status::released;
-                              break;
+                        if (sequence.state.frame_status == input_sequence::frame_status::released) {
+                           switch (child_inode->button_press_type) {
+                              case button_press_type::press:
+                                 matched = true;
+                                 break;
+                              case button_press_type::long_press:
+                                 {
+                                    auto down_for = elapsed_time(child_inode->input_sequence.state.went_down_at, now);
+                                    if (down_for >= defaults::press_to_long_press_threshold)
+                                       matched = true;
+                                 }
+                                 break;
+                           }
+                        } else if (sequence.state.frame_status == input_sequence::frame_status::down) {
+                           switch (child_inode->button_press_type) {
+                              case button_press_type::press:
+                              case button_press_type::long_press:
+                                 pressed_down_nodes.push_back(child_inode);
+                                 break;
+                              case button_press_type::hold:
+                                 matched = true;
+                                 break;
+                           }
                         }
                      }
                      break;
@@ -89,10 +107,13 @@ namespace dovahkit::subsystems::worldinput2::binds {
                //
                if (!matched) {
                   if (child_inode)
-                     child_inode->clear_descendants_progress();
+                     child_inode->clear_descendants_input_sequence_progress();
                   continue;
                }
                if (child_inode) {
+
+                  // If `child` has the same press type and absolute terminal inputs as any node in `conflict_losing_binds,
+                  // then add `child` to `conflict_losing_binds` and then `continue`.
                   bool lost_conflict = false;
                   for (auto* loser : conflict_losing_binds) {
                      if (loser->button_press_type != child_inode->button_press_type)
@@ -106,7 +127,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
                      conflict_losing_binds.push_back(child_inode);
                      continue;
                   }
-                  //
+                  
                   bool child_conflicted = false;
                   {
                      std::vector<nodes::abstract_input_node*> binds_made_ineligible;
@@ -117,7 +138,14 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
                         nodes::abstract_input_node* winning_node;
                         bool winner_is_not_blocked;
-                        static_assert(false, "TODO: node conflict resolution algorithm, passing refs to the above two variables");
+                        //
+                        nodes::abstract_input_node::do_concurrent_nodes_conflict(
+                           now,
+                           *child_inode,
+                           *prior_inode,
+                           winning_node,
+                           winner_is_not_blocked
+                        );
 
                         auto* losing_node = (winning_node == child_inode) ? prior_inode : child_inode;
 
@@ -168,31 +196,78 @@ namespace dovahkit::subsystems::worldinput2::binds {
       for (auto* conflicted : conflict_losing_binds) {
          if (conflicted->button_press_type == button_press_type::hold)
             continue;
-         conflicted->clear_descendants_progress();
+         conflicted->clear_descendants_input_sequence_progress();
       }
 
       // Hold release.
       for (auto* hold_node : this->last_frame_active_hold_binds) {
-         assert(hold_node->type == node_type::bound_tool);
-         if (std::find(eligible_binds.begin(), eligible_binds.end(), hold_node) == eligible_binds.end()) {
-            static_assert(false, "TODO: Execute the bound tool in the context of key-up.");
+         auto* tool_node = hold_node->as<nodes::bound_tool>();
+         if (!tool_node)
+            continue;
+         if (std::find(eligible_binds.begin(), eligible_binds.end(), tool_node) == eligible_binds.end()) {
+            tool_node->invoke_for_hold_release();
          }
       }
+
+      // Conflict resolution: Presses delay Holds
+      eligible_binds.erase(
+         std::remove_if(
+            eligible_binds.begin(),
+            eligible_binds.end(),
+            [this, &pressed_down_nodes, now](const auto* node) -> bool {
+               auto* input_node = node->as<nodes::abstract_input_node>();
+               if (!input_node)
+                  return false;
+               //
+               if (input_node->button_press_type == button_press_type::hold) {
+                  //
+                  // Conflict resolution: Presses delay Holds.
+                  //
+                  for (auto* press_node : pressed_down_nodes) {
+                     bool result = nodes::abstract_input_node::does_press_delay_hold(
+                        now,
+                        *press_node,
+                        *input_node
+                     );
+                     if (result)
+                        return true;
+                  }
+               } else {
+                  //
+                  // Conflict resolution: Holds block Presses.
+                  //
+                  for (auto* hold_node : this->last_frame_active_hold_binds) {
+                     bool result = nodes::abstract_input_node::does_hold_block_press(
+                        *input_node,
+                        *hold_node
+                     );
+                     if (result)
+                        return true;
+                  }
+               }
+               //
+               // No conflict.
+               //
+               return false;
+            }
+         ),
+         eligible_binds.end()
+      );
+
       this->last_frame_active_hold_binds = {};
 
       // Execution;
       for (auto* node : eligible_binds) {
          if (auto* bt = node->as<nodes::bound_tool>()) {
-            static_assert(false, "TODO: Execute the bound tool.");
-            if (bt->button_press_type == button_press_type::hold)
-               this->last_frame_active_hold_binds.push_back(bt);
+            bt->invoke();
          }
-         if (auto* in = node->as<nodes::abstract_input_node>()) {
-            if (in->button_press_type != button_press_type::hold) {
-               assert(in->input_sequence.state.frame_status == input_sequence::frame_status::released);
-               assert(in->input_sequence.all_contents_inactive());
-               in->input_sequence.state.frame_status = input_sequence::frame_status::inactive;
-            }
+         if (node->button_press_type == button_press_type::hold) {
+            assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);
+            this->last_frame_active_hold_binds.push_back(node);
+         } else {
+            assert(node->input_sequence.state.frame_status == input_sequence::frame_status::released);
+            assert(node->input_sequence.all_contents_inactive());
+            node->input_sequence.state.frame_status = input_sequence::frame_status::inactive;
          }
       }
    }

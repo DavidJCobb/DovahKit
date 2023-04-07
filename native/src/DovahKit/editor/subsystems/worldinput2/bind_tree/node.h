@@ -70,6 +70,8 @@ namespace dovahkit::subsystems::worldinput2::binds {
             return nullptr;
          }
 
+         void clear_descendants_input_sequence_progress();
+
          node* clone() const;
 
          // Returns true if this node is a "parent" of some kind, or false otherwise.

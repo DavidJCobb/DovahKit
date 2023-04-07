@@ -1,4 +1,5 @@
-#include "node.h"
+#include "./node.h"
+#include "./nodes/abstract_input_node.h"
 
 namespace dovahkit::subsystems::worldinput2::binds {
    node::node(node_type t) : type(t) {}
@@ -36,6 +37,16 @@ namespace dovahkit::subsystems::worldinput2::binds {
       o.parent = nullptr;
       this->children.removeOne(&o);
    }
+
+   void node::clear_descendants_input_sequence_progress() {
+      for (auto* item : this->children) {
+         if (auto* casted = item->as<nodes::abstract_input_node>()) {
+            casted->input_sequence.clear_all_progress();
+         }
+         item->clear_descendants_input_sequence_progress();
+      }
+   }
+
    node* node::clone() const {
       auto* copy = this->_clone_impl();
       auto& list = this->children;

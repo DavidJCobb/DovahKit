@@ -27,25 +27,10 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       return this->input_sequence.clone();
    }
 
-   void abstract_input_node::clear_descendants_progress() {
-      for (auto* item : this->children) {
-         switch (item->type) {
-            case node_type::bound_tool:
-            case node_type::modifier:
-               break;
-            default:
-               continue;
-         }
-         auto* casted = (nodes::abstract_input_node*)item;
-         casted->input_sequence.clear_all_progress();
-         casted->clear_descendants_progress();
-      }
-   }
-
    /*static*/ bool abstract_input_node::does_press_delay_hold(
       timestamp_t current_time,
-      abstract_input_node& press,
-      abstract_input_node& hold
+      const abstract_input_node& press,
+      const abstract_input_node& hold
    ) {
       // A conflict is present if both binds have the same absolute terminal inputs.
       auto abs_p = press.absolute_input_sequence().terminal_inputs();
@@ -70,7 +55,17 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       // The two binds may conflict. Next, we need to check the timestamps at which 
       // they went down.
 
-      static_assert(false, "TODO: Return true if `hold` went down within <threshold> of `press`, and <threshold> time hasn't elapsed since then.");
+      auto elapsed_p = elapsed_time(press.input_sequence.state.went_down_at, current_time);
+      auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at,  current_time);
+
+      auto disambig = defaults::press_to_hold_threshold;
+      if (press.button_press_type == button_press_type::long_press)
+         disambig += defaults::press_to_long_press_threshold;
+
+      if (elapsed_h > disambig) {
+         return false;
+      }
+      return true;
    }
    /*static*/ void abstract_input_node::do_concurrent_nodes_conflict(
       timestamp_t current_time,
@@ -96,7 +91,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             // Press duration rule: If the absolute input sequences are identical, but one 
             // bind is a Press and the other is a Long Press, then the Long Press wins the 
             // conflict if it was down long enough; else, the Press.
-            auto& press  = a.button_press_type == button_press_type::press      ? a : b;
+            auto& press  = a.button_press_type == button_press_type::press ? a : b;
             auto& longer = (&press == &a) ? b : a;
             //
             if (elapsed_time(longer.input_sequence.state.went_down_at, current_time) >= defaults::press_to_long_press_threshold) {
@@ -146,7 +141,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          // in conflict if any of the input controls in V's final ISG overlap any of the 
          // terminal inputs in U.
          //
-         auto& node_u  = (a_length > b_length) ? a : b;
+         auto& node_u = (a_length > b_length) ? a : b;
          auto& node_v = (a_length > b_length) ? b : a;
          const auto& abs_u = (a_length > b_length) ? abs_a : abs_b;
          const auto& abs_v = (a_length > b_length) ? abs_b : abs_a;
@@ -168,17 +163,35 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
                }
             } else {
                for (const auto& term : ti_u) {
-                  static_assert(false, "TODO: If any input controls anyhwere in `final_isg_v` equal `term`, then a conflict is present and `node_u` wins.");
+                  if (final_isg_v->is_or_contains_input_control(term)) {
+                     //
+                     // The final ISG in V is a group, and one of the input controls somewhere 
+                     // inside of that group is present in U's terminal inputs. A conflict is 
+                     // present, and U, being the longer input sequence, wins.
+                     //
+                     winner = &node_u;
+                     return;
+                  }
                }
             }
          }
       }
 
-      static_assert(false, "TODO: Superset/subset rule");
+      // Superset/subset rule.
+      if (abs_a.is_subset_of(abs_b)) {
+         winner = &a;
+         return;
+      }
+      if (abs_b.is_subset_of(abs_a)) {
+         winner = &b;
+         return;
+      }
+
+      // Done.
    }
    /*static*/ bool abstract_input_node::does_hold_block_press(
-      abstract_input_node& press,
-      abstract_input_node& hold
+      const abstract_input_node& press,
+      const abstract_input_node& hold
    ) {
       // A conflict is present if the absolute terminal inputs of the two binds overlap.
       auto abs_p = press.absolute_input_sequence().terminal_inputs();

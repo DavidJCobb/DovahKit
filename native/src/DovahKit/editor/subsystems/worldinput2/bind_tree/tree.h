@@ -7,6 +7,8 @@ namespace dovahkit::subsystems::worldinput2 {
    namespace binds {
       class node;
       namespace nodes {
+         class abstract_input_node;
+         class bound_tool;
          class root;
       }
    }
@@ -32,7 +34,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          // If these binds cease to be active on this frame, then we must fire key-up invocations 
          // for them, so they can deactivate their effects as needed.
-         std::vector<node*> last_frame_active_hold_binds;
+         std::vector<nodes::abstract_input_node*> last_frame_active_hold_binds;
 
          // -----
 

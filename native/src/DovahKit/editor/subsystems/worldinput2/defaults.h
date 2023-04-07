@@ -2,9 +2,8 @@
 
 namespace dovahkit::subsystems::worldinput2::defaults {
    constexpr const double press_to_long_press_threshold = 0.35; // seconds
-   constexpr const double long_press_to_hold_threshold  = 0.50; // seconds
 
-   constexpr const double press_to_hold_threshold = press_to_long_press_threshold + long_press_to_hold_threshold;
+   constexpr const double press_to_hold_threshold = 0.50; // seconds
 
    // Given a sequential keybind like  {A + B}  (i.e. press and release A; then press and 
    // release B), the latter keypress cannot occur more than this many seconds later than 

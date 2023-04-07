@@ -237,6 +237,16 @@ namespace dovahkit::subsystems::worldinput2 {
       }
       return count;
    }
+   bool input_sequence::group::is_or_contains_input_control(const inputs::button& button) const {
+      if (this->type == group_type::single_control) {
+         return this->button == button;
+      }
+      for (const auto* item : this->children) {
+         if (item->is_or_contains_input_control(button))
+            return true;
+      }
+      return false;
+   }
 
    const input_sequence::group* input_sequence::group::final_group() const {
       const group* out;

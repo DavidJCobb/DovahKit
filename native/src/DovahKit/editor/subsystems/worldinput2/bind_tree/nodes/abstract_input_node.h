@@ -15,12 +15,10 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
          class input_sequence absolute_input_sequence() const;
 
-         void clear_descendants_progress();
-
          static bool does_press_delay_hold(
             timestamp_t current_time,
-            abstract_input_node& press,
-            abstract_input_node& hold
+            const abstract_input_node& press,
+            const abstract_input_node& hold
          );
          static void do_concurrent_nodes_conflict(
             timestamp_t current_time,
@@ -31,8 +29,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             bool& allow_activation
          );
          static bool does_hold_block_press(
-            abstract_input_node& press,
-            abstract_input_node& hold
+            const abstract_input_node& press,
+            const abstract_input_node& hold
          );
    };
 }
