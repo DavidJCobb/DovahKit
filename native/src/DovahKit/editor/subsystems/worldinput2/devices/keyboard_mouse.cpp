@@ -77,7 +77,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
          this->buttons.update_button(now, i, held);
 
          if (!held) {
-            if (i == (this->system.mouse.swap_left_right) ? VK_RBUTTON : VK_LBUTTON) {
+            if (i == ((this->system.mouse.swap_left_right) ? VK_RBUTTON : VK_LBUTTON)) {
                if (_mouseup_handler_for_double_click(now)) {
                   //
                   // Double-click.
@@ -161,7 +161,8 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return;
       this->buttons.flags[vk] |= device_button_state::flag::consumed_on_this_frame;
    }
-   void keyboard_mouse::prepare_interruption_check(interruption_check& check) const {
+   interruption_check keyboard_mouse::prepare_interruption_check() const {
+      interruption_check check;
       for (size_t i = 0; i < vk_code_count; ++i) {
          if (this->buttons.start[i] == zero_timestamp)
             continue;
@@ -172,6 +173,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
             this->buttons.start[i]
          });
       }
+      return check;
    }
 
    button_press_type keyboard_mouse::release_type(const inputs::button& button) const {

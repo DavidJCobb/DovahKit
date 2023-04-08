@@ -13,7 +13,7 @@ namespace dovahkit::subsystems::worldinput2::inputs {
 
       constexpr bool operator==(const button& other) const = default;
 
-      constexpr bool empty() const noexcept {
+      inline bool empty() const noexcept {
          return key.empty() && (mouse == Qt::MouseButton::NoButton) && (gamepad == xinput_button::none);
       }
 

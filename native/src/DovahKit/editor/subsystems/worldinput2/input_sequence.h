@@ -92,6 +92,13 @@ namespace dovahkit::subsystems::worldinput2 {
                }
 
                void find_final_group(const group*& out, const group*& out_parent) const;
+               void find_final_group(group*& out, group*& out_parent) {
+                  const group* a;
+                  const group* b;
+                  std::as_const(*this).find_final_group(a, b);
+                  out        = const_cast<group*>(a);
+                  out_parent = const_cast<group*>(b);
+               }
 
                bool operator==(const group&) const;
                bool shallow_equals(const group&) const;

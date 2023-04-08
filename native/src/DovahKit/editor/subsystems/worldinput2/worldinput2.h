@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QPointer>
+#include <QWidget>
 #include "./chrono.h"
 #include "./bind_tree/tree.h"
 #include "./devices/abstract_device_handler.h"

@@ -1,6 +1,10 @@
 #pragma once
 #include "./abstract_input_node.h"
 
+namespace dovahkit::subsystems::worldinput2 {
+   class combined_tool_results;
+}
+
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
    class bound_tool final : public abstract_input_node {
       public:
@@ -10,8 +14,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
          virtual bool is_valid_parent() const override { return false; }
 
-         void invoke() const;
-         void invoke_for_hold_release() const;
+         void invoke(combined_tool_results&) const;
+         void invoke_for_hold_release(combined_tool_results&) const;
 
       protected:
          virtual node* _clone_impl() const override;

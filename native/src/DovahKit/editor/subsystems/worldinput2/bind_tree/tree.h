@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "../enums/input_device_type.h"
+#include "../chrono.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    class combined_tool_results;
@@ -38,6 +39,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          // -----
 
-         void update(timestamp_t now, combined_tool_results& instant, combined_tool_results& while_down);
+         void update(timestamp_t now, combined_tool_results& press_results, combined_tool_results& hold_results);
    };
 }

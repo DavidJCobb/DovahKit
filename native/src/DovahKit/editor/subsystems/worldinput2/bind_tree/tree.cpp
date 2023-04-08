@@ -48,7 +48,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       }
    }
    
-   void tree::update(timestamp_t now, combined_tool_results& tap_results, combined_tool_results& while_results) {
+   void tree::update(timestamp_t now, combined_tool_results& press_results, combined_tool_results& hold_results) {
       assert(this->root);
 
       auto& subsys = core::get(); // worldinput2
@@ -62,7 +62,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       interruption_check interruption_check = device.prepare_interruption_check();
 
-      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, &interruption_check, current_editing_mode](node* current) {
+      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, &interruption_check, current_editing_mode, now](node* current) {
          auto recurse = [&](node* current, auto& recurse) mutable -> void {
             //
             for (auto* child : current->child_nodes()) {
@@ -209,7 +209,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
          if (!tool_node)
             continue;
          if (std::find(eligible_binds.begin(), eligible_binds.end(), tool_node) == eligible_binds.end()) {
-            tool_node->invoke_for_hold_release();
+            tool_node->invoke_for_hold_release(hold_results);
          }
       }
 
@@ -263,7 +263,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       // Execution;
       for (auto* node : eligible_binds) {
          if (auto* bt = node->as<nodes::bound_tool>()) {
-            bt->invoke();
+            bt->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results);
          }
          if (node->button_press_type == button_press_type::hold) {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);

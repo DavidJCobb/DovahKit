@@ -98,7 +98,8 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return;
       this->buttons.flags[i] |= device_button_state::flag::consumed_on_this_frame;
    }
-   void xinput::prepare_interruption_check(interruption_check& check) const {
+   interruption_check xinput::prepare_interruption_check() const {
+      interruption_check check;
       for (size_t i = 0; i < button_count; ++i) {
          if (this->buttons.start[i] == zero_timestamp)
             continue;
@@ -109,6 +110,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
             this->buttons.start[i]
          });
       }
+      return check;
    }
 
    button_press_type xinput::release_type(const inputs::button& b) const {

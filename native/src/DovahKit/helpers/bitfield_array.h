@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <functional>
@@ -53,7 +54,7 @@ namespace cobb {
          static constexpr const auto value_mask    = cobb::bits::all_ones<value_bitcount, underlying_integral_type>();
          static constexpr const auto sign_bit_mask = underlying_integral_type(1) << (value_bitcount - 1);
 
-         unit_type units[unit_count] = {};
+         std::array<unit_type, unit_count> units = {};
 
          static constexpr void _bounds_check(size_t index) {
             if (std::is_constant_evaluated()) {
