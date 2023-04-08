@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "helpers/passkey.h"
 #include "../devices/abstract_device_handler.h"
+#include "../tools/combined_tool_results.h"
 #include "../defaults.h"
 #include "../core.h"
 #include "./node.h"

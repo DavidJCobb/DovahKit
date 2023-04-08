@@ -32,24 +32,25 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       const abstract_input_node& press,
       const abstract_input_node& hold
    ) {
-      // A conflict is present if both binds have the same absolute terminal inputs.
+      // A conflict is present if both binds have overlapping absolute terminal inputs.
       auto abs_p = press.absolute_input_sequence().terminal_inputs();
       auto abs_h = hold.absolute_input_sequence().terminal_inputs();
       //
-      if (abs_p.size() != abs_h.size())
-         return false;
-      //
-      for (const auto& item_p : abs_p) {
-         bool found = false;
-         for (const auto& item_h : abs_h) {
-            if (item_p == item_h) {
-               found = true;
-               break;
+      {
+         bool overlap = false;
+         for (const auto& item_p : abs_p) {
+            for (const auto& item_h : abs_h) {
+               if (item_p == item_h) {
+                  overlap = true;
+                  break;
+               }
             }
+            if (overlap)
+               break;
          }
-         if (!found) {
+         //
+         if (!overlap)
             return false;
-         }
       }
 
       // The two binds may conflict. Next, we need to check the timestamps at which 
