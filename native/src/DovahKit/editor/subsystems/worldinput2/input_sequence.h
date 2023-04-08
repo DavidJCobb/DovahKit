@@ -1,8 +1,10 @@
 #pragma once
+#include <utility> // std::pair
 #include <vector>
 #include "helpers/owned_ptr.h"
 #include "./inputs/button.h"
 #include "./chrono.h"
+#include "./interruption_check.h"
 
 namespace dovahkit::subsystems::worldinput2::devices {
    class abstract_device_handler;
@@ -58,6 +60,8 @@ namespace dovahkit::subsystems::worldinput2 {
             public:
                group_update_result update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device);
 
+               void run_interruption_check(interruption_check&) const;
+
                constexpr bool is_concurrent() const noexcept {
                   switch (this->type) {
                      case group_type::concurrent_ordered:
@@ -109,7 +113,9 @@ namespace dovahkit::subsystems::worldinput2 {
          } state;
 
       public:
-         void update(timestamp_t current_time, devices::abstract_device_handler& device);
+         void update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check&);
+
+         bool run_interruption_check(interruption_check&) const;
 
          bool all_contents_inactive() const;
          void clear_all_progress();

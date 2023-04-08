@@ -79,7 +79,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
       if (this->is_ordered()) {
          auto* current_item = this->children[this->state.current_item_index];
-         static_assert(false, "TODO: Check if interrupted by keys not part of the current bind (maybe only for separate-and-ordered?");
          if (this->type == group_type::concurrent_ordered) {
             //
             // Ensure no currently-down items have been released.
@@ -213,6 +212,66 @@ namespace dovahkit::subsystems::worldinput2 {
       }
       this->state.frame_status = frame_status::inactive;
       return group_update_result::no_change;
+   }
+
+   void input_sequence::group::run_interruption_check(interruption_check& check) const {
+      //
+      // This sub-algorithm runs recursively on some of the ISGs in an input sequence. It serves 
+      // two purposes: it detects whether the user is currently in the middle of inputting a 
+      // separate-and-ordered ISG (be it this group or one of its descendants); and it checks if 
+      // any of the buttons (on the current device) that have gone down since the containing 
+      // input sequence's last advancement time are buttons that would advance this ISG or any 
+      // of its descendants.
+      //
+      if (this->type == group_type::single_control) {
+         for (auto& item : check.buttons) {
+            if (item.button == this->button) {
+               item.matched = true;
+               break;
+            }
+         }
+         return;
+      }
+      if (this->type == group_type::concurrent_unordered) {
+         const group* in_progress_separate_ordered_child = nullptr;
+
+         for (const auto* item : this->children) {
+            if (item->type != group_type::separated_ordered)
+               continue;
+            if (item->state.frame_status == frame_status::down)
+               continue;
+            if (item->state.current_item_index > 0) {
+               in_progress_separate_ordered_child = item;
+               break;
+            }
+         }
+
+         if (!in_progress_separate_ordered_child) {
+            for (const auto* item : this->children)
+               if (item->type != group_type::separated_ordered)
+                  item->run_interruption_check(check);
+         } else {
+            //
+            // If a separate-and-ordered child is currently being entered, then the user is 
+            // "locked in" to that child item; buttons exclusive to its siblings count as 
+            // interruptions, so we shouldn't run this algorithm on those.
+            //
+            in_progress_separate_ordered_child->run_interruption_check(check);
+         }
+         return;
+      }
+      if (this->type == group_type::separated_ordered) {
+         check.saw_separate_ordered_group = true;
+      }
+      if (this->state.current_item_index >= this->children.size()) {
+         //
+         // This can happen if this group's frame status is `down` as a result of 
+         // the user fully progressing through this group's contents.
+         //
+         return;
+      }
+      auto* current_item = this->children[this->state.current_item_index];
+      current_item->run_interruption_check(check);
    }
 
    bool input_sequence::group::all_contents_inactive() const {
@@ -450,9 +509,14 @@ namespace dovahkit::subsystems::worldinput2 {
    #pragma endregion
 
    #pragma region input_sequence
-   void input_sequence::update(timestamp_t current_time, devices::abstract_device_handler& device) {
+   void input_sequence::update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check& interruption_check) {
       if (!this->root)
          return;
+
+      if (this->run_interruption_check(interruption_check)) {
+         this->clear_all_progress();
+         return;
+      }
 
       auto result = this->root->update(current_time, this->state.last_advancement, device);
       if (result == group_update_result::interrupted) {
@@ -478,6 +542,33 @@ namespace dovahkit::subsystems::worldinput2 {
             }
          }
       }
+   }
+
+   bool input_sequence::run_interruption_check(interruption_check& check) const {
+      check.saw_separate_ordered_group = false;
+      check.start_at = 0;
+      //
+      bool found_first_button = false;
+      for (size_t i = 0; i < check.buttons.size(); ++i) {
+         auto& item = check.buttons[i];
+         item.matched = false;
+         if (!found_first_button) {
+            if (item.down_at > this->state.last_advancement) {
+               found_first_button = true;
+               check.start_at = i;
+            }
+         }
+      }
+
+      if (this->root) {
+         this->root->run_interruption_check(check);
+      }
+      if (check.saw_separate_ordered_group) {
+         for (const auto& item : check.buttons)
+            if (!item.matched)
+               return true;
+      }
+      return false;
    }
 
    bool input_sequence::all_contents_inactive() const {

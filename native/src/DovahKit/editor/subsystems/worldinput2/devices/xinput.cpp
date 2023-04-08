@@ -1,8 +1,9 @@
-#include "xinput.h"
+#include "./xinput.h"
 #include <array>
 #include "helpers/unreachable.h"
-#include "../defaults.h"
 #include "../inputs/button.h"
+#include "../defaults.h"
+#include "../interruption_check.h"
 
 namespace {
    using xinput_button = dovahkit::subsystems::xinput::button;
@@ -96,6 +97,18 @@ namespace dovahkit::subsystems::worldinput2::devices {
       if (i == no_button)
          return;
       this->buttons.flags[i] |= device_button_state::flag::consumed_on_this_frame;
+   }
+   void xinput::prepare_interruption_check(interruption_check& check) const {
+      for (size_t i = 0; i < button_count; ++i) {
+         if (this->buttons.start[i] == zero_timestamp)
+            continue;
+         check.buttons.emplace_back(interruption_check::potentially_interrupting_button{
+            inputs::button{
+               .gamepad = _indices_to_buttons[i],
+            },
+            this->buttons.start[i]
+         });
+      }
    }
 
    button_press_type xinput::release_type(const inputs::button& b) const {

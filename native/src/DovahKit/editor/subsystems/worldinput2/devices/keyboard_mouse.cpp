@@ -1,6 +1,7 @@
-#include "keyboard_mouse.h"
+#include "./keyboard_mouse.h"
 #include "helpers/windows.h"
 #include "../defaults.h"
+#include "../interruption_check.h"
 #include "../inputs/button.h"
 #include <QCursor>
 
@@ -159,6 +160,18 @@ namespace dovahkit::subsystems::worldinput2::devices {
       if (vk < 0 || vk >= vk_code_count)
          return;
       this->buttons.flags[vk] |= device_button_state::flag::consumed_on_this_frame;
+   }
+   void keyboard_mouse::prepare_interruption_check(interruption_check& check) const {
+      for (size_t i = 0; i < vk_code_count; ++i) {
+         if (this->buttons.start[i] == zero_timestamp)
+            continue;
+         check.buttons.emplace_back(interruption_check::potentially_interrupting_button{
+            inputs::button{
+               .key = cobb::qt::key::from_windows_vk(i),
+            },
+            this->buttons.start[i]
+         });
+      }
    }
 
    button_press_type keyboard_mouse::release_type(const inputs::button& button) const {

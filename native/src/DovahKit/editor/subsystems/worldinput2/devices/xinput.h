@@ -38,7 +38,8 @@ namespace dovahkit::subsystems::worldinput2::devices {
 
          virtual device_button_state get_state_of(const inputs::button&) const final;
          virtual bool is_consumed(const inputs::button&) const final override;
-         virtual void consume(const inputs::button&) final;
+         virtual void consume(const inputs::button&) override final;
+         virtual void prepare_interruption_check(interruption_check&) const override final;
 
          button_press_type release_type(const inputs::button&) const;
          bool is_down(const inputs::button&) const;

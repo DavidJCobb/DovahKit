@@ -3,8 +3,9 @@
 #include "helpers/passkey.h"
 #include "../devices/abstract_device_handler.h"
 #include "../tools/combined_tool_results.h"
-#include "../defaults.h"
 #include "../core.h"
+#include "../defaults.h"
+#include "../interruption_check.h"
 #include "./node.h"
 #include "./nodes/bound_tool.h"
 #include "./nodes/editor_mode.h"
@@ -59,7 +60,9 @@ namespace dovahkit::subsystems::worldinput2::binds {
       std::vector<nodes::abstract_input_node*> conflict_losing_binds;
       std::vector<nodes::abstract_input_node*> pressed_down_nodes;
 
-      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, current_editing_mode](node* current) {
+      interruption_check interruption_check = device.prepare_interruption_check();
+
+      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, &interruption_check, current_editing_mode](node* current) {
          auto recurse = [&](node* current, auto& recurse) mutable -> void {
             //
             for (auto* child : current->child_nodes()) {
@@ -77,7 +80,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
                         auto& sequence = child_inode->input_sequence;
 
-                        sequence.update(now, device);
+                        sequence.update(now, device, interruption_check);
                         if (sequence.state.frame_status == input_sequence::frame_status::released) {
                            switch (child_inode->button_press_type) {
                               case button_press_type::press:
