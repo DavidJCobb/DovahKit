@@ -25,8 +25,16 @@ namespace dovahkit::subsystems::worldinput2 {
          };
 
          enum class group_update_result {
-            not_interrupted,
+            no_change,
+
+            // It was determined that the user's attempt to enter the input sequence was interrupted 
+            // somehow. Perhaps they released one of the keys in a concurrent group before entering 
+            // the group's contents in full, for example.
             interrupted,
+
+            // The user is advancing within the input sequence; the next key that they need to press 
+            // is down, or was just released.
+            advancing,
          };
 
          class group {
@@ -44,12 +52,11 @@ namespace dovahkit::subsystems::worldinput2 {
                   enum frame_status frame_status = frame_status::inactive;
                   bool frame_status_changed = false;
                   //
-                  size_t      current_item_index = 0;
-                  timestamp_t last_advancement   = zero_timestamp; // for separate-and-ordered groups
+                  size_t current_item_index = 0;
                } state;
 
             public:
-               group_update_result update(timestamp_t current_time, devices::abstract_device_handler& device);
+               group_update_result update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device);
 
                constexpr bool is_concurrent() const noexcept {
                   switch (this->type) {
@@ -97,7 +104,8 @@ namespace dovahkit::subsystems::worldinput2 {
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
-            timestamp_t went_down_at = zero_timestamp;
+            timestamp_t last_advancement = zero_timestamp; // timestamp at which the user entered the next key in this input sequence
+            timestamp_t went_down_at     = zero_timestamp;
          } state;
 
       public:

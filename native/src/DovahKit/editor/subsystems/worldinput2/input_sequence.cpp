@@ -12,7 +12,7 @@ namespace dovahkit::subsystems::worldinput2 {
       this->children.clear();
    }
 
-   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, devices::abstract_device_handler& device) {
+   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device) {
       this->state.frame_status_changed = false;
 
       const auto prior_fs = this->state.frame_status;
@@ -23,14 +23,16 @@ namespace dovahkit::subsystems::worldinput2 {
          if (bs.was_released_this_frame()) {
             this->state.frame_status         = frame_status::released;
             this->state.frame_status_changed = true;
+            return group_update_result::advancing;
          } else if (bs.is_down()) {
             this->state.frame_status         = frame_status::down;
             this->state.frame_status_changed = bs.was_pressed_this_frame();
+            return group_update_result::advancing;
          } else {
             this->state.frame_status         = frame_status::inactive;
             this->state.frame_status_changed = (prior_fs != frame_status::inactive);
          }
-         return group_update_result::not_interrupted;
+         return group_update_result::no_change;
       }
 
       // If a top-level group's frame status becomes released, then that should cause the 
@@ -62,16 +64,17 @@ namespace dovahkit::subsystems::worldinput2 {
             // terminal items were also down.
             assert(item->state.frame_status == frame_status::down);
 
-            auto result = item->update(current_time, device);
+            auto result = item->update(current_time, last_advancement_time, device);
             assert(result != group_update_result::interrupted);
             if (item->state.frame_status == frame_status::released) {
                this->state.frame_status         = frame_status::released;
                this->state.frame_status_changed = true;
-               return group_update_result::not_interrupted;
+               return group_update_result::advancing;
             }
             assert(item->state.frame_status == frame_status::down);
          }
          assert(this->state.frame_status == frame_status::down);
+         return group_update_result::advancing;
       }
 
       if (this->is_ordered()) {
@@ -85,7 +88,7 @@ namespace dovahkit::subsystems::worldinput2 {
                auto* item = this->children[i];
                assert(item->state.frame_status == frame_status::down);
 
-               auto result = item->update(current_time, device);
+               auto result = item->update(current_time, last_advancement_time, device);
                assert(result != group_update_result::interrupted);
                //
                // A result of interrupted should be impossible here: once an input sequence 
@@ -107,7 +110,7 @@ namespace dovahkit::subsystems::worldinput2 {
             // should consider that as the sequence being interrupted.
             //
             if (this->state.current_item_index > 0) {
-               auto elapsed = elapsed_time(this->state.last_advancement, current_time);
+               auto elapsed = elapsed_time(last_advancement_time, current_time);
                if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
                   this->state.frame_status         = frame_status::inactive;
                   this->state.frame_status_changed = true;
@@ -116,7 +119,7 @@ namespace dovahkit::subsystems::worldinput2 {
             }
          }
 
-         auto result = current_item->update(current_time, device);
+         auto result = current_item->update(current_time, last_advancement_time, device);
          if (result == group_update_result::interrupted) {
             this->state.frame_status         = frame_status::inactive;
             this->state.frame_status_changed = true;
@@ -131,39 +134,40 @@ namespace dovahkit::subsystems::worldinput2 {
                      if (this->state.current_item_index == this->children.size()) {
                         this->state.frame_status         = frame_status::down;
                         this->state.frame_status_changed = true;
-                        return group_update_result::not_interrupted;
                      }
                   }
                }
-               break;
+               return group_update_result::advancing;
             case frame_status::released:
                if (this->type == group_type::separated_ordered) {
                   ++this->state.current_item_index;
-                  this->state.last_advancement = current_time;
                }
                if (this->state.current_item_index == this->children.size()) {
                   this->state.frame_status         = frame_status::released;
                   this->state.frame_status_changed = true;
-                  return group_update_result::not_interrupted;
                }
-               break;
+               return group_update_result::advancing;
          }
 
-         return group_update_result::not_interrupted;
+         return result;
       }
 
       assert(this->type == group_type::concurrent_unordered);
       {
-         bool any_released = false;
-         bool any_down     = false;
-         bool any_down_now = false; // true if any went down on this frame specifically
-         bool any_inactive = false;
+         bool any_advancing = false;
+         bool any_released  = false;
+         bool any_down      = false;
+         bool any_down_now  = false; // true if any went down on this frame specifically
+         bool any_inactive  = false;
          for (auto* item : this->children) {
-            auto result = item->update(current_time, device);
+            auto result = item->update(current_time, last_advancement_time, device);
             if (result == group_update_result::interrupted) {
                this->state.frame_status         = frame_status::inactive;
                this->state.frame_status_changed = true;
                return result;
+            }
+            if (result == group_update_result::advancing) {
+               any_advancing = true;
             }
             switch (item->state.frame_status) {
                case frame_status::released:
@@ -205,10 +209,10 @@ namespace dovahkit::subsystems::worldinput2 {
                this->state.frame_status_changed = any_down_now;
             }
          }
-         return group_update_result::not_interrupted;
+         return (any_advancing || any_down || any_released) ? group_update_result::advancing : group_update_result::no_change;
       }
       this->state.frame_status = frame_status::inactive;
-      return group_update_result::not_interrupted;
+      return group_update_result::no_change;
    }
 
    bool input_sequence::group::all_contents_inactive() const {
@@ -439,7 +443,6 @@ namespace dovahkit::subsystems::worldinput2 {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
       this->state.current_item_index   = 0;
-      this->state.last_advancement     = zero_timestamp;
       //
       for (auto* child : this->children)
          child->_clear_all_progress();
@@ -451,10 +454,12 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!this->root)
          return;
 
-      auto result = this->root->update(current_time, device);
+      auto result = this->root->update(current_time, this->state.last_advancement, device);
       if (result == group_update_result::interrupted) {
          this->clear_all_progress();
          return;
+      } else if (result == group_update_result::advancing) {
+         this->state.last_advancement = current_time;
       }
       this->state.frame_status = this->root->state.frame_status;
       if (this->state.frame_status == frame_status::down) {
