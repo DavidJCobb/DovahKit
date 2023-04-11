@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::bitfield_array&lt;*,*,*,*&gt;">
+
+      <Intrinsic Name="size" Expression="$T2" />
+
+      <Intrinsic Name="_all_ones_unit" Expression="($T4(1) &lt;&lt; bitcount) == 0 ? $T4(-1) : ($T4(1) &lt;&lt; bitcount) - 1">
+         <Parameter Name="bitcount" Type="size_t" />
+      </Intrinsic>
+
+      <Intrinsic Name="_sign_extend_raw_bits" Expression="(is_signed_value_type &amp;&amp; (v &amp; sign_bit_mask)) ? (~value_mask | v) : v">
+         <Parameter Name="v" Type="underlying_integral_type" />
+      </Intrinsic>
+
+      <Intrinsic Name="_get__leading_bits_functor" Expression="(underlying_integral_type)((underlying_integral_type)(unit &gt;&gt; (unit_bitcount - bitshift - bitcount)) &amp; (underlying_integral_type)_all_ones_unit(bitcount))" ReturnType="underlying_integral_type">
+         <Parameter Name="unit" Type="$T4" />
+         <Parameter Name="bitshift" Type="uint8_t" />
+         <Parameter Name="bitcount" Type="uint8_t" />
+      </Intrinsic>
+
+      <DisplayString>{{ size={size()} }}</DisplayString>
+      <Expand>
+         <Item Name="[bits per value]">value_bitcount,d</Item>
+         <Item Name="[is signed]">is_signed_value_type</Item>
+         <Item Name="[raw]">units</Item>
+         
+         <!-- values: -->
+         <CustomListItems Condition="(unit_bitcount % value_bitcount) == 0">
+            <Variable Name="i" InitialValue="(size_t)0"/>
+            
+            <Size>size()</Size>
+            <Exec>i = 0</Exec>
+            <Loop Condition="i &lt; size()">
+               <Item>($T1)_sign_extend_raw_bits(units[i])</Item>
+               <Exec>++i</Exec>
+            </Loop>
+         </CustomListItems>
+
+         <CustomListItems Condition="(unit_bitcount % value_bitcount) != 0 &amp;&amp; (unit_bitcount % value_bitcount) == 0">
+            <Variable Name="i"      InitialValue="(size_t)0"/>
+            <Variable Name="bitpos" InitialValue="(size_t)0"/>
+            
+            <Size>size()</Size>
+            <Exec>i = 0</Exec>
+            <Loop Condition="i &lt; size()">
+               <Exec>bitpos = i * value_bitcount</Exec>
+               <Item>($T1)_sign_extend_raw_bits(_get__leading_bits_functor(units[bitpos / unit_bitcount], bitpos % unit_bitcount, value_bitcount))</Item>
+
+               <Exec>++i</Exec>
+            </Loop>
+         </CustomListItems>
+         
+         <CustomListItems Condition="(unit_bitcount % value_bitcount) != 0 &amp;&amp; (unit_bitcount % value_bitcount) != 0">
+            <Variable Name="_continue" InitialValue="false"/>
+            <Variable Name="_value" InitialValue="(underlying_integral_type)0"/>
+            
+            <Variable Name="i" InitialValue="(size_t)0"/>
+            <Variable Name="bitpos"   InitialValue="(size_t)0"/>
+            <Variable Name="unitpos"  InitialValue="(size_t)0"/>
+            <Variable Name="bitshift" InitialValue="($T4)0"/>
+            
+            <Variable Name="remaining" InitialValue="(size_t)0"/>
+            <Variable Name="unaligned_bitcount" InitialValue="(size_t)0"/>
+            <Variable Name="trailing_bitcount" InitialValue="(uint8_t)0"/>
+            <Variable Name="remaining_wholes" InitialValue="(int8_t)0"/>
+            
+            <Size>size()</Size>
+            <Exec>i = 0</Exec>
+            <Loop Condition="i &lt; size()">
+               <Exec>_continue = false</Exec>
+               <Exec>_value    = ($T1)0</Exec>
+                  
+               <Exec>bitpos  = i * value_bitcount</Exec>
+               <Exec>unitpos = bitpos / unit_bitcount</Exec>
+                  
+               <Exec>remaining = value_bitcount</Exec>
+               <Exec>bitshift  = bitpos % unit_bitcount</Exec>
+               <If Condition="bitshift != 0">
+                  <Exec>unaligned_bitcount = unit_bitcount - bitshift</Exec>
+                  <If Condition="remaining &lt; unaligned_bitcount">
+                     <Exec>_value = _get__leading_bits_functor(units[unitpos], bitshift, remaining)</Exec>
+                     <Exec>_continue = true</Exec>
+                  </If>
+                  <If Condition="_continue == false">
+                     <Exec>remaining -= unaligned_bitcount</Exec>
+                     <Exec>_value = _get__leading_bits_functor(units[unitpos], bitshift, unaligned_bitcount)</Exec>
+                     <Exec>unitpos++</Exec>
+                  </If>
+               </If>
+               <If Condition="_continue == false">
+                  <Exec>trailing_bitcount = remaining % unit_bitcount</Exec>
+                  <If Condition="value_bitcount &gt; unit_bitcount">
+                     <Exec>remaining_wholes = remaining - trailing_bitcount</Exec>
+                     <Loop Condition="remaining_wholes &gt; 0">
+                        <Exec>remaining_wholes -= unit_bitcount</Exec>
+                        <Exec>_value &lt;&lt;= unit_bitcount</Exec>
+                        <Exec>_value |= units[unitpos]</Exec>
+                        <Exec>unitpos++</Exec>
+                     </Loop>
+                  </If>
+                  <If Condition="trailing_bitcount &gt; 0">
+                     <Exec>_value &lt;&lt;= trailing_bitcount</Exec>
+
+                     <Exec>_value |= (units[unitpos] &gt;&gt; (unit_bitcount - trailing_bitcount)) &amp; _all_ones_unit(trailing_bitcount)</Exec>
+                  </If>
+               </If>
+               <Item>($T1)_sign_extend_raw_bits(_value)</Item>
+               <Exec>++i</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

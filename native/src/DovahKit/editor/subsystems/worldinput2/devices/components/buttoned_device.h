@@ -19,7 +19,7 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
       public:
          std::array<timestamp_t, ButtonCount> start = {};
          cobb::bitfield_array<device_button_state::flags_t, ButtonCount, 3> flags;
-         cobb::bitfield_array<button_press_type, ButtonCount, 2> release_times;
+         cobb::bitfield_array<button_press_type, ButtonCount, 3> release_times;
 
       public:
          // Per-frame update handler; call per button.

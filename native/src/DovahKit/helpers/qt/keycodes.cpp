@@ -277,6 +277,11 @@ namespace cobb::qt {
       this->native.scan = MapVirtualKeyW(this->native.vk, 4);
       if (this->native.scan == 0)
          this->native.scan = MapVirtualKeyW(this->native.vk, MAPVK_VK_TO_VSC);
+      //
+      if (this->code == (Qt::Key)0) {
+         if (this->native.vk < mappings::vk_to_qt.size())
+            this->code = mappings::vk_to_qt[this->native.vk];
+      }
    }
 
    /*static*/ key key::from_windows_vk(int vk) {

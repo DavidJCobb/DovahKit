@@ -12,12 +12,12 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       public:
          bound_tool() : abstract_input_node(my_type) {}
 
-         virtual bool is_valid_parent() const override { return false; }
+         virtual bool is_valid_parent() const override final { return false; }
 
          void invoke(combined_tool_results&) const;
          void invoke_for_hold_release(combined_tool_results&) const;
 
       protected:
-         virtual node* _clone_impl() const override;
+         virtual node* _clone_impl() const override final;
    };
 }

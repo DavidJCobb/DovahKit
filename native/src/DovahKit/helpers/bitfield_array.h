@@ -185,8 +185,8 @@ namespace cobb {
                //
                uint8_t trailing_bitcount = remaining % unit_bitcount;
                if constexpr (value_bitcount > unit_bitcount) {  // Write whole chunks.
-                  size_t rem_wholes = remaining - trailing_bitcount;
-                  while (rem_wholes) {
+                  int8_t rem_wholes = remaining - trailing_bitcount;
+                  while (rem_wholes > 0) {
                      wcf(self->units[bytepos++], trailing_bitcount, (rem_wholes -= unit_bitcount));
                   }
                }
@@ -275,6 +275,9 @@ namespace cobb {
                   throw;
             }
             auto value = (underlying_integral_type)v;
+            if constexpr (is_signed_value_type) {
+               value &= value_mask;
+            }
             _access_element(
                i,
                [value](unit_type& unit) {

@@ -22,6 +22,7 @@
 #include "vulkan_renderer_instance.h"
 #include "ui_key_picker.h"
 #include "load_nif.h"
+#include "worldinput2.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -44,7 +45,8 @@ namespace DovahKitDebug {
       features::qt_3d_tests,
       features::vulkan_renderer_instance,
       features::ui_key_picker,
-      features::load_nif//,
+      features::load_nif,
+      features::worldinput2//,
    >;
 
    template<typename T> struct _add_functor {

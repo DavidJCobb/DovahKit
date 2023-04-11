@@ -26,6 +26,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
    tree& tree::operator=(const tree& o) {
       if (this->root)
          delete this->root;
+      assert(o.root);
       this->device_type = o.device_type;
       this->root        = (nodes::root*)o.root->clone();
       return *this;

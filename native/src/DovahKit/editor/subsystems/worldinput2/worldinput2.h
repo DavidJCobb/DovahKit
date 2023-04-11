@@ -29,7 +29,6 @@ namespace dovahkit::subsystems::worldinput2 {
          const devices::abstract_device_handler& device_by_type(input_device_type) const;
          devices::abstract_device_handler& device_by_type(input_device_type);
 
-         void viewFocusChange(QWidget* target, bool has_focus);
          void update(double& elapsed_time);
 
       public slots:
@@ -38,6 +37,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       protected slots:
          void ignoreAllHeldKeys();
+      public slots:
          void doPerFrameInputProcessing(double& elapsed_seconds, combined_tool_results& out); // both args are out-variables
 
       protected:
@@ -48,10 +48,17 @@ namespace dovahkit::subsystems::worldinput2 {
          struct {
             QPointer<QWidget> target_widget;
             timestamp_t last_update = zero_timestamp;
+            //
+            bool target_widget_has_focus = false;
          } state;
          struct {
             binds::tree keyboard = binds::tree(input_device_type::keyboard_mouse);
             binds::tree gamepad  = binds::tree(input_device_type::xinput);
          } binds;
+
+      protected:
+
+         // Detects focus gain and loss on the target widget
+         virtual bool eventFilter(QObject* watched, QEvent* event);
    };
 }

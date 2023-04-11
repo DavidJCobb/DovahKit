@@ -5,6 +5,9 @@
 #include "./bind_tree/nodes/root.h"
 #include "./tools/combined_tool_results.h"
 
+#include "./debugging.h"
+#include <QLabel>
+
 namespace {
    constexpr float reset_after_lag_threshold = 3.0; // ignore all held inputs if this much time passed since we last polled
 }
@@ -53,6 +56,10 @@ namespace dovahkit::subsystems::worldinput2 {
          out = {};
          return;
       }
+      if (!this->state.target_widget_has_focus) {
+         out = {};
+         return;
+      }
       //
       // Update input device states:
       //
@@ -95,19 +102,20 @@ namespace dovahkit::subsystems::worldinput2 {
       out = press_results;
    }
 
-   void core::viewFocusChange(QWidget* target, bool has_focus) {
-      if (has_focus) {
-         this->setTargetWidget(target);
-      } else {
-         if (this->state.target_widget == target)
-            this->setTargetWidget(nullptr);
-      }
-   }
-
    void core::setTargetWidget(QWidget* target) {
-      if (this->state.target_widget == target)
+      auto& current = this->state.target_widget;
+      if (current == target)
          return;
-      this->state.target_widget = target;
+      if (current) {
+         current->removeEventFilter(this);
+      }
+      current = target;
+      if (target) {
+         target->installEventFilter(this);
+         this->state.target_widget_has_focus = target->hasFocus();
+      } else {
+         this->state.target_widget_has_focus = false;
+      }
       this->ignoreAllHeldKeys();
    }
 
@@ -123,5 +131,22 @@ namespace dovahkit::subsystems::worldinput2 {
          default:
             return;
       }
+   }
+
+   bool core::eventFilter(QObject* watched, QEvent* event) {
+      if (watched != this->state.target_widget)
+         return false;
+      switch (event->type()) {
+         case QEvent::Type::FocusIn:
+            this->state.target_widget_has_focus = true;
+            break;
+         case QEvent::Type::FocusOut:
+            this->state.target_widget_has_focus = false;
+            this->ignoreAllHeldKeys();
+            break;
+         default:
+            return false;
+      }
+      return false;
    }
 }

@@ -374,9 +374,12 @@ namespace dovahkit::subsystems::worldinput2 {
          size_t size = this->children.size();
          if (size != other.children.size())
             return false;
-         for (size_t i = 0; i < size; ++i)
+         for (size_t i = 0; i < size; ++i) {
+            assert(this->children[i]);
+            assert(other.children[i]);
             if (*this->children[i] != *other.children[i])
                return false;
+         }
       }
       return true;
    }
@@ -482,6 +485,25 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
+   void input_sequence::group::debug_stringify(std::string& out) const {
+      if (this->type == group_type::single_control) {
+         out += this->button.key.glyph.toStdString();
+         return;
+      }
+      switch (this->type) {
+         case group_type::concurrent_ordered:   out += '['; break;
+         case group_type::concurrent_unordered: out += '('; break;
+         case group_type::separated_ordered:    out += '<'; break;
+      }
+      for (const auto* child : this->children)
+         child->debug_stringify(out);
+      switch (this->type) {
+         case group_type::concurrent_ordered:   out += ']'; break;
+         case group_type::concurrent_unordered: out += ')'; break;
+         case group_type::separated_ordered:    out += '>'; break;
+      }
+   }
+
    input_sequence::group* input_sequence::group::_clone() const {
       auto* out = new group;
 
@@ -525,7 +547,8 @@ namespace dovahkit::subsystems::worldinput2 {
       } else if (result == group_update_result::advancing) {
          this->state.last_advancement = current_time;
       }
-      this->state.frame_status = this->root->state.frame_status;
+      this->state.frame_status         = this->root->state.frame_status;
+      this->state.frame_status_changed = this->root->state.frame_status_changed;
       if (this->state.frame_status == frame_status::down) {
          if (this->state.frame_status_changed) {
             this->state.went_down_at = current_time;
@@ -535,7 +558,8 @@ namespace dovahkit::subsystems::worldinput2 {
 
          this->clear_all_progress();
          if (this->root->already_consumed(device) == false) {
-            this->state.frame_status = frame_status::released;
+            this->state.frame_status         = frame_status::released;
+            this->state.frame_status_changed = true;
             this->state.went_down_at = down_at;
             for (const auto& button : this->terminal_inputs()) {
                device.consume(button);
@@ -749,6 +773,130 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       return *this;
+   }
+
+   void input_sequence::debug_stringify(std::string& out) const {
+      if (this->root)
+         this->root->debug_stringify(out);
+   }
+   /*static*/ input_sequence input_sequence::debug_from_string(const std::string& str) {
+      input_sequence out;
+
+      std::vector<group*> nesting;
+
+      size_t i = 0;
+      for (; i < str.size(); ++i) {
+         const char c = str[i];
+
+         auto type  = group_type::single_control;
+         bool close = false;
+
+         switch (c) {
+            case '[': type = group_type::concurrent_ordered;   break;
+            case '(': type = group_type::concurrent_unordered; break;
+            case '<': type = group_type::separated_ordered;    break;
+            case ']': type = group_type::concurrent_ordered;   close = true; break;
+            case ')': type = group_type::concurrent_unordered; close = true; break;
+            case '>': type = group_type::separated_ordered;    close = true; break;
+            case '+':
+               qDebug("input_sequence::debug_from_string: unexpected + at position %d in: '%s'", i, str.c_str());
+               [[fallthrough]];
+            case ' ':
+               continue;
+         }
+         if (close) {
+            if (nesting.empty()) {
+               qDebug("input_sequence::debug_from_string:: unexpected closing delimiter %c at position %d", c, i);
+               __debugbreak();
+            }
+            nesting.pop_back();
+            continue;
+         }
+
+         auto* child = new group;
+         child->type = type;
+         //
+         if (nesting.empty()) {
+            out.root = child;
+         } else {
+            auto* parent = nesting.back();
+            assert(parent);
+            assert(parent->type != group_type::single_control);
+
+            parent->children.push_back(child);
+         }
+
+         if (type == group_type::single_control) {
+            //
+            // Advance to next ending delimiter, or to next '+'.
+            //
+            assert(c != ' ');
+            std::string name;
+            name += c;
+            for (++i; i < str.size(); ++i) {
+               const char d = str[i];
+               if (d == '+') {
+                  break;
+               }
+               if (d == ']' || d == ')' || d == '>') {
+                  --i;
+                  break;
+               }
+               name += d;
+            }
+
+            // trim trailing whitespace:
+            size_t j;
+            for (j = name.size() - 1; j > 0; --j)
+               if (name[j] != ' ')
+                  break;
+            name.resize(j + 1);
+
+            if (name.size() == 1) {
+               child->button = inputs::button{ .key = cobb::qt::key(QChar(name[0])) };
+            } else {
+               auto n = QString(name.c_str()).toLower();
+               if (n == "ctrl") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Control) };
+               } else if (n == "alt") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Alt) };
+               } else if (n == "shift") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Shift) };
+               } else if (n == "prtscrn") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Print) };
+               } else if (n == "caps lock") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_CapsLock) };
+               } else if (n == "num lock") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_NumLock) };
+               } else if (n == "scroll lock") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_ScrollLock) };
+               } else if (n == "tab") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Tab) };
+               } else if (n == "space") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Space) };
+               } else if (n == "enter") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Enter) };
+               } else if (n == "del" || n == "delete") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Delete) };
+               } else if (n == "home") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Home) };
+               } else if (n == "end") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_End) };
+               } else if (n == "page up") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageUp) };
+               } else if (n == "page down") {
+                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageDown) };
+               } else {
+                  qDebug("input_sequence::debug_from_string: unrecognize key name: %s", qUtf8Printable(n));
+               }
+            }
+            continue;
+         } else {
+            nesting.push_back(child);
+         }
+      }
+
+      return out;
    }
    #pragma endregion
 }

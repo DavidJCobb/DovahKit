@@ -1944,7 +1944,6 @@
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovahscript\_docs\apis\wrappers\ui\image_widget.md" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1954,7 +1953,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\input.cpp">
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\node.cpp">
@@ -1964,6 +1963,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2818,9 +2829,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\wrappers\ui\widget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\tasks\_ui_base.h">
@@ -4572,9 +4580,6 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\inputs\bound_input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -4599,7 +4604,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\input.h">
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h">
@@ -4627,6 +4632,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\devices\components\buttoned_device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\devices\abstract_device_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\owned_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\tools\combined_tool_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\interruption_check.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\debugging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -5089,6 +5127,9 @@
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -5131,24 +5172,8 @@
     <Text Include="dovah\_docs\form versions 43 and 44.txt" />
     <Text Include="dovah\_docs\persistent cells.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />
-    <Text Include="dovahscript\_docs\abstract.txt" />
-    <Text Include="dovahscript\_docs\userdata wrappers.txt" />
-    <Text Include="dovahscript\_docs\lifetime management.txt" />
-    <Text Include="dovahscript\_docs\overall structure of the script engine.txt" />
-    <Text Include="dovahscript\_docs\eval scripts.txt" />
-    <Text Include="dovahscript\_docs\cross-thread tasks and script aborts.txt" />
-    <Text Include="dovahscript\_docs\dovahscript resources.txt" />
-    <Text Include="dovahscript\_docs\ui - model observers.txt" />
-    <Text Include="dovahscript\_docs\ui - model observer property handlers.txt" />
-    <Text Include="dovahscript\_docs\zombie wrappers.txt" />
-    <Text Include="dovahscript\_docs\case studies.txt" />
-    <Text Include="dovahscript\_docs\cross-thread tasks.txt" />
-    <Text Include="dovahscript\_docs\classes in Lua.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
-    <Text Include="dovahscript\_docs\the dangers of noexcept.txt" />
-    <Text Include="dovahscript\_docs\event listeners.txt" />
-    <Text Include="dovahscript\_docs\form APIs and thread-safety.txt" />
     <Text Include="dovah\_docs\asset paths.txt" />
     <Text Include="editor\_docs\asset manager.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
@@ -5312,56 +5337,6 @@
     <None Include="helpers\windows.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
-    <None Include="dovahscript\_docs\apis\classes\benchmark.md" />
-    <None Include="dovahscript\_docs\apis\classes\euler.md" />
-    <None Include="dovahscript\_docs\apis\classes\matrix3x3.md" />
-    <None Include="dovahscript\_docs\apis\classes\quaternion.md" />
-    <None Include="dovahscript\_docs\apis\classes\vector2.md" />
-    <None Include="dovahscript\_docs\apis\classes\vector3.md" />
-    <None Include="dovahscript\_docs\apis\common\alignment.md" />
-    <None Include="dovahscript\_docs\apis\common\color.md" />
-    <None Include="dovahscript\_docs\apis\libraries\dovah.md" />
-    <None Include="dovahscript\_docs\apis\libraries\dovah.package.md" />
-    <None Include="dovahscript\_docs\apis\libraries\form_types.md" />
-    <None Include="dovahscript\_docs\apis\libraries\ui.md" />
-    <None Include="dovahscript\_docs\apis\libraries\unscoped.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ini\setting.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\resource\binary_view.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\resource\dds.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\resource\dds_image_subresource.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\resource\raster.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\resource\unknown.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\button.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_layer.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_layer_group.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\canvas_text_data.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\checkbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\color_button.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\dropdown.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\dropdown_item.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\file_save_button.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\formpicker.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\groupbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\line.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\progress_bar.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\radio_button.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\radio_group.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\scrollbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\spinbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\tabbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\tabbox_tab.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_cell.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_col.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\table_view_row.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\text.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\textarea.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\textbox.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\widget.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\ui\window.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\unusual\font.md" />
-    <None Include="dovahscript\_docs\apis\wrappers\unusual\raster_draw_path.md" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl">
       <Filter>Header Files</Filter>
@@ -5408,5 +5383,6 @@
     <Natvis Include="vulkan\image_metadata.natvis" />
     <Natvis Include="vulkan\image.natvis" />
     <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
+    <Natvis Include="helpers\bitfield_array.natvis" />
   </ItemGroup>
 </Project>
