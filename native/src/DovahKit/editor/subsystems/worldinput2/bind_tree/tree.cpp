@@ -152,17 +152,23 @@ namespace dovahkit::subsystems::worldinput2::binds {
                            winner_is_not_blocked
                         );
 
-                        auto* losing_node = (winning_node == child_inode) ? prior_inode : child_inode;
-
-                        if (losing_node->button_press_type != button_press_type::hold) {
-                           conflict_losing_binds.push_back(losing_node);
-                        }
-                        if (winning_node == child_inode) {
-                           binds_made_ineligible.push_back(losing_node);
-                           if (!winner_is_not_blocked) {
+                        nodes::abstract_input_node* losing_node = nullptr;
+                        if (winning_node) {
+                           losing_node = (winning_node == child_inode) ? prior_inode : child_inode;
+                           //
+                           if (losing_node->button_press_type != button_press_type::hold) {
+                              conflict_losing_binds.push_back(losing_node);
+                           }
+                           if (winning_node == child_inode) {
+                              binds_made_ineligible.push_back(losing_node);
+                              if (!winner_is_not_blocked) {
+                                 child_conflicted = true;
+                              }
+                           } else {
                               child_conflicted = true;
                            }
-                        } else {
+                        } else if (!winner_is_not_blocked) {
+                           binds_made_ineligible.push_back(prior_inode);
                            child_conflicted = true;
                         }
                      }

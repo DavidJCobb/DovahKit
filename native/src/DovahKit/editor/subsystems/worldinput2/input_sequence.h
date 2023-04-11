@@ -158,6 +158,6 @@ namespace dovahkit::subsystems::worldinput2 {
          input_sequence& operator<<=(const input_sequence& nested);
 
          void debug_stringify(std::string&) const;
-         static input_sequence debug_from_string(const std::string&);
+         static input_sequence debug_from_string(const std::string&, bool gamepad = false);
    };
 }

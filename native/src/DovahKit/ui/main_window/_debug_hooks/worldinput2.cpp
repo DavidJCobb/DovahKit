@@ -105,6 +105,234 @@ namespace {
             }
          ),
       },
+      testing_tree{
+         .name = "Hold-blocks-Press conflict resolution",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Hold [X + Z]",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("[X + Z]")
+               ),
+               make_tool_node(
+                  "Press X",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("X")
+               ),
+            }
+         ),
+      },
+      testing_tree{ // 4/11/2023 - PASSES
+         .name = "Basic gamepad tests",
+         .tree = make_tree(
+            worldinput2::input_device_type::xinput,
+            {
+               make_tool_node(
+                  "Press A",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("A", true)
+               ),
+               make_tool_node(
+                  "Press B",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("B", true)
+               ),
+               make_tool_node(
+                  "Long Press X",
+                  worldinput2::button_press_type::long_press,
+                  worldinput2::input_sequence::debug_from_string("X", true)
+               ),
+               make_tool_node(
+                  "Hold Y",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("Y", true)
+               ),
+            }
+         ),
+      },
+      testing_tree{ // 4/11/2023 - PASSES
+         .name = "Modifier conflict rule",
+         //
+         // Test procedure:
+         // 
+         //  - Press and hold Gamepad LS.
+         //  - Press and hold Gamepad B.
+         //  - Press and release Gamepad X.
+         // 
+         // Desired result: neither bind activates.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::xinput,
+            {
+               make_tool_node(
+                  "Press [LS + X]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[LS + X]", true)
+               ),
+               make_tool_node(
+                  "Press [B + X]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[B + X]", true)
+               ),
+            }
+         ),
+      },
+      testing_tree{ // 4/11/2023 - PASSES
+         .name = "Basic sequence tests",
+         //
+         // Test procedure:
+         // 
+         //  - Press and hold A.
+         //  - Press and release B.
+         //     - The `Press [A + B]` bind should fire.
+         //  - Release A.
+         //  - Press and hold X.
+         //  - Press and hold Y.
+         //  - Release X and Y in any order.
+         //     - The `Press (X + Y)` bind should fire.
+         //  - Press and hold Y.
+         //  - Press and hold X.
+         //  - Release X and Y in any order.
+         //     - The `Press (X + Y)` bind should fire.
+         //     = This verifies the lack of ordering requirements on concurrent-and-unordered sequences.
+         //  - Press and release J.
+         //  - Press and release K.
+         //     - The `Press <J + K>` bind should fire.
+         //  - Press and release K.
+         //  - Press and release J.
+         //     - Nothing should happen.
+         //     = This verifies ordering for separate-and-ordered sequences.
+         //  - Press and release J.
+         //  - Press and release A.
+         //  - Press and release K.
+         //     - Nothing should happen.
+         //     = This tests interrupting a separate-and-ordered sequence with unrelated keys.
+         //  - Press and release J.
+         //  - Press and release J.
+         //  - Press and release K.
+         //     - The `Press <J + K>` bind should fire.
+         //     = This tests interrupting a separate-and-ordered sequence with itself.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press [A + B]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + B]")
+               ),
+               make_tool_node(
+                  "Press (X + Y)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(X + Y)")
+               ),
+               make_tool_node(
+                  "Press <J + K>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<J + K>")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Specificity rule",
+         //
+         // Test procedure:
+         // 
+         //  - Press and hold Y.
+         //  - Pres and release, in sequence, A through E.
+         // 
+         // Desired result: only the `Press [A + B + C + D + E]` bind activates.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press [A + B + C + D + E]",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("[A + S + D + F]")
+               ),
+               make_tool_node(
+                  "Press (Y + E)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(G + F)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Identical binds rule",
+         //
+         // Desired result: both binds activate when pressing X.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Bind #1",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("X")
+               ),
+               make_tool_node(
+                  "Bind #2",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("X")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Seamless switching between Hold binds",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Hold A",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("A")
+               ),
+               make_tool_node(
+                  "Hold (A + B)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(A + B)")
+               ),
+               make_tool_node(
+                  "Hold (A + B + C)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(A + B + C)")
+               ),
+               make_tool_node(
+                  "Hold (A + C)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(A + C)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Repeated combo activation",
+         //
+         // Test procedure:
+         // 
+         //  - Press and hold X.
+         //  - Press and release Z.
+         //  - Press and release Z again.
+         // 
+         // Desired result: the bind activates with each release of the Z key, 
+         // without having to release X between attempted activations.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press [X + Z]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[X + Z]")
+               ),
+            }
+         ),
+      },
    };
 }
 
@@ -193,7 +421,8 @@ namespace DovahKitDebug::features {
       core.setTargetWidget(test_window->findChild<QFrame*>("frame"));
       test_window->show();
       if (auto* combo = test_window->findChild<QComboBox*>("combo")) {
-         combo->setCurrentIndex(0);
+         combo->setCurrentIndex(1);
+         combo->setCurrentIndex(0); // when the combobox is initially created, it defaults to this, and so this call on its own wouldn't count as "changing"
       }
    }
 }

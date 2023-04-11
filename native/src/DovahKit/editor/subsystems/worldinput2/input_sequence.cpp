@@ -779,7 +779,7 @@ namespace dovahkit::subsystems::worldinput2 {
       if (this->root)
          this->root->debug_stringify(out);
    }
-   /*static*/ input_sequence input_sequence::debug_from_string(const std::string& str) {
+   /*static*/ input_sequence input_sequence::debug_from_string(const std::string& str, bool gamepad) {
       input_sequence out;
 
       std::vector<group*> nesting;
@@ -852,42 +852,91 @@ namespace dovahkit::subsystems::worldinput2 {
                   break;
             name.resize(j + 1);
 
-            if (name.size() == 1) {
-               child->button = inputs::button{ .key = cobb::qt::key(QChar(name[0])) };
-            } else {
+            if (gamepad) {
+               //
+               // Gamepad
+               //
                auto n = QString(name.c_str()).toLower();
-               if (n == "ctrl") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Control) };
-               } else if (n == "alt") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Alt) };
-               } else if (n == "shift") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Shift) };
-               } else if (n == "prtscrn") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Print) };
-               } else if (n == "caps lock") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_CapsLock) };
-               } else if (n == "num lock") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_NumLock) };
-               } else if (n == "scroll lock") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_ScrollLock) };
-               } else if (n == "tab") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Tab) };
-               } else if (n == "space") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Space) };
-               } else if (n == "enter") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Enter) };
-               } else if (n == "del" || n == "delete") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Delete) };
-               } else if (n == "home") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Home) };
-               } else if (n == "end") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_End) };
-               } else if (n == "page up") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageUp) };
-               } else if (n == "page down") {
-                  child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageDown) };
+               if (n == "a") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::a };
+               } else if (n == "b") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::b };
+               } else if (n == "x") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::x };
+               } else if (n == "y") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::y };
+               } else if (n == "lb") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::lb };
+               } else if (n == "rb") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rb };
+               } else if (n == "ls") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::ls };
+               } else if (n == "rs") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rs };
+               } else if (n == "start") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::start };
+               } else if (n == "back") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::back };
+               } else if (n == "d-pad up") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_up };
+               } else if (n == "d-pad left") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_left };
+               } else if (n == "d-pad right") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_right };
+               } else if (n == "d-pad down") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_down };
+               } else if (n == "lt") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::lt };
+               } else if (n == "rt") {
+                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rt };
                } else {
-                  qDebug("input_sequence::debug_from_string: unrecognize key name: %s", qUtf8Printable(n));
+                  qDebug("input_sequence::debug_from_string: unrecognized gamepad button name: %s", qUtf8Printable(n));
+               }
+            } else {
+               //
+               // Keyboard and mouse
+               //
+               if (name.size() == 1) {
+                  child->button = inputs::button{ .key = cobb::qt::key(QChar(name[0])) };
+               } else {
+                  auto n = QString(name.c_str()).toLower();
+                  if (n == "ctrl") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Control) };
+                  } else if (n == "alt") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Alt) };
+                  } else if (n == "shift") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Shift) };
+                  } else if (n == "prtscrn") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Print) };
+                  } else if (n == "caps lock") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_CapsLock) };
+                  } else if (n == "num lock") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_NumLock) };
+                  } else if (n == "scroll lock") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_ScrollLock) };
+                  } else if (n == "tab") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Tab) };
+                  } else if (n == "space") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Space) };
+                  } else if (n == "enter") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Enter) };
+                  } else if (n == "del" || n == "delete") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Delete) };
+                  } else if (n == "home") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Home) };
+                  } else if (n == "end") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_End) };
+                  } else if (n == "page up") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageUp) };
+                  } else if (n == "page down") {
+                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageDown) };
+                  } else if (n == "lmb") {
+                     child->button = inputs::button{ .key = cobb::qt::key::from_windows_vk(1) };
+                  } else if (n == "rmb") {
+                     child->button = inputs::button{ .key = cobb::qt::key::from_windows_vk(2) };
+                  } else {
+                     qDebug("input_sequence::debug_from_string: unrecognized key name: %s", qUtf8Printable(n));
+                  }
                }
             }
             continue;
