@@ -8,6 +8,7 @@ namespace dovahkit::subsystems::worldinput2 {
    namespace inputs {
       struct button;
    }
+   struct device_button_claim;
 }
 
 namespace dovahkit::subsystems::worldinput2::devices {
@@ -16,8 +17,11 @@ namespace dovahkit::subsystems::worldinput2::devices {
          virtual ~abstract_device_handler() {}
 
          virtual device_button_state get_state_of(const inputs::button&) const = 0;
-         virtual bool is_consumed(const inputs::button&) const = 0;
-         virtual void consume(const inputs::button&) = 0;
+         virtual const device_button_claim& get_existing_claim_of(const inputs::button&) const = 0;
+         virtual device_button_claim& get_pending_claim_of(const inputs::button&) = 0;
+         virtual const device_button_claim& get_pending_claim_of(const inputs::button&) const = 0;
          virtual interruption_check prepare_interruption_check() const = 0;
+
+         virtual bool button_is_valid(const inputs::button&) const = 0;
    };
 }

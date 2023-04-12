@@ -333,6 +333,144 @@ namespace {
             }
          ),
       },
+      testing_tree{
+         .name = "Specificity rule, incl. across time",
+         //
+         // Multiple tests. 
+         // 
+         // Case A1:
+         //  - G down.
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - F up.
+         //     - Bind 1 activates.
+         //     - Bind 2 is blocked.
+         //     - Bind 2 does not activate.
+         // 
+         // Case A2:
+         //  - G down.
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - A, S, or D up.
+         //     - Bind 1 activates.
+         //     - Bind 2 is blocked.
+         //  - F up.
+         //     - Bind 2 does not activate.
+         // 
+         // Case B:
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - A, S, or D up.
+         //     - Bind 1 fires.
+         //  - G down.
+         //  - G up.
+         //     - Bind 2 fires.
+         // 
+         // Case C1:
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - G down.
+         //  - F up.
+         //     - Bind 1 fires.
+         //     - Bind 2 is blocked.
+         //     - Bind 2 does not activate.
+         // 
+         // Case C2:
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - G down.
+         //  - A, S, or D up.
+         //     - Bind 1 fires.
+         //     - Bind 2 is blocked.
+         //  - G up.
+         //     - Bind 2 does not activate.
+         // 
+         // Case D:
+         //  - A down.
+         //  - S down.
+         //  - G down.
+         //  - D down.
+         //  - F down.
+         //  - A, S, or D up.
+         //     - Bind 1 fires.
+         //     - Bind 2 is blocked.
+         //  - G up.
+         //     - Bind 2 does not activate.
+         //  - F up.
+         //     - Bind 2 does not activate.
+         // 
+         // Case E:
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - G down.
+         //  - F up.
+         //     - Bind 1 activates.
+         //     - Bind 2 is blocked.
+         //     - Bind 2 does not activate.
+         // 
+         // Case F:
+         //  - G down.
+         //  - A down.
+         //  - S down.
+         //  - D down.
+         //  - F down.
+         //  - G up.
+         //     - Bind 2 fires.
+         //  - A, S, D, or F up.
+         //     - Bind 1 fires.
+         // 
+         // Case G:
+         //  - G down.
+         //  - H down.
+         //  - F down.
+         //  - F up.
+         //     - Bind 2 and Bind 3 both lose a same-frame conflict.
+         //     - Bind 2 does not activate.
+         //     - Bind 3 does not activate.
+         // 
+         // Case H:
+         //  - G down.
+         //  - F down.
+         //  - H down.
+         //  - G up.
+         //     - Bind 2 fires.
+         //     - Bind 3 is blocked.
+         //  - H up.
+         //     - Bind 3 does not activate.
+         //
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Bind #1: Press [A + S + D + F]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + S + D + F]")
+               ),
+               make_tool_node(
+                  "Bind #2: Press (G + F)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(G + F)")
+               ),
+               make_tool_node(
+                  "Bind #3: Press (H + F)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(H + F)")
+               ),
+            }
+         ),
+      },
    };
 }
 

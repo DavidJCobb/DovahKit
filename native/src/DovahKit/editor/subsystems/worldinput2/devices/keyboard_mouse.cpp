@@ -149,17 +149,14 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return {};
       return this->buttons.get_button_state(vk);
    }
-   bool keyboard_mouse::is_consumed(const inputs::button& button) const {
-      auto vk = button_to_vk(button);
-      if (vk < 0 || vk >= vk_code_count)
-         return {};
-      return this->buttons.is_consumed(vk);
+   const device_button_claim& keyboard_mouse::get_existing_claim_of(const inputs::button& button) const {
+      return this->buttons.claims[button_to_vk(button)].existing;
    }
-   void keyboard_mouse::consume(const inputs::button& button) {
-      auto vk = button_to_vk(button);
-      if (vk < 0 || vk >= vk_code_count)
-         return;
-      this->buttons.flags[vk] |= device_button_state::flag::consumed_on_this_frame;
+   device_button_claim& keyboard_mouse::get_pending_claim_of(const inputs::button& button) {
+      return this->buttons.claims[button_to_vk(button)].pending;
+   }
+   const device_button_claim& keyboard_mouse::get_pending_claim_of(const inputs::button& button) const {
+      return this->buttons.claims[button_to_vk(button)].pending;
    }
    interruption_check keyboard_mouse::prepare_interruption_check() const {
       interruption_check check;
@@ -174,6 +171,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
          });
       }
       return check;
+   }
+   //
+   bool keyboard_mouse::button_is_valid(const inputs::button& button) const {
+      auto vk = button_to_vk(button);
+      if (vk < 0 || vk >= vk_code_count)
+         return false;
+      return true;
    }
 
    button_press_type keyboard_mouse::release_type(const inputs::button& button) const {

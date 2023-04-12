@@ -104,37 +104,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          }
       }
 
-      // Modifier conflict rule
-      if (a.button_press_type != button_press_type::hold && b.button_press_type != button_press_type::hold) {
-         auto ti_a = abs_a.terminal_inputs();
-         auto ti_b = abs_b.terminal_inputs();
-
-         size_t matched = 0;
-         for (const auto& item_a : ti_a) {
-            for (const auto& item_b : ti_b) {
-               if (item_a == item_b) {
-                  ++matched;
-                  break;
-               }
-            }
-         }
-         if (matched > 0) {
-            //
-            // The nodes have overlapping terminal inputs.
-            //
-            if (matched != ti_a.size() || ti_a.size() != ti_b.size()) {
-               //
-               // The nodes do not have identical terminal inputs. The nodes should both be 
-               // considered conflict losers; neither should be allowed to activate.
-               //
-               allow_activation = false;
-               return;
-            }
-         }
-      }
-
-      auto a_length = abs_a.input_control_count();
-      auto b_length = abs_b.input_control_count();
+      auto a_length = abs_a.specificity();
+      auto b_length = abs_b.specificity();
       if (a_length != b_length) {
          //
          // Specificity rule: if node U's input sequence has more buttons than node V's input 
@@ -176,16 +147,33 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
                }
             }
          }
-      }
-
-      // Superset/subset rule.
-      if (abs_a.is_subset_of(abs_b)) {
-         winner = &a;
-         return;
-      }
-      if (abs_b.is_subset_of(abs_a)) {
-         winner = &b;
-         return;
+      } else {
+         // Modifier conflict rule.
+         if (a.button_press_type != button_press_type::hold && b.button_press_type != button_press_type::hold) {
+            bool overlap = false;
+            {
+               auto ti_a = abs_a.terminal_inputs();
+               auto ti_b = abs_b.terminal_inputs();
+               for (const auto& item_a : ti_a) {
+                  for (const auto& item_b : ti_b) {
+                     if (item_a == item_b) {
+                        overlap = true;
+                        break;
+                     }
+                  }
+                  if (overlap)
+                     break;
+               }
+            }
+            if (overlap) {
+               //
+               // The nodes do not have identical terminal inputs. The nodes should both be 
+               // considered conflict losers; neither should be allowed to activate.
+               //
+               allow_activation = false;
+               return;
+            }
+         }
       }
 
       // Done.

@@ -4667,6 +4667,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\device_button_claim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

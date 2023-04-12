@@ -11,7 +11,7 @@ namespace {
          constexpr auto unknown  = Qt::Key::Key_unknown;
          constexpr auto is_glyph = (Qt::Key)0;
          //
-         std::array<Qt::Key, VK_OEM_CLEAR + 1> list = {};
+         std::array<Qt::Key, 256> list = {};
          for (auto& v : list)
             v = unknown;
          //
@@ -148,6 +148,7 @@ namespace {
          // FC is VK_NONAME
          // FD is VK_PA1
          list[VK_OEM_CLEAR]           = Qt::Key::Key_Clear;           // FE
+         // FF is invalid, but sometimes Windows sends it anyway?
          return list;
       })();
    }

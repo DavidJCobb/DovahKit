@@ -9,9 +9,7 @@ namespace dovahkit::subsystems::worldinput2 {
       struct flag {
          flag() = delete;
          enum type : uint8_t {
-            went_down_on_this_frame      = 0x01,
-            consumed_on_a_previous_frame = 0x02,
-            consumed_on_this_frame       = 0x04,
+            went_down_on_this_frame = 0x01,
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

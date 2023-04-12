@@ -3,6 +3,7 @@
 #include "helpers/unreachable.h"
 #include "./devices/abstract_device_handler.h"
 #include "./defaults.h"
+#include "./device_button_claim.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::group
@@ -283,15 +284,6 @@ namespace dovahkit::subsystems::worldinput2 {
       }
       return true;
    }
-   bool input_sequence::group::already_consumed(const devices::abstract_device_handler& device) const {
-      std::vector<inputs::button> terminals;
-      this->terminal_inputs(terminals);
-      for (const auto& button : terminals) {
-         if (!device.is_consumed(button))
-            return false;
-      }
-      return true;
-   }
    void input_sequence::group::terminal_inputs(std::vector<inputs::button>& append_to) const {
       if (this->type == group_type::single_control) {
          append_to.push_back(this->button);
@@ -300,16 +292,6 @@ namespace dovahkit::subsystems::worldinput2 {
       for (const auto* item : this->children) {
          item->terminal_inputs(append_to);
       }
-   }
-   size_t input_sequence::group::descendant_count() const {
-      if (this->type == group_type::single_control)
-         return 0;
-      size_t count = 0;
-      for (const auto* item : this->children) {
-         ++count;
-         count += item->descendant_count();
-      }
-      return count;
    }
    size_t input_sequence::group::input_control_count() const {
       if (this->type == group_type::single_control)
@@ -557,12 +539,26 @@ namespace dovahkit::subsystems::worldinput2 {
          auto down_at = this->state.went_down_at;
 
          this->clear_all_progress();
-         if (this->root->already_consumed(device) == false) {
+
+         auto specificity = this->specificity();
+         auto terminals   = this->terminal_inputs();
+         bool consumed_by_more_specific_sequence = false;
+         for (const auto& button : terminals) {
+            const auto& claim = device.get_existing_claim_of(button);
+            if (claim.specificity > specificity) {
+               if (claim.when > down_at) {
+                  consumed_by_more_specific_sequence = true;
+                  break;
+               }
+            }
+         }
+         if (!consumed_by_more_specific_sequence) {
             this->state.frame_status         = frame_status::released;
             this->state.frame_status_changed = true;
             this->state.went_down_at = down_at;
-            for (const auto& button : this->terminal_inputs()) {
-               device.consume(button);
+            for (const auto& button : terminals) {
+               auto& claim = device.get_pending_claim_of(button);
+               claim.attempt_new_claim(current_time, specificity);
             }
          }
       }
@@ -662,13 +658,7 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
-   size_t input_sequence::total_group_count() const {
-      if (this->root) {
-         return 1 + this->root->descendant_count();
-      }
-      return 0;
-   }
-   size_t input_sequence::input_control_count() const {
+   size_t input_sequence::specificity() const {
       if (!this->root)
          return 0;
       if (this->root->type == group_type::single_control)

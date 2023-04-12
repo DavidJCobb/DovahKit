@@ -80,9 +80,7 @@ namespace dovahkit::subsystems::worldinput2 {
                }
 
                bool all_contents_inactive() const;
-               bool already_consumed(const devices::abstract_device_handler&) const;
                void terminal_inputs(std::vector<inputs::button>& append_to) const;
-               size_t descendant_count() const;
                size_t input_control_count() const;
                bool is_or_contains_input_control(const inputs::button&) const;
 
@@ -139,8 +137,7 @@ namespace dovahkit::subsystems::worldinput2 {
          // invoke this on and with absolute input sequences, not relative
          bool is_subset_of(const input_sequence&) const;
 
-         size_t total_group_count() const;
-         size_t input_control_count() const;
+         size_t specificity() const;
 
          input_sequence clone() const; // does not clone run-time-only state
 

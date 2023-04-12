@@ -37,9 +37,12 @@ namespace dovahkit::subsystems::worldinput2::devices {
          void update(timestamp_t now, bool connected, const subsystems::xinput::gamepad&);
 
          virtual device_button_state get_state_of(const inputs::button&) const final;
-         virtual bool is_consumed(const inputs::button&) const final override;
-         virtual void consume(const inputs::button&) override final;
+         virtual const device_button_claim& get_existing_claim_of(const inputs::button&) const final override;
+         virtual device_button_claim& get_pending_claim_of(const inputs::button&) final override;
+         virtual const device_button_claim& get_pending_claim_of(const inputs::button&) const final override;
          virtual interruption_check prepare_interruption_check() const override final;
+         //
+         virtual bool button_is_valid(const inputs::button&) const override final;
 
          button_press_type release_type(const inputs::button&) const;
          bool is_down(const inputs::button&) const;

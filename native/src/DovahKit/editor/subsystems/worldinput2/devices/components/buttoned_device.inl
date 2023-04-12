@@ -1,5 +1,6 @@
 #pragma once
 #include "./buttoned_device.h"
+#include <limits>
 #include "../../defaults.h"
 
 #pragma push_macro("TEMPLATE_PARAMS")
@@ -39,14 +40,15 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
          }
       }
 
-      if (flags & device_button_state::flag::consumed_on_this_frame) {
-         flags |=  device_button_state::flag::consumed_on_a_previous_frame;
-         flags &= ~device_button_state::flag::consumed_on_this_frame;
+      auto& claims = this->claims[index];
+      if (!is_down && this->release_times[index] == button_press_type::none) {
+         claims.existing = {};
       } else {
-         if (!is_down && this->release_times[index] == button_press_type::none) {
-            flags &= ~device_button_state::flag::consumed_on_a_previous_frame;
+         if (claims.pending.specificity >= claims.existing.specificity) {
+            claims.existing = claims.pending;
          }
       }
+      claims.pending = {};
    }
 
    TEMPLATE_PARAMS
@@ -56,9 +58,11 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
 
    TEMPLATE_PARAMS
    void CLASS_NAME::ignore_all_down() {
-      for (size_t i = 0; i < button_count; ++i)
-         if (this->start[i] != zero_timestamp)
-            this->flags[i] |= device_button_state::flag::consumed_on_a_previous_frame;
+      for (size_t i = 0; i < button_count; ++i) {
+         if (this->start[i] != zero_timestamp) {
+            this->claims[i].existing.specificity = std::numeric_limits<size_t>::max();
+         }
+      }
    }
 
    TEMPLATE_PARAMS

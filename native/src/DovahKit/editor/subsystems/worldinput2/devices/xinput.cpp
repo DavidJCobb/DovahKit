@@ -84,19 +84,14 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return {};
       return this->buttons.get_button_state(i);
    }
-   bool xinput::is_consumed(const inputs::button& button) const {
-      if (!this->is_connected)
-         return true;
-      auto i = _button_to_index(button);
-      if (i == no_button)
-         return {};
-      return this->buttons.is_consumed(i);
+   const device_button_claim& xinput::get_existing_claim_of(const inputs::button& button) const {
+      return this->buttons.claims[_button_to_index(button)].existing;
    }
-   void xinput::consume(const inputs::button& button) {
-      auto i = _button_to_index(button);
-      if (i == no_button)
-         return;
-      this->buttons.flags[i] |= device_button_state::flag::consumed_on_this_frame;
+   device_button_claim& xinput::get_pending_claim_of(const inputs::button& button) {
+      return this->buttons.claims[_button_to_index(button)].pending;
+   }
+   const device_button_claim& xinput::get_pending_claim_of(const inputs::button& button) const {
+      return this->buttons.claims[_button_to_index(button)].pending;
    }
    interruption_check xinput::prepare_interruption_check() const {
       interruption_check check;
@@ -111,6 +106,11 @@ namespace dovahkit::subsystems::worldinput2::devices {
          });
       }
       return check;
+   }
+   //
+   bool xinput::button_is_valid(const inputs::button& button) const {
+      auto i = _button_to_index(button);
+      return (i != no_button);
    }
 
    button_press_type xinput::release_type(const inputs::button& b) const {
