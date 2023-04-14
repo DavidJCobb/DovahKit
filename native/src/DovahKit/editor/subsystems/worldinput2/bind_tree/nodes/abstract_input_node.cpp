@@ -32,32 +32,37 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       const abstract_input_node& press,
       const abstract_input_node& hold
    ) {
-      // A conflict is present if both binds have overlapping absolute terminal inputs.
+
+      auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
+      if (elapsed_h > defaults::press_to_hold_threshold + defaults::press_to_long_press_threshold) {
+         //
+         // The Hold bind has been pressed down for longer than the worst-case delay 
+         // that would be present in the case of a conflict, so just immediately 
+         // assume that it's fine.
+         //
+         return false;
+      }
+
       auto abs_p = press.absolute_input_sequence().terminal_inputs();
       auto abs_h = hold.absolute_input_sequence().terminal_inputs();
-      //
       {
-         bool overlap = false;
-         for (const auto& item_p : abs_p) {
-            for (const auto& item_h : abs_h) {
+         if (abs_p.size() < abs_h.size())
+            return false;
+         for (const auto& item_h : abs_h) {
+            bool found = false;
+            for (const auto& item_p : abs_p) {
                if (item_p == item_h) {
-                  overlap = true;
+                  found = true;
                   break;
                }
             }
-            if (overlap)
-               break;
+            if (!found)
+               return false;
          }
-         //
-         if (!overlap)
-            return false;
       }
 
       // The two binds may conflict. Next, we need to check the timestamps at which 
       // they went down.
-
-      auto elapsed_p = elapsed_time(press.input_sequence.state.went_down_at, current_time);
-      auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at,  current_time);
 
       auto disambig = defaults::press_to_hold_threshold;
       if (press.button_press_type == button_press_type::long_press)

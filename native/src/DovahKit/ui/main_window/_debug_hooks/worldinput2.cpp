@@ -88,19 +88,34 @@ namespace {
          ),
       },
       testing_tree{ // 4/11/2023 - PASSES
-         .name = "Press/Hold basic conflict",
+         .name = "Press-delays-Hold conflict resolution",
          .tree = make_tree(
             worldinput2::input_device_type::keyboard_mouse,
             {
                make_tool_node(
-                  "Press X",
+                  "Bind #1: Press X",
                   worldinput2::button_press_type::press,
                   worldinput2::input_sequence::debug_from_string("X")
                ),
                make_tool_node(
-                  "Hold X",
+                  "Bind #2: Hold X",
                   worldinput2::button_press_type::hold,
                   worldinput2::input_sequence::debug_from_string("X")
+               ),
+               make_tool_node(
+                  "Bind #3: Press [Y + Z]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[Y + Z]")
+               ),
+               make_tool_node(
+                  "Bind #4: Hold Y",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("Y")
+               ),
+               make_tool_node(
+                  "Bind #5: Hold Z",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("Z")
                ),
             }
          ),

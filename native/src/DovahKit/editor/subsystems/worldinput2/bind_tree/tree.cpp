@@ -69,6 +69,8 @@ namespace dovahkit::subsystems::worldinput2::binds {
             for (auto* child : current->child_nodes()) {
                nodes::abstract_input_node* child_inode = nullptr;
 
+               assert(child != nullptr);
+
                bool matched = false;
                switch (child->type) {
                   case node_type::editor_mode:
@@ -135,7 +137,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
                   
                   bool child_conflicted = false;
                   {
-                     std::vector<nodes::abstract_input_node*> binds_made_ineligible;
                      for (auto* prior : eligible_binds) {
                         auto* prior_inode = prior->as<nodes::abstract_input_node>();
                         if (!prior_inode)
@@ -160,7 +161,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
                               conflict_losing_binds.push_back(losing_node);
                            }
                            if (winning_node == child_inode) {
-                              binds_made_ineligible.push_back(losing_node);
+                              conflict_losing_binds.push_back(losing_node);
                               if (!winner_is_not_blocked) {
                                  child_conflicted = true;
                               }
@@ -168,21 +169,18 @@ namespace dovahkit::subsystems::worldinput2::binds {
                               child_conflicted = true;
                            }
                         } else if (!winner_is_not_blocked) {
-                           binds_made_ineligible.push_back(prior_inode);
+                           conflict_losing_binds.push_back(prior_inode);
                            child_conflicted = true;
                         }
-                     }
-                     for (auto* bind : binds_made_ineligible) {
-                        eligible_binds.erase(
-                           std::remove_if(
-                              eligible_binds.begin(),
-                              eligible_binds.end(),
-                              [bind](auto* node) {
-                                 return node == bind;
-                              }
-                           ),
-                           eligible_binds.end()
-                        );
+                        //
+                        // We don't remove the conflict loser from `eligible_binds` because we want to 
+                        // test all eligible binds against both each other and any previously designated 
+                        // conflict losers. We'll remove the conflict losers later, after traversal and 
+                        // conflict resolution are complete.
+                        // 
+                        // Hm... Maybe we should rename `eligible_binds` to `binds_under_consideration` 
+                        // or `accumulated_binds`...
+                        //
                      }
                   }
                   //
@@ -205,9 +203,97 @@ namespace dovahkit::subsystems::worldinput2::binds {
       traversal_subalgorithm(this->root);
       
       for (auto* conflicted : conflict_losing_binds) {
+         eligible_binds.erase(
+            std::remove_if(
+               eligible_binds.begin(),
+               eligible_binds.end(),
+               [conflicted](auto* node) {
+                  return node == conflicted;
+               }
+            ),
+            eligible_binds.end()
+         );
+         //
          if (conflicted->button_press_type == button_press_type::hold)
             continue;
          conflicted->clear_descendants_input_sequence_progress();
+      }
+      conflict_losing_binds.clear();
+      //
+      {
+         size_t hold_count = 0;
+         for (const auto* node : eligible_binds)
+            if (node->button_press_type == button_press_type::hold)
+               ++hold_count;
+
+         auto press_delays_hold_subalgorithm = [&conflict_losing_binds, &eligible_binds, &hold_count, now](node* current) {
+            enum class result {
+               stop,
+               proceed,
+            };
+
+            auto recurse = [&](node* current, auto& recurse) mutable -> result {
+               for (auto* child : current->child_nodes()) {
+                  assert(child != nullptr);
+
+                  if (auto* press_node = child->as<nodes::abstract_input_node>()) {
+                     if (press_node->button_press_type != button_press_type::hold) {
+
+                        for (auto* eligible : eligible_binds) {
+                           if (eligible->button_press_type != button_press_type::hold)
+                              continue;
+                           bool result = nodes::abstract_input_node::does_press_delay_hold(
+                              now,
+                              *press_node,
+                              *eligible
+                           );
+                           if (result) {
+                              conflict_losing_binds.push_back(eligible);
+                           }
+                        }
+                        if (!conflict_losing_binds.empty()) {
+                           for (auto* conflicted : conflict_losing_binds) {
+                              eligible_binds.erase(
+                                 std::remove_if(
+                                    eligible_binds.begin(),
+                                    eligible_binds.end(),
+                                    [conflicted, &hold_count](auto* node) {
+                                       if (node == conflicted) {
+                                          assert(hold_count > 0);
+                                          --hold_count;
+                                          return true;
+                                       }
+                                       return false;
+                                    }
+                                 ),
+                                 eligible_binds.end()
+                              );
+                           }
+                           conflict_losing_binds.clear();
+                           //
+                           if (hold_count == 0)
+                              //
+                              // We've filtered out all of the relevant binds.
+                              //
+                              return result::stop;
+                        }
+
+                     }
+                  }
+
+                  for (auto* item : child->child_nodes()) {
+                     auto r = recurse(item, recurse);
+                     if (r == result::stop)
+                        return result::stop;
+                  }
+               }
+               return result::proceed;
+            };
+            recurse(current, recurse);
+         };
+         if (hold_count) {
+            press_delays_hold_subalgorithm(this->root);
+         }
       }
 
       // Hold release.
