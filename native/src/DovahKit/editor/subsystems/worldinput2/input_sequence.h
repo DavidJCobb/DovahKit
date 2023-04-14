@@ -44,13 +44,17 @@ namespace dovahkit::subsystems::worldinput2 {
 
             protected:
                struct {
-                  size_t current_item_index = 0;
+                  size_t current_item_index   = 0;
+                  bool   failed_on_this_frame = false;
                } state;
 
             public:
-               group_update_result update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device);
+               group_update_result update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device, interruption_check&);
 
-               void run_interruption_check(interruption_check&) const;
+            protected:
+               bool _is_separate_ordered_group_complete(interruption_check&) const;
+            public:
+               bool run_interruption_check(interruption_check&) const;
 
                constexpr bool is_concurrent() const noexcept {
                   switch (this->type) {
@@ -88,8 +92,6 @@ namespace dovahkit::subsystems::worldinput2 {
                }
 
                bool operator==(const group&) const;
-               bool shallow_equals(const group&) const;
-               bool is_superset_of(const group&) const;
 
                void debug_stringify(std::string&) const;
 
@@ -111,8 +113,6 @@ namespace dovahkit::subsystems::worldinput2 {
       public:
          void update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check&);
 
-         bool run_interruption_check(interruption_check&) const;
-
          void clear_all_progress();
 
          bool is_probably_keyboard_impossible() const;
@@ -123,9 +123,6 @@ namespace dovahkit::subsystems::worldinput2 {
          group* final_group() {
             return const_cast<group*>(std::as_const(*this).final_group());
          }
-
-         // invoke this on and with absolute input sequences, not relative
-         bool is_subset_of(const input_sequence&) const;
 
          size_t specificity() const;
 

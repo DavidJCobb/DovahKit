@@ -13,7 +13,7 @@ namespace dovahkit::subsystems::worldinput2 {
       this->children.clear();
    }
 
-   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device) {
+   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device, interruption_check& interruption_check) {
       if (this->type == group_type::single_control) {
          const auto bs = device.get_state_of(this->button);
          //
@@ -41,7 +41,7 @@ namespace dovahkit::subsystems::worldinput2 {
          size_t i;
          for (i = 0; i < this->children.size(); ++i) {
             auto* item   = this->children[i];
-            auto  result = item->update(current_time, last_advancement_time, device);
+            auto  result = item->update(current_time, last_advancement_time, device, interruption_check);
 
             if (result.status != frame_status::released) {
                if (result.down_at < previous_timestamp) {
@@ -52,6 +52,11 @@ namespace dovahkit::subsystems::worldinput2 {
             
             if (result.status == frame_status::inactive) {
                any_inactive = true;
+               //
+               if (result.down_at > previous_timestamp) // ignore `result.down_at` if it's a zero timestamp
+                  previous_timestamp = result.down_at;
+               count_down += result.down_count;
+               //
                break;
             } else if (result.status == frame_status::released) {
                any_released = true;
@@ -62,10 +67,17 @@ namespace dovahkit::subsystems::worldinput2 {
             count_down += result.down_count;
          }
          if (any_inactive) {
-            assert(i < this->children.size());
-            for (i = 0; i < this->children.size(); ++i)
+            for (i = i + 1; i < this->children.size(); ++i) {
+               //
+               // We don't clear the progress of the child that flagged as inactive, as that 
+               // child may be e.g. a partially completed separate-and-ordered group, and in 
+               // that case it's only inactive because it's not complete; we want to refrain 
+               // from wiping its progress so that it *can* be completed.
+               //
                this->children[i]->_clear_all_progress();
+            }
             return group_update_result{
+               .down_at    = previous_timestamp,
                .down_count = count_down,
                .status     = frame_status::inactive,
             };
@@ -89,7 +101,7 @@ namespace dovahkit::subsystems::worldinput2 {
          bool   any_inactive = false;
          bool   any_released = false;
          for (auto* item : this->children) {
-            auto result = item->update(current_time, last_advancement_time, device);
+            auto result = item->update(current_time, last_advancement_time, device, interruption_check);
             count_down += result.down_count;
             if (result.down_at > most_recently_down)
                most_recently_down = result.down_at;
@@ -123,35 +135,72 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       if (this->type == group_type::separated_ordered) {
-         auto* current_item = this->children[this->state.current_item_index];
-         if (this->state.current_item_index > 0) {
-            auto elapsed = elapsed_time(last_advancement_time, current_time);
-            if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
-               this->state.current_item_index = 0;
-               return group_update_result{
-                  .status = frame_status::inactive,
-               };
-            }
+         if (this->run_interruption_check(interruption_check)) {
+            this->_clear_all_progress();
+            return group_update_result{
+               .status = frame_status::inactive,
+            };
          }
-         auto result = current_item->update(current_time, last_advancement_time, device);
+         //
+         auto* current_item = this->children[this->state.current_item_index];
+         auto  result       = current_item->update(current_time, last_advancement_time, device, interruption_check);
          switch (result.status) {
             case frame_status::down:
                if (this->state.current_item_index == this->children.size() - 1) {
-                  return result;
+                  return group_update_result{
+                     .down_at    = current_time,
+                     .down_count = result.down_count,
+                     .status     = frame_status::down,
+                  };
+                  //return result;
                }
+               return group_update_result{
+                  .down_at    = current_time,
+                  .down_count = result.down_count,
+                  .status     = frame_status::inactive,
+               };
                break;
             case frame_status::released:
                ++this->state.current_item_index;
                if (this->state.current_item_index == this->children.size()) {
-                  this->state.current_item_index = 0;
+                  this->_clear_all_progress();
                   return group_update_result{
                      .status = frame_status::released,
+                  };
+               } else {
+                  return group_update_result{
+                     .down_at    = current_time,
+                     .down_count = result.down_count,
+                     .status     = frame_status::inactive,
+                  };
+               }
+               break;
+            case frame_status::inactive:
+               //
+               // Enforce the maximum time to progress the sequence.
+               //
+               if (this->state.current_item_index > 0) {
+                  auto time    = last_advancement_time;
+                  if (result.down_at > time)
+                     time = result.down_at;
+                  auto elapsed = elapsed_time(time, current_time);
+                  if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
+                     this->_clear_all_progress();
+                     return group_update_result{
+                        .status = frame_status::inactive,
+                     };
+                  }
+               } else {
+                  return group_update_result{
+                     .down_at    = result.down_at,
+                     .down_count = result.down_count,
+                     .status     = frame_status::inactive,
                   };
                }
                break;
          }
          return group_update_result{
-            .down_at    = result.down_at,
+            .down_at    = result.down_at > last_advancement_time ? result.down_at : last_advancement_time,
             .down_count = result.down_count,
             .status     = frame_status::inactive,
          };
@@ -160,71 +209,93 @@ namespace dovahkit::subsystems::worldinput2 {
       cobb::unreachable();
    }
 
-   void input_sequence::group::run_interruption_check(interruption_check& check) const {
-      /*//
-      //
-      // This sub-algorithm runs recursively on some of the ISGs in an input sequence. It serves 
-      // two purposes: it detects whether the user is currently in the middle of inputting a 
-      // separate-and-ordered ISG (be it this group or one of its descendants); and it checks if 
-      // any of the buttons (on the current device) that have gone down since the containing 
-      // input sequence's last advancement time are buttons that would advance this ISG or any 
-      // of its descendants.
-      //
-      if (this->type == group_type::single_control) {
-         for (auto& item : check.buttons) {
-            if (item.button == this->button) {
-               item.matched = true;
-               break;
-            }
-         }
-         return;
+   bool input_sequence::group::_is_separate_ordered_group_complete(interruption_check& check) const {
+      if (this->type == input_sequence::group_type::single_control) {
+         for (const auto& item : check.buttons)
+            if (item.button == this->button)
+               return true;
+         return false;
       }
-      if (this->type == group_type::concurrent_unordered) {
-         const group* in_progress_separate_ordered_child = nullptr;
+      if (this->type == input_sequence::group_type::separated_ordered) {
+         if (this->state.current_item_index < this->children.size() - 1)
+            return false;
 
-         for (const auto* item : this->children) {
-            if (item->type != group_type::separated_ordered)
-               continue;
-            if (item->state.frame_status == frame_status::down)
-               continue;
-            if (item->state.current_item_index > 0) {
-               in_progress_separate_ordered_child = item;
-               break;
-            }
-         }
+         assert(this->state.current_item_index < this->children.size());
+         return this->children.back()->_is_separate_ordered_group_complete(check);
+      }
+      for (const auto* child : this->children) {
+         if (!child->_is_separate_ordered_group_complete(check))
+            return false;
+      }
+      return true;
+   }
+   bool input_sequence::group::run_interruption_check(interruption_check& check) const {
+      assert(this->type == group_type::separated_ordered);
 
-         if (!in_progress_separate_ordered_child) {
-            for (const auto* item : this->children)
-               if (item->type != group_type::separated_ordered)
-                  item->run_interruption_check(check);
-         } else {
-            //
-            // If a separate-and-ordered child is currently being entered, then the user is 
-            // "locked in" to that child item; buttons exclusive to its siblings count as 
-            // interruptions, so we shouldn't run this algorithm on those.
-            //
-            in_progress_separate_ordered_child->run_interruption_check(check);
+      if (this->state.current_item_index == 0) {
+         return false;
+      }
+      if (this->state.current_item_index == this->children.size() - 1) {
+         //
+         // We're on our last item. Is it already down? If so, then our separate and 
+         // ordered group has been entered in full, so it can't be interrupted. (We 
+         // need this check so that keys belonging to the group's next-sibling(s) don't 
+         // count as retroactively "interrupting" it.)
+         //
+         if (this->children[this->state.current_item_index]->_is_separate_ordered_group_complete(check)) {
+            return false;
          }
-         return;
       }
-      if (this->type == group_type::separated_ordered) {
-         check.saw_separate_ordered_group = true;
+      assert(this->state.current_item_index < this->children.size());
+
+      for (size_t i = check.start_at; i < check.buttons.size(); ++i) {
+         check.buttons[i].matched = false;
       }
-      if (this->state.current_item_index >= this->children.size()) {
-         //
-         // This can happen if this group's frame status is `down` as a result of 
-         // the user fully progressing through this group's contents.
-         //
-         return;
+
+      auto traverse = [this, &check](const group& current) {
+         auto recurse = [&](const group& current, auto& recurse) -> void {
+            if (current.type == group_type::single_control) {
+               for (size_t i = check.start_at; i < check.buttons.size(); ++i) {
+                  auto& item = check.buttons[i];
+                  if (item.button == current.button) {
+                     item.matched = true;
+                     break;
+                  }
+               }
+               return;
+            }
+            if (current.type == group_type::separated_ordered) {
+               assert(current.state.current_item_index < current.children.size());
+               
+               auto* next = current.children[current.state.current_item_index];
+               recurse(*next, recurse);
+               return;
+            }
+            for (const auto* item : current.children) {
+               recurse(*item, recurse);
+            }
+         };
+         recurse(current, recurse);
+      };
+      traverse(*(this->children[this->state.current_item_index]));
+
+      for (size_t i = check.start_at; i < check.buttons.size(); ++i) {
+         if (!check.buttons[i].matched) {
+            return true;
+         }
       }
-      auto* current_item = this->children[this->state.current_item_index];
-      current_item->run_interruption_check(check);
-      //*/
+      return false;
    }
 
    void input_sequence::group::terminal_inputs(std::vector<inputs::button>& append_to) const {
       if (this->type == group_type::single_control) {
          append_to.push_back(this->button);
+         return;
+      }
+      if (this->type == group_type::separated_ordered) {
+         if (this->children.empty())
+            return;
+         this->children.back()->terminal_inputs(append_to);
          return;
       }
       for (const auto* item : this->children) {
@@ -287,122 +358,39 @@ namespace dovahkit::subsystems::worldinput2 {
    bool input_sequence::group::operator==(const group& other) const {
       if (this->type != other.type)
          return false;
+
       if (this->type == group_type::single_control) {
-         if (this->button != other.button)
-            return false;
+         return (this->button == other.button);
+      }
+
+      size_t size = this->children.size();
+      if (size != other.children.size()) {
+         return false;
+      }
+
+      if (this->type == group_type::concurrent_unordered) {
+         for (const auto* a : this->children) {
+            assert(a != nullptr);
+            bool found = false;
+            for (const auto* b : other.children) {
+               assert(b != nullptr);
+               if (*a == *b) {
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               return false;
+         }
       } else {
-         size_t size = this->children.size();
-         if (size != other.children.size())
-            return false;
          for (size_t i = 0; i < size; ++i) {
-            assert(this->children[i]);
-            assert(other.children[i]);
+            assert(this->children[i] != nullptr);
+            assert(other.children[i] != nullptr);
             if (*this->children[i] != *other.children[i])
                return false;
          }
       }
       return true;
-   }
-   bool input_sequence::group::shallow_equals(const group& other) const {
-      if (this->type != other.type)
-         return false;
-      if (this->type == group_type::single_control) {
-         if (this->button != other.button)
-            return false;
-      } else {
-         size_t size = this->children.size();
-         if (size != other.children.size())
-            return false;
-      }
-      return true;
-   }
-   bool input_sequence::group::is_superset_of(const group& other) const {
-      if (this->type == group_type::single_control)
-         return false;
-      if (other.type == group_type::single_control) {
-         for (auto* child : this->children)
-            if (*child == other)
-               return true;
-      }
-      if (this->type == other.type) {
-         auto&  list_sup = this->children;
-         auto&  list_sub = other.children;
-         size_t size_sup = list_sup.size();
-         size_t size_sub = list_sub.size();
-         if (size_sup > size_sub) {
-            //
-            // It's possible that `this` is equal to `other` but with additional stuff 
-            // added. What that actually means depends on whether the groups are ordered.
-            //
-            if (this->is_ordered()) {
-               //
-               // Given two ordered groups U and V and two arbitrary indices I and J: 
-               // if the I-th element of U is equivalent to the (I + J)-th element in V 
-               // for all possible values of I (i.e. any that are valid indices in U) 
-               // and for any single value of J, then U is a subset of V.
-               // 
-               // In simpler terms: U is a subset of V if U's contents are equal, in 
-               // data and ordering, to any subrange (with equivalent length) of V.
-               //
-               for (size_t i = 0; i < size_sup; ++i) {
-                  bool shallow = list_sup[i]->shallow_equals(*list_sub[0]);
-                  if (!shallow)
-                     continue;
-                  for (size_t j = 0; j < size_sub; ++j) {
-                     shallow = list_sup[i + j]->shallow_equals(*list_sub[j]);
-                     if (!shallow)
-                        break;
-                  }
-                  if (!shallow)
-                     continue;
-
-                  bool deep = true;
-                  for (size_t j = 0; j < size_sub; ++j) {
-                     if (*list_sup[i + j] != *list_sub[j]) {
-                        deep = false;
-                        break;
-                     }
-                  }
-                  if (deep)
-                     return true;
-               }
-            } else {
-               //
-               // Given two unordered groups U and V: if for every element in U there 
-               // is at least one equivalent element in V, then U is a subset of V.
-               //
-               std::vector<bool> contained;
-               contained.resize(size_sub);
-               //
-               size_t contained_count = 0;
-
-               for (const auto* child : this->children) {
-                  for (size_t j = 0; j < size_sub; ++j) {
-                     if (contained[j])
-                        continue;
-                     if (*child == *other.children[j]) {
-                        contained[j] = true;
-                        break;
-                     }
-                  }
-                  if (++contained_count == size_sub) {
-                     return true;
-                  }
-               }
-            }
-            //
-         }
-         //
-         // If this group is not directly a superset of `other`, it may still contain 
-         // a child group that is a superset of `other`, so fall through here.
-         //
-      }
-
-      for (auto* child : this->children)
-         if (child->is_superset_of(other))
-            return true;
-
-      return false;
    }
 
    void input_sequence::group::debug_stringify(std::string& out) const {
@@ -453,15 +441,32 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!this->root)
          return;
 
-      /*//
-      if (this->run_interruption_check(interruption_check)) {
-         this->clear_all_progress();
-         return;
+      {
+         interruption_check.start_at = 0;
+         //
+         bool found_first_button = false;
+         for (size_t i = 0; i < interruption_check.buttons.size(); ++i) {
+            auto& item = interruption_check.buttons[i];
+            item.matched = false;
+            //
+            if (!found_first_button) {
+               if (item.down_at > this->state.last_advancement) {
+                  found_first_button = true;
+                  interruption_check.start_at = i;
+               }
+            }
+         }
+         if (!found_first_button) {
+            //
+            // If *all* of the buttons were down before our last advancement time, 
+            // then we want to skip all of them.
+            //
+            interruption_check.start_at = interruption_check.buttons.size();
+         }
       }
-      //*/
 
       auto prior  = this->state.frame_status;
-      auto result = this->root->update(current_time, this->state.last_advancement, device);
+      auto result = this->root->update(current_time, this->state.last_advancement, device, interruption_check);
       if (this->state.frame_status != result.status) {
          this->state.frame_status_changed = true;
          this->state.frame_status         = result.status;
@@ -509,33 +514,6 @@ namespace dovahkit::subsystems::worldinput2 {
          default:
             cobb::unreachable();
       }
-   }
-
-   bool input_sequence::run_interruption_check(interruption_check& check) const {
-      check.saw_separate_ordered_group = false;
-      check.start_at = 0;
-      //
-      bool found_first_button = false;
-      for (size_t i = 0; i < check.buttons.size(); ++i) {
-         auto& item = check.buttons[i];
-         item.matched = false;
-         if (!found_first_button) {
-            if (item.down_at > this->state.last_advancement) {
-               found_first_button = true;
-               check.start_at = i;
-            }
-         }
-      }
-
-      if (this->root) {
-         this->root->run_interruption_check(check);
-      }
-      if (check.saw_separate_ordered_group) {
-         for (const auto& item : check.buttons)
-            if (!item.matched)
-               return true;
-      }
-      return false;
    }
 
    void input_sequence::clear_all_progress() {
@@ -603,45 +581,6 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!this->root)
          return nullptr;
       return this->root->final_group();
-   }
-
-   bool input_sequence::is_subset_of(const input_sequence& other) const {
-      if (!this->root || !other.root)
-         return false;
-
-      {  // Compare terminal inputs.
-         auto term_sub = this->terminal_inputs();
-         auto term_sup = other.terminal_inputs();
-         if (term_sub.size() < term_sup.size()) {
-            bool all = true;
-            for (const auto& a : term_sub) {
-               bool found = false;
-               for (const auto& b : term_sup) {
-                  if (a == b) {
-                     found = true;
-                     break;
-                  }
-               }
-               if (!found)
-                  all = false;
-            }
-            if (all)
-               return true;
-         }
-      }
-
-      // Compare full sequences:
-
-      {
-         // TODO: Once we switch to flat storage for ISG trees, we can check the total 
-         //       number of ISGs (child and descendant) in a sequence by just checking 
-         //       the length of the storage. This would allow us to early-out if the 
-         //       `other` sequence is shorter than `this`.
-      }
-      if (this->root->is_superset_of(*other.root))
-         return true;
-
-      return false;
    }
 
    size_t input_sequence::specificity() const {

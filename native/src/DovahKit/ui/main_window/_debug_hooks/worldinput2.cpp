@@ -36,12 +36,16 @@ namespace {
    worldinput2::binds::nodes::bound_tool* make_tool_node(
       const std::string& name,
       worldinput2::button_press_type pt,
-      const worldinput2::input_sequence& sequence
+      const worldinput2::input_sequence& sequence,
+      std::initializer_list<worldinput2::binds::node*> children = {}
    ) {
       auto* node = new worldinput2::binds::nodes::bound_tool;
       node->name = name.c_str();
       node->button_press_type = pt;
       node->input_sequence    = sequence;
+      for (auto* child : children) {
+         node->append(*child);
+      }
       return node;
    }
 
@@ -193,7 +197,7 @@ namespace {
             }
          ),
       },
-      testing_tree{ // 4/14/2023 - ALL PASS EXCEPT INTERRUPTION (not yet implemented in new ISG design)
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Basic sequence tests",
          //
          // Test procedure:
@@ -485,6 +489,29 @@ namespace {
             }
          ),
       },
+      testing_tree{
+         .name = "Separate-and-ordered interruptions",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press <A + S + D + F>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + D + F>")
+               ),
+               make_tool_node(
+                  "Press <A + S + D + [F + <J + K>]>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + D + [F + <J + K>]>")
+               ),
+               make_tool_node(
+                  "Press <A + S + D + [<J + K> + Z]>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + D + [<J + K> + Z]>")
+               ),
+            }
+         ),
+      },
    };
 }
 
@@ -543,6 +570,7 @@ namespace DovahKitDebug::features {
             debug->setAlignment(Qt::AlignTop | Qt::AlignLeft);
             debug->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
             debug->setContentsMargins(0, 0, 0, 0);
+            debug->setTextFormat(Qt::TextFormat::PlainText);
             //
             layout->addWidget(debug);
          }
