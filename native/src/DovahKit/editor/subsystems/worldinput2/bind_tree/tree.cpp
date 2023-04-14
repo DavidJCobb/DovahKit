@@ -277,7 +277,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
             this->last_frame_active_hold_binds.push_back(node);
          } else {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::released);
-            assert(node->input_sequence.all_contents_inactive());
             node->input_sequence.state.frame_status = input_sequence::frame_status::inactive;
          }
       }

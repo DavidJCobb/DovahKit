@@ -14,208 +14,154 @@ namespace dovahkit::subsystems::worldinput2 {
    }
 
    input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device) {
-      this->state.frame_status_changed = false;
-
-      const auto prior_fs = this->state.frame_status;
-
       if (this->type == group_type::single_control) {
          const auto bs = device.get_state_of(this->button);
          //
          if (bs.was_released_this_frame()) {
-            this->state.frame_status         = frame_status::released;
-            this->state.frame_status_changed = true;
-            return group_update_result::advancing;
+            return group_update_result{
+               .status = frame_status::released,
+            };
          } else if (bs.is_down()) {
-            this->state.frame_status         = frame_status::down;
-            this->state.frame_status_changed = bs.was_pressed_this_frame();
-            return group_update_result::advancing;
-         } else {
-            this->state.frame_status         = frame_status::inactive;
-            this->state.frame_status_changed = (prior_fs != frame_status::inactive);
+            return group_update_result{
+               .down_at    = bs.down_when,
+               .down_count = 1,
+               .status    = frame_status::down,
+            };
          }
-         return group_update_result::no_change;
+         return group_update_result{
+            .status = frame_status::inactive,
+         };
       }
 
-      // If a top-level group's frame status becomes released, then that should cause the 
-      // containing input sequence to flag as released -- and to reset the states on all of
-      // its contained groups. If a nested group's frame status becomes released, then that 
-      // should be handled by its parent group as either interrupting an incomplete input 
-      // sequence, or as releasing a currently-down input sequence; this should cause the 
-      // containing groups, all the way up to the top-level one, to either become released 
-      // or flag as interrupted, causing the containing input sequence to reset them all.
-      //
-      // In short: the frame status should never remain released across frames; it should 
-      // always end up being reset to inactive on the same frame that it appeared.
-      assert(this->state.frame_status != frame_status::released);
+      if (this->type == group_type::concurrent_ordered) {
+         auto   previous_timestamp = zero_timestamp;
+         size_t count_down   = 0;
+         bool   any_inactive = false;
+         bool   any_released = false;
+         size_t i;
+         for (i = 0; i < this->children.size(); ++i) {
+            auto* item   = this->children[i];
+            auto  result = item->update(current_time, last_advancement_time, device);
 
-      if (this->state.frame_status == frame_status::down) {
-         //
-         // Detect when a currently-down group is released.
-         //
-         std::vector<group*> terminals;
-         if (this->is_concurrent()) {
-            terminals = this->children;
-         } else {
-            if (!this->children.empty())
-               terminals.push_back(this->children.back());
-         }
-         for (auto* item : terminals) {
-
-            // An input sequence group can only be down if, on the last frame, all of its 
-            // terminal items were also down.
-            assert(item->state.frame_status == frame_status::down);
-
-            auto result = item->update(current_time, last_advancement_time, device);
-            assert(result != group_update_result::interrupted);
-            if (item->state.frame_status == frame_status::released) {
-               this->state.frame_status         = frame_status::released;
-               this->state.frame_status_changed = true;
-               return group_update_result::advancing;
+            if (result.status != frame_status::released) {
+               if (result.down_at < previous_timestamp) {
+                  any_inactive = true;
+                  break;
+               }
             }
-            assert(item->state.frame_status == frame_status::down);
+            
+            if (result.status == frame_status::inactive) {
+               any_inactive = true;
+               break;
+            } else if (result.status == frame_status::released) {
+               any_released = true;
+            } else if (result.status == frame_status::down) {
+               previous_timestamp = result.down_at;
+            }
+
+            count_down += result.down_count;
          }
-         assert(this->state.frame_status == frame_status::down);
-         return group_update_result::advancing;
+         if (any_inactive) {
+            assert(i < this->children.size());
+            for (i = 0; i < this->children.size(); ++i)
+               this->children[i]->_clear_all_progress();
+            return group_update_result{
+               .down_count = count_down,
+               .status     = frame_status::inactive,
+            };
+         }
+         if (any_released) {
+            return group_update_result{
+               .down_count = count_down,
+               .status     = frame_status::released,
+            };
+         }
+         return group_update_result{
+            .down_at    = previous_timestamp,
+            .down_count = count_down,
+            .status     = frame_status::down,
+         };
       }
 
-      if (this->is_ordered()) {
-         auto* current_item = this->children[this->state.current_item_index];
-         if (this->type == group_type::concurrent_ordered) {
-            //
-            // Ensure no currently-down items have been released.
-            //
-            for (size_t i = 0; i < this->state.current_item_index; ++i) {
-               auto* item = this->children[i];
-               assert(item->state.frame_status == frame_status::down);
-
-               auto result = item->update(current_time, last_advancement_time, device);
-               assert(result != group_update_result::interrupted);
-               //
-               // A result of interrupted should be impossible here: once an input sequence 
-               // group is down, the update algorithm only cares about whether it's released, 
-               // and so should not allow it to become interrupted.
-
-               if (item->state.frame_status == frame_status::released) {
-                  this->state.frame_status         = frame_status::inactive;
-                  this->state.frame_status_changed = true;
-                  return group_update_result::interrupted;
-               }
-               assert(item->state.frame_status == frame_status::down);
-            }
-         } else {
-            assert(this->type == group_type::separated_ordered);
-            //
-            // For separated-and-ordered groups, there should be a limit on how much time can 
-            // elapse between keypresses. Take too long to input the next keypress, and we 
-            // should consider that as the sequence being interrupted.
-            //
-            if (this->state.current_item_index > 0) {
-               auto elapsed = elapsed_time(last_advancement_time, current_time);
-               if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
-                  this->state.frame_status         = frame_status::inactive;
-                  this->state.frame_status_changed = true;
-                  return group_update_result::interrupted;
-               }
-            }
-         }
-
-         auto result = current_item->update(current_time, last_advancement_time, device);
-         if (result == group_update_result::interrupted) {
-            this->state.frame_status         = frame_status::inactive;
-            this->state.frame_status_changed = true;
-            return result;
-         }
-
-         switch (current_item->state.frame_status) {
-            case frame_status::down:
-               if (current_item->state.frame_status_changed) {
-                  if (this->type == group_type::concurrent_ordered) {
-                     ++this->state.current_item_index;
-                     if (this->state.current_item_index == this->children.size()) {
-                        this->state.frame_status         = frame_status::down;
-                        this->state.frame_status_changed = true;
-                     }
-                  }
-               }
-               return group_update_result::advancing;
-            case frame_status::released:
-               if (this->type == group_type::separated_ordered) {
-                  ++this->state.current_item_index;
-               }
-               if (this->state.current_item_index == this->children.size()) {
-                  this->state.frame_status         = frame_status::released;
-                  this->state.frame_status_changed = true;
-               }
-               return group_update_result::advancing;
-         }
-
-         return result;
-      }
-
-      assert(this->type == group_type::concurrent_unordered);
-      {
-         bool any_advancing = false;
-         bool any_released  = false;
-         bool any_down      = false;
-         bool any_down_now  = false; // true if any went down on this frame specifically
-         bool any_inactive  = false;
+      if (this->type == group_type::concurrent_unordered) {
+         auto   most_recently_down = zero_timestamp;
+         size_t count_down   = 0;
+         bool   any_inactive = false;
+         bool   any_released = false;
          for (auto* item : this->children) {
             auto result = item->update(current_time, last_advancement_time, device);
-            if (result == group_update_result::interrupted) {
-               this->state.frame_status         = frame_status::inactive;
-               this->state.frame_status_changed = true;
-               return result;
-            }
-            if (result == group_update_result::advancing) {
-               any_advancing = true;
-            }
-            switch (item->state.frame_status) {
-               case frame_status::released:
-                  any_released = true;
-                  break;
-               case frame_status::down:
-                  any_down = true;
-                  if (item->state.frame_status_changed)
-                     any_down_now = true;
-                  break;
+            count_down += result.down_count;
+            if (result.down_at > most_recently_down)
+               most_recently_down = result.down_at;
+            switch (result.status) {
                case frame_status::inactive:
                   any_inactive = true;
                   break;
-            }
-            if (any_released && any_inactive) {
-               //
-               // This happens if a concurrent-and-ordered group had some keys released before 
-               // all of them went down, interrupting the bind.
-               //
-               this->state.frame_status = frame_status::inactive;
-               assert(this->state.frame_status_changed == false);
-               return group_update_result::interrupted;
+               case frame_status::released:
+                  any_released = true;
+                  break;
             }
          }
-         if (any_inactive == false) {
-            assert(any_down == true || any_released == true); // All items are either down or released.
+         if (!any_inactive) {
             if (any_released) {
-               this->state.frame_status         = frame_status::released;
-               this->state.frame_status_changed = true;
-            } else {
-               //
-               // If `any_down_now` is true, then -- by virtue of the logic for all of this -- 
-               // the group's frame status will have been a value other than `down` before we 
-               // set it to `down` here. We could potentially omit the `any_down_now` bool if 
-               // we instead check whether the prior frame status value was `down`, which could 
-               // be done in a setter for `frame_status` if we implement one.
-               //
-               this->state.frame_status         = frame_status::down;
-               this->state.frame_status_changed = any_down_now;
+               return group_update_result{
+                  .down_count = count_down,
+                  .status     = frame_status::released,
+               };
+            }
+            return group_update_result{
+               .down_at    = most_recently_down,
+               .down_count = count_down,
+               .status     = frame_status::down,
+            };
+         }
+         return group_update_result{
+            .down_at    = most_recently_down,
+            .down_count = count_down,
+            .status     = frame_status::inactive,
+         };
+      }
+
+      if (this->type == group_type::separated_ordered) {
+         auto* current_item = this->children[this->state.current_item_index];
+         if (this->state.current_item_index > 0) {
+            auto elapsed = elapsed_time(last_advancement_time, current_time);
+            if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
+               this->state.current_item_index = 0;
+               return group_update_result{
+                  .status = frame_status::inactive,
+               };
             }
          }
-         return (any_advancing || any_down || any_released) ? group_update_result::advancing : group_update_result::no_change;
+         auto result = current_item->update(current_time, last_advancement_time, device);
+         switch (result.status) {
+            case frame_status::down:
+               if (this->state.current_item_index == this->children.size() - 1) {
+                  return result;
+               }
+               break;
+            case frame_status::released:
+               ++this->state.current_item_index;
+               if (this->state.current_item_index == this->children.size()) {
+                  this->state.current_item_index = 0;
+                  return group_update_result{
+                     .status = frame_status::released,
+                  };
+               }
+               break;
+         }
+         return group_update_result{
+            .down_at    = result.down_at,
+            .down_count = result.down_count,
+            .status     = frame_status::inactive,
+         };
       }
-      this->state.frame_status = frame_status::inactive;
-      return group_update_result::no_change;
+
+      cobb::unreachable();
    }
 
    void input_sequence::group::run_interruption_check(interruption_check& check) const {
+      /*//
       //
       // This sub-algorithm runs recursively on some of the ISGs in an input sequence. It serves 
       // two purposes: it detects whether the user is currently in the middle of inputting a 
@@ -273,17 +219,9 @@ namespace dovahkit::subsystems::worldinput2 {
       }
       auto* current_item = this->children[this->state.current_item_index];
       current_item->run_interruption_check(check);
+      //*/
    }
 
-   bool input_sequence::group::all_contents_inactive() const {
-      for (auto* item : this->children) {
-         if (item->state.frame_status != frame_status::inactive)
-            return false;
-         if (!item->all_contents_inactive())
-            return false;
-      }
-      return true;
-   }
    void input_sequence::group::terminal_inputs(std::vector<inputs::button>& append_to) const {
       if (this->type == group_type::single_control) {
          append_to.push_back(this->button);
@@ -503,9 +441,7 @@ namespace dovahkit::subsystems::worldinput2 {
    }
 
    void input_sequence::group::_clear_all_progress() {
-      this->state.frame_status         = frame_status::inactive;
-      this->state.frame_status_changed = false;
-      this->state.current_item_index   = 0;
+      this->state.current_item_index = 0;
       //
       for (auto* child : this->children)
          child->_clear_all_progress();
@@ -517,50 +453,61 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!this->root)
          return;
 
+      /*//
       if (this->run_interruption_check(interruption_check)) {
          this->clear_all_progress();
          return;
       }
+      //*/
 
+      auto prior  = this->state.frame_status;
       auto result = this->root->update(current_time, this->state.last_advancement, device);
-      if (result == group_update_result::interrupted) {
-         this->clear_all_progress();
-         return;
-      } else if (result == group_update_result::advancing) {
-         this->state.last_advancement = current_time;
+      if (this->state.frame_status != result.status) {
+         this->state.frame_status_changed = true;
+         this->state.frame_status         = result.status;
       }
-      this->state.frame_status         = this->root->state.frame_status;
-      this->state.frame_status_changed = this->root->state.frame_status_changed;
-      if (this->state.frame_status == frame_status::down) {
-         if (this->state.frame_status_changed) {
-            this->state.went_down_at = current_time;
-         }
-      } else if (this->state.frame_status == frame_status::released) {
-         auto down_at = this->state.went_down_at;
+      switch (result.status) {
+         case frame_status::inactive:
+            this->state.last_advancement = result.down_at;
+            break;
+         case frame_status::down:
+            this->state.last_advancement = result.down_at;
+            if (this->state.frame_status_changed) {
+               this->state.went_down_at = result.down_at;
+            }
+            break;
+         case frame_status::released:
+            {
+               auto down_at = this->state.went_down_at;
 
-         this->clear_all_progress();
+               auto specificity = this->specificity();
+               auto terminals   = this->terminal_inputs();
+               bool consumed_by_more_specific_sequence = false;
 
-         auto specificity = this->specificity();
-         auto terminals   = this->terminal_inputs();
-         bool consumed_by_more_specific_sequence = false;
-         for (const auto& button : terminals) {
-            const auto& claim = device.get_existing_claim_of(button);
-            if (claim.specificity > specificity) {
-               if (claim.when > down_at) {
-                  consumed_by_more_specific_sequence = true;
-                  break;
+               this->clear_all_progress();
+
+               for (const auto& button : terminals) {
+                  const auto& claim = device.get_existing_claim_of(button);
+                  if (claim.specificity > specificity) {
+                     if (claim.when > down_at) {
+                        consumed_by_more_specific_sequence = true;
+                        break;
+                     }
+                  }
+               }
+               if (!consumed_by_more_specific_sequence) {
+                  this->state.frame_status         = frame_status::released; // clear_all_progress reset this earlier
+                  this->state.frame_status_changed = true;
+                  this->state.went_down_at         = down_at;
+                  for (const auto& button : terminals) {
+                     auto& claim = device.get_pending_claim_of(button);
+                     claim.attempt_new_claim(current_time, specificity);
+                  }
                }
             }
-         }
-         if (!consumed_by_more_specific_sequence) {
-            this->state.frame_status         = frame_status::released;
-            this->state.frame_status_changed = true;
-            this->state.went_down_at = down_at;
-            for (const auto& button : terminals) {
-               auto& claim = device.get_pending_claim_of(button);
-               claim.attempt_new_claim(current_time, specificity);
-            }
-         }
+            break;
+         default:
+            cobb::unreachable();
       }
    }
 
@@ -591,19 +538,58 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
-   bool input_sequence::all_contents_inactive() const {
-      if (!this->root)
-         return true;
-      if (this->root->state.frame_status != frame_status::inactive)
-         return false;
-      return this->root->all_contents_inactive();
-   }
    void input_sequence::clear_all_progress() {
       this->state.frame_status         = frame_status::inactive;
       this->state.frame_status_changed = false;
       this->state.went_down_at         = zero_timestamp;
       if (auto* g = this->root)
          g->_clear_all_progress();
+   }
+
+   namespace {
+      size_t _group_concurrent_input_count(const input_sequence::group& self) {
+         if (self.type == input_sequence::group_type::single_control) {
+            if (self.button.is_modifier_key())
+               return 0;
+            return 1;
+         }
+         if (self.type == input_sequence::group_type::separated_ordered) {
+            size_t count = 0;
+            for (const auto* item : self.children) {
+               auto cc = _group_concurrent_input_count(*item);
+               if (cc > count)
+                  count = cc;
+            }
+            return count;
+         }
+         size_t count = 0;
+         for (const auto* item : self.children) {
+            count += _group_concurrent_input_count(*item);
+         }
+         return count;
+      }
+   }
+   bool input_sequence::is_probably_keyboard_impossible() const {
+      //
+      // Most keyboards can only register a limited number of simultaneously 
+      // pressed keys; this count is called the "N-key rollover" for a given 
+      // value of N. Typically, the limit is 2. Some USB keyboards can raise 
+      // the limit to 6; for PS/2 connectors, there's no upper bound.
+      // 
+      // It's due to how keyboards are wired. Modifier keys generally don't 
+      // contribute to the limit (else several Windows accelerator keys just 
+      // wouldn't be possible), and sometimes the limit only applies to keys 
+      // that are near each other; but the typical limit for non-modifier 
+      // keys is 2.
+      // 
+      // As such, this function returns true if a given input sequence may 
+      // not be possible to actually enter on a typical keyboard, due to 
+      // requiring more than 2 non-modifier keys to be down concurrently.
+      //
+      if (!this->root)
+         return false;
+      size_t concurrent_input_count = _group_concurrent_input_count(*this->root);
+      return (concurrent_input_count > 2);
    }
 
    std::vector<inputs::button> input_sequence::terminal_inputs() const {

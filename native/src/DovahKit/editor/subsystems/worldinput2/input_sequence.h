@@ -26,17 +26,10 @@ namespace dovahkit::subsystems::worldinput2 {
             separated_ordered,
          };
 
-         enum class group_update_result {
-            no_change,
-
-            // It was determined that the user's attempt to enter the input sequence was interrupted 
-            // somehow. Perhaps they released one of the keys in a concurrent group before entering 
-            // the group's contents in full, for example.
-            interrupted,
-
-            // The user is advancing within the input sequence; the next key that they need to press 
-            // is down, or was just released.
-            advancing,
+         struct group_update_result {
+            timestamp_t  down_at    = zero_timestamp;
+            size_t       down_count = 0;
+            frame_status status     = frame_status::inactive;
          };
 
          class group {
@@ -51,9 +44,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
             protected:
                struct {
-                  enum frame_status frame_status = frame_status::inactive;
-                  bool frame_status_changed = false;
-                  //
                   size_t current_item_index = 0;
                } state;
 
@@ -79,7 +69,6 @@ namespace dovahkit::subsystems::worldinput2 {
                   return false;
                }
 
-               bool all_contents_inactive() const;
                void terminal_inputs(std::vector<inputs::button>& append_to) const;
                size_t input_control_count() const;
                bool is_or_contains_input_control(const inputs::button&) const;
@@ -124,8 +113,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
          bool run_interruption_check(interruption_check&) const;
 
-         bool all_contents_inactive() const;
          void clear_all_progress();
+
+         bool is_probably_keyboard_impossible() const;
 
          std::vector<inputs::button> terminal_inputs() const;
 

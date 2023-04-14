@@ -105,7 +105,7 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Hold-blocks-Press conflict resolution",
          .tree = make_tree(
             worldinput2::input_device_type::keyboard_mouse,
@@ -151,7 +151,7 @@ namespace {
             }
          ),
       },
-      testing_tree{ // 4/11/2023 - PASSES
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Modifier conflict rule",
          //
          // Test procedure:
@@ -178,7 +178,7 @@ namespace {
             }
          ),
       },
-      testing_tree{ // 4/11/2023 - PASSES
+      testing_tree{ // 4/14/2023 - ALL PASS EXCEPT INTERRUPTION (not yet implemented in new ISG design)
          .name = "Basic sequence tests",
          //
          // Test procedure:
@@ -235,33 +235,33 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Specificity rule",
          //
          // Test procedure:
          // 
-         //  - Press and hold Y.
-         //  - Pres and release, in sequence, A through E.
+         //  - Press and hold LB.
+         //  - Pres and release, in order, A, B, X, and Y.
          // 
-         // Desired result: only the `Press [A + B + C + D + E]` bind activates.
+         // Desired result: only the `Press [A + B + X + Y]` bind activates.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput2::input_device_type::xinput,
             {
                make_tool_node(
-                  "Press [A + B + C + D + E]",
+                  "Press [A + B + X + Y]",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("[A + S + D + F]")
+                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
-                  "Press (Y + E)",
+                  "Press (LB + Y)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(G + F)")
+                  worldinput2::input_sequence::debug_from_string("(LB + Y)", true)
                ),
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Identical binds rule",
          //
          // Desired result: both binds activate when pressing X.
@@ -282,7 +282,7 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Seamless switching between Hold binds",
          .tree = make_tree(
             worldinput2::input_device_type::keyboard_mouse,
@@ -310,7 +310,7 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Repeated combo activation",
          //
          // Test procedure:
@@ -333,140 +333,139 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Specificity rule, incl. across time",
          //
          // Multiple tests. 
          // 
          // Case A1:
-         //  - G down.
+         //  - LB down.
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - F up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - Y up.
          //     - Bind 1 activates.
          //     - Bind 2 is blocked.
          //     - Bind 2 does not activate.
          // 
          // Case A2:
-         //  - G down.
+         //  - LB down.
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - A, S, or D up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - A, B, or X up.
          //     - Bind 1 activates.
          //     - Bind 2 is blocked.
-         //  - F up.
+         //  - Y up.
          //     - Bind 2 does not activate.
          // 
          // Case B:
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - A, S, or D up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - A, B, or X up.
          //     - Bind 1 fires.
-         //  - G down.
-         //  - G up.
+         //  - LB down.
+         //  - LB up.
          //     - Bind 2 fires.
          // 
          // Case C1:
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - G down.
-         //  - F up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - LB down.
+         //  - Y up.
          //     - Bind 1 fires.
          //     - Bind 2 is blocked.
          //     - Bind 2 does not activate.
          // 
          // Case C2:
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - G down.
-         //  - A, S, or D up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - LB down.
+         //  - A, B, or X up.
          //     - Bind 1 fires.
          //     - Bind 2 is blocked.
-         //  - G up.
+         //  - LB up.
          //     - Bind 2 does not activate.
          // 
          // Case D:
          //  - A down.
-         //  - S down.
-         //  - G down.
-         //  - D down.
-         //  - F down.
-         //  - A, S, or D up.
+         //  - B down.
+         //  - LB down.
+         //  - X down.
+         //  - Y down.
+         //  - A, B, or X up.
          //     - Bind 1 fires.
          //     - Bind 2 is blocked.
-         //  - G up.
+         //  - LB up.
          //     - Bind 2 does not activate.
-         //  - F up.
+         //  - Y up.
          //     - Bind 2 does not activate.
          // 
          // Case E:
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - G down.
-         //  - F up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - LB down.
+         //  - Y up.
          //     - Bind 1 activates.
          //     - Bind 2 is blocked.
          //     - Bind 2 does not activate.
          // 
          // Case F:
-         //  - G down.
+         //  - LB down.
          //  - A down.
-         //  - S down.
-         //  - D down.
-         //  - F down.
-         //  - G up.
+         //  - B down.
+         //  - X down.
+         //  - Y down.
+         //  - LB up.
          //     - Bind 2 fires.
-         //  - A, S, D, or F up.
+         //  - A, B, X, or Y up.
          //     - Bind 1 fires.
          // 
          // Case G:
-         //  - G down.
-         //  - H down.
-         //  - F down.
-         //  - F up.
+         //  - LB down.
+         //  - LT down.
+         //  - Y down.
+         //  - Y up.
          //     - Bind 2 and Bind 3 both lose a same-frame conflict.
          //     - Bind 2 does not activate.
          //     - Bind 3 does not activate.
          // 
          // Case H:
-         //  - G down.
-         //  - F down.
-         //  - H down.
-         //  - G up.
+         //  - LB down.
+         //  - Y down.
+         //  - LT down.
+         //  - LB up.
          //     - Bind 2 fires.
-         //     - Bind 3 is blocked.
-         //  - H up.
-         //     - Bind 3 does not activate.
+         //  - LT up.
+         //     - Bind 3 fires.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput2::input_device_type::xinput,
             {
                make_tool_node(
-                  "Bind #1: Press [A + S + D + F]",
+                  "Bind #1: Press [A + B + X + Y]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + S + D + F]")
+                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
-                  "Bind #2: Press (G + F)",
+                  "Bind #2: Press (Y + LB)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(G + F)")
+                  worldinput2::input_sequence::debug_from_string("(Y + LB)", true)
                ),
                make_tool_node(
-                  "Bind #3: Press (H + F)",
+                  "Bind #3: Press (Y + LT)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(H + F)")
+                  worldinput2::input_sequence::debug_from_string("(Y + LT)", true)
                ),
             }
          ),

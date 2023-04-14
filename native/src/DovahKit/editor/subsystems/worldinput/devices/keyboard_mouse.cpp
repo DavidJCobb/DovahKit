@@ -97,7 +97,7 @@ namespace dovahkit::subsystems::worldinput::devices {
                //
                // Key has been released.
                //
-               if (i == (this->system.mouse.swap_left_right) ? VK_RBUTTON : VK_LBUTTON) {
+               if (i == ((this->system.mouse.swap_left_right) ? VK_RBUTTON : VK_LBUTTON)) {
                   if (_mouseup_handler_for_double_click(now)) {
                      //
                      // Double-click.
