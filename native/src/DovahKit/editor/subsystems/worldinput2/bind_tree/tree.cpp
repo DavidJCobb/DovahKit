@@ -59,11 +59,10 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       std::vector<nodes::abstract_input_node*> eligible_binds;
       std::vector<nodes::abstract_input_node*> conflict_losing_binds;
-      std::vector<nodes::abstract_input_node*> pressed_down_nodes;
 
       interruption_check interruption_check = device.prepare_interruption_check();
 
-      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &pressed_down_nodes, &device, &interruption_check, current_editing_mode, now](node* current) {
+      auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &device, &interruption_check, current_editing_mode, now](node* current) {
          auto recurse = [&](node* current, auto& recurse) mutable -> void {
             //
             for (auto* child : current->child_nodes()) {
@@ -99,10 +98,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
                            }
                         } else if (sequence.state.frame_status == input_sequence::frame_status::down) {
                            switch (child_inode->button_press_type) {
-                              case button_press_type::press:
-                              case button_press_type::long_press:
-                                 pressed_down_nodes.push_back(child_inode);
-                                 break;
                               case button_press_type::hold:
                                  matched = true;
                                  break;
@@ -118,22 +113,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
                   continue;
                }
                if (child_inode) {
-
-                  // If `child` has the same press type and absolute terminal inputs as any node in `conflict_losing_binds,
-                  // then add `child` to `conflict_losing_binds` and then `continue`.
-                  bool lost_conflict = false;
-                  for (auto* loser : conflict_losing_binds) {
-                     if (loser->button_press_type != child_inode->button_press_type)
-                        continue;
-                     if (loser->absolute_terminal_inputs() != child_inode->absolute_terminal_inputs())
-                        continue;
-                     lost_conflict = true;
-                     break;
-                  }
-                  if (lost_conflict) {
-                     conflict_losing_binds.push_back(child_inode);
-                     continue;
-                  }
+                  eligible_binds.push_back(child_inode);
                   
                   bool child_conflicted = false;
                   {
@@ -185,11 +165,9 @@ namespace dovahkit::subsystems::worldinput2::binds {
                   }
                   //
                   if (child_conflicted) {
-                     if (child_inode->button_press_type != button_press_type::hold)
-                        conflict_losing_binds.push_back(child_inode);
+                     conflict_losing_binds.push_back(child_inode);
                      continue;
                   }
-                  eligible_binds.push_back(child_inode);
                }
                for (auto* item : child->child_nodes()) {
                   recurse(item, recurse);
@@ -306,36 +284,16 @@ namespace dovahkit::subsystems::worldinput2::binds {
          }
       }
 
-      // Conflict resolution: Presses delay Holds
+      // Conflict resolution: Holds block Presses.
       eligible_binds.erase(
          std::remove_if(
             eligible_binds.begin(),
             eligible_binds.end(),
-            [this, &pressed_down_nodes, now](const auto* node) -> bool {
-               auto* input_node = node->as<nodes::abstract_input_node>();
-               if (!input_node)
-                  return false;
-               //
-               if (input_node->button_press_type == button_press_type::hold) {
-                  //
-                  // Conflict resolution: Presses delay Holds.
-                  //
-                  for (auto* press_node : pressed_down_nodes) {
-                     bool result = nodes::abstract_input_node::does_press_delay_hold(
-                        now,
-                        *press_node,
-                        *input_node
-                     );
-                     if (result)
-                        return true;
-                  }
-               } else {
-                  //
-                  // Conflict resolution: Holds block Presses.
-                  //
+            [this, now](const auto* node) -> bool {
+               if (node->button_press_type != button_press_type::hold) {
                   for (auto* hold_node : this->last_frame_active_hold_binds) {
                      bool result = nodes::abstract_input_node::does_hold_block_press(
-                        *input_node,
+                        *node,
                         *hold_node
                      );
                      if (result)
