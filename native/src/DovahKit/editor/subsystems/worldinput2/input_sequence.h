@@ -44,8 +44,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
             protected:
                struct {
-                  size_t current_item_index   = 0;
-                  bool   failed_on_this_frame = false;
+                  size_t current_item_index = 0;
                } state;
 
             public:

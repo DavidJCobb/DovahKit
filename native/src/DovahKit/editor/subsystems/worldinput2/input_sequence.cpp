@@ -493,7 +493,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
                for (const auto& button : terminals) {
                   const auto& claim = device.get_existing_claim_of(button);
-                  if (claim.specificity > specificity) {
+                  if (claim.specificity >= specificity) {
                      if (claim.when > down_at) {
                         consumed_by_more_specific_sequence = true;
                         break;
@@ -507,6 +507,15 @@ namespace dovahkit::subsystems::worldinput2 {
                   for (const auto& button : terminals) {
                      auto& claim = device.get_pending_claim_of(button);
                      claim.attempt_new_claim(current_time, specificity);
+                     //
+                     // It's worth noting here that claims only get applied to an input 
+                     // control if it's still down on the frame after the claim is made, 
+                     // so the terminal inputs that were released on this frame will not 
+                     // be claimed. This prevents an input sequence from blocking itself, 
+                     // and that fact in turn allows you to re-trigger any typical button 
+                     // combination by releasing and re-pressing a terminal input without 
+                     // having to re-enter the whole input sequence.
+                     //
                   }
                }
             }

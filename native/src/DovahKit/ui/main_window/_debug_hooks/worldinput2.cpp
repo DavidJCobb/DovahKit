@@ -30,6 +30,30 @@ namespace {
       worldinput2::binds::tree out(dt);
       for (auto* node : nodes)
          out.root->append(*node);
+
+      constexpr auto warn = [](const worldinput2::binds::tree& out) {
+         constexpr auto recurse = [&](const worldinput2::binds::node& node, auto& recurse) -> void {
+            if (auto* in = node.as<worldinput2::binds::nodes::abstract_input_node>()) {
+               if (in->input_sequence.is_probably_keyboard_impossible()) {
+                  std::string seq;
+                  in->input_sequence.debug_stringify(seq);
+                  qDebug(
+                     "WARNING: One of the test bind trees contains an input sequence that may not be completable on a gamepad.\n   Node:     %s\n   Sequence: %s",
+                     qUtf8Printable(in->name),
+                     seq.c_str()
+                  );
+               }
+            }
+            for (auto* child : node.child_nodes()) {
+               recurse(*child, recurse);
+            }
+         };
+         recurse(*out.root, recurse);
+      };
+      if (dt == worldinput2::input_device_type::keyboard_mouse) {
+         warn(out);
+      }
+
       return out;
    }
 
@@ -456,6 +480,7 @@ namespace {
          //  - Y down.
          //  - Y up.
          //     - Bind 2 and Bind 3 both lose a same-frame conflict.
+         //        = They have equal specificity and went wholly down at the same time.)
          //     - Bind 2 does not activate.
          //     - Bind 3 does not activate.
          // 
@@ -465,8 +490,9 @@ namespace {
          //  - LT down.
          //  - LB up.
          //     - Bind 2 fires.
+         //     - Bind 3 is blocked. (Bind 2 went wholly down before Bind 3, and they have equal specificity.)
          //  - LT up.
-         //     - Bind 3 fires.
+         //     - Bind 3 does not activate.
          //
          .tree = make_tree(
             worldinput2::input_device_type::xinput,
@@ -489,7 +515,7 @@ namespace {
             }
          ),
       },
-      testing_tree{
+      testing_tree{ // 4/14/2023 - PASSES
          .name = "Separate-and-ordered interruptions",
          .tree = make_tree(
             worldinput2::input_device_type::keyboard_mouse,
