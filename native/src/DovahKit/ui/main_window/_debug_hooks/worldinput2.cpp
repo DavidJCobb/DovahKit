@@ -538,6 +538,96 @@ namespace {
             }
          ),
       },
+      testing_tree{
+         .name = "Press-delays-Hold detail 1",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press <A + S + J>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+               ),
+               make_tool_node(
+                  "Hold S",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("S")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press-delays-Hold detail 2",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press <A + S + J>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+               ),
+               make_tool_node(
+                  "Hold (K + S)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(K + S)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press-delays-Hold detail 3",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press <A + S + J>",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+               ),
+               make_tool_node(
+                  "Hold (K + <A + S>)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press-delays-Hold detail 4",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press (X + <A + S + J>)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(X + <A + S + J>)")
+               ),
+               make_tool_node(
+                  "Hold (K + <A + S>)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press-delays-Hold detail 5",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press [X + <A + S + J>]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[X + <A + S + J>]")
+               ),
+               make_tool_node(
+                  "Hold (K + <A + S>)",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+               ),
+            }
+         ),
+      },
    };
 }
 

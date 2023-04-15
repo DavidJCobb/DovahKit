@@ -1,4 +1,6 @@
 #include "./abstract_input_node.h"
+#include "helpers/unreachable.h"
+#include "../../devices/abstract_device_handler.h"
 #include "../../defaults.h"
 
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
@@ -29,49 +31,115 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
    /*static*/ bool abstract_input_node::does_press_delay_hold(
       timestamp_t current_time,
+      devices::abstract_device_handler& device,
       const abstract_input_node& press,
       const abstract_input_node& hold
    ) {
 
       auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
-      if (elapsed_h > defaults::press_to_hold_threshold + defaults::press_to_long_press_threshold) {
-         //
-         // The Hold bind has been pressed down for longer than the worst-case delay 
-         // that would be present in the case of a conflict, so just immediately 
-         // assume that it's fine.
-         //
-         return false;
-      }
-
-      auto abs_p = press.absolute_input_sequence().terminal_inputs();
-      auto abs_h = hold.absolute_input_sequence().terminal_inputs();
       {
-         if (abs_p.size() < abs_h.size())
+         auto disambig = defaults::press_to_hold_threshold;
+         if (press.button_press_type == button_press_type::long_press)
+            disambig += defaults::press_to_long_press_threshold;
+
+         if (elapsed_h > disambig) {
+            //
+            // Whether or not there is a conflict, the Hold bind has been pressed down 
+            // for long enough to win it.
+            //
             return false;
-         for (const auto& item_h : abs_h) {
-            bool found = false;
-            for (const auto& item_p : abs_p) {
-               if (item_p == item_h) {
-                  found = true;
-                  break;
-               }
-            }
-            if (!found)
-               return false;
          }
       }
 
-      // The two binds may conflict. Next, we need to check the timestamps at which 
-      // they went down.
+      using frame_status = input_sequence::frame_status;
+      using group        = input_sequence::group;
+      using group_type   = input_sequence::group_type;
 
-      auto disambig = defaults::press_to_hold_threshold;
-      if (press.button_press_type == button_press_type::long_press)
-         disambig += defaults::press_to_long_press_threshold;
+      const auto abs_p = press.absolute_input_sequence();
+      const auto abs_h = hold.absolute_input_sequence();
 
-      if (elapsed_h > disambig) {
+      const auto* final_h = abs_h.final_group();
+      if (!final_h) {
          return false;
       }
-      return true;
+      assert(final_h->type == group_type::single_control || final_h->type == group_type::concurrent_unordered);
+
+      std::vector<inputs::button> keys_h;
+      std::vector<inputs::button> keys_p;
+      final_h->terminal_inputs(keys_h);
+
+      auto key_gathering_subalgorithm = [&keys_p, current_time, &device](const group& current) {
+         struct result {
+            frame_status status    = frame_status::inactive;
+            timestamp_t  timestamp = zero_timestamp;
+         };
+
+         auto recurse = [&](const group& current, auto& recurse) -> result {
+            if (current.type == group_type::single_control) {
+               auto bs = device.get_state_of(current.button);
+               if (bs.is_down()) {
+                  keys_p.push_back(current.button);
+                  return { frame_status::down, bs.down_when };
+               }
+               return { frame_status::inactive, zero_timestamp };
+            }
+            if (current.type == group_type::concurrent_ordered) {
+               auto previous_timestamp = zero_timestamp;
+               for (const auto* child : current.children) {
+                  size_t prior_count = keys_p.size();
+                  auto   result      = recurse(*child, recurse);
+                  if (result.status == frame_status::down) {
+                     if (result.timestamp < previous_timestamp) {
+                        keys_p.resize(prior_count);
+                        return { frame_status::inactive, previous_timestamp };
+                     }
+                  } else {
+                     return { frame_status::inactive, previous_timestamp };
+                  }
+                  previous_timestamp = result.timestamp;
+               }
+               return { frame_status::down, previous_timestamp };
+            }
+            if (current.type == group_type::concurrent_unordered) {
+               bool any_not_down = false;
+               auto most_recent  = zero_timestamp;
+               for (const auto* child : current.children) {
+                  auto result = recurse(*child, recurse);
+                  if (result.status != frame_status::down)
+                     any_not_down = true;
+                  if (result.timestamp > most_recent)
+                     most_recent = result.timestamp;
+               }
+               if (any_not_down)
+                  return { frame_status::inactive, most_recent };
+               return { frame_status::down, most_recent };
+            }
+            if (current.type == group_type::separated_ordered) {
+               if (current.children.empty()) {
+                  return { frame_status::inactive, zero_timestamp };
+               }
+               //
+               const auto& child = current.current_item();
+               auto result = recurse(child, recurse);
+               if (result.status == frame_status::down && &child == current.children.back()) {
+                  return { frame_status::down, current_time };
+               }
+               return { frame_status::inactive, result.timestamp };
+            }
+            cobb::unreachable();
+         };
+         recurse(current, recurse);
+      };
+      key_gathering_subalgorithm(*(press.input_sequence.root));
+
+      for (const auto& key_p : keys_p) {
+         for (const auto& key_h : keys_h) {
+            if (key_p == key_h)
+               return true;
+         }
+      }
+
+      return false;
    }
    /*static*/ void abstract_input_node::do_concurrent_nodes_conflict(
       timestamp_t current_time,

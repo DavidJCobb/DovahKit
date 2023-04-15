@@ -152,7 +152,6 @@ namespace dovahkit::subsystems::worldinput2 {
                      .down_count = result.down_count,
                      .status     = frame_status::down,
                   };
-                  //return result;
                }
                return group_update_result{
                   .down_at    = current_time,
@@ -325,6 +324,11 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
+   const input_sequence::group& input_sequence::group::current_item() const {
+      assert(this->type == group_type::separated_ordered);
+      return *(this->children[this->state.current_item_index]);
+   }
+
    const input_sequence::group* input_sequence::group::final_group() const {
       const group* out;
       const group* parent;
@@ -447,13 +451,10 @@ namespace dovahkit::subsystems::worldinput2 {
          bool found_first_button = false;
          for (size_t i = 0; i < interruption_check.buttons.size(); ++i) {
             auto& item = interruption_check.buttons[i];
-            item.matched = false;
-            //
-            if (!found_first_button) {
-               if (item.down_at > this->state.last_advancement) {
-                  found_first_button = true;
-                  interruption_check.start_at = i;
-               }
+            if (item.down_at > this->state.last_advancement) {
+               found_first_button = true;
+               interruption_check.start_at = i;
+               break;
             }
          }
          if (!found_first_button) {
@@ -470,6 +471,8 @@ namespace dovahkit::subsystems::worldinput2 {
       if (this->state.frame_status != result.status) {
          this->state.frame_status_changed = true;
          this->state.frame_status         = result.status;
+      } else {
+         this->state.frame_status_changed = false;
       }
       switch (result.status) {
          case frame_status::inactive:

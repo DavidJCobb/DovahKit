@@ -76,6 +76,9 @@ namespace dovahkit::subsystems::worldinput2 {
                size_t input_control_count() const;
                bool is_or_contains_input_control(const inputs::button&) const;
 
+               // only meaningful when called on a separate-and-ordered group; result is undefined otherwise
+               const group& current_item() const;
+
                const group* final_group() const;
                group* final_group() {
                   return const_cast<group*>(std::as_const(*this).final_group());

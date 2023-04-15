@@ -204,7 +204,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
             if (node->button_press_type == button_press_type::hold)
                ++hold_count;
 
-         auto press_delays_hold_subalgorithm = [&conflict_losing_binds, &eligible_binds, &hold_count, now](node* current) {
+         auto press_delays_hold_subalgorithm = [&conflict_losing_binds, &eligible_binds, &hold_count, &device, now](node* current) {
             enum class result {
                stop,
                proceed,
@@ -222,6 +222,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
                               continue;
                            bool result = nodes::abstract_input_node::does_press_delay_hold(
                               now,
+                              device,
                               *press_node,
                               *eligible
                            );

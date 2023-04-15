@@ -3,6 +3,10 @@
 #include "../../enums/button_press_type.h"
 #include "../../input_sequence.h"
 
+namespace dovahkit::subsystems::worldinput2::devices {
+   class abstract_device_handler;
+}
+
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
    class abstract_input_node : public node {
       protected:
@@ -20,6 +24,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
          static bool does_press_delay_hold(
             timestamp_t current_time,
+            devices::abstract_device_handler&,
             const abstract_input_node& press,
             const abstract_input_node& hold
          );
