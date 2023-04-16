@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::qt::key">
+
+      <Intrinsic Name="_is_glyph" Expression="code == (Qt::Key)0 &amp;&amp; glyph.d-&gt;size &gt; 0" />
+      <Intrinsic Name="_glyph_ptr" Expression="(QChar*)((char*)(glyph.d) + glyph.d-&gt;offset)" />
+
+      <DisplayString IncludeView="keyname" Condition="_is_glyph() &amp;&amp; native.vk">{_glyph_ptr(),sub}</DisplayString>
+      <DisplayString IncludeView="keyname" Condition="!_is_glyph()">{code,en}</DisplayString>
+
+      <DisplayString Condition="_is_glyph() &amp;&amp; native.vk">glyph {_glyph_ptr(),sub} (VK code {(unsigned char)native.vk,X})</DisplayString>
+      <DisplayString Condition="_is_glyph()">glyph "{_glyph_ptr(),sub}"</DisplayString>
+      <DisplayString Condition="!_is_glyph() &amp;&amp; side != key_side::none &amp;&amp; native.vk">{side,en}-side {code,en} (VK code {(unsigned char)native.vk,X})</DisplayString>
+      <DisplayString Condition="!_is_glyph() &amp;&amp; side != key_side::none">{side,en}-side {code,en}</DisplayString>
+      <DisplayString Condition="!_is_glyph()">{code,en}</DisplayString>
+      <DisplayString>{*this,!}</DisplayString>
+   </Type>
+</AutoVisualizer>

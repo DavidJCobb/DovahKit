@@ -112,24 +112,4 @@ namespace dovahkit::subsystems::worldinput2::devices {
       auto i = _button_to_index(button);
       return (i != no_button);
    }
-
-   button_press_type xinput::release_type(const inputs::button& b) const {
-      auto i = _button_to_index(b);
-      if (i == no_button)
-         return button_press_type::none;
-      return this->buttons.release_times[i];
-   }
-
-   bool xinput::is_down(const inputs::button& b) const {
-      auto i = _button_to_index(b);
-      if (i == no_button)
-         return false;
-      return (this->buttons.start[i] != zero_timestamp);
-   }
-   timestamp_t xinput::down_when(const inputs::button& b) const {
-      auto i = _button_to_index(b);
-      if (i == no_button)
-         return zero_timestamp;
-      return this->buttons.start[i];
-   }
 }

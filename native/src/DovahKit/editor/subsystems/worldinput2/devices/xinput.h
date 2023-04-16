@@ -45,10 +45,5 @@ namespace dovahkit::subsystems::worldinput2::devices {
          //
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const override final;
-
-      public:
-         button_press_type release_type(const inputs::button&) const;
-         bool is_down(const inputs::button&) const;
-         timestamp_t down_when(const inputs::button&) const;
    };
 }

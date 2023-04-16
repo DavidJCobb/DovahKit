@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovahkit::subsystems::worldinput2::input_sequence">
+      <DisplayString IncludeView="stringified" Condition="root != nullptr">{*root,view(stringified)}</DisplayString>
+      <DisplayString Condition="root != nullptr">{state.frame_status,en}: {*root,view(stringified)}</DisplayString>
+      <DisplayString>{*this,!}</DisplayString>
+      <Expand>
+         <Item Name="root">*root,view(stringified)</Item>
+         <Item Name="state">state</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovahkit::subsystems::worldinput2::input_sequence::group">
+
+      <Intrinsic Name="_child" Expression="*children[i]">
+         <Parameter Name="i" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_nests" Expression="type != group_type::single_control" />
+      <Intrinsic Name="_size" Expression="_nests() ? children.size() : 0" />
+
+      <DisplayString IncludeView="stringified" Condition="!_nests()">{button.key,view(keyname)}</DisplayString>
+
+      <!--
+         HACK: We use multiple views to do string concatenation within DisplayString. 
+         You can just do {*this,view(some_view)} within DisplayString to invoke another 
+         view. The catch is that the views you define need to all exclude each other by 
+         name; a DisplayString tag with both IncludeView and a Condition attribute can 
+         shadow non-default views that it doesn't manually exclude.
+      -->
+      
+      <DisplayString IncludeView="delim1" ExcludeView="stringified; n0; n1; n2; n3; n4; n5; delim2" Condition="type == group_type::separated_ordered">&lt;</DisplayString>
+      <DisplayString IncludeView="delim1" ExcludeView="stringified; n0; n1; n2; n3; n4; n5; delim2" Condition="type == group_type::concurrent_ordered">[</DisplayString>
+      <DisplayString IncludeView="delim1" ExcludeView="stringified; n0; n1; n2; n3; n4; n5; delim2" Condition="type == group_type::concurrent_unordered">(</DisplayString>
+      <DisplayString IncludeView="delim2" ExcludeView="stringified; n0; n1; n2; n3; n4; n5" Condition="type == group_type::separated_ordered">&gt;</DisplayString>
+      <DisplayString IncludeView="delim2" ExcludeView="stringified; n0; n1; n2; n3; n4; n5" Condition="type == group_type::concurrent_ordered">]</DisplayString>
+      <DisplayString IncludeView="delim2" ExcludeView="stringified; n0; n1; n2; n3; n4; n5" Condition="type == group_type::concurrent_unordered">)</DisplayString>
+
+      <DisplayString IncludeView="n0" ExcludeView="stringified">{_child(0),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="n1" ExcludeView="stringified">{*this,view(n0)} + {_child(1),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="n2" ExcludeView="stringified">{*this,view(n1)} + {_child(2),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="n3" ExcludeView="stringified">{*this,view(n2)} + {_child(3),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="n4" ExcludeView="stringified">{*this,view(n3)} + {_child(4),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="n5" ExcludeView="stringified">{*this,view(n4)} + {_child(5),view(stringified)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() &gt; 5">{*this,view(delim1)}{*this,view(n5)} + ...{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() == 5">{*this,view(delim1)}{*this,view(n4)}{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() == 4">{*this,view(delim1)}{*this,view(n3)}{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() == 3">{*this,view(delim1)}{*this,view(n2)}{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() == 2">{*this,view(delim1)}{*this,view(n1)}{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_size() == 1">{*this,view(delim1)}{*this,view(n0)}{*this,view(delim2)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="_nests() &amp;&amp; _size() == 0">{*this,view(delim1)}{*this,view(delim2)}</DisplayString>
+      
+      <!-- Default-view DisplayStrings: -->
+
+      <DisplayString Condition="type == group_type::single_control">{{ single input control, {button} }}</DisplayString>
+      <DisplayString Condition="type == group_type::separated_ordered">{{ {type,en}, size={children.size(),d}, current={state.current_item_index,d} }}</DisplayString>
+      <DisplayString Condition="type != group_type::single_control">{{ {type,en}, size={children.size(),d} }}</DisplayString>
+      <DisplayString>{*this,!}</DisplayString>
+      
+      <Expand>
+         <Item Name="type">type</Item>
+         <Item Name="button"   Condition="type == group_type::single_control">button</Item>
+         <Synthetic Name="children" Condition="type != group_type::single_control">
+            <DisplayString>{children}</DisplayString>
+            <Expand>
+               <IndexListItems>
+                  <Size>children.size()</Size>
+                  <ValueNode>*(children[$i])</ValueNode>
+               </IndexListItems>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="state" Condition="type != group_type::single_control">
+            <DisplayString>{state}</DisplayString>
+            <Expand>
+               <ExpandedItem>state</ExpandedItem>
+               <Item Name="[current item]" Condition="type == group_type::separated_ordered">children[state.current_item_index],na</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

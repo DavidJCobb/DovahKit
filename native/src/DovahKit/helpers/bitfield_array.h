@@ -255,8 +255,12 @@ namespace cobb {
                   value = (value >> (unit_bitcount - bitshift - bitcount)) & cobb::bits::all_ones<underlying_integral_type>(bitcount);
                },
                [&value](const unit_type unit, uint8_t trailing_bitcount, size_t whole_unit_bits_remaining) {
-                  value <<= unit_bitcount;
-                  value |= unit;
+                  if constexpr (sizeof(value) <= sizeof(unit_type)) {
+                     value = unit;
+                  } else {
+                     value <<= unit_bitcount;
+                     value |= unit;
+                  }
                },
                [&value](const unit_type unit, uint8_t trailing_bitcount) {
                   value <<= trailing_bitcount;
@@ -304,7 +308,7 @@ namespace cobb {
             return;
          }
 
-         void clear() {
+         constexpr void clear() {
             this->units = {};
          }
 

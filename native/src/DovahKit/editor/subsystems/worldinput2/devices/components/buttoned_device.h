@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
 #include "helpers/bitfield_array.h"
-#include "../../enums/button_press_type.h"
 #include "../../chrono.h"
 #include "../../device_button_claim.h"
 #include "../../device_button_state.h"
@@ -20,19 +19,19 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
       public:
          std::array<timestamp_t, ButtonCount> start = {};
          cobb::bitfield_array<device_button_state::flags_t, ButtonCount, 3> flags;
-         cobb::bitfield_array<button_press_type, ButtonCount, 3> release_times;
          std::array<device_button_claim_set, ButtonCount> claims = {};
 
       public:
          // Per-frame update handler; call per button.
-         void update_button(timestamp_t now, size_t index, bool is_down);
+         constexpr void update_button(timestamp_t now, size_t index, bool is_down);
 
          // Call if the device was disconnected on this frame.
-         void handle_disconnected();
+         constexpr void handle_disconnected();
 
-         void ignore_all_down();
+         constexpr void ignore_all_down();
 
-         device_button_state get_button_state(size_t index) const;
+         constexpr device_button_state get_button_state(size_t index) const;
+
          constexpr bool is_consumed(size_t index) const {
             return this->flags[index] & device_button_state::flag::consumed_on_a_previous_frame;
          }

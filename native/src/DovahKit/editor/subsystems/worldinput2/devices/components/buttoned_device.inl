@@ -10,38 +10,32 @@
 
 namespace dovahkit::subsystems::worldinput2::devices::components {
    TEMPLATE_PARAMS
-   void CLASS_NAME::update_button(timestamp_t now, size_t index, bool is_down) {
+   constexpr void CLASS_NAME::update_button(timestamp_t now, size_t index, bool is_down) {
       auto& start = this->start[index];
-      auto  flags = this->flags[index];
-      flags &= ~device_button_state::flag::went_down_on_this_frame;
+      this->flags[index] &= ~device_button_state::flag::down_state_changed_on_this_frame;
 
+      bool changed_this_frame = false;
       if (is_down) {
          if (start == zero_timestamp) {
             //
             // Key was up, last we checked.
             //
             start = now;
-            flags |= device_button_state::flag::went_down_on_this_frame;
+            this->flags[index] |= device_button_state::flag::down_state_changed_on_this_frame;
+            changed_this_frame = true;
          }
       } else {
-         this->release_times[index] = button_press_type::none;
          if (start != zero_timestamp) {
             auto down_duration = elapsed_time(start, now);
 
             start = zero_timestamp;
-
-            this->release_times[index] = button_press_type::press;
-            if (down_duration >= dovahkit::subsystems::worldinput2::defaults::press_to_long_press_threshold) {
-               this->release_times[index] = button_press_type::long_press;
-               if (down_duration >= dovahkit::subsystems::worldinput2::defaults::press_to_hold_threshold) {
-                  this->release_times[index] = button_press_type::hold;
-               }
-            }
+            this->flags[index] |= device_button_state::flag::down_state_changed_on_this_frame;
+            changed_this_frame = true;
          }
       }
 
       auto& claims = this->claims[index];
-      if (!is_down && this->release_times[index] == button_press_type::none) {
+      if (!is_down && !changed_this_frame) {
          claims.existing = {};
       } else {
          if (claims.pending.specificity >= claims.existing.specificity) {
@@ -52,12 +46,12 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
    }
 
    TEMPLATE_PARAMS
-   void CLASS_NAME::handle_disconnected() {
+   constexpr void CLASS_NAME::handle_disconnected() {
       this->ignore_all_down();
    }
 
    TEMPLATE_PARAMS
-   void CLASS_NAME::ignore_all_down() {
+   constexpr void CLASS_NAME::ignore_all_down() {
       for (size_t i = 0; i < button_count; ++i) {
          if (this->start[i] != zero_timestamp) {
             this->claims[i].existing.specificity = std::numeric_limits<size_t>::max();
@@ -66,13 +60,10 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
    }
 
    TEMPLATE_PARAMS
-   device_button_state CLASS_NAME::get_button_state(size_t index) const {
+   constexpr device_button_state CLASS_NAME::get_button_state(size_t index) const {
       device_button_state out;
       out.down_when = this->start[index];
       out.flags     = this->flags[index];
-      if (out.down_when == zero_timestamp) {
-         out.release_type = this->release_times[index];
-      }
       return out;
    }
 }

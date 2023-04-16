@@ -179,23 +179,4 @@ namespace dovahkit::subsystems::worldinput2::devices {
          return false;
       return true;
    }
-
-   button_press_type keyboard_mouse::release_type(const inputs::button& button) const {
-      auto vk = button_to_vk(button);
-      if (vk < 0 || vk >= vk_code_count)
-         return button_press_type::none;
-      return this->buttons.release_times[vk];
-   }
-   bool keyboard_mouse::is_down(const inputs::button& button) const {
-      auto vk = button_to_vk(button);
-      if (vk < 0 || vk >= vk_code_count)
-         return false;
-      return (this->buttons.start[vk] != zero_timestamp);
-   }
-   timestamp_t keyboard_mouse::down_when(const inputs::button& button) const {
-      auto vk = button_to_vk(button);
-      if (vk < 0 || vk >= vk_code_count)
-         return zero_timestamp;
-      return this->buttons.start[vk];
-   }
 }
