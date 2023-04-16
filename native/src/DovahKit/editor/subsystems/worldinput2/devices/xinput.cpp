@@ -93,7 +93,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
    const device_button_claim& xinput::get_pending_claim_of(const inputs::button& button) const {
       return this->buttons.claims[_button_to_index(button)].pending;
    }
-   interruption_check xinput::prepare_interruption_check() const {
+   interruption_check xinput::_prepare_interruption_check_impl() const {
       interruption_check check;
       for (size_t i = 0; i < button_count; ++i) {
          if (this->buttons.start[i] == zero_timestamp)

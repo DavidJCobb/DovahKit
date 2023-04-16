@@ -1977,6 +1977,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">

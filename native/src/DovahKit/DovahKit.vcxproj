@@ -118,6 +118,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp" />

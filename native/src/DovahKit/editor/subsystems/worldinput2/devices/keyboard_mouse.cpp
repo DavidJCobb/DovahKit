@@ -158,7 +158,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
    const device_button_claim& keyboard_mouse::get_pending_claim_of(const inputs::button& button) const {
       return this->buttons.claims[button_to_vk(button)].pending;
    }
-   interruption_check keyboard_mouse::prepare_interruption_check() const {
+   interruption_check keyboard_mouse::_prepare_interruption_check_impl() const {
       interruption_check check;
       for (size_t i = 0; i < vk_code_count; ++i) {
          if (this->buttons.start[i] == zero_timestamp)

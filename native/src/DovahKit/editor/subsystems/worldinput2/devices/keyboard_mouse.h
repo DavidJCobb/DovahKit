@@ -58,10 +58,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
          virtual const device_button_claim& get_existing_claim_of(const inputs::button&) const final override;
          virtual device_button_claim& get_pending_claim_of(const inputs::button&) final override;
          virtual const device_button_claim& get_pending_claim_of(const inputs::button&) const final override;
-         virtual interruption_check prepare_interruption_check() const override final;
          //
          virtual bool button_is_valid(const inputs::button&) const override final;
+         //
+      protected:
+         virtual interruption_check _prepare_interruption_check_impl() const override final;
 
+      public:
          button_press_type release_type(const inputs::button&) const;
          bool is_down(const inputs::button&) const;
          timestamp_t down_when(const inputs::button&) const;

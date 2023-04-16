@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace dovahkit::subsystems::worldinput2 {
    enum class button_press_type : int8_t {
