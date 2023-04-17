@@ -62,6 +62,37 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       interruption_check interruption_check = device.prepare_interruption_check();
 
+      auto recursively_disqualify_node_and_descendants = [&eligible_binds](node& target, bool clear_progress = false) -> size_t {
+         size_t removed = 0;
+         auto   recurse = [&](node& target, auto& recurse) mutable -> void {
+            if (auto* casted = target.as<nodes::abstract_input_node>()) {
+               eligible_binds.erase(
+                  std::remove_if(
+                     eligible_binds.begin(),
+                     eligible_binds.end(),
+                     [casted, &removed](auto* node) {
+                        ++removed;
+                        return node == casted;
+                     }
+                  ),
+                  eligible_binds.end()
+               );
+               if (casted->button_press_type != button_press_type::hold) {
+                  casted->clear_descendants_input_sequence_progress();
+               }
+               if (eligible_binds.empty())
+                  return;
+            }
+            for (auto* child : target.child_nodes()) {
+               recurse(*child, recurse);
+               if (eligible_binds.empty())
+                  return;
+            }
+         };
+         recurse(target, recurse);
+         return removed;
+      };
+
       auto traversal_subalgorithm = [&eligible_binds, &conflict_losing_binds, &device, &interruption_check, current_editing_mode, now](node* current) {
          auto recurse = [&](node* current, auto& recurse) mutable -> void {
             //
@@ -181,20 +212,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       traversal_subalgorithm(this->root);
       
       for (auto* conflicted : conflict_losing_binds) {
-         eligible_binds.erase(
-            std::remove_if(
-               eligible_binds.begin(),
-               eligible_binds.end(),
-               [conflicted](auto* node) {
-                  return node == conflicted;
-               }
-            ),
-            eligible_binds.end()
-         );
-         //
-         if (conflicted->button_press_type == button_press_type::hold)
-            continue;
-         conflicted->clear_descendants_input_sequence_progress();
+         recursively_disqualify_node_and_descendants(*conflicted, true);
       }
       conflict_losing_binds.clear();
       //
@@ -204,7 +222,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
             if (node->button_press_type == button_press_type::hold)
                ++hold_count;
 
-         auto press_delays_hold_subalgorithm = [&conflict_losing_binds, &eligible_binds, &hold_count, &device, now](node* current) {
+         auto press_delays_hold_subalgorithm = [&conflict_losing_binds, &eligible_binds, &hold_count, &device, now, &recursively_disqualify_node_and_descendants](node* current) {
             enum class result {
                stop,
                proceed,
@@ -232,21 +250,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
                         }
                         if (!conflict_losing_binds.empty()) {
                            for (auto* conflicted : conflict_losing_binds) {
-                              eligible_binds.erase(
-                                 std::remove_if(
-                                    eligible_binds.begin(),
-                                    eligible_binds.end(),
-                                    [conflicted, &hold_count](auto* node) {
-                                       if (node == conflicted) {
-                                          assert(hold_count > 0);
-                                          --hold_count;
-                                          return true;
-                                       }
-                                       return false;
-                                    }
-                                 ),
-                                 eligible_binds.end()
-                              );
+                              hold_count -= recursively_disqualify_node_and_descendants(*conflicted, false);
                            }
                            conflict_losing_binds.clear();
                            //
@@ -309,10 +313,13 @@ namespace dovahkit::subsystems::worldinput2::binds {
          ),
          eligible_binds.end()
       );
+      // NOTE: Modifiers are always Hold binds, whereas we're here removing Press and Long Press 
+      // binds, so we don't here need to worry about recursively removing descendants from the 
+      // list of eligible binds if a Press or Long Press bind loses a conflict.
 
       this->last_frame_active_hold_binds = {};
 
-      // Execution;
+      // Execution:
       for (auto* node : eligible_binds) {
          if (auto* bt = node->as<nodes::bound_tool>()) {
             bt->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results);
