@@ -2051,12 +2051,15 @@
   <ItemGroup>
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="editor\subsystems\worldinput2\inputs\button.natvis" />
+    <Natvis Include="editor\subsystems\worldinput2\input_sequence.natvis" />
     <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
     <Natvis Include="helpers\eight_cc.natvis" />
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\grid.natvis" />
+    <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="nif\block.natvis" />
     <Natvis Include="nif\blocks\BSShaderTextureSet.natvis" />

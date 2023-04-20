@@ -36,21 +36,6 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       const abstract_input_node& hold
    ) {
 
-      auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
-      {
-         auto disambig = defaults::press_to_hold_threshold;
-         if (press.button_press_type == button_press_type::long_press)
-            disambig += defaults::press_to_long_press_threshold;
-
-         if (elapsed_h > disambig) {
-            //
-            // Whether or not there is a conflict, the Hold bind has been pressed down 
-            // for long enough to win it.
-            //
-            return false;
-         }
-      }
-
       using frame_status = input_sequence::frame_status;
       using group        = input_sequence::group;
       using group_type   = input_sequence::group_type;
@@ -64,8 +49,23 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       }
       assert(final_h->type == group_type::single_control || final_h->type == group_type::concurrent_unordered);
 
+      struct key_in_press_node {
+         inputs::button button;
+
+         bool passed = false;
+         // If all conflicting keys are `passed`, then this means that the user has advanced 
+         // past all of them. The Hold node should be delayed indefinitely, but should not be 
+         // blocked outright. This is because if the user releases keys exclusive to the Press 
+         // node's input sequence, they may "rewind" before a conflicting key, thereby allowing 
+         // the Hold node to potentially win this conflict again.
+         // 
+         // If any conflicting keys exist and are not `passed`, then a conflict is present, and 
+         // the Hold node should experience a finite delay before activating (with its activation 
+         // then preempting activation of the conflicting Press node).
+      };
+
       std::vector<inputs::button> keys_h;
-      std::vector<inputs::button> keys_p;
+      std::vector<key_in_press_node> keys_p;
       final_h->terminal_inputs(keys_h);
 
       auto key_gathering_subalgorithm = [&keys_p, current_time, &device](const group& current) {
@@ -78,13 +78,14 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             if (current.type == group_type::single_control) {
                auto bs = device.get_state_of(current.button);
                if (bs.is_down()) {
-                  keys_p.push_back(current.button);
+                  keys_p.push_back({ .button = current.button, .passed = false });
                   return { frame_status::down, bs.down_when };
                }
                return { frame_status::inactive, zero_timestamp };
             }
             if (current.type == group_type::concurrent_ordered) {
-               auto previous_timestamp = zero_timestamp;
+               auto   previous_timestamp = zero_timestamp;
+               size_t previous_start     = keys_p.size();
                for (const auto* child : current.children) {
                   size_t prior_count = keys_p.size();
                   auto   result      = recurse(*child, recurse);
@@ -93,22 +94,49 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
                         keys_p.resize(prior_count);
                         return { frame_status::inactive, previous_timestamp };
                      }
+                     //
+                     // Mark the previous-sibling ISG's contributions to `keys_p` (if any) as passed.
+                     //
+                     for (size_t j = previous_start; j < prior_count; ++j) {
+                        keys_p[j].passed = true;
+                     }
                   } else {
                      return { frame_status::inactive, previous_timestamp };
                   }
                   previous_timestamp = result.timestamp;
+                  previous_start     = prior_count;
                }
                return { frame_status::down, previous_timestamp };
             }
             if (current.type == group_type::concurrent_unordered) {
+               size_t additions_start_at = keys_p.size();
+               
                bool any_not_down = false;
                auto most_recent  = zero_timestamp;
                for (const auto* child : current.children) {
-                  auto result = recurse(*child, recurse);
+                  size_t prior_count = keys_p.size();
+                  auto   result      = recurse(*child, recurse);
                   if (result.status != frame_status::down)
                      any_not_down = true;
-                  if (result.timestamp > most_recent)
+                  if (result.timestamp > most_recent) {
                      most_recent = result.timestamp;
+                     //
+                     // The keys we just found were pressed more recently than the previous-sibling 
+                     // ISGs. Mark those previous-sibling ISGs' contributions to `keys_p` as passed.
+                     //
+                     for (size_t j = additions_start_at; j < prior_count; ++j) {
+                        keys_p[j].passed = true;
+                     }
+                     additions_start_at = prior_count; // hack, to avoid redundant work if we end up running the above loop multiple times
+                  } else {
+                     //
+                     // The keys we just found were pressed less recently than a previous-sibling 
+                     // ISG. Mark them all as passed.
+                     //
+                     for (size_t j = prior_count; j < keys_p.size(); ++j) {
+                        keys_p[j].passed = true;
+                     }
+                  }
                }
                if (any_not_down)
                   return { frame_status::inactive, most_recent };
@@ -132,14 +160,41 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       };
       key_gathering_subalgorithm(*(press.input_sequence.root));
 
+      bool any_passed   = false;
+      bool any_conflict = false;
       for (const auto& key_p : keys_p) {
          for (const auto& key_h : keys_h) {
-            if (key_p == key_h)
-               return true;
+            if (key_p.button == key_h) {
+               any_conflict = true;
+               if (key_p.passed) {
+                  any_passed = true;
+                  break;
+               }
+            }
          }
       }
+      if (!any_conflict) {
+         return false;
+      }
+      if (any_passed) {
+         // indefinite delay
+         return true;
+      }
 
-      return false;
+      auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
+      {
+         auto disambig = defaults::press_to_hold_threshold;
+         if (press.button_press_type == button_press_type::long_press)
+            disambig += defaults::press_to_long_press_threshold;
+
+         if (elapsed_h > disambig) {
+            //
+            // The Hold bind has been pressed down for long enough to win a conflict.
+            //
+            return false;
+         }
+      }
+      return true;
    }
    /*static*/ void abstract_input_node::do_concurrent_nodes_conflict(
       timestamp_t current_time,

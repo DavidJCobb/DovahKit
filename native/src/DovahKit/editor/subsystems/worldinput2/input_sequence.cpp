@@ -32,6 +32,14 @@ namespace dovahkit::subsystems::worldinput2 {
             .status = frame_status::inactive,
          };
       }
+      
+      if (this->children.empty()) {
+         return group_update_result{
+            .down_at    = zero_timestamp,
+            .down_count = 0,
+            .status     = frame_status::down,
+         };
+      }
 
       if (this->type == group_type::concurrent_ordered) {
          auto   previous_timestamp = zero_timestamp;
@@ -179,7 +187,7 @@ namespace dovahkit::subsystems::worldinput2 {
                // Enforce the maximum time to progress the sequence.
                //
                if (this->state.current_item_index > 0) {
-                  auto time    = last_advancement_time;
+                  auto time = last_advancement_time;
                   if (result.down_at > time)
                      time = result.down_at;
                   auto elapsed = elapsed_time(time, current_time);
@@ -413,6 +421,152 @@ namespace dovahkit::subsystems::worldinput2 {
          case group_type::concurrent_ordered:   out += ']'; break;
          case group_type::concurrent_unordered: out += ')'; break;
          case group_type::separated_ordered:    out += '>'; break;
+      }
+   }
+
+   void input_sequence::group::normalize(bool recursively) {
+      //
+      // This function strips out duplicate and empty ISGs, but does not do anything 
+      // about impossible ISGs.
+      // 
+      // TODO: Dupes/redundancies across hierarchy are not yet accounted for; for example, 
+      // [A + [A + B]] is equivalent to [A + B] but won't be normalized as such.
+      //
+      if (this->type == group_type::single_control) {
+         return;
+      }
+
+      auto& list = this->children;
+      const auto size = list.size();
+      if (size == 0) {
+         //
+         // This branch should only be reachable for the root ISG of an input sequence, 
+         // presuming that ISG is not a single control yet is still empty and non-null.
+         //
+         return;
+      }
+
+      if (this->type == group_type::concurrent_ordered) {
+         //
+         // In a concurrent-and-ordered group, two consecutive and identical children 
+         // act the same as a single child. For example, [A + A] becomes fully down 
+         // after a single A press, because A is concurrent with itself, and these 
+         // groups only require that each child be pressed concurrently with or after 
+         // its previous sibling.
+         // 
+         // Identical but non-consecutive children would result in a group that is 
+         // impossible to input. For example, [A + B + A] requires that A be pressed 
+         // both before and after B is pressed, without ever being released.
+         // 
+         // Additionally, we remove empty ISGs if they are not single buttons.
+         //
+         std::vector<group*> to_remove;
+         if (list[0]->can_have_children() && list[0]->children.empty()) {
+            to_remove.push_back(list[0]);
+         }
+         for (size_t i = 1; i < size; ++i) {
+            auto* a = list[i - 1];
+            auto* b = list[i];
+            if (*a == *b) {
+               to_remove.push_back(b);
+            } else {
+               if (b->can_have_children() && b->children.empty()) {
+                  to_remove.push_back(b);
+               }
+            }
+         }
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [&to_remove](const auto* item) -> bool {
+                  for (const auto* unwanted : to_remove)
+                     if (unwanted == item)
+                        return true;
+                  return false;
+               }
+            ),
+            list.end()
+         );
+         for (auto* unwanted : to_remove) {
+            delete unwanted;
+         }
+      } else if (this->type == group_type::concurrent_unordered) {
+         //
+         // In a concurrent-and-unordered group, identical children anywhere in the 
+         // list act the same as a single child. For example, (A + B + A) has the 
+         // same behavior as (A + B).
+         // 
+         // Additionally, we remove empty ISGs if they are not single buttons.
+         //
+         std::vector<bool> to_remove;
+         to_remove.resize(size);
+         //
+         for (size_t i = 0; i < size - 1; ++i) {
+            auto* a = list[i];
+            for (size_t j = i + 1; j < size; ++j) {
+               auto* b = list[j];
+               if (*a == *b) {
+                  to_remove[j] = true;
+               }
+            }
+            if (a->can_have_children() && a->children.empty()) {
+               to_remove[i] = true;
+            }
+         }
+         if (size > 1) {
+            auto* b = list.back();
+            if (b->can_have_children() && b->children.empty()) {
+               to_remove.back() = true;
+            }
+         }
+         //
+         // Below, we delete duplicate groups *and* shift the list. It's basically 
+         // the same approach taken by the erase-remove idiom, except 
+         //
+         size_t displaced = 0;
+         for (size_t i = 1; i < size; ++i) {
+            if (to_remove[i]) {
+               delete list[i];
+               list[i] = nullptr;
+               ++displaced;
+            } else if (displaced > 0) {
+               list[i - displaced] = list[i];
+            }
+         }
+         if (displaced > 0)
+            list.resize(size - displaced);
+      } else if (this->type == group_type::separated_ordered) {
+         //
+         // We remove any empty ISGs inside of this one.
+         //
+         bool any_deleted = false;
+         for (size_t i = 0; i < size; ++i) {
+            auto* item = list[i];
+            if (item->can_have_children() && item->children.empty()) {
+               delete item;
+               list[i] = nullptr;
+               any_deleted = true;
+            }
+         }
+         if (any_deleted) {
+            list.erase(
+               std::remove(
+                  list.begin(),
+                  list.end(),
+                  nullptr
+               ),
+               list.end()
+            );
+         }
+      }
+      //
+      // At this point, `size` is potentially inaccurate, so we can't use it 
+      // to iterate over `list`.
+      //
+      if (recursively) {
+         for (auto* child : list)
+            child->normalize(true);
       }
    }
 
@@ -873,6 +1027,16 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       return out;
+   }
+
+   void input_sequence::normalize() {
+      if (this->root) {
+         this->root->normalize(true);
+         if (this->root->can_have_children() && this->root->children.empty()) {
+            delete this->root;
+            this->root = nullptr;
+         }
+      }
    }
    #pragma endregion
 }

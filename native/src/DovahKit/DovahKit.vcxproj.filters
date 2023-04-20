@@ -5390,5 +5390,8 @@
     <Natvis Include="vulkan\image.natvis" />
     <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
+    <Natvis Include="editor\subsystems\worldinput2\input_sequence.natvis" />
+    <Natvis Include="helpers\qt\keycodes.natvis" />
+    <Natvis Include="editor\subsystems\worldinput2\inputs\button.natvis" />
   </ItemGroup>
 </Project>

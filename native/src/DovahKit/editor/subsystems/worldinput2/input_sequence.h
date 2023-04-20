@@ -55,6 +55,13 @@ namespace dovahkit::subsystems::worldinput2 {
             public:
                bool run_interruption_check(interruption_check&) const;
 
+               constexpr bool can_have_children() const noexcept {
+                  switch (this->type) {
+                     case group_type::single_control:
+                        return false;
+                  }
+                  return true;
+               }
                constexpr bool is_concurrent() const noexcept {
                   switch (this->type) {
                      case group_type::concurrent_ordered:
@@ -96,6 +103,8 @@ namespace dovahkit::subsystems::worldinput2 {
                bool operator==(const group&) const;
 
                void debug_stringify(std::string&) const;
+
+               void normalize(bool recursively = false);
 
             protected:
                void _clear_all_progress();
@@ -145,5 +154,8 @@ namespace dovahkit::subsystems::worldinput2 {
 
          void debug_stringify(std::string&) const;
          static input_sequence debug_from_string(const std::string&, bool gamepad = false);
+
+         // May set `root` to `nullptr` if it's an empty non-single-button ISG.
+         void normalize();
    };
 }

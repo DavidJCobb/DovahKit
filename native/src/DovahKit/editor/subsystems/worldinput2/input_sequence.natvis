@@ -17,7 +17,7 @@
       <Intrinsic Name="_nests" Expression="type != group_type::single_control" />
       <Intrinsic Name="_size" Expression="_nests() ? children.size() : 0" />
 
-      <DisplayString IncludeView="stringified" Condition="!_nests()">{button.key,view(keyname)}</DisplayString>
+      <DisplayString IncludeView="stringified" Condition="!_nests()">{button,view(stringified)}</DisplayString>
 
       <!--
          HACK: We use multiple views to do string concatenation within DisplayString. 
