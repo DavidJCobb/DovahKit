@@ -134,6 +134,11 @@ namespace dovahkit::subsystems::worldinput2::binds {
                                  break;
                            }
                         }
+
+                        if (!matched && child_inode->button_press_type == button_press_type::hold) {
+                           child_inode->state.outlasted_press_delays_hold = false;
+                           child_inode->state.press_blocked_hold = false;
+                        }
                      }
                      break;
                }

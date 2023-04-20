@@ -35,6 +35,12 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       const abstract_input_node& press,
       const abstract_input_node& hold
    ) {
+      if (hold.state.outlasted_press_delays_hold) {
+         return false;
+      }
+      if (hold.state.press_blocked_hold) {
+         return true;
+      }
 
       using frame_status = input_sequence::frame_status;
       using group        = input_sequence::group;
@@ -48,6 +54,36 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          return false;
       }
       assert(final_h->type == group_type::single_control || final_h->type == group_type::concurrent_unordered);
+
+      std::vector<inputs::button> keys_h;
+      final_h->terminal_inputs(keys_h);
+
+      if (press.input_sequence.state.frame_status == input_sequence::frame_status::released) {
+         //
+         // The Press node was released. If it conflicts with the Hold node, then assume that 
+         // the Hold node was delayed and the Press node was released; that release should now 
+         // block the Hold node (i.e. Press-blocks-Hold).
+         //
+         auto keys_p = abs_p.terminal_inputs();
+         bool subset = true;
+         for (const auto& a : keys_h) {
+            bool found = false;
+            for (const auto& b : keys_p) {
+               if (a == b) {
+                  found = true;
+                  break;
+               }
+            }
+            if (!found) {
+               subset = false;
+               break;
+            }
+         }
+         if (subset) {
+            hold.state.press_blocked_hold = true;
+            return true;
+         }
+      }
 
       struct key_in_press_node {
          inputs::button button;
@@ -63,10 +99,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          // the Hold node should experience a finite delay before activating (with its activation 
          // then preempting activation of the conflicting Press node).
       };
-
-      std::vector<inputs::button> keys_h;
+      //
       std::vector<key_in_press_node> keys_p;
-      final_h->terminal_inputs(keys_h);
 
       auto key_gathering_subalgorithm = [&keys_p, current_time, &device](const group& current) {
          struct result {
@@ -160,23 +194,23 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       };
       key_gathering_subalgorithm(*(press.input_sequence.root));
 
-      bool any_passed   = false;
+      bool all_passed   = true;
       bool any_conflict = false;
       for (const auto& key_p : keys_p) {
          for (const auto& key_h : keys_h) {
             if (key_p.button == key_h) {
                any_conflict = true;
-               if (key_p.passed) {
-                  any_passed = true;
-                  break;
+               if (!key_p.passed) {
+                  all_passed = false;
                }
+               break;
             }
          }
       }
       if (!any_conflict) {
          return false;
       }
-      if (any_passed) {
+      if (all_passed) {
          // indefinite delay
          return true;
       }
@@ -230,6 +264,10 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             winner = &press;
             return;
          }
+      }
+
+      if ((a.button_press_type == button_press_type::hold) != (b.button_press_type == button_press_type::hold)) {
+         return;
       }
 
       auto a_length = abs_a.specificity();

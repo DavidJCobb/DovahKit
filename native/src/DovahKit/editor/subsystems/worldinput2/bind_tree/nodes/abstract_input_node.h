@@ -16,6 +16,10 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          QString name;
          typename button_press_type button_press_type = button_press_type::press;
          typename input_sequence    input_sequence;
+         mutable struct {
+            bool outlasted_press_delays_hold : 1 = false; // Hold node state for Press-preempts-Hold
+            bool press_blocked_hold          : 1 = false; // Hold node state for Press-preempts-Hold
+         } state;
 
          class input_sequence absolute_input_sequence() const;
          std::vector<inputs::button> absolute_terminal_inputs() const {
