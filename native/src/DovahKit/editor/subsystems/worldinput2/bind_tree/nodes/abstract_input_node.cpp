@@ -36,6 +36,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       const abstract_input_node& hold
    ) {
       if (hold.state.outlasted_press_delays_hold) {
+         press.state.press_delay_was_outlasted = true;
          return false;
       }
       if (hold.state.press_blocked_hold) {
@@ -210,6 +211,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       if (!any_conflict) {
          return false;
       }
+      press.state.press_did_delay_hold = true;
       if (all_passed) {
          // indefinite delay
          return true;
@@ -225,6 +227,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             //
             // The Hold bind has been pressed down for long enough to win a conflict.
             //
+            hold.state.outlasted_press_delays_hold = true;
+            press.state.press_delay_was_outlasted = true;
             return false;
          }
       }

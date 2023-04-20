@@ -18,7 +18,11 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          typename input_sequence    input_sequence;
          mutable struct {
             bool outlasted_press_delays_hold : 1 = false; // Hold node state for Press-preempts-Hold
+            bool press_delayed_hold          : 1 = false; // Hold node state for Press-delays-Hold
             bool press_blocked_hold          : 1 = false; // Hold node state for Press-preempts-Hold
+
+            bool press_did_delay_hold      : 1 = false; // Press node state for Press-delays-Hold
+            bool press_delay_was_outlasted : 1 = false; // Press node state for Press-delays-Hold
          } state;
 
          class input_sequence absolute_input_sequence() const;

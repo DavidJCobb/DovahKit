@@ -628,6 +628,65 @@ namespace {
             }
          ),
       },
+      testing_tree{
+         .name = "Press/Hold with common stem",
+         .tree = make_tree(
+            worldinput2::input_device_type::xinput,
+            {
+               make_tool_node(
+                  "Press [X + Y + A]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[X + Y + A]", true)
+               ),
+               make_tool_node(
+                  "Hold [X + Y + B]",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("[X + Y + B]", true)
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Advancing Press past conflict key indefinitely delays Hold?",
+         .tree = make_tree(
+            worldinput2::input_device_type::xinput,
+            {
+               make_tool_node(
+                  "Press [A + B + X + Y]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
+               ),
+               make_tool_node(
+                  "Hold B",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("B", true)
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press-delays-Hold: outlast one Press; advanced past by another",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Bind #1: Press [A + B]",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("[A + B]")
+               ),
+               make_tool_node(
+                  "Bind #2: Press [A + B + J]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + B + J]")
+               ),
+               make_tool_node(
+                  "Bind #3: Hold B",
+                  worldinput2::button_press_type::hold,
+                  worldinput2::input_sequence::debug_from_string("B")
+               ),
+            }
+         ),
+      },
    };
 }
 
