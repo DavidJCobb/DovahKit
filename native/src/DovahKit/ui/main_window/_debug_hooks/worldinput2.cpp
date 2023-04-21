@@ -293,7 +293,7 @@ namespace {
             {
                make_tool_node(
                   "Press [A + B + X + Y]",
-                  worldinput2::button_press_type::hold,
+                  worldinput2::button_press_type::press,
                   worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
@@ -516,7 +516,7 @@ namespace {
          ),
       },
       testing_tree{ // 4/14/2023 - PASSES
-         .name = "Separate-and-ordered interruptions",
+         .name = "Separate-and-ordered interruptions #1",
          .tree = make_tree(
             worldinput2::input_device_type::keyboard_mouse,
             {
@@ -530,6 +530,14 @@ namespace {
                   worldinput2::button_press_type::press,
                   worldinput2::input_sequence::debug_from_string("<A + S + D + [F + <J + K>]>")
                ),
+            }
+         ),
+      },
+      testing_tree{ // 4/14/2023 - PASSES
+         .name = "Press <A + S + D + [<J + K> + Z]>",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
                make_tool_node(
                   "Press <A + S + D + [<J + K> + Z]>",
                   worldinput2::button_press_type::press,
@@ -683,6 +691,26 @@ namespace {
                   "Bind #3: Hold B",
                   worldinput2::button_press_type::hold,
                   worldinput2::input_sequence::debug_from_string("B")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Edge-case: sequencing constraints on first item in group",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Bind #1: Press [B + [A + B]]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[B + [A + B]]")
+                  //
+                  // When this test-case was first written, the first item in an ordered  
+                  // group was unaware of the timestamp of the group's own previous sibling, 
+                  // and so would not disqualify inputs which preceded it. This means that 
+                  // this bind, which should ordinarily be impossible, would instead trigger 
+                  // if you entered (A + B).
+                  //
                ),
             }
          ),

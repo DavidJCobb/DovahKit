@@ -17,8 +17,8 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
          static constexpr const size_t button_count = ButtonCount;
 
       public:
-         std::array<timestamp_t, ButtonCount> start = {};
-         cobb::bitfield_array<device_button_state::flags_t, ButtonCount, 3> flags;
+         std::array<timestamp_t, ButtonCount> down_at = {};
+         cobb::bitfield_array<device_button_state::flags_t, ButtonCount, device_button_state::flag_count> flags;
          std::array<device_button_claim_set, ButtonCount> claims = {};
 
       public:

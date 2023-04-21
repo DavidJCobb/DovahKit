@@ -48,7 +48,13 @@ namespace dovahkit::subsystems::worldinput2 {
                } state;
 
             public:
-               group_update_result update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device, interruption_check&);
+               group_update_result update(
+                  timestamp_t current_time,
+                  timestamp_t last_advancement_time,
+                  devices::abstract_device_handler& device,
+                  interruption_check&,
+                  timestamp_t previous_sibling_time = zero_timestamp
+               );
 
             protected:
                bool _is_separate_ordered_group_complete(interruption_check&) const;

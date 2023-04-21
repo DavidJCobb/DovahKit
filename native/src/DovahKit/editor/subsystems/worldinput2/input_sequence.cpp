@@ -13,13 +13,21 @@ namespace dovahkit::subsystems::worldinput2 {
       this->children.clear();
    }
 
-   input_sequence::group_update_result input_sequence::group::update(timestamp_t current_time, timestamp_t last_advancement_time, devices::abstract_device_handler& device, interruption_check& interruption_check) {
+   input_sequence::group_update_result input_sequence::group::update(
+      timestamp_t current_time,
+      timestamp_t last_advancement_time,
+      devices::abstract_device_handler& device,
+      interruption_check& interruption_check,
+      timestamp_t previous_sibling_time
+   ) {
       if (this->type == group_type::single_control) {
          const auto bs = device.get_state_of(this->button);
          //
          if (bs.was_released_this_frame()) {
             return group_update_result{
-               .status = frame_status::released,
+               .down_at    = bs.down_when,
+               .down_count = 0,
+               .status     = frame_status::released,
             };
          } else if (bs.is_down()) {
             return group_update_result{
@@ -42,14 +50,14 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       if (this->type == group_type::concurrent_ordered) {
-         auto   previous_timestamp = zero_timestamp;
+         auto   previous_timestamp = previous_sibling_time;
          size_t count_down   = 0;
          bool   any_inactive = false;
          bool   any_released = false;
          size_t i;
          for (i = 0; i < this->children.size(); ++i) {
             auto* item   = this->children[i];
-            auto  result = item->update(current_time, last_advancement_time, device, interruption_check);
+            auto  result = item->update(current_time, last_advancement_time, device, interruption_check, previous_timestamp);
 
             if (result.status != frame_status::released) {
                if (result.down_at < previous_timestamp) {
@@ -67,7 +75,12 @@ namespace dovahkit::subsystems::worldinput2 {
                //
                break;
             } else if (result.status == frame_status::released) {
-               any_released = true;
+               if (result.down_at != zero_timestamp && result.down_at < previous_timestamp) {
+                  any_inactive = true;
+                  break;
+               }
+               any_released       = true;
+               previous_timestamp = result.down_at;
             } else if (result.status == frame_status::down) {
                previous_timestamp = result.down_at;
             }
@@ -92,6 +105,7 @@ namespace dovahkit::subsystems::worldinput2 {
          }
          if (any_released) {
             return group_update_result{
+               .down_at    = previous_timestamp,
                .down_count = count_down,
                .status     = frame_status::released,
             };
@@ -125,6 +139,7 @@ namespace dovahkit::subsystems::worldinput2 {
          if (!any_inactive) {
             if (any_released) {
                return group_update_result{
+                  .down_at    = most_recently_down,
                   .down_count = count_down,
                   .status     = frame_status::released,
                };
@@ -172,7 +187,8 @@ namespace dovahkit::subsystems::worldinput2 {
                if (this->state.current_item_index == this->children.size()) {
                   this->_clear_all_progress();
                   return group_update_result{
-                     .status = frame_status::released,
+                     .down_at = result.down_at,
+                     .status  = frame_status::released,
                   };
                } else {
                   return group_update_result{

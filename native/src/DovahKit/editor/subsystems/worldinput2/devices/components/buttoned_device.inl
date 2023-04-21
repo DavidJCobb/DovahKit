@@ -11,31 +11,22 @@
 namespace dovahkit::subsystems::worldinput2::devices::components {
    TEMPLATE_PARAMS
    constexpr void CLASS_NAME::update_button(timestamp_t now, size_t index, bool is_down) {
-      auto& start = this->start[index];
-      this->flags[index] &= ~device_button_state::flag::down_state_changed_on_this_frame;
+      bool  was_down = (this->flags[index] & device_button_state::flag::is_down) != 0;
+      auto& down_at  = this->down_at[index];
+      this->flags[index] &= ~(device_button_state::flag::down_state_changed_on_this_frame | device_button_state::flag::is_down);
 
-      bool changed_this_frame = false;
       if (is_down) {
-         if (start == zero_timestamp) {
-            //
-            // Key was up, last we checked.
-            //
-            start = now;
-            this->flags[index] |= device_button_state::flag::down_state_changed_on_this_frame;
-            changed_this_frame = true;
-         }
-      } else {
-         if (start != zero_timestamp) {
-            auto down_duration = elapsed_time(start, now);
-
-            start = zero_timestamp;
-            this->flags[index] |= device_button_state::flag::down_state_changed_on_this_frame;
-            changed_this_frame = true;
+         this->flags[index] |= device_button_state::flag::is_down;
+      }
+      if (is_down != was_down) {
+         this->flags[index] |= device_button_state::flag::down_state_changed_on_this_frame;
+         if (is_down) {
+            this->down_at[index] = now;
          }
       }
 
       auto& claims = this->claims[index];
-      if (!is_down && !changed_this_frame) {
+      if (!is_down && !was_down) {
          claims.existing = {};
       } else {
          if (claims.pending.specificity >= claims.existing.specificity) {
@@ -53,7 +44,7 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
    TEMPLATE_PARAMS
    constexpr void CLASS_NAME::ignore_all_down() {
       for (size_t i = 0; i < button_count; ++i) {
-         if (this->start[i] != zero_timestamp) {
+         if (this->flags[i] & device_button_state::flag::is_down) {
             this->claims[i].existing.specificity = std::numeric_limits<size_t>::max();
          }
       }
@@ -62,7 +53,7 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
    TEMPLATE_PARAMS
    constexpr device_button_state CLASS_NAME::get_button_state(size_t index) const {
       device_button_state out;
-      out.down_when = this->start[index];
+      out.down_when = this->down_at[index];
       out.flags     = this->flags[index];
       return out;
    }

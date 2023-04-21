@@ -96,13 +96,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
    interruption_check xinput::_prepare_interruption_check_impl() const {
       interruption_check check;
       for (size_t i = 0; i < button_count; ++i) {
-         if (this->buttons.start[i] == zero_timestamp)
+         if (this->buttons.down_at[i] == zero_timestamp)
             continue;
          check.buttons.emplace_back(interruption_check::potentially_interrupting_button{
             inputs::button{
                .gamepad = _indices_to_buttons[i],
             },
-            this->buttons.start[i]
+            this->buttons.down_at[i]
          });
       }
       return check;
