@@ -17,12 +17,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          typename button_press_type button_press_type = button_press_type::press;
          typename input_sequence    input_sequence;
          mutable struct {
-            bool outlasted_press_delays_hold : 1 = false; // Hold node state for Press-preempts-Hold
-            bool press_delayed_hold          : 1 = false; // Hold node state for Press-delays-Hold
-            bool press_blocked_hold          : 1 = false; // Hold node state for Press-preempts-Hold
-
-            bool press_did_delay_hold      : 1 = false; // Press node state for Press-delays-Hold
-            bool press_delay_was_outlasted : 1 = false; // Press node state for Press-delays-Hold
+            bool outlasted_press_delays_hold : 1 = false; // single-frame? Hold node state for Press-preempts-Hold
+            bool press_blocked_hold          : 1 = false; // cross-frame Hold node state for Press-preempts-Hold
          } state;
 
          class input_sequence absolute_input_sequence() const;
@@ -30,12 +26,20 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             return this->absolute_input_sequence().terminal_inputs();
          }
 
-         static bool does_press_delay_hold(
+         enum class press_preempt_hold_result {
+            no_conflict,
+            press_delays_hold,
+            press_blocks_hold,
+            press_advanced_past_hold,
+            hold_outlasted_press,
+         };
+         static press_preempt_hold_result does_press_delay_hold(
             timestamp_t current_time,
             devices::abstract_device_handler&,
             const abstract_input_node& press,
             const abstract_input_node& hold
          );
+
          static void do_concurrent_nodes_conflict(
             timestamp_t current_time,
             abstract_input_node& a,
@@ -44,6 +48,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             abstract_input_node*& winner,
             bool& allow_activation
          );
+
          static bool does_hold_block_press(
             const abstract_input_node& press,
             const abstract_input_node& hold

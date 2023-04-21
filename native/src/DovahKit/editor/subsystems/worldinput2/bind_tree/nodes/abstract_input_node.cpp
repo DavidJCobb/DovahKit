@@ -29,20 +29,12 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       return this->input_sequence.clone();
    }
 
-   /*static*/ bool abstract_input_node::does_press_delay_hold(
+   /*static*/ abstract_input_node::press_preempt_hold_result abstract_input_node::does_press_delay_hold(
       timestamp_t current_time,
       devices::abstract_device_handler& device,
       const abstract_input_node& press,
       const abstract_input_node& hold
    ) {
-      if (hold.state.outlasted_press_delays_hold) {
-         press.state.press_delay_was_outlasted = true;
-         return false;
-      }
-      if (hold.state.press_blocked_hold) {
-         return true;
-      }
-
       using frame_status = input_sequence::frame_status;
       using group        = input_sequence::group;
       using group_type   = input_sequence::group_type;
@@ -52,7 +44,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
       const auto* final_h = abs_h.final_group();
       if (!final_h) {
-         return false;
+         return press_preempt_hold_result::no_conflict;
       }
       assert(final_h->type == group_type::single_control || final_h->type == group_type::concurrent_unordered);
 
@@ -82,7 +74,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          }
          if (subset) {
             hold.state.press_blocked_hold = true;
-            return true;
+            return press_preempt_hold_result::press_blocks_hold;
          }
       }
 
@@ -209,12 +201,11 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          }
       }
       if (!any_conflict) {
-         return false;
+         return press_preempt_hold_result::no_conflict;
       }
-      press.state.press_did_delay_hold = true;
       if (all_passed) {
          // indefinite delay
-         return true;
+         return press_preempt_hold_result::press_advanced_past_hold;
       }
 
       auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
@@ -228,11 +219,10 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             // The Hold bind has been pressed down for long enough to win a conflict.
             //
             hold.state.outlasted_press_delays_hold = true;
-            press.state.press_delay_was_outlasted = true;
-            return false;
+            return press_preempt_hold_result::hold_outlasted_press;
          }
       }
-      return true;
+      return press_preempt_hold_result::press_delays_hold;
    }
    /*static*/ void abstract_input_node::do_concurrent_nodes_conflict(
       timestamp_t current_time,

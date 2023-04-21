@@ -224,159 +224,156 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       // Press-preempts-Hold.
       [this, now, &device, &eligible_binds, &recursively_disqualify_node_and_descendants](){
-         size_t hold_count = 0;
-         for (const auto* node : eligible_binds) {
+         struct hold_node_conflict_info {
+            nodes::abstract_input_node* node = nullptr;
+            size_t outlasted  = 0;
+            size_t delayed_by = 0;
+            bool   is_advanced_past : 1 = false;
+            bool   is_blocked       : 1 = false;
+         };
+         std::vector<hold_node_conflict_info> seen_hold_nodes;
+         std::vector<nodes::abstract_input_node*> winning_press_nodes;
+
+         for (auto* node : eligible_binds) {
             if (node->button_press_type == button_press_type::hold) {
-               node->state.press_delayed_hold = false;
-               ++hold_count;
+               auto& item = seen_hold_nodes.emplace_back();
+               item.node = node;
+               //
+               if (node->state.press_blocked_hold)
+                  item.is_blocked = true;
             }
          }
-         if (hold_count == 0) {
+         if (seen_hold_nodes.empty())
             return;
-         }
-
-         struct losing_hold_node_entry {
-            nodes::abstract_input_node* node = nullptr;
-            size_t lost_to_count = 0;
-
-            constexpr losing_hold_node_entry() {}
-            constexpr losing_hold_node_entry(nodes::abstract_input_node* n, size_t c) : node(n), lost_to_count(c) {}
-         };
-         std::vector<losing_hold_node_entry> blocked_or_delayed_hold_nodes;
 
          enum class pass_result {
             stop,
             proceed,
          };
-         auto pass_1 = [&](node* current, auto& recurse) mutable -> pass_result {
+         auto pass_1 = [&](node* current, auto& recurse) mutable -> void {
             for (auto* child : current->child_nodes()) {
                assert(child != nullptr);
 
                if (auto* press_node = child->as<nodes::abstract_input_node>()) {
                   if (press_node->button_press_type != button_press_type::hold) {
 
-                     press_node->state.press_did_delay_hold      = false;
-                     press_node->state.press_delay_was_outlasted = false;
-
-                     for (auto* eligible : eligible_binds) {
-                        if (eligible->button_press_type != button_press_type::hold)
-                           continue;
-                        //
-                        if (eligible->state.outlasted_press_delays_hold) {
-                           press_node->state.press_delay_was_outlasted = true;
-                           continue;
-                        }
-                        //
-                        bool result = nodes::abstract_input_node::does_press_delay_hold(
+                     for (auto& hold_info : seen_hold_nodes) {
+                        auto result = nodes::abstract_input_node::does_press_delay_hold(
                            now,
                            device,
                            *press_node,
-                           *eligible
+                           *hold_info.node
                         );
-                        if (result) {
-//qDebug("Press-preempts-Hold: Hold node lost: %s", qUtf8Printable(eligible->name));
-                           bool found = false;
-                           for (auto& item : blocked_or_delayed_hold_nodes) {
-                              if (item.node == eligible) {
-                                 found = true;
-                                 ++item.lost_to_count;
-                                 break;
-                              }
-                           }
-                           if (!found)
-                              blocked_or_delayed_hold_nodes.emplace_back(eligible, 1);
+                        switch (result) {
+                           using enum nodes::abstract_input_node::press_preempt_hold_result;
+                           case press_delays_hold:
+                              ++hold_info.delayed_by;
+                              winning_press_nodes.push_back(press_node);
+                              break;
+                           case press_blocks_hold:
+                              hold_info.is_blocked = true;
+                              break;
+                           case press_advanced_past_hold:
+                              ++hold_info.delayed_by;
+                              hold_info.is_advanced_past = true;
+                              winning_press_nodes.push_back(press_node);
+                              break;
+                           case hold_outlasted_press:
+                              ++hold_info.outlasted;
+                              break;
                         }
-                     }
-                     if (blocked_or_delayed_hold_nodes.size() == hold_count) {
-                        //
-                        // We've filtered out all of the relevant binds.
-                        //
-                        return pass_result::stop;
                      }
                   }
                }
 
                for (auto* item : child->child_nodes()) {
-                  auto r = recurse(item, recurse);
-                  if (r == pass_result::stop)
-                     return pass_result::stop;
+                  recurse(item, recurse);
                }
             }
-            return pass_result::proceed;
          };
          pass_1(this->root, pass_1);
 
-         if (blocked_or_delayed_hold_nodes.empty())
-            return;
-
-         std::vector<nodes::abstract_input_node*> un_losers;
-         //
-         auto pass_2 = [&](node* current, auto& recurse) -> pass_result {
-            for (auto* child : current->child_nodes()) {
-               assert(child != nullptr);
-
-               if (auto* press_node = child->as<nodes::abstract_input_node>()) {
-                  if (press_node->button_press_type != button_press_type::hold) {
-
-                     if (press_node->state.press_did_delay_hold && press_node->state.press_delay_was_outlasted) {
-                        //
-                        // This Press node won one Press-delays-Hold conflict, but lost another. Because it lost 
-                        // the other, the Hold node it lost against should activate... which should preempt the 
-                        // Press node, and so the other Hold nodes that lost against it should "un-lose."
-                        //
-                        for (auto& loser : blocked_or_delayed_hold_nodes) {
-                           if (loser.lost_to_count == 0)
-                              continue;
-                           bool result = nodes::abstract_input_node::does_press_delay_hold(
-                              now,
-                              device,
-                              *press_node,
-                              *loser.node
-                           );
-                           if (result) {
-//qDebug("Press-preempts-Hold: Hold node un-lost against a Press node: %s", qUtf8Printable(loser.node->name));
-                              --loser.lost_to_count;
-                              if (loser.lost_to_count == 0) {
-//qDebug("Press-preempts-Hold: Hold node un-lost entirely and will remain eligible: %s", qUtf8Printable(loser.node->name));
-                                 un_losers.push_back(loser.node);
-
-                                 if (un_losers.size() == blocked_or_delayed_hold_nodes.size()) {
-                                    return pass_result::stop;
-                                 }
-                              }
-                           }
-                        }
-                     }
-
+         {
+            std::vector<nodes::abstract_input_node*> retroamended_losing_presses;
+            for (auto& hold_info : seen_hold_nodes) {
+               if (hold_info.is_blocked || hold_info.is_advanced_past)
+                  continue;
+               if (hold_info.outlasted == 0)
+                  continue;
+               hold_info.outlasted += hold_info.delayed_by;
+               hold_info.delayed_by = 0;
+               //
+               for (auto* press_node : winning_press_nodes) {
+                  auto result = nodes::abstract_input_node::does_press_delay_hold(
+                     now,
+                     device,
+                     *press_node,
+                     *hold_info.node
+                  );
+                  switch (result) {
+                     using enum nodes::abstract_input_node::press_preempt_hold_result;
+                     case press_delays_hold:
+                     case hold_outlasted_press:
+                        retroamended_losing_presses.push_back(press_node);
+                        break;
                   }
-               }
-
-               for (auto* item : child->child_nodes()) {
-                  auto code = recurse(item, recurse);
-                  if (code == pass_result::stop)
-                     return pass_result::stop;
                }
             }
-            return pass_result::proceed;
-         };
-         pass_2(this->root, pass_2);
-
-         if (!un_losers.empty()) {
-            blocked_or_delayed_hold_nodes.erase(
-               std::remove_if(
-                  blocked_or_delayed_hold_nodes.begin(),
-                  blocked_or_delayed_hold_nodes.end(),
-                  [&un_losers](const auto& item) -> bool {
-                     return std::find(un_losers.begin(), un_losers.end(), item.node) != un_losers.end();
-                  }
-               ),
-               blocked_or_delayed_hold_nodes.end()
-            );
+            if (!retroamended_losing_presses.empty()) {
+               winning_press_nodes.erase(
+                  std::remove_if(
+                     winning_press_nodes.begin(),
+                     winning_press_nodes.end(),
+                     [&retroamended_losing_presses](const auto* node) -> bool {
+                        return std::find(retroamended_losing_presses.begin(), retroamended_losing_presses.end(), node) != retroamended_losing_presses.end();
+                     }
+                  ),
+                  winning_press_nodes.end()
+               );
+            }
+         }
+         
+         for (auto& hold_info : seen_hold_nodes) {
+            if (hold_info.is_blocked)
+               continue;
+            if (hold_info.delayed_by == 0)
+               continue;
+            //
+            bool any_loss = false;
+            bool still_advanced_past = false;
+            for (auto* press_node : winning_press_nodes) {
+               auto result = nodes::abstract_input_node::does_press_delay_hold(
+                  now,
+                  device,
+                  *press_node,
+                  *hold_info.node
+               );
+               switch (result) {
+                  using enum nodes::abstract_input_node::press_preempt_hold_result;
+                  case press_delays_hold:
+                     any_loss = true;
+                     break;
+                  case press_advanced_past_hold:
+                     any_loss = true;
+                     still_advanced_past = true;
+                     break;
+               }
+            }
+            if (!any_loss) {
+               hold_info.delayed_by = 0;
+               if (!still_advanced_past) {
+                  hold_info.is_advanced_past = false;
+               }
+            }
          }
 
-         for (const auto& conflicted : blocked_or_delayed_hold_nodes) {
-//qDebug("Press-preempts-Hold: disqualified: %s", qUtf8Printable(conflicted.node->name));
-            recursively_disqualify_node_and_descendants(*conflicted.node, false);
+         for (auto& hold_info : seen_hold_nodes) {
+            auto* node = hold_info.node;
+            if (hold_info.delayed_by == 0 && !hold_info.is_blocked && !hold_info.is_advanced_past) {
+               if (!node->state.press_blocked_hold)
+                  continue;
+            }
+            recursively_disqualify_node_and_descendants(*hold_info.node, false);
          }
       }();
 

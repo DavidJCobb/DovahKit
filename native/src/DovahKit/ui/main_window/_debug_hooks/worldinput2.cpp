@@ -671,7 +671,7 @@ namespace {
             {
                make_tool_node(
                   "Bind #1: Press [A + B]",
-                  worldinput2::button_press_type::hold,
+                  worldinput2::button_press_type::press,
                   worldinput2::input_sequence::debug_from_string("[A + B]")
                ),
                make_tool_node(
