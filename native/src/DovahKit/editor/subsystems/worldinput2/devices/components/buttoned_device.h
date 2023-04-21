@@ -31,10 +31,6 @@ namespace dovahkit::subsystems::worldinput2::devices::components {
          constexpr void ignore_all_down();
 
          constexpr device_button_state get_button_state(size_t index) const;
-
-         constexpr bool is_consumed(size_t index) const {
-            return this->flags[index] & device_button_state::flag::consumed_on_a_previous_frame;
-         }
    };
 }
 
