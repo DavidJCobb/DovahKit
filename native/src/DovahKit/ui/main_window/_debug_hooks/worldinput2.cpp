@@ -710,7 +710,153 @@ namespace {
                   // and so would not disqualify inputs which preceded it. This means that 
                   // this bind, which should ordinarily be impossible, would instead trigger 
                   // if you entered (A + B).
+                  // 
+                  // We've since fixed that, so now, this sequence should be impossible to 
+                  // trigger, no matter which key goes down first and which key is released 
+                  // first.
                   //
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Redundant binds",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Bind #1: Press [A + A + B] // equivalent to [A + B]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + A + B]")
+                  //
+                  // Concurrent-and-ordered groups are stateless and allow you to advance 
+                  // through multiple keys in a single frame, if those keys all went down 
+                  // on that same frame. As such, when you have multiple of the same key 
+                  // in a row, you advance through all of them at once.
+                  //
+               ),
+               make_tool_node(
+                  "Bind #2: Press [J + [J + K]] // equivalent to [J + K]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[J + [J + K]]")
+                  //
+                  // Concurrent-and-ordered groups are stateless and allow you to advance 
+                  // through multiple keys in a single frame, if those keys all went down 
+                  // on that same frame. What's more: the first item in a nested concurrent-
+                  // and-ordered group compares timestamps to the group's previous sibling. 
+                  // This means that when you press J, we advance past the lone J key, 
+                  // recurse into the nested ISG, and there we advance past its J key as 
+                  // well: J needs to have gone down either after or at the same time as 
+                  // itself.
+                  //
+               ),
+               make_tool_node(
+                  "Bind #3: Press (X + (X + Y)) // equivalent to (X + Y)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(X + (X + Y))")
+               ),
+               make_tool_node(
+                  "Bind #4: Press (Q + [Q + W]) // equivalent to [Q + W]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(Q + [Q + W])")
+                  //
+                  // The inner ISG requires that Q and W be down on the same frame, and that 
+                  // Q have gone down first. The outer ISG requires that constraint to have 
+                  // been met, and requires Q to be down, with no regard for when it went 
+                  // down in relation to said constraint being met (i.e. before, at the same 
+                  // time, or after).
+                  //
+               ),
+               make_tool_node(
+                  "Bind #5: Press [E + (R + E)] // equivalent to (E + R)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[E + (R + E)]")
+                  //
+                  // The outer ISG requires that E go down before or at the same time as 
+                  // the inner ISG. The inner ISG goes down when R and E are pressed down, 
+                  // regardless of their ordering. The inner ISG reports its "down" time 
+                  // as the most recent time at which any of its contents went down. As 
+                  // such: if you press E and then R, then the inner ISG goes down last; 
+                  // if you press R and the nE, then the inner ISG goes down at the same 
+                  // time as the E-key previous sibling.
+                  //
+               ),
+               make_tool_node(
+                  "Bind #6: Press [T + <C + V> + <C + V>] // impossible",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[T + <C + V> + <C + V>]")
+                  //
+                  // If the first separate-and-ordered group is not fully down (i.e. not on its 
+                  // last key), then we don't advance past it to update the next separate-and-
+                  // ordered group. Therefore, when we finally do reach the next separate-and-
+                  // ordered group, it's expecting C to be pressed down again.
+                  // 
+                  // However, when we release V the first time, the first separate-and-ordered 
+                  // group flags as released and (by necessity) clears its ISG-level state and 
+                  // the ISG-level state of its descendents: it resets back to its start.
+                  // 
+                  // This means that if you press and hold T, press and release C, press and 
+                  // release V, and then press and release C again, that second C-press will 
+                  // be caught by the first separate-and-ordered group, which will "replay" 
+                  // again. As such, you can never advance the second separate-and-ordered 
+                  // group, making this sequence impossible to complete.
+                  //
+               ),
+               make_tool_node(
+                  "Bind #7: Press [1 + <2 + 3> + 3] // equivalent to [1 + <2 + 3>]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[1 + <2 + 3> + 3]")
+                  //
+                  // This is the same basic principle as Bind 1. To activate this bind, you 
+                  // would press and hold 1, press and release 2, press and hold 3,... at 
+                  // which point you've advanced past the inner ISG and to the lone 3-key, 
+                  // and 3 is down at the same time as itself, so the outer ISG advances to 
+                  // its end and successfully goes down.
+                  //
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press [A + <J + K> + <J + K>]",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press [A + <J + K> + <J + K>]",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("[A + <J + K> + <J + K>]")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press (A + <J + K> + <J + K>)",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press (A + <J + K> + <J + K>)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(A + <J + K> + <J + K>)")
+               ),
+            }
+         ),
+      },
+      testing_tree{
+         .name = "Press (A + <B + A>) and Press (X + <X + Y>)",
+         .tree = make_tree(
+            worldinput2::input_device_type::keyboard_mouse,
+            {
+               make_tool_node(
+                  "Press (A + <B + A>)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(A + <B + A>)")
+               ),
+               make_tool_node(
+                  "Press (X + <X + Y>)",
+                  worldinput2::button_press_type::press,
+                  worldinput2::input_sequence::debug_from_string("(X + <X + Y>)")
                ),
             }
          ),

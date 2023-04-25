@@ -218,7 +218,6 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
             //
             // The Hold bind has been pressed down for long enough to win a conflict.
             //
-            hold.state.outlasted_press_delays_hold = true;
             return press_preempt_hold_result::hold_outlasted_press;
          }
       }

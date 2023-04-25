@@ -167,6 +167,15 @@ namespace dovahkit::subsystems::worldinput2 {
          //
          auto* current_item = this->children[this->state.current_item_index];
          auto  result       = current_item->update(current_time, last_advancement_time, device, interruption_check);
+         if (this->state.current_item_index == 0) {
+            if (result.down_at < previous_sibling_time) {
+               return group_update_result{
+                  .down_at = zero_timestamp,
+                  .down_count = 0,
+                  .status = frame_status::inactive,
+               };
+            }
+         }
          switch (result.status) {
             case frame_status::down:
                if (this->state.current_item_index == this->children.size() - 1) {
