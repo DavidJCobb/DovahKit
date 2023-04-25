@@ -161,7 +161,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
    interruption_check keyboard_mouse::_prepare_interruption_check_impl() const {
       interruption_check check;
       for (size_t i = 0; i < vk_code_count; ++i) {
-         if (this->buttons.down_at[i] == zero_timestamp)
+         if ((this->buttons.flags[i] & device_button_state::flag::is_down) == 0)
             continue;
          check.buttons.emplace_back(interruption_check::potentially_interrupting_button{
             inputs::button{

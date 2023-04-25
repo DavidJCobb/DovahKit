@@ -205,9 +205,8 @@ namespace dovahkit::subsystems::worldinput2::binds {
                      continue;
                   }
                }
-               for (auto* item : child->child_nodes()) {
-                  recurse(item, recurse);
-               }
+               if (child->is_valid_parent())
+                  recurse(child, recurse);
             }
             //
          };

@@ -12,6 +12,7 @@
 
 #include "editor/subsystems/worldinput2/bind_tree/tree.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
+#include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/root.h"
 
 #include "editor/subsystems/worldinput2/tools/combined_tool_results.h"
@@ -60,12 +61,22 @@ namespace {
    worldinput2::binds::nodes::bound_tool* make_tool_node(
       const std::string& name,
       worldinput2::button_press_type pt,
-      const worldinput2::input_sequence& sequence,
-      std::initializer_list<worldinput2::binds::node*> children = {}
+      const worldinput2::input_sequence& sequence
    ) {
       auto* node = new worldinput2::binds::nodes::bound_tool;
       node->name = name.c_str();
       node->button_press_type = pt;
+      node->input_sequence    = sequence;
+      return node;
+   }
+   worldinput2::binds::nodes::modifier* make_modifier_node(
+      const std::string& name,
+      const worldinput2::input_sequence& sequence,
+      std::initializer_list<worldinput2::binds::node*> children = {}
+   ) {
+      auto* node = new worldinput2::binds::nodes::modifier;
+      node->name = name.c_str();
+      node->button_press_type = worldinput2::button_press_type::hold;
       node->input_sequence    = sequence;
       for (auto* child : children) {
          node->append(*child);
@@ -861,6 +872,56 @@ namespace {
             }
          ),
       },
+      #pragma region Modifier node tests
+         testing_tree{
+            .name = "Modifier parity: Press [A + B]",
+            .tree = make_tree(
+               worldinput2::input_device_type::keyboard_mouse,
+               {
+                  make_modifier_node(
+                     "Press [A + ...]",
+                     worldinput2::input_sequence::debug_from_string("A"),
+                     {
+                        make_tool_node(
+                           "Press [A + B]",
+                           worldinput2::button_press_type::press,
+                           worldinput2::input_sequence::debug_from_string("B")
+                        ),
+                     }
+                  ),
+                  make_tool_node(
+                     "Press [X + Y]",
+                     worldinput2::button_press_type::press,
+                     worldinput2::input_sequence::debug_from_string("[X + Y]")
+                  ),
+               }
+            ),
+         },
+         testing_tree{
+            .name = "Modifier parity: Press [(A + B) + C]",
+            .tree = make_tree(
+               worldinput2::input_device_type::keyboard_mouse,
+               {
+                  make_modifier_node(
+                     "Press [(A + B) + ...]",
+                     worldinput2::input_sequence::debug_from_string("(A + B)"),
+                     {
+                        make_tool_node(
+                           "Press [(A + B) + C]",
+                           worldinput2::button_press_type::press,
+                           worldinput2::input_sequence::debug_from_string("C")
+                        ),
+                     }
+                  ),
+                  make_tool_node(
+                     "Press [(X + Z) + Y]",
+                     worldinput2::button_press_type::press,
+                     worldinput2::input_sequence::debug_from_string("[(X + Z) + Y]")
+                  ),
+               }
+            ),
+         },
+      #pragma endregion
    };
 }
 
