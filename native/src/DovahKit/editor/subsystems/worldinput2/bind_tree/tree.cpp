@@ -386,12 +386,39 @@ namespace dovahkit::subsystems::worldinput2::binds {
       }
 
       // Conflict resolution: Holds block Presses.
-      eligible_binds.erase(
-         std::remove_if(
-            eligible_binds.begin(),
-            eligible_binds.end(),
-            [this, now](const auto* node) -> bool {
-               if (node->button_press_type != button_press_type::hold) {
+      {
+         //
+         // We only want Hold nodes that are released to block Press and Long Press 
+         // nodes (that are released, but that's implied by their being eligible). 
+         // We can check whether each Hold node in this list is also eligible while 
+         // we potentially disqualify the Press nodes, but it's easier to just pre-
+         // filter this list instead.
+         //
+         auto& to_prune = this->last_frame_active_hold_binds;
+         to_prune.erase(
+            std::remove_if(
+               to_prune.begin(),
+               to_prune.end(),
+               [this, &eligible_binds](const auto* node) -> bool {
+                  return std::find(
+                     eligible_binds.begin(),
+                     eligible_binds.end(),
+                     node
+                  ) != eligible_binds.end();
+               }
+            ),
+            to_prune.end()
+         );
+      }
+      if (!this->last_frame_active_hold_binds.empty()) {
+         eligible_binds.erase(
+            std::remove_if(
+               eligible_binds.begin(),
+               eligible_binds.end(),
+               [this, now](const auto* node) -> bool {
+                  if (node->button_press_type == button_press_type::hold) {
+                     return false;
+                  }
                   for (auto* hold_node : this->last_frame_active_hold_binds) {
                      bool result = nodes::abstract_input_node::does_hold_block_press(
                         *node,
@@ -400,20 +427,21 @@ namespace dovahkit::subsystems::worldinput2::binds {
                      if (result)
                         return true;
                   }
+                  //
+                  // No conflict.
+                  //
+                  return false;
                }
-               //
-               // No conflict.
-               //
-               return false;
-            }
-         ),
-         eligible_binds.end()
-      );
-      // NOTE: Modifiers are always Hold binds, whereas we're here removing Press and Long Press 
-      // binds, so we don't here need to worry about recursively removing descendants from the 
-      // list of eligible binds if a Press or Long Press bind loses a conflict.
+            ),
+            eligible_binds.end()
+         );
+         //
+         // NOTE: Modifiers are always Hold binds, whereas we're here removing Press and Long Press 
+         // binds, so we don't here need to worry about recursively removing descendants from the 
+         // list of eligible binds if a Press or Long Press bind loses a conflict.
 
-      this->last_frame_active_hold_binds = {};
+         this->last_frame_active_hold_binds = {};
+      }
 
       // Execution:
       for (auto* node : eligible_binds) {
