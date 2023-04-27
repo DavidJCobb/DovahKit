@@ -112,6 +112,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\bind_list.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.cpp" />
@@ -783,6 +788,11 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\bind_list.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\node.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.h" />

@@ -50,13 +50,14 @@ namespace dovahkit::subsystems::worldinput2::binds {
          void remove(node& o);
          inline int index_of(const node& o) const { return this->children.indexOf(const_cast<node*>(&o)); }
 
-         inline node* parent_node() const noexcept { return this->parent; }
-         inline const QVector<node*>& child_nodes() const noexcept { return this->children; }
+         constexpr node* parent_node() const noexcept { return this->parent; }
+         constexpr const QVector<node*>& child_nodes() const noexcept { return this->children; }
 
          template<typename subclass> requires std::is_base_of_v<node, subclass> subclass* as() {
             return const_cast<subclass*>(std::as_const(*this).as<subclass>());
          }
-         template<typename subclass> requires std::is_base_of_v<node, subclass> const subclass* as() const {
+         template<typename subclass> requires std::is_base_of_v<node, subclass>
+         constexpr const subclass* as() const {
             if constexpr (std::is_same_v<subclass, nodes::abstract_input_node>) {
                switch (this->type) {
                   case node_type::bound_tool:
