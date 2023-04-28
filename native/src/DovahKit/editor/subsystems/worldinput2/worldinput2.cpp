@@ -2,6 +2,7 @@
 #include <QApplication>
 #include "helpers/unreachable.h"
 #include "editor/subsystems/xinput/core.h"
+#include "./algorithms/flatten_bind_tree.h"
 #include "./bind_tree/nodes/root.h"
 #include "./tools/combined_tool_results.h"
 
@@ -123,10 +124,12 @@ namespace dovahkit::subsystems::worldinput2 {
       switch (d) {
          using _ = input_device_type;
          case _::keyboard_mouse:
-            this->binds.keyboard = b;
+            this->schemes.keyboard = b;
+            this->binds.keyboard = algorithms::flatten_bind_tree(this->schemes.keyboard);
             break;
          case _::xinput:
-            this->binds.gamepad = b;
+            this->schemes.gamepad = b;
+            this->binds.gamepad = algorithms::flatten_bind_tree(this->schemes.gamepad);
             break;
          default:
             return;

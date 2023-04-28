@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QWidget>
+#include "./bind_list.h"
 #include "./chrono.h"
 #include "./bind_tree/tree.h"
 #include "./devices/abstract_device_handler.h"
@@ -52,9 +53,13 @@ namespace dovahkit::subsystems::worldinput2 {
             bool target_widget_has_focus = false;
          } state;
          struct {
+            bind_list keyboard = bind_list(input_device_type::keyboard_mouse);
+            bind_list gamepad  = bind_list(input_device_type::xinput);
+         } binds;
+         struct {
             binds::tree keyboard = binds::tree(input_device_type::keyboard_mouse);
             binds::tree gamepad  = binds::tree(input_device_type::xinput);
-         } binds;
+         } schemes;
 
       protected:
 

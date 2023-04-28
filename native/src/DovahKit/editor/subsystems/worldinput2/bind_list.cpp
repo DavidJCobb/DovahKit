@@ -374,10 +374,6 @@ namespace dovahkit::subsystems::worldinput2 {
             ),
             eligible_binds.end()
          );
-         //
-         // NOTE: Modifiers are always Hold binds, whereas we're here removing Press and Long Press 
-         // binds, so we don't here need to worry about recursively removing descendants from the 
-         // list of eligible binds if a Press or Long Press bind loses a conflict.
 
          this->last_frame_active_hold_binds = {};
       }

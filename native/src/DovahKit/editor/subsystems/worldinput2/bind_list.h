@@ -31,6 +31,8 @@ namespace dovahkit::subsystems::worldinput2 {
 
    class bind_list {
       public:
+         bind_list(input_device_type t) : device_type(t) {}
+
          input_device_type device_type;
 
          std::vector<bind_list_item> items;

@@ -9,7 +9,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
    extern bind_list flatten_bind_tree(
       const binds::tree& src
    ) {
-      bind_list out;
+      auto out = bind_list(src.device_type);
 
       std::optional<worldedit::editor_mode> current_editor_mode;
 
