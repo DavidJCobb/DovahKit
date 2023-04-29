@@ -1,15 +1,9 @@
 #pragma once
-#include <vector>
 #include "../enums/input_device_type.h"
-#include "../chrono.h"
 
 namespace dovahkit::subsystems::worldinput2 {
-   class combined_tool_results;
    namespace binds {
-      class node;
       namespace nodes {
-         class abstract_input_node;
-         class bound_tool;
          class root;
       }
    }
@@ -32,13 +26,5 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          input_device_type device_type;
          nodes::root*      root   = nullptr;
-
-         // If these binds cease to be active on this frame, then we must fire key-up invocations 
-         // for them, so they can deactivate their effects as needed.
-         std::vector<nodes::abstract_input_node*> last_frame_active_hold_binds;
-
-         // -----
-
-         void update(timestamp_t now, combined_tool_results& press_results, combined_tool_results& hold_results);
    };
 }

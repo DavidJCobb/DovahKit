@@ -1,5 +1,6 @@
 #include "./input_sequence.h"
 #include <cassert>
+#include <stdexcept>
 #include "helpers/unreachable.h"
 #include "./devices/abstract_device_handler.h"
 #include "./defaults.h"
@@ -7,12 +8,6 @@
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::group
-   input_sequence::group::~group() {
-      for (auto* child : this->children)
-         delete child;
-      this->children.clear();
-   }
-
    input_sequence::group_update_result input_sequence::group::update(
       timestamp_t current_time,
       timestamp_t last_advancement_time,
@@ -319,49 +314,6 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
 
-   void input_sequence::group::terminal_inputs(std::vector<inputs::button>& append_to) const {
-      if (this->type == group_type::single_control) {
-         append_to.push_back(this->button);
-         return;
-      }
-      if (this->type == group_type::separated_ordered) {
-         if (this->children.empty())
-            return;
-         this->children.back()->terminal_inputs(append_to);
-         return;
-      }
-      for (const auto* item : this->children) {
-         item->terminal_inputs(append_to);
-      }
-   }
-   size_t input_sequence::group::input_control_count() const {
-      if (this->type == group_type::single_control)
-         return 0;
-      size_t count = 0;
-      for (const auto* item : this->children) {
-         if (item->type == group_type::single_control)
-            ++count;
-         else
-            count += item->input_control_count();
-      }
-      return count;
-   }
-   bool input_sequence::group::is_or_contains_input_control(const inputs::button& button) const {
-      if (this->type == group_type::single_control) {
-         return this->button == button;
-      }
-      for (const auto* item : this->children) {
-         if (item->is_or_contains_input_control(button))
-            return true;
-      }
-      return false;
-   }
-
-   const input_sequence::group& input_sequence::group::current_item() const {
-      assert(this->type == group_type::separated_ordered);
-      return *(this->children[this->state.current_item_index]);
-   }
-
    const input_sequence::group* input_sequence::group::final_group() const {
       const group* out;
       const group* parent;
@@ -428,25 +380,6 @@ namespace dovahkit::subsystems::worldinput2 {
          }
       }
       return true;
-   }
-
-   void input_sequence::group::debug_stringify(std::string& out) const {
-      if (this->type == group_type::single_control) {
-         out += this->button.key.glyph.toStdString();
-         return;
-      }
-      switch (this->type) {
-         case group_type::concurrent_ordered:   out += '['; break;
-         case group_type::concurrent_unordered: out += '('; break;
-         case group_type::separated_ordered:    out += '<'; break;
-      }
-      for (const auto* child : this->children)
-         child->debug_stringify(out);
-      switch (this->type) {
-         case group_type::concurrent_ordered:   out += ']'; break;
-         case group_type::concurrent_unordered: out += ')'; break;
-         case group_type::separated_ordered:    out += '>'; break;
-      }
    }
 
    void input_sequence::group::normalize(bool recursively) {
@@ -715,71 +648,10 @@ namespace dovahkit::subsystems::worldinput2 {
          g->_clear_all_progress();
    }
 
-   namespace {
-      size_t _group_concurrent_input_count(const input_sequence::group& self) {
-         if (self.type == input_sequence::group_type::single_control) {
-            if (self.button.is_modifier_key())
-               return 0;
-            return 1;
-         }
-         if (self.type == input_sequence::group_type::separated_ordered) {
-            size_t count = 0;
-            for (const auto* item : self.children) {
-               auto cc = _group_concurrent_input_count(*item);
-               if (cc > count)
-                  count = cc;
-            }
-            return count;
-         }
-         size_t count = 0;
-         for (const auto* item : self.children) {
-            count += _group_concurrent_input_count(*item);
-         }
-         return count;
-      }
-   }
-   bool input_sequence::is_probably_keyboard_impossible() const {
-      //
-      // Most keyboards can only register a limited number of simultaneously 
-      // pressed keys; this count is called the "N-key rollover" for a given 
-      // value of N. Typically, the limit is 2. Some USB keyboards can raise 
-      // the limit to 6; for PS/2 connectors, there's no upper bound.
-      // 
-      // It's due to how keyboards are wired. Modifier keys generally don't 
-      // contribute to the limit (else several Windows accelerator keys just 
-      // wouldn't be possible), and sometimes the limit only applies to keys 
-      // that are near each other; but the typical limit for non-modifier 
-      // keys is 2.
-      // 
-      // As such, this function returns true if a given input sequence may 
-      // not be possible to actually enter on a typical keyboard, due to 
-      // requiring more than 2 non-modifier keys to be down concurrently.
-      //
-      if (!this->root)
-         return false;
-      size_t concurrent_input_count = _group_concurrent_input_count(*this->root);
-      return (concurrent_input_count > 2);
-   }
-
-   std::vector<inputs::button> input_sequence::terminal_inputs() const {
-      std::vector<inputs::button> out;
-      if (this->root)
-         this->root->terminal_inputs(out);
-      return out;
-   }
-
    const input_sequence::group* input_sequence::final_group() const {
       if (!this->root)
          return nullptr;
       return this->root->final_group();
-   }
-
-   size_t input_sequence::specificity() const {
-      if (!this->root)
-         return 0;
-      if (this->root->type == group_type::single_control)
-         return 1;
-      return this->root->input_control_count();
    }
 
    input_sequence input_sequence::clone() const {
@@ -799,6 +671,17 @@ namespace dovahkit::subsystems::worldinput2 {
    input_sequence& input_sequence::operator<<=(const input_sequence& nested) {
       if (!nested.root)
          return *this;
+
+      if (this->has_directional_requirement() && nested.has_directional_requirement()) {
+         throw std::logic_error(
+            "An input sequence can only have one directional requirement; "
+            "merging here would result in two. Ideally, only the 'leaf' "
+            "sequence should have the requirement."
+         );
+      }
+      if (nested.has_directional_requirement()) {
+         this->directional = nested.directional;
+      }
 
       group* last_terminal;
       group* parent_of_last;
@@ -879,179 +762,6 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       return *this;
-   }
-
-   void input_sequence::debug_stringify(std::string& out) const {
-      if (this->root)
-         this->root->debug_stringify(out);
-   }
-   /*static*/ input_sequence input_sequence::debug_from_string(const std::string& str, bool gamepad) {
-      input_sequence out;
-
-      std::vector<group*> nesting;
-
-      size_t i = 0;
-      for (; i < str.size(); ++i) {
-         const char c = str[i];
-
-         auto type  = group_type::single_control;
-         bool close = false;
-
-         switch (c) {
-            case '[': type = group_type::concurrent_ordered;   break;
-            case '(': type = group_type::concurrent_unordered; break;
-            case '<': type = group_type::separated_ordered;    break;
-            case ']': type = group_type::concurrent_ordered;   close = true; break;
-            case ')': type = group_type::concurrent_unordered; close = true; break;
-            case '>': type = group_type::separated_ordered;    close = true; break;
-            case '+':
-               qDebug("input_sequence::debug_from_string: unexpected + at position %d in: '%s'", i, str.c_str());
-               [[fallthrough]];
-            case ' ':
-               continue;
-         }
-         if (close) {
-            if (nesting.empty()) {
-               qDebug("input_sequence::debug_from_string:: unexpected closing delimiter %c at position %d", c, i);
-               __debugbreak();
-            }
-            nesting.pop_back();
-            continue;
-         }
-
-         auto* child = new group;
-         child->type = type;
-         //
-         if (nesting.empty()) {
-            out.root = child;
-         } else {
-            auto* parent = nesting.back();
-            assert(parent);
-            assert(parent->type != group_type::single_control);
-
-            parent->children.push_back(child);
-         }
-
-         if (type == group_type::single_control) {
-            //
-            // Advance to next ending delimiter, or to next '+'.
-            //
-            assert(c != ' ');
-            std::string name;
-            name += c;
-            for (++i; i < str.size(); ++i) {
-               const char d = str[i];
-               if (d == '+') {
-                  break;
-               }
-               if (d == ']' || d == ')' || d == '>') {
-                  --i;
-                  break;
-               }
-               name += d;
-            }
-
-            // trim trailing whitespace:
-            size_t j;
-            for (j = name.size() - 1; j > 0; --j)
-               if (name[j] != ' ')
-                  break;
-            name.resize(j + 1);
-
-            if (gamepad) {
-               //
-               // Gamepad
-               //
-               auto n = QString(name.c_str()).toLower();
-               if (n == "a") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::a };
-               } else if (n == "b") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::b };
-               } else if (n == "x") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::x };
-               } else if (n == "y") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::y };
-               } else if (n == "lb") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::lb };
-               } else if (n == "rb") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rb };
-               } else if (n == "ls") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::ls };
-               } else if (n == "rs") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rs };
-               } else if (n == "start") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::start };
-               } else if (n == "back") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::back };
-               } else if (n == "d-pad up") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_up };
-               } else if (n == "d-pad left") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_left };
-               } else if (n == "d-pad right") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_right };
-               } else if (n == "d-pad down") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::d_pad_down };
-               } else if (n == "lt") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::lt };
-               } else if (n == "rt") {
-                  child->button = inputs::button{ .gamepad = inputs::xinput_button::rt };
-               } else {
-                  qDebug("input_sequence::debug_from_string: unrecognized gamepad button name: %s", qUtf8Printable(n));
-               }
-            } else {
-               //
-               // Keyboard and mouse
-               //
-               if (name.size() == 1) {
-                  child->button = inputs::button{ .key = cobb::qt::key(QChar(name[0])) };
-               } else {
-                  auto n = QString(name.c_str()).toLower();
-                  if (n == "ctrl") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Control) };
-                  } else if (n == "alt") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Alt) };
-                  } else if (n == "shift") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Shift) };
-                  } else if (n == "prtscrn") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Print) };
-                  } else if (n == "caps lock") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_CapsLock) };
-                  } else if (n == "num lock") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_NumLock) };
-                  } else if (n == "scroll lock") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_ScrollLock) };
-                  } else if (n == "tab") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Tab) };
-                  } else if (n == "space") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Space) };
-                  } else if (n == "enter") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Enter) };
-                  } else if (n == "del" || n == "delete") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Delete) };
-                  } else if (n == "home") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_Home) };
-                  } else if (n == "end") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_End) };
-                  } else if (n == "page up") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageUp) };
-                  } else if (n == "page down") {
-                     child->button = inputs::button{ .key = cobb::qt::key(Qt::Key::Key_PageDown) };
-                  } else if (n == "lmb") {
-                     child->button = inputs::button{ .key = cobb::qt::key::from_windows_vk(1) };
-                  } else if (n == "rmb") {
-                     child->button = inputs::button{ .key = cobb::qt::key::from_windows_vk(2) };
-                  } else {
-                     qDebug("input_sequence::debug_from_string: unrecognized key name: %s", qUtf8Printable(n));
-                  }
-               }
-            }
-            continue;
-         } else {
-            nesting.push_back(child);
-         }
-      }
-
-      return out;
    }
 
    void input_sequence::normalize() {

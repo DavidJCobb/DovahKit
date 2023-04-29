@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::keyboard::key">
+
+      <DisplayString IncludeView="keyname" Condition="unicode">{(wchar_t)unicode,sub}</DisplayString>
+      <DisplayString IncludeView="keyname" Condition="!unicode">{vk,en}</DisplayString>
+
+      <DisplayString Condition="unicode &amp;&amp; vk != virtual_key::none">glyph {(wchar_t*)&amp;unicode,sub} (VK code {(unsigned char)vk,X})</DisplayString>
+      <DisplayString Condition="unicode">glyph "{(wchar_t*)&amp;unicode,sub}"</DisplayString>
+      <DisplayString Condition="!unicode">{vk,en}</DisplayString>
+      <DisplayString>{*this,!}</DisplayString>
+   </Type>
+</AutoVisualizer>

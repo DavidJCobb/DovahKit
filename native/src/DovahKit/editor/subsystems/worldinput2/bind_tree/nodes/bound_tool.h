@@ -14,9 +14,6 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
          virtual bool is_valid_parent() const override final { return false; }
 
-         void invoke(combined_tool_results&) const;
-         void invoke_for_hold_release(combined_tool_results&) const;
-
       protected:
          virtual node* _clone_impl() const override final;
    };

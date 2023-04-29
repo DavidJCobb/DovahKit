@@ -495,6 +495,7 @@
     <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
@@ -791,6 +792,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\input_sequence_stringification.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_list.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\node.h" />
@@ -810,9 +812,12 @@
     <ClInclude Include="editor\subsystems\worldinput2\devices\xinput.h" />
     <ClInclude Include="editor\subsystems\worldinput2\device_button_claim.h" />
     <ClInclude Include="editor\subsystems\worldinput2\device_button_state.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\axis2D.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_release_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\scalar_input_control.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\vector_input_control.h" />
     <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h" />
     <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h" />
     <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h" />
@@ -932,6 +937,9 @@
     <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
     <ClInclude Include="helpers\grid.h" />
+    <ClInclude Include="helpers\keyboard\key.h" />
+    <ClInclude Include="helpers\keyboard\qt_to_vk.h" />
+    <ClInclude Include="helpers\keyboard\virtual_key.h" />
     <ClInclude Include="helpers\math\abs.h" />
     <ClInclude Include="helpers\math\arcsine.h" />
     <ClInclude Include="helpers\math\atan2.h" />
@@ -1925,6 +1933,7 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
+    <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
@@ -2069,6 +2078,7 @@
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\grid.natvis" />
+    <Natvis Include="helpers\keyboard\key.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="nif\block.natvis" />

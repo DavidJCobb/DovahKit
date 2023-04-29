@@ -1,4 +1,5 @@
 #include "./flatten_bind_tree.h"
+#include <cassert>
 #include "../bind_tree/tree.h"
 #include "../bind_tree/nodes/bound_tool.h"
 #include "../bind_tree/nodes/editor_mode.h"
@@ -25,6 +26,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                   // TODO: bound tool params
                   continue;
                }
+
+               #if _DEBUG
+                  if (auto* casted = child->as<binds::nodes::modifier>()) {
+                     assert(casted->button_press_type == button_press_type::hold);
+                  }
+               #endif
 
                if (!child->child_nodes().size())
                   continue;

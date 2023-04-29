@@ -39,7 +39,7 @@ namespace {
    }
    int button_to_vk(const dovahkit::subsystems::worldinput2::inputs::button& b) {
       if (!b.key.empty()) {
-         return b.key.native.vk;
+         return (int)b.key.vk;
       }
       if (b.mouse != Qt::MouseButton::NoButton)
          return qt_mouse_button_to_vk(b.mouse);
@@ -165,7 +165,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
             continue;
          check.buttons.emplace_back(interruption_check::potentially_interrupting_button{
             inputs::button{
-               .key = cobb::qt::key::from_windows_vk(i),
+               .key = cobb::keyboard::key((cobb::keyboard::virtual_key)i),
             },
             this->buttons.down_at[i]
          });

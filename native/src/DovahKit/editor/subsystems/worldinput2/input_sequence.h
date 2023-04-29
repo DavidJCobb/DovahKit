@@ -2,6 +2,9 @@
 #include <utility> // std::pair
 #include <vector>
 #include "helpers/owned_ptr.h"
+#include "./enums/axis2D.h"
+#include "./enums/scalar_input_control.h"
+#include "./enums/vector_input_control.h"
 #include "./inputs/button.h"
 #include "./chrono.h"
 #include "./interruption_check.h"
@@ -35,12 +38,12 @@ namespace dovahkit::subsystems::worldinput2 {
          class group {
             friend class input_sequence;
             public:
+               constexpr ~group();
+
                group_type type = group_type::single_control;
 
                inputs::button button; // for single controls only
                std::vector<group*> children; // except for single controls
-
-               ~group();
 
             protected:
                struct {
@@ -61,36 +64,16 @@ namespace dovahkit::subsystems::worldinput2 {
             public:
                bool run_interruption_check(interruption_check&) const;
 
-               constexpr bool can_have_children() const noexcept {
-                  switch (this->type) {
-                     case group_type::single_control:
-                        return false;
-                  }
-                  return true;
-               }
-               constexpr bool is_concurrent() const noexcept {
-                  switch (this->type) {
-                     case group_type::concurrent_ordered:
-                     case group_type::concurrent_unordered:
-                        return true;
-                  }
-                  return false;
-               }
-               constexpr bool is_ordered() const noexcept {
-                  switch (this->type) {
-                     case group_type::concurrent_ordered:
-                     case group_type::separated_ordered:
-                        return true;
-                  }
-                  return false;
-               }
+               constexpr bool can_have_children() const noexcept;
+               constexpr bool is_concurrent() const noexcept;
+               constexpr bool is_ordered() const noexcept;
 
-               void terminal_inputs(std::vector<inputs::button>& append_to) const;
-               size_t input_control_count() const;
-               bool is_or_contains_input_control(const inputs::button&) const;
+               constexpr void terminal_inputs(std::vector<inputs::button>& append_to) const;
+               constexpr size_t input_control_count() const;
+               constexpr bool is_or_contains_input_control(const inputs::button&) const;
 
                // only meaningful when called on a separate-and-ordered group; result is undefined otherwise
-               const group& current_item() const;
+               constexpr const group& current_item() const;
 
                const group* final_group() const;
                group* final_group() {
@@ -108,8 +91,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
                bool operator==(const group&) const;
 
-               void debug_stringify(std::string&) const;
-
                void normalize(bool recursively = false);
 
             protected:
@@ -120,6 +101,13 @@ namespace dovahkit::subsystems::worldinput2 {
 
       public:
          group* root = nullptr;
+         struct {
+            vector_input_control vector = vector_input_control::none;
+            struct {
+               scalar_input_control type = scalar_input_control::none;
+               axis2D               axis = axis2D::x;
+            } scalar;
+         } directional;
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
@@ -132,16 +120,15 @@ namespace dovahkit::subsystems::worldinput2 {
 
          void clear_all_progress();
 
-         bool is_probably_keyboard_impossible() const;
-
-         std::vector<inputs::button> terminal_inputs() const;
+         constexpr bool has_directional_requirement() const;
+         constexpr bool is_probably_keyboard_impossible() const;
+         constexpr size_t specificity() const;
+         constexpr std::vector<inputs::button> terminal_inputs() const;
 
          const group* final_group() const;
          group* final_group() {
             return const_cast<group*>(std::as_const(*this).final_group());
          }
-
-         size_t specificity() const;
 
          input_sequence clone() const; // does not clone run-time-only state
 
@@ -158,10 +145,9 @@ namespace dovahkit::subsystems::worldinput2 {
          // absolute <<= nested;
          input_sequence& operator<<=(const input_sequence& nested);
 
-         void debug_stringify(std::string&) const;
-         static input_sequence debug_from_string(const std::string&, bool gamepad = false);
-
          // May set `root` to `nullptr` if it's an empty non-single-button ISG.
          void normalize();
    };
 }
+
+#include "./input_sequence.inl"

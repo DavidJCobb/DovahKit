@@ -2,7 +2,7 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="dovahkit::subsystems::worldinput2::inputs::button">
 
-      <Intrinsic Name="_is_key" Expression="(key.code != (Qt::Key)0 &amp;&amp; key.code != Qt::Key::Key_unknown) || key.glyph.d-&gt;size &gt; 0" />
+      <Intrinsic Name="_is_key" Expression="key.vk != cobb::keyboard::virtual_key::none || key.unicode || key.scan_code" />
 
       <DisplayString IncludeView="stringified" Condition="_is_key()">{key,view(keyname)}</DisplayString>
       <DisplayString IncludeView="stringified" Condition="mouse != Qt::MouseButton::NoButton">{mouse,en}</DisplayString>
