@@ -3,6 +3,45 @@
 #include <type_traits> // std::is_constant_evaluated
 
 namespace dovahkit::subsystems::worldinput2 {
+   #pragma region input_sequence::directional_constraint
+   constexpr bool input_sequence::directional_constraint::operator==(const directional_constraint& other) const {
+      if (this->vector != other.vector)
+         return false;
+      if (this->vector != vector_input_control::none) {
+         //
+         // Scalar info isn't relevant if we're using a vector. (We can only 
+         // use one.)
+         //
+         return true;
+      }
+      if (this->scalar.type != other.scalar.type)
+         return false;
+      if (this->scalar.type != scalar_input_control::none) {
+         if (this->scalar.axis != other.scalar.axis)
+            return false;
+      }
+      return true;
+   }
+   #pragma endregion
+
+   #pragma region input_sequence::control_set
+   constexpr bool input_sequence::control_set::contains(const inputs::button& btn) const {
+      for (const auto& item : this->buttons)
+         if (item == btn)
+            return true;
+      return false;
+   }
+   constexpr bool input_sequence::control_set::overlaps(const control_set& other) const {
+      if (this->direction == other.direction)
+         return true;
+      for (const auto& item_a : this->buttons)
+         for (const auto& item_b : other.buttons)
+            if (item_a == item_b)
+               return true;
+      return false;
+   }
+   #pragma endregion
+
    #pragma region input_sequence::group
    constexpr input_sequence::group::~group() {
       for (auto* child : this->children)
@@ -138,9 +177,25 @@ namespace dovahkit::subsystems::worldinput2 {
    constexpr size_t input_sequence::specificity() const {
       if (!this->root)
          return 0;
-      if (this->root->type == group_type::single_control)
-         return 1;
-      return this->root->input_control_count();
+      size_t result;
+      if (this->root->type == group_type::single_control) {
+         result = 1;
+      } else {
+         result = this->root->input_control_count();
+      }
+
+      // Directional requirements should increase specificity by 0.5, but I don't 
+      // want to actually use a float for this. The cheap, lazy hack is to just 
+      // double the specificity value we got above, and then conditionally add 1. 
+      // These values are opaque to outside callers -- only comparisons between 
+      // them are meaningful; the values themselves are not -- so this should be 
+      // fine.
+      result *= 2;
+      if (this->has_directional_requirement()) {
+         result + 1;
+      }
+
+      return result;
    }
    constexpr std::vector<inputs::button> input_sequence::terminal_inputs() const {
       std::vector<inputs::button> out;

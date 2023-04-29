@@ -4,6 +4,9 @@
 #include <vector>
 #include <QDebug>
 #include "helpers/keyboard/virtual_key.h"
+#include "../enums/axis2D.h"
+#include "../enums/scalar_input_control.h"
+#include "../enums/vector_input_control.h"
 #include "../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput2::algorithms {
@@ -16,7 +19,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          const char* name_formal;
          inputs::xinput_button button;
       };
-
+      //
       constexpr const auto xinput_button_names = std::array{
          _name_to_xinput_button{ "a",  "A",  inputs::xinput_button::a},
          _name_to_xinput_button{ "b",  "B",  inputs::xinput_button::b },
@@ -41,7 +44,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          const char* name_formal;
          cobb::keyboard::virtual_key code;
       };
-
+      //
       constexpr const auto special_key_names = std::array{
          _name_to_special_key{ "alt",         "Alt",         cobb::keyboard::virtual_key::alt },
          _name_to_special_key{ "caps lock",   "Caps Lock",   cobb::keyboard::virtual_key::caps_lock },
@@ -59,17 +62,35 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          _name_to_special_key{ "space",       "Space",       cobb::keyboard::virtual_key::space },
          _name_to_special_key{ "tab",         "Tab",         cobb::keyboard::virtual_key::tab },
       };
+
+      struct _name_to_directional_control {
+         const char* name;
+         const char* name_formal;
+         vector_input_control vector = vector_input_control::none;
+         scalar_input_control scalar = scalar_input_control::none;
+
+         constexpr _name_to_directional_control(const char* a, const char* b, vector_input_control c) : name(a), name_formal(b), vector(c) {}
+         constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c) : name(a), name_formal(b), scalar(c) {}
+      };
+      //
+      constexpr const auto directional_control_names = std::array{
+         _name_to_directional_control{ "mouse move",    "Mouse Move",    vector_input_control::mouse_move },
+         _name_to_directional_control{ "left stick",    "Left Stick",    vector_input_control::xinput_ls },
+         _name_to_directional_control{ "right stick",   "Right Stick",   vector_input_control::xinput_rs },
+         _name_to_directional_control{ "left trigger",  "Left Trigger",  scalar_input_control::xinput_lt },
+         _name_to_directional_control{ "right trigger", "Right Trigger", scalar_input_control::xinput_rt },
+      };
    }
 
    #pragma region To string
    constexpr void input_sequence_to_string(const input_sequence& seq, std::string& out) {
+      using namespace impl::input_sequence_stringification;
+
       out.clear();
       if (!seq.root)
          return;
 
       auto recurse = [](const input_sequence::group& current, std::string& out, auto& recurse) constexpr -> void {
-         using namespace impl::input_sequence_stringification;
-
          if (current.type == group_type::single_control) {
             switch (current.button.mouse) {
                case Qt::MouseButton::LeftButton:
@@ -114,6 +135,20 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          }
       };
       recurse(*seq.root, out, recurse);
+
+      if (seq.has_directional_requirement()) {
+         out += " :: ";
+         for (const auto& known : directional_control_names) {
+            if (seq.directional.vector == known.vector) {
+               out += known.name_formal;
+               break;
+            }
+            if (seq.directional.scalar.type == known.scalar) {
+               out += known.name_formal;
+               break;
+            }
+         }
+      }
    }
    #pragma endregion
 
@@ -128,6 +163,53 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
       size_t i = 0;
       for (; i < str.size(); ++i) {
          const char c = str[i];
+
+         if (c == ':') {
+            if (i + 1 < str.size()) {
+               char d = str[i + 1];
+               if (d == ':') {
+                  std::string dir_name;
+                  for (size_t j = i + 1; j < str.size(); ++j) {
+                     d = str[j];
+                     switch (d) {
+                        case '[':
+                        case '(':
+                        case '<':
+                        case '>':
+                        case ')':
+                        case ']':
+                        case '+':
+                           if (std::is_constant_evaluated()) {
+                              throw;
+                           } else {
+                              qDebug("input_sequence::debug_from_string: unexpected %c (expected directional input only) at position %d in: '%s'", d, i, str.c_str());
+                              __debugbreak();
+                           }
+                           break;
+                     }
+                     dir_name += d;
+                  }
+                  bool found = false;
+                  for (const auto& known : directional_control_names) {
+                     if (dir_name == known.name) {
+                        out.directional.scalar.type = known.scalar;
+                        out.directional.vector = known.vector;
+                        found = true;
+                        break;
+                     }
+                  }
+                  if (!found) {
+                     if (std::is_constant_evaluated()) {
+                        throw;
+                     } else {
+                        qDebug("input_sequence::debug_from_string: unrecognized directional control name in: '%s'", str.c_str());
+                        __debugbreak();
+                     }
+                  }
+                  break;
+               }
+            }
+         }
 
          auto type  = group_type::single_control;
          bool close = false;

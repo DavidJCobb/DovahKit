@@ -34,6 +34,23 @@ namespace dovahkit::subsystems::worldinput2 {
             size_t       down_count = 0;
             frame_status status     = frame_status::inactive;
          };
+         
+         struct directional_constraint {
+            vector_input_control vector = vector_input_control::none;
+            struct {
+               scalar_input_control type = scalar_input_control::none;
+               axis2D               axis = axis2D::x; // TODO: we only need this if we use a vector control *as* a scalar control, which we can't do due to how we've defined this struct
+            } scalar;
+
+            constexpr bool operator==(const directional_constraint& other) const;
+         };
+
+         struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it
+            std::vector<inputs::button> buttons;
+
+            constexpr bool contains(const inputs::button&) const;
+            constexpr bool overlaps(const control_set&) const;
+         };
 
          class group {
             friend class input_sequence;
@@ -101,13 +118,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       public:
          group* root = nullptr;
-         struct {
-            vector_input_control vector = vector_input_control::none;
-            struct {
-               scalar_input_control type = scalar_input_control::none;
-               axis2D               axis = axis2D::x;
-            } scalar;
-         } directional;
+         directional_constraint directional;
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
@@ -135,7 +146,9 @@ namespace dovahkit::subsystems::worldinput2 {
          bool operator==(const input_sequence& other) const {
             if (this->root && other.root)
                return *(this->root) == *(other.root);
-            return this->root == other.root;
+            if (this->root != other.root)
+               return false;
+            return this->directional == other.directional;
          }
 
          // absolute = modifier << nested;

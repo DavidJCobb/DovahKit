@@ -59,6 +59,15 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          const auto& seq_u = (a_length > b_length) ? seq_a : seq_b;
          const auto& seq_v = (a_length > b_length) ? seq_b : seq_a;
 
+         if (seq_u.directional == seq_v.directional) {
+            //
+            // For directional inputs, we only care about same-frame conflicts, and here, we 
+            // have one.
+            //
+            winner = &node_u;
+            return;
+         }
+
          auto* final_isg_v = seq_v.final_group();
          if (final_isg_v) {
             auto ti_u = seq_u.terminal_inputs();
