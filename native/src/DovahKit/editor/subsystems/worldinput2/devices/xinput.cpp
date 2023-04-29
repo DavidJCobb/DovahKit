@@ -112,4 +112,37 @@ namespace dovahkit::subsystems::worldinput2::devices {
       auto i = _button_to_index(button);
       return (i != no_button);
    }
+   //
+   QPointF xinput::get_directional_control(scalar_input_control s, axis2D axis, bool& is_delta) const {
+      is_delta = false;
+      if (s == scalar_input_control::none)
+         return { 0, 0 };
+      switch (s) {
+         case scalar_input_control::xinput_ls:
+            if (axis == axis2D::y)
+               return { this->vectors.ls.y(), 0 };
+            return { this->vectors.ls.x(), 0 };
+         case scalar_input_control::xinput_rs:
+            if (axis == axis2D::y)
+               return { this->vectors.rs.y(), 0 };
+            return { this->vectors.rs.x(), 0 };
+         case scalar_input_control::xinput_lt:
+            return { this->scalars.lt, 0 };
+         case scalar_input_control::xinput_rt:
+            return { this->scalars.rt, 0 };
+      }
+      return { 0, 0 };
+   }
+   QPointF xinput::get_directional_control(vector_input_control v, bool& is_delta) const {
+      is_delta = false;
+      if (v == vector_input_control::none)
+         return { 0, 0 };
+      switch (v) {
+         case vector_input_control::xinput_ls:
+            return this->vectors.ls;
+         case vector_input_control::xinput_rs:
+            return this->vectors.rs;
+      }
+      return { 0, 0 };
+   }
 }

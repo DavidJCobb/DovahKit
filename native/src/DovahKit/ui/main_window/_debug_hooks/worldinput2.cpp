@@ -10,6 +10,7 @@
 #include <QTimer>
 #include "editor/subsystems/worldinput2/core.h"
 
+#include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
 #include "editor/subsystems/worldinput2/bind_tree/tree.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
@@ -37,7 +38,7 @@ namespace {
             if (auto* in = node.as<worldinput2::binds::nodes::abstract_input_node>()) {
                if (in->input_sequence.is_probably_keyboard_impossible()) {
                   std::string seq;
-                  in->input_sequence.debug_stringify(seq);
+                  worldinput2::algorithms::input_sequence_to_string(in->input_sequence, seq);
                   qDebug(
                      "WARNING: One of the test bind trees contains an input sequence that may not be completable on a gamepad.\n   Node:     %s\n   Sequence: %s",
                      qUtf8Printable(in->name),
@@ -93,17 +94,17 @@ namespace {
                make_tool_node(
                   "Press X",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Long Press Y",
                   worldinput2::button_press_type::long_press,
-                  worldinput2::input_sequence::debug_from_string("Y")
+                  worldinput2::algorithms::input_sequence_from_string("Y")
                ),
                make_tool_node(
                   "Hold Z",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("Z")
+                  worldinput2::algorithms::input_sequence_from_string("Z")
                ),
             }
          ),
@@ -116,12 +117,12 @@ namespace {
                make_tool_node(
                   "Press X",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Long Press X",
                   worldinput2::button_press_type::long_press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -134,27 +135,27 @@ namespace {
                make_tool_node(
                   "Bind #1: Press X",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #2: Hold X",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #3: Press [Y + Z]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[Y + Z]")
+                  worldinput2::algorithms::input_sequence_from_string("[Y + Z]")
                ),
                make_tool_node(
                   "Bind #4: Hold Y",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("Y")
+                  worldinput2::algorithms::input_sequence_from_string("Y")
                ),
                make_tool_node(
                   "Bind #5: Hold Z",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("Z")
+                  worldinput2::algorithms::input_sequence_from_string("Z")
                ),
             }
          ),
@@ -167,12 +168,12 @@ namespace {
                make_tool_node(
                   "Hold [X + Z]",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("[X + Z]")
+                  worldinput2::algorithms::input_sequence_from_string("[X + Z]")
                ),
                make_tool_node(
                   "Press X",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -185,22 +186,22 @@ namespace {
                make_tool_node(
                   "Press A",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("A", true)
+                  worldinput2::algorithms::input_sequence_from_string("A", true)
                ),
                make_tool_node(
                   "Press B",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("B", true)
+                  worldinput2::algorithms::input_sequence_from_string("B", true)
                ),
                make_tool_node(
                   "Long Press X",
                   worldinput2::button_press_type::long_press,
-                  worldinput2::input_sequence::debug_from_string("X", true)
+                  worldinput2::algorithms::input_sequence_from_string("X", true)
                ),
                make_tool_node(
                   "Hold Y",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("Y", true)
+                  worldinput2::algorithms::input_sequence_from_string("Y", true)
                ),
             }
          ),
@@ -222,12 +223,12 @@ namespace {
                make_tool_node(
                   "Press [LS + X]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[LS + X]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[LS + X]", true)
                ),
                make_tool_node(
                   "Press [B + X]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[B + X]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[B + X]", true)
                ),
             }
          ),
@@ -274,17 +275,17 @@ namespace {
                make_tool_node(
                   "Press [A + B]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B]")
+                  worldinput2::algorithms::input_sequence_from_string("[A + B]")
                ),
                make_tool_node(
                   "Press (X + Y)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(X + Y)")
+                  worldinput2::algorithms::input_sequence_from_string("(X + Y)")
                ),
                make_tool_node(
                   "Press <J + K>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<J + K>")
+                  worldinput2::algorithms::input_sequence_from_string("<J + K>")
                ),
             }
          ),
@@ -305,12 +306,12 @@ namespace {
                make_tool_node(
                   "Press [A + B + X + Y]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Press (LB + Y)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(LB + Y)", true)
+                  worldinput2::algorithms::input_sequence_from_string("(LB + Y)", true)
                ),
             }
          ),
@@ -326,12 +327,12 @@ namespace {
                make_tool_node(
                   "Bind #1",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #2",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("X")
+                  worldinput2::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -344,22 +345,22 @@ namespace {
                make_tool_node(
                   "Hold A",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("A")
+                  worldinput2::algorithms::input_sequence_from_string("A")
                ),
                make_tool_node(
                   "Hold (A + B)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(A + B)")
+                  worldinput2::algorithms::input_sequence_from_string("(A + B)")
                ),
                make_tool_node(
                   "Hold (A + B + C)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(A + B + C)")
+                  worldinput2::algorithms::input_sequence_from_string("(A + B + C)")
                ),
                make_tool_node(
                   "Hold (A + C)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(A + C)")
+                  worldinput2::algorithms::input_sequence_from_string("(A + C)")
                ),
             }
          ),
@@ -382,7 +383,7 @@ namespace {
                make_tool_node(
                   "Press [X + Z]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[X + Z]")
+                  worldinput2::algorithms::input_sequence_from_string("[X + Z]")
                ),
             }
          ),
@@ -511,17 +512,17 @@ namespace {
                make_tool_node(
                   "Bind #1: Press [A + B + X + Y]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Bind #2: Press (Y + LB)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(Y + LB)", true)
+                  worldinput2::algorithms::input_sequence_from_string("(Y + LB)", true)
                ),
                make_tool_node(
                   "Bind #3: Press (Y + LT)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(Y + LT)", true)
+                  worldinput2::algorithms::input_sequence_from_string("(Y + LT)", true)
                ),
             }
          ),
@@ -534,12 +535,12 @@ namespace {
                make_tool_node(
                   "Press <A + S + D + F>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + D + F>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + F>")
                ),
                make_tool_node(
                   "Press <A + S + D + [F + <J + K>]>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + D + [F + <J + K>]>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + [F + <J + K>]>")
                ),
             }
          ),
@@ -552,7 +553,7 @@ namespace {
                make_tool_node(
                   "Press <A + S + D + [<J + K> + Z]>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + D + [<J + K> + Z]>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + [<J + K> + Z]>")
                ),
             }
          ),
@@ -565,12 +566,12 @@ namespace {
                make_tool_node(
                   "Press <A + S + J>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold S",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("S")
+                  worldinput2::algorithms::input_sequence_from_string("S")
                ),
             }
          ),
@@ -583,12 +584,12 @@ namespace {
                make_tool_node(
                   "Press <A + S + J>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold (K + S)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(K + S)")
+                  worldinput2::algorithms::input_sequence_from_string("(K + S)")
                ),
             }
          ),
@@ -601,12 +602,12 @@ namespace {
                make_tool_node(
                   "Press <A + S + J>",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("<A + S + J>")
+                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -619,12 +620,12 @@ namespace {
                make_tool_node(
                   "Press (X + <A + S + J>)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(X + <A + S + J>)")
+                  worldinput2::algorithms::input_sequence_from_string("(X + <A + S + J>)")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -637,12 +638,12 @@ namespace {
                make_tool_node(
                   "Press [X + <A + S + J>]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[X + <A + S + J>]")
+                  worldinput2::algorithms::input_sequence_from_string("[X + <A + S + J>]")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("(K + <A + S>)")
+                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -655,12 +656,12 @@ namespace {
                make_tool_node(
                   "Press [X + Y + A]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[X + Y + A]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[X + Y + A]", true)
                ),
                make_tool_node(
                   "Hold [X + Y + B]",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("[X + Y + B]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[X + Y + B]", true)
                ),
             }
          ),
@@ -673,12 +674,12 @@ namespace {
                make_tool_node(
                   "Press [A + B + X + Y]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B + X + Y]", true)
+                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Hold B",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("B", true)
+                  worldinput2::algorithms::input_sequence_from_string("B", true)
                ),
             }
          ),
@@ -691,17 +692,17 @@ namespace {
                make_tool_node(
                   "Bind #1: Press [A + B]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B]")
+                  worldinput2::algorithms::input_sequence_from_string("[A + B]")
                ),
                make_tool_node(
                   "Bind #2: Press [A + B + J]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + B + J]")
+                  worldinput2::algorithms::input_sequence_from_string("[A + B + J]")
                ),
                make_tool_node(
                   "Bind #3: Hold B",
                   worldinput2::button_press_type::hold,
-                  worldinput2::input_sequence::debug_from_string("B")
+                  worldinput2::algorithms::input_sequence_from_string("B")
                ),
             }
          ),
@@ -714,7 +715,7 @@ namespace {
                make_tool_node(
                   "Bind #1: Press [B + [A + B]]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[B + [A + B]]")
+                  worldinput2::algorithms::input_sequence_from_string("[B + [A + B]]")
                   //
                   // When this test-case was first written, the first item in an ordered  
                   // group was unaware of the timestamp of the group's own previous sibling, 
@@ -738,7 +739,7 @@ namespace {
                make_tool_node(
                   "Bind #1: Press [A + A + B] // equivalent to [A + B]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + A + B]")
+                  worldinput2::algorithms::input_sequence_from_string("[A + A + B]")
                   //
                   // Concurrent-and-ordered groups are stateless and allow you to advance 
                   // through multiple keys in a single frame, if those keys all went down 
@@ -749,7 +750,7 @@ namespace {
                make_tool_node(
                   "Bind #2: Press [J + [J + K]] // equivalent to [J + K]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[J + [J + K]]")
+                  worldinput2::algorithms::input_sequence_from_string("[J + [J + K]]")
                   //
                   // Concurrent-and-ordered groups are stateless and allow you to advance 
                   // through multiple keys in a single frame, if those keys all went down 
@@ -764,12 +765,12 @@ namespace {
                make_tool_node(
                   "Bind #3: Press (X + (X + Y)) // equivalent to (X + Y)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(X + (X + Y))")
+                  worldinput2::algorithms::input_sequence_from_string("(X + (X + Y))")
                ),
                make_tool_node(
                   "Bind #4: Press (Q + [Q + W]) // equivalent to [Q + W]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(Q + [Q + W])")
+                  worldinput2::algorithms::input_sequence_from_string("(Q + [Q + W])")
                   //
                   // The inner ISG requires that Q and W be down on the same frame, and that 
                   // Q have gone down first. The outer ISG requires that constraint to have 
@@ -781,7 +782,7 @@ namespace {
                make_tool_node(
                   "Bind #5: Press [E + (R + E)] // equivalent to (E + R)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[E + (R + E)]")
+                  worldinput2::algorithms::input_sequence_from_string("[E + (R + E)]")
                   //
                   // The outer ISG requires that E go down before or at the same time as 
                   // the inner ISG. The inner ISG goes down when R and E are pressed down, 
@@ -795,7 +796,7 @@ namespace {
                make_tool_node(
                   "Bind #6: Press [T + <C + V> + <C + V>] // impossible",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[T + <C + V> + <C + V>]")
+                  worldinput2::algorithms::input_sequence_from_string("[T + <C + V> + <C + V>]")
                   //
                   // If the first separate-and-ordered group is not fully down (i.e. not on its 
                   // last key), then we don't advance past it to update the next separate-and-
@@ -816,7 +817,7 @@ namespace {
                make_tool_node(
                   "Bind #7: Press [1 + <2 + 3> + 3] // equivalent to [1 + <2 + 3>]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[1 + <2 + 3> + 3]")
+                  worldinput2::algorithms::input_sequence_from_string("[1 + <2 + 3> + 3]")
                   //
                   // This is the same basic principle as Bind 1. To activate this bind, you 
                   // would press and hold 1, press and release 2, press and hold 3,... at 
@@ -836,7 +837,7 @@ namespace {
                make_tool_node(
                   "Press [A + <J + K> + <J + K>]",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("[A + <J + K> + <J + K>]")
+                  worldinput2::algorithms::input_sequence_from_string("[A + <J + K> + <J + K>]")
                ),
             }
          ),
@@ -849,7 +850,7 @@ namespace {
                make_tool_node(
                   "Press (A + <J + K> + <J + K>)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(A + <J + K> + <J + K>)")
+                  worldinput2::algorithms::input_sequence_from_string("(A + <J + K> + <J + K>)")
                ),
             }
          ),
@@ -862,12 +863,12 @@ namespace {
                make_tool_node(
                   "Press (A + <B + A>)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(A + <B + A>)")
+                  worldinput2::algorithms::input_sequence_from_string("(A + <B + A>)")
                ),
                make_tool_node(
                   "Press (X + <X + Y>)",
                   worldinput2::button_press_type::press,
-                  worldinput2::input_sequence::debug_from_string("(X + <X + Y>)")
+                  worldinput2::algorithms::input_sequence_from_string("(X + <X + Y>)")
                ),
             }
          ),
@@ -880,19 +881,19 @@ namespace {
                {
                   make_modifier_node(
                      "Press [A + ...]",
-                     worldinput2::input_sequence::debug_from_string("A"),
+                     worldinput2::algorithms::input_sequence_from_string("A"),
                      {
                         make_tool_node(
                            "Press [A + B]",
                            worldinput2::button_press_type::press,
-                           worldinput2::input_sequence::debug_from_string("B")
+                           worldinput2::algorithms::input_sequence_from_string("B")
                         ),
                      }
                   ),
                   make_tool_node(
                      "Press [X + Y]",
                      worldinput2::button_press_type::press,
-                     worldinput2::input_sequence::debug_from_string("[X + Y]")
+                     worldinput2::algorithms::input_sequence_from_string("[X + Y]")
                   ),
                }
             ),
@@ -904,19 +905,83 @@ namespace {
                {
                   make_modifier_node(
                      "Press [(A + B) + ...]",
-                     worldinput2::input_sequence::debug_from_string("(A + B)"),
+                     worldinput2::algorithms::input_sequence_from_string("(A + B)"),
                      {
                         make_tool_node(
                            "Press [(A + B) + C]",
                            worldinput2::button_press_type::press,
-                           worldinput2::input_sequence::debug_from_string("C")
+                           worldinput2::algorithms::input_sequence_from_string("C")
                         ),
                      }
                   ),
                   make_tool_node(
                      "Press [(X + Z) + Y]",
                      worldinput2::button_press_type::press,
-                     worldinput2::input_sequence::debug_from_string("[(X + Z) + Y]")
+                     worldinput2::algorithms::input_sequence_from_string("[(X + Z) + Y]")
+                  ),
+               }
+            ),
+         },
+      #pragma endregion
+      #pragma region Directional constraint tests
+         testing_tree{
+            .name = "Directional constraint tests 1",
+            .tree = make_tree(
+               worldinput2::input_device_type::keyboard_mouse,
+               {
+                  make_tool_node(
+                     "Hold A :: Mouse Move",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move")
+                  ),
+                  make_tool_node(
+                     "Press B :: Mouse Move",
+                     worldinput2::button_press_type::press,
+                     worldinput2::algorithms::input_sequence_from_string("B :: Mouse Move")
+                  ),
+               }
+            ),
+         },
+         testing_tree{
+            .name = "Directional constraint tests 2",
+            .tree = make_tree(
+               worldinput2::input_device_type::keyboard_mouse,
+               {
+                  make_tool_node(
+                     "Hold A :: Mouse Move",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move")
+                  ),
+                  make_tool_node(
+                     "Hold B :: Mouse Move",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string("B :: Mouse Move")
+                  ),
+               }
+            ),
+         },
+         testing_tree{
+            .name = "Directional constraint tests 3 (scalar)",
+            .tree = make_tree(
+               worldinput2::input_device_type::keyboard_mouse,
+               {
+                  make_tool_node(
+                     "Hold A :: Mouse Move X",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move X")
+                  ),
+               }
+            ),
+         },
+         testing_tree{
+            .name = "Directional constraint tests 4 (gamepad)",
+            .tree = make_tree(
+               worldinput2::input_device_type::xinput,
+               {
+                  make_tool_node(
+                     "Hold A :: Left Stick X",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string("A :: Left Stick X", true)
                   ),
                }
             ),

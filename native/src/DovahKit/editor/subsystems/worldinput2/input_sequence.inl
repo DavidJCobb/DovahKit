@@ -32,8 +32,6 @@ namespace dovahkit::subsystems::worldinput2 {
       return false;
    }
    constexpr bool input_sequence::control_set::overlaps(const control_set& other) const {
-      if (this->direction == other.direction)
-         return true;
       for (const auto& item_a : this->buttons)
          for (const auto& item_b : other.buttons)
             if (item_a == item_b)
@@ -192,7 +190,7 @@ namespace dovahkit::subsystems::worldinput2 {
       // fine.
       result *= 2;
       if (this->has_directional_requirement()) {
-         result + 1;
+         result += 1;
       }
 
       return result;

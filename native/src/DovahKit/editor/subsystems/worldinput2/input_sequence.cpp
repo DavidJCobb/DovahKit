@@ -661,7 +661,8 @@ namespace dovahkit::subsystems::worldinput2 {
       // nor recursion; it will be enough to just copy the entire flat range, sans run-time state.
       //
       input_sequence out;
-      out.root = this->root->_clone();
+      out.root        = this->root->_clone();
+      out.directional = this->directional;
       return out;
    }
 

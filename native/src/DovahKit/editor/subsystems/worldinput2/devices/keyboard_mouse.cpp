@@ -45,13 +45,6 @@ namespace {
          return qt_mouse_button_to_vk(b.mouse);
       return -1;
    }
-
-   constexpr MOUSEMOVEPOINT dummy_mouse_point = MOUSEMOVEPOINT{
-      .x = 0,
-      .y = 0,
-      .time = 0,
-      .dwExtraInfo = 0,
-   };
 }
 
 namespace dovahkit::subsystems::worldinput2::devices {
@@ -101,21 +94,15 @@ namespace dovahkit::subsystems::worldinput2::devices {
       // Get mousemove state:
       //
       if constexpr (use_winapi_for_mouse_location) {
-         auto dummy = dummy_mouse_point;
-         std::array<MOUSEMOVEPOINT, 1> points = {};
-         auto count = GetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &dummy, points.data(), 1, GMMP_USE_DISPLAY_POINTS);
-         if (count > 0) {
-            auto& point = points[count - 1];
-            //
-            // Multiple monitors may require some normalization:
-            //
-            if (point.x > 32767)
-               point.x -= 65536;
-            if (point.y > 32767)
-               point.y -= 65536;
-            //
+         POINT current;
+         if (GetCursorPos(&current) == 0) {
+            #if _DEBUG
+               auto err = GetLastError();
+               __debugbreak();
+            #endif
+         } else {
             auto prior = this->mouse.pos;
-            this->mouse.pos  = { point.x, point.y };
+            this->mouse.pos  = { current.x, current.y };
             this->mouse.move = this->mouse.pos - prior;
          }
       } else {
@@ -178,5 +165,30 @@ namespace dovahkit::subsystems::worldinput2::devices {
       if (vk < 0 || vk >= vk_code_count)
          return false;
       return true;
+   }
+   //
+   QPointF keyboard_mouse::get_directional_control(scalar_input_control s, axis2D axis, bool& is_delta) const {
+      is_delta = false;
+      if (s == scalar_input_control::none)
+         return { 0, 0 };
+      switch (s) {
+         case scalar_input_control::mouse_move:
+            is_delta = true;
+            if (axis == axis2D::y)
+               return { (qreal)this->mouse.move.y(), 0 };
+            return { (qreal)this->mouse.move.x(), 0 };
+      }
+      return { 0, 0 };
+   }
+   QPointF keyboard_mouse::get_directional_control(vector_input_control v, bool& is_delta) const {
+      is_delta = false;
+      if (v == vector_input_control::none)
+         return { 0, 0 };
+      switch (v) {
+         case vector_input_control::mouse_move:
+            is_delta = true;
+            return this->mouse.move;
+      }
+      return { 0, 0 };
    }
 }

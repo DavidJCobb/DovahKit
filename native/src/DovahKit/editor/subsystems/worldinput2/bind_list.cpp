@@ -8,6 +8,7 @@
 #include "./algorithms/press_preempts_hold.h"
 #include "./devices/abstract_device_handler.h"
 #include "./tools/combined_tool_results.h"
+#include "./tools/opaque_tool_options.h"
 #include "./core.h"
 #include "./defaults.h"
 #include "./interruption_check.h"
@@ -16,11 +17,26 @@
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region bind_list_item
-   void bind_list_item::invoke(combined_tool_results& out) const {
+   void bind_list_item::invoke(combined_tool_results& out, const QPointF& pos, bool pos_is_delta) const {
       // TODO
       //
       if constexpr (enable_initial_testing) {
          out.data += this->name.toStdString().c_str();
+
+         auto x = pos.x();
+         auto y = pos.y();
+         if (x || y) {
+            out.data += " (";
+            if (pos_is_delta && x > 0)
+               out.data += "+";
+            out.data += QString::number(x).toStdString();
+            out.data += ", ";
+            if (pos_is_delta && y > 0)
+               out.data += "+";
+            out.data += QString::number(y).toStdString();
+            out.data += ")";
+         }
+
          out.data += '\n';
       }
    }
@@ -77,6 +93,18 @@ namespace dovahkit::subsystems::worldinput2 {
 
             if (!matched && child.button_press_type == button_press_type::hold) {
                child.state.press_blocked_hold = false;
+            }
+
+            if (matched && sequence.has_directional_requirement()) {
+               QPointF pos;
+               bool    is_delta;
+               if (sequence.directional.vector != vector_input_control::none)
+                  pos = device.get_directional_control(sequence.directional.vector, is_delta);
+               else
+                  pos = device.get_directional_control(sequence.directional.scalar.type, sequence.directional.scalar.axis, is_delta);
+               if (pos.x() == 0.0 && pos.y() == 0.0) {
+                  matched = false;
+               }
             }
          }
          if (child.editor_mode.has_value()) {
@@ -380,7 +408,19 @@ namespace dovahkit::subsystems::worldinput2 {
 
       // Execution:
       for (auto* node : eligible_binds) {
-         node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results);
+
+         QPointF pos      = { 0, 0 };
+         bool    is_delta = false;
+         if (node->input_sequence.has_directional_requirement()) {
+            auto& dir = node->input_sequence.directional;
+            if (dir.vector != vector_input_control::none) {
+               pos = device.get_directional_control(dir.vector, is_delta);
+            } else {
+               pos = device.get_directional_control(dir.scalar.type, dir.scalar.axis, is_delta);
+            }
+         }
+         node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, pos, is_delta);
+         
          if (node->button_press_type == button_press_type::hold) {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);
             this->last_frame_active_hold_binds.push_back(node);

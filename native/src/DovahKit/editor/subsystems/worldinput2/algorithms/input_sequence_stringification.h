@@ -68,9 +68,11 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          const char* name_formal;
          vector_input_control vector = vector_input_control::none;
          scalar_input_control scalar = scalar_input_control::none;
+         axis2D scalar_axis = axis2D::x;
 
          constexpr _name_to_directional_control(const char* a, const char* b, vector_input_control c) : name(a), name_formal(b), vector(c) {}
          constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c) : name(a), name_formal(b), scalar(c) {}
+         constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c, axis2D d) : name(a), name_formal(b), scalar(c), scalar_axis(d) {}
       };
       //
       constexpr const auto directional_control_names = std::array{
@@ -79,6 +81,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          _name_to_directional_control{ "right stick",   "Right Stick",   vector_input_control::xinput_rs },
          _name_to_directional_control{ "left trigger",  "Left Trigger",  scalar_input_control::xinput_lt },
          _name_to_directional_control{ "right trigger", "Right Trigger", scalar_input_control::xinput_rt },
+         _name_to_directional_control{ "mouse move x",  "Mouse Move X",  scalar_input_control::mouse_move, axis2D::x },
+         _name_to_directional_control{ "mouse move y",  "Mouse Move Y",  scalar_input_control::mouse_move, axis2D::y },
+         _name_to_directional_control{ "left stick x",  "Left Stick X",  scalar_input_control::xinput_ls,  axis2D::x },
+         _name_to_directional_control{ "left stick y",  "Left Stick Y",  scalar_input_control::xinput_ls,  axis2D::y },
+         _name_to_directional_control{ "right stick x", "Right Stick X", scalar_input_control::xinput_rs,  axis2D::x },
+         _name_to_directional_control{ "right stick y", "Right Stick Y", scalar_input_control::xinput_rs,  axis2D::y },
       };
    }
 
@@ -168,8 +176,10 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
             if (i + 1 < str.size()) {
                char d = str[i + 1];
                if (d == ':') {
+                  i += 2;
+
                   std::string dir_name;
-                  for (size_t j = i + 1; j < str.size(); ++j) {
+                  for (size_t j = i; j < str.size(); ++j) {
                      d = str[j];
                      switch (d) {
                         case '[':
@@ -189,11 +199,27 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                      }
                      dir_name += d;
                   }
+
+                  {  // Trim
+                     size_t m = dir_name.find_first_not_of(" \r\n\t");
+                     size_t n = dir_name.find_last_not_of(" \r\n\t");
+                     if (n != std::string::npos) {
+                        dir_name.resize(n + 1);
+                        dir_name.erase(0, m);
+                     }
+                  }
+                  for (size_t i = 0; i < dir_name.size(); ++i) { // to lower (ASCII)
+                     auto& c = dir_name[i];
+                     if (c >= 'A' && c <= 'Z')
+                        c |= 0x20;
+                  }
+
                   bool found = false;
                   for (const auto& known : directional_control_names) {
                      if (dir_name == known.name) {
                         out.directional.scalar.type = known.scalar;
-                        out.directional.vector = known.vector;
+                        out.directional.scalar.axis = known.scalar_axis;
+                        out.directional.vector      = known.vector;
                         found = true;
                         break;
                      }
@@ -296,6 +322,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                const char d = str[i];
                if (d == '+') {
                   break;
+               }
+               if (d == ':') {
+                  if (i + 1 < str.size() && str[i + 1] == ':') {
+                     --i;
+                     break;
+                  }
                }
                if (d == ']' || d == ')' || d == '>') {
                   --i;

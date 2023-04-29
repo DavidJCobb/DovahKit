@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <vector>
+#include <QPointF>
 #include <QString>
 #include "editor/subsystems/worldedit/enums/editor_mode.h"
 #include "./enums/button_press_type.h"
@@ -25,7 +26,9 @@ namespace dovahkit::subsystems::worldinput2 {
             bool press_blocked_hold : 1 = false; // cross-frame Hold node state for Press-preempts-Hold
          } state;
 
-         void invoke(combined_tool_results&) const;
+         // Pass `pos` and `pos_is_delta` if the associated input sequence has a directional constraint; pass whatever's associated with the specified scalar or vector input control.
+         // For a scalar input control, the value is always in pos.x(), even if the scalar is generated from e.g. the vertical axis of a vector.
+         void invoke(combined_tool_results&, const QPointF& pos, bool pos_is_delta) const;
          void invoke_for_hold_release(combined_tool_results&) const;
    };
 

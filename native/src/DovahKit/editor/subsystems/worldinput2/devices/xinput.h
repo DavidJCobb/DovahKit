@@ -43,6 +43,9 @@ namespace dovahkit::subsystems::worldinput2::devices {
          //
          virtual bool button_is_valid(const inputs::button&) const override final;
          //
+         virtual QPointF get_directional_control(scalar_input_control, axis2D, bool& is_delta) const override final;
+         virtual QPointF get_directional_control(vector_input_control, bool& is_delta) const override final;
+         //
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const override final;
    };

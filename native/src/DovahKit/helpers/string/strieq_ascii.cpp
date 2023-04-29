@@ -3,7 +3,7 @@
 #include "../cpuinfo.h"
 
 namespace cobb {
-   extern int strieq_ascii(const std::string& a, const std::string& b) {
+   extern int strieq_ascii_simd(const std::string& a, const std::string& b) {
       size_t size = a.size();
       if (size != b.size())
          return false;

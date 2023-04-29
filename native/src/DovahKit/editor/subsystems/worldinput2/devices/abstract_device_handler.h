@@ -1,5 +1,9 @@
 #pragma once
+#include <QPointF>
+#include "../enums/axis2D.h"
 #include "../enums/button_press_type.h"
+#include "../enums/scalar_input_control.h"
+#include "../enums/vector_input_control.h"
 #include "../chrono.h"
 #include "../device_button_state.h"
 #include "../interruption_check.h"
@@ -22,6 +26,9 @@ namespace dovahkit::subsystems::worldinput2::devices {
          virtual const device_button_claim& get_pending_claim_of(const inputs::button&) const = 0;
 
          virtual bool button_is_valid(const inputs::button&) const = 0;
+
+         virtual QPointF get_directional_control(vector_input_control, bool& is_delta) const = 0;
+         virtual QPointF get_directional_control(scalar_input_control, axis2D, bool& is_delta) const = 0;
 
          interruption_check prepare_interruption_check() const;
 
