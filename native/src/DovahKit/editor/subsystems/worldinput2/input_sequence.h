@@ -43,6 +43,8 @@ namespace dovahkit::subsystems::worldinput2 {
             } scalar;
 
             constexpr bool operator==(const range_requirement& other) const;
+
+            bool is_satisfied(const devices::abstract_device_handler&) const;
          };
 
          struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it

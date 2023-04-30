@@ -7,6 +7,20 @@
 #include "./device_button_claim.h"
 
 namespace dovahkit::subsystems::worldinput2 {
+   #pragma region input_sequence::range_requirement
+   bool input_sequence::range_requirement::is_satisfied(const devices::abstract_device_handler& device) const {
+      range_control_state state;
+      if (this->vector != vector_input_control::none)
+         state = device.get_range_control_state(this->vector);
+      else if (this->scalar.type != scalar_input_control::none)
+         state = device.get_range_control_state(this->scalar.type, this->scalar.axis);
+      else
+         return true;
+
+      return state != range_control_state::zeroed;
+   }
+   #pragma endregion
+
    #pragma region input_sequence::group
    input_sequence::group_update_result input_sequence::group::update(
       timestamp_t current_time,

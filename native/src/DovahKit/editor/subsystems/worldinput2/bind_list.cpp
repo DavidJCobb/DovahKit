@@ -96,16 +96,8 @@ namespace dovahkit::subsystems::worldinput2 {
                child.state.press_blocked_hold = false;
             }
 
-            if (matched && sequence.has_range_requirement()) {
-               range_control_state state;
-               if (sequence.range.vector != vector_input_control::none)
-                  state = device.get_range_control_state(sequence.range.vector);
-               else
-                  state = device.get_range_control_state(sequence.range.scalar.type, sequence.range.scalar.axis);
-
-               if (state == range_control_state::zeroed)
-                  matched = false;
-            }
+            if (matched && !sequence.range.is_satisfied(device))
+               matched = false;
          }
          if (child.editor_mode.has_value()) {
             if (child.editor_mode.value() != current_editing_mode)
