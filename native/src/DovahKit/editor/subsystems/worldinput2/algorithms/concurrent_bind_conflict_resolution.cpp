@@ -59,7 +59,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          const auto& seq_u = (a_length > b_length) ? seq_a : seq_b;
          const auto& seq_v = (a_length > b_length) ? seq_b : seq_a;
 
-         if (seq_u.directional == seq_v.directional) {
+         if (seq_u.range == seq_v.range) {
             //
             // For directional inputs, we only care about same-frame conflicts, and here, we 
             // have one.

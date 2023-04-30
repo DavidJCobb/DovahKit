@@ -22,6 +22,9 @@ namespace dovahkit::subsystems::worldinput2::devices {
       public:
          components::buttoned_device<vk_code_count> buttons;
          struct {
+            timestamp_t last_movement = zero_timestamp;
+            bool is_stale = false;
+            //
             QPoint pos;  // mouse screen position; tracked so we can generate the (move) field
             QPoint move; // distance the mouse moved since the last update
             //
@@ -61,8 +64,10 @@ namespace dovahkit::subsystems::worldinput2::devices {
          //
          virtual bool button_is_valid(const inputs::button&) const override final;
          //
-         virtual QPointF get_directional_control(scalar_input_control, axis2D, bool& is_delta) const override final;
-         virtual QPointF get_directional_control(vector_input_control, bool& is_delta) const override final;
+         virtual range_control_state get_range_control_state(scalar_input_control, axis2D) const override final;
+         virtual range_control_state get_range_control_state(vector_input_control) const override final;
+         virtual QPointF get_range_control_value(scalar_input_control, axis2D) const override final;
+         virtual QPointF get_range_control_value(vector_input_control) const override final;
          //
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const override final;

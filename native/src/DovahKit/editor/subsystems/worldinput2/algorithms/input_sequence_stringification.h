@@ -75,7 +75,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c, axis2D d) : name(a), name_formal(b), scalar(c), scalar_axis(d) {}
       };
       //
-      constexpr const auto directional_control_names = std::array{
+      constexpr const auto range_control_names = std::array{
          _name_to_directional_control{ "mouse move",    "Mouse Move",    vector_input_control::mouse_move },
          _name_to_directional_control{ "left stick",    "Left Stick",    vector_input_control::xinput_ls },
          _name_to_directional_control{ "right stick",   "Right Stick",   vector_input_control::xinput_rs },
@@ -144,14 +144,14 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
       };
       recurse(*seq.root, out, recurse);
 
-      if (seq.has_directional_requirement()) {
+      if (seq.has_range_requirement()) {
          out += " :: ";
-         for (const auto& known : directional_control_names) {
-            if (seq.directional.vector == known.vector) {
+         for (const auto& known : range_control_names) {
+            if (seq.range.vector == known.vector) {
                out += known.name_formal;
                break;
             }
-            if (seq.directional.scalar.type == known.scalar) {
+            if (seq.range.scalar.type == known.scalar) {
                out += known.name_formal;
                break;
             }
@@ -215,11 +215,11 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                   }
 
                   bool found = false;
-                  for (const auto& known : directional_control_names) {
+                  for (const auto& known : range_control_names) {
                      if (dir_name == known.name) {
-                        out.directional.scalar.type = known.scalar;
-                        out.directional.scalar.axis = known.scalar_axis;
-                        out.directional.vector      = known.vector;
+                        out.range.scalar.type = known.scalar;
+                        out.range.scalar.axis = known.scalar_axis;
+                        out.range.vector      = known.vector;
                         found = true;
                         break;
                      }
@@ -228,7 +228,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                      if (std::is_constant_evaluated()) {
                         throw;
                      } else {
-                        qDebug("input_sequence::debug_from_string: unrecognized directional control name in: '%s'", str.c_str());
+                        qDebug("input_sequence::debug_from_string: unrecognized range control name in: '%s'", str.c_str());
                         __debugbreak();
                      }
                   }

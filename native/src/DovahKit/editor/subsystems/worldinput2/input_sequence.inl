@@ -3,8 +3,8 @@
 #include <type_traits> // std::is_constant_evaluated
 
 namespace dovahkit::subsystems::worldinput2 {
-   #pragma region input_sequence::directional_constraint
-   constexpr bool input_sequence::directional_constraint::operator==(const directional_constraint& other) const {
+   #pragma region input_sequence::range_requirement
+   constexpr bool input_sequence::range_requirement::operator==(const range_requirement& other) const {
       if (this->vector != other.vector)
          return false;
       if (this->vector != vector_input_control::none) {
@@ -119,10 +119,10 @@ namespace dovahkit::subsystems::worldinput2 {
    #pragma endregion
 
    #pragma region input_sequence
-   constexpr bool input_sequence::has_directional_requirement() const {
-      if (this->directional.vector != vector_input_control::none)
+   constexpr bool input_sequence::has_range_requirement() const {
+      if (this->range.vector != vector_input_control::none)
          return true;
-      if (this->directional.scalar.type != scalar_input_control::none)
+      if (this->range.scalar.type != scalar_input_control::none)
          return true;
       return false;
    }
@@ -182,14 +182,14 @@ namespace dovahkit::subsystems::worldinput2 {
          result = this->root->input_control_count();
       }
 
-      // Directional requirements should increase specificity by 0.5, but I don't 
+      // Range requirements should increase specificity by 0.5, but I don't 
       // want to actually use a float for this. The cheap, lazy hack is to just 
       // double the specificity value we got above, and then conditionally add 1. 
       // These values are opaque to outside callers -- only comparisons between 
       // them are meaningful; the values themselves are not -- so this should be 
       // fine.
       result *= 2;
-      if (this->has_directional_requirement()) {
+      if (this->has_range_requirement()) {
          result += 1;
       }
 

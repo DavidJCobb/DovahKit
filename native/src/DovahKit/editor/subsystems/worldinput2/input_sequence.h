@@ -35,14 +35,14 @@ namespace dovahkit::subsystems::worldinput2 {
             frame_status status     = frame_status::inactive;
          };
          
-         struct directional_constraint {
+         struct range_requirement {
             vector_input_control vector = vector_input_control::none;
             struct {
                scalar_input_control type = scalar_input_control::none;
                axis2D               axis = axis2D::x; // TODO: we only need this if we use a vector control *as* a scalar control, which we can't do due to how we've defined this struct
             } scalar;
 
-            constexpr bool operator==(const directional_constraint& other) const;
+            constexpr bool operator==(const range_requirement& other) const;
          };
 
          struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it
@@ -118,7 +118,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       public:
          group* root = nullptr;
-         directional_constraint directional;
+         range_requirement range;
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
@@ -131,7 +131,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
          void clear_all_progress();
 
-         constexpr bool has_directional_requirement() const;
+         constexpr bool has_range_requirement() const;
          constexpr bool is_probably_keyboard_impossible() const;
          constexpr size_t specificity() const;
          constexpr std::vector<inputs::button> terminal_inputs() const;
@@ -148,7 +148,7 @@ namespace dovahkit::subsystems::worldinput2 {
                return *(this->root) == *(other.root);
             if (this->root != other.root)
                return false;
-            return this->directional == other.directional;
+            return this->range == other.range;
          }
 
          // absolute = modifier << nested;

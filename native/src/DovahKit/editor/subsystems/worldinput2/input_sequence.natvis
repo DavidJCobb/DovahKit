@@ -2,7 +2,7 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="dovahkit::subsystems::worldinput2::input_sequence">
 
-      <Intrinsic Name="has_directional_requirement" Expression="directional.scalar.type != scalar_input_control::none || directional.vector != vector_input_control::none" />
+      <Intrinsic Name="has_range_requirement" Expression="range.scalar.type != scalar_input_control::none || range.vector != vector_input_control::none" />
 
       <DisplayString IncludeView="stringified" Condition="root != nullptr">{*root,view(stringified)}</DisplayString>
       <DisplayString Condition="root != nullptr">{state.frame_status,en}: {*root,view(stringified)}</DisplayString>
@@ -10,10 +10,10 @@
       <Expand>
          <Item Name="root">*root,view(stringified)</Item>
          <Item Name="state">state</Item>
-         <Item Name="directional" Condition="has_directional_requirement()">directional</Item>
+         <Item Name="range" Condition="has_range_requirement()">range</Item>
       </Expand>
    </Type>
-   <Type Name="dovahkit::subsystems::worldinput2::input_sequence::directional_constraint">
+   <Type Name="dovahkit::subsystems::worldinput2::input_sequence::range_requirement">
       <Intrinsic Name="_is_vector_as_scalar" Expression="
          scalar.type == scalar_input_control::mouse_move
       || scalar.type == scalar_input_control::xinput_ls

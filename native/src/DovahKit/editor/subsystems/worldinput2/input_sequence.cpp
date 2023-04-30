@@ -661,8 +661,8 @@ namespace dovahkit::subsystems::worldinput2 {
       // nor recursion; it will be enough to just copy the entire flat range, sans run-time state.
       //
       input_sequence out;
-      out.root        = this->root->_clone();
-      out.directional = this->directional;
+      out.root  = this->root->_clone();
+      out.range = this->range;
       return out;
    }
 
@@ -673,15 +673,15 @@ namespace dovahkit::subsystems::worldinput2 {
       if (!nested.root)
          return *this;
 
-      if (this->has_directional_requirement() && nested.has_directional_requirement()) {
+      if (this->has_range_requirement() && nested.has_range_requirement()) {
          throw std::logic_error(
             "An input sequence can only have one directional requirement; "
             "merging here would result in two. Ideally, only the 'leaf' "
             "sequence should have the requirement."
          );
       }
-      if (nested.has_directional_requirement()) {
-         this->directional = nested.directional;
+      if (nested.has_range_requirement()) {
+         this->range = nested.range;
       }
 
       group* last_terminal;

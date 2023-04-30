@@ -113,8 +113,36 @@ namespace dovahkit::subsystems::worldinput2::devices {
       return (i != no_button);
    }
    //
-   QPointF xinput::get_directional_control(scalar_input_control s, axis2D axis, bool& is_delta) const {
-      is_delta = false;
+   range_control_state xinput::get_range_control_state(scalar_input_control c, axis2D axis) const {
+      qreal scalar;
+      switch (c) {
+         case scalar_input_control::xinput_ls:
+            scalar = (axis == axis2D::y) ? this->vectors.ls.y() : this->vectors.ls.x();
+            break;
+         case scalar_input_control::xinput_rs:
+            scalar = (axis == axis2D::y) ? this->vectors.rs.y() : this->vectors.rs.x();
+            break;
+         case scalar_input_control::xinput_lt:
+            scalar = this->scalars.lt;
+            break;
+         case scalar_input_control::xinput_rt:
+            scalar = this->scalars.rt;
+            break;
+         default:
+            return range_control_state::unavailable;
+      }
+      return (scalar == 0.0) ? range_control_state::zeroed : range_control_state::active;
+   }
+   range_control_state xinput::get_range_control_state(vector_input_control c) const {
+      switch (c) {
+         case vector_input_control::xinput_ls:
+            return this->vectors.ls.isNull() ? range_control_state::zeroed : range_control_state::active;
+         case vector_input_control::xinput_rs:
+            return this->vectors.rs.isNull() ? range_control_state::zeroed : range_control_state::active;
+      }
+      return range_control_state::unavailable;
+   }
+   QPointF xinput::get_range_control_value(scalar_input_control s, axis2D axis) const {
       if (s == scalar_input_control::none)
          return { 0, 0 };
       switch (s) {
@@ -133,8 +161,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
       }
       return { 0, 0 };
    }
-   QPointF xinput::get_directional_control(vector_input_control v, bool& is_delta) const {
-      is_delta = false;
+   QPointF xinput::get_range_control_value(vector_input_control v) const {
       if (v == vector_input_control::none)
          return { 0, 0 };
       switch (v) {

@@ -9,6 +9,7 @@
 #include "./devices/abstract_device_handler.h"
 #include "./tools/combined_tool_results.h"
 #include "./tools/opaque_tool_options.h"
+#include "./util/is_delta_control.h"
 #include "./core.h"
 #include "./defaults.h"
 #include "./interruption_check.h"
@@ -95,16 +96,15 @@ namespace dovahkit::subsystems::worldinput2 {
                child.state.press_blocked_hold = false;
             }
 
-            if (matched && sequence.has_directional_requirement()) {
-               QPointF pos;
-               bool    is_delta;
-               if (sequence.directional.vector != vector_input_control::none)
-                  pos = device.get_directional_control(sequence.directional.vector, is_delta);
+            if (matched && sequence.has_range_requirement()) {
+               range_control_state state;
+               if (sequence.range.vector != vector_input_control::none)
+                  state = device.get_range_control_state(sequence.range.vector);
                else
-                  pos = device.get_directional_control(sequence.directional.scalar.type, sequence.directional.scalar.axis, is_delta);
-               if (pos.x() == 0.0 && pos.y() == 0.0) {
+                  state = device.get_range_control_state(sequence.range.scalar.type, sequence.range.scalar.axis);
+
+               if (state == range_control_state::zeroed)
                   matched = false;
-               }
             }
          }
          if (child.editor_mode.has_value()) {
@@ -409,17 +409,29 @@ namespace dovahkit::subsystems::worldinput2 {
       // Execution:
       for (auto* node : eligible_binds) {
 
-         QPointF pos      = { 0, 0 };
+         QPointF value    = { 0, 0 };
          bool    is_delta = false;
-         if (node->input_sequence.has_directional_requirement()) {
-            auto& dir = node->input_sequence.directional;
-            if (dir.vector != vector_input_control::none) {
-               pos = device.get_directional_control(dir.vector, is_delta);
+         bool    is_stale = false;
+         if (node->input_sequence.has_range_requirement()) {
+            auto& req = node->input_sequence.range;
+            if (req.vector != vector_input_control::none) {
+               auto range_control = req.vector;
+
+               is_delta = util::is_delta_control(range_control);
+               value    = device.get_range_control_value(range_control);
+               if (is_delta)
+                  is_stale = device.get_range_control_state(range_control) == range_control_state::stale;
             } else {
-               pos = device.get_directional_control(dir.scalar.type, dir.scalar.axis, is_delta);
+               auto range_control = req.scalar.type;
+
+               is_delta = util::is_delta_control(range_control);
+               value    = device.get_range_control_value(range_control, req.scalar.axis);
+               if (is_delta)
+                  is_stale = device.get_range_control_state(range_control, req.scalar.axis) == range_control_state::stale;
             }
          }
-         node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, pos, is_delta);
+         if (!is_stale)
+            node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, value, is_delta);
          
          if (node->button_press_type == button_press_type::hold) {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);

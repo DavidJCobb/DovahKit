@@ -2,6 +2,7 @@
 #include <QPointF>
 #include "../enums/axis2D.h"
 #include "../enums/button_press_type.h"
+#include "../enums/range_control_state.h"
 #include "../enums/scalar_input_control.h"
 #include "../enums/vector_input_control.h"
 #include "../chrono.h"
@@ -27,8 +28,10 @@ namespace dovahkit::subsystems::worldinput2::devices {
 
          virtual bool button_is_valid(const inputs::button&) const = 0;
 
-         virtual QPointF get_directional_control(vector_input_control, bool& is_delta) const = 0;
-         virtual QPointF get_directional_control(scalar_input_control, axis2D, bool& is_delta) const = 0;
+         virtual range_control_state get_range_control_state(scalar_input_control, axis2D) const = 0;
+         virtual range_control_state get_range_control_state(vector_input_control) const = 0;
+         virtual QPointF get_range_control_value(scalar_input_control, axis2D) const = 0;
+         virtual QPointF get_range_control_value(vector_input_control) const = 0;
 
          interruption_check prepare_interruption_check() const;
 

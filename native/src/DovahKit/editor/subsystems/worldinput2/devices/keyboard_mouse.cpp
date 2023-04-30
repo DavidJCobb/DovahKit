@@ -110,6 +110,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
          this->mouse.move = current - this->mouse.pos;
          this->mouse.pos  = current;
       }
+      if (this->mouse.move.isNull()) {
+         auto elapsed = elapsed_time(this->mouse.last_movement, now);
+         this->mouse.is_stale = (elapsed < 0.066);
+      } else {
+         this->mouse.is_stale = false;
+         this->mouse.last_movement = now;
+      }
       //
       // TODO: If we want mouse wheel state, we'll need to either find a way to bridge QWheelEvent to 
       // this system, or use Windows's "Raw Input" API.
@@ -167,26 +174,49 @@ namespace dovahkit::subsystems::worldinput2::devices {
       return true;
    }
    //
-   QPointF keyboard_mouse::get_directional_control(scalar_input_control s, axis2D axis, bool& is_delta) const {
-      is_delta = false;
+   range_control_state keyboard_mouse::get_range_control_state(scalar_input_control c, axis2D axis) const {
+      switch (c) {
+         case scalar_input_control::mouse_move:
+            {
+               auto n = (axis == axis2D::y) ? this->mouse.move.y() : this->mouse.move.x();
+               if (!n) {
+                  if (this->mouse.is_stale)
+                     return range_control_state::stale;
+                  return range_control_state::zeroed;
+               }
+            }
+            return range_control_state::active;
+      }
+      return range_control_state::unavailable;
+   }
+   range_control_state keyboard_mouse::get_range_control_state(vector_input_control c) const {
+      switch (c) {
+         case vector_input_control::mouse_move:
+            if (this->mouse.move.x() == 0 && this->mouse.move.y() == 0) {
+               if (this->mouse.is_stale)
+                  return range_control_state::stale;
+               return range_control_state::zeroed;
+            }
+            return range_control_state::active;
+      }
+      return range_control_state::unavailable;
+   }
+   QPointF keyboard_mouse::get_range_control_value(scalar_input_control s, axis2D axis) const {
       if (s == scalar_input_control::none)
          return { 0, 0 };
       switch (s) {
          case scalar_input_control::mouse_move:
-            is_delta = true;
             if (axis == axis2D::y)
                return { (qreal)this->mouse.move.y(), 0 };
             return { (qreal)this->mouse.move.x(), 0 };
       }
       return { 0, 0 };
    }
-   QPointF keyboard_mouse::get_directional_control(vector_input_control v, bool& is_delta) const {
-      is_delta = false;
+   QPointF keyboard_mouse::get_range_control_value(vector_input_control v) const {
       if (v == vector_input_control::none)
          return { 0, 0 };
       switch (v) {
          case vector_input_control::mouse_move:
-            is_delta = true;
             return this->mouse.move;
       }
       return { 0, 0 };
