@@ -23,7 +23,7 @@ All bind list items are generated from bound tool nodes.
 A bind list item's editor mode is generated from its ancestor editor mode node; if it has more than one editor mode node as an ancestor, and if these nodes specify inconsistent modes, then no bind list item is generated (because the bind would be impossible to activate).
 
 A bind list item's input sequence is the input sequence of the original bound tool node, merged with the input sequences of any ancestor modifier nodes.
- 
+
 ## Bind tree
 A **bind tree** is a node tree wherein nodes are of the following types and subtypes:
 * Root node
@@ -48,7 +48,7 @@ A bound tool node has both a bound input, an associated tool, and a set of tool 
 * Set editor mode
 
 Tool parameters are settings that are passed to the tool, and are specific to each tool. Scalar and vector input controls can be used to supply tool parameters.
- 
+
 ## Button press type
 Input nodes that include button input controls also define a **button press type**. The button press type applies to the bound input's terminal inputs. The following button press types are recognized:
 
@@ -210,7 +210,7 @@ Range constraints are also ignored by [Press-preempts-Hold](#press-preempts-hold
 * Press X :: Left Stick
 
 The decision to implement this specific behavior stems from the fact that Press-delays-Hold and Hold-blocks-Press exist to deal with conflicts arising from the same buttons being mapped to input sequences with different button press types (whereas the concurrent binds conflict resolution rules exist to deal with like press types). Range constraints are orthogonal to button press types.
- 
+
 ### Notation and examples
 The following input sequence notation is defined:
 
@@ -360,7 +360,7 @@ Consider the following binds:
 Here, if you press and hold B, and then press and hold X, the Hold bind should not be delayed. They share a terminal input (the B button), but X is not the (or rather, a) "next" key in the Press bind, nor is it a key that has already been used to advance the Press bind's input sequence. This is why we use the terminal inputs of the Hold input sequence's final ISG.
 
 <span style="page-break-after: always"></span>
- 
+
 ### Simultaneous activation of like binds
 There are several different kinds of conflicts that can occur here.
 
@@ -408,7 +408,7 @@ If the user presses and holds A through D, and then presses and holds X, and the
 This must be implemented in the [bind list update algorithm](#bind-list-update-algorithm). After we've found all eligible nodes, we must check for conflicts between any Press and Long Press eligible binds, and any Hold binds that were active on the previous frame and are not eligible on this frame.
 
 <span style="page-break-after: always"></span>
- 
+
 ## Conflict resolution across time
 It's easy to resolve conflicts within a single frame. However, some of the above conflict resolution rules require special handling in order to handle over multiple frames.
 
@@ -430,7 +430,7 @@ This system thus applies the following conflict resolution rules across time:
 * [Hold-blocks-Press rule](#simultaneous-release-of-hold-and-press-binds)
 
 <span style="page-break-after: always"></span>
- 
+
 ## Seamless switching between Hold binds
 The Creation Kit has a small family of "light/scale" tools, which activate when the user holds one or more keys, and then left-clicks and drags on any selected ref in the Render Window. They are as follows (all keys are concurrent in each bind):
 
@@ -751,7 +751,7 @@ Behavior B is handled by the [specificity rule](#specificity-rule) in conflict r
 Behavior C is handled by application of the specificity rule during [conflict resolution across time](#conflict-resolution-across-time).
 
 <span style="page-break-after: always"></span>
- 
+
 # Algorithms
 
 ## Merging of a parent and child input sequence
@@ -784,7 +784,7 @@ Given an [input sequence](#input-sequence) <var>Parent</var> and an input sequen
    1. Assert: <var>FinalGroup</var> is the root input sequence group of <var>Parent</var>.
    1. Set the root input sequence group of <var>Parent</var> to <var>Wrap</var>.
 15. Return.
- 
+
 ## Identification of an input sequence's terminal inputs
 The algorithm to gather up the [terminal inputs](#terminal-inputs) of an [input sequence](#input-sequence) are as follows:
 
@@ -857,8 +857,8 @@ An [input node](#input-node) <var>Node</var>'s absolute input sequence is define
 1. Run the [bind list update algorithm](#bind-list-update-algorithm).
 1. Deliver all queued (and merged, if applicable) bound function invocations to the outside world i.e. to Worldedit.[^3]
 
-[^3]: Algorithms in this document describe Worldinput as executing input nodes' bound tools. This is a simplification. In reality, Worldinput passes parameters to those tools as appropriate and receives queued actions, merging them if a tool is triggered more than once in a single frame. The queued actions are then delivered to the outside world at the end of input processing. In other words: we're not running editor operations in the middle of processing input; we do all input processing, and then we actually run the editor operations that the user's inputs triggered. 
- 
+[^3]: Algorithms in this document describe Worldinput as executing input nodes' bound tools. This is a simplification. In reality, Worldinput passes parameters to those tools as appropriate and receives queued actions, merging them if a tool is triggered more than once in a single frame. The queued actions are then delivered to the outside world at the end of input processing. In other words: we're not running editor operations in the middle of processing input; we do all input processing, and then we actually run the editor operations that the user's inputs triggered.
+
 ## Bind list update algorithm
 The operations here are as follows:
 
@@ -997,7 +997,7 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
 [^6]: In order to allow seamless switching between Hold binds, we do not clear a Hold bind's key sequence progress if the bind is blocked by the activation of a [more specific](#specificity-rule) Hold bind.
 [^7]: Note that we do not here remove conflict losers from <var>EligibleBinds</var>; we just add them to <var>ConflictLosingBinds</var>. This is because we still want to test nodes that we encounter in the future against them for conflicts. After traversal, we'll remove all <var>ConflictLosingBinds</var> nodes from <var>EligibleBinds</var>.
 [^8]: If we clear all progress on Hold binds, then it becomes impossible to seamlessly switch between input sequences like Hold [X + Y] and Hold [X + (Y + Z)]. If the latter input sequence (being [more specific](#specificity-rule)) interrupts the former, then clearing all progress on the former would prevent it from being considered *down* again unless the X key is released and re-pressed.
- 
+
 ## Bind conflict resolution algorithms
 There are multiple kinds of conflicts that can occur between binds, and so there are multiple algorithms for checking whether two binds are in conflict and if so, which bind should win that conflict.
 
@@ -1145,7 +1145,7 @@ Given two bind list items &mdash; one, <var>PressBind</var>, whose button press 
 2. Let <var>SeqHold</var> be the terminal inputs of <var>HoldBind</var>.
 3. If any input control is present in both <var>SeqPress</var> and <var>SeqHold</var>, then return true.
 4. Return false.
- 
+
 ## <var>Input</var> sequence group interruption check
 This algorithm is invoked when updating a *separate and ordered* input sequence group. The algorithm requires the use of an instance of the following data structure, which is partially prepared by the [bind list update algorithm](#bind-list-update-algorithm) and then further prepared by the [input sequence update algorithm](#input-sequence-update-algorithm):
 
@@ -1270,7 +1270,7 @@ In order to clear all progress for an input sequence:
 In order to clear all progress for an input sequence group:
 1. Set the group's <var>CurrentItemIndex</var> to 0.
 2. Recursively clear all progress for group's children.
- 
+
 ## <var>Input</var> sequence group update algorithm
 This algorithm runs on a single input sequence group, and works by potentially changing the group's frame status. The algorithm itself returns a [frame status](#frame-status), a down timestamp, and the number of currently-down input controls seen by the algorithm; you could regard this as a "progress" value, with the containing input sequence's specificity as the overall maximum.
 
@@ -1371,7 +1371,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
 [^21]: We here want to clear progress on any *separate and ordered* children if the user "rewinds" back before them by releasing keys in this group that would’ve preceded them. Again, however: the first-seen *inactive* child of <var>Group</var> may be "partially down," so we don't want to clear its progress in case it is or contains a *separate and ordered* group. We clear everything *after* the first-seen inactive group.
 [^22]: We enforce a limit on how much time may elapse between fully entering the child items of a *separate and ordered* input sequence group. We rely on the containing input sequence's [last advancement time](#last-advancement-time) to check the elapsed time, and that timestamp is updated based on the timestamp returned by the input sequence group update algorithm. We want the limit to apply to the time between entering child items; we don't want to count the time that any child time spends pressed down; so we always update the last advancement time to the current time while any child item is down.
 [^23]: This ensures that if <var>CurrentItem</var> is "partially down," we still take the time of its last keypress &mdash; which may have occurred on this frame &mdash; into account.
- 
+
 ## <var>Input</var> sequence range constraint check
 This check is invoked by the bind list update algorithm, and not by the input sequence update algorithm, so that we can prevent range constraints from interfering with handling of the Press-blocks-Hold conflict resolution rule.
 
