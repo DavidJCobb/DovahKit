@@ -58,7 +58,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          constexpr options_union() : opaque_options_union(id_of_none), data({}) {}
 
          template<is_tool_options T>
-         options_union(const T& src) : opaque_options_union(id_of<T>()) {
+         options_union(const T& src) : opaque_options_union(id_of<T>) {
             memcpy(this->data.data(), &src, sizeof(T));
          }
 
