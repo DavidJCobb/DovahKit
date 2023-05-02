@@ -112,6 +112,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
@@ -799,6 +800,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h" />
@@ -808,6 +810,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\id_of.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\opaque_options_union.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\options_union.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_dispatch_table.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_id.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_results.h" />

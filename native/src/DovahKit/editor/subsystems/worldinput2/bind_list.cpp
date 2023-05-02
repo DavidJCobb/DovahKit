@@ -15,45 +15,40 @@
 #include "./interruption_check.h"
 //
 #include "editor/subsystems/worldedit/core.h"
+#include "editor/subsystems/worldedit/tool_system/options_union.h"
+#include "editor/subsystems/worldedit/tool_system/tool_dispatch_table.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region bind_list_item
-   void bind_list_item::invoke(combined_tool_results& out, const QPointF& pos, bool pos_is_delta) const {
-      // TODO
-      //
-      if constexpr (enable_initial_testing) {
-         out.data += this->name.toStdString().c_str();
-
-         auto x = pos.x();
-         auto y = pos.y();
-         if (x || y) {
-            out.data += " (";
-            if (pos_is_delta && x > 0)
-               out.data += "+";
-            out.data += QString::number(x).toStdString();
-            out.data += ", ";
-            if (pos_is_delta && y > 0)
-               out.data += "+";
-            out.data += QString::number(y).toStdString();
-            out.data += ")";
-         }
-
-         out.data += '\n';
+   bind_list_item::~bind_list_item() {
+      if (auto*& p = this->bound_tool.options) {
+         delete ((worldedit::tools::options_union*)p);
+         p = nullptr;
       }
    }
-   void bind_list_item::invoke_for_hold_release(combined_tool_results& out) const {
-      // TODO
-      //
-      if constexpr (enable_initial_testing) {
-         out.data += "[Hold-Release] ";
-         out.data += this->name.toStdString().c_str();
-         out.data += '\n';
+
+   void bind_list_item::invoke(worldedit::tool_results_tuple& out, const tool_invocation_cause& cause) const {
+      if (this->bound_tool.tool == worldedit::tools::id_of_none) {
+         return;
       }
+      assert(this->bound_tool.options != nullptr);
+
+      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
+      table.invoke(cause, *this->bound_tool.options, out);
+   }
+   void bind_list_item::invoke_for_hold_release(worldedit::tool_results_tuple& out) const {
+      if (this->bound_tool.tool == worldedit::tools::id_of_none) {
+         return;
+      }
+      assert(this->bound_tool.options != nullptr);
+
+      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
+      table.invoke_hold_release(*this->bound_tool.options, out);
    }
    #pragma endregion
 
    #pragma region bind_list
-   void bind_list::update(timestamp_t now, combined_tool_results& press_results, combined_tool_results& hold_results) {
+   void bind_list::update(timestamp_t now, worldedit::tool_results_tuple& press_results, worldedit::tool_results_tuple& hold_results) {
       auto& subsys = core::get(); // worldinput2
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 

@@ -2007,6 +2007,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4809,6 +4812,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_dispatch_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

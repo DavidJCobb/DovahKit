@@ -10,6 +10,9 @@
 #include "./devices/xinput.h"
 #include "./enums/input_device_type.h"
 
+namespace dovahkit::subsystems::worldedit {
+   class tool_results_tuple;
+}
 namespace dovahkit::subsystems::worldinput2 {
    class combined_tool_results;
 }
@@ -17,6 +20,9 @@ namespace dovahkit::subsystems::worldinput2 {
 namespace dovahkit::subsystems::worldinput2 {
    class core : public QObject {
       Q_OBJECT;
+      public:
+         using tool_results_tuple = worldedit::tool_results_tuple;
+
       protected:
          core();
          ~core();
@@ -39,7 +45,7 @@ namespace dovahkit::subsystems::worldinput2 {
       protected slots:
          void ignoreAllHeldKeys();
       public slots:
-         void doPerFrameInputProcessing(double& elapsed_seconds, combined_tool_results& out); // both args are out-variables
+         void doPerFrameInputProcessing(double& elapsed_seconds, tool_results_tuple& out); // both args are out-variables
 
       protected:
          struct {

@@ -4,6 +4,7 @@
 #include "helpers/tuples/contains_type_matching_functor.h"
 #include "editor/subsystems/worldinput2/tool_invocation_cause.h"
 #include "../all_tools.h"
+#include "./debug_print.h"
 #include "./move_camera.h"
 
 namespace dovahkit::subsystems::worldedit {
