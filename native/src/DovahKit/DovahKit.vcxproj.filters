@@ -1998,6 +1998,15 @@
     <ClCompile Include="helpers\keyboard\key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4736,6 +4745,72 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\range_control_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\reference_frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\sign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\tool_invocation_cause.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\opaque_options_union.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\options_union.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\all_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\id_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5262,7 +5337,6 @@
     <Text Include="editor\subsystems\worldinput\_docs\keyboard shortcuts - guidelines for defaults.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\tools.txt" />
-    <Text Include="editor\subsystems\worldinput2\_docs\bound inputs.txt" />
     <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -5411,6 +5485,16 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldinput2\input_sequence.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\options_union.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -1,0 +1,39 @@
+#pragma once
+#include <concepts>
+#include "helpers/enum_flags.h"
+#include "editor/subsystems/worldinput2/tool_invocation_cause.h"
+#include "../../enums/editor_mode.h"
+
+namespace dovahkit::subsystems::worldedit {
+   class tool_results_tuple;
+
+   namespace tools {
+      class opaque_options_union;
+
+      using editor_mode_set = cobb::enum_flags<editor_mode, 3>;
+      inline constexpr editor_mode_set all_editor_modes = editor_mode_set::with_all_set();
+   }
+}
+
+namespace dovahkit::subsystems::worldedit::tools {
+   struct compile_time_tool_options {
+      bool use_strict_ordering = false; // set to (true) if the order of results within a single frame matters when merging results
+   };
+
+   class _base {
+      public:
+         using tool_invocation_cause = dovahkit::subsystems::worldinput2::tool_invocation_cause;
+      public:
+         static constexpr const char* function_name = "unnamed";
+
+         static constexpr const compile_time_tool_options compile_time_options = {};
+
+         static constexpr const editor_mode_set supported_editor_modes = all_editor_modes;
+   };
+
+   template<typename T> concept tool_with_options_member_type = requires { typename T::options; requires std::is_base_of_v<_base, T>; };
+   template<typename T> concept tool_sans_options_member_type = !tool_with_options_member_type<T> && std::is_base_of_v<_base, T>;
+
+   template<typename T> concept tool_with_results_member_type = requires { typename T::results; requires std::is_base_of_v<_base, T>; };
+   template<typename T> concept tool_sans_results_member_type = !tool_with_results_member_type<T> && std::is_base_of_v<_base, T>;
+}

@@ -112,6 +112,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.cpp" />
@@ -785,10 +788,31 @@
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\reference_frame.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\all_tools.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_options.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_options.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\id_of.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\opaque_options_union.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\options_union.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_id.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_results.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h" />
@@ -825,6 +849,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\interruption_check.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tools\combined_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tools\opaque_tool_options.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\tool_invocation_cause.h" />
     <ClInclude Include="editor\subsystems\worldinput2\util\is_delta_control.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\node.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.h" />
@@ -1879,7 +1904,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
-    <Text Include="editor\subsystems\worldinput2\_docs\bound inputs.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\keyboard inputs.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\keyboard shortcuts - guidelines for defaults.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
@@ -1935,8 +1959,12 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\options_union.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
+    <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
