@@ -92,11 +92,14 @@ namespace cobb {
          static constexpr bool for_each_until_true(Functor&& f, Args&&... args) {
             return (f.template operator()<Types>(std::forward<Args>(args)...) || ...);
          }
-
-         template<auto Functor, typename U> requires requires {
-            { Functor(U{}) } -> std::same_as<U>;
-         }
-         static constexpr auto reduce(U prev = U()) -> U {
+         
+         template<typename Result, auto Functor>
+            #ifndef __INTELLISENSE__
+            requires requires(Result prev) {
+               { Functor.template operator()<nth_type<0>>(prev) } -> std::convertible_to<Result>;
+            }
+            #endif
+         static constexpr Result reduce(Result prev = {}) {
             return ((prev = Functor.template operator()<Types>(prev)), ...);
          }
 

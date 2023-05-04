@@ -74,7 +74,6 @@ namespace dovahkit::subsystems::worldedit {
          template<tools::tool_results_or_tool_with_results T> constexpr const _to_results<T>& get_member() const;
          template<tools::tool_results_or_tool_with_results T> constexpr _to_results<T>& get_member();
 
-
          // alternative to std::get-and-then-assign which accepts a tool class or a tool::results struct; 
          // templated type must be specified explicitly
          template<tools::tool_results_or_tool_with_results T>

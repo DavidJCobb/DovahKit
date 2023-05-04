@@ -36,8 +36,6 @@ namespace dovahkit::subsystems::worldinput2 {
          const devices::abstract_device_handler& device_by_type(input_device_type) const;
          devices::abstract_device_handler& device_by_type(input_device_type);
 
-         void update(double& elapsed_time);
-
       public slots:
          void setTargetWidget(QWidget* target);
          void setBindingsFor(input_device_type, const binds::tree&);

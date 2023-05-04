@@ -18,7 +18,8 @@ namespace dovahkit::subsystems::worldedit::tools {
             std::string text;
 
             constexpr void merge(const results& from) {
-               this->text = from.text + this->text;
+               this->text += '\n';
+               this->text += from.text;
             }
          };
 

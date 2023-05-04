@@ -22,9 +22,10 @@ namespace cobb::tuples {
       template<typename Tuple, auto Predicate>
       struct _contains_type_matching_functor;
 
-      template<auto Predicate, typename... Types> requires requires {
-         { (Predicate.template operator()<Types>() || ...) } -> std::same_as<bool>;
-      }
+      template<auto Predicate, typename... Types>
+         requires requires {
+            { (Predicate.template operator()<Types>() || ...) } -> std::same_as<bool>;
+         }
       struct _contains_type_matching_functor<std::tuple<Types...>, Predicate> {
          static constexpr const bool value = (Predicate.template operator()<Types>() || ...);
       };

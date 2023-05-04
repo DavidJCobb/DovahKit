@@ -16,9 +16,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       //
       results res = { o.text };
 
-      if (input.is_button()) {
-         ;
-      } else {
+      if (input.has_range) {
          auto x = input.range.x;
          auto y = input.range.y;
 

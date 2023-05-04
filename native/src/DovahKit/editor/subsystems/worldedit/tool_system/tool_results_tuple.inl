@@ -15,39 +15,52 @@ namespace dovahkit::subsystems::worldedit {
    template<tools::tool_results_or_tool_with_results T>
    void tool_results_tuple::set_member(const _to_results<T>& v) {
       std::get<_to_results<T>>(*this) = v;
+      this->presence.set(_presence_bit_index_of<T>);
    }
 
    template<tools::is_tool_results A>
    void tool_results_tuple::set_member(const A& v) {
       std::get<A>(*this) = v;
+      this->presence.set(_presence_bit_index_of<A>);
    }
    
    template<tools::is_tool_results A>
    void tool_results_tuple::merge_member(const A& v) {
       if constexpr (impl::_tool_results_tuple::can_merge<A>) {
-         std::get<A>(*this).merge(v);
-      } else {
-         std::get<A>(*this) = v;
+         if (this->presence.test(_presence_bit_index_of<A>)) {
+            std::get<A>(*this).merge(v);
+            return;
+         }
       }
+      std::get<A>(*this) = v;
+      this->presence.set(_presence_bit_index_of<A>);
    }
 
    template<tools::is_tool_results A>
    void tool_results_tuple::merge_member(timestamp_t time, const A& v) {
-      if constexpr (result_types_with_timestamps::contains_type<A>) {
+      if constexpr (result_types_with_timestamps::contains_type<A> && impl::_tool_results_tuple::can_merge<A>) {
          auto& ts     = this->input_timestamps[result_types_with_timestamps::index_of_type<A>()];
          auto& stored = std::get<A>(*this);
-         if (ts <= time) {
-            // argument results are newer (e.g. if two "while" binds are held concurrently, prefer the more recently pressed of the two)
-            stored.merge(v);
+         if (this->presence.test(_presence_bit_index_of<A>)) {
+            if (ts <= time) {
+               // argument results are newer (e.g. if two "while" binds are held concurrently, prefer the more recently pressed of the two)
+               stored.merge(v);
+               ts = time;
+            } else {
+               // argument results are older
+               auto temp = v;
+               temp.merge(stored);
+               std::swap(stored, temp);
+            }
          } else {
-            // argument results are older
-            auto temp = v;
-            temp.merge(stored);
-            std::swap(stored, temp);
+            this->presence.set(_presence_bit_index_of<A>);
+            stored = v;
+            ts     = time;
          }
-      } else {
-         std::get<A>(*this) = v;
+         return;
       }
+      this->presence.set(_presence_bit_index_of<A>);
+      std::get<A>(*this) = v;
    }
    
    template<tools::is_tool_results A>
@@ -57,8 +70,9 @@ namespace dovahkit::subsystems::worldedit {
          // For now, results that don't have an explicit merge method also don't 
          // use timestaps or ordering. Maybe we'll change that someday.
          //
-         if (cause.is_button() && !cause.button.is_down)
+         if (cause.has_button && !cause.button.is_down)
             return;
+         this->presence.set(_presence_bit_index_of<A>);
          std::get<A>(*this) = v;
          return;
       }
@@ -75,7 +89,7 @@ namespace dovahkit::subsystems::worldedit {
       // Else, pull the appropriate timestamp from the input_result and then merge 
       // results in chronological order.
       //
-      if (cause.is_button()) {
+      if (cause.has_button) {
          if (!cause.button.is_down) {
             this->merge_member(zero_timestamp, v);
             return;

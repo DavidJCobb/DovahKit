@@ -133,6 +133,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
          void clear_all_progress();
 
+         constexpr bool has_any_buttons() const;
          constexpr bool has_range_requirement() const;
          constexpr bool is_probably_keyboard_impossible() const;
          constexpr size_t specificity() const;

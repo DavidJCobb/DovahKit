@@ -879,7 +879,8 @@ namespace dovahkit::subsystems::worldedit {
       //
       // Update edit gizmo mouseover state.
       //
-      if (auto* sr = view.surfaceRenderer()) {
+      auto* sr = view.surfaceRenderer();
+      if (sr) {
          auto cursor_pos = view.mapFromGlobal(QCursor::pos());
 
          vulkanDK::raycast rc(*sr);
@@ -899,7 +900,15 @@ namespace dovahkit::subsystems::worldedit {
          //
          tool_results_tuple results;
          double delta;
-         worldinput2::core::get().update(results, delta);
+         worldinput2::core::get().doPerFrameInputProcessing(delta, results);
+         //
+         if (!sr)
+            //
+            // Don't execute commands "blind." If there's no renderer, exit.
+            //
+            return;
+
+         // TODO
 
       } else {
          //
@@ -909,7 +918,6 @@ namespace dovahkit::subsystems::worldedit {
          double delta;
          worldinput::core::get().update(results, delta);
          //
-         auto* sr = view.surfaceRenderer();
          if (!sr)
             //
             // Don't execute commands "blind." If there's no renderer, exit.

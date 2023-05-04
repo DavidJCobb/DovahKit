@@ -43,7 +43,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          .y = o.magnitudes.y,
          .z = o.magnitudes.z,
       };
-      if (!input.is_button()) {
+      if (input.has_range) {
          _apply(res, input.range.x, o.range.x.axis, o.range.x.sign);
          _apply(res, input.range.y, o.range.y.axis, o.range.y.sign);
       }

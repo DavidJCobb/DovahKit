@@ -20,6 +20,9 @@ namespace dovahkit::subsystems::worldinput2 {
 namespace dovahkit::subsystems::worldinput2 {
    class bind_list_item {
       public:
+         bind_list_item() {}
+         bind_list_item(const bind_list_item&);
+         bind_list_item(bind_list_item&&) noexcept;
          ~bind_list_item();
 
          QString name;
@@ -37,6 +40,9 @@ namespace dovahkit::subsystems::worldinput2 {
          mutable struct {
             bool press_blocked_hold : 1 = false; // cross-frame Hold node state for Press-preempts-Hold
          } state;
+
+         bind_list_item& operator=(const bind_list_item&);
+         bind_list_item& operator=(bind_list_item&&) noexcept;
 
          // Pass `pos` and `pos_is_delta` if the associated input sequence has a directional constraint; pass whatever's associated with the specified scalar or vector input control.
          // For a scalar input control, the value is always in pos.x(), even if the scalar is generated from e.g. the vertical axis of a vector.

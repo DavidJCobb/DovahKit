@@ -12,8 +12,8 @@ namespace dovahkit::subsystems::worldedit {
    void tool_results_tuple::merge(const tool_results_tuple& merge_from) {
       classes::for_each<[]<typename T>(self_t* self, const self_t& source) {
          if constexpr (impl::_tool_results_tuple::can_merge<T>) {
-            if (self->has_member<T>())
-               std::get<T>(*self).merge(std::get<T>(source));
+            if (source.has_member<T>())
+               self->merge_member<T>(source.get_member<T>());
          }
       }>(this, merge_from);
    }

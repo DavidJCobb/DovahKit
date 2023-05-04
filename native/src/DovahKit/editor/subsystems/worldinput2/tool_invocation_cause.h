@@ -17,11 +17,8 @@ namespace dovahkit::subsystems::worldinput2 {
             float y = 0;
             bool  is_delta = false;
          } range;
-
-      protected:
-         bool _is_button = true;
-
-      public:
-         constexpr const bool is_button() const { return this->_is_button; }
+         //
+         bool has_button : 1 = false;
+         bool has_range  : 1 = false;
    };
 }

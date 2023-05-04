@@ -43,7 +43,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       protected:
          node(node_type t);
       public:
-         ~node();
+         virtual ~node();
 
          void append(node& o);
          void insert(node& o, size_t before);

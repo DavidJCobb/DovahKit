@@ -119,6 +119,21 @@ namespace dovahkit::subsystems::worldinput2 {
    #pragma endregion
 
    #pragma region input_sequence
+   constexpr bool input_sequence::has_any_buttons() const {
+      if (!this->root)
+         return false;
+      auto recurse = [](const input_sequence::group& current, const auto& recurse) constexpr -> bool {
+         if (current.type == group_type::single_control) {
+            return !current.button.empty();
+         }
+         for (const auto* item : current.children) {
+            if (recurse(*item, recurse))
+               return true;
+         }
+         return false;
+      };
+      return recurse(*this->root, recurse);
+   }
    constexpr bool input_sequence::has_range_requirement() const {
       if (this->range.vector != vector_input_control::none)
          return true;

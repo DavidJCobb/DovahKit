@@ -6,6 +6,8 @@
 #include "../bind_tree/nodes/modifier.h"
 #include "../bind_tree/nodes/root.h"
 
+#include "editor/subsystems/worldedit/tool_system/options_union.h"
+
 namespace dovahkit::subsystems::worldinput2::algorithms {
    extern bind_list flatten_bind_tree(
       const binds::tree& src
@@ -19,11 +21,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
             for (const auto* child : current.child_nodes()) {
                if (auto* bt = child->as<binds::nodes::bound_tool>()) {
                   auto& item = out.items.emplace_back();
-                  item.name              = bt->name;
-                  item.editor_mode       = current_editor_mode;
-                  item.input_sequence    = bt->absolute_input_sequence();
-                  item.button_press_type = bt->button_press_type;
-                  // TODO: bound tool params
+                  item.name               = bt->name;
+                  item.editor_mode        = current_editor_mode;
+                  item.input_sequence     = bt->absolute_input_sequence();
+                  item.button_press_type  = bt->button_press_type;
+                  item.bound_tool.tool    = bt->tool.id;
+                  item.bound_tool.options = ((worldedit::tools::options_union*)bt->tool.options)->clone();
                   continue;
                }
 

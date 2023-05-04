@@ -20,11 +20,52 @@
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region bind_list_item
+   bind_list_item::bind_list_item(const bind_list_item& other) {
+      *this = other;
+   }
+   bind_list_item::bind_list_item(bind_list_item&& other) noexcept {
+      *this = std::move(other);
+   }
+
    bind_list_item::~bind_list_item() {
       if (auto*& p = this->bound_tool.options) {
          delete ((worldedit::tools::options_union*)p);
          p = nullptr;
       }
+   }
+
+   bind_list_item& bind_list_item::operator=(const bind_list_item& src) {
+      this->name = src.name;
+      this->editor_mode = src.editor_mode;
+      //
+      this->button_press_type = src.button_press_type;
+      this->input_sequence    = src.input_sequence.clone();
+      //
+      this->bound_tool.tool   = src.bound_tool.tool;
+      {
+         auto*& mine = this->bound_tool.options;
+         const auto* const& theirs = src.bound_tool.options;
+         if (mine) {
+            if (theirs) {
+               *((worldedit::tools::options_union*)mine) = *((worldedit::tools::options_union*)theirs);
+            } else {
+               delete ((worldedit::tools::options_union*)mine);
+               mine = nullptr;
+            }
+         } else if (theirs) {
+            mine = ((worldedit::tools::options_union*)theirs)->clone();
+         }
+      }
+      return *this;
+   }
+   bind_list_item& bind_list_item::operator=(bind_list_item&& src) noexcept {
+      std::swap(this->name,               src.name);
+      std::swap(this->editor_mode,        src.editor_mode);
+      std::swap(this->button_press_type,  src.button_press_type);
+      std::swap(this->input_sequence,     src.input_sequence);
+      std::swap(this->bound_tool.tool,    src.bound_tool.tool);
+      std::swap(this->bound_tool.options, src.bound_tool.options);
+      return *this;
    }
 
    void bind_list_item::invoke(worldedit::tool_results_tuple& out, const tool_invocation_cause& cause) const {
@@ -417,8 +458,22 @@ namespace dovahkit::subsystems::worldinput2 {
                   is_stale = device.get_range_control_state(range_control, req.scalar.axis) == range_control_state::stale;
             }
          }
-         if (!is_stale)
-            node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, value, is_delta);
+         if (!is_stale) {
+            tool_invocation_cause cause;
+            //
+            cause.has_button = node->input_sequence.has_any_buttons();
+            cause.has_range  = node->input_sequence.has_range_requirement();
+            //
+            cause.button.is_down    = node->button_press_type == button_press_type::hold;
+            cause.button.down_when  = node->input_sequence.state.went_down_at;
+            cause.button.press_type = node->button_press_type;
+            cause.button.down_state_changed_this_frame = node->input_sequence.state.frame_status_changed;
+            cause.range.x = value.x();
+            cause.range.y = value.y();
+            cause.range.is_delta = is_delta;
+
+            node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, cause);
+         }
          
          if (node->button_press_type == button_press_type::hold) {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);

@@ -18,7 +18,15 @@
 
 #include "editor/subsystems/worldinput2/tools/combined_tool_results.h"
 
+#include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
+#include "editor/subsystems/worldedit/tool_system/id_of.h"
+#include "editor/subsystems/worldedit/tool_system/options_union.h"
+#include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"
+
 namespace {
+   namespace worldedit {
+      using namespace dovahkit::subsystems::worldedit;
+   }
    namespace worldinput2 {
       using namespace dovahkit::subsystems::worldinput2;
    }
@@ -68,6 +76,14 @@ namespace {
       node->name = name.c_str();
       node->button_press_type = pt;
       node->input_sequence    = sequence;
+      //
+      node->tool.id = worldedit::tools::id_of<worldedit::tools::debug_print>;
+      node->tool.options = new worldedit::tools::options_union(
+         worldedit::tools::debug_print::options{
+            .text = name
+         }
+      );
+      //
       return node;
    }
    worldinput2::binds::nodes::modifier* make_modifier_node(
@@ -1003,7 +1019,7 @@ namespace DovahKitDebug::features {
             return;
 
          double elapsed;
-         ::worldinput2::combined_tool_results results;
+         ::worldedit::tool_results_tuple results;
 
          dovahkit::subsystems::worldinput2::core::get().doPerFrameInputProcessing(elapsed, results);
 
@@ -1012,8 +1028,12 @@ namespace DovahKitDebug::features {
 
             static double no_empty_timer = 0.0;
 
-            QString text = results.data.c_str();
-            text = text.trimmed();
+            QString text;
+            if (results.has_member<worldedit::tools::debug_print>()) {
+               const auto& data = results.get_member<worldedit::tools::debug_print>();
+               text = data.text.c_str();
+               text = text.trimmed();
+            }
 
             if (!text.isEmpty()) {
                no_empty_timer = 0.0;
