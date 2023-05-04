@@ -1002,6 +1002,19 @@ namespace {
                }
             ),
          },
+         testing_tree{
+            .name = "Directional constraint test: Left Stick only, no buttons",
+            .tree = make_tree(
+               worldinput2::input_device_type::xinput,
+               {
+                  make_tool_node(
+                     "Hold <none> :: Left Stick",
+                     worldinput2::button_press_type::hold,
+                     worldinput2::algorithms::input_sequence_from_string(":: Left Stick", true)
+                  ),
+               }
+            ),
+         },
       #pragma endregion
    };
 }

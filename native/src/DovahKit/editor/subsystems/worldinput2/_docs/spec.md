@@ -287,6 +287,21 @@ Specificity is an opaque value: the precise values are not meaningful; values ar
 
 <span style="page-break-after: always"></span>
 
+## Tool invocation cause
+
+A data structure that gets passed to tools when they're invoked. It has the following properties:
+
+* **"Has button" flag:** Indicates that the [input sequence](#input-sequence) which triggered this invocation has one or more buttons.
+* **"Has range" flag:** Indicates that the input sequence which triggered this invocation has a [range constraint](#range-constraint).
+* **Button press type:** The [button press type](#button-press-type) of the bind that triggered this invocation.
+* **"Button is down" flag:** Indicates that this invocation is the result of a button currently being down (i.e. the button press type is Hold). This is redundant with the button press type, but may be used in the future.
+* **"Down status changed on this frame" flag:** Primarily useful for Hold binds, to know whether the current invocation is the result of the bind beginning to activate or remaining active over multiple frames. For tools that toggle some setting, for example, this is what allows them to toggle once when a Hold bind goes down and toggle back when it's released, rather than toggling every single frame. 
+* **Range value:** X- and Y-axis values for a range input control.
+* **"Range is delta" flag:** Indicates that the range value represents a [delta](#delta-controls) rather than an absolute position.
+
+
+<span style="page-break-after: always"></span>
+
 # Behaviors
 
 ## Conflict resolution
@@ -984,7 +999,19 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
       1. If the range control is a delta control:
          1. If the range control is stale, then set <var>RangeIsStale</var> to *true*.
    1. If <var>RangeIsStale</var> is *false*:
-      1. Execute <var>EligibleBind</var>'s bound tool, passing <var>RangeValue</var> and <var>RangeIsDelta</var>.
+      1. Let <var>Cause</var> be a tool invocation cause.
+      1. If <var>EligibleBind</var>'s input sequence contains any buttons, then set <var>Cause</var>'s "has button" flag to *true*.
+      1. If <var>EligibleBind</var> has a range constraint, then set <var>Cause</var>'s "has range" flag to *true*.
+      1. If <var>EligibleBind</var>'s button press type is Hold, then set <var>Cause</var>'s "button is down" flag to *true*.
+      1. Set <var>Cause</var>'s "button went down at" timestamp to the [down timestamp](#down-timestamp) of <var>EligibleBind</var>'s input sequence.
+      1. Set <var>Cause</var>'s button press type to <var>EligibleBind</var>'s button press type.
+      1. Set <var>Cause</var>'s "down status changed this frame" flag to the frame status change flag of <var>EligibleBind</var>'s input sequence.
+      1. If <var>EligibleBind</var>'s press type is Hold:
+         1. If the frame status change flag of <var>EligibleBind</var>'s input sequence is not set:
+            1. If <var>EligibleBind</var> is in <var>LastFrameActiveHoldBinds</var>, then set <var>Cause</var>'s "down status changed this frame" flag.
+      1. Set <var>Cause</var>'s range value to <var>RangeValue</var>.
+      1. Set <var>Cause</var>'s "range is delta" flag to <var>RangeIsDelta</var>.
+      1. Execute <var>EligibleBind</var>'s bound tool, passing <var>Cause</var>.
    1. If <var>EligibleBind</var>'s press type is Hold, then:
       1. Add <var>EligibleBind</var> to <var>LastFrameActiveHoldBinds</var>.
    1. Else:
@@ -1212,7 +1239,11 @@ This algorithm is potentially invoked by the bind list update algorithm, running
 
 1. Let <var>CurrentTimestamp</var> be the timestamp at which input processing began for this frame.
 2. Let <var>InterruptionCheck</var> be the [interruption check](#input-sequence-group-interruption-check) instance received as a parameter.
-3. If this input sequence is empty, then abort this process.
+3. If this input sequence is empty, then:
+   1. If this input sequence has a [range constraint](#range-constraint):[^17]
+      1. Set this input sequence's [frame status](#frame-status) to *down*.
+      1. Clear this input sequence's frame status change flag.
+   1. Abort this process.
 4. Set up the interruption check:
    1. Set <var>InterruptionCheck</var>'s "start at" property to 0.
    1. Let <var>FoundFirstButton</var> be false.
@@ -1222,16 +1253,16 @@ This algorithm is potentially invoked by the bind list update algorithm, running
          2. Set <var>InterruptionCheck</var>'s "down at" property to the index of <var>Button</var> in <var>InterruptionCheck</var>'s button list.
          3. Break.
    1. If <var>FoundFirstButton</var> is *false*:
-      1. Set <var>InterruptionCheck</var>'s "down at" property to the size of its button list.[^17]
+      1. Set <var>InterruptionCheck</var>'s "down at" property to the size of its button list.[^18]
 5. Let <var>RootGroup</var> be the root group of this input sequence.
 6. Run the [input sequence group update algorithm](#input-sequence-group-update-algorithm) on <var>RootGroup</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; and let <var>ResultCount</var> be the returned count.
 7. If this input sequence's frame status is not equal to <var>ResultStatus</var>:
    1. Set this input sequence's frame status change flag.
    1. Set this input sequence's frame status to <var>ResultStatus</var>.
 8. If <var>ResultStatus</var> is *inactive*, then:
-   1. Set this input sequence's last advancement time to <var>ResultDownTimestamp</var>.[^18]
+   1. Set this input sequence's last advancement time to <var>ResultDownTimestamp</var>.[^19]
 9. Else if <var>ResultStatus</var> is *down*, then:
-   1. Set this input sequence's last advancement time to <var>ResultDownTimestamp</var>.[^18]
+   1. Set this input sequence's last advancement time to <var>ResultDownTimestamp</var>.[^19]
    1. If this input sequence's frame status change flag is set:
       1. Set this input sequence's [down timestamp](#down-timestamp) to <var>ResultDownTimestamp</var>.
 10. Else if <var>ResultStatus</var> is *released*, then:
@@ -1252,12 +1283,13 @@ This algorithm is potentially invoked by the bind list update algorithm, running
       1. For every input <var>Input</var> in <var>TerminalInputs</var>:
          1. Let <var>CurrentClaim</var> be InputControl's current-frame claim.
          2. If <var>CurrentClaim</var> has a specificity lower than <var>Specificity</var>:
-            1. Set <var>CurrentClaim</var>'s specificity to <var>Specificity</var>.[^19]
+            1. Set <var>CurrentClaim</var>'s specificity to <var>Specificity</var>.[^20]
             1. Set <var>CurrentClaim</var>'s timestamp to <var>CurrentTimestamp</var>.
 
-[^17]: This case ensures that if a non-zero number of buttons are currently down, but all of them went down prior to the input sequence's last advancement time, then interruption checks will skip all of them.
-[^18]: This is done unconditionally; we want to overwrite the last advancement time even if <var>ResultDownTimestamp</var> precedes it. This is because if the user releases some keys in a concurrent input sequence group, they effectively "rewind" back through the group.
-[^19]: We don't need to avoid claiming the inputs that were released on the current frame, as our pending claim will be discarded rather than applied if the inputs are still not down on the next frame.
+[^17]: By making this exception, we allow the user to bind actions directly to range constraints, e.g. binding "Turn Camera" to an Xbox controller's right stick without the need for any buttons to be pressed. Of course, this only actually works if the button press type used for the bind is Hold.
+[^18]: This case ensures that if a non-zero number of buttons are currently down, but all of them went down prior to the input sequence's last advancement time, then interruption checks will skip all of them.
+[^19]: This is done unconditionally; we want to overwrite the last advancement time even if <var>ResultDownTimestamp</var> precedes it. This is because if the user releases some keys in a concurrent input sequence group, they effectively "rewind" back through the group.
+[^20]: We don't need to avoid claiming the inputs that were released on the current frame, as our pending claim will be discarded rather than applied if the inputs are still not down on the next frame.
 
 ### Clear all progress
 In order to clear all progress for an input sequence:
@@ -1300,7 +1332,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
             1. Break.
       1. If <var>ResultStatus</var> is inactive, then:
          1. Set <var>AnyInactive</var> to *true*.
-         2. If <var>ResultDownTimestamp</var> is greater than <var>PreviousTimestamp</var>, then set <var>PreviousTimestamp</var> to <var>ResultDownTimestamp</var>.[^20]
+         2. If <var>ResultDownTimestamp</var> is greater than <var>PreviousTimestamp</var>, then set <var>PreviousTimestamp</var> to <var>ResultDownTimestamp</var>.[^21]
          3. Increase <var>CountDown</var> by <var>ResultCount</var>.
          4. Break.
       1. Else if <var>ResultStatus</var> is released:
@@ -1313,7 +1345,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
       1. Increase <var>CountDown</var> by <var>ResultCount</var>.
    1. If <var>AnyInactive</var> is *true*:
       1. Assert: <var>Index</var> is in bounds.
-      1. For each item <var>Item</var> in <var>Group</var> starting after[^21] <var>Index</var>:
+      1. For each item <var>Item</var> in <var>Group</var> starting after[^22] <var>Index</var>:
          1. Clear all progress for <var>Item</var>.
       1. Return: the *inactive* frame status; <var>PreviousTimestamp</var>; and <var>CountDown</var>.
    1. If <var>AnyReleased</var> is *true*, then return: the *released* frame status; <var>PreviousTimestamp</var>; and <var>CountDown</var>.
@@ -1347,7 +1379,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
       1. If <var>ResultDownTimestamp</var> is older than <var>PreviousSiblingTime</var>, then return: the *inactive* frame status; a zero timestamp; and 0.
    1. If <var>ResultStatus</var> is down:
       1. If <var>CurrentItem</var> is the last item in <var>Group</var>:
-         1. Return: the *down* frame status; <var>CurrentTimestamp</var>[^22]; and <var>ResultCount</var>.
+         1. Return: the *down* frame status; <var>CurrentTimestamp</var>[^23]; and <var>ResultCount</var>.
       1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; and <var>ResultCount</var>.
    1. Else if <var>ResultStatus</var> is *released*:
       1. Increment <var>CurrentItemIndex</var> by 1.
@@ -1358,7 +1390,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
          1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; and <var>ResultCount</var>.
    1. Else if <var>ResultStatus</var> is *inactive*:
       1. **[Don't let too much time pass between separated keystrokes.]** If <var>CurrentItemIndex</var> is greater than zero:
-         1. Let <var>ComparisonTime</var> be whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>.[^23]
+         1. Let <var>ComparisonTime</var> be whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>.[^24]
          2. Let <var>Elapsed</var> be the difference between <var>ComparisonTime</var> and <var>CurrentTime</var>.
          3. If <var>Elapsed</var> is greater than KeySequenceInputExpiryTime, then:
             1. [Clear all progress](#clear-all-progress) for <var>Group</var>.
@@ -1367,10 +1399,10 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
    1. Return: the *inactive* frame status; whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>; and <var>ResultCount</var>.
 8. Assert: unreachable.
 
-[^20]: If <var>ResultStatus</var> is inactive, that doesn't necessarily mean that <var>Item</var> is *entirely* inactive; it could be a nested group with only some of its contents currently being *down*. As such, we still want to capture the timestamp it returns, so we can update the [last advancement time](#last-advancement-time) of the containing input sequence.
-[^21]: We here want to clear progress on any *separate and ordered* children if the user "rewinds" back before them by releasing keys in this group that would’ve preceded them. Again, however: the first-seen *inactive* child of <var>Group</var> may be "partially down," so we don't want to clear its progress in case it is or contains a *separate and ordered* group. We clear everything *after* the first-seen inactive group.
-[^22]: We enforce a limit on how much time may elapse between fully entering the child items of a *separate and ordered* input sequence group. We rely on the containing input sequence's [last advancement time](#last-advancement-time) to check the elapsed time, and that timestamp is updated based on the timestamp returned by the input sequence group update algorithm. We want the limit to apply to the time between entering child items; we don't want to count the time that any child time spends pressed down; so we always update the last advancement time to the current time while any child item is down.
-[^23]: This ensures that if <var>CurrentItem</var> is "partially down," we still take the time of its last keypress &mdash; which may have occurred on this frame &mdash; into account.
+[^21]: If <var>ResultStatus</var> is inactive, that doesn't necessarily mean that <var>Item</var> is *entirely* inactive; it could be a nested group with only some of its contents currently being *down*. As such, we still want to capture the timestamp it returns, so we can update the [last advancement time](#last-advancement-time) of the containing input sequence.
+[^22]: We here want to clear progress on any *separate and ordered* children if the user "rewinds" back before them by releasing keys in this group that would’ve preceded them. Again, however: the first-seen *inactive* child of <var>Group</var> may be "partially down," so we don't want to clear its progress in case it is or contains a *separate and ordered* group. We clear everything *after* the first-seen inactive group.
+[^23]: We enforce a limit on how much time may elapse between fully entering the child items of a *separate and ordered* input sequence group. We rely on the containing input sequence's [last advancement time](#last-advancement-time) to check the elapsed time, and that timestamp is updated based on the timestamp returned by the input sequence group update algorithm. We want the limit to apply to the time between entering child items; we don't want to count the time that any child time spends pressed down; so we always update the last advancement time to the current time while any child item is down.
+[^24]: This ensures that if <var>CurrentItem</var> is "partially down," we still take the time of its last keypress &mdash; which may have occurred on this frame &mdash; into account.
 
 ## <var>Input</var> sequence range constraint check
 This check is invoked by the bind list update algorithm, and not by the input sequence update algorithm, so that we can prevent range constraints from interfering with handling of the Press-blocks-Hold conflict resolution rule.

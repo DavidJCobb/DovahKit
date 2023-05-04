@@ -568,8 +568,20 @@ namespace dovahkit::subsystems::worldinput2 {
 
    #pragma region input_sequence
    void input_sequence::update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check& interruption_check) {
-      if (!this->root)
+      if (!this->root || !this->has_any_buttons()) {
+         if (this->has_range_requirement()) {
+            //
+            // By making this exception, we allow the user to bind actions directly to 
+            // range constraints, e.g. binding "Turn Camera" to an Xbox controller's 
+            // right stick without the need for any buttons to be pressed. Of course, 
+            // this only actually works if the button press type used for the bind is 
+            // Hold.
+            //
+            this->state.frame_status         = frame_status::down;
+            this->state.frame_status_changed = false;
+         }
          return;
+      }
 
       {
          interruption_check.start_at = 0;
@@ -675,7 +687,8 @@ namespace dovahkit::subsystems::worldinput2 {
       // nor recursion; it will be enough to just copy the entire flat range, sans run-time state.
       //
       input_sequence out;
-      out.root  = this->root->_clone();
+      if (this->root)
+         out.root = this->root->_clone();
       out.range = this->range;
       return out;
    }

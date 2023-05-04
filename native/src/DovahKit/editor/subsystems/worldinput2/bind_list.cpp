@@ -430,9 +430,9 @@ namespace dovahkit::subsystems::worldinput2 {
             ),
             eligible_binds.end()
          );
-
-         this->last_frame_active_hold_binds = {};
       }
+
+      std::vector<bind_list_item*> this_frame_active_hold_binds;
 
       // Execution:
       for (auto* node : eligible_binds) {
@@ -467,7 +467,21 @@ namespace dovahkit::subsystems::worldinput2 {
             cause.button.is_down    = node->button_press_type == button_press_type::hold;
             cause.button.down_when  = node->input_sequence.state.went_down_at;
             cause.button.press_type = node->button_press_type;
-            cause.button.down_state_changed_this_frame = node->input_sequence.state.frame_status_changed;
+            {
+               cause.button.down_state_changed_this_frame = node->input_sequence.state.frame_status_changed;
+               if (node->button_press_type == button_press_type::hold) {
+                  if (!cause.button.down_state_changed_this_frame) {
+                     bool changed = true;
+                     for (const auto* item : this->last_frame_active_hold_binds) {
+                        if (item == node) {
+                           changed = false;
+                           break;
+                        }
+                     }
+                     cause.button.down_state_changed_this_frame = changed;
+                  }
+               }
+            }
             cause.range.x = value.x();
             cause.range.y = value.y();
             cause.range.is_delta = is_delta;
@@ -477,12 +491,14 @@ namespace dovahkit::subsystems::worldinput2 {
          
          if (node->button_press_type == button_press_type::hold) {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::down);
-            this->last_frame_active_hold_binds.push_back(node);
+            this_frame_active_hold_binds.push_back(node);
          } else {
             assert(node->input_sequence.state.frame_status == input_sequence::frame_status::released);
             node->input_sequence.state.frame_status = input_sequence::frame_status::inactive;
          }
       }
+
+      std::swap(this_frame_active_hold_binds, this->last_frame_active_hold_binds);
    }
    #pragma endregion
 }
