@@ -57,7 +57,10 @@ namespace dovahkit::subsystems::worldedit::tools {
    /*static*/ void modify_camera_speed_flags::invoke_for_hold_release(const opaque_options_union& raw_options, tool_results_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
-      results res;
+      results res = {
+         .boost     = o.boost,
+         .precision = o.precision,
+      };
       {
          auto invert = [](bool_operation& b) {
             switch (b) {

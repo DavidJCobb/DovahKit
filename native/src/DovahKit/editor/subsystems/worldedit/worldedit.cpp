@@ -36,8 +36,10 @@ namespace {
 
 #include "editor/subsystems/worldinput2/core.h"
 #include "./tool_system/tool_results_tuple.h"
+#include "editor/subsystems/worldinput2/control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput2/control_schemes/reach.h"
 namespace {
-   static constexpr bool debug_use_new_worldinput = false;
+   static constexpr bool debug_use_new_worldinput = true;
 }
 
 namespace {
@@ -114,6 +116,14 @@ namespace dovahkit::subsystems::worldedit {
             return;
          }
       });
+
+      if constexpr (debug_use_new_worldinput) {
+         using namespace dovahkit::subsystems::worldinput2;
+
+         auto& wi = worldinput2::core::get();
+         wi.setBindingsFor(worldinput2::input_device_type::keyboard_mouse, worldinput2::default_control_schemes::debug_wasd());
+         wi.setBindingsFor(worldinput2::input_device_type::xinput, worldinput2::default_control_schemes::reach());
+      }
    }
 
    vulkanDK::rendered_bounds_handle core::_make_bounds_for(const refr& item, bounds_generation_source& src) {
@@ -851,7 +861,11 @@ namespace dovahkit::subsystems::worldedit {
       assert(this->target_view == nullptr);
       this->target_view = &view;
       //
-      worldinput::core::get().setTargetView(&view);
+      if constexpr (debug_use_new_worldinput) {
+         worldinput2::core::get().setTargetWidget(&view);
+      } else {
+         worldinput::core::get().setTargetView(&view);
+      }
       //
       QObject::connect(&view, &DKVulkanView::rendererReady, this, &core::_on_renderer_attached, Qt::UniqueConnection);
       if (auto* sr = view.surfaceRenderer()) {
@@ -864,7 +878,11 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&view, &DKVulkanView::rendererErrorKillImminent, this, &core::_on_renderer_loss_imminent);
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &core::_on_renderer_lost);
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
-         worldinput::core::get().setTargetView(nullptr);
+         if constexpr (debug_use_new_worldinput) {
+            worldinput2::core::get().setTargetWidget(nullptr);
+         } else {
+            worldinput::core::get().setTargetView(nullptr);
+         }
          this->target_view = nullptr;
          //
          this->_on_renderer_lost();
@@ -956,10 +974,11 @@ namespace dovahkit::subsystems::worldedit {
             if (results.has_member<tools::move_camera>()) {
                const auto& data = results.get_member<tools::move_camera>();
                update.move.direction      = { data.x, data.y, data.z };
+               // TODO: Apply reference frame here?
                update.move.scale_by_delta = false;
                //
-               // Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
-               // delta in the code above. This means that we need to turn off scaling in this particular 
+               // ^- Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
+               // delta in Worldinput. This means that we need to turn off scaling in this particular 
                // step here.
                //
                update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in

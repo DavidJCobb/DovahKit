@@ -70,8 +70,6 @@ namespace dovahkit::subsystems::worldedit {
          // For now, results that don't have an explicit merge method also don't 
          // use timestaps or ordering. Maybe we'll change that someday.
          //
-         if (cause.has_button && !cause.button.is_down)
-            return;
          this->presence.set(_presence_bit_index_of<A>);
          std::get<A>(*this) = v;
          return;

@@ -17,6 +17,9 @@ namespace dovahkit::subsystems::worldinput2 {
       else
          return true;
 
+      if (state == range_control_state::unavailable)
+         return false;
+
       return state != range_control_state::zeroed;
    }
    #pragma endregion

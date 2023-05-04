@@ -161,7 +161,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
    #pragma endregion
 
    #pragma region From string
-   extern input_sequence input_sequence_from_string(const std::string& str, bool gamepad = false) {
+   constexpr input_sequence input_sequence_from_string(const std::string& str, bool gamepad = false) {
       using namespace impl::input_sequence_stringification;
 
       input_sequence out;
@@ -347,7 +347,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                //
                // Gamepad
                //
-               auto n = QString(name.c_str()).toLower();
+               auto n = name;
+               for (size_t i = 0; i < n.size(); ++i) { // to lower (ASCII)
+                  auto& c = n[i];
+                  if (c >= 'A' && c <= 'Z')
+                     c |= 0x20;
+               }
                {
                   bool found = false;
                   for (const auto& known : xinput_button_names) {
@@ -361,7 +366,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                      if (std::is_constant_evaluated()) {
                         throw;
                      } else {
-                        qDebug("input_sequence::debug_from_string: unrecognized gamepad button name: %s", qUtf8Printable(n));
+                        qDebug("input_sequence::debug_from_string: unrecognized gamepad button name: %s", n.c_str());
                      }
                   }
                }
@@ -372,7 +377,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                if (name.size() == 1) {
                   child->button = inputs::button{ .key = cobb::keyboard::key(name[0])};
                } else {
-                  auto n = QString(name.c_str()).toLower();
+                  auto n = name;
+                  for (size_t i = 0; i < n.size(); ++i) { // to lower (ASCII)
+                     auto& c = n[i];
+                     if (c >= 'A' && c <= 'Z')
+                        c |= 0x20;
+                  }
                   
                   bool found = false;
                   for (const auto& known : special_key_names) {
@@ -393,7 +403,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                         if (std::is_constant_evaluated()) {
                            throw;
                         } else {
-                           qDebug("input_sequence::debug_from_string: unrecognized key name: %s", qUtf8Printable(n));
+                           qDebug("input_sequence::debug_from_string: unrecognized key name: %s", n.c_str());
                         }
                      }
                   }

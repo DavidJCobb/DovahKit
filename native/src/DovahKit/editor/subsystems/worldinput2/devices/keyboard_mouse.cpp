@@ -39,6 +39,9 @@ namespace {
    }
    int button_to_vk(const dovahkit::subsystems::worldinput2::inputs::button& b) {
       if (!b.key.empty()) {
+         if (b.mouse != Qt::MouseButton::NoButton) {
+            return qt_mouse_button_to_vk(b.mouse);
+         }
          return (int)b.key.vk;
       }
       if (b.mouse != Qt::MouseButton::NoButton)

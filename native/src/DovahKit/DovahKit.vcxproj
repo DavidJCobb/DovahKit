@@ -131,6 +131,8 @@
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\reach.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
@@ -844,6 +846,9 @@
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\tree.h" />
     <ClInclude Include="editor\subsystems\worldinput2\chrono.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\reach.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\_builders.h" />
     <ClInclude Include="editor\subsystems\worldinput2\core.h" />
     <ClInclude Include="editor\subsystems\worldinput2\debugging.h" />
     <ClInclude Include="editor\subsystems\worldinput2\defaults.h" />

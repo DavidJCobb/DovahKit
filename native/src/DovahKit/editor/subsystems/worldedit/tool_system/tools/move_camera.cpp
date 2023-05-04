@@ -14,13 +14,13 @@ namespace {
          input = -input;
       switch (axis) {
          case axis3D::x:
-            out.x = input;
+            out.x *= input;
             break;
          case axis3D::y:
-            out.y = input;
+            out.y *= input;
             break;
          case axis3D::z:
-            out.z = input;
+            out.z *= input;
             break;
       }
    }
