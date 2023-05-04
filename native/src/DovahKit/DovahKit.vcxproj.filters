@@ -2010,6 +2010,18 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4826,6 +4838,30 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_options.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_turn_axis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\pointer_position_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5510,6 +5546,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -3,9 +3,15 @@
 #include <type_traits>
 #include "helpers/tuples/contains_type_matching_functor.h"
 #include "editor/subsystems/worldinput2/tool_invocation_cause.h"
+
 #include "../all_tools.h"
+
+#include "./attempt_on_screen_selection.h"
+#include "./debug_dump_landscape_details.h"
 #include "./debug_print.h"
+#include "./modify_camera_speed_flags.h"
 #include "./move_camera.h"
+#include "./turn_camera.h"
 
 namespace dovahkit::subsystems::worldedit {
    class opaque_options_union;

@@ -895,6 +895,8 @@ namespace dovahkit::subsystems::worldedit {
          }
       }
       if constexpr (debug_use_new_worldinput) {
+         auto cursor_pos = view.mapFromGlobal(QCursor::pos()); // TODO: GET THIS FROM THE INPUT SYSTEM?
+
          //
          // Update input state.
          //
@@ -907,9 +909,178 @@ namespace dovahkit::subsystems::worldedit {
             // Don't execute commands "blind." If there's no renderer, exit.
             //
             return;
+         
+         #pragma region modify_camera_speed_flags
+         if (results.has_member<tools::modify_camera_speed_flags>()) {
+            //
+            // This must run before we apply camera movements.
+            //
+            const auto& data = results.get_member<tools::modify_camera_speed_flags>();
+            auto& mask = this->state.camera_speed;
+            {
+               constexpr auto flag = camera_speed_flag::boost;
+               switch (data.boost) {
+                  using enum worldedit::bool_operation;
+                  case set_true:
+                     mask.set<flag>();
+                     break;
+                  case set_false:
+                     mask.reset<flag>();
+                     break;
+                  case invert:
+                     mask.flip<flag>();
+                     break;
+               }
+            }
+            {
+               constexpr auto flag = camera_speed_flag::precision;
+               switch (data.precision) {
+                  using enum worldedit::bool_operation;
+                  case set_true:
+                     mask.set<flag>();
+                     break;
+                  case set_false:
+                     mask.reset<flag>();
+                     break;
+                  case invert:
+                     mask.flip<flag>();
+                     break;
+               }
+            }
+         }
+         #pragma endregion
+         #pragma region move_camera and turn_camera
+         if (results.has_member<tools::move_camera>() || results.has_member<tools::turn_camera>()) {
+            DKVulkanCameraUpdate update;
+            update.delta_seconds = delta;
+            if (results.has_member<tools::move_camera>()) {
+               const auto& data = results.get_member<tools::move_camera>();
+               update.move.direction      = { data.x, data.y, data.z };
+               update.move.scale_by_delta = false;
+               //
+               // Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
+               // delta in the code above. This means that we need to turn off scaling in this particular 
+               // step here.
+               //
+               update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+               if (this->state.camera_speed.test<camera_speed_flag::boost>())
+                  update.move.speed *= move_speed_mult_boost;
+               if (this->state.camera_speed.test<camera_speed_flag::precision>())
+                  update.move.speed *= move_speed_mult_precision;
+            }
+            if (results.has_member<tools::turn_camera>()) {
+               const auto& data = results.get_member<tools::turn_camera>();
+               update.turn.roll  = data.roll;
+               update.turn.pitch = data.pitch;
+               update.turn.yaw   = data.yaw;
+               update.turn.scale_by_delta = false;
+               //
+               update.turn.speed = turn_speed_per_second;
+            }
+            sr->scene.adjust_camera(update);
+         }
+         #pragma endregion
+         #pragma region attempt_on_screen_selection
+         if (results.has_member<tools::attempt_on_screen_selection>()) {
+            const auto& data = results.get_member<tools::attempt_on_screen_selection>();
+            if (data.sweep) {
+               //
+               // TODO
+               //
+               static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
+            } else {
+               if (data.position == pointer_position_type::mouse) {
+                  vulkanDK::rendered_mesh_handle handle = {};
+                  {
+                     vulkanDK::raycast raycast(*sr);
+                     raycast.test_flags = 0;
+                     raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
+                     raycast.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
+                     sr->do_raycast(raycast);
 
-         // TODO
+                     if (raycast.result.hit) {
+                        auto& e = raycast.result.entity;
+                        if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
+                           handle = std::get<vulkanDK::rendered_mesh_handle>(e);
+                     }
+                  }
+                  if (!handle.empty()) {
+                     if (auto* nif = handle->owning_nif) {
+                        if (auto* stub = nif->owning_form) {
+                           switch (data.operation) {
+                              case selection_operation::no_op:
+                                 break;
+                              case selection_operation::toggle:
+                                 this->toggleRefSelectionState(*stub);
+                                 break;
+                              case selection_operation::add:
+                              case selection_operation::remove:
+                                 this->setRefSelectionState(*stub, data.operation == selection_operation::add);
+                                 break;
+                              case selection_operation::replace:
+                                 this->replaceRefSelection(*stub);
+                                 break;
+                           }
+                        }
+                     }
+                  }
+               } else {
+                  //
+                  // TODO
+                  //
+                  static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
+               }
+            }
+         }
+         #pragma endregion
+         #pragma region debug_dump_landscape_details
+         if (results.has_member<tools::debug_dump_landscape_details>()) {
+            const auto& data = results.get_member<tools::debug_dump_landscape_details>();
+            if (data.position == pointer_position_type::mouse) {
+               vulkanDK::raycast rc(*sr);
+               rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
 
+               sr->do_raycast(rc);
+               if (rc.result.hit) {
+                  if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(rc.result.entity)) {
+                     auto handle = std::get<vulkanDK::rendered_landscape_handle>(rc.result.entity);
+                     auto pos    = rc.result.hit.position - handle->frame_drawing_data.position;
+                  
+                     qDebug(
+                        "Hit landscape at (%g, %g, %g).",
+                        handle->frame_drawing_data.position.x,
+                        handle->frame_drawing_data.position.y,
+                        handle->frame_drawing_data.position.z
+                     );
+                     qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
+                  
+                     pos /= vulkanDK::rendered_landscape::vertex_distance;
+
+                     int x = pos.x;
+                     int y = pos.y;
+                     qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
+
+                     if (x > 0 && y > 0 && x < 33 && y < 33) {
+                        vulkanDK::vertex_landscape* vert = nullptr;
+
+                        #if _DEBUG
+                           //
+                           // TODO: console-print the vert attributes
+                           //
+                           __debugbreak();
+                        #endif
+
+                     }
+                  }
+               }
+            } else {
+               //
+               // TODO
+               //
+               static_assert(!require_complete_implementation, "TODO: Support performing a query at the reticle.");
+            }
+         }
+         #pragma endregion
       } else {
          //
          // Update input state.

@@ -112,9 +112,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
@@ -790,18 +794,26 @@
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_turn_axis.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\pointer_position_type.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\reference_frame.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\all_tools.h" />
@@ -1966,6 +1978,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\options_union.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
