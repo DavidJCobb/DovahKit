@@ -1,6 +1,11 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "../../enums/pointer_position_type.h"
 #include "./_base.h"
+
+namespace dovah {
+   class form_stub;
+}
 
 namespace dovahkit::subsystems::worldedit::tools {
    class debug_dump_landscape_details : public _base {
@@ -18,6 +23,9 @@ namespace dovahkit::subsystems::worldedit::tools {
          };
          struct results {
             pointer_position_type position;
+
+            glm::vec3 hit_position = { 0, 0, 0 };
+            dovah::form_stub* target = nullptr;
          };
 
       public:

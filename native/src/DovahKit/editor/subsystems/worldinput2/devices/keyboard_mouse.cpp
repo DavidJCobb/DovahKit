@@ -93,6 +93,35 @@ namespace dovahkit::subsystems::worldinput2::devices {
             }
          }
       }
+      if (auto& list = this->raycast_results; !list.empty()) {
+         //
+         // Clear raycast results for any buttons that were released on the previous frame. 
+         // (We don't clear a button's results on the frame it's released, because that 
+         // would prevent Press and Long Press binds from checking the results when they're 
+         // about to activate.)
+         //
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [this](const auto& result) -> bool {
+                  auto vk = button_to_vk(result.button);
+                  if (vk < 0)
+                     return true;
+
+                  constexpr auto down_or_released_this_frame = device_button_state::flag::is_down | device_button_state::flag::down_state_changed_on_this_frame;
+                  //
+                  auto f = this->buttons.flags[vk];
+                  if ((f & down_or_released_this_frame) == 0) {
+                     return true;
+                  }
+
+                  return false;
+               }
+            ),
+            list.end()
+         );
+      }
       //
       // Get mousemove state:
       //

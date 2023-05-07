@@ -14,6 +14,13 @@ namespace dovahkit::subsystems::worldedit::tools {
             return;
          }
       }
+      if (input.raycast.has_value()) {
+         const auto& raycast = input.raycast.value();
+         if (raycast.hit_position.has_value()) {
+            res.hit_position = raycast.hit_position.value();
+            res.target       = raycast.target_info.form;
+         }
+      }
       all_results.merge_member(input, res);
    }
    /*static*/ void debug_dump_landscape_details::invoke_for_hold_release(const opaque_options_union& raw_options, tool_results_tuple& all_results) {

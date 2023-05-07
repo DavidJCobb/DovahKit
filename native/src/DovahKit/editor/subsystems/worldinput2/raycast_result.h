@@ -1,6 +1,7 @@
 #pragma once
-#include <glm/glm.hpp>
 #include <optional>
+#include <QPointF>
+#include <glm/glm.hpp>
 #include "editor/subsystems/worldedit/enums/axis3D.h"
 #include "vulkan/enums/gizmo_mode.h"
 #include "./inputs/button.h"
@@ -18,6 +19,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       public:
          std::optional<glm::vec3> hit_position;
+         QPointF view_position;
          struct {
             struct {
                axis3D     axis = axis3D::x;

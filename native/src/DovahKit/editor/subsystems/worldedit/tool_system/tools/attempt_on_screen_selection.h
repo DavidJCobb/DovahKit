@@ -1,7 +1,12 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "./_base.h"
 #include "../../enums/pointer_position_type.h"
 #include "../../enums/selection_operation.h"
+
+namespace dovah {
+   class form_stub;
+}
 
 namespace dovahkit::subsystems::worldedit::tools {
    class attempt_on_screen_selection : public _base {
@@ -21,6 +26,8 @@ namespace dovahkit::subsystems::worldedit::tools {
          struct results {
             selection_operation   operation;
             pointer_position_type position;
+            glm::vec3 hit_position = { 0, 0, 0 };
+            dovah::form_stub* target = nullptr;
             //
             bool sweep = false; // for any non-button inputs; sweep the pointer over objects to modify selection state; Worldedit must track when an object is swept over/out
          };

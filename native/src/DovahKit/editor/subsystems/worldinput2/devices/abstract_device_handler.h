@@ -8,6 +8,7 @@
 #include "../chrono.h"
 #include "../device_button_state.h"
 #include "../interruption_check.h"
+#include "../raycast_result.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    namespace inputs {
@@ -33,9 +34,27 @@ namespace dovahkit::subsystems::worldinput2::devices {
          virtual QPointF get_range_control_value(scalar_input_control, axis2D) const = 0;
          virtual QPointF get_range_control_value(vector_input_control) const = 0;
 
+         // The return value is stored in a `std::vector` and is not heap-allocated.
+         //
+         // - It IS NOT SAFE to keep a reference to the return value for longer than 
+         //   the current stack frame; consider it a temporary.
+         //
+         // - If you're calling this function multiple times (which you generally 
+         //   shouldn't need to do given how Worldinput is meant to handle raycasts), 
+         //   then DO NOT store references to the return values. Each call to this 
+         //   function may potentially create a new raycast result, invalidating all 
+         //   iterators (and consequently references) for older raycasts. If you need 
+         //   to make multiple calls from the same place, copy the values instead of 
+         //   using reference-typed variables.
+         //
+         const raycast_result_per_key& get_raycast_result(timestamp_t now, const inputs::button&);
+
          interruption_check prepare_interruption_check() const;
 
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const = 0;
+
+      protected:
+         std::vector<raycast_result_per_key> raycast_results;
    };
 }

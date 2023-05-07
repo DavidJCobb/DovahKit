@@ -53,8 +53,10 @@ namespace dovahkit::subsystems::worldinput2::devices {
          scl.lt = scl.rt = 0;
          vec.ls = vec.rs = {};
          //
-         if (was_connected)
+         if (was_connected) {
             this->buttons.handle_disconnected();
+            this->raycast_results.clear();
+         }
          //
          return;
       }
@@ -73,6 +75,35 @@ namespace dovahkit::subsystems::worldinput2::devices {
       for (size_t i = 0; i < button_count; ++i) {
          bool  held  = gs.is_button_down(_indices_to_buttons[i]);
          this->buttons.update_button(now, i, held);
+      }
+      if (auto& list = this->raycast_results; !list.empty()) {
+         //
+         // Clear raycast results for any buttons that were released on the previous frame. 
+         // (We don't clear a button's results on the frame it's released, because that 
+         // would prevent Press and Long Press binds from checking the results when they're 
+         // about to activate.)
+         //
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [this](const auto& result) -> bool {
+                  auto i = _button_to_index(result.button);
+                  if (i == no_button)
+                     return true;
+
+                  constexpr auto down_or_released_this_frame = device_button_state::flag::is_down | device_button_state::flag::down_state_changed_on_this_frame;
+                  //
+                  auto f = this->buttons.flags[i];
+                  if ((f & down_or_released_this_frame) == 0) {
+                     return true;
+                  }
+
+                  return false;
+               }
+            ),
+            list.end()
+         );
       }
    }
 
