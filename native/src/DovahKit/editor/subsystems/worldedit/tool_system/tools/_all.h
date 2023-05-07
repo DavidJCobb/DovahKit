@@ -64,4 +64,38 @@ namespace dovahkit::subsystems::worldedit::tools {
       }(),
       "No two tools can have the same results type."
    );
+   
+   // Enforce: raycast-sensitive tools must require strict ordering, and cannot have mergeable results.
+   //
+   // This is for one simple reason: if the raycast target or hit position is relevant to the tool's 
+   // operation, then how do you "merge" two separate raycasts? Remember: some tools react to the 
+   // target of a raycast made when the triggering bind originally went down, sometimes even if the 
+   // tool itself is only activated when the bind is released; and so multiple invocations of the 
+   // same tool could be reacting to different raycast results. The only way to cope with this is to 
+   // mandate that no merging occur: we react to only one raycast at a time, preferring a consistent 
+   // and predictable order (i.e. timestamps) rather than the implementation-defined order in which 
+   // binds are processed.
+   //
+   static_assert(
+      []() constexpr -> bool {
+         bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
+            if constexpr (A::is_raycast_sensitive) {
+               if constexpr (requires { typename A::results; }) {
+                  using results = typename A::results;
+                  if constexpr (requires(results & a, const results & b) { a.merge(b); }) {
+                     // Fail: Results are mergeable.
+                     return false;
+                  }
+               }
+               if (!A::compile_time_options.use_strict_ordering) {
+                  // Fail: Strict ordering not required.
+                  return false;
+               }
+            }
+            return true;
+         }>();
+         return valid;
+      }(),
+      "Raycast-sensitive tools must require strict ordering, and cannot have mergeable results."
+   );
 }

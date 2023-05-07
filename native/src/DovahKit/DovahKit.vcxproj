@@ -862,6 +862,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_release_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\optional_yn.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\range_control_state.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\scalar_input_control.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\vector_input_control.h" />
@@ -869,6 +870,8 @@
     <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h" />
     <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h" />
     <ClInclude Include="editor\subsystems\worldinput2\interruption_check.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\raycast_requirement.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tools\combined_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tools\opaque_tool_options.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tool_invocation_cause.h" />

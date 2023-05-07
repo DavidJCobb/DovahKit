@@ -2,13 +2,14 @@
 #include <QObject>
 #include <QPointer>
 #include <QWidget>
-#include "./bind_list.h"
-#include "./chrono.h"
 #include "./bind_tree/tree.h"
 #include "./devices/abstract_device_handler.h"
 #include "./devices/keyboard_mouse.h"
 #include "./devices/xinput.h"
 #include "./enums/input_device_type.h"
+#include "./bind_list.h"
+#include "./chrono.h"
+#include "./raycast_result.h"
 
 namespace dovahkit::subsystems::worldedit {
    class tool_results_tuple;
@@ -55,6 +56,11 @@ namespace dovahkit::subsystems::worldinput2 {
             timestamp_t last_update = zero_timestamp;
             //
             bool target_widget_has_focus = false;
+            //
+            struct {
+               std::optional<raycast_result> cursor;
+               std::optional<raycast_result> reticle;
+            } raycast_results_this_frame;
          } state;
          struct {
             bind_list keyboard = bind_list(input_device_type::keyboard_mouse);

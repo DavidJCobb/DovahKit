@@ -8,6 +8,7 @@
 #include "./inputs/button.h"
 #include "./chrono.h"
 #include "./interruption_check.h"
+#include "./raycast_requirement.h"
 
 namespace dovahkit::subsystems::worldinput2::devices {
    class abstract_device_handler;
@@ -119,8 +120,12 @@ namespace dovahkit::subsystems::worldinput2 {
          };
 
       public:
-         group* root = nullptr;
+         group* root = nullptr; // owned pointer
          range_requirement range;
+         struct {
+            raycast_requirement requirement;
+            group* on_button = nullptr; // unowned pointer (points to `root` or something inside of `root`)
+         } raycast;
          struct {
             enum frame_status frame_status = frame_status::inactive;
             bool frame_status_changed = false;
@@ -129,6 +134,8 @@ namespace dovahkit::subsystems::worldinput2 {
          } state;
 
       public:
+         constexpr ~input_sequence();
+
          void update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check&);
 
          void clear_all_progress();

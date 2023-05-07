@@ -1,6 +1,7 @@
 #pragma once
 #include "./enums/button_press_type.h"
 #include "./chrono.h"
+#include "./raycast_result.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    struct tool_invocation_cause {
@@ -20,5 +21,7 @@ namespace dovahkit::subsystems::worldinput2 {
          //
          bool has_button : 1 = false;
          bool has_range  : 1 = false;
+         //
+         std::optional<raycast_result> raycast;
    };
 }

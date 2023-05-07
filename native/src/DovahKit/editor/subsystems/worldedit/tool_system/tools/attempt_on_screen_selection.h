@@ -7,9 +7,11 @@ namespace dovahkit::subsystems::worldedit::tools {
    class attempt_on_screen_selection : public _base {
       public:
          static constexpr const char* function_name = "attempt_on_screen_selection";
+
          static constexpr const compile_time_tool_options compile_time_options = {
-            .use_strict_ordering = false,
+            .use_strict_ordering = true,
          };
+         static constexpr const bool is_raycast_sensitive = true;
 
       public:
          struct options {

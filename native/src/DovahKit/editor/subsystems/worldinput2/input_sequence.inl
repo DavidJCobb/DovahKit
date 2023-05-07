@@ -119,6 +119,14 @@ namespace dovahkit::subsystems::worldinput2 {
    #pragma endregion
 
    #pragma region input_sequence
+   constexpr input_sequence::~input_sequence() {
+      if (auto*& p = this->root) {
+         delete p;
+         p = nullptr;
+      }
+      this->raycast.on_button = nullptr;
+   }
+
    constexpr bool input_sequence::has_any_buttons() const {
       if (!this->root)
          return false;

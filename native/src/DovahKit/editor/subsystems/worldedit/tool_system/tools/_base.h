@@ -28,6 +28,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
          static constexpr const compile_time_tool_options compile_time_options = {};
 
+         static constexpr const bool is_raycast_sensitive = false;
          static constexpr const editor_mode_set supported_editor_modes = all_editor_modes;
    };
 
