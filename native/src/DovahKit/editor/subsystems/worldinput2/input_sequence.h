@@ -17,6 +17,9 @@ namespace dovahkit::subsystems::worldinput2::devices {
 namespace dovahkit::subsystems::worldinput2 {
    class input_sequence {
       public:
+         class group;
+
+      public:
          enum class frame_status {
             inactive,
             down,
@@ -28,6 +31,17 @@ namespace dovahkit::subsystems::worldinput2 {
             concurrent_ordered,
             concurrent_unordered,
             separated_ordered,
+         };
+
+         struct group_update_params {
+            timestamp_t         current_time;
+            devices::abstract_device_handler& device;
+            interruption_check& interruption_check;
+            timestamp_t         last_advancement_time;
+            struct {
+               const group* associated_button = nullptr;
+               const raycast_requirement& requirement;
+            } raycast;
          };
 
          struct group_update_result {
@@ -72,10 +86,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
             public:
                group_update_result update(
-                  timestamp_t current_time,
-                  timestamp_t last_advancement_time,
-                  devices::abstract_device_handler& device,
-                  interruption_check&,
+                  const group_update_params,
                   timestamp_t previous_sibling_time = zero_timestamp
                );
 
@@ -123,8 +134,8 @@ namespace dovahkit::subsystems::worldinput2 {
          group* root = nullptr; // owned pointer
          range_requirement range;
          struct {
+            group* associated_button = nullptr; // unowned pointer (points to `root` or something inside of `root`)
             raycast_requirement requirement;
-            group* on_button = nullptr; // unowned pointer (points to `root` or something inside of `root`)
          } raycast;
          struct {
             enum frame_status frame_status = frame_status::inactive;

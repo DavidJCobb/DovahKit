@@ -124,7 +124,7 @@ namespace dovahkit::subsystems::worldinput2 {
          delete p;
          p = nullptr;
       }
-      this->raycast.on_button = nullptr;
+      this->raycast.associated_button = nullptr;
    }
 
    constexpr bool input_sequence::has_any_buttons() const {

@@ -26,12 +26,14 @@ namespace dovahkit::subsystems::worldinput2 {
 
    #pragma region input_sequence::group
    input_sequence::group_update_result input_sequence::group::update(
-      timestamp_t current_time,
-      timestamp_t last_advancement_time,
-      devices::abstract_device_handler& device,
-      interruption_check& interruption_check,
+      const group_update_params params,
       timestamp_t previous_sibling_time
    ) {
+      const auto current_time          = params.current_time;
+      auto&      device                = params.device;
+      auto&      interruption_check    = params.interruption_check;
+      const auto last_advancement_time = params.last_advancement_time;
+
       if (this->type == group_type::single_control) {
          const auto bs = device.get_state_of(this->button);
          //
@@ -69,7 +71,7 @@ namespace dovahkit::subsystems::worldinput2 {
          size_t i;
          for (i = 0; i < this->children.size(); ++i) {
             auto* item   = this->children[i];
-            auto  result = item->update(current_time, last_advancement_time, device, interruption_check, previous_timestamp);
+            auto  result = item->update(params, previous_timestamp);
 
             if (result.status != frame_status::released) {
                if (result.down_at < previous_timestamp) {
@@ -135,7 +137,7 @@ namespace dovahkit::subsystems::worldinput2 {
          bool   any_inactive = false;
          bool   any_released = false;
          for (auto* item : this->children) {
-            auto result = item->update(current_time, last_advancement_time, device, interruption_check);
+            auto result = item->update(params);
             count_down += result.down_count;
             if (result.down_at > most_recently_down)
                most_recently_down = result.down_at;
@@ -178,7 +180,7 @@ namespace dovahkit::subsystems::worldinput2 {
          }
          //
          auto* current_item = this->children[this->state.current_item_index];
-         auto  result       = current_item->update(current_time, last_advancement_time, device, interruption_check);
+         auto  result       = current_item->update(params);
          if (this->state.current_item_index == 0) {
             if (result.down_at < previous_sibling_time) {
                return group_update_result{
@@ -608,7 +610,16 @@ namespace dovahkit::subsystems::worldinput2 {
       }
 
       auto prior  = this->state.frame_status;
-      auto result = this->root->update(current_time, this->state.last_advancement, device, interruption_check);
+      auto result = this->root->update({
+         .current_time          = current_time,
+         .device                = device,
+         .interruption_check    = interruption_check,
+         .last_advancement_time = this->state.last_advancement,
+         .raycast = {
+            .associated_button = this->raycast.associated_button,
+            .requirement       = this->raycast.requirement,
+         }
+      });
       if (this->state.frame_status != result.status) {
          this->state.frame_status_changed = true;
          this->state.frame_status         = result.status;
