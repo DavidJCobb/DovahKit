@@ -43,7 +43,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
    void xinput::ignore_all_down() {
       this->buttons.ignore_all_down();
    }
-   void xinput::update(timestamp_t now, bool connected, const subsystems::xinput::gamepad& gs) {
+
+   void xinput::update(timestamp_t now, const QWidget& view, bool connected, const subsystems::xinput::gamepad& gs) {
+      this->raycast_results.this_frame = {};
+      this->update_buttons(now, connected, gs);
+      this->update_pointer(view);
+   }
+   void xinput::update_buttons(timestamp_t now, bool connected, const subsystems::xinput::gamepad& gs) {
       auto was_connected = this->is_connected;
       this->is_connected = connected;
       //
@@ -55,7 +61,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
          //
          if (was_connected) {
             this->buttons.handle_disconnected();
-            this->raycast_results.clear();
+            this->raycast_results.per_button.clear();
          }
          //
          return;
@@ -76,7 +82,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
          bool  held  = gs.is_button_down(_indices_to_buttons[i]);
          this->buttons.update_button(now, i, held);
       }
-      if (auto& list = this->raycast_results; !list.empty()) {
+      if (auto& list = this->raycast_results.per_button; !list.empty()) {
          //
          // Clear raycast results for any buttons that were released on the previous frame. 
          // (We don't clear a button's results on the frame it's released, because that 
@@ -105,6 +111,12 @@ namespace dovahkit::subsystems::worldinput2::devices {
             list.end()
          );
       }
+   }
+   void xinput::update_pointer(const QWidget& view) {
+      auto r = view.rect();
+
+      this->pointer_position.setX(r.left() + r.width() / 2);
+      this->pointer_position.setY(r.top() + r.height() / 2); // centered reticle, for now
    }
 
    device_button_state xinput::get_state_of(const inputs::button& button) const {

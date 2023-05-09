@@ -1,5 +1,6 @@
 #pragma once
 #include <Qt>
+#include <QWidget>
 #include "editor/subsystems/xinput/enums/button.h"
 #include "editor/subsystems/xinput/gamepad.h"
 #include "../enums/button_press_type.h"
@@ -34,7 +35,10 @@ namespace dovahkit::subsystems::worldinput2::devices {
          } scalars;
 
          void ignore_all_down();
-         void update(timestamp_t now, bool connected, const subsystems::xinput::gamepad&);
+
+         void update(timestamp_t now, const QWidget& view, bool connected, const subsystems::xinput::gamepad&);
+         void update_buttons(timestamp_t now, bool connected, const subsystems::xinput::gamepad&);
+         void update_pointer(const QWidget& view);
 
          virtual device_button_state get_state_of(const inputs::button&) const final;
          virtual const device_button_claim& get_existing_claim_of(const inputs::button&) const final override;

@@ -149,6 +149,11 @@ namespace dovahkit::subsystems::worldinput2 {
          return true;
       return false;
    }
+   constexpr bool input_sequence::has_raycast_requirement() const {
+      if (this->raycast.associated_button)
+         return true;
+      return false;
+   }
    constexpr bool input_sequence::is_probably_keyboard_impossible() const {
       //
       // Most keyboards can only register a limited number of simultaneously 
@@ -223,6 +228,14 @@ namespace dovahkit::subsystems::worldinput2 {
       if (this->root)
          this->root->terminal_inputs(out);
       return out;
+   }
+
+   constexpr input_sequence& input_sequence::operator=(input_sequence&& other) noexcept {
+      std::swap(this->root, other.root);
+      std::swap(this->range, other.range);
+      std::swap(this->raycast, other.raycast);
+      std::swap(this->state, other.state);
+      return *this;
    }
    #pragma endregion
 }

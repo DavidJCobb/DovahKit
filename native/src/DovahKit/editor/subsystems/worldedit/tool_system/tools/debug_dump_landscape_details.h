@@ -1,6 +1,5 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../../enums/pointer_position_type.h"
 #include "./_base.h"
 
 namespace dovah {
@@ -18,14 +17,9 @@ namespace dovahkit::subsystems::worldedit::tools {
          static constexpr const bool is_raycast_sensitive = true;
 
       public:
-         struct options {
-            pointer_position_type position  = pointer_position_type::mouse;
-         };
          struct results {
-            pointer_position_type position;
-
-            glm::vec3 hit_position = { 0, 0, 0 };
-            dovah::form_stub* target = nullptr;
+            glm::vec3         hit_position = { 0, 0, 0 };
+            dovah::form_stub* target       = nullptr;
          };
 
       public:

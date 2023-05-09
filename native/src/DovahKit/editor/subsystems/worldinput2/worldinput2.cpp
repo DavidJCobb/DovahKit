@@ -66,11 +66,11 @@ namespace dovahkit::subsystems::worldinput2 {
       //
       // Update input device states:
       //
-      this->device_handlers.keyboard_mouse.update(now);
+      this->device_handlers.keyboard_mouse.update(now, *this->state.target_widget);
       {
          auto& xinput = subsystems::xinput::core::get();
          xinput.update();
-         this->device_handlers.gamepad.update(now, xinput.isGamepadConnected(), xinput.gamepadState());
+         this->device_handlers.gamepad.update(now, *this->state.target_widget, xinput.isGamepadConnected(), xinput.gamepadState());
       }
       //
       // Run the bind tree update algorithm:

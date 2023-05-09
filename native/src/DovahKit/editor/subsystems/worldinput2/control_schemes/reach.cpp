@@ -93,6 +93,23 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
          }
       ));
 
+      {
+         auto* node = build::tool_node(
+            "Toggle Selection",
+            button_press_type::press,
+            inputs::xinput_button::a,
+            worldedit::tools::attempt_on_screen_selection::options{
+               .operation = selection_operation::toggle,
+            }
+         );
+         node->input_sequence.raycast.associated_button = node->input_sequence.root;
+         node->input_sequence.raycast.requirement = raycast_requirement{
+            .targets = {
+               .object_references = true,
+            },
+         };
+      }
+
       return out;
    }
 }

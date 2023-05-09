@@ -3,6 +3,7 @@
 #include "helpers/math/geometry/ray_OBB_intersection.h"
 #include "helpers/math/geometry/ray_cylinder_intersection.h"
 #include "helpers/math/sqrt.h"
+#include "helpers/unreachable.h"
 
 namespace vulkanDK::gizmos::meshes::scale {
    extern raycast_hit_data do_raycast(
@@ -59,6 +60,7 @@ namespace vulkanDK::gizmos::meshes::scale {
                   case axis3D::y: return transform[1];
                   case axis3D::z: return transform[2];
                }
+               cobb::unreachable();
             }();
             box_transform[3] += box_axis * box_center_distance;
          }

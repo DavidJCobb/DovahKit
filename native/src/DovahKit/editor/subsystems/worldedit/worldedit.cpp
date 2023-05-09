@@ -1007,47 +1007,21 @@ namespace dovahkit::subsystems::worldedit {
                // TODO
                //
                static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
-            } else {
-               if (data.position == pointer_position_type::mouse) {
-                  vulkanDK::rendered_mesh_handle handle = {};
-                  {
-                     vulkanDK::raycast raycast(*sr);
-                     raycast.test_flags = 0;
-                     raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
-                     raycast.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
-                     sr->do_raycast(raycast);
-
-                     if (raycast.result.hit) {
-                        auto& e = raycast.result.entity;
-                        if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
-                           handle = std::get<vulkanDK::rendered_mesh_handle>(e);
-                     }
-                  }
-                  if (!handle.empty()) {
-                     if (auto* nif = handle->owning_nif) {
-                        if (auto* stub = nif->owning_form) {
-                           switch (data.operation) {
-                              case selection_operation::no_op:
-                                 break;
-                              case selection_operation::toggle:
-                                 this->toggleRefSelectionState(*stub);
-                                 break;
-                              case selection_operation::add:
-                              case selection_operation::remove:
-                                 this->setRefSelectionState(*stub, data.operation == selection_operation::add);
-                                 break;
-                              case selection_operation::replace:
-                                 this->replaceRefSelection(*stub);
-                                 break;
-                           }
-                        }
-                     }
-                  }
-               } else {
-                  //
-                  // TODO
-                  //
-                  static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
+            }
+            if (auto* stub = data.target; stub && dovah::form_type_info::form_type_is_reference(stub->formType)) {
+               switch (data.operation) {
+                  case selection_operation::no_op:
+                     break;
+                  case selection_operation::toggle:
+                     this->toggleRefSelectionState(*stub);
+                     break;
+                  case selection_operation::add:
+                  case selection_operation::remove:
+                     this->setRefSelectionState(*stub, data.operation == selection_operation::add);
+                     break;
+                  case selection_operation::replace:
+                     this->replaceRefSelection(*stub);
+                     break;
                }
             }
          }
@@ -1055,48 +1029,45 @@ namespace dovahkit::subsystems::worldedit {
          #pragma region debug_dump_landscape_details
          if (results.has_member<tools::debug_dump_landscape_details>()) {
             const auto& data = results.get_member<tools::debug_dump_landscape_details>();
-            if (data.position == pointer_position_type::mouse) {
-               vulkanDK::raycast rc(*sr);
-               rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
 
-               sr->do_raycast(rc);
-               if (rc.result.hit) {
-                  if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(rc.result.entity)) {
-                     auto handle = std::get<vulkanDK::rendered_landscape_handle>(rc.result.entity);
-                     auto pos    = rc.result.hit.position - handle->frame_drawing_data.position;
-                  
-                     qDebug(
-                        "Hit landscape at (%g, %g, %g).",
-                        handle->frame_drawing_data.position.x,
-                        handle->frame_drawing_data.position.y,
-                        handle->frame_drawing_data.position.z
-                     );
-                     qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
-                  
-                     pos /= vulkanDK::rendered_landscape::vertex_distance;
+            bool found = false;
+            if (data.target && data.target->formType == dovah::form_type::land) {
+               for (auto& item : this->loaded_cells) {
+                  if (item.land && &(item.land->stub) == data.target) {
+                     found = true;
 
-                     int x = pos.x;
-                     int y = pos.y;
-                     qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
+                     auto& handle = item.vulkan_handles.landscape;
+                     if (!handle.empty()) {
+                        auto pos = data.hit_position - handle->frame_drawing_data.position;
 
-                     if (x > 0 && y > 0 && x < 33 && y < 33) {
-                        vulkanDK::vertex_landscape* vert = nullptr;
+                        qDebug(
+                           "Hit landscape at (%g, %g, %g).",
+                           handle->frame_drawing_data.position.x,
+                           handle->frame_drawing_data.position.y,
+                           handle->frame_drawing_data.position.z
+                        );
+                        qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
 
-                        #if _DEBUG
+                        pos /= vulkanDK::rendered_landscape::vertex_distance;
+
+                        int x = pos.x;
+                        int y = pos.y;
+                        qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
+
+                        if (x > 0 && y > 0 && x < 33 && y < 33) {
+                           vulkanDK::vertex_landscape* vert = nullptr;
+
+                           #if _DEBUG
                            //
                            // TODO: console-print the vert attributes
                            //
                            __debugbreak();
-                        #endif
-
+                           #endif
+                        }
                      }
+                     break;
                   }
                }
-            } else {
-               //
-               // TODO
-               //
-               static_assert(!require_complete_implementation, "TODO: Support performing a query at the reticle.");
             }
          }
          #pragma endregion
@@ -1385,6 +1356,69 @@ namespace dovahkit::subsystems::worldedit {
       for (const auto& item : this->state.selection.refs)
          if (item.stub)
             out.push_back(item.stub);
+
+      return out;
+   }
+
+   raycast_result core::raycast_at(int view_x, int view_y) const {
+      raycast_result out;
+      
+      if (!this->target_view)
+         return out;
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return out;
+
+      vulkanDK::raycast raycast(*sr);
+      raycast.test_flags = vulkanDK::raycast::test_flag::all;
+      raycast.set_screen_relative_raycast(view_x, view_y);
+      sr->do_raycast(raycast);
+
+      out.hit_position  = raycast.result.hit.position;
+      out.view_position = { (qreal)view_x, (qreal)view_y };
+      switch (raycast.result.target) {
+         using enum vulkanDK::raycast_hit_target;
+         case none:
+            break;
+         case edit_gizmo:
+            {
+               auto& dst = out.target_info.edit_gizmo.axis;
+               switch (raycast.result.gizmo.axis) {
+                  using enum vulkanDK::axis3D;
+                  using to = axis3D;
+                  case x: dst = to::x; break;
+                  case y: dst = to::y; break;
+                  case z: dst = to::z; break;
+               }
+            }
+            out.target_info.edit_gizmo.mode = raycast.result.gizmo.mode;
+            break;
+         case entity:
+            {
+               auto& ev = raycast.result.entity;
+               if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(ev)) {
+                  auto handle = std::get<vulkanDK::rendered_landscape_handle>(ev);
+                  if (!handle.empty()) {
+                     for (const auto& info : this->loaded_cells) {
+                        if (info.vulkan_handles.landscape == handle) {
+                           out.target_info.form = &(info.land->stub);
+                           break;
+                        }
+                     }
+                  }
+               } else if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(ev)) {
+                  auto handle = std::get<vulkanDK::rendered_mesh_handle>(ev);
+                  if (!handle.empty()) {
+                     if (auto* nif = handle->owning_nif; nif) {
+                        auto* form = out.target_info.form = nif->owning_form;
+                        if (form)
+                           out.target_info.is_selected = this->is_ref_selected(form);
+                     }
+                  }
+               }
+            }
+            break;
+      }
 
       return out;
    }

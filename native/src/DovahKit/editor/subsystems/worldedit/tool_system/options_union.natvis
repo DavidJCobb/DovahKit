@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovahkit::subsystems::worldedit::tools::options_union">
+      <DisplayString>{*this,!}</DisplayString>
+      <Expand>
+         <Item Optional="true"
+            Name="attempt_on_screen_selection"
+         >
+            (attempt_on_screen_selection::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="debug_dump_landscape_details"
+         >
+            *(debug_dump_landscape_details::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="debug_print"
+         >
+            *(debug_print::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="modify_camera_speed_flags"
+         >
+            *(modify_camera_speed_flags::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="move_camera"
+         >
+            *(move_camera::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="turn_camera"
+         >
+            *(turn_camera::options*)&amp;data[0]
+         </Item>
+         <Synthetic Name="[data]" Condition="tag == (tool_id)-1">
+            <DisplayString>&lt;empty&gt;</DisplayString>
+         </Synthetic>
+         <Item Name="[raw]">data</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

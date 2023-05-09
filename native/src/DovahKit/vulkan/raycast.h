@@ -36,6 +36,7 @@ namespace vulkanDK {
                meshes     = 0x00000004,
             };
 
+            static constexpr const auto all = edit_gizmo | landscapes | meshes;
             static constexpr const auto default_flags = landscapes | meshes;
          };
          using test_flags_t = std::underlying_type_t<test_flag::type>;

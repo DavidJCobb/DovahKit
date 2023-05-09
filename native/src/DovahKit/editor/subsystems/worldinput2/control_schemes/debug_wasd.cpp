@@ -122,6 +122,13 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             auto* g = node->input_sequence.root = new input_sequence::group;
             g->type   = input_sequence::group_type::single_control;
             g->button = inputs::button{ .mouse = Qt::MouseButton::LeftButton };
+            
+            node->input_sequence.raycast.associated_button = g;
+            node->input_sequence.raycast.requirement = raycast_requirement{
+               .targets = {
+                  .object_references = true,
+               },
+            };
 
             node->tool.id      = tools::id_of<tools::attempt_on_screen_selection>;
             node->tool.options = new tools::options_union(tools::attempt_on_screen_selection::options{
@@ -136,6 +143,14 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             em_node->append(*node);
 
             node->input_sequence = algorithms::input_sequence_from_string("[Ctrl + LMB]");
+            auto* lmb = node->input_sequence.root->children[1];
+            
+            node->input_sequence.raycast.associated_button = lmb;
+            node->input_sequence.raycast.requirement = raycast_requirement{
+               .targets = {
+                  .object_references = true,
+               },
+            };
 
             node->tool.id      = tools::id_of<tools::attempt_on_screen_selection>;
             node->tool.options = new tools::options_union(tools::attempt_on_screen_selection::options{

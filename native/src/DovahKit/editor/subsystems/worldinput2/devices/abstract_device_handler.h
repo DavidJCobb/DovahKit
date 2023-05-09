@@ -49,12 +49,18 @@ namespace dovahkit::subsystems::worldinput2::devices {
          //
          const raycast_result_per_key& get_raycast_result(timestamp_t now, const inputs::button&);
 
+         const raycast_result& get_per_frame_raycast_result();
+
          interruption_check prepare_interruption_check() const;
 
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const = 0;
 
       protected:
-         std::vector<raycast_result_per_key> raycast_results;
+         QPoint pointer_position; // view-relative and in view coordinates i.e. pixels
+         struct {
+            std::vector<raycast_result_per_key> per_button;
+            std::optional<raycast_result>       this_frame;
+         } raycast_results;
    };
 }

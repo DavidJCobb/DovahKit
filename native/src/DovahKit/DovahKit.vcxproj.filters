@@ -2028,6 +2028,9 @@
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4886,6 +4889,9 @@
     <ClInclude Include="editor\subsystems\worldinput2\raycast_result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\raycast_result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5622,5 +5628,7 @@
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="editor\subsystems\worldinput2\inputs\button.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
+    <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
+    <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
   </ItemGroup>
 </Project>

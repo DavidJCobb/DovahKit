@@ -39,6 +39,8 @@ namespace dovahkit::subsystems::worldinput2 {
             interruption_check& interruption_check;
             timestamp_t         last_advancement_time;
             struct {
+               bool already_passed = false;
+               //
                const group* associated_button = nullptr;
                const raycast_requirement& requirement;
             } raycast;
@@ -48,6 +50,8 @@ namespace dovahkit::subsystems::worldinput2 {
             timestamp_t  down_at    = zero_timestamp;
             size_t       down_count = 0;
             frame_status status     = frame_status::inactive;
+            //
+            bool raycast_requirement_met_this_frame = false;
          };
          
          struct range_requirement {
@@ -142,9 +146,14 @@ namespace dovahkit::subsystems::worldinput2 {
             bool frame_status_changed = false;
             timestamp_t last_advancement = zero_timestamp; // timestamp at which the user entered the next key in this input sequence
             timestamp_t went_down_at     = zero_timestamp;
+            //
+            bool raycast_requirement_satisfied = false;
          } state;
 
       public:
+         constexpr input_sequence() {}
+         input_sequence(const input_sequence& o) { *this = o; }
+         constexpr input_sequence(input_sequence&& o) { *this = std::move(o); }
          constexpr ~input_sequence();
 
          void update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check&);
@@ -153,6 +162,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
          constexpr bool has_any_buttons() const;
          constexpr bool has_range_requirement() const;
+         constexpr bool has_raycast_requirement() const;
          constexpr bool is_probably_keyboard_impossible() const;
          constexpr size_t specificity() const;
          constexpr std::vector<inputs::button> terminal_inputs() const;
@@ -171,6 +181,9 @@ namespace dovahkit::subsystems::worldinput2 {
                return false;
             return this->range == other.range;
          }
+
+         input_sequence& operator=(const input_sequence& other);
+         constexpr input_sequence& operator=(input_sequence&& other) noexcept;
 
          // absolute = modifier << nested;
          input_sequence operator<<(const input_sequence& nested) const;

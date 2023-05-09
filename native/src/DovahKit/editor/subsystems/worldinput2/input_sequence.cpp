@@ -5,6 +5,7 @@
 #include "./devices/abstract_device_handler.h"
 #include "./defaults.h"
 #include "./device_button_claim.h"
+#include "./raycast_result.h"
 
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::range_requirement
@@ -44,10 +45,47 @@ namespace dovahkit::subsystems::worldinput2 {
                .status     = frame_status::released,
             };
          } else if (bs.is_down()) {
+
+            if (this == params.raycast.associated_button) {
+               const auto& requirement = params.raycast.requirement;
+               //
+               if (bs.was_pressed_this_frame()) {
+                  const auto& res = device.get_raycast_result(current_time, this->button);
+                  if (!requirement.is_satisfied_by(res)) {
+                     return group_update_result{
+                        .status = frame_status::inactive,
+                     };
+                  }
+               } else if (params.raycast.already_passed) {
+                  const bool per_frame = requirement.timing == raycast_requirement::timing_type::per_frame;
+                  const bool no_change = requirement.fail_if_target_changes;
+                  if (per_frame || no_change) {
+                     const auto& res_p = device.get_per_frame_raycast_result();
+                     if (per_frame) {
+                        if (!requirement.is_satisfied_by(res_p)) {
+                           return group_update_result{
+                              .status = frame_status::inactive,
+                           };
+                        }
+                     }
+                     if (no_change) {
+                        const auto& res_b = device.get_raycast_result(current_time, this->button);
+                        if (res_b != res_p) {
+                           return group_update_result{
+                              .status = frame_status::inactive,
+                           };
+                        }
+                     }
+                  }
+               }
+            }
+
             return group_update_result{
                .down_at    = bs.down_when,
                .down_count = 1,
-               .status    = frame_status::down,
+               .status     = frame_status::down,
+               //
+               .raycast_requirement_met_this_frame = (this == params.raycast.associated_button),
             };
          }
          return group_update_result{
@@ -65,6 +103,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       if (this->type == group_type::concurrent_ordered) {
          auto   previous_timestamp = previous_sibling_time;
+         bool   raycast_satisfied  = false;
          size_t count_down   = 0;
          bool   any_inactive = false;
          bool   any_released = false;
@@ -72,6 +111,8 @@ namespace dovahkit::subsystems::worldinput2 {
          for (i = 0; i < this->children.size(); ++i) {
             auto* item   = this->children[i];
             auto  result = item->update(params, previous_timestamp);
+
+            raycast_satisfied |= result.raycast_requirement_met_this_frame;
 
             if (result.status != frame_status::released) {
                if (result.down_at < previous_timestamp) {
@@ -115,6 +156,7 @@ namespace dovahkit::subsystems::worldinput2 {
                .down_at    = previous_timestamp,
                .down_count = count_down,
                .status     = frame_status::inactive,
+               .raycast_requirement_met_this_frame = raycast_satisfied,
             };
          }
          if (any_released) {
@@ -122,22 +164,26 @@ namespace dovahkit::subsystems::worldinput2 {
                .down_at    = previous_timestamp,
                .down_count = count_down,
                .status     = frame_status::released,
+               .raycast_requirement_met_this_frame = raycast_satisfied,
             };
          }
          return group_update_result{
             .down_at    = previous_timestamp,
             .down_count = count_down,
             .status     = frame_status::down,
+            .raycast_requirement_met_this_frame = raycast_satisfied,
          };
       }
 
       if (this->type == group_type::concurrent_unordered) {
          auto   most_recently_down = zero_timestamp;
+         bool   raycast_satisfied  = false;
          size_t count_down   = 0;
          bool   any_inactive = false;
          bool   any_released = false;
          for (auto* item : this->children) {
             auto result = item->update(params);
+            raycast_satisfied |= result.raycast_requirement_met_this_frame;
             count_down += result.down_count;
             if (result.down_at > most_recently_down)
                most_recently_down = result.down_at;
@@ -156,18 +202,21 @@ namespace dovahkit::subsystems::worldinput2 {
                   .down_at    = most_recently_down,
                   .down_count = count_down,
                   .status     = frame_status::released,
+                  .raycast_requirement_met_this_frame = raycast_satisfied,
                };
             }
             return group_update_result{
                .down_at    = most_recently_down,
                .down_count = count_down,
                .status     = frame_status::down,
+               .raycast_requirement_met_this_frame = raycast_satisfied,
             };
          }
          return group_update_result{
             .down_at    = most_recently_down,
             .down_count = count_down,
             .status     = frame_status::inactive,
+            .raycast_requirement_met_this_frame = raycast_satisfied,
          };
       }
 
@@ -184,9 +233,9 @@ namespace dovahkit::subsystems::worldinput2 {
          if (this->state.current_item_index == 0) {
             if (result.down_at < previous_sibling_time) {
                return group_update_result{
-                  .down_at = zero_timestamp,
+                  .down_at    = zero_timestamp,
                   .down_count = 0,
-                  .status = frame_status::inactive,
+                  .status     = frame_status::inactive,
                };
             }
          }
@@ -197,12 +246,14 @@ namespace dovahkit::subsystems::worldinput2 {
                      .down_at    = current_time,
                      .down_count = result.down_count,
                      .status     = frame_status::down,
+                     .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
                   };
                }
                return group_update_result{
                   .down_at    = current_time,
                   .down_count = result.down_count,
                   .status     = frame_status::inactive,
+                  .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
                };
                break;
             case frame_status::released:
@@ -212,12 +263,14 @@ namespace dovahkit::subsystems::worldinput2 {
                   return group_update_result{
                      .down_at = result.down_at,
                      .status  = frame_status::released,
+                     .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
                   };
                } else {
                   return group_update_result{
                      .down_at    = current_time,
                      .down_count = result.down_count,
                      .status     = frame_status::inactive,
+                     .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
                   };
                }
                break;
@@ -241,6 +294,7 @@ namespace dovahkit::subsystems::worldinput2 {
                      .down_at    = result.down_at,
                      .down_count = result.down_count,
                      .status     = frame_status::inactive,
+                     .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
                   };
                }
                break;
@@ -249,6 +303,7 @@ namespace dovahkit::subsystems::worldinput2 {
             .down_at    = result.down_at > last_advancement_time ? result.down_at : last_advancement_time,
             .down_count = result.down_count,
             .status     = frame_status::inactive,
+            .raycast_requirement_met_this_frame = result.raycast_requirement_met_this_frame,
          };
       }
 
@@ -588,6 +643,16 @@ namespace dovahkit::subsystems::worldinput2 {
          return;
       }
 
+      if (this->state.raycast_requirement_satisfied) {
+         auto* g = this->raycast.associated_button;
+         assert(g);
+         assert(g->type == group_type::single_control);
+         auto state = device.get_state_of(g->button);
+         if (!state.is_down() && !(state.flags & device_button_state::flag::down_state_changed_on_this_frame)) {
+            this->state.raycast_requirement_satisfied = false;
+         }
+      }
+
       {
          interruption_check.start_at = 0;
          //
@@ -616,10 +681,22 @@ namespace dovahkit::subsystems::worldinput2 {
          .interruption_check    = interruption_check,
          .last_advancement_time = this->state.last_advancement,
          .raycast = {
+            .already_passed    = this->state.raycast_requirement_satisfied,
             .associated_button = this->raycast.associated_button,
             .requirement       = this->raycast.requirement,
          }
       });
+
+      this->state.raycast_requirement_satisfied |= result.raycast_requirement_met_this_frame;
+      if (this->has_raycast_requirement()) {
+         if (!this->state.raycast_requirement_satisfied) {
+            if (result.status == frame_status::released) {
+               this->clear_all_progress();
+            }
+            result.status = frame_status::inactive;
+         }
+      }
+
       if (this->state.frame_status != result.status) {
          this->state.frame_status_changed = true;
          this->state.frame_status         = result.status;
@@ -704,7 +781,65 @@ namespace dovahkit::subsystems::worldinput2 {
       if (this->root)
          out.root = this->root->_clone();
       out.range = this->range;
+
+      out.raycast.requirement = this->raycast.requirement;
+      if (this->raycast.associated_button) {
+         auto recurse = [this, &out](const group* current_src, group* current_dst, auto& recurse) -> group* {
+            if (current_src == this->raycast.associated_button) {
+               return current_dst;
+            }
+            if (current_src->can_have_children()) {
+               size_t size = current_src->children.size();
+               for (size_t i = 0; i < size; ++i) {
+                  auto* child_src = current_src->children[i];
+                  auto* child_dst = current_dst->children[i];
+                  if (auto* found = recurse(child_src, child_dst, recurse))
+                     return found;
+               }
+            }
+            return nullptr;
+         };
+         out.raycast.associated_button = recurse(this->root, out.root, recurse);
+      }
+
       return out;
+   }
+
+   input_sequence& input_sequence::operator=(const input_sequence& other) {
+      if (this->root)
+         delete this->root;
+      if (other.root)
+         this->root = other.root->_clone();
+      else
+         this->root = nullptr;
+
+      this->range = other.range;
+
+      this->raycast.requirement = other.raycast.requirement;
+      if (other.raycast.associated_button) {
+         auto recurse = [this, &other](const group* current_src, group* current_dst, auto& recurse) -> group* {
+            if (current_src == other.raycast.associated_button) {
+               return current_dst;
+            }
+            if (current_src->can_have_children()) {
+               size_t size = current_src->children.size();
+               for (size_t i = 0; i < size; ++i) {
+                  auto* child_src = current_src->children[i];
+                  auto* child_dst = current_dst->children[i];
+                  if (auto* found = recurse(child_src, child_dst, recurse))
+                     return found;
+               }
+            }
+            return nullptr;
+         };
+         this->raycast.associated_button = recurse(other.root, this->root, recurse);
+      } else {
+         this->raycast.associated_button = nullptr;
+      }
+
+      this->state = other.state;
+
+      return *this;
    }
 
    input_sequence input_sequence::operator<<(const input_sequence& nested) const {

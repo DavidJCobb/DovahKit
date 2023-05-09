@@ -1,6 +1,7 @@
 #include "rotate.h"
 #include "helpers/math/cosine.h"
 #include "helpers/math/sine.h"
+#include "helpers/unreachable.h"
 #include "../../raycast.h"
 #include "helpers/math/geometry/ray_cylinder_intersection.h"
 
@@ -59,6 +60,7 @@ namespace {
          case y: return _vertices_per_axis.y;
          case z: return _vertices_per_axis.z;
       }
+      cobb::unreachable();
    }
 }
 

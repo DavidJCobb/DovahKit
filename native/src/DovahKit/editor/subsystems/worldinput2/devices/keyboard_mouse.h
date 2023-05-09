@@ -1,6 +1,6 @@
 #pragma once
-#include <Qt>
 #include <QPoint>
+#include <QWidget>
 #include "../enums/button_press_type.h"
 #include "../chrono.h"
 #include "../device_button_state.h"
@@ -55,7 +55,10 @@ namespace dovahkit::subsystems::worldinput2::devices {
          void recheck_mouse_metrics();
 
          void ignore_all_down();
-         void update(timestamp_t now);
+
+         void update(timestamp_t now, const QWidget& view);
+         void update_buttons(timestamp_t now);
+         void update_pointer(const QWidget& view);
 
          virtual device_button_state get_state_of(const inputs::button&) const final override;
          virtual const device_button_claim& get_existing_claim_of(const inputs::button&) const final override;

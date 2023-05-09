@@ -2332,6 +2332,7 @@ namespace vulkanDK {
          axis3D axis;
          auto   hit = this->gizmo_buffer.do_raycast(rc, this->scene.gizmo_state, axis);
          if (hit) {
+            rc.result.target = raycast_hit_target::edit_gizmo;
             rc.receive_hit(hit);
             rc.result.gizmo.axis = axis;
             rc.result.gizmo.mode = this->scene.gizmo_state.get_mode();
@@ -2353,6 +2354,7 @@ namespace vulkanDK {
                nearest = i;
          }
          if (nearest != -1) {
+            rc.result.target = raycast_hit_target::entity;
             rc.result.hit.surface_normal = list[nearest].triangle_surface_normal(rc.result.hit.triangle_index);
             rc.result.entity = rendered_mesh_handle{ *this, nearest };
          }
@@ -2367,8 +2369,10 @@ namespace vulkanDK {
             if (rc.receive_hit(hit))
                nearest = i;
          }
-         if (nearest != -1)
+         if (nearest != -1) {
+            rc.result.target = raycast_hit_target::entity;
             rc.result.entity = rendered_landscape_handle{ *this, nearest };
+         }
       }
    }
 

@@ -3,6 +3,13 @@
 #include "vulkan/enums/gizmo_mode.h"
 #include "./enums/optional_yn.h"
 
+namespace dovahkit::subsystems::worldedit {
+   struct raycast_result;
+}
+namespace dovahkit::subsystems::worldinput2 {
+   using raycast_result = worldedit::raycast_result;
+}
+
 namespace dovahkit::subsystems::worldinput2 {
    struct raycast_requirement {
       public:
@@ -37,5 +44,7 @@ namespace dovahkit::subsystems::worldinput2 {
             || targets.object_references
             ) == false;
          }
+
+         bool is_satisfied_by(const raycast_result&) const;
    };
 }

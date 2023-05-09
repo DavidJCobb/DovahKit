@@ -8,7 +8,6 @@ namespace dovahkit::subsystems::worldedit::tools {
       //
       results res = {
          .operation = o.operation,
-         .position  = o.position,
       };
       if (input.has_button) {
          if (input.button.press_type == worldinput2::button_press_type::hold && !input.button.down_state_changed_this_frame) {

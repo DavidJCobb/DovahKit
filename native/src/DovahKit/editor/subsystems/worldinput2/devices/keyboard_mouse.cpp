@@ -1,9 +1,11 @@
 #include "./keyboard_mouse.h"
+#include <Qt>
+#include <QCursor>
+#include <QWidget>
 #include "helpers/windows.h"
 #include "../defaults.h"
 #include "../interruption_check.h"
 #include "../inputs/button.h"
-#include <QCursor>
 
 namespace {
    constexpr bool use_winapi_for_mouse_location = false;
@@ -67,7 +69,13 @@ namespace dovahkit::subsystems::worldinput2::devices {
    void keyboard_mouse::ignore_all_down() {
       this->buttons.ignore_all_down();
    }
-   void keyboard_mouse::update(timestamp_t now) {
+
+   void keyboard_mouse::update(timestamp_t now, const QWidget& view) {
+      this->raycast_results.this_frame = {};
+      this->update_buttons(now);
+      this->update_pointer(view);
+   }
+   void keyboard_mouse::update_buttons(timestamp_t now) {
       for (size_t i = 0; i < vk_code_count; ++i) {
          bool held = (GetAsyncKeyState(i) & 0x8000) != 0;
          this->buttons.update_button(now, i, held);
@@ -93,7 +101,7 @@ namespace dovahkit::subsystems::worldinput2::devices {
             }
          }
       }
-      if (auto& list = this->raycast_results; !list.empty()) {
+      if (auto& list = this->raycast_results.per_button; !list.empty()) {
          //
          // Clear raycast results for any buttons that were released on the previous frame. 
          // (We don't clear a button's results on the frame it's released, because that 
@@ -156,6 +164,9 @@ namespace dovahkit::subsystems::worldinput2::devices {
       // https://docs.microsoft.com/en-us/windows/win32/inputdev/about-raw-input
       // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawmouse
       //
+   }
+   void keyboard_mouse::update_pointer(const QWidget& view) {
+      this->pointer_position = view.mapFromGlobal(this->mouse.pos);
    }
 
    void keyboard_mouse::recheck_mouse_metrics() {

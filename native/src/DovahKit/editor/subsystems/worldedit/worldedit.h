@@ -15,6 +15,7 @@
 #include "./enums/camera_speed_flags.h"
 #include "./enums/editor_mode.h"
 #include "./grid_definitions.h"
+#include "./raycast_result.h"
 
 class DKVulkanView;
 namespace dovah {
@@ -141,6 +142,8 @@ namespace dovahkit::subsystems::worldedit {
          bool is_ref_selected(const dovah::form_stub*) const;
 
          std::vector<dovah::form_stub*> get_selected_refs() const;
+
+         raycast_result raycast_at(int view_x, int view_y) const;
 
          inline size_t cell_grid_size() const noexcept {
             return this->loaded_cells.length();

@@ -137,6 +137,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp" />
@@ -806,6 +807,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
+    <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
@@ -2127,6 +2129,8 @@
   <ItemGroup>
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
+    <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
     <Natvis Include="editor\subsystems\worldinput2\inputs\button.natvis" />
     <Natvis Include="editor\subsystems\worldinput2\input_sequence.natvis" />
     <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
