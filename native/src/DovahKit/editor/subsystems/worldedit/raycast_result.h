@@ -32,25 +32,30 @@ namespace dovahkit::subsystems::worldedit {
             return !this->hit_position.has_value();
          }
 
+         constexpr bool same_target_as(const raycast_result& other) const noexcept {
+            const auto& a = this->target_info;
+            const auto& b = other.target_info;
+            if (a.edit_gizmo.mode != b.edit_gizmo.mode)
+               return false;
+            if (a.edit_gizmo.mode != gizmo_mode::none) {
+               if (a.edit_gizmo.axis != b.edit_gizmo.axis)
+                  return false;
+            }
+            if (a.form != b.form)
+               return false;
+            if (a.is_selected != b.is_selected)
+               return false;
+
+            return true;
+         }
+
          constexpr bool operator==(const raycast_result& other) const noexcept {
             if (this->hit_position != other.hit_position)
                return false;
             if (this->view_position != other.view_position)
                return false;
-            {
-               const auto& a = this->target_info;
-               const auto& b = other.target_info;
-               if (a.edit_gizmo.mode != b.edit_gizmo.mode)
-                  return false;
-               if (a.edit_gizmo.mode != gizmo_mode::none) {
-                  if (a.edit_gizmo.axis != b.edit_gizmo.axis)
-                     return false;
-               }
-               if (a.form != b.form)
-                  return false;
-               if (a.is_selected != b.is_selected)
-                  return false;
-            }
+            if (!this->same_target_as(other))
+               return false;
             return true;
          }
    };

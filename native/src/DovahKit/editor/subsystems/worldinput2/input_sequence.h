@@ -26,6 +26,12 @@ namespace dovahkit::subsystems::worldinput2 {
             released,
          };
 
+         enum class raycast_status {
+            unaffected,
+            passed,
+            failed,
+         };
+
          enum class group_type {
             single_control,
             concurrent_ordered,
@@ -47,11 +53,10 @@ namespace dovahkit::subsystems::worldinput2 {
          };
 
          struct group_update_result {
-            timestamp_t  down_at    = zero_timestamp;
-            size_t       down_count = 0;
-            frame_status status     = frame_status::inactive;
-            //
-            bool raycast_requirement_met_this_frame = false;
+            timestamp_t    down_at    = zero_timestamp;
+            size_t         down_count = 0;
+            frame_status   status     = frame_status::inactive;
+            raycast_status raycast    = raycast_status::unaffected;
          };
          
          struct range_requirement {
@@ -147,7 +152,7 @@ namespace dovahkit::subsystems::worldinput2 {
             timestamp_t last_advancement = zero_timestamp; // timestamp at which the user entered the next key in this input sequence
             timestamp_t went_down_at     = zero_timestamp;
             //
-            bool raycast_requirement_satisfied = false;
+            bool raycast_success_flag = false;
          } state;
 
       public:

@@ -98,6 +98,11 @@ The following state is stored per-button, per-device:
 
 A button is said to be *down* if the "is down" flag is set A button is said to be *released* if, on the current frame, it is not down and its down status changed on this frame. A button is said to be *up* if its "is down" flag is not set; buttons that are *released* are also *up*.
 
+### Raycast result
+Some input binds require that a raycast be performed when a particular button is first pressed down, and that the raycast yield a particular result. In these cases, the raycast result is stored as device state, associated with the button.
+
+A button's raycast result is cleared on the frame after the button is released. It is retained for the frame on which the button is released so that it remains available to [Press and Long Press](#button-press-type) binds.
+
 ## Input sequence
 An input sequence is a series of inputs that the user must make in order to perform some action. Every input sequence is defined as a tree of *input sequence groups*, optionally accompanied by a *range constraint*. Input sequences have terminal inputs.
 
@@ -126,6 +131,13 @@ This is the timestamp at which the user was last seen to be making progress towa
 
 This value is used to enforce a timeout on entering a *separate and ordered* button combination. If the user waits too long between inputs, then the button combination is interrupted and the user's "progress" within the button combination is reset.
 This value must be stored on the input sequence as a whole, and not on *separate and ordered* ISGs, in order to ensure that the user is given enough time to enter all of the keys for any ISG that is the child of a *separate and ordered* ISG. ISGs have no access to their parents (primarily for performance reasons, but it's also unnecessary) and so an inner ISG cannot update the state of an outer ISG (including a hypothetical last advancement time stored locally on separate-and-ordered ISGs); the outer ISG only knows when its direct children are considered [fully] *down* and *released*.
+
+#### Raycast success flag
+This flag is set if the input sequence has a [raycast constraint](#raycast-constraint), and if that constraint has been satisfied.
+
+The raycast constraint is first checked on the frame at which the input sequence's raycast-associated button goes down; if the constraint is met at that time, this flag is set. The flag allows us to remember that the raycast constraint was met, specifically, at the time that the raycast-associated button went down.
+
+When that button ceases to be down, this flag is cleared.
 
 ### Input sequence group
 There are four kinds of input sequence groups:
@@ -210,6 +222,17 @@ Range constraints are also ignored by [Press-preempts-Hold](#press-preempts-hold
 * Press X :: Left Stick
 
 The decision to implement this specific behavior stems from the fact that Press-delays-Hold and Hold-blocks-Press exist to deal with conflicts arising from the same buttons being mapped to input sequences with different button press types (whereas the concurrent binds conflict resolution rules exist to deal with like press types). Range constraints are orthogonal to button press types.
+
+### Raycast constraint
+An input sequence can optionally require that a raycast be made and hit targets of a given type. Raycast constraints consist of two parts:
+
+* A **raycast requirement** struct. Most options are implementation-defined (i.e. they depend on the specific things in the editor that you can aim at), but the following are always present:
+   * **"Per frame" flag:** Specifies that the raycast requirements should be rechecked on every frame after the raycast-associated button goes down, and not just on the frame that the raycast-associated button (see below) goes down.
+   * **"Fail on change"** flag: Specifies that the user must continue to aim at the same raycast target, or the input sequence will cease to be active.
+   * **Target types:** The set of valid targets for this raycast.
+       * One of the target types should be "nothing," i.e. it should be possible for a tool to require that you click on empty space, or to allow clicks on anything (including empty space) except specific target types.
+* A **raycast-associated button:** a pointer to a *single input control* [group](#input-sequence-group) somewhere in the input sequence.
+
 
 ### Notation and examples
 The following input sequence notation is defined:
@@ -298,6 +321,7 @@ A data structure that gets passed to tools when they're invoked. It has the foll
 * **"Down status changed on this frame" flag:** Primarily useful for Hold binds, to know whether the current invocation is the result of the bind beginning to activate or remaining active over multiple frames. For tools that toggle some setting, for example, this is what allows them to toggle once when a Hold bind goes down and toggle back when it's released, rather than toggling every single frame. 
 * **Range value:** X- and Y-axis values for a range input control.
 * **"Range is delta" flag:** Indicates that the range value represents a [delta](#delta-controls) rather than an absolute position.
+* **Raycast result:** Present only when the tool is invoked as the result of an input sequence with a [raycast constraint](#raycast-constraint). Contains the result of the raycast that allowed the input sequence to proceed.
 
 
 <span style="page-break-after: always"></span>
@@ -443,6 +467,15 @@ This system thus applies the following conflict resolution rules across time:
 
 * [Specificity rule](#specificity-rule)
 * [Hold-blocks-Press rule](#simultaneous-release-of-hold-and-press-binds)
+
+<span style="page-break-after: always"></span>
+
+## Raycasts
+Some tools should act on the thing the user is aiming at; and some tools should only be invocable when the player is aiming at a given kind of target. Here are a few examples:
+
+* In Halo: Reach Forge, you can aim at an object and press A on an Xbox controller to select it. In this case, a raycast is performed once when the bind goes down.
+* Halo 4's Forge mode added a safety feature: to delete an object, you must aim at the object and hold the "delete" button. In this case, a raycast is performed once when the bind goes down. In DovahKit, it is desirable to fail to recheck the raycast every frame while the bind is down, and fail to activate the bind if the player aims at something else while the button is down.
+* In Halo 5 and Halo Infinite Forge, you can hold LB on an Xbox controller and then sweep your reticle over several objects, toggling their selection state. In this case, a raycast is performed every frame while a Hold bind is down.
 
 <span style="page-break-after: always"></span>
 
@@ -865,6 +898,7 @@ An [input node](#input-node) <var>Node</var>'s absolute input sequence is define
          1. If <var>WasDown</var> is *true*, then set the "down state changed on this frame" flag.
       1. If <var>Button</var> is not down, and <var>WasDown</var> is *false*, then:
          1. Reset <var>Button</var>'s [previous-frame claim](#device-button-state).
+         1. Delete <var>Button</var>'s stored [raycast result](#raycast-result), if any.
       1. Else:
          1. If <var>Button</var>'s current-frame claim has a greater or equal [specificity](#specificity) than <var>Button</var>'s previous-frame claim:
             1. Overwrite <var>Button</var>'s previous-frame claim with <var>Button</var>'s current-frame claim.
@@ -1011,6 +1045,9 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
             1. If <var>EligibleBind</var> is in <var>LastFrameActiveHoldBinds</var>, then set <var>Cause</var>'s "down status changed this frame" flag.
       1. Set <var>Cause</var>'s range value to <var>RangeValue</var>.
       1. Set <var>Cause</var>'s "range is delta" flag to <var>RangeIsDelta</var>.
+      1. If <var>EligibleBind</var>'s input sequence has a [raycast constraint](#raycast-constraint):
+         1. Let <var>RaycastResult</var> be the [raycast result](#raycast-result) associated with the constraint's raycast-associated button.
+         2. Set <var>Cause</var>'s raycast result to a copy of <var>RaycastResult</var>.
       1. Execute <var>EligibleBind</var>'s bound tool, passing <var>Cause</var>.
    1. If <var>EligibleBind</var>'s press type is Hold, then:
       1. Add <var>EligibleBind</var> to <var>LastFrameActiveHoldBinds</var>.
@@ -1173,7 +1210,7 @@ Given two bind list items &mdash; one, <var>PressBind</var>, whose button press 
 3. If any input control is present in both <var>SeqPress</var> and <var>SeqHold</var>, then return true.
 4. Return false.
 
-## <var>Input</var> sequence group interruption check
+## Input sequence group interruption check
 This algorithm is invoked when updating a *separate and ordered* input sequence group. The algorithm requires the use of an instance of the following data structure, which is partially prepared by the [bind list update algorithm](#bind-list-update-algorithm) and then further prepared by the [input sequence update algorithm](#input-sequence-update-algorithm):
 
 ```c++
@@ -1234,7 +1271,7 @@ The input sequence group interruption check runs only on *separate and ordered* 
    1. If <var>Button</var>'s "matched" property is *false*, then return true.
 10. Return false.
 
-## <var>Input</var> sequence update algorithm
+## Input sequence update algorithm
 This algorithm is potentially invoked by the bind list update algorithm, running at most once per frame for any given input sequence. This algorithm takes as input the timestamp at which input processing began for the current frame, the current input device handler, and an interruption check instance.
 
 1. Let <var>CurrentTimestamp</var> be the timestamp at which input processing began for this frame.
@@ -1244,6 +1281,10 @@ This algorithm is potentially invoked by the bind list update algorithm, running
       1. Set this input sequence's [frame status](#frame-status) to *down*.
       1. Clear this input sequence's frame status change flag.
    1. Abort this process.
+1. If this input sequence's [raycast success flag](#raycast-success-flag) is set:
+   1. Let <var>Button</var> be this input sequence's [raycast-associated button](#raycast-constraint).
+   1. If <var>Button</var> is not [down](#device-button-state):
+      1. Clear this input sequence's raycast success flag.
 4. Set up the interruption check:
    1. Set <var>InterruptionCheck</var>'s "start at" property to 0.
    1. Let <var>FoundFirstButton</var> be false.
@@ -1255,7 +1296,18 @@ This algorithm is potentially invoked by the bind list update algorithm, running
    1. If <var>FoundFirstButton</var> is *false*:
       1. Set <var>InterruptionCheck</var>'s "down at" property to the size of its button list.[^18]
 5. Let <var>RootGroup</var> be the root group of this input sequence.
-6. Run the [input sequence group update algorithm](#input-sequence-group-update-algorithm) on <var>RootGroup</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; and let <var>ResultCount</var> be the returned count.
+6. Run the [input sequence group update algorithm](#input-sequence-group-update-algorithm) on <var>RootGroup</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; let <var>ResultCount</var> be the returned count; and let <var>ResultRaycastStatus</var> be the returned raycast status.
+1. If this input sequence has a [raycast constraint](#raycast-constraint):
+   1. If <var>ResultRaycastStatus</var> is *raycast requirement met*:
+      1. Set this input sequence's raycast success flag.
+   1. Else if <var>ResultRaycastStatus</var> is *raycast requirement failed*:
+      1. Clear this input sequence's raycast success flag.
+      1. If <var>ResultStatus</var> is *released*:
+         1. [Clear all progress](#clear-all-progress) for this input sequence.
+      1. Set <var>ResultStatus</var> to *inactive*.
+   1. Else if <var>ResultRaycastStatus</var> is *raycast requirement unaffected*:
+      1. If this input sequence's raycast success flag is not set:
+         1. Set <var>ResultStatus</var> to *inactive*.
 7. If this input sequence's frame status is not equal to <var>ResultStatus</var>:
    1. Set this input sequence's frame status change flag.
    1. Set this input sequence's frame status to <var>ResultStatus</var>.
@@ -1294,38 +1346,62 @@ This algorithm is potentially invoked by the bind list update algorithm, running
 ### Clear all progress
 In order to clear all progress for an input sequence:
 
-1. Set the input sequence's frame status to inactive.
-2. Set the input sequence's down timestamp to zero.
-3. Set the input sequence's last advancement time to zero.
+1. Set the input sequence's [frame status](#frame-status) to inactive.
+2. Set the input sequence's [down timestamp](#down-timestamp) to zero.
+3. Set the input sequence's [last advancement time](#last-advancement-time) to zero.
+1. Clear the input sequence's [raycast success flag](#raycast-success-flag).
 4. Clear all progress for the input sequence's root group.
 
 In order to clear all progress for an input sequence group:
 1. Set the group's <var>CurrentItemIndex</var> to 0.
 2. Recursively clear all progress for group's children.
 
-## <var>Input</var> sequence group update algorithm
-This algorithm runs on a single input sequence group, and works by potentially changing the group's frame status. The algorithm itself returns a [frame status](#frame-status), a down timestamp, and the number of currently-down input controls seen by the algorithm; you could regard this as a "progress" value, with the containing input sequence's specificity as the overall maximum.
+## Input sequence group update algorithm
+This algorithm runs on a single input sequence group, and works by potentially changing the group's frame status. The algorithm itself returns:
+
+* A [frame status](#frame-status).
+* A down timestamp.
+* The number of currently-down input controls seen by the algorithm; you could regard this as a "progress" value, with the containing input sequence's specificity as the overall maximum.
+* A "raycast status:" an enumeration indicating whether the [raycast requirement](#raycast-constraint) was satisfied on this frame; allowed values are *raycast requirement met*, *raycast requirement unaffected*, and *raycast requirement failed*.
 
 The returned timestamp is the most recent timestamp at which the user progressed through entering the input sequence by pressing any input control down.
 
-The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTime</var>, Device, and optional parameter <var>PreviousSiblingTime</var>, and works as follows:
+The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTime</var>, Device, boolean <var>RaycastAlreadyPassed</var>, and optional parameter <var>PreviousSiblingTime</var>, and works as follows:
 
 1. If <var>PreviousSiblingTime</var> is unspecified, it defaults to a zero timestamp.
 2. Let <var>Group</var> be the input sequence group we are running the algorithm on.
 3. Clear <var>Group</var>'s frame status change flag.
 4. If <var>Group</var> is a single input control, then:
    1. If that input control is released, then return: the *released* frame status; the input control's down timestamp; and a count of 0.
-   1. If that input control is down, then return: the *down* frame status; the input control's down timestamp; and a count of 1.
+   1. If that input control is down, then:
+      1. If <var>Group</var> is its containing input sequence's [raycast-associated button](#raycast-constraint):
+         1.	If the input control was pressed down on this frame:
+            1. Let <var>RaycastResult</var> be the result of a raycast performed on this frame. [The result should be cached by the input device to which this input control belongs, and associated with said control.](#raycast-result)
+            1. If the input sequence's [raycast requirement](#raycast-constraint) is not satisfied by <var>RaycastResult</var>, then:
+               1. Return: the *inactive* frame status; a zero timestamp; a count of 0; and *raycast requirement failed*.
+            1. Else:
+               1. Return: the *down* frame status; the input control's down timestamp; a count of 1; and *raycast requirement met*.
+         1. Else if the containing input sequence's [raycast success flag](#raycast-success-flag) is set:
+            1. If the raycast requirements are per frame, or if they fail if the target changes:
+               1. Let <var>FrameRaycastResult</var> be the result of a raycast performed on this frame.
+               1. If the raycast requirement is per-frame:
+                  1. If the raycast requirement is not satisfied by <var>FrameRaycastResult</var>, then return: the *inactive* frame status; a zero timestamp; a count of 0; and *raycast requirement failed*.
+               1. If the raycast requirement fails if the target changes:
+                  1. Let <var>ButtonRaycastResult</var> be [the raycast result associated with this input control](#raycast-result).
+                  1. If <var>FrameRaycastResult</var> and <var>ButtonRaycastResult</var> hit different targets, then return: the *inactive* frame status; a zero timestamp; a count of 0; and *raycast requirement failed*.
+      1. Return: the *down* frame status; the input control's down timestamp; a count of 1; and *raycast requirement unaffected*
    1. Assert: the input control is inactive.
    1. Return: the *inactive* frame status; a zero timestamp; and a count of 0.
 5. If <var>Group</var>'s type is *concurrent and ordered*, then:
+   1. Let <var>RaycastStatus</var> be *raycast requirement unaffected*.
    1. Let <var>PreviousTimestamp</var> be <var>PreviousSiblingTime</var>.
    1. Let <var>CountDown</var> be 0.
    1. Let <var>AnyInactive</var> be false.
    1. Let <var>AnyReleased</var> be false.
    1. Let <var>Index</var> be 0.
    1. For each item <var>Item</var> in <var>Group</var>, using <var>Index</var> to iterate:
-      1. Run this algorithm on <var>Item</var>, passing <var>PreviousTimestamp</var> as the value of the nested <var>PreviousSiblingTime</var> invocation. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; and let <var>ResultCount</var> be the returned count.
+      1. Run this algorithm on <var>Item</var>, passing <var>PreviousTimestamp</var> as the value of the nested <var>PreviousSiblingTime</var> invocation. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; let <var>ResultCount</var> be the returned count; and let <var>ResultRaycastStatus</var> be the returned raycast status.
+      1. If <var>ResultRaycastStatus</var> is not *raycast requirement unaffected*, then set <var>RaycastStatus</var> to <var>ResultRaycastStatus</var>.
       1. If <var>ResultStatus</var> is not released:
          1. If <var>ResultDownTimestamp</var> is less recent than <var>PreviousTimestamp</var>, then:
             1. Set <var>AnyInactive</var> to *true*.
@@ -1347,16 +1423,18 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
       1. Assert: <var>Index</var> is in bounds.
       1. For each item <var>Item</var> in <var>Group</var> starting after[^22] <var>Index</var>:
          1. Clear all progress for <var>Item</var>.
-      1. Return: the *inactive* frame status; <var>PreviousTimestamp</var>; and <var>CountDown</var>.
-   1. If <var>AnyReleased</var> is *true*, then return: the *released* frame status; <var>PreviousTimestamp</var>; and <var>CountDown</var>.
-   1. Return: the *down* frame status; <var>PreviousTimestamp</var>; and <var>CountDown</var>.
+      1. Return: the *inactive* frame status; <var>PreviousTimestamp</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
+   1. If <var>AnyReleased</var> is *true*, then return: the *released* frame status; <var>PreviousTimestamp</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
+   1. Return: the *down* frame status; <var>PreviousTimestamp</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
 6. Else if <var>Group</var>'s type is *concurrent and unordered*, then:
    1. Let <var>CountDown</var> be 0.
    1. Let <var>AnyInactive</var> be false.
    1. Let <var>AnyReleased</var> be true.
    1. Let <var>MostRecentlyDown</var> be a zero timestamp.
+   1. Let <var>RaycastStatus</var> be *raycast requirement unaffected*.
    1. For each item <var>Item</var> in <var>Group</var>:
-      1. Run this algorithm on <var>Item</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; and let <var>ResultCount</var> be the returned count.
+      1. Run this algorithm on <var>Item</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; let <var>ResultCount</var> be the returned count; and let <var>ResultRaycastStatus</var> be the returned raycast status.
+      1. If <var>ResultRaycastStatus</var> is not *raycast requirement unaffected*, then set <var>RaycastStatus</var> to <var>ResultRaycastStatus</var>.
       1. Increase <var>CountDown</var> by <var>ResultCount</var>.
       1. If <var>ResultDownTimestamp</var> is more recent than <var>MostRecentlyDown</var>, then set <var>MostRecentlyDown</var> to <var>ResultDownTimestamp</var>.
       1. If <var>ResultStatus</var> is inactive, then:
@@ -1364,9 +1442,9 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
       1. Else if <var>ResultStatus</var> is released, then:
          1. Set <var>AnyReleased</var> to *true*.
    1. If <var>AnyInactive</var> is *false*, then:
-      1. If <var>AnyReleased</var> is *true*, then return: the *released* frame status; <var>MostRecentlyDown</var>; and <var>CountDown</var>.
-      1. Return: the *down* frame status; <var>MostRecentlyDown</var>; and <var>CountDown</var>.
-   1. Return: the *inactive* frame status; <var>MostRecentlyDown</var>; and <var>CountDown</var>.
+      1. If <var>AnyReleased</var> is *true*, then return: the *released* frame status; <var>MostRecentlyDown</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
+      1. Return: the *down* frame status; <var>MostRecentlyDown</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
+   1. Return: the *inactive* frame status; <var>MostRecentlyDown</var>; <var>CountDown</var>; and <var>RaycastStatus</var>.
 7. Else if <var>Group</var>'s type is *separate and ordered*, then:
    1. Let <var>Interrupted</var> be the result of running an interruption check on <var>Group</var>.
    1. If <var>Interrupted</var> is *true*:
@@ -1374,29 +1452,29 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
       1. Return: the *inactive* frame status; a zero timestamp; and 0.
    1. Let <var>CurrentItemIndex</var> be a persistent run-time-only state value stored on <var>Group</var>. It should be the index of an item in <var>Group</var>. It should be initialized to 0.
    1. Let <var>CurrentItem</var> be the item in <var>Group</var> at index <var>CurrentItemIndex</var>.
-   1. Run this algorithm on <var>CurrentItem</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; and let <var>ResultCount</var> be the returned count.
+   1. Run this algorithm on <var>CurrentItem</var>. Let <var>ResultStatus</var> be the returned frame status; let <var>ResultDownTimestamp</var> be the returned timestamp; let <var>ResultCount</var> be the returned count; and let <var>ResultRaycastStatus</var> be the returned raycast status.
    1. If <var>CurrentItem</var> is the first child of <var>Group</var>:
-      1. If <var>ResultDownTimestamp</var> is older than <var>PreviousSiblingTime</var>, then return: the *inactive* frame status; a zero timestamp; and 0.
+      1. If <var>ResultDownTimestamp</var> is older than <var>PreviousSiblingTime</var>, then return: the *inactive* frame status; a zero timestamp; a count of 0; and <var>ResultRaycastStatus</var>.
    1. If <var>ResultStatus</var> is down:
       1. If <var>CurrentItem</var> is the last item in <var>Group</var>:
-         1. Return: the *down* frame status; <var>CurrentTimestamp</var>[^23]; and <var>ResultCount</var>.
-      1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; and <var>ResultCount</var>.
+         1. Return: the *down* frame status; <var>CurrentTimestamp</var>[^23]; <var>ResultCount</var>; and <var>ResultRaycastStatus</var>.
+      1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; <var>ResultCount</var>; and <var>ResultRaycastStatus</var>.
    1. Else if <var>ResultStatus</var> is *released*:
       1. Increment <var>CurrentItemIndex</var> by 1.
       1. If <var>CurrentItem</var> is the last item in <var>Group</var>:
          1. Set <var>CurrentItemIndex</var> to 0.
-         2. Return: the *released* frame status; <var>ResultDownTimestamp</var>; and 0.
+         2. Return: the *released* frame status; <var>ResultDownTimestamp</var>; a count of 0; and <var>ResultRaycastStatus</var>.
       1. Else:
-         1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; and <var>ResultCount</var>.
+         1. Return: the *inactive* frame status; <var>CurrentTimestamp</var>; <var>ResultCount</var>; and <var>ResultRaycastStatus</var>.
    1. Else if <var>ResultStatus</var> is *inactive*:
       1. **[Don't let too much time pass between separated keystrokes.]** If <var>CurrentItemIndex</var> is greater than zero:
          1. Let <var>ComparisonTime</var> be whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>.[^24]
          2. Let <var>Elapsed</var> be the difference between <var>ComparisonTime</var> and <var>CurrentTime</var>.
          3. If <var>Elapsed</var> is greater than KeySequenceInputExpiryTime, then:
             1. [Clear all progress](#clear-all-progress) for <var>Group</var>.
-            1. Return: the *inactive* frame status; a zero timestamp; and 0.
-      1. Else, return: the *inactive* frame status; <var>ResultDownTimestamp</var>; and <var>ResultCount</var>.
-   1. Return: the *inactive* frame status; whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>; and <var>ResultCount</var>.
+            1. Return: the *inactive* frame status; a zero timestamp; a count of 0; and <var>ResultRaycastStatus</var>.
+      1. Else, return: the *inactive* frame status; <var>ResultDownTimestamp</var>; <var>ResultCount</var>; and <var>ResultRaycastStatus</var>.
+   1. Return: the *inactive* frame status; whichever timestamp is more recent among <var>LastAdvancementTime</var> and <var>ResultDownTimestamp</var>; <var>ResultCount</var>; and <var>ResultRaycastStatus</var>.
 8. Assert: unreachable.
 
 [^21]: If <var>ResultStatus</var> is inactive, that doesn't necessarily mean that <var>Item</var> is *entirely* inactive; it could be a nested group with only some of its contents currently being *down*. As such, we still want to capture the timestamp it returns, so we can update the [last advancement time](#last-advancement-time) of the containing input sequence.
@@ -1404,7 +1482,7 @@ The algorithm receives parameters <var>CurrentTime</var>, <var>LastAdvancementTi
 [^23]: We enforce a limit on how much time may elapse between fully entering the child items of a *separate and ordered* input sequence group. We rely on the containing input sequence's [last advancement time](#last-advancement-time) to check the elapsed time, and that timestamp is updated based on the timestamp returned by the input sequence group update algorithm. We want the limit to apply to the time between entering child items; we don't want to count the time that any child time spends pressed down; so we always update the last advancement time to the current time while any child item is down.
 [^24]: This ensures that if <var>CurrentItem</var> is "partially down," we still take the time of its last keypress &mdash; which may have occurred on this frame &mdash; into account.
 
-## <var>Input</var> sequence range constraint check
+## Input sequence range constraint check
 This check is invoked by the bind list update algorithm, and not by the input sequence update algorithm, so that we can prevent range constraints from interfering with handling of the Press-blocks-Hold conflict resolution rule.
 
 This check takes an input device handler, Device, as input, and returns a Boolean.
