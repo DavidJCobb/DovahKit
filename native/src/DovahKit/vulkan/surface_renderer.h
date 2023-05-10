@@ -350,6 +350,8 @@ namespace vulkanDK {
 
          gizmo_mode get_gizmo_mode() const;
          void set_gizmo_mode(gizmo_mode);
+         void set_gizmo_transform(const glm::mat4&);
+         void set_gizmo_transform(const glm::vec3& pos, const glm::vec3& rot, float scale);
          bool is_gizmo_axis_highlighted(axis3D) const;
          void set_gizmo_axis_highlighted(axis3D, bool);
          void replace_gizmo_axis_highlighted(axis3D);

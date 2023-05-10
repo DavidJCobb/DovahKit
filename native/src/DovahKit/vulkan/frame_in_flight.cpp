@@ -413,6 +413,7 @@ namespace vulkanDK {
                continue;
             if (!predicate(ro))
                continue;
+            assert(!ro.vib().empty());
             params[j] = VkDrawIndexedIndirectCommand{
                .indexCount    = ro.vib().index_count,
                .instanceCount = 1,
@@ -1309,7 +1310,7 @@ namespace vulkanDK {
       auto& ds    = this->descriptor_sets;
       auto& scene = sr.scene;
       //
-      auto& command_buffer = this->graphics_commands.bounds;
+      auto& command_buffer = this->graphics_commands.gizmo;
       auto  command_handle = command_buffer.handle;
       //
       command_buffer.reset(0);

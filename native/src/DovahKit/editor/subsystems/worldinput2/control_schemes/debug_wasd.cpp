@@ -13,7 +13,7 @@ namespace {
    using worldedit::bool_operation;
    using worldedit::camera_turn_axis;
    using worldedit::editor_mode;
-   using worldedit::pointer_position_type;
+   using worldedit::gizmo_mode;
    using worldedit::reference_frame;
    using worldedit::selection_operation;
    using worldedit::sign;
@@ -73,10 +73,10 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             float yaw   = 0; // clockwise, so turning left is negative
          };
          constexpr auto binds = std::array{
-               _bind{ "Turn Camera Left",  'G',  0, -1},
-               _bind{ "Turn Camera Right", 'H',  0,  1},
-               _bind{ "Turn Camera Up",    'R',  1,  0},
-               _bind{ "Turn Camera Down" , 'V', -1,  0},
+            _bind{ "Turn Camera Left",  'G',  0, -1},
+            _bind{ "Turn Camera Right", 'H',  0,  1},
+            _bind{ "Turn Camera Up",    'R',  1,  0},
+            _bind{ "Turn Camera Down" , 'V', -1,  0},
          };
          for (const auto& item : binds) {
             auto* node = new binds::nodes::bound_tool;
@@ -109,6 +109,59 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             .boost = bool_operation::set_true,
          });
       }
+      {  // Edit Gizmo modes
+         struct _bind {
+            const char* name;
+            wchar_t     key;
+            gizmo_mode  mode;
+            bool        toggle = false;
+         };
+         constexpr auto binds = std::array{
+            _bind{ "Show Scale Gizmo",     '2', gizmo_mode::scale,     true },
+            _bind{ "Show Translate Gizmo", 'E', gizmo_mode::translate, true },
+            _bind{ "Hide Gizmo",           'R', gizmo_mode::none,      false },
+            _bind{ "Toggle Rotate Gizmo",  'W', gizmo_mode::rotate,    true },
+         };
+         for (const auto& item : binds) {
+            auto* node = new binds::nodes::bound_tool;
+            node->name              = item.name;
+            node->button_press_type = button_press_type::press;
+            out.root->append(*node);
+
+            auto* g = node->input_sequence.root = new input_sequence::group;
+            g->type   = input_sequence::group_type::single_control;
+            g->button = inputs::button{ .key = cobb::keyboard::key::from_character(item.key, false) };
+
+            node->tool.id      = tools::id_of<tools::set_edit_gizmo_mode>;
+            node->tool.options = new tools::options_union(tools::set_edit_gizmo_mode::options{
+               .gizmo = {
+                  .a = item.mode,
+                  .b = gizmo_mode::none,
+               },
+               .toggle_gizmo = item.toggle,
+               .modify_gizmo = true,
+            });
+         }
+      }
+      {  // Edit Gizmo reference frame
+         auto* node = new binds::nodes::bound_tool;
+         node->name              = "Toggle Gizmo Reference Frame (World/Local)";
+         node->button_press_type = button_press_type::press;
+         out.root->append(*node);
+
+         auto* g = node->input_sequence.root = new input_sequence::group;
+         g->type   = input_sequence::group_type::single_control;
+         g->button = inputs::button{ .key = cobb::keyboard::key::from_character('G', false) };
+
+         node->tool.id      = tools::id_of<tools::set_edit_gizmo_mode>;
+         node->tool.options = new tools::options_union(tools::set_edit_gizmo_mode::options{
+            .frame = {
+               .a = reference_frame::world,
+               .b = reference_frame::local,
+            },
+            .toggle_frame = true,
+         });
+      }
       {  // Editor Mode: Objects
          auto* em_node = new binds::nodes::editor_mode(editor_mode::objects);
          out.root->append(*em_node);
@@ -133,7 +186,6 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             node->tool.id      = tools::id_of<tools::attempt_on_screen_selection>;
             node->tool.options = new tools::options_union(tools::attempt_on_screen_selection::options{
                .operation = selection_operation::replace,
-               .position  = pointer_position_type::mouse,
             });
          }
          {  // Replace Selection
@@ -155,7 +207,6 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
             node->tool.id      = tools::id_of<tools::attempt_on_screen_selection>;
             node->tool.options = new tools::options_union(tools::attempt_on_screen_selection::options{
                .operation = selection_operation::toggle,
-               .position  = pointer_position_type::mouse,
             });
          }
       }

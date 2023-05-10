@@ -2467,6 +2467,15 @@ namespace vulkanDK {
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_gizmo_mode_changed();
    }
+   void surface_renderer::set_gizmo_transform(const glm::mat4& transform) {
+      this->scene.gizmo_state.transform = transform;
+      //
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_mode_changed();
+   }
+   void surface_renderer::set_gizmo_transform(const glm::vec3& pos, const glm::vec3& rot, float scale) {
+      this->set_gizmo_transform(glm_transform_from_beth(pos, rot, scale));
+   }
    bool surface_renderer::is_gizmo_axis_highlighted(axis3D a) const {
       return this->scene.gizmo_state.is_axis_highlighted(a);
    }

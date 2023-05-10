@@ -8,12 +8,14 @@
 #include "dovah/forms/Landscape.h"
 #include "dovah/forms/ObjectReference.h"
 #include "nif/file.h"
+#include "vulkan/enums/gizmo_mode.h"
 #include "vulkan/rendered_nif.h"
 #include "vulkan/scene_entity_handle.h"
 
 #include "./enums/bounds_generation_source.h"
 #include "./enums/camera_speed_flags.h"
 #include "./enums/editor_mode.h"
+#include "./enums/reference_frame.h"
 #include "./grid_definitions.h"
 #include "./raycast_result.h"
 
@@ -40,6 +42,8 @@ namespace dovahkit::subsystems::worldedit {
       public:
          using singleton_ex::get;
          using singleton_ex::get_or_create;
+
+         using gizmo_mode = vulkanDK::gizmo_mode;
 
       protected:
          using form_stub       = dovah::form_stub;
@@ -100,6 +104,12 @@ namespace dovahkit::subsystems::worldedit {
          struct {
             camera_speed_flags camera_speed;
             editor_mode mode = editor_mode::objects;
+
+            struct {
+               reference_frame frame = reference_frame::world;
+               gizmo_mode      mode  = gizmo_mode::none;
+            } gizmo;
+
             struct {
                std::vector<selected_refr_info> refs;
             } selection;

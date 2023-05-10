@@ -118,6 +118,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
@@ -802,6 +803,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_turn_axis.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\gizmo_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\pointer_position_type.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\reference_frame.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
@@ -817,6 +819,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h" />

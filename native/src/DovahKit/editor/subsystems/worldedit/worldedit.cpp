@@ -31,7 +31,7 @@
 
 #include "helpers/vector.h"
 namespace {
-   static constexpr const bool selection_vector_is_unordered = true;
+   static constexpr const bool selection_vector_is_unordered = false;
 }
 
 #include "editor/subsystems/worldinput2/core.h"
@@ -41,6 +41,8 @@ namespace {
 namespace {
    static constexpr bool debug_use_new_worldinput = true;
 }
+
+#include "vulkan/helpers/glm_transform_from_beth.h"
 
 namespace {
    static constexpr bool require_complete_implementation = false;
@@ -1071,6 +1073,26 @@ namespace dovahkit::subsystems::worldedit {
             }
          }
          #pragma endregion
+         #pragma region set_edit_gizmo_mode
+         if (results.has_member<tools::set_edit_gizmo_mode>()) {
+            const auto& data = results.get_member<tools::set_edit_gizmo_mode>();
+
+            if (data.modify_gizmo) {
+               auto prior = this->state.gizmo.mode;
+               this->state.gizmo.mode = data.gizmo.a;
+               if (prior == data.gizmo.a && data.toggle_gizmo) {
+                  this->state.gizmo.mode = data.gizmo.b;
+               }
+            }
+            if (data.frame.a != reference_frame::current) {
+               auto prior = this->state.gizmo.frame;
+               this->state.gizmo.frame = data.frame.a;
+               if (data.toggle_frame && prior == data.frame.a && data.frame.b != reference_frame::current) {
+                  this->state.gizmo.frame = data.frame.b;
+               }
+            }
+         }
+         #pragma endregion
       } else {
          //
          // Update input state.
@@ -1159,51 +1181,51 @@ namespace dovahkit::subsystems::worldedit {
          {
             const auto& data = results.get_member<worldinput::tools::attempt_on_screen_selection>();
             if (data.sweep) {
-               //
-               // TODO
-               //
-               static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
+//
+// TODO
+//
+static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
             } else {
-               if (data.position == worldinput::pointer_position_type::mouse) {
-                  vulkanDK::rendered_mesh_handle handle = {};
-                  {
-                     vulkanDK::raycast raycast(*sr);
-                     raycast.test_flags = 0;
-                     raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
-                     sr->do_raycast(raycast);
+            if (data.position == worldinput::pointer_position_type::mouse) {
+               vulkanDK::rendered_mesh_handle handle = {};
+               {
+                  vulkanDK::raycast raycast(*sr);
+                  raycast.test_flags = 0;
+                  raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
+                  sr->do_raycast(raycast);
 
-                     if (raycast.result.hit) {
-                        auto& e = raycast.result.entity;
-                        if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
-                           handle = std::get<vulkanDK::rendered_mesh_handle>(e);
-                     }
+                  if (raycast.result.hit) {
+                     auto& e = raycast.result.entity;
+                     if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
+                        handle = std::get<vulkanDK::rendered_mesh_handle>(e);
                   }
-                  if (!handle.empty()) {
-                     if (auto* nif = handle->owning_nif) {
-                        if (auto* stub = nif->owning_form) {
-                           switch (data.operation) {
-                              case worldinput::selection_operation::no_op:
-                                 break;
-                              case worldinput::selection_operation::toggle:
-                                 this->toggleRefSelectionState(*stub);
-                                 break;
-                              case worldinput::selection_operation::add:
-                              case worldinput::selection_operation::remove:
-                                 this->setRefSelectionState(*stub, data.operation == worldinput::selection_operation::add);
-                                 break;
-                              case worldinput::selection_operation::replace:
-                                 this->replaceRefSelection(*stub);
-                                 break;
-                           }
+               }
+               if (!handle.empty()) {
+                  if (auto* nif = handle->owning_nif) {
+                     if (auto* stub = nif->owning_form) {
+                        switch (data.operation) {
+                           case worldinput::selection_operation::no_op:
+                              break;
+                           case worldinput::selection_operation::toggle:
+                              this->toggleRefSelectionState(*stub);
+                              break;
+                           case worldinput::selection_operation::add:
+                           case worldinput::selection_operation::remove:
+                              this->setRefSelectionState(*stub, data.operation == worldinput::selection_operation::add);
+                              break;
+                           case worldinput::selection_operation::replace:
+                              this->replaceRefSelection(*stub);
+                              break;
                         }
                      }
                   }
-               } else {
-                  //
-                  // TODO
-                  //
-                  static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
                }
+            } else {
+               //
+               // TODO
+               //
+               static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
+            }
             }
          }
          #pragma endregion
@@ -1218,8 +1240,8 @@ namespace dovahkit::subsystems::worldedit {
                if (rc.result.hit) {
                   if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(rc.result.entity)) {
                      auto handle = std::get<vulkanDK::rendered_landscape_handle>(rc.result.entity);
-                     auto pos    = rc.result.hit.position - handle->frame_drawing_data.position;
-                  
+                     auto pos = rc.result.hit.position - handle->frame_drawing_data.position;
+
                      qDebug(
                         "Hit landscape at (%g, %g, %g).",
                         handle->frame_drawing_data.position.x,
@@ -1227,7 +1249,7 @@ namespace dovahkit::subsystems::worldedit {
                         handle->frame_drawing_data.position.z
                      );
                      qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
-                  
+
                      pos /= vulkanDK::rendered_landscape::vertex_distance;
 
                      int x = pos.x;
@@ -1238,10 +1260,10 @@ namespace dovahkit::subsystems::worldedit {
                         vulkanDK::vertex_landscape* vert = nullptr;
 
                         #if _DEBUG
-                           //
-                           // TODO: console-print the vert attributes
-                           //
-                           __debugbreak();
+                        //
+                        // TODO: console-print the vert attributes
+                        //
+                        __debugbreak();
                         #endif
 
                      }
@@ -1259,6 +1281,44 @@ namespace dovahkit::subsystems::worldedit {
       //
       // Done processing all tools.
       //
+      if (sr) {  // Handle edit gizmo position and visibility
+         glm::mat4  transform = glm::mat4(1);
+         gizmo_mode mode_to_use = this->state.gizmo.mode;
+
+         if (mode_to_use != gizmo_mode::none) {
+            if (this->state.selection.refs.empty()) {
+               mode_to_use = gizmo_mode::none;
+            } else {
+               auto& item = this->state.selection.refs.back();
+               if (item.stub) {
+                  auto loaded = item.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+                  //
+                  auto rot = glm::fvec3{ 0, 0, 0 };
+                  switch (this->state.gizmo.frame) {
+                     case reference_frame::current:
+                     case reference_frame::world:
+                        break;
+                     case reference_frame::local:
+                        rot = loaded->rotation.to_struct<glm::fvec3>();
+                        break;
+                     case reference_frame::camera:
+                        if constexpr (require_complete_implementation) {
+                           static_assert(!require_complete_implementation, "TODO: Implement camera-relative edit gizmo!");
+                        }
+                        break;
+                  }
+                  //
+                  transform = vulkanDK::glm_transform_from_beth(
+                     loaded->position.to_struct<glm::fvec3>(),
+                     rot,
+                     1.0
+                  );
+               }
+            }
+         }
+         sr->set_gizmo_mode(mode_to_use);
+         sr->set_gizmo_transform(transform);
+      }
       if (auto* world = this->target_area.world) {
          //
          // Process (un)loading cells as the camera moves.

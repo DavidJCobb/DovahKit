@@ -10,7 +10,6 @@ namespace {
    using worldedit::bool_operation;
    using worldedit::camera_turn_axis;
    using worldedit::editor_mode;
-   using worldedit::pointer_position_type;
    using worldedit::reference_frame;
    using worldedit::selection_operation;
    using worldedit::sign;

@@ -660,6 +660,8 @@ namespace vulkanDK {
          //
          auto& list = this->scene.entities_of_type<Entity>();
          for (size_t i = 0; i < list.size(); ++i) {
+            if (pending_upload_count <= 0)
+               break;
             auto& entity = list[i];
             if (entity.lifetime.life_state != scene_entities::life_state::active_pending_upload)
                continue;

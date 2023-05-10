@@ -45,12 +45,13 @@ namespace vulkanDK {
    class frame_in_flight : no_copy {
       protected:
          union command_buffer_set {
-            std::array<command_buffer, 5> list;
+            std::array<command_buffer, 6> list;
             struct {
                command_buffer main_shadow;
                command_buffer main_shadow_placed;
                command_buffer main;
                command_buffer bounds;
+               command_buffer gizmo;
                command_buffer fps;
             };
 

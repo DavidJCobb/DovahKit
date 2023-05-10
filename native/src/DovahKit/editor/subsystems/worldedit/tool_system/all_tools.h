@@ -9,6 +9,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class debug_print,
       class modify_camera_speed_flags,
       class move_camera,
+      class set_edit_gizmo_mode,
       class turn_camera//,
    >;
 }
