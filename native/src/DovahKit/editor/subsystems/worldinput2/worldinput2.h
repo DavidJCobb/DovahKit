@@ -56,11 +56,6 @@ namespace dovahkit::subsystems::worldinput2 {
             timestamp_t last_update = zero_timestamp;
             //
             bool target_widget_has_focus = false;
-            //
-            struct {
-               std::optional<raycast_result> cursor;
-               std::optional<raycast_result> reticle;
-            } raycast_results_this_frame;
          } state;
          struct {
             bind_list keyboard = bind_list(input_device_type::keyboard_mouse);

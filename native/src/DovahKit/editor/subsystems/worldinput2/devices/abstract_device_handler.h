@@ -10,6 +10,9 @@
 #include "../interruption_check.h"
 #include "../raycast_result.h"
 
+namespace dovah {
+   class form_stub;
+}
 namespace dovahkit::subsystems::worldinput2 {
    namespace inputs {
       struct button;
@@ -50,6 +53,8 @@ namespace dovahkit::subsystems::worldinput2::devices {
          const raycast_result_per_key& get_raycast_result(timestamp_t now, const inputs::button&);
 
          const raycast_result& get_per_frame_raycast_result();
+
+         void discard_raycast_results_for(const dovah::form_stub&);
 
          interruption_check prepare_interruption_check() const;
 

@@ -3,6 +3,7 @@
 #include "helpers/unreachable.h"
 #include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"
 #include "editor/subsystems/xinput/core.h"
+#include "editor/core.h"
 #include "./algorithms/flatten_bind_tree.h"
 #include "./bind_tree/nodes/root.h"
 #include "./tools/combined_tool_results.h"
@@ -22,6 +23,13 @@ namespace dovahkit::subsystems::worldinput2 {
          if (state == Qt::ApplicationState::ApplicationActive) {
             this->device_handlers.keyboard_mouse.recheck_mouse_metrics();
          }
+      });
+
+      QObject::connect(&DovahKitCore::get(), &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+         if (!stub)
+            return;
+         this->device_handlers.keyboard_mouse.discard_raycast_results_for(*stub);
+         this->device_handlers.gamepad.discard_raycast_results_for(*stub);
       });
    }
    core::~core() {

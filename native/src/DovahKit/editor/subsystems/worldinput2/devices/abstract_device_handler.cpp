@@ -26,6 +26,32 @@ namespace dovahkit::subsystems::worldinput2::devices {
       return rr.value();
    }
 
+   void abstract_device_handler::discard_raycast_results_for(const dovah::form_stub& stub) {
+      if (auto& list = this->raycast_results.per_button; !list.empty()) {
+         //
+         // Clear raycast results for any buttons that were released on the previous frame. 
+         // (We don't clear a button's results on the frame it's released, because that 
+         // would prevent Press and Long Press binds from checking the results when they're 
+         // about to activate.)
+         //
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [this, &stub](const auto& result) -> bool {
+                  return result.target_info.form == &stub;
+               }
+            ),
+            list.end()
+         );
+      }
+      if (auto& opt = this->raycast_results.this_frame; opt.has_value()) {
+         if (opt.value().target_info.form == &stub) {
+            opt = {};
+         }
+      }
+   }
+
    interruption_check abstract_device_handler::prepare_interruption_check() const {
       interruption_check out = this->_prepare_interruption_check_impl();
       {
