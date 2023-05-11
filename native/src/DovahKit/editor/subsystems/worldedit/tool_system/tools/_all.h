@@ -4,10 +4,12 @@
 #include "helpers/tuples/contains_type_matching_functor.h"
 #include "editor/subsystems/worldinput2/tool_invocation_cause.h"
 
+#include "../concepts/tool_with_results.h"
 #include "../all_tools.h"
 
 #include "./attempt_on_screen_selection.h"
 #include "./debug_dump_landscape_details.h"
+#include "./debug_dump_raycast.h"
 #include "./debug_print.h"
 #include "./modify_camera_speed_flags.h"
 #include "./move_camera.h"
@@ -47,13 +49,13 @@ namespace dovahkit::subsystems::worldedit::tools {
    // Enforce: no two tools can have the same results type.
    static_assert(
       []() constexpr -> bool {
-         bool any_two_same = all_tools::for_each_until_true<[]<typename A>() -> bool {
-            if constexpr (requires { typename A::results; }) {
+         constexpr bool any_two_same = all_tools::for_each_until_true<[]<typename A>() -> bool {
+            if constexpr (tool_with_results<A>) {
                return all_tools::for_each_until_true<[]<typename B>() -> bool {
                   if constexpr (std::is_same_v<A, B>) {
                      return false;
                   }
-                  if constexpr (requires { typename B::results; }) {
+                  if constexpr (tool_with_results<B>) {
                      return std::is_same_v<typename A::results, typename B::results>;
                   }
                   return false;
@@ -79,11 +81,11 @@ namespace dovahkit::subsystems::worldedit::tools {
    //
    static_assert(
       []() constexpr -> bool {
-         bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
+         constexpr bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
             if constexpr (A::is_raycast_sensitive) {
-               if constexpr (requires { typename A::results; }) {
+               if constexpr (tool_with_results<A>) {
                   using results = typename A::results;
-                  if constexpr (requires(results & a, const results & b) { a.merge(b); }) {
+                  if constexpr (requires(results& a, const results& b) { a.merge(b); }) {
                      // Fail: Results are mergeable.
                      return false;
                   }

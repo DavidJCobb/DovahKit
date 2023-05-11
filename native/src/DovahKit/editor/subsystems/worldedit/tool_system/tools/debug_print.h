@@ -28,5 +28,3 @@ namespace dovahkit::subsystems::worldedit::tools {
          static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
    };
 }
-
-#include "./move_camera.inl"

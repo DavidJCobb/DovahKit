@@ -1434,8 +1434,10 @@ static_assert(!require_complete_implementation, "TODO: Only modify an entity's s
       raycast.set_screen_relative_raycast(view_x, view_y);
       sr->do_raycast(raycast);
 
-      out.hit_position  = raycast.result.hit.position;
-      out.view_position = { (qreal)view_x, (qreal)view_y };
+      if (raycast.result.hit) {
+         out.hit_position = raycast.result.hit.position;
+      }
+      out.view_position = QPointF((qreal)view_x, (qreal)view_y);
       switch (raycast.result.target) {
          using enum vulkanDK::raycast_hit_target;
          case none:

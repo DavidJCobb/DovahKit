@@ -114,6 +114,7 @@
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\ck_standard.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\reach.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
@@ -812,10 +814,12 @@
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
@@ -851,6 +855,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\tree.h" />
     <ClInclude Include="editor\subsystems\worldinput2\chrono.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\ck_standard.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\reach.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\_builders.h" />

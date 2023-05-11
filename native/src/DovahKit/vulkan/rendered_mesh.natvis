@@ -55,6 +55,7 @@
          <Item Name="frame_drawing_data">frame_drawing_data</Item>
          <Item Name="push_params">push_params</Item>
          <Item Name="owning_nif">owning_nif</Item>
+         <Item Name="[owning form]" Condition="owning_nif &amp;&amp; owning_nif-&gt;owning_form">owning_nif-&gt;owning_form,na</Item>
          <Item Name="anim_state">anim_state</Item>
       </Expand>
    </Type>

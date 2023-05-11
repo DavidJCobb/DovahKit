@@ -1811,7 +1811,10 @@ namespace vulkanDK {
             vkDestroyFence(this->logical_device, fence, nullptr);
             fence = VK_NULL_HANDLE;
          }
-         this->uploading = {};
+         this->uploading.commands = {};
+         this->uploading.staging  = {};
+         this->uploading.pending_upload_counts.set_all_to(0);
+         this->uploading.pending_texture_placeholder.teardown();
       }
       {
          auto& list = this->graphics_shaders;

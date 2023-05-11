@@ -1,4 +1,4 @@
-#include "./reach.h"
+#include "./debug_wasd.h"
 #include "./_builders.h"
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
 
@@ -28,6 +28,28 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
       if (initialized)
          return out;
       initialized = true;
+      
+      {
+         auto* node = build::tool_node(
+            "Debug: Dump Raycast",
+            button_press_type::press,
+            cobb::keyboard::key(cobb::keyboard::virtual_key::numpad_0),
+            worldedit::tools::id_of<worldedit::tools::debug_dump_raycast>
+         );
+
+         auto& is = node->input_sequence;
+         is.raycast.requirement = raycast_requirement{
+            .targets = {
+               .edit_gizmo_mode   = gizmo_mode::translate,
+               .landscapes        = true,
+               .nothing           = true,
+               .object_references = true,
+            },
+         };
+         is.raycast.associated_button = is.root;
+
+         out.root->append(*node);
+      }
 
       {  // Move Camera
          struct _bind {
@@ -112,55 +134,30 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
       {  // Edit Gizmo modes
          struct _bind {
             const char* name;
-            wchar_t     key;
+            cobb::keyboard::virtual_key vk;
             gizmo_mode  mode;
             bool        toggle = false;
          };
          constexpr auto binds = std::array{
-            _bind{ "Show Scale Gizmo",     '2', gizmo_mode::scale,     true },
-            _bind{ "Show Translate Gizmo", 'E', gizmo_mode::translate, true },
-            _bind{ "Hide Gizmo",           'R', gizmo_mode::none,      false },
-            _bind{ "Toggle Rotate Gizmo",  'W', gizmo_mode::rotate,    true },
+            _bind{ "Show Translate Gizmo", cobb::keyboard::virtual_key::numpad_1, gizmo_mode::translate, true },
+            _bind{ "Toggle Rotate Gizmo",  cobb::keyboard::virtual_key::numpad_2, gizmo_mode::rotate,    true },
+            _bind{ "Show Scale Gizmo",     cobb::keyboard::virtual_key::numpad_3, gizmo_mode::scale,     true },
          };
          for (const auto& item : binds) {
-            auto* node = new binds::nodes::bound_tool;
-            node->name              = item.name;
-            node->button_press_type = button_press_type::press;
-            out.root->append(*node);
-
-            auto* g = node->input_sequence.root = new input_sequence::group;
-            g->type   = input_sequence::group_type::single_control;
-            g->button = inputs::button{ .key = cobb::keyboard::key::from_character(item.key, false) };
-
-            node->tool.id      = tools::id_of<tools::set_edit_gizmo_mode>;
-            node->tool.options = new tools::options_union(tools::set_edit_gizmo_mode::options{
-               .gizmo = {
-                  .a = item.mode,
-                  .b = gizmo_mode::none,
-               },
-               .toggle_gizmo = item.toggle,
-               .modify_gizmo = true,
-            });
+            out.root->append(*build::tool_node(
+               item.name,
+               button_press_type::press,
+               cobb::keyboard::key(item.vk),
+               tools::set_edit_gizmo_mode::options{
+                  .gizmo = {
+                     .a = item.mode,
+                     .b = gizmo_mode::none,
+                  },
+                  .toggle_gizmo = item.toggle,
+                  .modify_gizmo = true,
+               }
+            ));
          }
-      }
-      {  // Edit Gizmo reference frame
-         auto* node = new binds::nodes::bound_tool;
-         node->name              = "Toggle Gizmo Reference Frame (World/Local)";
-         node->button_press_type = button_press_type::press;
-         out.root->append(*node);
-
-         auto* g = node->input_sequence.root = new input_sequence::group;
-         g->type   = input_sequence::group_type::single_control;
-         g->button = inputs::button{ .key = cobb::keyboard::key::from_character('G', false) };
-
-         node->tool.id      = tools::id_of<tools::set_edit_gizmo_mode>;
-         node->tool.options = new tools::options_union(tools::set_edit_gizmo_mode::options{
-            .frame = {
-               .a = reference_frame::world,
-               .b = reference_frame::local,
-            },
-            .toggle_frame = true,
-         });
       }
       {  // Editor Mode: Objects
          auto* em_node = new binds::nodes::editor_mode(editor_mode::objects);

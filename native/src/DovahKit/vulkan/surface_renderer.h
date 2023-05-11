@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <type_traits>
 #include <vector>
@@ -194,7 +195,7 @@ namespace vulkanDK {
             VkFence        fence = VK_NULL_HANDLE;
             buffer         staging;
             //
-            cobb::class_map_from_class_array<size_t, scene_entities::all_types_with_owned_gpu_resources> pending_upload_counts;
+            cobb::class_map_from_class_array<std::atomic<size_t>, scene_entities::all_types_with_owned_gpu_resources> pending_upload_counts;
             
             // At some point, we want to implement spreading out GPU data uploads over multiple frames. 
             // If we have 500 MB of data to upload, we shouldn't rig up a 500 MB staging buffer and use 

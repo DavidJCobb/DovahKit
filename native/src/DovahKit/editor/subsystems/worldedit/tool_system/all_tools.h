@@ -6,6 +6,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    using all_tools = cobb::class_array<
       class attempt_on_screen_selection,
       class debug_dump_landscape_details,
+      class debug_dump_raycast,
       class debug_print,
       class modify_camera_speed_flags,
       class move_camera,

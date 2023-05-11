@@ -56,7 +56,6 @@ namespace dovahkit::subsystems::worldinput2 {
       timestamp_t now = current_time();
       elapsed_seconds = elapsed_time(this->state.last_update, now);
       this->state.last_update = now;
-      this->state.raycast_results_this_frame = {};
       if (elapsed_seconds <= 0.0) {
          //
          // This can happen sometimes -- we receive  an update so soon that it's not even 

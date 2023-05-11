@@ -28,7 +28,7 @@ namespace vulkanDK::gizmos::meshes::scale {
       constexpr const float stem_circumcenter = options::stem_radius;
 
       auto test_stem = [&rc, &out_which_axis, &transform, &out, &origin](glm::vec3 start, axis3D which) {
-         start = glm::vec4(start, 0) * transform;
+         start = transform * glm::vec4(start, 1);
          //
          float distance;
          if (cobb::geometry::ray_cylinder_intersection(
@@ -89,6 +89,9 @@ namespace vulkanDK::gizmos::meshes::scale {
       test_head(glm::vec3(0, 1, 0), axis3D::y);
       test_head(glm::vec3(0, 0, 1), axis3D::z);
 
+      if (out) {
+         out.position = rc.origin + (rc.direction * out.distance);
+      }
       return out;
    }
 }

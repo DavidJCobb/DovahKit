@@ -616,7 +616,7 @@ namespace vulkanDK {
       VkDeviceSize total_staging_size = 0;
       VkDeviceSize max_staging_size   = this->max_upload_buffer_size();
 
-      this->uploading.pending_upload_counts.for_each([this, &total_staging_size, max_staging_size]<typename Entity>(size_t& pending_upload_count) {
+      this->uploading.pending_upload_counts.for_each([this, &total_staging_size, max_staging_size]<typename Entity>(const size_t pending_upload_count) {
          if (pending_upload_count <= 0)
             return;
          if (total_staging_size >= max_staging_size)
@@ -650,7 +650,7 @@ namespace vulkanDK {
       upload.staging.data = staging.map_memory();
 
       size_t deferred_entity_count = 0;
-      this->uploading.pending_upload_counts.for_each([this, &upload, &deferred_entity_count]<typename Entity>(size_t& pending_upload_count) {
+      this->uploading.pending_upload_counts.for_each([this, &upload, &deferred_entity_count]<typename Entity>(auto& pending_upload_count) {
          if (pending_upload_count <= 0)
             return;
          if (!upload.has_room_for_more({}))
@@ -667,7 +667,7 @@ namespace vulkanDK {
                continue;
             if (!upload.has_room_for_more({})) {
                ++deferred_entity_count;
-               break;
+               continue;
             }
 
             any_of_this_type = true;

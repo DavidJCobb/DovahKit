@@ -31,6 +31,12 @@ namespace cobb {
          constexpr value_type& value_for() noexcept { return this->_values[classes::template index_of_type<C>]; }
          template<typename C> requires (std::is_same_v<Classes, C> || ...)
          constexpr const value_type& value_for() const noexcept { return this->_values[classes::template index_of_type<C>]; }
+
+         template<typename V> requires (std::is_convertible_v<V, value_type>)
+         constexpr const void set_all_to(const V& v) {
+            for (auto& item : this->_values)
+               item = v;
+         }
          
          template<typename Functor, typename... Args>
          constexpr void for_each(Functor&& f, Args&&... args) {

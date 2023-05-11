@@ -27,7 +27,7 @@ namespace vulkanDK::gizmos::meshes::translate {
       constexpr const float stem_circumcenter = options::stem_radius;
 
       auto test_stem = [&rc, &out_which_axis, &transform, &out, &origin](glm::vec3 start, axis3D which) {
-         start = glm::vec4(start, 0) * transform;
+         start = transform * glm::vec4(start, 1);
          //
          float distance;
          if (cobb::geometry::ray_cylinder_intersection(
@@ -52,8 +52,8 @@ namespace vulkanDK::gizmos::meshes::translate {
          auto base = glm::vec3(distance_base, distance_base, distance_base) * mult;
          auto tip  = glm::vec3(distance_tip,  distance_tip,  distance_tip)  * mult;
 
-         base = glm::vec4(base, 0) * transform;
-         tip  = glm::vec4(tip,  0) * transform;
+         base = transform * glm::vec4(base, 1);
+         tip  = transform * glm::vec4(tip,  1);
 
          float distance;
          if (cobb::geometry::ray_cone_intersection(
@@ -79,6 +79,9 @@ namespace vulkanDK::gizmos::meshes::translate {
       test_head(glm::vec3(0, 1, 0), axis3D::y);
       test_head(glm::vec3(0, 0, 1), axis3D::z);
 
+      if (out) {
+         out.position = rc.origin + (rc.direction * out.distance);
+      }
       return out;
    }
 }

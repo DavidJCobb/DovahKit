@@ -2034,6 +2034,12 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\ck_standard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4899,6 +4905,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\gizmo_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\ck_standard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

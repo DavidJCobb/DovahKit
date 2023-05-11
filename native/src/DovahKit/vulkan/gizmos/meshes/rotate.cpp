@@ -83,8 +83,8 @@ namespace vulkanDK::gizmos::meshes::rotate {
             const auto& cap_a_local = list[i];
             const auto& cap_b_local = list[(i + 1) % list.size()];
 
-            glm::vec3 cap_a = glm::vec4(cap_a_local, 0) * transform;
-            glm::vec3 cap_b = glm::vec4(cap_b_local, 0) * transform;
+            glm::vec3 cap_a = transform * glm::vec4(cap_a_local, 1);
+            glm::vec3 cap_b = transform * glm::vec4(cap_b_local, 1);
 
             float distance;
             if (cobb::geometry::ray_cylinder_intersection(
@@ -108,6 +108,9 @@ namespace vulkanDK::gizmos::meshes::rotate {
       _test_loop(axis3D::y);
       _test_loop(axis3D::z);
 
+      if (out) {
+         out.position = rc.origin + (rc.direction * out.distance);
+      }
       return out;
    }
 }

@@ -8,6 +8,20 @@
          <Parameter Name="a" Type="uint32_t" />
       </Intrinsic>
 
+      <Intrinsic Name="_form_type_is_ref" Expression="
+         ft == dovah::form_type::actor
+      || ft == dovah::form_type::reference
+      || ft == dovah::form_type::arrow
+      || ft == dovah::form_type::beam
+      || ft == dovah::form_type::cone
+      || ft == dovah::form_type::flame
+      || ft == dovah::form_type::grenade
+      || ft == dovah::form_type::placed_hazard
+      || ft == dovah::form_type::missile
+      ">
+         <Parameter Name="ft" Type="uint8_t" />
+      </Intrinsic>
+
       <DisplayString Condition="formType == dovah::form_type::cell &amp;&amp; addenda">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb} at ({addenda-&gt;grid_coords.x,d}, {addenda-&gt;grid_coords.y,d})</DisplayString>
       <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb}</DisplayString>
       <Expand>
@@ -54,6 +68,55 @@
                </Synthetic>
             </Expand>
          </Synthetic>
+         <CustomListItems Condition="_form_type_is_ref(formType)">
+            <!--
+               std::map works as follows:
+               
+                - It's a binary tree, so every node has a left child and a right child.
+               
+                - The "head" node isn't actually part of the tree, but rather is a sentinel.
+                
+                   - The parent of the "head" node is the root node.
+                   
+                   - The left and right "children" of the "head" node are the smallest and largest 
+                     values in the tree.
+                
+                - If a node has no left child, its "left" pointer will point to the head node; thus 
+                  also to the right child and pointer.
+            -->
+            <Variable Name="head" InitialValue="outbound._Mypair._Myval2._Myval2._Myhead" />
+            <Variable Name="node" InitialValue="head->_Parent" />
+
+            <Variable Name="base_form"   InitialValue="(dovah::form_stub*)nullptr" />
+            <Variable Name="parent_cell" InitialValue="(dovah::form_stub*)nullptr" />
+
+            <Loop>
+               <Break Condition="node == nullptr" />
+               <Loop>
+                  <Break Condition="node-&gt;_Left == nullptr || node-&gt;_Left == head" />
+                  <Exec>node = node-&gt;_Left</Exec>
+               </Loop>
+               <If Condition="node-&gt;_Isnil == 0">
+                  <If Condition="node-&gt;_Myval.second.flags &amp; dovah::use_info_entry::flag::object_reference">
+                     <Exec>base_form = node-&gt;_Myval.second.other</Exec>
+                  </If>
+                  <If Condition="node-&gt;_Myval.second.flags &amp; dovah::use_info_entry::flag::parent_child">
+                     <Exec>parent_cell = node-&gt;_Myval.second.other,na</Exec>
+                  </If>
+               </If>
+               <Break Condition="base_form &amp;&amp; parent_cell" />
+               <Break Condition="node-&gt;_Parent == nullptr" />
+               <Exec>node = node-&gt;_Parent</Exec>
+               <Loop>
+                  <Break Condition="node-&gt;_Right != nullptr &amp;&amp; node-&gt;_Right != head" />
+                  <Exec>node = node-&gt;_Parent</Exec>
+               </Loop>
+               <Break Condition="node-&gt;_Right == nullptr || node-&gt;_Right == head" />
+               <Exec>node = node-&gt;_Right</Exec>
+            </Loop>
+            <Item Name="[ref base form]"   Condition="base_form">base_form,na</Item>
+            <Item Name="[ref parent cell]" Condition="parent_cell">parent_cell,na</Item>
+         </CustomListItems>
       </Expand>
    </Type>
 </AutoVisualizer>

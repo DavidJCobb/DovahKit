@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <string>
 #include "./_base.h"
 
 namespace dovah {
@@ -7,9 +7,9 @@ namespace dovah {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   class debug_dump_landscape_details : public _base {
+   class debug_dump_raycast : public _base {
       public:
-         static constexpr const char* function_name = "debug_dump_landscape_details";
+         static constexpr const char* function_name = "debug_dump_raycast";
 
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = true,
@@ -17,10 +17,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          static constexpr const bool is_raycast_sensitive = true;
 
       public:
-         struct results {
-            glm::vec3         hit_position = { 0, 0, 0 };
-            dovah::form_stub* target       = nullptr;
-         };
+         // no options or results
 
       public:
          static void invoke(const tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
