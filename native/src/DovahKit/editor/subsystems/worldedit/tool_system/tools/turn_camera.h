@@ -7,27 +7,35 @@
 namespace dovahkit::subsystems::worldedit::tools {
    class turn_camera : public _base {
       public:
-         static constexpr const char* function_name = "turn_camera";
+         static constexpr const char*          function_name = "turn_camera";
+         static constexpr const cobb::eight_cc function_code = "TrnCamra";
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = false,
          };
 
       public:
          struct options {
-            struct {
-               float yaw   = 0;
-               float pitch = 0;
-            } magnitudes;
-            struct {
+            protected:
+               static constexpr const options_serialization_version serialization_version = 0;
+
+            public:
                struct {
-                  camera_turn_axis axis = camera_turn_axis::yaw;
-                  sign sign = sign::positive;
-               } x;
+                  float yaw   = 0;
+                  float pitch = 0;
+               } magnitudes;
                struct {
-                  camera_turn_axis axis = camera_turn_axis::pitch;
-                  sign sign = sign::positive;
-               } y;
-            } range;
+                  struct {
+                     camera_turn_axis axis = camera_turn_axis::yaw;
+                     sign sign = sign::positive;
+                  } x;
+                  struct {
+                     camera_turn_axis axis = camera_turn_axis::pitch;
+                     sign sign = sign::positive;
+                  } y;
+               } range;
+
+               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
+               constexpr void write(cobb::streams::bitwriter&) const;
          };
          struct results {
             float yaw   = 0.0; // per tick

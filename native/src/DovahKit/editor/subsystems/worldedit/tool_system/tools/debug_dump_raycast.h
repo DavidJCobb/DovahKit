@@ -9,7 +9,8 @@ namespace dovah {
 namespace dovahkit::subsystems::worldedit::tools {
    class debug_dump_raycast : public _base {
       public:
-         static constexpr const char* function_name = "debug_dump_raycast";
+         static constexpr const char*          function_name = "debug_dump_raycast";
+         static constexpr const cobb::eight_cc function_code = "DbgRayca";
 
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = true,

@@ -5,15 +5,23 @@
 namespace dovahkit::subsystems::worldedit::tools {
    class modify_camera_speed_flags : public _base {
       public:
-         static constexpr const char* function_name = "modify_camera_speed_flags";
+         static constexpr const char*          function_name = "modify_camera_speed_flags";
+         static constexpr const cobb::eight_cc function_code = "CamSpeed";
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = false,
          };
 
       public:
          struct options {
-            bool_operation boost     = bool_operation::no_op;
-            bool_operation precision = bool_operation::no_op;
+            protected:
+               static constexpr const options_serialization_version serialization_version = 0;
+
+            public:
+               bool_operation boost     = bool_operation::no_op;
+               bool_operation precision = bool_operation::no_op;
+
+               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
+               constexpr void write(cobb::streams::bitwriter&) const;
          };
          struct results {
             bool_operation boost     = bool_operation::no_op;
@@ -26,3 +34,5 @@ namespace dovahkit::subsystems::worldedit::tools {
          static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
    };
 }
+
+#include "./modify_camera_speed_flags.inl"

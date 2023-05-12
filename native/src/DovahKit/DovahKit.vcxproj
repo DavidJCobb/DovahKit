@@ -511,6 +511,7 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\streams\bitstream_tests.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -1052,6 +1053,9 @@
     <ClInclude Include="helpers\small_vector.h" />
     <ClInclude Include="helpers\small_vector.h.bak" />
     <ClInclude Include="helpers\sorted_list.h" />
+    <ClInclude Include="helpers\streams\bitreader.h" />
+    <ClInclude Include="helpers\streams\bitstream_position.h" />
+    <ClInclude Include="helpers\streams\bitwriter.h" />
     <ClInclude Include="helpers\string\strcmp.h" />
     <ClInclude Include="helpers\string\strieq_ascii.h" />
     <ClInclude Include="helpers\string\string_says_false.h" />
@@ -1994,8 +1998,12 @@
   <ItemGroup>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\options_union.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
@@ -2005,6 +2013,9 @@
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
+    <None Include="helpers\streams\bitreader.inl" />
+    <None Include="helpers\streams\bitstream_position.inl" />
+    <None Include="helpers\streams\bitwriter.inl" />
     <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />

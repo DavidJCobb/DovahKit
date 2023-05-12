@@ -7,33 +7,40 @@
 namespace dovahkit::subsystems::worldedit::tools {
    class move_camera : public _base {
       public:
-         static constexpr const char* function_name = "move_camera";
+         static constexpr const char*          function_name = "move_camera";
+         static constexpr const cobb::eight_cc function_code = "MovCamra";
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = false,
          };
 
       public:
          struct options {
-            bool also_translate_selection = false;
-            struct {
-               reference_frame baseline  = reference_frame::camera;
-               reference_frame selection = reference_frame::camera;
-            } reference_frames;
-            struct {
-               float x = 0;
-               float y = 0;
-               float z = 0;
-            } magnitudes;
-            struct {
+            protected:
+               static constexpr const options_serialization_version serialization_version = 0;
+
+            public:
                struct {
-                  axis3D axis = axis3D::x;
-                  sign   sign = sign::positive;
-               } x;
+                  reference_frame baseline  = reference_frame::camera;
+                  reference_frame selection = reference_frame::camera;
+               } reference_frames;
                struct {
-                  axis3D axis = axis3D::y;
-                  sign   sign = sign::negative;
-               } y;
-            } range;
+                  float x = 0;
+                  float y = 0;
+                  float z = 0;
+               } magnitudes;
+               struct {
+                  struct {
+                     axis3D axis = axis3D::x;
+                     sign   sign = sign::positive;
+                  } x;
+                  struct {
+                     axis3D axis = axis3D::y;
+                     sign   sign = sign::negative;
+                  } y;
+               } range;
+
+               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
+               constexpr void write(cobb::streams::bitwriter&) const;
          };
          struct results {
             float x = 0;

@@ -9,7 +9,8 @@ namespace dovah {
 namespace dovahkit::subsystems::worldedit::tools {
    class debug_dump_landscape_details : public _base {
       public:
-         static constexpr const char* function_name = "debug_dump_landscape_details";
+         static constexpr const char*          function_name = "debug_dump_landscape_details";
+         static constexpr const cobb::eight_cc function_code = "DbgLands";
 
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = true,

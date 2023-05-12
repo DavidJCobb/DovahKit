@@ -35,6 +35,10 @@ namespace dovahkit::subsystems::worldedit::tools {
       requires requires(const opaque_options_union& b, tool_results_tuple& c) {
          { Tool::invoke_for_hold_release(b, c) } -> std::same_as<void>;
       };
+
+      // Tool must have a valid ID to use for serialization.
+      { Tool::function_code } -> std::same_as<const cobb::eight_cc&>;
+      requires (Tool::function_code != cobb::eight_cc(0));
    };
 
    static_assert(
@@ -44,6 +48,22 @@ namespace dovahkit::subsystems::worldedit::tools {
          }>();
       }(),
       "All tools must meet the requirements indicated here."
+   );
+
+   // Enforce: no two tools can have the same serialization code.
+   static_assert(
+      []() constexpr -> bool {
+         constexpr bool any_two_same = all_tools::for_each_until_true<[]<typename A>() -> bool {
+            return all_tools::for_each_until_true<[]<typename B>() -> bool {
+               if constexpr (std::is_same_v<A, B>) {
+                  return false;
+               }
+               return A::function_code == B::function_code;
+            }>();
+         }>();
+         return !any_two_same;
+      }(),
+      "No two tools can have the same serialization code."
    );
 
    // Enforce: no two tools can have the same results type.

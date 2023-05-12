@@ -2040,6 +2040,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\streams\bitstream_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4916,6 +4919,15 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\streams\bitreader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\streams\bitstream_position.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\streams\bitwriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5603,6 +5615,27 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\streams\bitstream_position.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\streams\bitreader.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\streams\bitwriter.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

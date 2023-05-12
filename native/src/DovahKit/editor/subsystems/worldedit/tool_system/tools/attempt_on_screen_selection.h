@@ -10,7 +10,8 @@ namespace dovah {
 namespace dovahkit::subsystems::worldedit::tools {
    class attempt_on_screen_selection : public _base {
       public:
-         static constexpr const char* function_name = "attempt_on_screen_selection";
+         static constexpr const char*          function_name = "attempt_on_screen_selection";
+         static constexpr const cobb::eight_cc function_code = "SelectAt";
 
          static constexpr const compile_time_tool_options compile_time_options = {
             .use_strict_ordering = true,
@@ -19,7 +20,14 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       public:
          struct options {
-            selection_operation operation = selection_operation::add;
+            protected:
+               static constexpr const options_serialization_version serialization_version = 0;
+
+            public:
+               selection_operation operation = selection_operation::add;
+
+               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
+               constexpr void write(cobb::streams::bitwriter&) const;
          };
          struct results {
             selection_operation operation;
@@ -34,3 +42,5 @@ namespace dovahkit::subsystems::worldedit::tools {
          static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
    };
 }
+
+#include "./attempt_on_screen_selection.inl"
