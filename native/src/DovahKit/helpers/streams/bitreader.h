@@ -6,6 +6,7 @@
 #include <vector>
 #include "../type_traits/strip_enum.h"
 #include "../eight_cc.h"
+#include "./bitcount_of_enum.h"
 #include "./bitstream_position.h"
 
 namespace cobb::streams {
@@ -31,9 +32,9 @@ namespace cobb::streams {
          template<typename T> static constexpr size_t _bitcount_of_type = std::bit_width(std::numeric_limits<std::make_unsigned_t<cobb::strip_enum_t<T>>>::max());
 
       protected:
-         buffer_type   _buffer = nullptr; // unowned
-         size_type     _size   = 0; // in bytes
-         position_type _position;
+         buffer_type   _buffer   = nullptr; // unowned
+         size_type     _size     = 0; // in bytes
+         position_type _position = {};
 
       protected:
          constexpr void _advance_offset_by_bits(size_t bits);
@@ -85,7 +86,9 @@ namespace cobb::streams {
 
          template<typename T> requires (!std::is_const_v<T> && std::is_enum_v<T>)
          constexpr void read(T& v) {
-            v = (T)this->read_bits<cobb::strip_enum_t<T>>(_bitcount_of_type<cobb::strip_enum_t<T>>);
+            constexpr const size_t bc = bitcount_of_enum<T>;
+
+            v = (T)this->read_bits<cobb::strip_enum_t<T>>(bc);
          }
 
          constexpr void read(bool& v) {

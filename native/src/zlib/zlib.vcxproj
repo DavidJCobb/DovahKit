@@ -149,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ChangeLog" />
+    <None Include="cpp.hint" />
     <None Include="FAQ" />
     <None Include="zlib.3.pdf" />
     <None Include="zlib.map" />

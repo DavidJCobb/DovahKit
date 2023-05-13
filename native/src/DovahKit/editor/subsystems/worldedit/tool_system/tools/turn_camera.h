@@ -1,4 +1,5 @@
 #pragma once
+#include "helpers/macros/default_comparable_anonymous_struct.h"
 #include "./_base.h"
 #include "../../enums/camera_turn_axis.h"
 #include "../../enums/reference_frame.h"
@@ -15,20 +16,26 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       public:
          struct options {
-            protected:
+            public:
                static constexpr const options_serialization_version serialization_version = 0;
 
+               constexpr bool operator==(const options& v) const noexcept = default;
+
             public:
-               struct {
+               struct __anonymous_struct {
+                  __anonymous_default_equality;
                   float yaw   = 0;
                   float pitch = 0;
                } magnitudes;
-               struct {
-                  struct {
+               struct __anonymous_struct{
+                  __anonymous_default_equality;
+                  struct __anonymous_struct {
+                     __anonymous_default_equality;
                      camera_turn_axis axis = camera_turn_axis::yaw;
                      sign sign = sign::positive;
                   } x;
-                  struct {
+                  struct __anonymous_struct {
+                     __anonymous_default_equality;
                      camera_turn_axis axis = camera_turn_axis::pitch;
                      sign sign = sign::positive;
                   } y;
@@ -53,3 +60,4 @@ namespace dovahkit::subsystems::worldedit::tools {
 }
 
 #include "./turn_camera.inl"
+#include "helpers/macros/default_comparable_anonymous_struct.undef.h"

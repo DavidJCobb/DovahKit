@@ -4,7 +4,7 @@
 namespace cobb::streams {
    struct bitstream_position {
       size_t  bytes = 0;
-      uint8_t bits = 0;
+      uint8_t bits  = 0;
 
       constexpr size_t bytespan() const noexcept { return this->bytes + (this->bits ? 1 : 0); }
       constexpr size_t in_bits()  const noexcept { return (this->bytes * 8) + this->bits; }

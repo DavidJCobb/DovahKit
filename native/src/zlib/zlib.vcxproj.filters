@@ -67,6 +67,7 @@
     <None Include="zlib.3.pdf" />
     <None Include="zlib.map" />
     <None Include="zlib2ansi" />
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crc32.h">

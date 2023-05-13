@@ -106,6 +106,7 @@
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
+    <None Include="cpp.hint" />
     <None Include="README.md" />
     <QtMoc Include="widgets\DKCollapsiblePane.h" />
     <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />

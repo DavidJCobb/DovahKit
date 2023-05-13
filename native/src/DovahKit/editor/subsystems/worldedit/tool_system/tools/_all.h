@@ -4,6 +4,7 @@
 #include "helpers/tuples/contains_type_matching_functor.h"
 #include "editor/subsystems/worldinput2/tool_invocation_cause.h"
 
+#include "../concepts/tool_with_options.h"
 #include "../concepts/tool_with_results.h"
 #include "../all_tools.h"
 
@@ -15,6 +16,7 @@
 #include "./move_camera.h"
 #include "./set_edit_gizmo_mode.h"
 #include "./turn_camera.h"
+#include "helpers/macros/default_comparable_anonymous_struct.h"
 
 namespace dovahkit::subsystems::worldedit {
    class opaque_options_union;
@@ -66,10 +68,11 @@ namespace dovahkit::subsystems::worldedit::tools {
       "No two tools can have the same serialization code."
    );
 
+
    // Enforce: no two tools can have the same results type.
    static_assert(
       []() constexpr -> bool {
-         constexpr bool any_two_same = all_tools::for_each_until_true<[]<typename A>() -> bool {
+         bool any_two_same = all_tools::template for_each_until_true<[]<typename A>() -> bool {
             if constexpr (tool_with_results<A>) {
                return all_tools::for_each_until_true<[]<typename B>() -> bool {
                   if constexpr (std::is_same_v<A, B>) {
@@ -101,7 +104,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    //
    static_assert(
       []() constexpr -> bool {
-         constexpr bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
+         bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
             if constexpr (A::is_raycast_sensitive) {
                if constexpr (tool_with_results<A>) {
                   using results = typename A::results;

@@ -13,8 +13,10 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       public:
          struct options {
-            protected:
+            public:
                static constexpr const options_serialization_version serialization_version = 0;
+
+               constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
                bool_operation boost     = bool_operation::no_op;

@@ -1,0 +1,9 @@
+
+#define MACRO_CONCAT_IMPL(x, y) x##y
+#define MACRO_CONCAT(x, y) MACRO_CONCAT_IMPL(x, y)
+
+#define __anonymous_struct_impl(n) struct MACRO_CONCAT(__cobb_anon_, n); template<int I> struct __cobb_anon_counter {}; template<> struct __cobb_anon_counter< n + 1 > { using type = MACRO_CONCAT(__cobb_anon_, n); }; struct MACRO_CONCAT(__cobb_anon_, n)
+#define __anonymous_struct __anonymous_struct_impl(__COUNTER__)
+
+#define __anonymous_default_equality_impl(n) constexpr bool operator==(const __cobb_anon_counter< n >::type& other) const = default;
+#define __anonymous_default_equality __anonymous_default_equality_impl(__COUNTER__)

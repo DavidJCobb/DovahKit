@@ -6,6 +6,7 @@
 #include <vector>
 #include "../type_traits/strip_enum.h"
 #include "../eight_cc.h"
+#include "./bitcount_of_enum.h"
 #include "./bitstream_position.h"
 
 namespace cobb::streams {
@@ -27,21 +28,18 @@ namespace cobb::streams {
          using length_prefix_serialized_type = std::uint32_t;
          
       protected:
-         template<typename T> static constexpr size_t _bitcount_of_type = std::bit_width(std::numeric_limits<std::make_unsigned_t<cobb::strip_enum_t<T>>>::max());
+         template<typename T> static constexpr const size_t _bitcount_of_type = std::bit_width(std::numeric_limits<std::make_unsigned_t<cobb::strip_enum_t<T>>>::max());
 
       protected:
-         buffer_type   _buffer = nullptr; // owned
-         size_type     _size   = 0; // in bytes
-         position_type _position;
+         buffer_type   _buffer   = nullptr; // owned
+         size_type     _size     = 0; // in bytes
+         position_type _position = {};
 
       protected:
          constexpr void _buffer_free();
 
          constexpr uint8_t& _access_byte(size_t bytepos) const noexcept;
          constexpr void _ensure_room_for(unsigned int bitcount);
-
-         template<typename T> requires std::is_integral_v<T>
-         constexpr void _write(T value, int bits, int& recurse_remaining);
 
       public:
          constexpr bitwriter() {}
@@ -84,7 +82,9 @@ namespace cobb::streams {
 
          template<typename T> requires (!std::is_const_v<T>&& std::is_enum_v<T>)
          constexpr void write(const T v) {
-            this->write_bits<cobb::strip_enum_t<T>>(_bitcount_of_type<cobb::strip_enum_t<T>>, (cobb::strip_enum_t<T>)v);
+            constexpr const size_t bc = bitcount_of_enum<T>;
+            
+            this->write_bits<cobb::strip_enum_t<T>>(bc, (cobb::strip_enum_t<T>)v);
          }
 
          constexpr void write(const bool v) {

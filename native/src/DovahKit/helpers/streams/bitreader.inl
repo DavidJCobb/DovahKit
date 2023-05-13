@@ -93,8 +93,12 @@ namespace cobb::streams {
             return;
          }
       }
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& c : v)
          this->read(c);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->read(v[i]);
    }
    constexpr void bitreader::read(std::wstring& v) {
       using char_type = std::decay_t<decltype(v)>::value_type;
@@ -110,8 +114,12 @@ namespace cobb::streams {
             return;
          }
       }
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& c : v)
          this->read(c);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->read(v[i]);
    }
 
    template<typename T>
@@ -119,8 +127,12 @@ namespace cobb::streams {
       length_prefix_serialized_type size = this->read_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8);
       v.resize(size);
 
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& item : v)
          this->read(item);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->read(v[i]);
    }
 
    template<typename T> requires (std::is_integral_v<T> && !std::is_same_v<T, bool> && !std::is_enum_v<T>)

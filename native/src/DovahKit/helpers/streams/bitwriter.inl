@@ -2,6 +2,7 @@
 #include "./bitwriter.h"
 
 #include <stdexcept>
+#include <type_traits>
 #include "../bitwise.h"
 
 namespace cobb::streams {
@@ -23,47 +24,15 @@ namespace cobb::streams {
    }
 
    constexpr uint8_t& bitwriter::_access_byte(size_t bytepos) const noexcept {
-      return *(this->_buffer + bytepos);
+      return this->_buffer[bytepos];
    }
    constexpr void bitwriter::_ensure_room_for(unsigned int bitcount) {
       size_t bitsize = (size_t)this->_size * 8;
       size_t target  = (size_t)this->get_bitpos() + bitcount;
-      if (target >= bitsize) {
+      if (target > bitsize) {
          target += 8 - (target % 8);
          this->resize(target / 8);
       }
-   }
-
-   template<typename T> requires std::is_integral_v<T>
-   constexpr void bitwriter::_write(T value, int bits, int& remaining) {
-      this->_ensure_room_for(bits);
-      uint8_t& target = this->_access_byte(this->get_bytepos());
-      int shift = this->get_bitshift();
-      //
-      value &= cobb::bitmax(bits); // needed for when signed values are sign-extended into an int64_t on the way here
-      if (!shift) {
-         if (bits < 8) {
-            target = value << (8 - bits);
-            this->_position.advance_by_bytes(1);
-            return;
-         }
-         target = (value >> (bits - 8));
-         this->_position.advance_by_bytes(1);
-         remaining -= 8;
-      } else {
-         int extra = 8 - shift;
-         if (bits <= extra) {
-            target |= (value << (extra - bits));
-            this->_position.advance_by_bits(bits);
-            return;
-         }
-         target &= ~(uint8_t(0xFF) >> shift); // clear the bits we're about to write
-         target |= ((value >> (bits - extra)) & 0xFF);
-         this->_position.advance_by_bits(extra);
-         remaining -= extra;
-      }
-      if (remaining > 0)
-         this->_write(value, remaining, remaining);
    }
 
    constexpr void bitwriter::reserve(size_t size) {
@@ -80,13 +49,16 @@ namespace cobb::streams {
          if (std::is_constant_evaluated()) {
             auto* after = new std::uint8_t[size]{};
             if (this->_buffer) {
-               for (size_t i = 0; i < this->_size; ++i)
+               size_t end = this->_size;
+               if (size < end)
+                  end = size;
+               for (size_t i = 0; i < end; ++i)
                   after[i] = this->_buffer[i];
                delete[] this->_buffer;
             }
             this->_buffer = after;
          } else {
-            auto prior = this->_buffer;
+            auto* prior = this->_buffer;
             this->_buffer = (uint8_t*)realloc(this->_buffer, size);
             if (this->_buffer == nullptr) {
                this->_buffer = prior;
@@ -105,7 +77,7 @@ namespace cobb::streams {
       using char_type = std::decay_t<decltype(v)>::value_type;
 
       const auto size = v.size();
-      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, (length_prefix_serialized_type)size);
+      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, size);
 
       if (!std::is_constant_evaluated()) {
          if (this->is_byte_aligned() && size + this->get_bytepos() <= this->size()) {
@@ -115,14 +87,18 @@ namespace cobb::streams {
             return;
          }
       }
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& c : v)
          this->write(c);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->write(v[i]);
    }
    constexpr void bitwriter::write(const std::wstring& v) {
       using char_type = std::decay_t<decltype(v)>::value_type;
 
       const auto size = v.size();
-      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, (length_prefix_serialized_type)size);
+      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, size);
 
       if (!std::is_constant_evaluated()) {
          if (this->is_byte_aligned() && size + this->get_bytepos() <= this->size()) {
@@ -132,16 +108,24 @@ namespace cobb::streams {
             return;
          }
       }
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& c : v)
          this->write(c);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->write(v[i]);
    }
 
    template<typename T>
    constexpr void bitwriter::write(const std::vector<T>& v) {
-      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, (length_prefix_serialized_type)v.size());
+      this->write_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8, v.size());
       //
+      /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& item : v)
          this->write(item);
+      //*/
+      for (size_t i = 0; i < v.size(); ++i)
+         this->write(v[i]);
    }
 
    template<typename T> requires (std::is_integral_v<T> && !std::is_same_v<T, bool> && !std::is_enum_v<T>)

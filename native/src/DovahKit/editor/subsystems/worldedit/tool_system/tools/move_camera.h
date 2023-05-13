@@ -1,5 +1,7 @@
 #pragma once
 #include "./_base.h"
+#include "helpers/macros/default_comparable_anonymous_struct.h"
+#include "helpers/vector3.h"
 #include "../../enums/axis3D.h"
 #include "../../enums/reference_frame.h"
 #include "../../enums/sign.h"
@@ -15,28 +17,35 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       public:
          struct options {
-            protected:
+            public:
                static constexpr const options_serialization_version serialization_version = 0;
 
+               constexpr bool operator==(const options& v) const noexcept = default;
+
             public:
-               struct {
+               struct range_mapping {
+                  constexpr bool operator==(const range_mapping& v) const noexcept = default;
+
+                  axis3D axis;
+                  sign   sign;
+               };
+
+            public:
+               struct __anonymous_struct {
+                  __anonymous_default_equality;
                   reference_frame baseline  = reference_frame::camera;
                   reference_frame selection = reference_frame::camera;
                } reference_frames;
-               struct {
+               struct __anonymous_struct {
+                  __anonymous_default_equality;
                   float x = 0;
                   float y = 0;
                   float z = 0;
                } magnitudes;
-               struct {
-                  struct {
-                     axis3D axis = axis3D::x;
-                     sign   sign = sign::positive;
-                  } x;
-                  struct {
-                     axis3D axis = axis3D::y;
-                     sign   sign = sign::negative;
-                  } y;
+               struct __anonymous_struct {
+                  __anonymous_default_equality;
+                  range_mapping x = range_mapping{ axis3D::x, sign::positive };
+                  range_mapping y = range_mapping{ axis3D::y, sign::negative };
                } range;
 
                constexpr void read(options_serialization_version, cobb::streams::bitreader&);
@@ -58,3 +67,4 @@ namespace dovahkit::subsystems::worldedit::tools {
 }
 
 #include "./move_camera.inl"
+#include "helpers/macros/default_comparable_anonymous_struct.undef.h"

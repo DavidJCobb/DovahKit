@@ -67,10 +67,10 @@
     <QtMoc Include="widgets\DKGameFilePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKTextureAssetPane.h">
+    <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
+    <QtMoc Include="widgets\DKTextureAssetPane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -108,15 +108,16 @@
     <ClCompile Include="widgets\DKGameFilePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKTextureAssetPane.cpp">
+    <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp">
+    <ClCompile Include="widgets\DKTextureAssetPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />

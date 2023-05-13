@@ -121,6 +121,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
@@ -815,6 +816,7 @@
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_options.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h" />
@@ -1004,6 +1006,8 @@
     <ClInclude Include="helpers\keyboard\key.h" />
     <ClInclude Include="helpers\keyboard\qt_to_vk.h" />
     <ClInclude Include="helpers\keyboard\virtual_key.h" />
+    <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.h" />
+    <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.undef.h" />
     <ClInclude Include="helpers\math\abs.h" />
     <ClInclude Include="helpers\math\arcsine.h" />
     <ClInclude Include="helpers\math\atan2.h" />
@@ -1053,6 +1057,7 @@
     <ClInclude Include="helpers\small_vector.h" />
     <ClInclude Include="helpers\small_vector.h.bak" />
     <ClInclude Include="helpers\sorted_list.h" />
+    <ClInclude Include="helpers\streams\bitcount_of_enum.h" />
     <ClInclude Include="helpers\streams\bitreader.h" />
     <ClInclude Include="helpers\streams\bitstream_position.h" />
     <ClInclude Include="helpers\streams\bitwriter.h" />
@@ -1996,6 +2001,7 @@
     <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
@@ -2011,6 +2017,7 @@
     <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
+    <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
     <None Include="helpers\streams\bitreader.inl" />
