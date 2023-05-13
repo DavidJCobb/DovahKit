@@ -27,7 +27,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                   float yaw   = 0;
                   float pitch = 0;
                } magnitudes;
-               struct __anonymous_struct{
+               struct __anonymous_struct {
                   __anonymous_default_equality;
                   struct __anonymous_struct {
                      __anonymous_default_equality;

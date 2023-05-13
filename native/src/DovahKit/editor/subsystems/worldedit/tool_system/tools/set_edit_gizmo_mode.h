@@ -26,7 +26,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                   reference_frame a = reference_frame::current; // current == no change
                   reference_frame b = reference_frame::current;
                } frame;
-               struct __anonymous_struct{
+               struct __anonymous_struct {
                   __anonymous_default_equality;
                   gizmo_mode a = gizmo_mode::none;
                   gizmo_mode b = gizmo_mode::none;

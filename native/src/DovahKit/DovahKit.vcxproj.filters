@@ -2046,6 +2046,12 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\input_sequence_flat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\optimize_input_sequence.inl">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4943,6 +4949,18 @@
     <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.undef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\input_sequence_flat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\flat_tree_interface\node_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\flat_tree_interface\tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\optimize_input_sequence.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5655,6 +5673,9 @@
     </None>
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
     <None Include="cpp.hint" />
+    <None Include="editor\subsystems\worldinput2\input_sequence_flat.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
