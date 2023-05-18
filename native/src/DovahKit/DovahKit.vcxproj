@@ -126,7 +126,6 @@
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.cpp" />
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\optimize_input_sequence.inl" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_list.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\node.cpp" />
@@ -142,7 +141,6 @@
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp" />
-    <ClCompile Include="editor\subsystems\worldinput2\input_sequence_flat.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp" />
@@ -514,7 +512,9 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\streams\bitreader.cpp" />
     <ClCompile Include="helpers\streams\bitstream_tests.cpp" />
+    <ClCompile Include="helpers\streams\bitwriter.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -845,10 +845,10 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_results.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_options.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_serialization_ids.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_results.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h" />
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\optimize_input_sequence.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\input_sequence_stringification.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.h" />
@@ -885,7 +885,6 @@
     <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h" />
     <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h" />
     <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h" />
-    <ClInclude Include="editor\subsystems\worldinput2\input_sequence_flat.h" />
     <ClInclude Include="editor\subsystems\worldinput2\interruption_check.h" />
     <ClInclude Include="editor\subsystems\worldinput2\raycast_requirement.h" />
     <ClInclude Include="editor\subsystems\worldinput2\raycast_result.h" />
@@ -2020,7 +2019,6 @@
     <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
-    <None Include="editor\subsystems\worldinput2\input_sequence_flat.inl" />
     <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />

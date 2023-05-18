@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <utility> // std::pair
 #include <vector>
 #include "helpers/owned_ptr.h"
@@ -10,6 +11,10 @@
 #include "./interruption_check.h"
 #include "./raycast_requirement.h"
 
+namespace cobb::streams {
+   class bitreader;
+   class bitwriter;
+}
 namespace dovahkit::subsystems::worldinput2::devices {
    class abstract_device_handler;
 }
@@ -18,6 +23,8 @@ namespace dovahkit::subsystems::worldinput2 {
    class input_sequence {
       public:
          class group;
+
+         static constexpr const uint32_t serialization_version = 0;
 
       public:
          enum class frame_status {
@@ -69,6 +76,9 @@ namespace dovahkit::subsystems::worldinput2 {
             constexpr bool operator==(const range_requirement& other) const;
 
             bool is_satisfied(const devices::abstract_device_handler&) const;
+
+            constexpr void read(uint32_t version, cobb::streams::bitreader&);
+            constexpr void write(cobb::streams::bitwriter&) const;
          };
 
          struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it
@@ -132,6 +142,9 @@ namespace dovahkit::subsystems::worldinput2 {
                bool operator==(const group&) const;
 
                void normalize(bool recursively = false);
+
+               constexpr void read(uint32_t version, cobb::streams::bitreader&);
+               constexpr void write(cobb::streams::bitwriter&) const;
 
             protected:
                void _clear_all_progress();
@@ -199,6 +212,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
          // May set `root` to `nullptr` if it's an empty non-single-button ISG.
          void normalize();
+
+         constexpr void read(cobb::streams::bitreader&);
+         constexpr void write(cobb::streams::bitwriter&) const;
    };
 }
 

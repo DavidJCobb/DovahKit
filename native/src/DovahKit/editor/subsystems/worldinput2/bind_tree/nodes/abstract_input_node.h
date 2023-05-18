@@ -1,6 +1,5 @@
 #pragma once
 #include "../node.h"
-#include "../../enums/button_press_type.h"
 #include "../../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
@@ -10,8 +9,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
       public:
          QString name;
-         typename button_press_type button_press_type = button_press_type::press;
-         typename input_sequence    input_sequence;
+         typename input_sequence input_sequence;
 
          class input_sequence absolute_input_sequence() const;
    };

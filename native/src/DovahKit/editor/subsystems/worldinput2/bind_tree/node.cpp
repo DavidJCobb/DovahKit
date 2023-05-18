@@ -1,6 +1,13 @@
 #include "./node.h"
 #include "./nodes/abstract_input_node.h"
 
+#include "helpers/streams/bitreader.h"
+#include "helpers/streams/bitwriter.h"
+#include "./nodes/root.h"
+#include "./nodes/bound_tool.h"
+#include "./nodes/editor_mode.h"
+#include "./nodes/modifier.h"
+
 namespace dovahkit::subsystems::worldinput2::binds {
    node::node(node_type t) : type(t) {}
    node::~node() {
@@ -38,15 +45,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
       this->children.removeOne(&o);
    }
 
-   void node::clear_descendants_input_sequence_progress() {
-      for (auto* item : this->children) {
-         if (auto* casted = item->as<nodes::abstract_input_node>()) {
-            casted->input_sequence.clear_all_progress();
-         }
-         item->clear_descendants_input_sequence_progress();
-      }
-   }
-
    node* node::clone() const {
       auto* copy = this->_clone_impl();
       auto& list = this->children;
@@ -58,5 +56,46 @@ namespace dovahkit::subsystems::worldinput2::binds {
          copy->children[i] = c;
       }
       return copy;
+   }
+
+   /*static*/ node* node::read(cobb::streams::bitreader& stream) {
+      node_type type;
+      stream.read(type);
+
+      node* out = nullptr;
+      switch (type) {
+         using enum node_type;
+         case root:
+            out = new nodes::root;
+            break;
+         case bound_tool:
+            out = new nodes::bound_tool;
+            break;
+         case editor_mode:
+            out = new nodes::editor_mode;
+            break;
+         case modifier:
+            out = new nodes::modifier;
+            break;
+      }
+      out->_read_impl(stream);
+
+      if (out->is_valid_parent()) {
+         size_t size;
+         stream.read(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto* child = read(stream);
+            out->children.append(child);
+         }
+      }
+      return out;
+   }
+   void node::write(cobb::streams::bitwriter& stream) const {
+      stream.write(this->type);
+      this->_write_impl(stream);
+      if (this->is_valid_parent()) {
+         for (const auto* child : this->children)
+            child->write(stream);
+      }
    }
 }

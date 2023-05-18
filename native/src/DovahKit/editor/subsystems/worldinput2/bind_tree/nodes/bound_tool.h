@@ -1,5 +1,6 @@
 #pragma once
 #include "./abstract_input_node.h"
+#include "../../enums/button_press_type.h"
 #include "editor/subsystems/worldedit/tool_system/tool_id.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
@@ -16,7 +17,8 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       public:
          bound_tool() : abstract_input_node(my_type) {}
          ~bound_tool();
-         
+
+         typename button_press_type button_press_type = button_press_type::press;
          struct {
             worldedit::tools::tool_id               id      = worldedit::tools::id_of_none;
             worldedit::tools::opaque_options_union* options = nullptr;
@@ -26,5 +28,7 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
       protected:
          virtual node* _clone_impl() const override final;
+         virtual node* _read_impl(cobb::streams::bitreader&) override;
+         virtual node* _write_impl(cobb::streams::bitwriter&) const override;
    };
 }

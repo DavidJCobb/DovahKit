@@ -6,7 +6,7 @@
 
 namespace cobb::streams {
    template<const auto V>
-   constexpr const size_t bitcount_of_enum_member = std::bit_width((std::make_unsigned_t<cobb::strip_enum_t<decltype(V)>>)V);
+   constexpr const size_t bitcount_of_enum_member = std::bit_width((std::make_unsigned_t<cobb::strip_enum_t<decltype(V)>>)V) + (std::is_signed_v<cobb::strip_enum_t<decltype(V)>> ? 1 : 0);
 
    template<typename T>
    constexpr const size_t bitcount_of_enum = sizeof(T) * 8;

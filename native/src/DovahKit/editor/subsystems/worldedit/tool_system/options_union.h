@@ -9,6 +9,11 @@
 #include "./id_of.h"
 #include "./opaque_options_union.h"
 
+namespace cobb::streams {
+   class bitreader;
+   class bitwriter;
+}
+
 namespace dovahkit::subsystems::worldedit::tools {
    class options_union : public opaque_options_union {
       //
@@ -114,6 +119,9 @@ namespace dovahkit::subsystems::worldedit::tools {
          static options_union construct_for_type(tool_id);
 
          options_union* clone() const;
+
+         void read(cobb::streams::bitreader&);
+         void write(cobb::streams::bitwriter&) const;
    };
 }
 

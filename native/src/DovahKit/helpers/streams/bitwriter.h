@@ -9,6 +9,8 @@
 #include "./bitcount_of_enum.h"
 #include "./bitstream_position.h"
 
+class QString;
+
 namespace cobb::streams {
    class bitwriter;
 
@@ -97,7 +99,7 @@ namespace cobb::streams {
             this->write_bits(32, std::bit_cast<std::uint32_t>(v));
          }
 
-         constexpr void write(cobb::eight_cc& v) {
+         constexpr void write(const cobb::eight_cc& v) {
             for (size_t i = 0; i < 8; ++i)
                this->write(v.bytes[i]);
          }
@@ -107,6 +109,8 @@ namespace cobb::streams {
 
          template<typename T>
          constexpr void write(const std::vector<T>& v);
+
+         void write(const QString&);
          #pragma endregion
 
          template<typename T> requires (std::is_integral_v<T> && !std::is_same_v<T, bool> && !std::is_enum_v<T>)

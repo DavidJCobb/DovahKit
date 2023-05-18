@@ -9,6 +9,8 @@
 #include "./bitcount_of_enum.h"
 #include "./bitstream_position.h"
 
+class QString;
+
 namespace cobb::streams {
    class bitreader;
 
@@ -111,6 +113,8 @@ namespace cobb::streams {
 
          template<typename T>
          constexpr void read(std::vector<T>& v);
+
+         void read(QString&);
          #pragma endregion
 
          constexpr void skip_bits(size_t b) { this->_advance_offset_by_bits(b); }
