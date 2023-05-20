@@ -14,6 +14,11 @@
             *(debug_dump_landscape_details::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
+            Name="debug_dump_raycast"
+         >
+            *(debug_dump_raycast::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
             Name="debug_print"
          >
             *(debug_print::options*)&amp;data[0]
@@ -27,6 +32,11 @@
             Name="move_camera"
          >
             *(move_camera::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
+            Name="set_edit_gizmo_mode"
+         >
+            *(set_edit_gizmo_mode::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
             Name="turn_camera"

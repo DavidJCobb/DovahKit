@@ -106,8 +106,7 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes::build {
    ) {
       auto* node = new worldinput2::binds::nodes::modifier;
       node->name = name.c_str();
-      node->button_press_type = worldinput2::button_press_type::hold;
-      node->input_sequence    = algorithms::input_sequence_from_string(sequence);
+      node->input_sequence = algorithms::input_sequence_from_string(sequence);
       for (auto* child : children) {
          node->append(*child);
       }

@@ -1,6 +1,6 @@
 
-#undef MACRO_CONCAT_IMPL(x, y)
-#undef MACRO_CONCAT(x, y)
+#undef MACRO_CONCAT_IMPL
+#undef MACRO_CONCAT
 
 #undef __anonymous_struct_impl
 #undef __anonymous_struct

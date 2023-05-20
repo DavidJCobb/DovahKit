@@ -274,7 +274,7 @@ namespace dovahkit::subsystems::worldinput2 {
          stream.read(this->button.key.vk);
          stream.read(this->button.key.scan_code);
       } else {
-         size_t size;
+         uint32_t size;
          stream.read(size);
          this->children.resize(size);
          for (size_t i = 0; i < size; ++i) {
@@ -292,7 +292,7 @@ namespace dovahkit::subsystems::worldinput2 {
          stream.write(this->button.key.scan_code);
          assert(this->children.empty());
       } else {
-         size_t size = this->children.size();
+         uint32_t size = this->children.size();
          stream.write(size);
          if (size > 0) {
             for (const auto* g : this->children) {

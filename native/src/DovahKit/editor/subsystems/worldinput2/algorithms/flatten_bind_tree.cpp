@@ -30,12 +30,6 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                   continue;
                }
 
-               #if _DEBUG
-                  if (auto* casted = child->as<binds::nodes::modifier>()) {
-                     assert(casted->button_press_type == button_press_type::hold);
-                  }
-               #endif
-
                if (!child->child_nodes().size())
                   continue;
 

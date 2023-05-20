@@ -277,6 +277,12 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                if (d == '+') {
                   break;
                }
+               if (d == ':') { // "::" is the separator for range constraints
+                  if (i + 1 < str.size() && str[i + 1] == ':') {
+                     --i;
+                     break;
+                  }
+               }
                if (d == ']' || d == ')' || d == '>') {
                   --i;
                   break;
@@ -323,7 +329,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                if (d == '+') {
                   break;
                }
-               if (d == ':') {
+               if (d == ':') { // "::" is the separator for range constraints
                   if (i + 1 < str.size() && str[i + 1] == ':') {
                      --i;
                      break;

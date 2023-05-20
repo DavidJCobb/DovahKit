@@ -171,7 +171,7 @@ namespace dovahkit::subsystems::worldinput2 {
       public:
          constexpr input_sequence() {}
          input_sequence(const input_sequence& o) { *this = o; }
-         constexpr input_sequence(input_sequence&& o) { *this = std::move(o); }
+         constexpr input_sequence(input_sequence&& o) noexcept { *this = std::move(o); }
          constexpr ~input_sequence();
 
          void update(timestamp_t current_time, devices::abstract_device_handler& device, interruption_check&);

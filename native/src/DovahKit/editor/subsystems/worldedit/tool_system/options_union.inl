@@ -21,4 +21,18 @@ namespace dovahkit::subsystems::worldedit::tools {
    template<is_tool_options Options> Options& options_union::as() noexcept {
       return const_cast<Options&>(std::as_const(*this).as<Options>());
    }
+
+   constexpr bool options_union::operator==(const options_union& other) const {
+      if (this->tag != other.tag)
+         return false;
+      for (const auto& entry : _type_table) {
+         if (entry.id == this->tag) {
+            return entry.compare(*this, other);
+         }
+      }
+      if (std::is_constant_evaluated()) {
+         throw; // No entry in the type table? How did this happen?
+      }
+      return false;
+   }
 }

@@ -25,7 +25,9 @@ namespace {
 namespace cobb::streams {
    #ifdef QT_CORE_LIB
       void bitwriter::write(const QString& v) {
-         size_t size = v.size();
+         auto utf8 = v.toUtf8();
+
+         length_prefix_serialized_type size = utf8.size();
          this->write(size);
          if (size == 0)
             return;
@@ -34,13 +36,13 @@ namespace cobb::streams {
             if (this->is_byte_aligned()) {
                size_t bytecount = size * q_char_size;
                //
-               memcpy(this->_buffer + this->get_bytepos(), v.constData(), bytecount);
+               memcpy(this->_buffer + this->get_bytepos(), utf8.constData(), bytecount);
                this->_position.advance_by_bytes(bytecount);
                return;
             }
          }
          for (uint i = 0; i < size; ++i) {
-            q_std_char c = v[i].unicode();
+            uint8_t c = utf8[i];
             this->write(c);
          }
       }

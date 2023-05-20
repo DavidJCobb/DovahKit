@@ -43,7 +43,7 @@ namespace {
 
       constexpr auto warn = [](const worldinput2::binds::tree& out) {
          constexpr auto recurse = [&](const worldinput2::binds::node& node, auto& recurse) -> void {
-            if (auto* in = node.as<worldinput2::binds::nodes::abstract_input_node>()) {
+            if (auto* in = node.as<worldinput2::binds::nodes::bound_tool>()) {
                if (in->input_sequence.is_probably_keyboard_impossible()) {
                   std::string seq;
                   worldinput2::algorithms::input_sequence_to_string(in->input_sequence, seq);
@@ -93,8 +93,7 @@ namespace {
    ) {
       auto* node = new worldinput2::binds::nodes::modifier;
       node->name = name.c_str();
-      node->button_press_type = worldinput2::button_press_type::hold;
-      node->input_sequence    = sequence;
+      node->input_sequence = sequence;
       for (auto* child : children) {
          node->append(*child);
       }

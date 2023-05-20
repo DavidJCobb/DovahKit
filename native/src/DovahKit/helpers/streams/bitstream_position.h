@@ -16,11 +16,21 @@ namespace cobb::streams {
       constexpr bitstream_position& rewind_by_bits(size_t bits);
       constexpr bitstream_position& rewind_by_bytes(size_t bytes);
 
+      [[nodiscard("This function creates a new instance; use the present-tense name to modify the current instance.")]]
       constexpr bitstream_position advanced_by_bits(size_t b) const { return bitstream_position(*this).advance_by_bits(b); }
+      //
+      [[nodiscard("This function creates a new instance; use the present-tense name to modify the current instance.")]]
       constexpr bitstream_position advanced_by_bytes(size_t b) const { return bitstream_position(*this).advance_by_bytes(b); }
+      //
+      [[nodiscard("This function creates a new instance; use the present-tense name to modify the current instance.")]]
       constexpr bitstream_position advanced_to_next_byte() const { return bitstream_position(*this).advance_to_next_byte(); }
       //
+      // Rewinds:
+      //
+      [[nodiscard("This function creates a new instance; use the present-tense name to modify the current instance.")]]
       constexpr bitstream_position rewound_by_bits(size_t b) const { return bitstream_position(*this).rewind_by_bits(b); }
+      //
+      [[nodiscard("This function creates a new instance; use the present-tense name to modify the current instance.")]]
       constexpr bitstream_position rewound_by_bytes(size_t b) const { return bitstream_position(*this).rewind_by_bytes(b); }
 
       constexpr void set_in_bits(size_t bits) {

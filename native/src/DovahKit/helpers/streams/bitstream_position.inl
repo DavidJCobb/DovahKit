@@ -57,6 +57,9 @@ namespace cobb::streams {
    #pragma endregion
 
    #pragma region full_bitstream_position
+   constexpr void full_bitstream_position::add_overshoot_bits(size_t b) {
+      this->overshoot.advance_by_bits(b);
+   }
    constexpr void full_bitstream_position::clamp_to_size(size_t size) {
       if (this->bytes <= size)
          return;

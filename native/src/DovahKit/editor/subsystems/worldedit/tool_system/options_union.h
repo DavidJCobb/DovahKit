@@ -41,12 +41,18 @@ namespace dovahkit::subsystems::worldedit::tools {
          template<tool_with_options_member_type T> static void _typed_default_construct(options_union& dst) {
             std::construct_at((typename T::options*)dst.data.data());
          }
+         template<tool_with_options_member_type T> static constexpr bool _typed_compare(const options_union& a, const options_union& b) {
+            auto* a_data = (typename T::options*)a.data.data();
+            auto* b_data = (typename T::options*)b.data.data();
+            return *a_data == *b_data;
+         }
 
          struct _type_table_entry {
             tool_id id = id_of_none;
             cobb::function_pointer<void(options_union&)> destruct  = nullptr;
             cobb::function_pointer<void(options_union&)> construct = nullptr;
             cobb::function_pointer<void(const options_union&, options_union&)> construct_copy = nullptr;
+            cobb::function_pointer<bool(const options_union&, const options_union&)> compare = nullptr;
          };
          static constexpr const auto _type_table = [](){
             std::array<_type_table_entry, all_tools_with_options::count> entries = {};
@@ -58,6 +64,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                   entry.destruct       = &_typed_destructor<Tool>;
                   entry.construct      = &_typed_default_construct<Tool>;
                   entry.construct_copy = &_typed_copy_construct<Tool>;
+                  entry.compare        = &_typed_compare<Tool>;
                   ++i;
                });
             }
@@ -115,6 +122,8 @@ namespace dovahkit::subsystems::worldedit::tools {
          // Cast self (non-const)
          template<tool_with_options_member_type Tool> typename Tool::options& as() noexcept;
          template<is_tool_options Options> Options& as() noexcept;
+
+         constexpr bool operator==(const options_union&) const;
 
          static options_union construct_for_type(tool_id);
 

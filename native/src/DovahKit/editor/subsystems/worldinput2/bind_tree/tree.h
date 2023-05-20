@@ -1,6 +1,11 @@
 #pragma once
+#include <QString>
 #include "../enums/input_device_type.h"
 
+namespace cobb::streams {
+   class bitreader;
+   class bitwriter;
+}
 namespace dovahkit::subsystems::worldinput2 {
    namespace binds {
       namespace nodes {
@@ -24,7 +29,15 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          // -----
 
+         QString name;
          input_device_type device_type;
          nodes::root*      root   = nullptr;
+
+         bool operator==(const tree& other) const;
+
+         static constexpr const uint32_t serialization_version = 0;
+         //
+         static tree read(cobb::streams::bitreader&);
+         void write(cobb::streams::bitwriter&) const;
    };
 }

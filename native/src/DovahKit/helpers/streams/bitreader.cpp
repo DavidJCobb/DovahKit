@@ -25,29 +25,10 @@ namespace {
 namespace cobb::streams {
    #ifdef QT_CORE_LIB
       void bitreader::read(QString& v) {
-         size_t size;
-         this->read(size);
-         v.resize(size);
-         if (size == 0)
-            return;
+         std::string utf8;
+         this->read(utf8);
 
-         if (!std::is_constant_evaluated()) {
-            if (this->is_byte_aligned()) {
-               size_t bytecount = size * q_char_size;
-               size_t data_end  = this->get_bytepos() + bytecount;
-               if (data_end <= this->size()) {
-                  memcpy(v.data(), this->_buffer + this->get_bytepos(), size * bytecount);
-                  this->_position.advance_by_bytes(bytecount);
-                  //
-                  return;
-               }
-            }
-         }
-         for (uint i = 0; i < size; ++i) {
-            q_std_char c;
-            this->read(c);
-            v[i] = c;
-         }
+         v = QString::fromUtf8(utf8.data(), utf8.size());
       }
    #endif
 }

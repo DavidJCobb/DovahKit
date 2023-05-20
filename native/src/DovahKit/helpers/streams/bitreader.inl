@@ -84,6 +84,8 @@ namespace cobb::streams {
 
       length_prefix_serialized_type size = this->read_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8);
       v.resize(size);
+      if (size == 0)
+         return;
 
       if (!std::is_constant_evaluated()) {
          if (this->is_byte_aligned() && size + this->get_bytepos() <= this->size()) {
@@ -105,6 +107,8 @@ namespace cobb::streams {
 
       length_prefix_serialized_type size = this->read_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8);
       v.resize(size);
+      if (size == 0)
+         return;
 
       if (!std::is_constant_evaluated()) {
          if (this->is_byte_aligned() && size + this->get_bytepos() <= this->size()) {
@@ -126,6 +130,8 @@ namespace cobb::streams {
    constexpr void bitreader::read(std::vector<T>& v) {
       length_prefix_serialized_type size = this->read_bits<length_prefix_serialized_type>(sizeof(length_prefix_serialized_type) * 8);
       v.resize(size);
+      if (size == 0)
+         return;
 
       /*// IntelliSense chokes and dies on range-based for loops used on std::string and friends during compile-time evaluation.
       for (auto& item : v)

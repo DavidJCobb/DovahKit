@@ -23,6 +23,7 @@
 #include "ui_key_picker.h"
 #include "load_nif.h"
 #include "worldinput2.h"
+#include "worldinput_serialization.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -46,7 +47,8 @@ namespace DovahKitDebug {
       features::vulkan_renderer_instance,
       features::ui_key_picker,
       features::load_nif,
-      features::worldinput2//,
+      features::worldinput2,
+      features::worldinput_serialization//,
    >;
 
    template<typename T> struct _add_functor {

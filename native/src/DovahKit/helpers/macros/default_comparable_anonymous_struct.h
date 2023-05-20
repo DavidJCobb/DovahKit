@@ -68,9 +68,9 @@
 #define MACRO_CONCAT(x, y) MACRO_CONCAT_IMPL(x, y)
 
 #define __anonymous_struct_impl(n) \
-   MACRO_CONCAT(__cobb_anon_, n);            \
-   template<int I> struct __cobb_anon_counter {};   \
-   template<> struct __cobb_anon_counter< n > { \
+   MACRO_CONCAT(__cobb_anon_, n);                   \
+   template<int I> struct __cobb_anon_counter;      \
+   template<> struct __cobb_anon_counter< n > {     \
       using type = MACRO_CONCAT(__cobb_anon_, n);   \
    };                                               \
    template<> struct __cobb_anon_counter< n + 1 > { \

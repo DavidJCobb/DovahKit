@@ -661,6 +661,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
     <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp" />
@@ -1228,6 +1229,7 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h" />
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\asset_loading\load_queue.h" />

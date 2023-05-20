@@ -56,7 +56,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          ou.as<T>().read(version, stream);
       }
       template<tool_with_options_member_type T> static void _typed_write(const options_union& ou, cobb::streams::bitwriter& stream) {
-         stream.write((tools::_base::options_serialization_version)T::serialization_version);
+         stream.write((tools::_base::options_serialization_version)T::options::serialization_version);
          ou.as<T>().write(stream);
       }
 
@@ -94,18 +94,16 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
    }
    void options_union::write(cobb::streams::bitwriter& stream) const {
-      bool presence = false;
       for (const auto& entry : _serialization_handler_table) {
          if (entry.id != this->tag)
             continue;
 
-         presence = true;
-         stream.write(presence);
+         stream.write(true); // presence bool
          //
          (entry.write)(*this, stream);
          return;
       }
-      stream.write(presence);
+      stream.write(false); // presence bool
       return;
    }
 }

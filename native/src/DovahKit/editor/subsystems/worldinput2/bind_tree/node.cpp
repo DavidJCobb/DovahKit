@@ -72,7 +72,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
             out = new nodes::bound_tool;
             break;
          case editor_mode:
-            out = new nodes::editor_mode;
+            out = new nodes::editor_mode(nodes::editor_mode::value_type::objects); // no default constructor
             break;
          case modifier:
             out = new nodes::modifier;
@@ -81,7 +81,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       out->_read_impl(stream);
 
       if (out->is_valid_parent()) {
-         size_t size;
+         uint32_t size;
          stream.read(size);
          for (size_t i = 0; i < size; ++i) {
             auto* child = read(stream);
@@ -94,8 +94,33 @@ namespace dovahkit::subsystems::worldinput2::binds {
       stream.write(this->type);
       this->_write_impl(stream);
       if (this->is_valid_parent()) {
+         uint32_t count = this->children.size();
+         stream.write(count);
          for (const auto* child : this->children)
             child->write(stream);
       }
+   }
+
+   bool node::operator==(const node& other) const {
+      if (this->type != other.type)
+         return false;
+
+      size_t child_count = this->children.size();
+      if (child_count != other.children.size())
+         return false;
+
+      if (!this->_compare_impl(other))
+         return false;
+
+      for (size_t i = 0; i < child_count; ++i) {
+         auto* a = this->children[i];
+         auto* b = other.children[i];
+         assert(a);
+         assert(b);
+         if (*a != *b)
+            return false;
+      }
+      
+      return true;
    }
 }

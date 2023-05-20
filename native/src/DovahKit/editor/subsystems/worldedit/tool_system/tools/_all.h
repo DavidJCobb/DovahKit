@@ -16,7 +16,7 @@
 #include "./move_camera.h"
 #include "./set_edit_gizmo_mode.h"
 #include "./turn_camera.h"
-#include "helpers/macros/default_comparable_anonymous_struct.h"
+//#include "helpers/macros/default_comparable_anonymous_struct.h"
 
 namespace dovahkit::subsystems::worldedit {
    class opaque_options_union;
