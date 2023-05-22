@@ -95,15 +95,11 @@ namespace cobb::bitstreams {
       }
    }
    
-   template<impl::_stream_with_bitcount::readable_specialization Wrapper>
-   requires (bitstreamable_primitive<typename Wrapper::value_type> && !std::is_floating_point_v<typename Wrapper::value_type>)
-   constexpr void reader::unchecked_stream(Wrapper& wrapper) {
+   template<impl::_override_bitcount::readable_specialization Wrapper>
+   constexpr void reader::unchecked_stream(const Wrapper& wrapper) {
       using value_type = typename Wrapper::value_type;
 
-      constexpr const size_t bitcount = Wrapper::bitcount;
-      auto& v = wrapper.target;
-
-      v = (value_type)this->stream_bits(bitcount);
+      wrapper.target = (value_type)this->stream_bits(Wrapper::bitcount);
    }
 
    template<size_t length_bitcount, bitstreamable_container T> requires (!std::is_same_v<T, QString>)

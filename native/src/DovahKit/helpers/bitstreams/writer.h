@@ -6,7 +6,7 @@
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
 #include "./data_header.h"
-#include "./stream_with_bitcount.h"
+#include "./override_bitcount.h"
 
 // streamable types:
 #include "../eight_cc.h"
@@ -82,8 +82,8 @@ namespace cobb::bitstreams {
          }
 
          // Multi-stream call. You can pass references to multiple fields, and stream all of them 
-         // using a single call. Additionally, you can wrap any field in a stream_with_bitcount 
-         // object in order to override the bitcount used.
+         // using a single call. Additionally, you can use override_bitcount to wrap any field and 
+         // override its bitcount.
          template<bitstreamable_primitive... Types> requires (sizeof...(Types) > 1)
          constexpr void unchecked_stream(const Types&... args) {
             (this->unchecked_stream(args), ...);
@@ -97,9 +97,8 @@ namespace cobb::bitstreams {
          template<bitstreamable_primitive T>
          constexpr void unchecked_stream(const T& v);
 
-         template<impl::_stream_with_bitcount::writable_specialization Wrapper>
-         requires (bitstreamable_primitive<typename Wrapper::value_type> && !std::is_floating_point_v<typename Wrapper::value_type>)
-         constexpr void unchecked_stream(Wrapper& v);
+         template<impl::_override_bitcount::writable_specialization Wrapper>
+         constexpr void unchecked_stream(const Wrapper& v);
 
          template<size_t length_bitcount, bitstreamable_container T> requires (!std::is_same_v<T, QString>)
          constexpr void stream(const T& v);

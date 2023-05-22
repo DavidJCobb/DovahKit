@@ -2064,6 +2064,9 @@
     <ClCompile Include="helpers\bitstreams\tests\containers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\bitstreams\tests\wrappers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4994,7 +4997,7 @@
     <ClInclude Include="helpers\bitstreams\bitstreamable_container.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\bitstreams\stream_with_bitcount.h">
+    <ClInclude Include="helpers\bitstreams\override_bitcount.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\exceptions\missing_data_header.h">

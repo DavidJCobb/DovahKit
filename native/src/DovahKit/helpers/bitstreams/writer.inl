@@ -93,9 +93,8 @@ namespace cobb::bitstreams {
       }
    }
 
-   template<impl::_stream_with_bitcount::writable_specialization Wrapper>
-   requires (bitstreamable_primitive<typename Wrapper::value_type> && !std::is_floating_point_v<typename Wrapper::value_type>)
-   constexpr void writer::unchecked_stream(Wrapper& wrapper) {
+   template<impl::_override_bitcount::writable_specialization Wrapper>
+   constexpr void writer::unchecked_stream(const Wrapper& wrapper) {
       using value_type = typename Wrapper::value_type;
 
       constexpr const size_t bitcount = Wrapper::bitcount;

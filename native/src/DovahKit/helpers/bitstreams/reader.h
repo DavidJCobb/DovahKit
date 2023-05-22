@@ -6,7 +6,7 @@
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
 #include "./data_header.h"
-#include "./stream_with_bitcount.h"
+#include "./override_bitcount.h"
 
 // streamable types:
 #include "../eight_cc.h"
@@ -66,19 +66,33 @@ namespace cobb::bitstreams {
          constexpr void skip_bits(size_t b) { this->set_bitpos(this->get_bitpos() + b); }
          constexpr void skip_bytes(size_t b) { this->skip_bits(b * 8); }
 
+      protected:
+         template<typename T>
+         struct _multi_stream_type_adjustor;
+         
+         template<typename T> requires (!impl::_override_bitcount::readable_specialization<T>)
+         struct _multi_stream_type_adjustor<T> {
+            using type = std::decay_t<T>&;
+         };
+         
+         template<impl::_override_bitcount::readable_specialization T>
+         struct _multi_stream_type_adjustor<T> {
+            using type = const std::decay_t<T>&;
+         };
+
       public:
          #pragma region Stream overloads
 
          // Multi-stream call. You can pass references to multiple fields, and stream all of them 
-         // using a single call. Additionally, you can wrap any field in a stream_with_bitcount 
-         // object in order to override the bitcount used.
+         // using a single call. Additionally, you can use override_bitcount to wrap any field and 
+         // override its bitcount.
          template<typename... Types> requires (sizeof...(Types) > 1)
-         constexpr void stream(Types&... args) {
-            (this->stream(args), ...);
+         constexpr void stream(Types&&... args) {
+            (this->stream(std::forward<typename _multi_stream_type_adjustor<Types>::type>(args)), ...);
          }
          //
          template<bitstreamable_primitive... Types> requires (sizeof...(Types) > 1)
-         constexpr void unchecked_stream(Types&... args) {
+         constexpr void unchecked_stream(_multi_stream_type_adjustor<Types>::type... args) {
             (this->unchecked_stream(args), ...);
          }
          
@@ -93,16 +107,14 @@ namespace cobb::bitstreams {
          template<bitstreamable_primitive T> requires (!std::is_const_v<T>)
          constexpr void unchecked_stream(T& v);
 
-         template<impl::_stream_with_bitcount::readable_specialization Wrapper>
-         requires (bitstreamable_primitive<typename Wrapper::value_type>)
-         constexpr void stream(Wrapper& v) {
+         template<impl::_override_bitcount::readable_specialization Wrapper>
+         constexpr void stream(const Wrapper& v) {
             this->require_remaining_bits(Wrapper::bitcount);
             this->unchecked_stream(v);
          }
          //
-         template<impl::_stream_with_bitcount::readable_specialization Wrapper>
-         requires (bitstreamable_primitive<typename Wrapper::value_type> && !std::is_floating_point_v<typename Wrapper::value_type>)
-         constexpr void unchecked_stream(Wrapper& v);
+         template<impl::_override_bitcount::readable_specialization Wrapper>
+         constexpr void unchecked_stream(const Wrapper& v);
 
          template<size_t length_bitcount, bitstreamable_container T> requires (!std::is_same_v<T, QString>)
          constexpr void stream(T& v);

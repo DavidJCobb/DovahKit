@@ -505,6 +505,7 @@
     <ClCompile Include="helpers\bitstreams\tests\basic.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\containers.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\structs.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\wrappers.cpp" />
     <ClCompile Include="helpers\cpuinfo.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
@@ -1001,7 +1002,7 @@
     <ClInclude Include="helpers\bitstreams\exceptions\read_past_end.h" />
     <ClInclude Include="helpers\bitstreams\reader.h" />
     <ClInclude Include="helpers\bitstreams\round_trip_test.h" />
-    <ClInclude Include="helpers\bitstreams\stream_with_bitcount.h" />
+    <ClInclude Include="helpers\bitstreams\override_bitcount.h" />
     <ClInclude Include="helpers\bitstreams\writer.h" />
     <ClInclude Include="helpers\bits\all_ones.h" />
     <ClInclude Include="helpers\bits\replace_bits_at_index.h" />
