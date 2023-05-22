@@ -19,7 +19,7 @@ namespace {
       return types_of_interest::for_each_until_false<[]<typename Current>() {
          cobb::bitstreams::writer w;
          w.stream(w.header());
-         w.unchecked_stream((Current)bit_pattern);
+         w.stream((Current)bit_pattern);
 
          cobb::bitstreams::reader r;
          r.set_buffer(w.data(), w.get_bytespan());
@@ -53,7 +53,7 @@ namespace {
             w.stream(w.header());
             //
             w.stream_bits(offset, 0);
-            w.unchecked_stream((Current)bit_pattern);
+            w.stream((Current)bit_pattern);
 
             cobb::bitstreams::reader r;
             r.set_buffer(w.data(), w.get_bytespan());

@@ -2,7 +2,7 @@
 #include <bit>
 #include <cstdint>
 #include "../streams/bitstream_position.h"
-#include "./bitstreamable.h"
+#include "./bitstreamable_struct.h"
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
 #include "./data_header.h"
@@ -60,50 +60,31 @@ namespace cobb::bitstreams {
          constexpr void skip_bits(size_t b);
          constexpr void skip_bytes(size_t b) { this->skip_bits(b * 8); }
 
-      protected:
-         template<typename T>
-         static constexpr const bool requires_checked_stream = bitstreamable_container<T>;
-
-         template<typename T>
-         constexpr void _checked_stream_if_necessary(const T& v) {
-            if constexpr (!requires_checked_stream<T>) {
-               this->unchecked_stream(v);
-            } else {
-               this->stream(v);
-            }
-         }
-
       public:
          #pragma region Stream overloads
-         template<typename... Types>
-         requires (sizeof...(Types) > 1 || (!requires_checked_stream<Types> && ...)) // Guard against infinite recursion, when passing one argument that requires a checked stream.
-         constexpr void stream(const Types&... args) {
-            (this->_checked_stream_if_necessary(args), ...);
-         }
-
          // Multi-stream call. You can pass references to multiple fields, and stream all of them 
          // using a single call. Additionally, you can use override_bitcount to wrap any field and 
          // override its bitcount.
-         template<bitstreamable_primitive... Types> requires (sizeof...(Types) > 1)
-         constexpr void unchecked_stream(const Types&... args) {
-            (this->unchecked_stream(args), ...);
+         template<typename... Types> requires (sizeof...(Types) > 1)
+         constexpr void stream(const Types&... args) {
+            (this->stream(args), ...);
          }
          
-         template<bitstreamable T>
-         constexpr void unchecked_stream(const T& v) {
+         template<bitstreamable_struct T>
+         constexpr void stream(const T& v) {
             v.stream(*this);
          }
 
          template<bitstreamable_primitive T>
-         constexpr void unchecked_stream(const T& v);
+         constexpr void stream(const T& v);
 
          template<impl::_override_bitcount::writable_specialization Wrapper>
-         constexpr void unchecked_stream(const Wrapper& v);
+         constexpr void stream(const Wrapper& v);
 
          template<size_t length_bitcount, bitstreamable_container T> requires (!std::is_same_v<T, QString>)
          constexpr void stream(const T& v);
 
-         constexpr void unchecked_stream(const cobb::eight_cc& v);
+         constexpr void stream(const cobb::eight_cc& v);
          #pragma endregion
 
          template<bitstreamable_primitive T>

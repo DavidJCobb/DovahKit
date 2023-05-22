@@ -4982,10 +4982,7 @@
     <ClInclude Include="helpers\bitstreams\exceptions\read_past_end.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\bitstreams\bitstream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\bitstreams\bitstreamable.h">
+    <ClInclude Include="helpers\bitstreams\bitstreamable_struct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\bitstreamable_primitive.h">
@@ -5010,6 +5007,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\round_trip_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\exceptions\read_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\exceptions\write_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\exceptions\any.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -81,7 +81,7 @@ namespace cobb::bitstreams {
 
    #pragma region Stream overloads
    template<bitstreamable_primitive T>
-   constexpr void writer::unchecked_stream(const T& v) {
+   constexpr void writer::stream(const T& v) {
       constexpr const size_t bitcount = std::is_same_v<T, bool> ? 1 : sizeof(T) * 8;
 
       if constexpr (std::is_floating_point_v<T>) {
@@ -94,7 +94,7 @@ namespace cobb::bitstreams {
    }
 
    template<impl::_override_bitcount::writable_specialization Wrapper>
-   constexpr void writer::unchecked_stream(const Wrapper& wrapper) {
+   constexpr void writer::stream(const Wrapper& wrapper) {
       using value_type = typename Wrapper::value_type;
 
       constexpr const size_t bitcount = Wrapper::bitcount;
@@ -107,8 +107,9 @@ namespace cobb::bitstreams {
    constexpr void writer::stream(const T& v) {
       size_t size = v.size();
       if constexpr (length_bitcount < sizeof(uintmax_t) / 8) {
-         if (size > (uintmax_t(1) << length_bitcount - 1)) {
-            throw exceptions::container_length_too_large{};
+         constexpr auto max = (uintmax_t(1) << length_bitcount - 1);
+         if (size > max) {
+            throw exceptions::container_length_too_large{ size, max };
          }
       }
       this->stream_bits(length_bitcount, size);
@@ -137,9 +138,9 @@ namespace cobb::bitstreams {
       }
    }
 
-   constexpr void writer::unchecked_stream(const cobb::eight_cc& v) {
+   constexpr void writer::stream(const cobb::eight_cc& v) {
       for (size_t i = 0; i < 8; ++i)
-         this->unchecked_stream(v.bytes[i]);
+         this->stream(v.bytes[i]);
    }
    #pragma endregion
 

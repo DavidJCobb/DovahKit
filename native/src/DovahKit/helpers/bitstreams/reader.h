@@ -2,7 +2,7 @@
 #include <bit>
 #include <cstdint>
 #include "../streams/bitstream_position.h"
-#include "./bitstreamable.h"
+#include "./bitstreamable_struct.h"
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
 #include "./data_header.h"
@@ -96,7 +96,7 @@ namespace cobb::bitstreams {
             (this->unchecked_stream(args), ...);
          }
          
-         template<bitstreamable T> requires (!std::is_const_v<T>)
+         template<bitstreamable_struct T> requires (!std::is_const_v<T>)
          constexpr void stream(T& v) {
             v.stream(*this);
          }

@@ -46,11 +46,11 @@ namespace cobb::bitstreams {
 
    constexpr void reader::require_remaining_bits(size_t b) const {
       if (b > this->bits_remaining())
-         throw exceptions::read_past_end{};
+         throw exceptions::read_past_end{this->_position, b};
    }
    constexpr void reader::require_remaining_bytes(size_t b) const {
       if (b > this->bytes_remaining())
-         throw exceptions::read_past_end{};
+         throw exceptions::read_past_end{ this->_position, b * 8};
    }
 
    constexpr void reader::set_buffer(buffer_type b, size_t size) noexcept {
@@ -64,12 +64,12 @@ namespace cobb::bitstreams {
    }
    constexpr void reader::set_bitpos(size_t bitpos) {
       if (bitpos > this->_size * 8)
-         throw exceptions::read_past_end{};
+         throw exceptions::read_past_end{ this->_position, bitpos - (this->_size * 8) };
       this->_position.set_in_bits(bitpos);
    }
    constexpr void reader::set_bytepos(size_t bytepos) {
       if (bytepos > this->_size)
-         throw exceptions::read_past_end{};
+         throw exceptions::read_past_end{ this->_position, (bytepos - this->_size) * 8 };
       this->_position.set_in_bytes(bytepos);
    }
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits>
 #include <utility> // std::pair
-#include "./bitstreamable.h"
+#include "./bitstreamable_struct.h"
 #include "./bitstreamable_primitive.h"
 
 namespace cobb {
@@ -18,7 +18,7 @@ namespace cobb {
       requires !impl::_bitstreamable_container::is_map<T>;
 
       typename T::value_type;
-      requires bitstreamable<typename T::value_type> || bitstreamable_primitive<typename T::value_type>;
+      requires bitstreamable_struct<typename T::value_type> || bitstreamable_primitive<typename T::value_type>;
       requires requires(T& x) {
          { x.begin() };
          { x.end() };

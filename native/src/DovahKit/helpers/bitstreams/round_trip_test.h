@@ -17,7 +17,7 @@ namespace cobb::bitstreams {
       T dst = {};
       if constexpr (std::is_trivially_copyable_v<T>) {
          using byte_array = std::array<uint8_t, sizeof(T)>;
-         if constexpr (std::is_trivially_copyable_v<byte_array> && sizeof(byte_array) == sizeof(T)) {
+         if constexpr (std::is_trivially_copyable_v<byte_array> && sizeof(byte_array) == sizeof(T)) { // std::bit_cast possible?
             //
             // Scramble `dst` before the read, so that a totally failed or no-op read 
             // doesn't automatically compare as equal.
