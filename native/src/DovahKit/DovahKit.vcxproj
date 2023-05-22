@@ -502,6 +502,9 @@
     <ClCompile Include="editor\subsystems\xinput\xinputDK.cpp" />
     <ClCompile Include="helpers\all_html_entities.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\basic.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\containers.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\structs.cpp" />
     <ClCompile Include="helpers\cpuinfo.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
@@ -988,6 +991,18 @@
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_flatten.h" />
     <ClInclude Include="helpers\as_const.h" />
+    <ClInclude Include="helpers\bitstreams\bitstream.h" />
+    <ClInclude Include="helpers\bitstreams\bitstreamable.h" />
+    <ClInclude Include="helpers\bitstreams\bitstreamable_container.h" />
+    <ClInclude Include="helpers\bitstreams\bitstreamable_primitive.h" />
+    <ClInclude Include="helpers\bitstreams\data_header.h" />
+    <ClInclude Include="helpers\bitstreams\exceptions\container_length_too_large.h" />
+    <ClInclude Include="helpers\bitstreams\exceptions\missing_data_header.h" />
+    <ClInclude Include="helpers\bitstreams\exceptions\read_past_end.h" />
+    <ClInclude Include="helpers\bitstreams\reader.h" />
+    <ClInclude Include="helpers\bitstreams\round_trip_test.h" />
+    <ClInclude Include="helpers\bitstreams\stream_with_bitcount.h" />
+    <ClInclude Include="helpers\bitstreams\writer.h" />
     <ClInclude Include="helpers\bits\all_ones.h" />
     <ClInclude Include="helpers\bits\replace_bits_at_index.h" />
     <ClInclude Include="helpers\bits\replace_most_significant_bits.h" />
@@ -2024,6 +2039,8 @@
     <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
+    <None Include="helpers\bitstreams\reader.inl" />
+    <None Include="helpers\bitstreams\writer.inl" />
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
