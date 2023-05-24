@@ -2,33 +2,6 @@
 #include "./move_camera.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   constexpr void move_camera::options::read(options_serialization_version version, cobb::streams::bitreader& stream) {
-      stream.read(
-         reference_frames.baseline,
-         reference_frames.selection,
-         magnitudes.x,
-         magnitudes.y,
-         magnitudes.z,
-         range.x.axis,
-         range.x.sign,
-         range.y.axis,
-         range.y.sign
-      );
-   }
-   constexpr void move_camera::options::write(cobb::streams::bitwriter& stream) const {
-      stream.write(
-         reference_frames.baseline,
-         reference_frames.selection,
-         magnitudes.x,
-         magnitudes.y,
-         magnitudes.z,
-         range.x.axis,
-         range.x.sign,
-         range.y.axis,
-         range.y.sign
-      );
-   }
-
    constexpr void move_camera::options::stream(cobb::bitstreams::reader& s) {
       s.stream(
          reference_frames.baseline,

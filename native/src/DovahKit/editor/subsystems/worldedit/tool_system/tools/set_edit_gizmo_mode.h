@@ -16,8 +16,6 @@ namespace dovahkit::subsystems::worldedit::tools {
       public:
          struct options {
             public:
-               static constexpr const options_serialization_version serialization_version = 0;
-
                constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
@@ -34,9 +32,6 @@ namespace dovahkit::subsystems::worldedit::tools {
                bool toggle_frame = false; // If true and we're already on the "a" frame, we switch to the "b" frame.
                bool toggle_gizmo = false; // If true and we're already on the "a" mode,  we switch to the "b" mode.
                bool modify_gizmo = false; // Since there's no "current" value for the gizmo_mode enum.
-
-               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
-               constexpr void write(cobb::streams::bitwriter&) const;
 
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;

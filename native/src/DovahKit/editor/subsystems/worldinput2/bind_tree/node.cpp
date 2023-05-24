@@ -1,12 +1,14 @@
 #include "./node.h"
+
 #include "./nodes/abstract_input_node.h"
 
-#include "helpers/streams/bitreader.h"
-#include "helpers/streams/bitwriter.h"
 #include "./nodes/root.h"
 #include "./nodes/bound_tool.h"
 #include "./nodes/editor_mode.h"
 #include "./nodes/modifier.h"
+
+#include "helpers/bitstreams/reader.h"
+#include "helpers/bitstreams/writer.h"
 
 namespace dovahkit::subsystems::worldinput2::binds {
    node::node(node_type t) : type(t) {}
@@ -57,50 +59,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
       }
       return copy;
    }
-
-   /*static*/ node* node::read(cobb::streams::bitreader& stream) {
-      node_type type;
-      stream.read(type);
-
-      node* out = nullptr;
-      switch (type) {
-         using enum node_type;
-         case root:
-            out = new nodes::root;
-            break;
-         case bound_tool:
-            out = new nodes::bound_tool;
-            break;
-         case editor_mode:
-            out = new nodes::editor_mode(nodes::editor_mode::value_type::objects); // no default constructor
-            break;
-         case modifier:
-            out = new nodes::modifier;
-            break;
-      }
-      out->_read_impl(stream);
-
-      if (out->is_valid_parent()) {
-         uint32_t size;
-         stream.read(size);
-         for (size_t i = 0; i < size; ++i) {
-            auto* child = read(stream);
-            out->append(*child);
-         }
-      }
-      return out;
-   }
-   void node::write(cobb::streams::bitwriter& stream) const {
-      stream.write(this->type);
-      this->_write_impl(stream);
-      if (this->is_valid_parent()) {
-         uint32_t count = this->children.size();
-         stream.write(count);
-         for (const auto* child : this->children)
-            child->write(stream);
-      }
-   }
-
 
    /*static*/ node* node::read(cobb::bitstreams::reader& s) {
       node_type type;

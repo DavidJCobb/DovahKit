@@ -10,8 +10,6 @@
 
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
-#include "helpers/streams/bitreader.h"
-#include "helpers/streams/bitwriter.h"
 
 namespace {
    namespace worldinput2 {
@@ -27,14 +25,6 @@ namespace DovahKitDebug::features {
       qDebug("Running Worldinput control scheme serialization tests...");
 
       auto _compare = [](const char* name, const worldinput2::binds::tree& src) {
-         /*//
-         cobb::streams::bitwriter writer;
-         writer.write(src);
-
-         cobb::streams::bitreader reader;
-         reader.set_buffer(writer.data(), writer.get_bytespan());
-         const auto dst = worldinput2::binds::tree::read(reader);
-         //*/
          cobb::bitstreams::writer writer;
          src.write(writer);
 

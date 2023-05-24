@@ -2,8 +2,6 @@
 #include <bit> // std::bit_width
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
-#include "helpers/streams/bitreader.h"
-#include "helpers/streams/bitwriter.h"
 
 namespace dovahkit::subsystems::worldinput2::binds::nodes {
    node* modifier::_clone_impl() const {
@@ -11,12 +9,6 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
       copy->name           = this->name;
       copy->input_sequence = this->input_sequence;
       return copy;
-   }
-   void modifier::_read_impl(cobb::streams::bitreader& stream) {
-      stream.read(name, input_sequence);
-   }
-   void modifier::_write_impl(cobb::streams::bitwriter& stream) const {
-      stream.write(name, input_sequence);
    }
    void modifier::_read_impl(cobb::bitstreams::reader& s) {
       s.stream<std::bit_width(max_name_length)>(name);

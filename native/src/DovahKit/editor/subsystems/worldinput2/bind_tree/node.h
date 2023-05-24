@@ -6,10 +6,6 @@ namespace cobb::bitstreams {
    class reader;
    class writer;
 }
-namespace cobb::streams {
-   class bitreader;
-   class bitwriter;
-}
 
 namespace dovahkit::subsystems::worldinput2::binds {
    enum class node_type {
@@ -78,9 +74,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          node* clone() const;
 
-         static node* read(cobb::streams::bitreader&);
-         void write(cobb::streams::bitwriter&) const;
-
          static node* read(cobb::bitstreams::reader&);
          void write(cobb::bitstreams::writer&) const;
 
@@ -91,8 +84,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
       protected:
          virtual node* _clone_impl() const = 0;
-         virtual void _read_impl(cobb::streams::bitreader&) = 0;
-         virtual void _write_impl(cobb::streams::bitwriter&) const = 0;
          virtual void _read_impl(cobb::bitstreams::reader&) = 0;
          virtual void _write_impl(cobb::bitstreams::writer&) const = 0;
 

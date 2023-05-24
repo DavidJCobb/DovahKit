@@ -3,8 +3,6 @@
 #include <bit> // std::bit_width
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
-#include "helpers/streams/bitreader.h"
-#include "helpers/streams/bitwriter.h"
 #include "./nodes/root.h"
 
 namespace dovahkit::subsystems::worldinput2::binds {
@@ -69,39 +67,6 @@ namespace dovahkit::subsystems::worldinput2::binds {
       }
 
       return true;
-   }
-
-   /*static*/ tree tree::read(cobb::streams::bitreader& stream) {
-      uint32_t version;
-      stream.read(version);
-
-      input_device_type device_type;
-      stream.read(device_type);
-
-      tree out = tree(device_type);
-
-      stream.read(out.name);
-
-      bool presence;
-      stream.read(presence);
-      if (presence) {
-         auto* root = node::read(stream);
-         out.root = (nodes::root*)root;
-         assert(root);
-         assert(root->type == node_type::root);
-      }
-      return out;
-   }
-   void tree::write(cobb::streams::bitwriter& stream) const {
-      stream.write(
-         serialization_version,
-         this->device_type,
-         this->name
-      );
-      stream.write(this->root != nullptr);
-      if (this->root != nullptr) {
-         this->root->write(stream);
-      }
    }
 
    /*static*/ tree tree::read(cobb::bitstreams::reader& s) {

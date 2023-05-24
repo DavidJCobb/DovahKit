@@ -14,16 +14,11 @@ namespace dovahkit::subsystems::worldedit::tools {
       public:
          struct options {
             public:
-               static constexpr const options_serialization_version serialization_version = 0;
-
                constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
                bool_operation boost     = bool_operation::no_op;
                bool_operation precision = bool_operation::no_op;
-
-               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
-               constexpr void write(cobb::streams::bitwriter&) const;
 
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;

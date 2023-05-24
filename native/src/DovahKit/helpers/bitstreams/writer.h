@@ -2,7 +2,6 @@
 #include <bit>
 #include <cstdint>
 #include <type_traits>
-#include "../streams/bitstream_position.h"
 #include "./exceptions/write_exception.h"
 #include "./_base.h"
 #include "./bitstreamable_struct.h"
@@ -10,6 +9,7 @@
 #include "./bitstreamable_primitive.h"
 #include "./data_header.h"
 #include "./override_bitcount.h"
+#include "./position.h"
 
 // streamable types:
 #include "../eight_cc.h"
@@ -24,7 +24,7 @@ namespace cobb::bitstreams {
    class writer : public _bitstream_base {
       public:
          using header_type   = data_header;
-         using position_type = cobb::streams::bitstream_position;
+         using position_type = typename position;
 
          using buffer_type = std::uint8_t*;
          using size_type   = size_t;

@@ -81,9 +81,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
             bool is_satisfied(const devices::abstract_device_handler&) const;
 
-            constexpr void read(uint32_t version, cobb::streams::bitreader&);
-            constexpr void write(cobb::streams::bitwriter&) const;
-
             constexpr void stream(cobb::bitstreams::reader&);
             constexpr void stream(cobb::bitstreams::writer&) const;
          };
@@ -156,9 +153,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
                void normalize(bool recursively = false);
 
-               constexpr void read(uint32_t version, cobb::streams::bitreader&);
-               constexpr void write(cobb::streams::bitwriter&) const;
-
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;
 
@@ -228,9 +222,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
          // May set `root` to `nullptr` if it's an empty non-single-button ISG.
          void normalize();
-
-         constexpr void read(cobb::streams::bitreader&);
-         constexpr void write(cobb::streams::bitwriter&) const;
 
          constexpr void stream(cobb::bitstreams::reader&);
          constexpr void stream(cobb::bitstreams::writer&) const;

@@ -2040,16 +2040,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\streams\bitstream_tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="helpers\streams\bitreader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="helpers\streams\bitwriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp">
@@ -4949,19 +4940,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\streams\bitreader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\streams\bitstream_position.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\streams\bitwriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_options.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\streams\bitcount_of_enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.h">
@@ -5085,6 +5064,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\util\enum_has_explicit_bitcount_override.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -5776,15 +5758,6 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="helpers\streams\bitstream_position.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="helpers\streams\bitreader.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="helpers\streams\bitwriter.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -5803,6 +5776,12 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\bitstreams\writer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldinput2\inputs\button.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\bitstreams\position.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

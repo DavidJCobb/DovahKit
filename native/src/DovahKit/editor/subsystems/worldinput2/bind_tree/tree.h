@@ -6,10 +6,6 @@ namespace cobb::bitstreams {
    class reader;
    class writer;
 }
-namespace cobb::streams {
-   class bitreader;
-   class bitwriter;
-}
 namespace dovahkit::subsystems::worldinput2 {
    namespace binds {
       namespace nodes {
@@ -44,13 +40,11 @@ namespace dovahkit::subsystems::worldinput2::binds {
 
          static constexpr const uint32_t serialization_version = 0;
          //
-         static tree read(cobb::streams::bitreader&);
-         void write(cobb::streams::bitwriter&) const;
-
          // These require a "fresh" bitstream, i.e. you must not have streamed any data 
          // (except the header, automatically, when giving the buffer to the reader). 
          // The tree will use its own serialization version. (TODO: Do we want to have 
          // separate serialization versions for the data versus the stream internals?)
+         //
          static tree read(cobb::bitstreams::reader&);
          void write(cobb::bitstreams::writer&) const;
    };

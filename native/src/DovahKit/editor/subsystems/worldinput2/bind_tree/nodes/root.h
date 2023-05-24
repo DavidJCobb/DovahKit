@@ -12,8 +12,6 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
 
       protected:
          virtual node* _clone_impl() const override { return new root; };
-         virtual void _read_impl(cobb::streams::bitreader&) {};
-         virtual void _write_impl(cobb::streams::bitwriter&) const {};
          virtual void _read_impl(cobb::bitstreams::reader&) {};
          virtual void _write_impl(cobb::bitstreams::writer&) const {};
 

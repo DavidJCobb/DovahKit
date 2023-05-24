@@ -72,7 +72,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    // Enforce: no two tools can have the same results type.
    static_assert(
       []() constexpr -> bool {
-         bool any_two_same = all_tools::template for_each_until_true<[]<typename A>() -> bool {
+         constexpr bool any_two_same = all_tools::template for_each_until_true<[]<typename A>() -> bool {
             if constexpr (tool_with_results<A>) {
                return all_tools::for_each_until_true<[]<typename B>() -> bool {
                   if constexpr (std::is_same_v<A, B>) {
@@ -104,7 +104,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    //
    static_assert(
       []() constexpr -> bool {
-         bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
+         constexpr bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
             if constexpr (A::is_raycast_sensitive) {
                if constexpr (tool_with_results<A>) {
                   using results = typename A::results;

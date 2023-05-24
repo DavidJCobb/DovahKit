@@ -3,8 +3,6 @@
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 #include "helpers/bitstreams/round_trip_test.h"
-#include "helpers/streams/bitreader.h"
-#include "helpers/streams/bitwriter.h"
 #include "helpers/eight_cc.h"
 #include "helpers/enum_flags.h"
 #include "editor/subsystems/worldinput2/tool_invocation_cause.h"
@@ -29,8 +27,6 @@ namespace dovahkit::subsystems::worldedit::tools {
    class _base {
       public:
          using tool_invocation_cause = dovahkit::subsystems::worldinput2::tool_invocation_cause;
-
-         using options_serialization_version = uint32_t;
 
       public:
          static constexpr const char*          function_name = "unnamed";

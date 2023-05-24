@@ -18,8 +18,6 @@ namespace dovahkit::subsystems::worldedit::tools {
       public:
          struct options {
             public:
-               static constexpr const options_serialization_version serialization_version = 0;
-
                constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
@@ -47,9 +45,6 @@ namespace dovahkit::subsystems::worldedit::tools {
                   range_mapping x = range_mapping{ axis3D::x, sign::positive };
                   range_mapping y = range_mapping{ axis3D::y, sign::negative };
                } range;
-
-               constexpr void read(options_serialization_version, cobb::streams::bitreader&);
-               constexpr void write(cobb::streams::bitwriter&) const;
 
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;
