@@ -599,7 +599,7 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       return 1;
    }
    Qt::ItemFlags DKBSACollectionModel::flags(const QModelIndex& index) const {
-      Qt::ItemFlags flags = 0;
+      Qt::ItemFlags flags = {};
       if (auto* node = this->_nodeFromIndex(index)) {
          flags |= Qt::ItemFlag::ItemIsEnabled;
          flags |= Qt::ItemFlag::ItemIsSelectable;

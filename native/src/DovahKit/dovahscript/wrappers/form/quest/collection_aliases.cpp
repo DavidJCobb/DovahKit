@@ -52,7 +52,7 @@ namespace {
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
          const auto* alias = list[i];
-         if (stricmp(alias->name.c_str(), name) == 0)
+         if (_stricmp(alias->name.c_str(), name) == 0)
             return alias_wrapper_type::wrap(L, self, alias);
       }
       return 0;

@@ -24,6 +24,9 @@ namespace dovahkit::subsystems::worldedit::tools {
 
                constexpr void read(options_serialization_version, cobb::streams::bitreader&);
                constexpr void write(cobb::streams::bitwriter&) const;
+
+               constexpr void stream(cobb::bitstreams::reader&);
+               constexpr void stream(cobb::bitstreams::writer&) const;
          };
          struct results {
             bool_operation boost     = bool_operation::no_op;

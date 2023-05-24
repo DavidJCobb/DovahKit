@@ -5084,6 +5084,9 @@
     <ClInclude Include="helpers\macros\macro_concat_n.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\bitstreams\util\enum_has_explicit_bitcount_override.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

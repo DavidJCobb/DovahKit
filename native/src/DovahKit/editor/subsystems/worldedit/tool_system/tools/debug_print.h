@@ -19,10 +19,15 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
+               static constexpr const size_t max_length = 1023;
+
                std::string text;
 
                constexpr void read(options_serialization_version, cobb::streams::bitreader&);
                constexpr void write(cobb::streams::bitwriter&) const;
+
+               constexpr void stream(cobb::bitstreams::reader&);
+               constexpr void stream(cobb::bitstreams::writer&) const;
          };
          struct results {
             std::string text;

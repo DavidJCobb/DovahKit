@@ -1,6 +1,6 @@
 #pragma once
 #include "editor/subsystems/worldedit/enums/axis3D.h"
-#include "vulkan/enums/gizmo_mode.h"
+#include "editor/subsystems/worldedit/enums/gizmo_mode.h"
 #include "./enums/optional_yn.h"
 
 namespace dovahkit::subsystems::worldedit {
@@ -14,7 +14,7 @@ namespace dovahkit::subsystems::worldinput2 {
    struct raycast_requirement {
       public:
          using axis3D     = worldedit::axis3D;
-         using gizmo_mode = vulkanDK::gizmo_mode;
+         using gizmo_mode = worldedit::gizmo_mode;
 
          enum class timing_type {
             on_control_down,

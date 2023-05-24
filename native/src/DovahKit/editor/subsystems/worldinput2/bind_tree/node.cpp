@@ -85,7 +85,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
          stream.read(size);
          for (size_t i = 0; i < size; ++i) {
             auto* child = read(stream);
-            out->children.append(child);
+            out->append(*child);
          }
       }
       return out;
@@ -98,6 +98,55 @@ namespace dovahkit::subsystems::worldinput2::binds {
          stream.write(count);
          for (const auto* child : this->children)
             child->write(stream);
+      }
+   }
+
+
+   /*static*/ node* node::read(cobb::bitstreams::reader& s) {
+      node_type type;
+      s.stream_bits(3, type);
+
+      node* out = nullptr;
+      switch (type) {
+         using enum node_type;
+         case root:
+            out = new nodes::root;
+            break;
+         case bound_tool:
+            out = new nodes::bound_tool;
+            break;
+         case editor_mode:
+            out = new nodes::editor_mode(nodes::editor_mode::value_type::objects); // no default constructor
+            break;
+         case modifier:
+            out = new nodes::modifier;
+            break;
+         default:
+            //
+            // TODO: Improve error reporting for this.
+            //
+            throw cobb::bitstreams::exceptions::read_exception{ s.get_position().rewind_by_bits(3) };
+      }
+      out->_read_impl(s);
+
+      if (out->is_valid_parent()) {
+         uint32_t size;
+         s.stream(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto* child = read(s);
+            out->append(*child);
+         }
+      }
+      return out;
+   }
+   void node::write(cobb::bitstreams::writer& s) const {
+      s.stream_bits(3, this->type);
+      this->_write_impl(s);
+      if (this->is_valid_parent()) {
+         uint32_t count = this->children.size();
+         s.stream(count);
+         for (const auto* child : this->children)
+            child->write(s);
       }
    }
 

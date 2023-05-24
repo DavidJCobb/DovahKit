@@ -178,7 +178,7 @@ class DovahKitAssetReceptor : public QObject {
       DovahKitAssetReceptor(DovahKitAssetReceptor&& other) noexcept;
       ~DovahKitAssetReceptor();
 
-      Flags flags = 0;
+      Flags flags = {};
 
       operator bool() { return this->asset != nullptr; };
       operator value_type*() const noexcept { return this->asset.data(); };

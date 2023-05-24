@@ -33,6 +33,32 @@ namespace dovahkit::subsystems::worldedit::tools {
       if (std::is_constant_evaluated()) {
          throw; // No entry in the type table? How did this happen?
       }
-      return false;
+      return true;
+   }
+
+   constexpr void options_union::stream(cobb::bitstreams::reader& s) {
+      bool presence;
+      s.stream(presence);
+      if (!presence)
+         return;
+      for (const auto& entry : _type_table) {
+         if (entry.id != this->tag)
+            continue;
+         (entry.read)(*this, s);
+         return;
+      }
+   }
+   constexpr void options_union::stream(cobb::bitstreams::writer& s) const {
+      for (const auto& entry : _type_table) {
+         if (entry.id != this->tag)
+            continue;
+
+         s.stream(true); // presence bool
+         //
+         (entry.write)(*this, s);
+         return;
+      }
+      s.stream(false); // presence bool
+      return;
    }
 }

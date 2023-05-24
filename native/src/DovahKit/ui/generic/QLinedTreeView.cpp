@@ -24,7 +24,7 @@ void QLinedTreeView::_BranchStyle::drawPrimitive(PrimitiveElement pe, const QSty
    dotted.setWidth(0);
    dotted.setDashPattern({ 1.0F, 1.0F });
    painter->setPen(dotted);
-   painter->setRenderHints(0);
+   painter->setRenderHints({});
    #pragma region Draw branches
       int y_start_even = y_start - (y_start % 2);
       int y_mid_even   = y_mid   - (y_mid   % 2);

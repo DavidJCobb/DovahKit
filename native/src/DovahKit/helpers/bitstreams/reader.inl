@@ -1,5 +1,6 @@
 #pragma once
 #include "./reader.h"
+#include "helpers/type_traits/strip_enum.h"
 #include "../uint_of_size.h"
 #include "./exceptions/bad_enum_read.h"
 #include "./exceptions/missing_data_header.h"
@@ -103,6 +104,26 @@ namespace cobb::bitstreams {
          v = std::bit_cast<T>((bit_castable_type)this->stream_bits(bitcount));
       } else {
          v = (T)this->stream_bits(bitcount);
+
+         if constexpr (std::is_enum_v<T>) {
+            using info = util::enum_type_information<T>;
+            if constexpr (info::is_signed) {
+               using underlying_type = cobb::strip_enum_t<T>;
+               constexpr const underlying_type sign_bit = underlying_type{1} << (bitcount - 1);
+
+               underlying_type sv = (underlying_type)v;
+               if (sv & sign_bit) {
+                  sv |= ~(sign_bit - 1);
+                  v = (T)sv;
+               }
+            }
+         } else if constexpr (std::is_signed_v<T>) {
+            constexpr const T sign_bit = T{1} << (bitcount - 1);
+
+            if (v & sign_bit) {
+               v |= ~(sign_bit - 1);
+            }
+         }
       }
    }
    

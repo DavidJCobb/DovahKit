@@ -2,6 +2,10 @@
 #include <type_traits>
 #include <QVector>
 
+namespace cobb::bitstreams {
+   class reader;
+   class writer;
+}
 namespace cobb::streams {
    class bitreader;
    class bitwriter;
@@ -77,6 +81,9 @@ namespace dovahkit::subsystems::worldinput2::binds {
          static node* read(cobb::streams::bitreader&);
          void write(cobb::streams::bitwriter&) const;
 
+         static node* read(cobb::bitstreams::reader&);
+         void write(cobb::bitstreams::writer&) const;
+
          // Returns true if this node is a "parent" of some kind, or false otherwise.
          virtual bool is_valid_parent() const = 0;
 
@@ -86,6 +93,8 @@ namespace dovahkit::subsystems::worldinput2::binds {
          virtual node* _clone_impl() const = 0;
          virtual void _read_impl(cobb::streams::bitreader&) = 0;
          virtual void _write_impl(cobb::streams::bitwriter&) const = 0;
+         virtual void _read_impl(cobb::bitstreams::reader&) = 0;
+         virtual void _write_impl(cobb::bitstreams::writer&) const = 0;
 
          // Subclasses should override this. This will only be called for two nodes of the same type.
          // (If we were using metaprogramming and not polymorphism, we could set up proper typing on 

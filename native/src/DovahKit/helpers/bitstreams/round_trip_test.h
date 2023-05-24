@@ -6,6 +6,12 @@
 #include "./writer.h"
 
 namespace cobb::bitstreams {
+
+   //
+   // This template can be used to check whether a struct passes a round-trip 
+   // serialization test. That is: if we create an instance, write it, and then 
+   // read what we've just written, do we get consistent results?
+   //
    template<typename T>
    constexpr const bool round_trip_test = []() {
       T src = {};
@@ -35,4 +41,5 @@ namespace cobb::bitstreams {
 
       return src == dst;
    }();
+
 }

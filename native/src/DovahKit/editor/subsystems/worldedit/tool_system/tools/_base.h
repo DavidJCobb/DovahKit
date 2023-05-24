@@ -1,5 +1,8 @@
 #pragma once
 #include <concepts>
+#include "helpers/bitstreams/reader.h"
+#include "helpers/bitstreams/writer.h"
+#include "helpers/bitstreams/round_trip_test.h"
 #include "helpers/streams/bitreader.h"
 #include "helpers/streams/bitwriter.h"
 #include "helpers/eight_cc.h"

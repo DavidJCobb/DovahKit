@@ -11,6 +11,10 @@
 #include "./interruption_check.h"
 #include "./raycast_requirement.h"
 
+namespace cobb::bitstreams {
+   class reader;
+   class writer;
+}
 namespace cobb::streams {
    class bitreader;
    class bitwriter;
@@ -79,6 +83,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
             constexpr void read(uint32_t version, cobb::streams::bitreader&);
             constexpr void write(cobb::streams::bitwriter&) const;
+
+            constexpr void stream(cobb::bitstreams::reader&);
+            constexpr void stream(cobb::bitstreams::writer&) const;
          };
 
          struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it
@@ -91,12 +98,18 @@ namespace dovahkit::subsystems::worldinput2 {
          class group {
             friend class input_sequence;
             public:
+               constexpr group() {}
                constexpr ~group();
 
                group_type type = group_type::single_control;
 
                inputs::button button; // for single controls only
                std::vector<group*> children; // except for single controls
+
+               constexpr group(const group&) = delete;
+               constexpr group(group&&) noexcept = delete;
+               constexpr group& operator=(const group&) const = delete;
+               constexpr group& operator=(group&&) const noexcept = delete;
 
             protected:
                struct {
@@ -145,6 +158,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
                constexpr void read(uint32_t version, cobb::streams::bitreader&);
                constexpr void write(cobb::streams::bitwriter&) const;
+
+               constexpr void stream(cobb::bitstreams::reader&);
+               constexpr void stream(cobb::bitstreams::writer&) const;
 
             protected:
                void _clear_all_progress();
@@ -215,6 +231,9 @@ namespace dovahkit::subsystems::worldinput2 {
 
          constexpr void read(cobb::streams::bitreader&);
          constexpr void write(cobb::streams::bitwriter&) const;
+
+         constexpr void stream(cobb::bitstreams::reader&);
+         constexpr void stream(cobb::bitstreams::writer&) const;
    };
 }
 

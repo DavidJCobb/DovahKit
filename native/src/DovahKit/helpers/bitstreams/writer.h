@@ -15,6 +15,10 @@
 #include "../eight_cc.h"
 
 class QString;
+#ifdef QT_CORE_LIB
+   #include <string>
+   #include <QString>
+#endif
 
 namespace cobb::bitstreams {
    class writer : public _bitstream_base {
@@ -100,12 +104,17 @@ namespace cobb::bitstreams {
          #pragma endregion
 
          template<bitstreamable_primitive T>
-         constexpr void stream_bits(size_t bitcount, const T& v) {
-            this->unchecked_stream_bits(bitcount, v);
-         }
-         //
-         template<bitstreamable_primitive T>
-         constexpr void unchecked_stream_bits(size_t bitcount, const T& v);
+         constexpr void stream_bits(size_t bitcount, const T& v);
+         
+         #ifdef QT_CORE_LIB
+            template<size_t length_bitcount>
+            void stream(const QString& v) {
+               auto utf8 = v.toUtf8();
+               auto sv   = std::string_view(utf8.constData(), utf8.size());
+
+               this->stream<length_bitcount>(sv);
+            }
+         #endif
    };
 }
 

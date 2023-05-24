@@ -14,8 +14,8 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
-#include "set_current_thread_name.h"
-#include <windows.h>
+#include "./set_current_thread_name.h"
+#include "./windows.h"
 #include <processthreadsapi.h>
 
 namespace cobb {

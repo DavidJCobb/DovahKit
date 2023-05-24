@@ -56,7 +56,7 @@ namespace {
    // comments describing issues in Bethesda's path handling will use examples which include the 
    // Data directory prefix, for clarity.
    //
-   PW out = 0;
+   PW out = {};
    //
    auto pathname       = QStringView(path);
    auto last_separator = std::max(path.lastIndexOf('/'), path.lastIndexOf('\\'));

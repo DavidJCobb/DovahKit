@@ -1,6 +1,8 @@
 #pragma once
 #include "./input_sequence.h"
 #include <type_traits> // std::is_constant_evaluated
+#include "helpers/bitstreams/writer.h"
+#include "helpers/bitstreams/reader.h"
 #include "helpers/streams/bitwriter.h"
 #include "helpers/streams/bitreader.h"
 
@@ -235,13 +237,14 @@ namespace dovahkit::subsystems::worldinput2 {
    constexpr input_sequence& input_sequence::operator=(input_sequence&& other) noexcept {
       std::swap(this->root, other.root);
       std::swap(this->range, other.range);
-      std::swap(this->raycast, other.raycast);
+      std::swap(this->raycast.associated_button, other.raycast.associated_button);
+      std::swap(this->raycast.requirement,       other.raycast.requirement);
       std::swap(this->state, other.state);
       return *this;
    }
    #pragma endregion
 
-   #pragma region Serialization
+   #pragma region Serialization (old)
    constexpr void input_sequence::range_requirement::read(uint32_t version, cobb::streams::bitreader& stream) {
       bool presence;
 
@@ -434,6 +437,214 @@ namespace dovahkit::subsystems::worldinput2 {
       stream.write(presence);
       if (this->root) {
          stream.write(*this->root);
+      }
+   }
+   #pragma endregion
+
+   #pragma region Serialization
+   constexpr void input_sequence::range_requirement::stream(cobb::bitstreams::reader& s) {
+      bool presence;
+
+      s.stream(presence);
+      if (presence) {
+         s.stream(this->scalar.type, this->scalar.axis);
+      }
+      s.stream(presence);
+      if (presence) {
+         s.stream(this->vector);
+      }
+   }
+   constexpr void input_sequence::range_requirement::stream(cobb::bitstreams::writer& s) const {
+      s.stream((bool)(this->scalar.type != scalar_input_control::none));
+      if (this->scalar.type != scalar_input_control::none) {
+         s.stream(this->scalar.type, this->scalar.axis);
+      }
+      s.stream((bool)(this->vector != vector_input_control::none));
+      if (this->vector != vector_input_control::none) {
+         s.stream(this->vector);
+      }
+   }
+
+   constexpr void input_sequence::group::stream(cobb::bitstreams::reader& s) {
+      this->type = (group_type)s.stream_bits(2);
+      if (this->type == group_type::single_control) {
+         s.stream(this->button.mouse);
+         s.stream(this->button.gamepad);
+         s.stream(this->button.key.unicode);
+         s.stream(this->button.key.vk);
+         s.stream(this->button.key.scan_code);
+      } else {
+         uint32_t size;
+         s.stream(size);
+         this->children.resize(size);
+         for (size_t i = 0; i < size; ++i) {
+            (this->children[i] = new group)->stream(s);
+         }
+      }
+   }
+   constexpr void input_sequence::group::stream(cobb::bitstreams::writer& s) const {
+      s.stream_bits(2, (uint32_t)this->type);
+      if (this->type == group_type::single_control) {
+         s.stream(this->button.mouse);
+         s.stream(this->button.gamepad);
+         s.stream(this->button.key.unicode);
+         s.stream(this->button.key.vk);
+         s.stream(this->button.key.scan_code);
+         assert(this->children.empty());
+      } else {
+         uint32_t size = this->children.size();
+         s.stream(size);
+         if (size > 0) {
+            for (const auto* g : this->children) {
+               g->stream(s);
+            }
+         }
+      }
+   }
+
+   constexpr void input_sequence::stream(cobb::bitstreams::reader& s) {
+      this->range.stream(s);
+
+      cobb::bitstreams::reader::position_type position_of_rab;
+      uint32_t index_of_rab    = -1;
+
+      bool presence;
+      s.stream(presence);
+      if (presence) {
+         position_of_rab = s.get_position();
+         s.stream(index_of_rab);
+         //
+         // Raycast requirements have a lot of bitfields, and it's impossible to take 
+         // pointers or references to bitfield elements, so the code below will be a 
+         // bit... verbose.
+         //
+         {
+            auto& req = this->raycast.requirement;
+            {
+               uint8_t v;
+               s.stream(
+                  v,
+                  req.fail_if_target_changes
+               );
+               req.timing = (raycast_requirement::timing_type)v;
+            }
+            {
+               auto& t = req.targets;
+
+               raycast_requirement::gizmo_mode gm;
+               s.stream(gm);
+               t.edit_gizmo_mode = gm;
+               if (gm != raycast_requirement::gizmo_mode::none) {
+                  raycast_requirement::axis3D ga;
+                  s.stream(ga);
+                  t.edit_gizmo_axis = ga;
+               }
+
+               bool bit;
+
+               s.stream(bit);
+               t.landscapes = bit;
+               s.stream(bit);
+               t.nothing = bit;
+               s.stream(bit);
+               t.object_references = bit;
+            }
+            {
+               optional_yn v;
+               s.stream(v);
+               req.target_options.selected = v;
+            }
+         }
+      }
+
+      s.stream(presence);
+      if (presence) {
+         this->root = new group;
+         this->root->stream(s);
+
+         if (index_of_rab != -1) {
+            size_t seen = 0;
+            auto recurse = [this, index_of_rab, &seen](input_sequence::group& current, auto& recurse) -> bool {
+               if (seen == index_of_rab) {
+                  this->raycast.associated_button = &current;
+                  return true;
+               }
+               for (auto* child : current.children) {
+                  ++seen;
+                  if (recurse(*child, recurse))
+                     return true;
+               }
+               return false;
+            };
+            recurse(*this->root, recurse);
+
+            if (this->raycast.associated_button == nullptr) {
+               //
+               // TODO: Improve error reporting for this.
+               //
+               throw cobb::bitstreams::exceptions::read_exception{ position_of_rab };
+            }
+         }
+      } else {
+         if (index_of_rab != -1) {
+            //
+            // TODO: Improve error reporting for this.
+            //
+            throw cobb::bitstreams::exceptions::read_exception{ position_of_rab };
+         }
+      }
+   }
+   constexpr void input_sequence::stream(cobb::bitstreams::writer& s) const {
+      s.stream(this->range);
+
+      bool presence;
+      
+      presence = this->has_raycast_requirement();
+      s.stream(presence);
+      if (presence) {
+         uint32_t index_of_rab = -1;
+         {
+            size_t seen = 0;
+            const auto* rab = this->raycast.associated_button;
+            auto recurse = [rab, &seen](const input_sequence::group& current, auto& recurse) -> bool {
+               if (&current == rab)
+                  return true;
+               for (const auto* child : current.children) {
+                  ++seen;
+                  if (recurse(*child, recurse))
+                     return true;
+               }
+               return false;
+            };
+            assert(recurse(*this->root, recurse));
+            index_of_rab = seen;
+         }
+         s.stream(index_of_rab);
+         //
+         {
+            const auto& req = this->raycast.requirement;
+            s.stream(
+               (uint8_t)req.timing,
+               req.fail_if_target_changes
+            );
+            {
+               auto& t = req.targets;
+               s.stream(t.edit_gizmo_mode);
+               if (t.edit_gizmo_mode != raycast_requirement::gizmo_mode::none) {
+                  s.stream(t.edit_gizmo_axis);
+               }
+               s.stream(t.landscapes);
+               s.stream(t.nothing);
+               s.stream(t.object_references);
+            }
+            s.stream(req.target_options.selected);
+         }
+      }
+
+      presence = (this->root != nullptr);
+      s.stream(presence);
+      if (this->root) {
+         s.stream(*this->root);
       }
    }
    #pragma endregion

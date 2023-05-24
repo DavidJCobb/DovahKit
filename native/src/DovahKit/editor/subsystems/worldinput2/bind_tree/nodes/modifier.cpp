@@ -1,4 +1,7 @@
 #include "./modifier.h"
+#include <bit> // std::bit_width
+#include "helpers/bitstreams/reader.h"
+#include "helpers/bitstreams/writer.h"
 #include "helpers/streams/bitreader.h"
 #include "helpers/streams/bitwriter.h"
 
@@ -14,6 +17,14 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
    }
    void modifier::_write_impl(cobb::streams::bitwriter& stream) const {
       stream.write(name, input_sequence);
+   }
+   void modifier::_read_impl(cobb::bitstreams::reader& s) {
+      s.stream<std::bit_width(max_name_length)>(name);
+      s.stream(input_sequence);
+   }
+   void modifier::_write_impl(cobb::bitstreams::writer& s) const {
+      s.stream<std::bit_width(max_name_length)>(name);
+      s.stream(input_sequence);
    }
 
    bool modifier::_compare_impl(const node& other) const {

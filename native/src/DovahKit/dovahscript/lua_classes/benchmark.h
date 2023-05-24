@@ -1,7 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <windows.h>
-#include "helpers/windows.h"
 #include "../../../lua.h"
 #include "../core/classes.h"
 

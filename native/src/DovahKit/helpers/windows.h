@@ -62,6 +62,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // #pragma once intentionally not used
 
+
+// Winbase triggers portability warnings when using MSVC's standards-conforming C(++) preprocessor
+#pragma warning(disable: 5105)
+
 #include <Windows.h>
 
 #ifdef COBB_WIN32_INCLUDE_ADVANCED_API
@@ -93,6 +97,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef COBB_WIN32_ENABLE_VERSION
    #pragma comment(lib, "version.lib")
 #endif
+
+#pragma warning(default: 5105)
 
 //
 // Bad macro names:

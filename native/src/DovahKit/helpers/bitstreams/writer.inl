@@ -76,7 +76,7 @@ namespace cobb::bitstreams {
    }
 
    constexpr void writer::skip_bits(size_t b) {
-      this->unchecked_stream_bits(b, 0);
+      this->stream_bits(b, 0);
       /*// This would be faster, but would write uninitialized bits into the output.
       size_t total = this->get_bitpos() + b;
       this->_ensure_room_for(total);
@@ -105,6 +105,16 @@ namespace cobb::bitstreams {
 
       constexpr const size_t bitcount = Wrapper::bitcount;
       const auto& v = wrapper.target;
+
+      if constexpr (std::is_enum_v<value_type>) {
+         using info = util::enum_type_information<value_type>;
+         if constexpr (info::bitcount_is_explicitly_defined) {
+            static_assert(
+               info::default_bitcount <= Wrapper::bitcount,
+               "The override bitcount you've chosen here is not large enough to read all bits in this enum."
+            );
+         }
+      }
 
       this->stream_bits(bitcount, v);
    }
@@ -135,6 +145,8 @@ namespace cobb::bitstreams {
             if (this->is_byte_aligned()) {
                const size_t bytecount = sizeof(value_type) * size;
 
+               this->_ensure_room_for(bytecount * 8);
+
                memcpy(this->_buffer + this->get_bytepos(), v.data(), bytecount);
                this->_position.advance_by_bytes(bytecount);
                return;
@@ -158,7 +170,7 @@ namespace cobb::bitstreams {
    #pragma endregion
 
    template<bitstreamable_primitive T>
-   constexpr void writer::unchecked_stream_bits(size_t bitcount, const T& v) {
+   constexpr void writer::stream_bits(size_t bitcount, const T& v) {
       this->_ensure_room_for(bitcount);
 
       // Types like char (as in const char*) are actually signed, and bitshifting them 

@@ -1,5 +1,6 @@
-#include "benchmark.h"
-#include "../../../helpers/lua/error.h"
+#include "./benchmark.h"
+#include "helpers/lua/error.h"
+#include "helpers/windows.h"
 #include "../core/classes.h"
 
 namespace {

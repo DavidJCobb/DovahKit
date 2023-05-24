@@ -76,7 +76,7 @@ namespace {
 }
 
 namespace dovahscript::lua_libraries::form_types {
-   #define __dovah_define(name) _offer_single_form_type(L, table, #name, form_type::##name );
+   #define __dovah_define(name) _offer_single_form_type(L, table, #name, form_type::name );
    //
    extern void import(lua_State* L) {
       lua_createtable(L, 0, 120);

@@ -15,6 +15,10 @@
 #include "../eight_cc.h"
 
 class QString;
+#ifdef QT_CORE_LIB
+   #include <string>
+   #include <QString>
+#endif
 
 namespace cobb::bitstreams {
    class reader : public _bitstream_base {
@@ -142,6 +146,16 @@ namespace cobb::bitstreams {
          //
          template<bitstreamable_primitive T>
          constexpr void unchecked_stream_bits(size_t bitcount, T&);
+         
+         #ifdef QT_CORE_LIB
+            template<size_t length_bitcount>
+            void stream(QString& v) {
+               std::string utf8;
+               this->stream<length_bitcount>(utf8);
+
+               v = QString::fromUtf8(utf8.data(), utf8.size());
+            }
+         #endif
    };
 }
 

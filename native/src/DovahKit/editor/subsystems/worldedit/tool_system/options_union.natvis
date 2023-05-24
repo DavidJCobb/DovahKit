@@ -3,50 +3,51 @@
    <Type Name="dovahkit::subsystems::worldedit::tools::options_union">
       <DisplayString>{*this,!}</DisplayString>
       <Expand>
+         <Item Name="tag">tag</Item>
+         <Synthetic Name="[data]" Condition="tag == (tool_id)-1">
+            <DisplayString>&lt;empty&gt;</DisplayString>
+         </Synthetic>
          <Item Optional="true"
-            Name="attempt_on_screen_selection"
+            Name="[data: attempt_on_screen_selection]"
          >
             (attempt_on_screen_selection::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="debug_dump_landscape_details"
+            Name="[data: debug_dump_landscape_details]"
          >
             *(debug_dump_landscape_details::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="debug_dump_raycast"
+            Name="[data: debug_dump_raycast]"
          >
             *(debug_dump_raycast::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="debug_print"
+            Name="[data: debug_print]"
          >
             *(debug_print::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="modify_camera_speed_flags"
+            Name="[data: modify_camera_speed_flags]"
          >
             *(modify_camera_speed_flags::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="move_camera"
+            Name="[data: move_camera]"
          >
             *(move_camera::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="set_edit_gizmo_mode"
+            Name="[data: set_edit_gizmo_mode]"
          >
             *(set_edit_gizmo_mode::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
-            Name="turn_camera"
+            Name="[data: turn_camera]"
          >
             *(turn_camera::options*)&amp;data[0]
          </Item>
-         <Synthetic Name="[data]" Condition="tag == (tool_id)-1">
-            <DisplayString>&lt;empty&gt;</DisplayString>
-         </Synthetic>
-         <Item Name="[raw]">data</Item>
+         <Item Name="[raw bytes]">data</Item>
       </Expand>
    </Type>
 </AutoVisualizer>

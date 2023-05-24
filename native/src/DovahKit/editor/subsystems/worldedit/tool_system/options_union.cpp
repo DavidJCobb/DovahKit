@@ -24,15 +24,15 @@ namespace dovahkit::subsystems::worldedit::tools {
    /*static*/ options_union options_union::construct_for_type(tool_id id) {
       if (id == id_of_none)
          return {};
-      options_union out;
-      out.tag = id;
       for (const auto& entry : _type_table) {
          if (entry.id == id) {
+            options_union out;
+            out.tag = id;
             entry.construct(out);
-            break;
+            return out;
          }
       }
-      return out;
+      return {};
    }
 
    options_union* options_union::clone() const {
@@ -84,8 +84,10 @@ namespace dovahkit::subsystems::worldedit::tools {
    void options_union::read(cobb::streams::bitreader& stream) {
       bool presence;
       stream.read(presence);
-      if (!presence)
+      if (!presence) {
+         this->tag = id_of_none;
          return;
+      }
       for (const auto& entry : _serialization_handler_table) {
          if (entry.id != this->tag)
             continue;

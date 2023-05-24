@@ -127,7 +127,7 @@ Qt::ItemFlags Options3DControlSchemeModel::flags(const QModelIndex& index) const
    if (!node) {
       if (!index.isValid()) // imaginary root
          return Qt::ItemFlag::ItemIsEnabled;
-      return 0;
+      return {};
    }
    switch (node->type) {
       using _ = worldinput::binds::node_type;
@@ -138,7 +138,7 @@ Qt::ItemFlags Options3DControlSchemeModel::flags(const QModelIndex& index) const
       case _::input:
          return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
    }
-   return 0;
+   return {};
 }
 bool Options3DControlSchemeModel::hasChildren(const QModelIndex& parent) const {
    if (!parent.isValid()) // imaginary root

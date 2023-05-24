@@ -91,7 +91,7 @@ namespace {
                std::pair{ QGradient::Type::RadialGradient,  "radial" },
             };
             for (auto& pair : map) {
-               if (stricmp(tn.c_str(), pair.second) == 0) {
+               if (_stricmp(tn.c_str(), pair.second) == 0) {
                   type = pair.first;
                   break;
                }
@@ -462,7 +462,7 @@ namespace {
             auto* str   = lua_tostring(L, -1);
             bool  found = false;
             for (auto& pair : join_styles) {
-               if (stricmp(str, pair.second) == 0) {
+               if (_stricmp(str, pair.second) == 0) {
                   found = true;
                   pen.setJoinStyle(pair.first);
                   break;
@@ -720,6 +720,7 @@ namespace {
          luaL_argcheck(L, y >= 0, 4, "y-coordinate cannot be negative");
          if (!self.managed_resource)
             return 0;
+         #pragma warning(suppress:6011) // MSVC can't tell that luaL_argcheck above checked that arg is not null
          auto* other = arg->managed_resource;
          if (!other)
             return 0;
@@ -850,11 +851,11 @@ namespace {
          bool vertical   = false;
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string (flip direction) expected");
          auto* str = lua_tostring(L, 2);
-         if (stricmp(str, "horizontal") == 0 || stricmp(str, "h") == 0) {
+         if (_stricmp(str, "horizontal") == 0 || _stricmp(str, "h") == 0) {
             horizontal = true;
-         } else if (stricmp(str, "vertical") == 0 || stricmp(str, "v") == 0) {
+         } else if (_stricmp(str, "vertical") == 0 || _stricmp(str, "v") == 0) {
             vertical   = true;
-         } else if (stricmp(str, "both") == 0) {
+         } else if (_stricmp(str, "both") == 0) {
             horizontal = true;
             vertical   = true;
          }

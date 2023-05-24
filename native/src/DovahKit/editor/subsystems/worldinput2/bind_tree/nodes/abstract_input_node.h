@@ -8,6 +8,9 @@ namespace dovahkit::subsystems::worldinput2::binds::nodes {
          abstract_input_node(node_type t) : node(t) {}
 
       public:
+         static constexpr const size_t max_name_length = 1023;
+
+      public:
          QString name;
          typename input_sequence input_sequence;
 

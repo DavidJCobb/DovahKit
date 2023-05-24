@@ -1,6 +1,8 @@
 #pragma once
+#include <bit>
 #include <type_traits>
 #include "../enum_serialization_options.h"
+#include "./enum_has_explicit_bitcount_override.h"
 #include "./enum_has_valid_values_list.h"
 
 #include "helpers/macros/static_warning.h"
@@ -22,7 +24,7 @@ namespace cobb::bitstreams::util {
          }
          return sizeof(underlying_type) * 8;
       }();
-      static constexpr const bool validate_values  = enum_has_valid_values_list<value_type>;
+      static constexpr const bool   validate_values  = enum_has_valid_values_list<value_type>;
 
       static constexpr const underlying_type min_underlying = []() {
          underlying_type v = std::numeric_limits<underlying_type>::max();
@@ -49,6 +51,20 @@ namespace cobb::bitstreams::util {
          }
 
          return v;
+      }();
+
+      static constexpr const bool is_signed = []() -> bool {
+         //
+         // An enum with a signed underlying type may not necessarily define any actual 
+         // signed values; the default underlying type for all enums is `signed int`. 
+         // If we know the list of allowed values for an enum, then we can check if any 
+         // of them is negative. Otherwise, we just have to trust the signedness of the 
+         // underlying type, unfortunately.
+         //
+         if constexpr (!validate_values) {
+            return std::is_signed_v<underlying_type>;
+         }
+         return min_underlying < 0;
       }();
 
       static constexpr const bool valid_values_are_contiguous = []() {
@@ -83,6 +99,19 @@ namespace cobb::bitstreams::util {
 Serializing a bitcount is unsafe if it doesn't have either an explicit bitcount override, or an underlying type with a consistent size (e.g. uint16_t). \
 (NOTE: This warning may emit as a false-positive for some types, e.g. int32_t, since some compilers just typedef these over the non-explicit integer types. \
 In that case, redundantly specifying a bitcount can suppress this warning.)"
+      );
+
+      static_assert(
+         []() -> bool {
+            if constexpr (!bitcount_is_explicitly_defined || !validate_values) {
+               return true;
+            }
+
+            constexpr size_t needed_bits = std::bit_width(std::make_unsigned_t<underlying_type>(max_underlying)) + ((std::is_signed_v<underlying_type> && min_underlying < 0) ? 1 : 0);
+
+            return needed_bits <= default_bitcount;
+         }(),
+         "Assertion: If this enum has an explicitly set bitcount and valid values list, the bitcount must be large enough to encode all valid values."
       );
    };
 }

@@ -55,10 +55,10 @@ namespace dovah::game_ini {
    }
    const setting_definition* file_definition::lookup(const char* section, const char* setting) const noexcept {
       for (auto& a : this->sections) {
-         if (stricmp(a.name.c_str(), section) != 0)
+         if (_stricmp(a.name.c_str(), section) != 0)
             continue;
          for (auto& b : a.settings) {
-            if (stricmp(b.name, setting) == 0)
+            if (_stricmp(b.name, setting) == 0)
                return &b;
          }
          return nullptr;

@@ -1017,6 +1017,7 @@
     <ClInclude Include="helpers\bitstreams\util\bitcount_of_type.h" />
     <ClInclude Include="helpers\bitstreams\util\bitpacked_primitive_type.h" />
     <ClInclude Include="helpers\bitstreams\util\enum_has_contiguous_valid_values.h" />
+    <ClInclude Include="helpers\bitstreams\util\enum_has_explicit_bitcount_override.h" />
     <ClInclude Include="helpers\bitstreams\util\enum_has_valid_values_list.h" />
     <ClInclude Include="helpers\bitstreams\util\enum_type_information.h" />
     <ClInclude Include="helpers\bitstreams\util\enum_valid_value_range.h" />

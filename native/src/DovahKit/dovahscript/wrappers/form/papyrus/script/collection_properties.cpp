@@ -41,7 +41,7 @@ namespace {
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
          auto& prop = list[i];
-         if (stricmp(prop.name.c_str(), name) == 0) {
+         if (_stricmp(prop.name.c_str(), name) == 0) {
             wrapper out = self;
             assert(out.is_collection);
             out.into_collection(i);
