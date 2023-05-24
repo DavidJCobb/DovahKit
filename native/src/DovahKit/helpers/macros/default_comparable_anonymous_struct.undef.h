@@ -1,6 +1,5 @@
 
-#undef MACRO_CONCAT_IMPL
-#undef MACRO_CONCAT
+#include "./macro_concat.undef.h"
 
 #undef __anonymous_struct_impl
 #undef __anonymous_struct

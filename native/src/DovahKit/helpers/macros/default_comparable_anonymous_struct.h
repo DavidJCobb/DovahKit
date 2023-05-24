@@ -64,8 +64,7 @@
 #pragma push_macro("__anonymous_default_equality_impl")
 #pragma push_macro("__anonymous_default_equality")
 
-#define MACRO_CONCAT_IMPL(x, y) x##y
-#define MACRO_CONCAT(x, y) MACRO_CONCAT_IMPL(x, y)
+#include "./macro_concat.h"
 
 #define __anonymous_struct_impl(n) \
    MACRO_CONCAT(__cobb_anon_, n);                   \

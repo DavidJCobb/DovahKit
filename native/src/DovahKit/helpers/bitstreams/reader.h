@@ -1,7 +1,10 @@
 #pragma once
 #include <bit>
 #include <cstdint>
+#include <type_traits>
 #include "../streams/bitstream_position.h"
+#include "./exceptions/read_exception.h"
+#include "./_base.h"
 #include "./bitstreamable_struct.h"
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
@@ -14,7 +17,7 @@
 class QString;
 
 namespace cobb::bitstreams {
-   class reader {
+   class reader : public _bitstream_base {
       public:
          using header_type   = data_header;
          using position_type = cobb::streams::bitstream_position;
@@ -67,6 +70,13 @@ namespace cobb::bitstreams {
          constexpr void skip_bytes(size_t b) { this->skip_bits(b * 8); }
 
       protected:
+         template<typename Exception, typename... Types> requires std::is_base_of_v<exceptions::read_exception, Exception>
+         [[noreturn]] constexpr void _throw_exception(Types&&... args) const {
+            auto except = Exception(std::forward<Types>(args)...);
+            except.where_were_we = this->_where_are_we;
+            throw except;
+         }
+
          template<typename T>
          struct _multi_stream_type_adjustor;
          
@@ -93,11 +103,12 @@ namespace cobb::bitstreams {
          //
          template<bitstreamable_primitive... Types> requires (sizeof...(Types) > 1)
          constexpr void unchecked_stream(_multi_stream_type_adjustor<Types>::type... args) {
-            (this->unchecked_stream(args), ...);
+            (this->unchecked_stream(std::forward<typename _multi_stream_type_adjustor<Types>::type>(args)), ...);
          }
          
          template<bitstreamable_struct T> requires (!std::is_const_v<T>)
          constexpr void stream(T& v) {
+            const auto step = add_parse_step_for_typename<T>();
             v.stream(*this);
          }
 

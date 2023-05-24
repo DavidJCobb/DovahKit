@@ -51,6 +51,8 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.3.204.1\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -62,6 +64,8 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <AdditionalIncludeDirectories>$(Qt_INCLUDEPATH_);$(ProjectDir);C:\VulkanSDK\1.3.204.1\Include;$(SolutionDir)glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
@@ -504,7 +508,9 @@
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\basic.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\containers.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\enums.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\structs.cpp" />
+    <ClCompile Include="helpers\bitstreams\tests\where_are_we.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\wrappers.cpp" />
     <ClCompile Include="helpers\cpuinfo.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -996,16 +1002,27 @@
     <ClInclude Include="helpers\bitstreams\bitstreamable_container.h" />
     <ClInclude Include="helpers\bitstreams\bitstreamable_primitive.h" />
     <ClInclude Include="helpers\bitstreams\data_header.h" />
+    <ClInclude Include="helpers\bitstreams\enum_serialization_options.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\any.h" />
+    <ClInclude Include="helpers\bitstreams\exceptions\bad_enum_read.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\container_length_too_large.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\missing_data_header.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\read_exception.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\read_past_end.h" />
     <ClInclude Include="helpers\bitstreams\exceptions\write_exception.h" />
+    <ClInclude Include="helpers\bitstreams\parse_step_info.h" />
     <ClInclude Include="helpers\bitstreams\reader.h" />
     <ClInclude Include="helpers\bitstreams\round_trip_test.h" />
     <ClInclude Include="helpers\bitstreams\override_bitcount.h" />
+    <ClInclude Include="helpers\bitstreams\util\bitcount_of_type.h" />
+    <ClInclude Include="helpers\bitstreams\util\bitpacked_primitive_type.h" />
+    <ClInclude Include="helpers\bitstreams\util\enum_has_contiguous_valid_values.h" />
+    <ClInclude Include="helpers\bitstreams\util\enum_has_valid_values_list.h" />
+    <ClInclude Include="helpers\bitstreams\util\enum_type_information.h" />
+    <ClInclude Include="helpers\bitstreams\util\enum_valid_value_range.h" />
+    <ClInclude Include="helpers\bitstreams\util\memcpyable_primitive_type.h" />
     <ClInclude Include="helpers\bitstreams\writer.h" />
+    <ClInclude Include="helpers\bitstreams\_base.h" />
     <ClInclude Include="helpers\bits\all_ones.h" />
     <ClInclude Include="helpers\bits\replace_bits_at_index.h" />
     <ClInclude Include="helpers\bits\replace_most_significant_bits.h" />
@@ -1032,6 +1049,14 @@
     <ClInclude Include="helpers\keyboard\virtual_key.h" />
     <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.h" />
     <ClInclude Include="helpers\macros\default_comparable_anonymous_struct.undef.h" />
+    <ClInclude Include="helpers\macros\macro_concat_n.h" />
+    <ClInclude Include="helpers\macros\macro_last_n_of.h" />
+    <ClInclude Include="helpers\macros\macro_first_n_of.h" />
+    <ClInclude Include="helpers\macros\macro_concat.h" />
+    <ClInclude Include="helpers\macros\macro_concat.undef.h" />
+    <ClInclude Include="helpers\macros\macro_minus_one.h" />
+    <ClInclude Include="helpers\macros\static_warning.h" />
+    <ClInclude Include="helpers\macros\static_warning.undef.h" />
     <ClInclude Include="helpers\math\abs.h" />
     <ClInclude Include="helpers\math\arcsine.h" />
     <ClInclude Include="helpers\math\atan2.h" />
@@ -1057,6 +1082,7 @@
     <ClInclude Include="helpers\math\sqrt.h" />
     <ClInclude Include="helpers\memset.h" />
     <ClInclude Include="helpers\dummy.h" />
+    <ClInclude Include="helpers\name_of.h" />
     <ClInclude Include="helpers\n_of_value.h" />
     <ClInclude Include="helpers\bitfield_array.h" />
     <ClInclude Include="helpers\copy_variadic_template_parameters.h" />

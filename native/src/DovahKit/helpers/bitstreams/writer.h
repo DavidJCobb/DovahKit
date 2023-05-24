@@ -1,7 +1,10 @@
 #pragma once
 #include <bit>
 #include <cstdint>
+#include <type_traits>
 #include "../streams/bitstream_position.h"
+#include "./exceptions/write_exception.h"
+#include "./_base.h"
 #include "./bitstreamable_struct.h"
 #include "./bitstreamable_container.h"
 #include "./bitstreamable_primitive.h"
@@ -14,7 +17,7 @@
 class QString;
 
 namespace cobb::bitstreams {
-   class writer {
+   class writer : public _bitstream_base {
       public:
          using header_type   = data_header;
          using position_type = cobb::streams::bitstream_position;
@@ -60,6 +63,14 @@ namespace cobb::bitstreams {
          constexpr void skip_bits(size_t b);
          constexpr void skip_bytes(size_t b) { this->skip_bits(b * 8); }
 
+      protected:
+         template<typename Exception, typename... Types> requires std::is_base_of_v<exceptions::write_exception, Exception>
+         [[noreturn]] constexpr void _throw_exception(Types&&... args) const {
+            auto except = Exception(std::forward<Types>(args)...);
+            except.where_were_we = this->_where_are_we;
+            throw except;
+         }
+
       public:
          #pragma region Stream overloads
          // Multi-stream call. You can pass references to multiple fields, and stream all of them 
@@ -72,6 +83,7 @@ namespace cobb::bitstreams {
          
          template<bitstreamable_struct T>
          constexpr void stream(const T& v) {
+            const auto step = add_parse_step_for_typename<T>();
             v.stream(*this);
          }
 
