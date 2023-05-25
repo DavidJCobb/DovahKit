@@ -91,7 +91,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
       assert(s.get_bitpos() == 0);
       {
          auto& h = s.header();
-         h.version = serialization_version;
+         h.versions.data = serialization_version;
          s.stream(h);
       }
 
