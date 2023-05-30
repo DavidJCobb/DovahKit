@@ -81,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtModules>core;gui;help;widgets;winextras;</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtDeploy>true</QtDeploy>
   </PropertyGroup>
@@ -668,8 +668,10 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
     <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp" />
@@ -804,11 +806,13 @@
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
@@ -1269,7 +1273,9 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h" />
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
+    <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
@@ -1966,6 +1972,7 @@
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="shaders\all_compiled.qrc" />

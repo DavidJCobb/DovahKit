@@ -16,8 +16,6 @@
 #include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/root.h"
 
-#include "editor/subsystems/worldinput2/tools/combined_tool_results.h"
-
 #include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
 #include "editor/subsystems/worldedit/tool_system/id_of.h"
 #include "editor/subsystems/worldedit/tool_system/options_union.h"

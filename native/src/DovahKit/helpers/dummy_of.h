@@ -31,8 +31,8 @@ namespace cobb {
          #pragma push_macro("COBB_DUMMY_OF_OPERAND_ASSIGN")
          #define COBB_DUMMY_OF_OPERAND(symbol) \
             template<typename Operand> requires requires(const underlying_type& x, const Operand& y) { { x symbol y }; } \
-            constexpr auto operator##symbol(const Operand&) const { \
-               using result = std::invoke_result_t<decltype(&underlying_type::operator##symbol), underlying_type, Operand>; \
+            constexpr auto operator symbol (const Operand&) const { \
+               using result = std::invoke_result_t<decltype( &underlying_type::operator symbol ), underlying_type, Operand>; \
                if constexpr (std::is_same_v<result, void>) { \
                   return; \
                } else { \
@@ -40,8 +40,8 @@ namespace cobb {
                } \
             }; \
             template<> requires requires(const underlying_type& x, const underlying_type& y) { { x symbol y }; } \
-            constexpr auto operator##symbol<dummy_of>(const dummy_of&) const { \
-               using result = std::invoke_result_t<decltype(&underlying_type::operator##symbol), underlying_type, underlying_type>; \
+            constexpr auto operator symbol <dummy_of>(const dummy_of&) const { \
+               using result = std::invoke_result_t<decltype( &underlying_type::operator symbol ), underlying_type, underlying_type>; \
                if constexpr (std::is_same_v<result, void>) { \
                   return; \
                } else { \
@@ -50,11 +50,11 @@ namespace cobb {
             };
          #define COBB_DUMMY_OF_OPERAND_ASSIGN(symbol) \
             template<typename Operand> requires requires(underlying_type& x, const Operand& y) { { x symbol##= y } -> std::same_as<underlying_type&>; } \
-            constexpr dummy_of operator##symbol##=(const Operand&) { \
+            constexpr dummy_of operator symbol##= (const Operand&) { \
                return *this; \
             }; \
             template<> requires requires(underlying_type& x, const underlying_type& y) { { x symbol##= y } -> std::same_as<underlying_type&>; } \
-            constexpr dummy_of operator##symbol##=<dummy_of>(const dummy_of&) { \
+            constexpr dummy_of operator symbol##= <dummy_of>(const dummy_of&) { \
                return *this; \
             };
 

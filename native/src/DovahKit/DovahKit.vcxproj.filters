@@ -2067,6 +2067,15 @@
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5072,6 +5081,9 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_axes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5192,6 +5204,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -5539,6 +5554,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
