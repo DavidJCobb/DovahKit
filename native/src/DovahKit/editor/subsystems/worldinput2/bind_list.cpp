@@ -442,20 +442,11 @@ namespace dovahkit::subsystems::worldinput2 {
          bool    is_stale = false;
          if (node->input_sequence.has_range_requirement()) {
             auto& req = node->input_sequence.range;
-            if (req.vector != vector_input_control::none) {
-               auto range_control = req.vector;
-
-               is_delta = util::is_delta_control(range_control);
-               value    = device.get_range_control_value(range_control);
+            if (req.control != range_input_control::none) {
+               is_delta = util::is_delta_control(req.control);
+               value    = device.get_range_control_value(req.control, req.axes);
                if (is_delta)
-                  is_stale = device.get_range_control_state(range_control) == range_control_state::stale;
-            } else {
-               auto range_control = req.scalar.type;
-
-               is_delta = util::is_delta_control(range_control);
-               value    = device.get_range_control_value(range_control, req.scalar.axis);
-               if (is_delta)
-                  is_stale = device.get_range_control_state(range_control, req.scalar.axis) == range_control_state::stale;
+                  is_stale = device.get_range_control_state(req.control, req.axes) == range_control_state::stale;
             }
          }
          if (!is_stale) {

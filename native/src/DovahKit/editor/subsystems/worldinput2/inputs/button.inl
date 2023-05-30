@@ -106,6 +106,12 @@ namespace dovahkit::subsystems::worldinput2::inputs {
    constexpr void button::stream(cobb::bitstreams::writer& s) const {
       using serialized_type = impl::_button::serialized_type;
 
+      // Right now, we don't have any systems for handling input given a key's 
+      // physical position on the keyboard; we can only process virtual keys. 
+      // Among other limitations, this means that we can't tell an AltGr key 
+      // apart from (Alt + Ctrl). As such, we'll only serialize VKs for now.
+      constexpr const bool allow_saving_detailed_keys = false;
+
       serialized_type type = serialized_type::none;
       //
       if (!this->key.empty()) {
@@ -124,13 +130,18 @@ namespace dovahkit::subsystems::worldinput2::inputs {
             {
                s.stream_bits(8, this->key.vk);
 
-               s.stream(this->key.has_scan_code());
-               if (this->key.has_scan_code())
-                  s.stream_bits(32, this->key.scan_code);
+               if constexpr (allow_saving_detailed_keys) {
+                  s.stream(this->key.has_scan_code());
+                  if (this->key.has_scan_code())
+                     s.stream_bits(32, this->key.scan_code);
 
-               s.stream(this->key.has_unicode());
-               if (this->key.has_unicode())
-                  s.stream_bits(32, this->key.unicode);
+                  s.stream(this->key.has_unicode());
+                  if (this->key.has_unicode())
+                     s.stream_bits(32, this->key.unicode);
+               } else {
+                  s.stream(false); // presence bit for scan code
+                  s.stream(false); // presence bit for glyph
+               }
             }
             break;
          case serialized_type::mouse:

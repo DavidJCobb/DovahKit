@@ -4775,12 +4775,6 @@
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\vector_input_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\scalar_input_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\enums\axis2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5070,6 +5064,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\position.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_axes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

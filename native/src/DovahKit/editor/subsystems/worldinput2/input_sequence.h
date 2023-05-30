@@ -4,8 +4,8 @@
 #include <vector>
 #include "helpers/owned_ptr.h"
 #include "./enums/axis2D.h"
-#include "./enums/scalar_input_control.h"
-#include "./enums/vector_input_control.h"
+#include "./enums/range_input_axes.h"
+#include "./enums/range_input_control.h"
 #include "./inputs/button.h"
 #include "./chrono.h"
 #include "./interruption_check.h"
@@ -71,25 +71,15 @@ namespace dovahkit::subsystems::worldinput2 {
          };
          
          struct range_requirement {
-            vector_input_control vector = vector_input_control::none;
-            struct {
-               scalar_input_control type = scalar_input_control::none;
-               axis2D               axis = axis2D::x; // TODO: we only need this if we use a vector control *as* a scalar control, which we can't do due to how we've defined this struct
-            } scalar;
+            range_input_control control = range_input_control::none;
+            range_input_axes    axes    = range_input_axes::all;
 
-            constexpr bool operator==(const range_requirement& other) const;
+            constexpr bool operator==(const range_requirement& other) const = default;
 
             bool is_satisfied(const devices::abstract_device_handler&) const;
 
             constexpr void stream(cobb::bitstreams::reader&);
             constexpr void stream(cobb::bitstreams::writer&) const;
-         };
-
-         struct control_set { // TODO: use this as the return value for the terminal inputs getter? if not, delete it
-            std::vector<inputs::button> buttons;
-
-            constexpr bool contains(const inputs::button&) const;
-            constexpr bool overlaps(const control_set&) const;
          };
 
          class group {

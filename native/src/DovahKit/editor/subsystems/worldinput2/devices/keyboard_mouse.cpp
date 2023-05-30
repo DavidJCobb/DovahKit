@@ -217,12 +217,20 @@ namespace dovahkit::subsystems::worldinput2::devices {
       return true;
    }
    //
-   range_control_state keyboard_mouse::get_range_control_state(scalar_input_control c, axis2D axis) const {
+   range_control_state keyboard_mouse::get_range_control_state(range_input_control c, range_input_axes axes) const {
       switch (c) {
-         case scalar_input_control::mouse_move:
+         case range_input_control::mouse_move:
             {
-               auto n = (axis == axis2D::y) ? this->mouse.move.y() : this->mouse.move.x();
-               if (!n) {
+               bool zeroed = true;
+               switch (axes) {
+                  using enum range_input_axes;
+                  case all:
+                     zeroed = (this->mouse.move.x() == 0) && (this->mouse.move.y() == 0);
+                     break;
+                  case x: zeroed = (this->mouse.move.x() == 0); break;
+                  case y: zeroed = (this->mouse.move.y() == 0); break;
+               }
+               if (zeroed) {
                   if (this->mouse.is_stale)
                      return range_control_state::stale;
                   return range_control_state::zeroed;
@@ -232,35 +240,18 @@ namespace dovahkit::subsystems::worldinput2::devices {
       }
       return range_control_state::unavailable;
    }
-   range_control_state keyboard_mouse::get_range_control_state(vector_input_control c) const {
+   QPointF keyboard_mouse::get_range_control_value(range_input_control c, range_input_axes axes) const {
+      if (c == range_input_control::none)
+         return { 0, 0 };
       switch (c) {
-         case vector_input_control::mouse_move:
-            if (this->mouse.move.x() == 0 && this->mouse.move.y() == 0) {
-               if (this->mouse.is_stale)
-                  return range_control_state::stale;
-               return range_control_state::zeroed;
+         case range_input_control::mouse_move:
+            switch (axes) {
+               using enum range_input_axes;
+               case all: return this->mouse.move;
+               case x:   return { (qreal)this->mouse.move.x(), 0 };
+               case y:   return { (qreal)this->mouse.move.y(), 0 };
             }
-            return range_control_state::active;
-      }
-      return range_control_state::unavailable;
-   }
-   QPointF keyboard_mouse::get_range_control_value(scalar_input_control s, axis2D axis) const {
-      if (s == scalar_input_control::none)
-         return { 0, 0 };
-      switch (s) {
-         case scalar_input_control::mouse_move:
-            if (axis == axis2D::y)
-               return { (qreal)this->mouse.move.y(), 0 };
-            return { (qreal)this->mouse.move.x(), 0 };
-      }
-      return { 0, 0 };
-   }
-   QPointF keyboard_mouse::get_range_control_value(vector_input_control v) const {
-      if (v == vector_input_control::none)
-         return { 0, 0 };
-      switch (v) {
-         case vector_input_control::mouse_move:
-            return this->mouse.move;
+            break;
       }
       return { 0, 0 };
    }

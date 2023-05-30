@@ -10,13 +10,10 @@
 namespace dovahkit::subsystems::worldinput2 {
    #pragma region input_sequence::range_requirement
    bool input_sequence::range_requirement::is_satisfied(const devices::abstract_device_handler& device) const {
-      range_control_state state;
-      if (this->vector != vector_input_control::none)
-         state = device.get_range_control_state(this->vector);
-      else if (this->scalar.type != scalar_input_control::none)
-         state = device.get_range_control_state(this->scalar.type, this->scalar.axis);
-      else
+      if (this->control == range_input_control::none)
          return true;
+
+      range_control_state state = device.get_range_control_state(this->control, this->axes);
 
       if (state == range_control_state::unavailable)
          return false;

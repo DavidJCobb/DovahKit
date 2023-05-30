@@ -156,62 +156,53 @@ namespace dovahkit::subsystems::worldinput2::devices {
       return (i != no_button);
    }
    //
-   range_control_state xinput::get_range_control_state(scalar_input_control c, axis2D axis) const {
-      qreal scalar;
+   range_control_state xinput::get_range_control_state(range_input_control c, range_input_axes axes) const {
+      QPointF value;
       switch (c) {
-         case scalar_input_control::xinput_ls:
-            scalar = (axis == axis2D::y) ? this->vectors.ls.y() : this->vectors.ls.x();
-            break;
-         case scalar_input_control::xinput_rs:
-            scalar = (axis == axis2D::y) ? this->vectors.rs.y() : this->vectors.rs.x();
-            break;
-         case scalar_input_control::xinput_lt:
-            scalar = this->scalars.lt;
-            break;
-         case scalar_input_control::xinput_rt:
-            scalar = this->scalars.rt;
-            break;
+         case range_input_control::xinput_ls: value = this->vectors.ls; break;
+         case range_input_control::xinput_rs: value = this->vectors.rs; break;
+         case range_input_control::xinput_lt: value = { this->scalars.lt, 0 }; break;
+         case range_input_control::xinput_rt: value = { this->scalars.rt, 0 }; break;
          default:
-            return range_control_state::unavailable;
+            range_control_state::unavailable;
       }
-      return (scalar == 0.0) ? range_control_state::zeroed : range_control_state::active;
+      bool zeroed = true;
+      if (range_input_control_has_multiple_axes(c)) {
+         switch (axes) {
+            using enum range_input_axes;
+            case all:
+               zeroed = value.isNull();
+               break;
+            case x: zeroed = value.x() == 0.0; break;
+            case y: zeroed = value.y() == 0.0; break;
+         }
+      } else {
+         zeroed = (value.x() == 0.0);
+      }
+      return zeroed ? range_control_state::zeroed : range_control_state::active;
    }
-   range_control_state xinput::get_range_control_state(vector_input_control c) const {
+   QPointF xinput::get_range_control_value(range_input_control c, range_input_axes axes) const {
+      if (c == range_input_control::none)
+         return { 0, 0 };
       switch (c) {
-         case vector_input_control::xinput_ls:
-            return this->vectors.ls.isNull() ? range_control_state::zeroed : range_control_state::active;
-         case vector_input_control::xinput_rs:
-            return this->vectors.rs.isNull() ? range_control_state::zeroed : range_control_state::active;
-      }
-      return range_control_state::unavailable;
-   }
-   QPointF xinput::get_range_control_value(scalar_input_control s, axis2D axis) const {
-      if (s == scalar_input_control::none)
-         return { 0, 0 };
-      switch (s) {
-         case scalar_input_control::xinput_ls:
-            if (axis == axis2D::y)
-               return { this->vectors.ls.y(), 0 };
-            return { this->vectors.ls.x(), 0 };
-         case scalar_input_control::xinput_rs:
-            if (axis == axis2D::y)
-               return { this->vectors.rs.y(), 0 };
-            return { this->vectors.rs.x(), 0 };
-         case scalar_input_control::xinput_lt:
+         case range_input_control::xinput_ls:
+         case range_input_control::xinput_rs:
+            {
+               const auto& src = (c == range_input_control::xinput_ls) ? this->vectors.ls : this->vectors.rs;
+               switch (axes) {
+                  using enum range_input_axes;
+                  case x:   return { src.x(), 0 };
+                  case y:   return { src.y(), 0 };
+                  case all:
+                  default:
+                     return src;
+               }
+            }
+            break;
+         case range_input_control::xinput_lt:
             return { this->scalars.lt, 0 };
-         case scalar_input_control::xinput_rt:
+         case range_input_control::xinput_rt:
             return { this->scalars.rt, 0 };
-      }
-      return { 0, 0 };
-   }
-   QPointF xinput::get_range_control_value(vector_input_control v) const {
-      if (v == vector_input_control::none)
-         return { 0, 0 };
-      switch (v) {
-         case vector_input_control::xinput_ls:
-            return this->vectors.ls;
-         case vector_input_control::xinput_rs:
-            return this->vectors.rs;
       }
       return { 0, 0 };
    }

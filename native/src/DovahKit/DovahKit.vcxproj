@@ -889,8 +889,8 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\optional_yn.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\range_control_state.h" />
-    <ClInclude Include="editor\subsystems\worldinput2\enums\scalar_input_control.h" />
-    <ClInclude Include="editor\subsystems\worldinput2\enums\vector_input_control.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_axes.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_control.h" />
     <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h" />
     <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h" />
     <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h" />

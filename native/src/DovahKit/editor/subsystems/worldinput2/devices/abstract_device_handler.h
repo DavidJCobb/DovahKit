@@ -3,8 +3,8 @@
 #include "../enums/axis2D.h"
 #include "../enums/button_press_type.h"
 #include "../enums/range_control_state.h"
-#include "../enums/scalar_input_control.h"
-#include "../enums/vector_input_control.h"
+#include "../enums/range_input_axes.h"
+#include "../enums/range_input_control.h"
 #include "../chrono.h"
 #include "../device_button_state.h"
 #include "../interruption_check.h"
@@ -32,10 +32,8 @@ namespace dovahkit::subsystems::worldinput2::devices {
 
          virtual bool button_is_valid(const inputs::button&) const = 0;
 
-         virtual range_control_state get_range_control_state(scalar_input_control, axis2D) const = 0;
-         virtual range_control_state get_range_control_state(vector_input_control) const = 0;
-         virtual QPointF get_range_control_value(scalar_input_control, axis2D) const = 0;
-         virtual QPointF get_range_control_value(vector_input_control) const = 0;
+         virtual range_control_state get_range_control_state(range_input_control, range_input_axes) const = 0;
+         virtual QPointF get_range_control_value(range_input_control, range_input_axes) const = 0; // If only one axis is requested, return { axis_value, 0 }.
 
          // The return value is stored in a `std::vector` and is not heap-allocated.
          //

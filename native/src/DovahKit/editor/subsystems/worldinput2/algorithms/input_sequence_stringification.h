@@ -4,9 +4,9 @@
 #include <vector>
 #include <QDebug>
 #include "helpers/keyboard/virtual_key.h"
-#include "../enums/axis2D.h"
-#include "../enums/scalar_input_control.h"
-#include "../enums/vector_input_control.h"
+#include "../enums/range_input_axes.h"
+#include "../enums/range_input_control.h"
+#include "../inputs/button.h"
 #include "../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput2::algorithms {
@@ -66,27 +66,25 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
       struct _name_to_directional_control {
          const char* name;
          const char* name_formal;
-         vector_input_control vector = vector_input_control::none;
-         scalar_input_control scalar = scalar_input_control::none;
-         axis2D scalar_axis = axis2D::x;
+         range_input_control control = range_input_control::none;
+         range_input_axes    axes    = range_input_axes::all;
 
-         constexpr _name_to_directional_control(const char* a, const char* b, vector_input_control c) : name(a), name_formal(b), vector(c) {}
-         constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c) : name(a), name_formal(b), scalar(c) {}
-         constexpr _name_to_directional_control(const char* a, const char* b, scalar_input_control c, axis2D d) : name(a), name_formal(b), scalar(c), scalar_axis(d) {}
+         constexpr _name_to_directional_control(const char* a, const char* b, range_input_control c) : name(a), name_formal(b), control(c) {}
+         constexpr _name_to_directional_control(const char* a, const char* b, range_input_control c, range_input_axes d) : name(a), name_formal(b), control(c), axes(d) {}
       };
       //
       constexpr const auto range_control_names = std::array{
-         _name_to_directional_control{ "mouse move",    "Mouse Move",    vector_input_control::mouse_move },
-         _name_to_directional_control{ "left stick",    "Left Stick",    vector_input_control::xinput_ls },
-         _name_to_directional_control{ "right stick",   "Right Stick",   vector_input_control::xinput_rs },
-         _name_to_directional_control{ "left trigger",  "Left Trigger",  scalar_input_control::xinput_lt },
-         _name_to_directional_control{ "right trigger", "Right Trigger", scalar_input_control::xinput_rt },
-         _name_to_directional_control{ "mouse move x",  "Mouse Move X",  scalar_input_control::mouse_move, axis2D::x },
-         _name_to_directional_control{ "mouse move y",  "Mouse Move Y",  scalar_input_control::mouse_move, axis2D::y },
-         _name_to_directional_control{ "left stick x",  "Left Stick X",  scalar_input_control::xinput_ls,  axis2D::x },
-         _name_to_directional_control{ "left stick y",  "Left Stick Y",  scalar_input_control::xinput_ls,  axis2D::y },
-         _name_to_directional_control{ "right stick x", "Right Stick X", scalar_input_control::xinput_rs,  axis2D::x },
-         _name_to_directional_control{ "right stick y", "Right Stick Y", scalar_input_control::xinput_rs,  axis2D::y },
+         _name_to_directional_control{ "mouse move",    "Mouse Move",    range_input_control::mouse_move },
+         _name_to_directional_control{ "left stick",    "Left Stick",    range_input_control::xinput_ls },
+         _name_to_directional_control{ "right stick",   "Right Stick",   range_input_control::xinput_rs },
+         _name_to_directional_control{ "left trigger",  "Left Trigger",  range_input_control::xinput_lt },
+         _name_to_directional_control{ "right trigger", "Right Trigger", range_input_control::xinput_rt },
+         _name_to_directional_control{ "mouse move x",  "Mouse Move X",  range_input_control::mouse_move, range_input_axes::x },
+         _name_to_directional_control{ "mouse move y",  "Mouse Move Y",  range_input_control::mouse_move, range_input_axes::y },
+         _name_to_directional_control{ "left stick x",  "Left Stick X",  range_input_control::xinput_ls,  range_input_axes::x },
+         _name_to_directional_control{ "left stick y",  "Left Stick Y",  range_input_control::xinput_ls,  range_input_axes::y },
+         _name_to_directional_control{ "right stick x", "Right Stick X", range_input_control::xinput_rs,  range_input_axes::x },
+         _name_to_directional_control{ "right stick y", "Right Stick Y", range_input_control::xinput_rs,  range_input_axes::y },
       };
    }
 
@@ -147,11 +145,7 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
       if (seq.has_range_requirement()) {
          out += " :: ";
          for (const auto& known : range_control_names) {
-            if (seq.range.vector == known.vector) {
-               out += known.name_formal;
-               break;
-            }
-            if (seq.range.scalar.type == known.scalar) {
+            if (seq.range.control == known.control && seq.range.axes == known.axes) {
                out += known.name_formal;
                break;
             }
@@ -217,9 +211,8 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
                   bool found = false;
                   for (const auto& known : range_control_names) {
                      if (dir_name == known.name) {
-                        out.range.scalar.type = known.scalar;
-                        out.range.scalar.axis = known.scalar_axis;
-                        out.range.vector      = known.vector;
+                        out.range.control = known.control;
+                        out.range.axes    = known.axes;
                         found = true;
                         break;
                      }

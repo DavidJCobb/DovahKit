@@ -5,43 +5,6 @@
 #include "helpers/bitstreams/reader.h"
 
 namespace dovahkit::subsystems::worldinput2 {
-   #pragma region input_sequence::range_requirement
-   constexpr bool input_sequence::range_requirement::operator==(const range_requirement& other) const {
-      if (this->vector != other.vector)
-         return false;
-      if (this->vector != vector_input_control::none) {
-         //
-         // Scalar info isn't relevant if we're using a vector. (We can only 
-         // use one.)
-         //
-         return true;
-      }
-      if (this->scalar.type != other.scalar.type)
-         return false;
-      if (this->scalar.type != scalar_input_control::none) {
-         if (this->scalar.axis != other.scalar.axis)
-            return false;
-      }
-      return true;
-   }
-   #pragma endregion
-
-   #pragma region input_sequence::control_set
-   constexpr bool input_sequence::control_set::contains(const inputs::button& btn) const {
-      for (const auto& item : this->buttons)
-         if (item == btn)
-            return true;
-      return false;
-   }
-   constexpr bool input_sequence::control_set::overlaps(const control_set& other) const {
-      for (const auto& item_a : this->buttons)
-         for (const auto& item_b : other.buttons)
-            if (item_a == item_b)
-               return true;
-      return false;
-   }
-   #pragma endregion
-
    #pragma region input_sequence::group
    constexpr input_sequence::group::~group() {
       for (auto* child : this->children)
@@ -145,11 +108,7 @@ namespace dovahkit::subsystems::worldinput2 {
       return recurse(*this->root, recurse);
    }
    constexpr bool input_sequence::has_range_requirement() const {
-      if (this->range.vector != vector_input_control::none)
-         return true;
-      if (this->range.scalar.type != scalar_input_control::none)
-         return true;
-      return false;
+      return (this->range.control != range_input_control::none);
    }
    constexpr bool input_sequence::has_raycast_requirement() const {
       if (this->raycast.associated_button)
@@ -248,21 +207,24 @@ namespace dovahkit::subsystems::worldinput2 {
 
       s.stream(presence);
       if (presence) {
-         s.stream(this->scalar.type, this->scalar.axis);
-      }
-      s.stream(presence);
-      if (presence) {
-         s.stream(this->vector);
+         s.stream(this->control);
+         if (range_input_control_has_multiple_axes(this->control)) {
+            s.stream(this->axes);
+         } else {
+            this->axes = range_input_axes::all;
+         }
+      } else {
+         this->control = range_input_control::none;
+         this->axes    = range_input_axes::all;
       }
    }
    constexpr void input_sequence::range_requirement::stream(cobb::bitstreams::writer& s) const {
-      s.stream((bool)(this->scalar.type != scalar_input_control::none));
-      if (this->scalar.type != scalar_input_control::none) {
-         s.stream(this->scalar.type, this->scalar.axis);
-      }
-      s.stream((bool)(this->vector != vector_input_control::none));
-      if (this->vector != vector_input_control::none) {
-         s.stream(this->vector);
+      s.stream((bool)(this->control != range_input_control::none));
+      if (this->control != range_input_control::none) {
+         s.stream(this->control);
+         if (range_input_control_has_multiple_axes(this->control)) {
+            s.stream(this->axes);
+         }
       }
    }
 
