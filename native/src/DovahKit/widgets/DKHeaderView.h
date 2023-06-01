@@ -31,6 +31,7 @@ class DKHeaderView : public QHeaderView {
    protected:
       void _reapplyColumnFlex(int length);
       void resizeEvent(QResizeEvent* event) override;
+      void showEvent(QShowEvent* event) override;
 
       struct _column_flex_info {
          int  grow   = 1;

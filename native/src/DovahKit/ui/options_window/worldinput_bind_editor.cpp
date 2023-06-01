@@ -1,5 +1,8 @@
 #include "./worldinput_bind_editor.h"
+#include <QAction>
+#include <QMenu>
 #include "helpers/qt/combobox.h"
+#include "widgets/DKHeaderView.h"
 
 #include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
 #include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
@@ -66,11 +69,79 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
       {
          auto* treeview = this->ui.treeView;
          treeview->setModel(new DKWorldinputInputSequenceModel(treeview));
+         treeview->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+         treeview->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+         treeview->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
          treeview->expandAll();
+
+         // QHeaderView sucks, and is bad, so replace it with this
+         auto* header = new DKHeaderView(Qt::Orientation::Horizontal, treeview);
+         treeview->setHeader(header);
+
+         header->setFlexResizeEnabled(true);
+         header->setColumnFlex(0, 1, 0);
+         header->setColumnFlex(1, 0, 0, 16);
+         header->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
+
+         #pragma region Treeview context menu
+            treeview->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+            {
+               auto* item = this->_treeview_context_menu.set_raycast_associated = new QAction(tr("Raycast-associated"), this);
+               QObject::connect(item, &QAction::triggered, this, [this]() {
+                  auto* model = this->_getInputSequenceModel();
+                  auto  qmi   = this->_getFirstSeqSelection();
+                  
+                  auto info_opt = model->infoFor(qmi);
+                  if (!info_opt.has_value())
+                     return;
+
+                  const auto& info = info_opt.value();
+                  if (info.type != input_sequence::group_type::single_control)
+                     return;
+
+                  bool already = model->raycastAssociatedButton() == qmi;
+                  model->setRaycastAssociatedButton(already ? QModelIndex{} : qmi);
+               });
+            }
+            QObject::connect(treeview, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+               const auto* opener = this->ui.treeView;
+               const auto& items  = this->_treeview_context_menu;
+
+               auto* model = this->_getInputSequenceModel();
+               auto  qmi   = this->_getFirstSeqSelection();
+
+               QMenu menu;
+               menu.addAction(items.set_raycast_associated);
+
+               {
+                  auto* item = items.set_raycast_associated;
+
+                  item->setEnabled(false);
+                  item->setVisible(false);
+                  auto info_opt = model->infoFor(qmi);
+                  if (info_opt.has_value()) {
+                     const auto& info = info_opt.value();
+                     if (info.type == input_sequence::group_type::single_control) {
+                        item->setEnabled(true);
+                        item->setVisible(true);
+                        if (model->isRaycastAssociatedButton(qmi)) {
+                           item->setText(tr("Unset as raycast-associated"));
+                        } else {
+                           item->setText(tr("Make raycast-associated"));
+                        }
+                     }
+                  }
+               }
+
+               if (menu.isEmpty())
+                  return; // don't show an empty menu
+               menu.exec(opener->mapToGlobal(pos));
+            });
+         #pragma endregion
       }
       #pragma region Treeview hierarchy edit buttons
          QObject::connect(this->ui.inputSeqAddButton, &QPushButton::clicked, this, [this]() {
-            auto created = this->_getModel()->addButtonTo(this->_getFirstSeqSelection());
+            auto created = this->_getInputSequenceModel()->addButtonTo(this->_getFirstSeqSelection());
             if (created.has_value()) {
                auto* sm = this->ui.treeView->selectionModel();
                if (sm)
@@ -78,7 +149,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             }
          });
          QObject::connect(this->ui.inputSeqAddGroup, &QPushButton::clicked, this, [this]() {
-            auto created = this->_getModel()->addGroupTo(this->_getFirstSeqSelection());
+            auto created = this->_getInputSequenceModel()->addGroupTo(this->_getFirstSeqSelection());
             if (created.has_value()) {
                auto* sm = this->ui.treeView->selectionModel();
                if (sm)
@@ -86,13 +157,13 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             }
          });
          QObject::connect(this->ui.inputSeqMoveUp, &QPushButton::clicked, this, [this]() {
-            this->_getModel()->moveItems(this->_getSeqSelection(), -1);
+            this->_getInputSequenceModel()->moveItems(this->_getSeqSelection(), -1);
          });
          QObject::connect(this->ui.inputSeqMoveDown, &QPushButton::clicked, this, [this]() {
-            this->_getModel()->moveItems(this->_getSeqSelection(), 1);
+            this->_getInputSequenceModel()->moveItems(this->_getSeqSelection(), 1);
          });
          QObject::connect(this->ui.inputSeqDelete, &QPushButton::clicked, this, [this]() {
-            this->_getModel()->deleteItems(this->_getSeqSelection());
+            this->_getInputSequenceModel()->deleteItems(this->_getSeqSelection());
          });
       #pragma endregion
       #pragma region Editing controls for selected treeview item
@@ -106,7 +177,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             widget->addItem(tr("Separate and ordered"), (int)input_sequence::group_type::separated_ordered);
 
             QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int current) {
-               auto* model     = this->_getModel();
+               auto* model     = this->_getInputSequenceModel();
                auto  selection = this->_getFirstSeqSelection();
                auto  info_opt  = model->infoFor(selection);
                if (!info_opt.has_value())
@@ -117,7 +188,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
          }
          this->ui.inputSeqButtonMakeRaycastAssoc->setCheckable(true);
          QObject::connect(this->ui.inputSeqButtonRemap, &QPushButton::clicked, this, [this]() {
-            auto* model     = this->_getModel();
+            auto* model     = this->_getInputSequenceModel();
             auto  selection = this->_getFirstSeqSelection();
             auto  info_opt  = model->infoFor(selection);
             if (!info_opt.has_value())
@@ -156,12 +227,16 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             delete modal;
          });
          QObject::connect(this->ui.inputSeqButtonMakeRaycastAssoc, &QPushButton::clicked, this, [this]() {
-            auto* model     = this->_getModel();
+            auto* model     = this->_getInputSequenceModel();
             auto  selection = this->_getFirstSeqSelection();
-            this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(model->setRaycastAssociatedButton(selection));
+            if (model->isRaycastAssociatedButton(selection)) {
+               this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(false == model->setRaycastAssociatedButton(QModelIndex{}));
+            } else {
+               this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(true  == model->setRaycastAssociatedButton(selection));
+            }
          });
          QObject::connect(this->ui.treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
-            auto* model    = this->_getModel();
+            auto* model    = this->_getInputSequenceModel();
             auto  info_opt = model->infoFor(current);
 
             this->ui.inputSeqEditSelection->setEnabled(info_opt.has_value());
@@ -172,7 +247,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             const auto& info = info_opt.value();
             if (info.type == dovahkit::subsystems::worldinput2::input_sequence::group_type::single_control) {
                this->ui.inputSeqEditSelection->setCurrentWidget(this->ui.inputSeqEditButton);
-               this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(model->raycastAssociatedButton() == current);
+               this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(model->isRaycastAssociatedButton(current));
             } else {
                const auto blocker_a = QSignalBlocker(this->ui.inputSeqGroupType);
 
@@ -180,7 +255,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
                cobb::qt::set_combobox_value(this->ui.inputSeqGroupType, info.type);
             }
          });
-         QObject::connect(this->_getModel(), &QAbstractItemModel::modelReset, this, [this]() {
+         QObject::connect(this->_getInputSequenceModel(), &QAbstractItemModel::modelReset, this, [this]() {
             this->ui.inputSeqEditSelection->setEnabled(false);
          });
       #pragma endregion
@@ -223,8 +298,8 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
    #pragma endregion
 }
 
-DKWorldinputInputSequenceModel* WorldinputBindEditDialog::_getModel() {
-   auto* model = dynamic_cast<DKWorldinputInputSequenceModel*>(this->ui.treeView->model());
+const DKWorldinputInputSequenceModel* WorldinputBindEditDialog::_getInputSequenceModel() const {
+   auto* model = dynamic_cast<const DKWorldinputInputSequenceModel*>(this->ui.treeView->model());
    assert(model);
    return model;
 }
@@ -248,7 +323,7 @@ void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldi
    cobb::qt::set_combobox_value(this->ui.rangeControlType, node.input_sequence.range.control);
    cobb::qt::set_combobox_value(this->ui.rangeControlAxis, node.input_sequence.range.axes);
 
-   this->_getModel()->overwriteFromSource(node.input_sequence);
+   this->_getInputSequenceModel()->overwriteFromSource(node.input_sequence);
    this->ui.treeView->expandAll();
 
    {
@@ -285,7 +360,7 @@ void WorldinputBindEditDialog::overwrite(dovahkit::subsystems::worldinput2::bind
    node.input_sequence.range.control = (range_input_control) this->ui.rangeControlType->currentData().toInt();
    node.input_sequence.range.axes    = (range_input_axes)    this->ui.rangeControlAxis->currentData().toInt();
 
-   // TODO: Treeview model
+   this->_getInputSequenceModel()->overwriteDestination(node.input_sequence);
 
    {
       auto& dst = node.input_sequence.raycast.requirement;

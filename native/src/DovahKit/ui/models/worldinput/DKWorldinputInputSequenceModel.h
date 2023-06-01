@@ -60,6 +60,7 @@ class DKWorldinputInputSequenceModel : public QAbstractItemModel {
       Node* _root = nullptr;
       Node* _raycast_associated_button = nullptr;
 
+      bool _is_empty_qmi(const QModelIndex&) const;
       const Node* _node_from_qmi(const QModelIndex&) const;
       Node* _node_from_qmi(const QModelIndex& qmi) {
          return const_cast<Node*>(std::as_const(*this)._node_from_qmi(qmi));
@@ -72,10 +73,20 @@ class DKWorldinputInputSequenceModel : public QAbstractItemModel {
       static constexpr const auto GroupTypeRole           = (Qt::ItemDataRole)(Qt::UserRole + 1);
       static constexpr const auto IsRaycastAssociatedRole = (Qt::ItemDataRole)(Qt::UserRole + 2);
 
+      struct Columns {
+         Columns() = delete;
+         enum : int {
+            Name = 0,
+            RaycastAssociatedIndicator = 1,
+         };
+      };
+      static constexpr const int MaxColumns = 2;
+
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
             virtual QModelIndex   index(int row, int column, const QModelIndex& parent) const override;
             virtual QModelIndex   parent(const QModelIndex& index) const;
+            virtual QModelIndex   sibling(int row, int column, const QModelIndex& index) const override;
             virtual int           rowCount(const QModelIndex& parent) const override;
             virtual int           columnCount(const QModelIndex& item) const override;
 
@@ -90,6 +101,7 @@ class DKWorldinputInputSequenceModel : public QAbstractItemModel {
 
       void clear();
       void overwriteFromSource(const input_sequence&);
+      void overwriteDestination(input_sequence&) const;
       
    protected:
       bool _insertInOrAfter(const QModelIndex& target, Node*);
@@ -104,5 +116,6 @@ class DKWorldinputInputSequenceModel : public QAbstractItemModel {
       void replaceInfoFor(const QModelIndex&, const NodeInfo&);
 
       std::optional<QModelIndex> raycastAssociatedButton() const;
+      bool isRaycastAssociatedButton(const QModelIndex&) const;
       bool setRaycastAssociatedButton(const QModelIndex&);
 };

@@ -7,5 +7,6 @@
     <qresource prefix="/icons">
         <file>refresh.png</file>
         <file>mouse-64.png</file>
+        <file>star.png</file>
     </qresource>
 </RCC>

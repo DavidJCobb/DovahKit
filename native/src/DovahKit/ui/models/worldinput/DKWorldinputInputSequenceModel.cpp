@@ -1,4 +1,5 @@
 #include "./DKWorldinputInputSequenceModel.h"
+#include <QIcon>
 
 /*
   
@@ -144,6 +145,9 @@ QString DKWorldinputInputSequenceModel::Node::button_name() const {
    return QString("Key: ") + QString::fromStdWString(name);
 }
 
+bool DKWorldinputInputSequenceModel::_is_empty_qmi(const QModelIndex& qmi) const {
+   return (qmi.row() < 0 || qmi.column() < 0);
+}
 const DKWorldinputInputSequenceModel::Node* DKWorldinputInputSequenceModel::_node_from_qmi(const QModelIndex& qmi) const {
    if (qmi.row() < 0 || qmi.column() < 0)
       return nullptr;
@@ -172,6 +176,7 @@ QModelIndex DKWorldinputInputSequenceModel::_qmi_for_node(const Node* node, int 
 void DKWorldinputInputSequenceModel::_clear_silent() {
    if (this->_root) {
       delete this->_root;
+      this->_root = nullptr;
    }
    this->_raycast_associated_button = nullptr;
 }
@@ -181,11 +186,13 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
       QModelIndex DKWorldinputInputSequenceModel::index(int row, int column, const QModelIndex& parent) const {
          if (!this->_root || row < 0 || column < 0)
             return {};
+         if (column > MaxColumns)
+            return {};
 
          const auto* parent_node = this->_node_from_qmi(parent);
          if (!parent_node) {
             if (row == 0)
-               return this->createIndex(0, column, nullptr);
+               return this->createIndex(row, column, nullptr);
             return {};
          }
          if (row >= parent_node->child_count())
@@ -199,6 +206,26 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
             return {};
          return this->_qmi_for_node(node->parent, index.column());
       }
+      QModelIndex DKWorldinputInputSequenceModel::sibling(int row, int column, const QModelIndex& index) const {
+         if (row < 0 || column < 0)
+            return {};
+         if (column > MaxColumns)
+            return {};
+         auto* node = this->_node_from_qmi(index);
+         if (!node)
+            return {};
+
+         if (row != index.row()) {
+            auto* parent = node->parent;
+            if (!parent) {
+               assert(node == this->_root);
+               return {};
+            }
+            if (row >= parent->child_count())
+               return {};
+         }
+         return this->createIndex(row, column, index.internalPointer());
+      }
       int DKWorldinputInputSequenceModel::rowCount(const QModelIndex& parent) const {
          auto* parent_node = this->_node_from_qmi(parent);
          if (!parent_node)
@@ -206,7 +233,7 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
          return parent_node->group.children.size();
       }
       int DKWorldinputInputSequenceModel::columnCount(const QModelIndex& item) const {
-         return 1;
+         return MaxColumns;
       }
 
       bool DKWorldinputInputSequenceModel::moveRows(const QModelIndex& from_parent, int first_row_index, int count, const QModelIndex& to_parent, int to_position) {
@@ -291,7 +318,7 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
          if (!node)
             return {};
          auto col = index.column();
-         if (col == 0) {
+         if (col == Columns::Name) {
             switch (role) {
                case Qt::ItemDataRole::DisplayRole:
                case Qt::ItemDataRole::ToolTipRole:
@@ -304,11 +331,17 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
                         return tr("Separate and ordered group", "group type");
                   }
                   return node->button_name();
+            }
+         }
+         if (col == Columns::RaycastAssociatedIndicator) {
+            switch (role) {
                case Qt::ItemDataRole::DecorationRole:
                   if (node == this->_raycast_associated_button) {
-                     // TODO: return QIcon
+                     return QIcon(":/icons/star.png");
                   }
                   break;
+               case Qt::ItemDataRole::SizeHintRole:
+                  return QSize(16, 16);
             }
          }
          switch (role) {
@@ -325,14 +358,24 @@ void DKWorldinputInputSequenceModel::_clear_silent() {
             flags |= Qt::ItemFlag::ItemIsEnabled;
             flags |= Qt::ItemFlag::ItemIsSelectable;
             if (!node->can_have_children()) {
-               flags |= Qt::ItemFlag::ItemNeverHasChildren;
+               //flags |= Qt::ItemFlag::ItemNeverHasChildren;
             }
          }
          return flags;
       }
       QVariant DKWorldinputInputSequenceModel::headerData(int section, Qt::Orientation orientation, int role) const {
-         if (section == 0 && role == Qt::DisplayRole)
+         if (section == Columns::Name && role == Qt::DisplayRole)
             return tr("Input sequence");
+         if (section == Columns::RaycastAssociatedIndicator) {
+            switch (role) {
+               case Qt::ItemDataRole::DisplayRole:
+                  return tr("R.A.", "column header for raycast-associated-button indicator");
+               case Qt::ItemDataRole::ToolTipRole:
+                  return tr("The raycast-associated button will have a star icon in this column.");
+               case Qt::ItemDataRole::SizeHintRole:
+                  return QSize(16, 16);
+            }
+         }
          return {};
       }
    #pragma endregion
@@ -380,6 +423,46 @@ void DKWorldinputInputSequenceModel::overwriteFromSource(const input_sequence& s
       clone(*src.root);
 
    this->endResetModel();
+}
+void DKWorldinputInputSequenceModel::overwriteDestination(input_sequence& dst) const {
+   dst.raycast.associated_button = nullptr;
+   if (dst.root) {
+      delete dst.root;
+      dst.root = nullptr;
+   }
+
+   auto clone = [this, &dst](const Node& n) {
+      auto recurse = [&](const Node& n, input_sequence::group* parent, auto& recurse) -> void {
+         auto* group = new input_sequence::group;
+         group->type = n.type;
+         if (parent) {
+            parent->children.push_back(group);
+         } else {
+            assert(!dst.root);
+            dst.root = group;
+         }
+
+         if (n.type == group_type::single_control) {
+            group->button = {
+               .key     = n.button.vk,
+               .mouse   = n.button.mouse,
+               .gamepad = n.button.xinput,
+            };
+         }
+         if (&n == this->_raycast_associated_button) {
+            dst.raycast.associated_button = group;
+         }
+         if (n.can_have_children()) {
+            for (const auto* child : n.group.children) {
+               assert(child != nullptr);
+               recurse(*child, group, recurse);
+            }
+         }
+      };
+      recurse(n, nullptr, recurse);
+   };
+   if (this->_root)
+      clone(*this->_root);
 }
 
 bool DKWorldinputInputSequenceModel::_insertInOrAfter(const QModelIndex& target, Node* item) {
@@ -462,6 +545,10 @@ void DKWorldinputInputSequenceModel::deleteItems(QModelIndexList indices) {
       if (!node)
          continue;
 
+      if (node == this->_raycast_associated_button) {
+         this->_raycast_associated_button = nullptr;
+      }
+
       if (!node->parent) {
          assert(node == this->_root);
          this->clear();
@@ -515,6 +602,11 @@ void DKWorldinputInputSequenceModel::moveItems(QModelIndexList indices, int down
 }
 
 std::optional<DKWorldinputInputSequenceModel::NodeInfo> DKWorldinputInputSequenceModel::infoFor(const QModelIndex& qmi) const {
+   if (qmi.column() != 0) {
+      if (_is_empty_qmi(qmi))
+         return {};
+      return infoFor(qmi.siblingAtColumn(0));
+   }
    auto* node = this->_node_from_qmi(qmi);
    if (!node)
       return {};
@@ -555,12 +647,35 @@ std::optional<QModelIndex> DKWorldinputInputSequenceModel::raycastAssociatedButt
       return {};
    return this->_qmi_for_node(this->_raycast_associated_button);
 }
+bool DKWorldinputInputSequenceModel::isRaycastAssociatedButton(const QModelIndex& qmi) const {
+   if (qmi.column() != 0) {
+      if (_is_empty_qmi(qmi))
+         return this->_raycast_associated_button == nullptr;
+      return isRaycastAssociatedButton(qmi.siblingAtColumn(0));
+   }
+   return qmi == this->_qmi_for_node(this->_raycast_associated_button);
+}
 bool DKWorldinputInputSequenceModel::setRaycastAssociatedButton(const QModelIndex& qmi) {
-   auto* node = this->_node_from_qmi(qmi);
-   if (!node)
-      return false;
+   auto* prior = this->_raycast_associated_button;
+   auto* node  = this->_node_from_qmi(qmi);
+   if (!node) {
+      this->_raycast_associated_button = nullptr;
+      if (prior) {
+         const QModelIndex qmi_prior = this->_qmi_for_node(this->_raycast_associated_button, Columns::RaycastAssociatedIndicator);
+         emit dataChanged(qmi_prior, qmi_prior);
+      }
+      return true;
+   }
    if (node->type != group_type::single_control)
       return false;
    this->_raycast_associated_button = node;
+   if (prior) {
+      const QModelIndex qmi_prior = this->_qmi_for_node(this->_raycast_associated_button, Columns::RaycastAssociatedIndicator);
+      emit dataChanged(qmi_prior, qmi_prior);
+   }
+   if (node) {
+      auto qmi_ra = qmi.siblingAtColumn(Columns::RaycastAssociatedIndicator);
+      emit dataChanged(qmi_ra, qmi_ra);
+   }
    return true;
 }

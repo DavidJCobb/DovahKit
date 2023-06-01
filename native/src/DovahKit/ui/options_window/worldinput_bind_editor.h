@@ -11,6 +11,8 @@
 #include "editor/subsystems/worldinput2/enums/range_input_axes.h"
 #include "editor/subsystems/worldinput2/enums/range_input_control.h"
 
+class QAction;
+
 namespace dovahkit::subsystems::worldinput2 {
    class  input_sequence;
    struct raycast_requirement;
@@ -20,6 +22,7 @@ namespace dovahkit::subsystems::worldinput2 {
       class modifier;
    }
 }
+
 class DKWorldinputInputSequenceModel;
 
 class WorldinputBindEditDialog : public QDialog {
@@ -35,6 +38,11 @@ class WorldinputBindEditDialog : public QDialog {
 
    protected:
       Ui::WorldinputBindEditDialog ui;
+      //
+      const input_device_type device_type;
+      struct {
+         QAction* set_raycast_associated = nullptr;
+      } _treeview_context_menu;
 
       using axis3D     = dovahkit::subsystems::worldedit::axis3D;
       using gizmo_mode = dovahkit::subsystems::worldedit::gizmo_mode;
@@ -47,9 +55,9 @@ class WorldinputBindEditDialog : public QDialog {
 
       using input_sequence = dovahkit::subsystems::worldinput2::input_sequence;
 
-      DKWorldinputInputSequenceModel* _getModel();
+      const DKWorldinputInputSequenceModel* _getInputSequenceModel() const;
+      DKWorldinputInputSequenceModel* _getInputSequenceModel() { return const_cast<DKWorldinputInputSequenceModel*>(std::as_const(*this)._getInputSequenceModel()); }
+
       QModelIndex _getFirstSeqSelection();
       QModelIndexList _getSeqSelection();
-
-      const input_device_type device_type;
 };

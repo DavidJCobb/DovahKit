@@ -371,3 +371,10 @@ void DKHeaderView::resizeEvent(QResizeEvent* event) {
    }
    this->reapplyColumnFlex();
 }
+void DKHeaderView::showEvent(QShowEvent* event) {
+   QHeaderView::showEvent(event);
+   if (!this->_flexResizeEnabled) {
+      return;
+   }
+   this->reapplyColumnFlex();
+}

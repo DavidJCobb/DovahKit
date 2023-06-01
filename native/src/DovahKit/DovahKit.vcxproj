@@ -1276,6 +1276,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h" />
+    <ClInclude Include="ui\models\DKGenericTreeModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
@@ -2197,6 +2198,7 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\models\DKGenericTreeModel.inl" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="vulkan\frame_in_flight.inl" />
