@@ -3,79 +3,105 @@
 #include <type_traits>
 #include <QAbstractItemModel>
 
+//
+//  - Specialize DKGenericTreeModelNode.
+// 
+//  - Define a subclass of DKGenericTreeModel using CRTP.
+// 
+// This templated class will set up a decent chunk of Qt's model-related boilerplate for you.
+//
+
 class QItemSelection;
 
-template<typename Node>
-concept DKGenericTreeModelNode = requires(Node& n, const Node& cn, size_t i) {
-   { cn.child_count() } -> std::same_as<size_t>;
-   { cn.contains(cn) } -> std::same_as<bool>; // is the argument a child or descendant of the context?
-   { cn.index_of_child(cn) } -> std::same_as<size_t>; // return index of argument in context's child list, or -1 if argument is not a child
+template<typename Self>
+class DKGenericTreeModel;
 
-   {  n.nth_child(i) } -> std::same_as<Node*>;
-   { cn.nth_child(i) } -> std::same_as<const Node*>;
-   {  n.nth_child(i) } -> std::same_as<Node*>;
-   { cn.parent_node() } -> std::same_as<const Node*>;
-   {  n.parent_node() } -> std::same_as<Node*>;
+// Specialize this, and inherit from DKGenericTreeModelNodeBase<Model>.
+template<class Model>
+class DKGenericTreeModelNode;
 
-   { n.move_children(i, i, i) }; // args: start_index, count, destination start index (element before which we want to place the first moved child)
-   //
-   // Moves a group of children within the node. Easiest way to accomplish this assuming a QVector is:
-   // 
-   //    while (count--)
-   //       this->children.move(start_index + count, destination_start_index);
-   //
+template<class Model>
+class DKGenericTreeModelNodeBase {
+   template<typename Self> friend class DKGenericTreeModel;
+   public:
+      using model_type = Model;
+      using node_type  = DKGenericTreeModelNode<Model>;
 
-   { n.move_children_to(i, i, n, i) }; // args: start index, count, destination node, destination start index
+      ~DKGenericTreeModelNodeBase();
 
-   // Additional requirements:
-   //  - Deleting a node should automatically remove it from its parent node.
+   protected:
+      QVector<node_type*> _children;
+      node_type* _parent = nullptr;
+
+      bool _check_can_have_children() const noexcept {
+         return ((const node_type*)this)->can_have_children();
+      }
+
+   public:
+      constexpr const QVector<const node_type*>& children() const noexcept {
+         return reinterpret_cast<const QVector<const node_type*>&>(this->_children);
+      }
+
+      size_t child_count() const noexcept;
+      bool contains(const node_type&) const noexcept;
+      size_t index_of_child(const node_type&) const noexcept;
+
+      const node_type* nth_child(size_t) const noexcept;
+      node_type* nth_child(size_t n) noexcept { return const_cast<node_type*>(std::as_const(*this).nth_child(n)); }
+
+      const node_type* parent_node() const noexcept;
+      node_type* parent_node() noexcept { return const_cast<node_type*>(std::as_const(*this).parent_node()); }
+
+      void move_children(size_t start, size_t count, size_t destination_start);
+      void move_children_to(size_t start, size_t count, node_type& destination_parent, size_t destination_start);
+
+      void append_child(node_type&);
+      void insert_child(size_t at, node_type&);
+      void remove_child(node_type&);
+
+      // Subclass can override this. A default-constructed node must have whatever data 
+      // would cause this to return `true`.
+      bool can_have_children() const noexcept {
+         return true;
+      }
 };
 
-template<typename Self, DKGenericTreeModelNode Node>
+template<typename Self>
 class DKGenericTreeModel : public QAbstractItemModel {
    public:
+      using base_type = DKGenericTreeModel;
       using self_type = Self;
-      using node_type = Node;
+      using node_type = DKGenericTreeModelNode<Self>;
 
       static constexpr const size_t max_columns = 1; // you can override this
       static constexpr const bool variable_column_count = false; // you can override this
 
    protected:
-      node_type* _root = nullptr;
+      node_type invisible_root;
 
    public:
       DKGenericTreeModel(QObject* parent) : QAbstractItemModel(parent) {}
+      ~DKGenericTreeModel();
 
    private:
       constexpr bool qmi_is_mine(const QModelIndex& qmi) const noexcept;
       constexpr bool qmi_is_none(const QModelIndex& qmi) const noexcept;
-      constexpr bool qmi_is_root(const QModelIndex& qmi) const noexcept;
 
-      constexpr QModelIndex make_qmi_for_root(size_t column = 0) const noexcept;
-
-      const node_type* parent_node_for_qmi(const QModelIndex& qmi) const;
-      node_type* parent_node_for_qmi(const QModelIndex& qmi);
       const node_type* node_for_qmi(const QModelIndex& qmi) const;
-      node_type* node_for_qmi(const QModelIndex& qmi);
+      node_type* node_for_qmi(const QModelIndex& qmi) { return const_cast<node_type*>(std::as_const(*this).node_for_qmi(qmi)); }
       QModelIndex qmi_for_node(const node_type&, size_t column = 0) const;
 
    #pragma region Stubs, to be overridden on the self type
    protected:
       size_t column_count_of(const node_type& node) const requires(variable_column_count);
-      void on_before_delete_root() {}
+      void on_before_delete_node(node_type&) {} // called before deleting any node
 
       QVariant      data_of(const node_type&, Qt::ItemDataRole, size_t column) const;
       Qt::ItemFlags flags_of(const node_type&, size_t column) const;
    #pragma endregion
 
    private:
-      void _clear_silent() {
-         if (this->_root) {
-            this->_on_before_delete_root();
-            delete this->_root;
-            this->_root = nullptr;
-         }
-      }
+   void _clear_silent();
 
    public:
       #pragma region QAbstractItemModel overrides
@@ -102,12 +128,36 @@ class DKGenericTreeModel : public QAbstractItemModel {
       void moveItems(const QModelIndex& start, const QModelIndex& end, int down);
       void moveItems(const QItemSelection&, int down);
 
+   #pragma region Subclass helpers
+   protected:
       const node_type* node(const QModelIndex&) const;
       node_type* node(const QModelIndex& qmi) {
          return const_cast<node_type*>(std::as_const(*this).node(qmi));
       }
+      
+      const node_type* parentNode(const QModelIndex&) const;
+      node_type* parentNode(const QModelIndex& qmi) {
+         return const_cast<node_type*>(std::as_const(*this).parentNode(qmi));
+      }
 
-      QModelIndex index(const node_type*) const;
+      QModelIndex index(const node_type*, size_t column = 0) const;
+
+      static constexpr bool isSameRow(const QModelIndex& a, const QModelIndex& b) noexcept {
+         if (a.row() != b.row())
+            return false;
+         if (a.model() != b.model())
+            return false;
+         if (a.internalPointer() != b.internalPointer())
+            return false;
+         return true;
+      }
+
+      void emitNodeChanged(const node_type&);
+      void emitNodeChanged(const node_type&, size_t column);
+      void emitNodeChanged(const QModelIndex&);
+
+      void replaceAll(node_type* root);
+   #pragma endregion
 };
 
 #include "./DKGenericTreeModel.inl"

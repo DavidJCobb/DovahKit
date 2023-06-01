@@ -12,6 +12,7 @@
 #include "editor/subsystems/worldinput2/enums/range_input_control.h"
 
 class QAction;
+class QItemSelection;
 
 namespace dovahkit::subsystems::worldinput2 {
    class  input_sequence;
@@ -59,5 +60,5 @@ class WorldinputBindEditDialog : public QDialog {
       DKWorldinputInputSequenceModel* _getInputSequenceModel() { return const_cast<DKWorldinputInputSequenceModel*>(std::as_const(*this)._getInputSequenceModel()); }
 
       QModelIndex _getFirstSeqSelection();
-      QModelIndexList _getSeqSelection();
+      const QItemSelection _getSeqSelection();
 };

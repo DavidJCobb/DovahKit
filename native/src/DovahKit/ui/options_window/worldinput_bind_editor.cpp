@@ -163,7 +163,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             this->_getInputSequenceModel()->moveItems(this->_getSeqSelection(), 1);
          });
          QObject::connect(this->ui.inputSeqDelete, &QPushButton::clicked, this, [this]() {
-            this->_getInputSequenceModel()->deleteItems(this->_getSeqSelection());
+            this->_getInputSequenceModel()->deleteItems(this->_getSeqSelection().indexes());
          });
       #pragma endregion
       #pragma region Editing controls for selected treeview item
@@ -197,11 +197,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             auto& info = info_opt.value();
 
             auto* modal = new DKWorldinputButtonPickDialog(this);
-            modal->setButton(DKWorldinputButtonPickDialog::Button{
-               .key     = info.button.vk,
-               .mouse   = info.button.mouse,
-               .gamepad = info.button.xinput,
-            });
+            modal->setButton(info.button);
             switch (this->device_type) {
                case input_device_type::keyboard_mouse:
                   modal->setGamepadAllowed(false);
@@ -216,12 +212,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
             }
             modal->setFixedHeight(modal->sizeHint().height()); // shrink height to make up for some controls being hidden
             if (modal->exec() == QDialog::Accepted) {
-               auto b = modal->button();
-               info.button = {
-                  .mouse  = b.mouse,
-                  .vk     = b.key.vk,
-                  .xinput = b.gamepad,
-               };
+               info.button = modal->button();
                model->replaceInfoFor(selection, info);
             }
             delete modal;
@@ -309,11 +300,11 @@ QModelIndex WorldinputBindEditDialog::_getFirstSeqSelection() {
       return {};
    return sm->currentIndex();
 }
-QModelIndexList WorldinputBindEditDialog::_getSeqSelection() {
+const QItemSelection WorldinputBindEditDialog::_getSeqSelection() {
    auto* sm = this->ui.treeView->selectionModel();
    if (!sm)
       return {};
-   return sm->selectedRows();
+   return sm->selection();
 }
 
 void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldinput2::binds::nodes::bound_tool& node) {
