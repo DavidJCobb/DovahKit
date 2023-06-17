@@ -462,10 +462,10 @@ void CLASS_NAME::moveItems(const QItemSelection& ranges, int down) {
       using persistent_range = QPair<QPersistentModelIndex, QPersistentModelIndex>;
       QVector<persistent_range> qpmi;
       for (const auto& range : ranges) {
-         qpmi.push_back(range.topLeft(), range.bottomRight());
+         qpmi.push_back({ range.topLeft(), range.bottomRight() });
       }
       for (const auto& range : qpmi) {
-         this->moveItems(range.topLeft(), range.bottomRight(), down);
+         this->moveItems(range.first, range.second, down);
       }
       return;
    }

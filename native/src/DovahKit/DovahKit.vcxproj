@@ -683,6 +683,13 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\debug_print.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_camera.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
@@ -1101,6 +1108,7 @@
     <ClInclude Include="helpers\qt\keycodes.h" />
     <ClInclude Include="helpers\qt\mass_block_signals.h" />
     <ClInclude Include="helpers\qt\mass_set_visible.h" />
+    <ClInclude Include="helpers\qt\wrappers\enum_combobox.h" />
     <ClInclude Include="helpers\resizable_grid.h" />
     <ClInclude Include="helpers\simd\bytes_to_floats.h" />
     <ClInclude Include="helpers\simd\min_and_max.h" />
@@ -1279,6 +1287,13 @@
     <ClInclude Include="ui\models\DKGenericTreeModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\debug_print.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_camera.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\turn_camera.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\asset_loading\load_queue.h" />
     <ClInclude Include="vulkan\asset_loading\queued_nif_load.h" />

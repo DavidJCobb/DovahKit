@@ -2076,6 +2076,27 @@
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\debug_print.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5085,6 +5106,30 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\models\DKGenericTreeModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\wrappers\enum_combobox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\turn_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\debug_print.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

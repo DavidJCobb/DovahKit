@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>38</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Selection operation:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="comboBox">
+     <item>
+      <property name="text">
+       <string>Do nothing</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Add to selection</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Remove from selection</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Toggle selected state</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Replace selection</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

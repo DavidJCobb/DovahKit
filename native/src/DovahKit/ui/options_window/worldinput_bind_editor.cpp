@@ -10,6 +10,8 @@
 #include "ui/models/worldinput/DKWorldinputInputSequenceModel.h"
 #include "widgets/widget-dialogs/DKWorldinputButtonPickDialog.h"
 
+#include "./worldedit_tools/get_worldedit_tool_info.h"
+
 WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type, QWidget* parent) : QDialog(parent), device_type(device_type) {
    this->ui.setupUi(this);
 
@@ -285,6 +287,15 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
       }
    #pragma endregion
    #pragma region Tool tab
+      {
+         auto* widget = this->ui.toolSelector;
+         widget->clear();
+
+         const auto& list = worldedit_tool_info::get_all_info();
+         for (const auto& item : list) {
+            widget->addItem(item.name, (int)item.id);
+         }
+      }
       // TODO: Tool and options
    #pragma endregion
 }
@@ -341,6 +352,7 @@ void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldi
       cobb::qt::set_combobox_value(this->ui.raycastReqSelected, src.target_options.selected);
    }
 
+   cobb::qt::set_combobox_value(this->ui.toolSelector, node.tool.id);
    // TODO: Tool and options
 }
 void WorldinputBindEditDialog::overwrite(dovahkit::subsystems::worldinput2::binds::nodes::bound_tool& node) const {
