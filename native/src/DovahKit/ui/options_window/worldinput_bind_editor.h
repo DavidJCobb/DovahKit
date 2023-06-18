@@ -30,12 +30,13 @@ class WorldinputBindEditDialog : public QDialog {
    Q_OBJECT;
    public:
       using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
+      using control_scheme_node_type = dovahkit::subsystems::worldinput2::binds::nodes::bound_tool;
       
    public:
       WorldinputBindEditDialog(input_device_type, QWidget* parent = nullptr);
 
-      void initializeFrom(const dovahkit::subsystems::worldinput2::binds::nodes::bound_tool&);
-      void overwrite(dovahkit::subsystems::worldinput2::binds::nodes::bound_tool&) const;
+      void initializeFrom(const control_scheme_node_type&);
+      void overwrite(control_scheme_node_type&) const;
 
    protected:
       Ui::WorldinputBindEditDialog ui;

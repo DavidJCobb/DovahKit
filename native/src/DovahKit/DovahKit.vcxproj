@@ -670,6 +670,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
@@ -693,6 +694,7 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
+    <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
@@ -1283,6 +1285,7 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h" />
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h" />
@@ -1299,6 +1302,7 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\turn_camera.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\_all.h" />
+    <QtMoc Include="ui\options_window\worldinput_scheme_editor.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\asset_loading\load_queue.h" />
     <ClInclude Include="vulkan\asset_loading\queued_nif_load.h" />
@@ -1990,6 +1994,7 @@
     <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui" />
+    <QtUic Include="ui\options_window\worldinput_scheme_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />

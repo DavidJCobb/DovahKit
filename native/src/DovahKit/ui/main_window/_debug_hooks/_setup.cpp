@@ -25,6 +25,7 @@
 #include "worldinput2.h"
 #include "worldinput_serialization.h"
 #include "worldinput2_input_seq_ui.h"
+#include "worldinput2_control_scheme_ui.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -50,7 +51,8 @@ namespace DovahKitDebug {
       features::load_nif,
       features::worldinput2,
       features::worldinput_serialization,
-      features::worldinput2_input_seq_ui//,
+      features::worldinput2_input_seq_ui,
+      features::worldinput2_control_scheme_ui//,
    >;
 
    template<typename T> struct _add_functor {

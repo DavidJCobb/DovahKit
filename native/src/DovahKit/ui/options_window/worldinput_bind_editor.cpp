@@ -19,7 +19,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
    QObject::connect(this->ui.buttonSave,   &QPushButton::clicked, this, &QDialog::accept);
 
-   this->ui.name->setMaxLength(dovahkit::subsystems::worldinput2::binds::nodes::abstract_input_node::max_name_length);
+   this->ui.name->setMaxLength(control_scheme_node_type::max_name_length);
 
    #pragma region Inputs tab
       {
@@ -322,7 +322,7 @@ const QItemSelection WorldinputBindEditDialog::_getSeqSelection() {
    return sm->selection();
 }
 
-void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldinput2::binds::nodes::bound_tool& node) {
+void WorldinputBindEditDialog::initializeFrom(const control_scheme_node_type& node) {
    this->ui.name->setText(node.name);
    
    cobb::qt::set_combobox_value(this->ui.buttonPressType,  node.button_press_type);
@@ -368,8 +368,8 @@ void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldi
       }
    }
 }
-void WorldinputBindEditDialog::overwrite(dovahkit::subsystems::worldinput2::binds::nodes::bound_tool& node) const {
-   assert(node.name.size() < std::decay_t<decltype(node)>::max_name_length);
+void WorldinputBindEditDialog::overwrite(control_scheme_node_type& node) const {
+   assert(node.name.size() < control_scheme_node_type::max_name_length);
    node.name = this->ui.name->text();
 
    node.button_press_type = (button_press_type)this->ui.buttonPressType->currentData().toInt();
