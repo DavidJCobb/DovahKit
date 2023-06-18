@@ -1290,6 +1290,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h" />
     <ClInclude Include="ui\models\DKGenericTreeModel.h" />
+    <QtMoc Include="ui\models\worldinput\DKWorldinputControlSchemeModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
