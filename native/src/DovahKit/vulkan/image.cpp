@@ -175,7 +175,7 @@ namespace vulkanDK {
       out.mipmap_count = header.mipmap_count;
       out.mipmap_count = std::min(
          out.mipmap_count,
-         std::min(
+         (decltype(out.mipmap_count)) std::min(
             std::bit_width(header.width),
             std::bit_width(header.height)
          )

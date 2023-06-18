@@ -11,6 +11,7 @@
 #include "widgets/widget-dialogs/DKWorldinputButtonPickDialog.h"
 
 #include "./worldedit_tools/get_worldedit_tool_info.h"
+#include "./worldedit_tools/options_widget_dispatch_table.h"
 
 WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type, QWidget* parent) : QDialog(parent), device_type(device_type) {
    this->ui.setupUi(this);
@@ -295,8 +296,11 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
          for (const auto& item : list) {
             widget->addItem(item.name, (int)item.id);
          }
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget]() {
+            auto id = widget->currentData().toInt();
+            this->_setUpToolOptionsUI(id);
+         });
       }
-      // TODO: Tool and options
    #pragma endregion
 }
 
@@ -353,7 +357,16 @@ void WorldinputBindEditDialog::initializeFrom(const dovahkit::subsystems::worldi
    }
 
    cobb::qt::set_combobox_value(this->ui.toolSelector, node.tool.id);
-   // TODO: Tool and options
+   this->_setUpToolOptionsUI(node.tool.id);
+   if (this->_tool_options_widget && node.tool.options) {
+      const auto& tbl = dovahkit::ui::worldedit::options_widget_dispatch_table;
+      for (const auto& entry : tbl) {
+         if (entry.id == node.tool.id) {
+            (entry.to_ui)(this->_tool_options_widget, *(const dovahkit::subsystems::worldedit::tools::options_union*)node.tool.options);
+            break;
+         }
+      }
+   }
 }
 void WorldinputBindEditDialog::overwrite(dovahkit::subsystems::worldinput2::binds::nodes::bound_tool& node) const {
    assert(node.name.size() < std::decay_t<decltype(node)>::max_name_length);
@@ -386,5 +399,54 @@ void WorldinputBindEditDialog::overwrite(dovahkit::subsystems::worldinput2::bind
       dst.target_options.selected = (optional_yn) this->ui.raycastReqSelected->currentData().toInt();
    }
 
-   // TODO: Tool and options
+   {
+      using options_union = dovahkit::subsystems::worldedit::tools::options_union;
+
+      auto& dst = node.tool;
+      dst.id = this->ui.toolSelector->currentData().toInt();
+      if (dst.id == dovahkit::subsystems::worldedit::tools::id_of_none) {
+         if (dst.options) {
+            delete dst.options;
+            dst.options = nullptr;
+         }
+      } else {
+         if (this->_tool_options_widget) {
+            if (!dst.options) {
+               dst.options = new options_union;
+            }
+
+            const auto& tbl = dovahkit::ui::worldedit::options_widget_dispatch_table;
+            for (const auto& entry : tbl) {
+               if (entry.id == dst.id) {
+                  (entry.to_data)(this->_tool_options_widget, *(options_union*)dst.options);
+                  break;
+               }
+            }
+         } else {
+            if (dst.options) {
+               delete dst.options;
+               dst.options = nullptr;
+            }
+         }
+      }
+   }
+}
+
+void WorldinputBindEditDialog::_setUpToolOptionsUI(int tool_id) {
+   if (auto*& w = this->_tool_options_widget) {
+      delete w;
+      w = nullptr;
+   }
+
+   const auto& tbl = dovahkit::ui::worldedit::options_widget_dispatch_table;
+   for (const auto& entry : tbl) {
+      if (entry.id == tool_id) {
+         this->_tool_options_widget = (entry.make_widget)();
+         break;
+      }
+   }
+   if (!this->_tool_options_widget)
+      return;
+
+   this->ui.toolOptionsWrapper->layout()->addWidget(this->_tool_options_widget);
 }

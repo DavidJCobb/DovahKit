@@ -19,7 +19,7 @@ namespace dovahkit::subsystems::worldinput::tools {
             size_t size = 0;
             all_tools::for_each([&size]<typename argument>() {
                if constexpr (dovahkit::subsystems::worldinput::tools::tool_has_options_member_type<argument>)
-                  size = std::max(size, sizeof(argument::options));
+                  size = std::max(size, sizeof(typename argument::options));
             });
             return size;
          })();
@@ -27,7 +27,7 @@ namespace dovahkit::subsystems::worldinput::tools {
             size_t size = 0;
             all_tools::for_each([&size]<typename argument>() {
                if constexpr (dovahkit::subsystems::worldinput::tools::tool_has_options_member_type<argument>)
-                  size = (std::max)(size, std::alignment_of_v<argument::options>);
+                  size = (std::max)(size, std::alignment_of_v<typename argument::options>);
             });
             return size;
          })();
@@ -38,7 +38,7 @@ namespace dovahkit::subsystems::worldinput::tools {
             #pragma region Metaprogramming
             template<typename T> static void _typed_data_destructor(option_union& ou) {
                if constexpr (dovahkit::subsystems::worldinput::tools::tool_has_options_member_type<T>) {
-                  using Options = T::options;
+                  using Options = typename T::options;
                   Options* p = ou.as<T>();
                   p->~Options();
                }

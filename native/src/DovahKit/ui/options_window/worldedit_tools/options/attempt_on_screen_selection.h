@@ -11,7 +11,7 @@ namespace dovahkit::ui::worldedit::tools {
          using options_type = tool::options;
 
       public:
-         attempt_on_screen_selection(QWidget* parent);
+         attempt_on_screen_selection(QWidget* parent = nullptr);
 
          const options_type& get_options() const { return this->_state.current_options; }
          void set_options(const options_type&);

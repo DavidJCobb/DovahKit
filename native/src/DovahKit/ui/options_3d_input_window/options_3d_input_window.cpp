@@ -30,7 +30,7 @@ namespace {
       DK3DToolOptions::Base* result = nullptr;
 
       DK3DToolOptions::all::for_each_until_true([id, parent, &result]<typename Current>() {
-         constexpr auto current_id = worldinput::id_of_tool<Current::tool_type>();
+         constexpr auto current_id = worldinput::id_of_tool<typename Current::tool_type>();
          if (current_id == id) {
             result = new Current(parent);
             return true;
@@ -118,7 +118,7 @@ Options3DInputDialog::Options3DInputDialog(QWidget* parent) : QDialog(parent) {
       widget->clear();
       widget->addItem(DKWorldinputLocalization::tool_name(worldinput::tools::id_of_none), (int)worldinput::tools::id_of_none);
       DK3DToolOptions::all::for_each([this, widget]<typename CurrentUI>() {
-         constexpr auto tool_id = worldinput::id_of_tool<CurrentUI::tool_type>();
+         constexpr auto tool_id = worldinput::id_of_tool<typename CurrentUI::tool_type>();
          widget->addItem(DKWorldinputLocalization::tool_name(tool_id), (int)tool_id);
       });
    }

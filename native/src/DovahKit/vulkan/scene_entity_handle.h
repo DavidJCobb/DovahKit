@@ -27,7 +27,7 @@ namespace vulkanDK {
             Self& as_self() { return *(Self*)this; }
 
          public:
-            scene_entity_handle() {}
+            constexpr scene_entity_handle() {}
             scene_entity_handle(surface_renderer& sr, size_t i) : owner(&sr), index(i) {}
 
             scene_entity_handle(Self&& o) {
@@ -40,18 +40,19 @@ namespace vulkanDK {
                return *this;
             }
 
-            bool operator==(const Self& o) const noexcept {
-               return owner == o.owner && index == o.index;
+            template<typename Self>
+            constexpr bool operator==(this const Self& self, const Self& o) noexcept {
+               return self.owner == o.owner && self.index == o.index;
             }
-            bool operator==(std::nullptr_t) const noexcept {
+            constexpr bool operator==(std::nullptr_t) const noexcept {
                return empty();
             }
 
             surface_renderer* renderer() const { return owner; }
 
-            inline size_t list_index(surface_renderer_passkey) const noexcept { return this->index; }
+            constexpr size_t list_index(surface_renderer_passkey) const noexcept { return this->index; }
 
-            inline bool empty() const noexcept {
+            constexpr bool empty() const noexcept {
                return owner == nullptr || index == -1;
             }
 

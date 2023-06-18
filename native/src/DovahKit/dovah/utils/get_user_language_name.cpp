@@ -1,6 +1,7 @@
 #include "get_user_language_name.h"
-#include "../../helpers/strings.h"
-#include "../../helpers/windows_ini.h"
+#include "helpers/strings.h"
+#include "helpers/windows_ini.h"
+#pragma warning(disable: 5105)
 #include "Shlobj.h"
 
 namespace dovah::utils {

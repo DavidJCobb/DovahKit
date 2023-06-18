@@ -5,6 +5,10 @@
 
 #include "ui/options_window/worldinput_bind_editor.h"
 
+#include "editor/subsystems/worldedit/tool_system/id_of.h"
+#include "editor/subsystems/worldedit/tool_system/options_union.h"
+#include "editor/subsystems/worldedit/tool_system/tools/modify_camera_speed_flags.h"
+
 namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
@@ -28,9 +32,28 @@ namespace DovahKitDebug::features {
       node->input_sequence.raycast.associated_button = node->input_sequence.root->children[1]; // 'S'
       node->input_sequence.raycast.requirement.targets.object_references = true;
 
+      if constexpr (true) { // tool test
+         using namespace dovahkit::subsystems::worldedit;
+
+         node->tool.id      = tools::id_of<tools::modify_camera_speed_flags>;
+         node->tool.options = new tools::options_union;
+
+         auto* ou = (tools::options_union*)node->tool.options;
+         *ou = tools::options_union(tools::modify_camera_speed_flags::options{
+            .boost     = bool_operation::set_true,
+            .precision = bool_operation::set_false,
+         });
+      }
+
       auto* dialog = new WorldinputBindEditDialog(worldinput2::input_device_type::keyboard_mouse, from);
-      dialog->setAttribute(Qt::WA_DeleteOnClose);
       dialog->initializeFrom(*node);
-      dialog->show();
+      dialog->exec();
+
+      dialog->overwrite(*node);
+      delete dialog;
+
+      #if _DEBUG
+         __debugbreak(); // Inspect `node` to confirm any changes made were properly set
+      #endif
    }
 }

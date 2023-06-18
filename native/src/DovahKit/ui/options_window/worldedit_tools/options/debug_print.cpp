@@ -6,6 +6,7 @@
 namespace dovahkit::ui::worldedit::tools {
    debug_print::debug_print(QWidget* parent) : QWidget(parent) {
       auto* layout = new QGridLayout(this);
+      layout->setContentsMargins(0, 0, 0, 0);
       this->setLayout(layout);
 
       {

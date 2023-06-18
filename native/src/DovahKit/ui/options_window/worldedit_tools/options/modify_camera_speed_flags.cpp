@@ -7,6 +7,7 @@
 namespace dovahkit::ui::worldedit::tools {
    modify_camera_speed_flags::modify_camera_speed_flags(QWidget* parent) : QWidget(parent) {
       auto* layout = new QGridLayout(this);
+      layout->setContentsMargins(0, 0, 0, 0);
       this->setLayout(layout);
 
       {

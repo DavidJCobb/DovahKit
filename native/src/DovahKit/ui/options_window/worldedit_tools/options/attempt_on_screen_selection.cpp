@@ -6,6 +6,7 @@
 namespace dovahkit::ui::worldedit::tools {
    attempt_on_screen_selection::attempt_on_screen_selection(QWidget* parent) : QWidget(parent) {
       auto* layout = new QGridLayout(this);
+      layout->setContentsMargins(0, 0, 0, 0);
       this->setLayout(layout);
 
       {

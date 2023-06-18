@@ -40,7 +40,7 @@
       case id_of<modify_camera_speed_flags>:
          return {
             .name        = QObject::tr("Camera: Change Speed Flags", "Worldedit tool name"),
-            .description = QObject::tr("Toggle whether the camera is boosting at high speed, or moving at a low speed suitable for precision editing.", "Worldedit tool description"),
+            .description = QObject::tr("Set whether the camera is boosting at high speed, or moving at a low speed suitable for precision editing.", "Worldedit tool description"),
          };
       case id_of<move_camera>:
          return {
@@ -69,7 +69,7 @@
       case id_of<debug_print>:
          return {
             .name        = QObject::tr("Debug: Print", "Worldedit tool name"),
-            .description = QObject::tr("Console-print a string.", "Worldedit tool description"),
+            .description = QObject::tr("Console-print a string. This exists to help DovahKit's developers; you probably shouldn't even be able to see it.", "Worldedit tool description"),
          };
       #endif
    }

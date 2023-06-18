@@ -5132,6 +5132,15 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\debug_print.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

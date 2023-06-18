@@ -12,7 +12,7 @@ namespace dovahkit::ui::worldedit::tools {
          using options_type = tool::options;
 
       public:
-         modify_camera_speed_flags(QWidget* parent);
+         modify_camera_speed_flags(QWidget* parent = nullptr);
 
          const options_type& get_options() const { return this->_state.current_options; }
          void set_options(const options_type&);

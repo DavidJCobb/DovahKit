@@ -15,7 +15,7 @@ namespace dovahkit::ui::worldedit::tools {
          using options_type = tool::options;
 
       public:
-         set_edit_gizmo_mode(QWidget* parent);
+         set_edit_gizmo_mode(QWidget* parent = nullptr);
 
          const options_type& get_options() const { return this->_state.current_options; }
          void set_options(const options_type&);

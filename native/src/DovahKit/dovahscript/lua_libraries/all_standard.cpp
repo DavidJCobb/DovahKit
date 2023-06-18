@@ -66,7 +66,7 @@ namespace {
                auto* key = lua_tostring(L, -1);
                bool  any = false;
                for (auto* allowed_key : library.allowed_keys) {
-                  if (stricmp(key, allowed_key) == 0) {
+                  if (_stricmp(key, allowed_key) == 0) {
                      any = true;
                      break;
                   }

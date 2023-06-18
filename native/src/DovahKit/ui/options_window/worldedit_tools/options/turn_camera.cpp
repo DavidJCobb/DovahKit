@@ -11,6 +11,7 @@
 namespace dovahkit::ui::worldedit::tools {
    turn_camera::turn_camera(QWidget* parent) : QWidget(parent) {
       auto* layout = new QGridLayout(this);
+      layout->setContentsMargins(0, 0, 0, 0);
       this->setLayout(layout);
 
       int row = 0;
@@ -22,6 +23,7 @@ namespace dovahkit::ui::worldedit::tools {
          layout->addWidget(wrapper, row, 1);
 
          auto* wr_layout = new QHBoxLayout;
+         wr_layout->setContentsMargins(0, 0, 0, 0);
          wrapper->setLayout(wr_layout);
 
          this->_subwidgets.magnitude.yaw   = new QDoubleSpinBox;
@@ -36,7 +38,7 @@ namespace dovahkit::ui::worldedit::tools {
 
       {
          auto* groupbox = new QGroupBox(tr("Range control mapping"), this);
-         layout->addWidget(groupbox, row, 0);
+         layout->addWidget(groupbox, row, 0, 1, 2);
 
          int   gb_row = 0;
          auto* gb_layout = new QGridLayout(groupbox);

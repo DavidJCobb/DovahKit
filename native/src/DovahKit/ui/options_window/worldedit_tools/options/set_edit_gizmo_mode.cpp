@@ -11,6 +11,7 @@
 namespace dovahkit::ui::worldedit::tools {
    set_edit_gizmo_mode::set_edit_gizmo_mode(QWidget* parent) : QWidget(parent) {
       auto* layout = new QGridLayout(this);
+      layout->setContentsMargins(0, 0, 0, 0);
       this->setLayout(layout);
 
       int row = 0;
@@ -19,6 +20,7 @@ namespace dovahkit::ui::worldedit::tools {
          auto& widgets  = this->_subwidgets.frames;
          auto* groupbox = widgets.groupbox = new QGroupBox(tr("Reference frame"));
          groupbox->setCheckable(true);
+         groupbox->setChecked(false);
          layout->addWidget(groupbox, row, 0);
 
          int   gb_row = 0;
@@ -42,6 +44,7 @@ namespace dovahkit::ui::worldedit::tools {
          auto& widgets  = this->_subwidgets.modes;
          auto* groupbox = widgets.groupbox = new QGroupBox(tr("Mode"));
          groupbox->setCheckable(true);
+         groupbox->setChecked(false);
          layout->addWidget(groupbox, row, 0);
 
          int   gb_row = 0;

@@ -58,8 +58,7 @@ template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsyst
 
    static constexpr const size_t bitcount = 2;
    static constexpr const auto   valid_values = []() {
-      using enum value_type;
-      return std::array{ none, keyboard, mouse, gamepad };
+      return std::array{ value_type::none, value_type::keyboard, value_type::mouse, value_type::gamepad };
    }();
 };
 

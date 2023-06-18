@@ -16,7 +16,6 @@ template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsyst
 
    static constexpr const size_t bitcount = 3;
    static constexpr const auto   valid_values = []() {
-      using enum value_type;
-      return std::array{ no_op, add, remove, toggle, replace };
+      return std::array{ value_type::no_op, value_type::add, value_type::remove, value_type::toggle, value_type::replace };
    }();
 };

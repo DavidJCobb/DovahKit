@@ -8,7 +8,7 @@ namespace {
       constexpr bool result = []() constexpr -> bool {
          constexpr bool success = all_tools::for_each_until_false<[]<typename Current>() -> bool {
             if constexpr (tool_with_options<Current>) {
-               return cobb::bitstreams::round_trip_test<Current::options>;
+               return cobb::bitstreams::round_trip_test<typename Current::options>;
             }
             return true;
          }>();

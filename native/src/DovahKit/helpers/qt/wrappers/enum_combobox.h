@@ -25,8 +25,8 @@ namespace cobb::qt::wrappers {
          template<class TranslateVia = QObject, size_t Count>
          void addItems(const std::array<std::pair<value_type, const char*>, Count>& items, const char* translation_disambiguator = nullptr) {
             for (const auto& item : items) {
-               auto text = TranslateVia::tr(item.first, translation_disambiguator);
-               addItem(text, item.second);
+               auto text = TranslateVia::tr(item.second, translation_disambiguator);
+               addItem(text, item.first);
             }
          }
 
@@ -50,7 +50,7 @@ namespace cobb::qt::wrappers {
                widget()->setCurrentIndex(i);
                return true;
             }
-            if (value != default_value) {
+            if (v != default_value) {
                i = widget()->findData((int)default_value);
             }
             if (i < 0) {

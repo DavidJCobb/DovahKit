@@ -36,8 +36,6 @@ class DKKeyPickerWidget : public QWidget {
          //
          _key() {}
          _key(const cobb::qt::key& k, bool sd = false) : key(k), still_down(sd) {}
-         //
-         bool operator==(const cobb::qt::key& other) const noexcept { return *(const cobb::qt::key*)this == other; }
       };
 
       struct {
