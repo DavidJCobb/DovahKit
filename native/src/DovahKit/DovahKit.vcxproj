@@ -674,6 +674,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
     <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp" />
@@ -2261,6 +2262,7 @@
     <Natvis Include="nif\blocks\NiObjectNET.natvis" />
     <Natvis Include="nif\blocks\NiProperty.natvis" />
     <Natvis Include="nif\blocks\unknown.natvis" />
+    <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
     <Natvis Include="vulkan\dds\header.natvis" />
     <Natvis Include="vulkan\dds\pixel_format.natvis" />
     <Natvis Include="vulkan\helpers\vertex_index_list.natvis" />

@@ -132,8 +132,15 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
             case group_type::concurrent_unordered: out += '('; break;
             case group_type::separated_ordered:    out += '<'; break;
          }
-         for (const auto* child : current.children)
+         bool is_first = true;
+         for (const auto* child : current.children) {
+            if (is_first) {
+               is_first = false;
+            } else {
+               out += " + ";
+            }
             recurse(*child, out, recurse);
+         }
          switch (current.type) {
             case group_type::concurrent_ordered:   out += ']'; break;
             case group_type::concurrent_unordered: out += ')'; break;

@@ -2103,6 +2103,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5941,5 +5944,6 @@
     <Natvis Include="helpers\keyboard\key.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
+    <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
   </ItemGroup>
 </Project>

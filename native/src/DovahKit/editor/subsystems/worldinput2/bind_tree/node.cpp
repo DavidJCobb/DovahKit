@@ -59,6 +59,10 @@ namespace dovahkit::subsystems::worldinput2::binds {
       }
       return copy;
    }
+   node* node::shallow_clone() const {
+      auto* copy = this->_clone_impl();
+      return copy;
+   }
 
    /*static*/ node* node::read(cobb::bitstreams::reader& s) {
       node_type type;

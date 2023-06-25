@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="DKGenericTreeModelNodeBase&lt;*&gt;">
+      <Expand>
+         <ExpandedItem>*(DKGenericTreeModelNode&lt;$T1&gt;*)this,nd</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

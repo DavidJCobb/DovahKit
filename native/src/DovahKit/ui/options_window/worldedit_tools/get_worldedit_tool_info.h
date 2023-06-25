@@ -9,6 +9,7 @@ struct worldedit_tool_info {
    QString description;
 
    static const QVector<worldedit_tool_info>& get_all_info();
+   static const worldedit_tool_info* info_of(dovahkit::subsystems::worldedit::tools::tool_id);
    private:
       static worldedit_tool_info get_single_info_sans_id(dovahkit::subsystems::worldedit::tools::tool_id);
 };

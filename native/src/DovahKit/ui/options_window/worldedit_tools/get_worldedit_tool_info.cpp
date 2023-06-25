@@ -1,5 +1,6 @@
 #include "./get_worldedit_tool_info.h"
 #include <QObject>
+#include "helpers/unreachable.h"
 #include "editor/subsystems/worldedit/tool_system/tools/_all.h"
 #include "editor/subsystems/worldedit/tool_system/id_of.h"
 
@@ -23,6 +24,13 @@
       info.front().id = id_of_none;
    }
    return info;
+}
+
+/*static*/ const worldedit_tool_info* worldedit_tool_info::info_of(dovahkit::subsystems::worldedit::tools::tool_id id) {
+   for (const auto& item : get_all_info())
+      if (item.id == id)
+         return &item;
+   return nullptr;
 }
 
 /*static*/ worldedit_tool_info worldedit_tool_info::get_single_info_sans_id(dovahkit::subsystems::worldedit::tools::tool_id id) {

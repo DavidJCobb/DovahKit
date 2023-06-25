@@ -1,5 +1,7 @@
 #include "./worldinput_scheme_editor.h"
 #include "editor/subsystems/worldinput2/bind_tree/tree.h"
+#include "ui/models/worldinput/DKWorldinputControlSchemeModel.h"
+#include "widgets/DKHeaderView.h"
 
 WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QWidget* parent) : QDialog(parent), device_type(idt) {
    this->ui.setupUi(this);
@@ -9,18 +11,33 @@ WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QW
 
    this->ui.name->setMaxLength(control_scheme_type::max_name_length);
 
-   // TODO: Treeview
-   // TODO: Treeview model (this->_model)
+   {
+      auto* treeview = this->ui.nodeTree;
+      treeview->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+      treeview->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+      treeview->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+      treeview->expandAll();
+
+      // QHeaderView sucks, and is bad, so replace it with this
+      auto* header = new DKHeaderView(Qt::Orientation::Horizontal, treeview);
+      treeview->setHeader(header);
+      //
+      header->setFlexResizeEnabled(true);
+
+      auto* model = this->_model = new DKWorldinputControlSchemeModel(treeview);
+      treeview->setModel(model);
+   }
    // TODO: Node edit buttons
 }
 
 void WorldinputSchemeEditDialog::initializeFrom(const control_scheme_type& src) {
    this->ui.name->setText(src.name);
 
-   // TODO: Node tree
+   this->_model->overwriteFromSource(src);
+   this->ui.nodeTree->expandAll();
 }
 void WorldinputSchemeEditDialog::overwrite(control_scheme_type& dst) const {
    dst.name = this->ui.name->text();
 
-   // TODO: Node tree
+   this->_model->overwriteDestination(dst);
 }

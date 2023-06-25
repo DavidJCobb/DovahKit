@@ -73,6 +73,7 @@ namespace dovahkit::subsystems::worldinput2::binds {
          }
 
          node* clone() const;
+         node* shallow_clone() const;
 
          static node* read(cobb::bitstreams::reader&);
          void write(cobb::bitstreams::writer&) const;
