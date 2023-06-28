@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::node&lt;*&gt;">
+      <DisplayString>{{ node, type {(unsigned int)_type,d}, with {children._list.size(),d} children }}</DisplayString>
+      <Expand>
+         <Item Optional="true" Name="[test5]" Condition="_type == 0 &amp;&amp; 5">*(cobb::impl::_node::strip_node_data_options&lt;$T1&gt;::type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[test6]" Condition="_type == 0 &amp;&amp; 6">*(all_data_types::nth_type&lt;0&gt;*)_untyped_data()</Item>
+         <Item Optional="true" Name="[test1]" Condition="_type == 0 &amp;&amp; true">*($T1::data_type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[test0]" Condition="_type == 0">*($T1*)_untyped_data()</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 0">as&lt;$T1&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 0">as&lt;$T1::data_type&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 1">as&lt;$T2&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 2">as&lt;$T3&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 3">as&lt;$T4&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 4">as&lt;$T5&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 5">as&lt;$T6&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 6">as&lt;$T7&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 7">as&lt;$T8&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 8">as&lt;$T9&gt;()-&gt;data</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 9">as&lt;$T10&gt;()-&gt;data</Item>
+         <Item Name="[parent]">_parent</Item>
+         <Item Name="[children]">children._list</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

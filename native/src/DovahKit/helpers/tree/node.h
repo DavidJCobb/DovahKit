@@ -6,7 +6,6 @@
 #include "../class_array.h"
 
 #include "./impl/child_list.h"
-#include "./impl/children_view.h"
 #include "./impl/data_destroyer.h"
 #include "./impl/parameters.h"
 #include "./impl/strip_node_data_options.h"
@@ -16,44 +15,27 @@
 #include "./node_data_with_attributes.h"
 
 namespace cobb {
-   namespace impl::_node {
-      template<typename Node>
-      class children_view;
-   }
-
    template<typename Node, typename Data> requires (Node::template supports_data_type<Data>)
    class typed_node;
 
    template<typename... DataTypes> requires (sizeof...(DataTypes) > 0)
    class node {
-      friend class impl::_node::children_view<node>;
       protected:
          using parameters = impl::_node::parameters<DataTypes...>;
          using typecode   = parameters::typecode_t;
 
-      public:
-         static constexpr const bool can_any_node_have_children = parameters::attribute_flag_info<node_data_attribute::leaf>::count > 0;
-
-      protected:
-         using child_list = std::conditional_t<
-            can_any_node_have_children,
-            std::vector<node*>,
-            typename parameters::dummy
-         >;
+         static constexpr const bool _clonable = (
+            (std::is_default_constructible_v<typename impl::_node::strip_node_data_options<DataTypes>::type> && ...)
+            ||
+            (std::is_copy_constructible_v<typename impl::_node::strip_node_data_options<DataTypes>::type> && ...)
+         );
+         static constexpr const bool _equality_comparable = (std::equality_comparable<typename impl::_node::strip_node_data_options<DataTypes>::type> && ...);
 
       public:
          using all_data_types = parameters::all_types;
 
-         using children_view = impl::_node::children_view<node>;
-         using const_children_view = impl::_node::children_view<const node>;
-
          template<typename Data>
          static constexpr const bool supports_data_type = all_data_types::template contains_type<Data>;
-
-         template<typename Data>
-         static constexpr const bool data_type_is_leaf = parameters::template data_has_attribute<Data, node_data_attribute::leaf>;
-
-         static constexpr const size_t data_type_count = all_data_types::count;
 
       protected:
          constexpr node(typecode t) : _type(t) {}
@@ -62,21 +44,21 @@ namespace cobb {
          //
          bool  _undergoing_typed_destroy : 1 = false;
          node* _parent = nullptr;
+         //
+      public:
+         impl::_node::child_list<node> children;
 
-         template<typename Data>
-         static constexpr const size_t _children_offset() noexcept;
+      protected:
          template<typename Data>
          static constexpr const size_t _data_offset() noexcept;
 
-         using _offset_list = std::array<size_t, data_type_count>;
-         static constexpr const _offset_list _all_children_offsets() noexcept;
+         using _offset_list = std::array<size_t, all_data_types::count>;
          static constexpr const _offset_list _all_data_offsets() noexcept;
 
-         static constexpr const size_t _fixed_children_offset() noexcept;
          static constexpr const size_t _fixed_data_offset() noexcept;
 
          void* _untyped_data() {
-            auto addr = (std::intptr_t)this;
+            auto addr = (std::intptr_t)this; // this is one of the things disqualifying us from being constexpr
             if constexpr (_fixed_data_offset()) {
                addr += _fixed_data_offset();
             } else {
@@ -85,23 +67,10 @@ namespace cobb {
             return (void*)addr;
          }
 
-         const std::vector<node*>* _child_list() const {
-            auto addr = (std::intptr_t)this;
-            if constexpr (_fixed_children_offset()) {
-               addr += _fixed_children_offset();
-            } else {
-               auto o = _all_children_offsets()[this->_type];
-               if (!o)
-                  return nullptr;
-               addr += o;
-            }
-            return (const std::vector<node*>*)addr;
-         }
-         std::vector<node*>* _child_list() {
-            return const_cast<std::vector<node*>*>(std::as_const(*this)._child_list());
-         }
-
       public:
+         constexpr node(const node&) = delete;
+         node& operator=(const node&) = delete;
+
          constexpr ~node() {
             //
             // We've chosen not to use polymorphism in order to potentially avoid the 
@@ -119,37 +88,14 @@ namespace cobb {
                if constexpr (!all_trivially_destructible) {
                   impl::_node::data_destroyer<all_data_types>::destroy(this->_untyped_data(), this->_type);
                }
-               this->clear_all_children();
             }
+            this->clear_all_children();
          }
 
-         template<typename Data, typename... Args> requires supports_data_type<Data>
+         template<typename Data, typename... Args> requires (supports_data_type<Data>)
          static constexpr typed_node<node, Data>* make(Args&&... args) {
             return new typed_node<node, Data>(std::forward<Args>(args)...);
          }
-
-         //
-
-         void append_child(node&);
-
-         bool can_have_children() const noexcept;
-
-         size_t child_count() const noexcept;
-
-         void clear_all_children();
-
-         bool contains(const node&) const noexcept;
-
-         size_t index_of_child(const node&) const noexcept;
-
-         void insert_child(node&, size_t at);
-
-         const node& nth_child(size_t) const;
-         node& nth_child(size_t i) {
-            return const_cast<node&>(std::as_const(*this).nth_child(i));
-         }
-
-         void remove_child(node&);
 
          //
 
@@ -161,28 +107,56 @@ namespace cobb {
             return const_cast<typed_node<node, Data>*>(std::as_const(*this).as<Data>());
          }
 
+         //
+
+         // Takes ownership of the child node: when this node is deleted, the child node will be, too.
+         // Requires that the child node not already have a parent (unless that parent is `this`).
+         constexpr void append_child(node&);
+
+         constexpr bool can_have_children() const noexcept;
+
+         void clear_all_children();
+
+         constexpr node* clone(bool shallow = false) const noexcept requires (_clonable);
+
+         // Checks if the argument is a child or descendant node of `this`.
+         constexpr bool contains(const node&) const noexcept;
+
+         constexpr size_t index_of_child(const node&) const noexcept;
+
+         // Takes ownership of the child node: when this node is deleted, the child node will be, too.
+         // Requires that the child node not already have a parent.
+         constexpr void insert_child(node&, size_t at);
+
+         constexpr const node& nth_child(size_t) const;
+         constexpr node& nth_child(size_t i) {
+            return const_cast<node&>(std::as_const(*this).nth_child(i));
+         }
+
          constexpr const node* parent() const noexcept { return this->_parent; }
          constexpr node* parent() noexcept { return const_cast<node*>(std::as_const(*this).parent()); }
+
+         // Cedes ownership of the child node: it is not deleted; it is simply abandoned.
+         constexpr void remove_child(node&);
+
+         // Deep compare, not shallow.
+         constexpr bool operator==(const node&) const noexcept requires (_equality_comparable);
    };
 
    template<typename Node, typename Data> requires (Node::template supports_data_type<Data>)
-   class typed_node : public Node {
-      protected:
-         using child_list = impl::_node::child_list<Node, Data>;
+   class typed_node final : public Node {
       public:
          using value_type = Data;
 
       public:
-         template<typename... Args>
+         template<typename... Args> requires std::is_constructible_v<Data, Args...>
          constexpr typed_node(Args&&... args) : Node(Node::all_data_types::template index_of_type<Data>), data(std::forward<Args>(args)...) {
          }
 
          constexpr ~typed_node() {
             this->_undergoing_typed_destroy = true;
-            this->clear_all_children();
          }
 
-         [[no_unique_address]] child_list children;
          value_type data;
    };
 }

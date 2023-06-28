@@ -130,6 +130,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\algorithms\control_scheme_to_bind_list.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.cpp" />
@@ -143,6 +144,9 @@
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\ck_standard.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\reach.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\action.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\control_scheme.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
@@ -670,6 +674,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
@@ -873,6 +878,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_serialization_ids.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_results.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\algorithms\control_scheme_to_bind_list.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h" />
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\input_sequence_stringification.h" />
@@ -890,6 +896,11 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\reach.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\_builders.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\action.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\all_node_headers.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\control_scheme.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h" />
     <ClInclude Include="editor\subsystems\worldinput2\core.h" />
     <ClInclude Include="editor\subsystems\worldinput2\debugging.h" />
     <ClInclude Include="editor\subsystems\worldinput2\defaults.h" />
@@ -1132,9 +1143,7 @@
     <ClInclude Include="helpers\string\strlen.h" />
     <ClInclude Include="helpers\tree\impl\child_list.h" />
     <ClInclude Include="helpers\tree\impl\data_destroyer.h" />
-    <ClInclude Include="helpers\tree\impl\data_type_info_table.h" />
     <ClInclude Include="helpers\tree\impl\is_node_data_with_attributes.h" />
-    <ClInclude Include="helpers\tree\impl\children_view.h" />
     <ClInclude Include="helpers\tree\impl\parameters.h" />
     <ClInclude Include="helpers\tree\impl\strip_node_data_options.h" />
     <ClInclude Include="helpers\tree\impl\typecode.h" />
@@ -1156,6 +1165,7 @@
     <ClInclude Include="helpers\tuple_concat.h" />
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\tuples\contains_type.h" />
+    <ClInclude Include="helpers\type_containers\fixed_map.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
     <ClInclude Include="helpers\type_traits\index_of_matching_value.h" />
     <ClInclude Include="helpers\type_traits\is_literal.h" />
@@ -1298,6 +1308,7 @@
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h" />
     <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
@@ -2108,6 +2119,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl" />
+    <None Include="editor\subsystems\worldinput2\control_scheme\condition.inl" />
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput2\inputs\button.inl" />
     <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
@@ -2268,6 +2280,7 @@
     <Natvis Include="helpers\keyboard\key.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
+    <Natvis Include="helpers\tree\node.natvis" />
     <Natvis Include="nif\block.natvis" />
     <Natvis Include="nif\blocks\BSShaderTextureSet.natvis" />
     <Natvis Include="nif\blocks\NiAVObject.natvis" />

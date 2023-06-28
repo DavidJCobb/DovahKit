@@ -33,12 +33,10 @@ The `cobb::node` class represents an untyped node: we know what data types *can*
 The following optimizations exist:
 
 * The `node` class uses metaprogramming rather than polymorphism; the class is not `virtual` and instances therefore do not require a vtbl.
-* Leaf nodes do not contain a child list.
 * In general, `constexpr` arrays need to be generated and used behind the scenes to match node data types to their attributes (e.g. whether a data type is a leaf). However, when an attribute is the same for all data types, we skip generating and using these arrays.
 
 Even though nodes are not polymorphic, the use of metaprogramming allows the base class to offer the following functionality:
 
 * Despite the lack of a virtual destructor, deleting a node via an untyped node pointer will still clean up subclass (typed node) members. This is because we use metaprogramming to allow the untyped node class to know (for any given data type) the offsets of its (templated) subclass's members.
-* Similarly, because the base class knows the offset of its subclass's members, including the child list, you can manipulate the node hierarchy (i.e. add, remove, and access child nodes) using an untyped node pointer.
 
-Unfortunately, the shenanigans needed to implement these optimzations make `cobb::node` *thoroughly* constexpr-incompatible.
+Unfortunately, `cobb::node` is constexpr-incompatible due to both not being polymorphic and to the aforementioned shenanigans.

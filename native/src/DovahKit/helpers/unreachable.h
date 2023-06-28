@@ -15,24 +15,50 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <version> // for feature test macros
+#if __cpp_lib_unreachable >= 202202L
+   #include <utility>
+#endif
 
 namespace cobb {
-   #if defined(__GNUC__)
-      [[noreturn]] inline __attribute__((always_inline)) void unreachable() {
-         __builtin_unreachable();
+   #if __cpp_lib_unreachable >= 202202L
+      #pragma push_macro("FORCEINLINE")
+      #if defined(__GNUC__)
+         #define FORCEINLINE __attribute__((always_inline))
+      #elif defined(_MSC_VER)
+         #define FORCEINLINE __forceinline
+      #else
+         #define FORCEINLINE
+      #endif
+
+      // const auto& unreachable = std::unreachable; // not viable; MSVC still emits warnings about control paths not returning values
+      [[noreturn]] inline FORCEINLINE void unreachable() {
          if (std::is_constant_evaluated())
             throw;
+         else
+            std::unreachable();
       }
-   #elif defined(_MSC_VER)
-      [[noreturn]] inline __forceinline void unreachable() {
-         __assume(false);
-         if (std::is_constant_evaluated())
-            throw;
-      }
+
+      #undef FORCEINLINE
+      #pragma pop_macro("FORCEINLINE")
    #else
-      inline void unreachable() {
-         if (std::is_constant_evaluated())
-            throw;
-      }
+      #if defined(__GNUC__)
+         [[noreturn]] inline __attribute__((always_inline)) void unreachable() {
+            __builtin_unreachable();
+            if (std::is_constant_evaluated())
+               throw;
+         }
+      #elif defined(_MSC_VER)
+         [[noreturn]] inline __forceinline void unreachable() {
+            __assume(false);
+            if (std::is_constant_evaluated())
+               throw;
+         }
+      #else
+         inline void unreachable() {
+            if (std::is_constant_evaluated())
+               throw;
+         }
+      #endif
    #endif
 }

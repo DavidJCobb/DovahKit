@@ -2,7 +2,7 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="dovahkit::subsystems::worldinput2::input_sequence">
 
-      <Intrinsic Name="has_range_requirement" Expression="range.scalar.type != scalar_input_control::none || range.vector != vector_input_control::none" />
+      <Intrinsic Name="has_range_requirement" Expression="range.control != range_input_control::none" />
 
       <DisplayString IncludeView="stringified" Condition="root != nullptr">{*root,view(stringified)}</DisplayString>
       <DisplayString Condition="root != nullptr">{state.frame_status,en}: {*root,view(stringified)}</DisplayString>
@@ -11,19 +11,11 @@
          <Item Name="root">*root,view(stringified)</Item>
          <Item Name="state">state</Item>
          <Item Name="range" Condition="has_range_requirement()">range</Item>
+         <Item Name="raycast" Condition="raycast.associated_button != nullptr">raycast</Item>
       </Expand>
    </Type>
    <Type Name="dovahkit::subsystems::worldinput2::input_sequence::range_requirement">
-      <Intrinsic Name="_is_vector_as_scalar" Expression="
-         scalar.type == scalar_input_control::mouse_move
-      || scalar.type == scalar_input_control::xinput_ls
-      || scalar.type == scalar_input_control::xinput_rs
-      " />
-
-      <DisplayString Condition="_is_vector_as_scalar()">{scalar.type,en} on axis {scalar.axis,en}</DisplayString>
-      <DisplayString Condition="scalar.type != scalar_input_control::none">{scalar.type,en}</DisplayString>
-      <DisplayString Condition="vector != vector_input_control::none">{vector,en}</DisplayString>
-      <DisplayString>{*this,!}</DisplayString>
+      <DisplayString>{control,en} on axes {axes,en}</DisplayString>
    </Type>
    <Type Name="dovahkit::subsystems::worldinput2::input_sequence::group">
 

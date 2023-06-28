@@ -60,7 +60,7 @@ namespace cobb {
             if constexpr ((impl::_class_map::can_templated_invoke_with_result<bool, Functor, Classes, value_type&, Args...> && ...)) {
                (f.template operator()<Classes>(this->value_for<Classes>(), std::forward<Args>(args)...) || ...);
             } else {
-               (f(this->value_for<Classes>(), std::forward<Args>(args)...) || ...);
+               (f(this->value_for<Classes>(), std::forward<Args>(args)...) && ...);
             }
          }
          template<typename Functor, typename... Args>
@@ -68,7 +68,7 @@ namespace cobb {
             if constexpr ((impl::_class_map::can_templated_invoke_with_result<bool, Functor, Classes, std::add_const_t<value_type>&, Args...> && ...)) {
                (f.template operator()<Classes>(this->value_for<Classes>(), std::forward<Args>(args)...) || ...);
             } else {
-               (f(this->value_for<Classes>(), std::forward<Args>(args)...) || ...);
+               (f(this->value_for<Classes>(), std::forward<Args>(args)...) && ...);
             }
          }
    };

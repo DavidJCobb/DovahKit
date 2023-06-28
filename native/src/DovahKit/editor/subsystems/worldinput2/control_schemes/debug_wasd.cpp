@@ -185,9 +185,9 @@ namespace dovahkit::subsystems::worldinput2::default_control_schemes {
                .operation = selection_operation::replace,
             });
          }
-         {  // Replace Selection
+         {  // Toggle Selection
             auto* node = new binds::nodes::bound_tool;
-            node->name              = "Replace Selection";
+            node->name              = "Toggle Selection";
             node->button_press_type = button_press_type::press;
             em_node->append(*node);
 
