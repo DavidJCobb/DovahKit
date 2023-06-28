@@ -524,6 +524,7 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\tree\tests.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -1009,6 +1010,7 @@
     <ClInclude Include="helpers\arrays\make.h" />
     <ClInclude Include="helpers\arrays\map.h" />
     <ClInclude Include="helpers\arrays\quicksort_ct.h" />
+    <ClInclude Include="helpers\arrays\unpack_values_as_NTTPs.h" />
     <ClInclude Include="helpers\array_concat.h" />
     <ClInclude Include="helpers\array_flatten.h" />
     <ClInclude Include="helpers\as_const.h" />
@@ -1129,6 +1131,16 @@
     <ClInclude Include="helpers\string\string_says_false.h" />
     <ClInclude Include="helpers\string\string_to_integer.h" />
     <ClInclude Include="helpers\string\strlen.h" />
+    <ClInclude Include="helpers\tree\impl\data_destroyer.h" />
+    <ClInclude Include="helpers\tree\impl\data_type_info_table.h" />
+    <ClInclude Include="helpers\tree\impl\is_node_data_with_attributes.h" />
+    <ClInclude Include="helpers\tree\impl\children_view.h" />
+    <ClInclude Include="helpers\tree\impl\parameters.h" />
+    <ClInclude Include="helpers\tree\impl\strip_node_data_options.h" />
+    <ClInclude Include="helpers\tree\impl\typecode.h" />
+    <ClInclude Include="helpers\tree\node.h" />
+    <ClInclude Include="helpers\tree\node_data_attribute.h" />
+    <ClInclude Include="helpers\tree\node_data_with_attributes.h" />
     <ClInclude Include="helpers\tuples\concat.h" />
     <ClInclude Include="helpers\tuples\contains_type_matching_functor.h" />
     <ClInclude Include="helpers\tuples\filter_types.h" />
@@ -2108,6 +2120,7 @@
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
+    <None Include="helpers\tree\node.inl" />
     <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />

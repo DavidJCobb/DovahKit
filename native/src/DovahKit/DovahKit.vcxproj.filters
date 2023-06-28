@@ -2106,6 +2106,9 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\tree\tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5153,6 +5156,39 @@
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\tree\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\strip_node_data_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\node_data_attribute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\data_type_info_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\typecode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\data_destroyer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\arrays\unpack_values_as_NTTPs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\node_data_with_attributes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\is_node_data_with_attributes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\parameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tree\impl\children_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5893,6 +5929,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="ui\models\DKGenericTreeModel.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\tree\node.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
