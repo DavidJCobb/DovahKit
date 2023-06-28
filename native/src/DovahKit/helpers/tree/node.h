@@ -1,9 +1,11 @@
 #pragma once
 #include <array>
+#include <bit>
 #include <type_traits>
 #include <vector>
 #include "../class_array.h"
 
+#include "./impl/child_list.h"
 #include "./impl/children_view.h"
 #include "./impl/data_destroyer.h"
 #include "./impl/parameters.h"
@@ -48,84 +50,76 @@ namespace cobb {
          template<typename Data>
          static constexpr const bool supports_data_type = all_data_types::template contains_type<Data>;
 
+         template<typename Data>
+         static constexpr const bool data_type_is_leaf = parameters::template data_has_attribute<Data, node_data_attribute::leaf>;
+
+         static constexpr const size_t data_type_count = all_data_types::count;
+
       protected:
          constexpr node(typecode t) : _type(t) {}
 
          [[no_unique_address]] const typecode _type;
-         bool  _is_typed_destroy : 1 = false;
+         //
+         bool  _undergoing_typed_destroy : 1 = false;
          node* _parent = nullptr;
-         [[no_unique_address]] child_list _children;
 
          template<typename Data>
-         static constexpr const size_t _offset_of() noexcept {
-            using node_subtype = typed_node<node, Data>; // offsetof is a macro and therefore chokes to death on commas
-            return offsetof(node_subtype, data);
-         }
-
+         static constexpr const size_t _children_offset() noexcept;
          template<typename Data>
-         static constexpr const auto _all_offsets() noexcept {
-            std::array<size_t, all_data_types::count> out = {};
-            
-            size_t i = 0;
-            all_data_types::for_each([&out, &i]<typename Data>() {
-               out[i++] = _offset_of<Data>();
-            });
+         static constexpr const size_t _data_offset() noexcept;
 
-            return out;
-         }
+         using _offset_list = std::array<size_t, data_type_count>;
+         static constexpr const _offset_list _all_children_offsets() noexcept;
+         static constexpr const _offset_list _all_data_offsets() noexcept;
 
-         static constexpr const size_t _fixed_offset() noexcept {
-            size_t offset   = 0;
-            bool   all_same = all_data_types::for_each_until_false([&offset]<typename Data>() {
-               constexpr auto o = _offset_of<Data>();
-               if (offset && offset != o)
-                  return false;
-               offset = o;
-               return true;
-            });
-            if (!all_same)
-               return 0;
-            return offset;
-         }
+         static constexpr const size_t _fixed_children_offset() noexcept;
+         static constexpr const size_t _fixed_data_offset() noexcept;
 
          void* _untyped_data() {
             auto addr = (std::intptr_t)this;
-            if constexpr (_fixed_offset()) {
-               return (void*)(addr + _fixed_offset());
+            if constexpr (_fixed_data_offset()) {
+               addr += _fixed_data_offset();
             } else {
-               return (void*)(addr + _all_offsets()[this->_type]);
+               addr += _all_data_offsets()[this->_type];
             }
+            return (void*)addr;
+         }
+
+         const std::vector<node*>* _child_list() const {
+            auto addr = (std::intptr_t)this;
+            if constexpr (_fixed_children_offset()) {
+               addr += _fixed_children_offset();
+            } else {
+               auto o = _all_children_offsets()[this->_type];
+               if (!o)
+                  return nullptr;
+               addr += o;
+            }
+            return (const std::vector<node*>*)addr;
+         }
+         std::vector<node*>* _child_list() {
+            return const_cast<std::vector<node*>*>(std::as_const(*this)._child_list());
          }
 
       public:
          constexpr ~node() {
-            constexpr const bool all_trivially_destructible = (std::is_trivially_destructible_v<typename impl::_node::strip_node_data_options<DataTypes>::type> && ...);
-            if constexpr (!all_trivially_destructible) {
-               //
-               // We've chosen not to use polymorphism in order to potentially avoid the 
-               // relevant overhead -- "you don't pay for what you don't use" taken to the 
-               // extreme.
-               // 
-               // This means that someone may delete a node via a bare `node` pointer or via 
-               // a `typed_node` pointer. We need to make sure to destroy the node data held 
-               // in the `typed_node` subclass either way, and we need to make sure we only 
-               // destroy it once. We do this by having the subclass set a flag on the base 
-               // class, which we can use to tell if the subclass destructor ever ran.
-               //
-               if (!this->_is_typed_destroy)
+            //
+            // We've chosen not to use polymorphism in order to potentially avoid the 
+            // relevant overhead -- "you don't pay for what you don't use" taken to the 
+            // extreme.
+            // 
+            // This means that someone may delete a node via a bare `node` pointer or via 
+            // a `typed_node` pointer. We need to make sure to destroy the node data held 
+            // in the `typed_node` subclass either way, and we need to make sure we only 
+            // destroy it once. We do this by having the subclass set a flag on the base 
+            // class, which we can use to tell if the subclass destructor ever ran.
+            //
+            if (!this->_undergoing_typed_destroy) {
+               constexpr const bool all_trivially_destructible = (std::is_trivially_destructible_v<typename impl::_node::strip_node_data_options<DataTypes>::type> && ...);
+               if constexpr (!all_trivially_destructible) {
                   impl::_node::data_destroyer<all_data_types>::destroy(this->_untyped_data(), this->_type);
-            }
-            if constexpr (can_any_node_have_children) {
-               //
-               // NOTE: This actually fails to meet the requirements for constexpr execution. 
-               //       We lose type information on a child when we store it (i.e. we don't 
-               //       know what data type it holds), and we don't use a virtual destructor, 
-               //       so as far as the compiler knows, we can't properly run the subclass 
-               //       destructor. We manually destroy the data as per the above, but the 
-               //       compiler can't know that, and "Trust me, bro" won't fly in constexpr.
-               //
-               for (auto* child : this->_children)
-                  delete child;
+               }
+               this->clear_all_children();
             }
          }
 
@@ -136,17 +130,26 @@ namespace cobb {
 
          //
 
-         constexpr void append_child(node&);
+         void append_child(node&);
 
-         constexpr bool can_have_children() const noexcept;
+         bool can_have_children() const noexcept;
 
-         constexpr bool contains(const node&) const noexcept;
+         size_t child_count() const noexcept;
 
-         constexpr size_t index_of_child(const node&) const noexcept;
+         void clear_all_children();
 
-         constexpr void insert_child(node&, size_t at);
+         bool contains(const node&) const noexcept;
 
-         constexpr void remove_child(node&);
+         size_t index_of_child(const node&) const noexcept;
+
+         void insert_child(node&, size_t at);
+
+         const node& nth_child(size_t) const;
+         node& nth_child(size_t i) {
+            return const_cast<node&>(std::as_const(*this).nth_child(i));
+         }
+
+         void remove_child(node&);
 
          //
 
@@ -158,24 +161,29 @@ namespace cobb {
             return const_cast<typed_node<node, Data>*>(std::as_const(*this).as<Data>());
          }
 
-         constexpr const const_children_view children() const noexcept { return const_children_view{ *this }; }
-         constexpr children_view children() noexcept { return children_view{ *this }; }
-
          constexpr const node* parent() const noexcept { return this->_parent; }
          constexpr node* parent() noexcept { return const_cast<node*>(std::as_const(*this).parent()); }
    };
 
    template<typename Node, typename Data> requires (Node::template supports_data_type<Data>)
    class typed_node : public Node {
+      protected:
+         using child_list = impl::_node::child_list<Node, Data>;
+      public:
+         using value_type = Data;
+
       public:
          template<typename... Args>
-         constexpr typed_node(Args&&... args) : Node(Node::all_data_types::template index_of_type<Data>), data(std::forward<Args>(args)...) {}
-
-         constexpr ~typed_node() {
-            this->_is_typed_destroy = true;
+         constexpr typed_node(Args&&... args) : Node(Node::all_data_types::template index_of_type<Data>), data(std::forward<Args>(args)...) {
          }
 
-         Data data;
+         constexpr ~typed_node() {
+            this->_undergoing_typed_destroy = true;
+            this->clear_all_children();
+         }
+
+         [[no_unique_address]] child_list children;
+         value_type data;
    };
 }
 

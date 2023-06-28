@@ -2106,9 +2106,6 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\tree\tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5189,6 +5186,9 @@
     <ClInclude Include="helpers\tree\impl\children_view.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\tree\impl\child_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5934,6 +5934,7 @@
     <None Include="helpers\tree\node.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="helpers\tree\node.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

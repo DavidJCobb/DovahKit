@@ -524,7 +524,6 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
-    <ClCompile Include="helpers\tree\tests.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -1131,6 +1130,7 @@
     <ClInclude Include="helpers\string\string_says_false.h" />
     <ClInclude Include="helpers\string\string_to_integer.h" />
     <ClInclude Include="helpers\string\strlen.h" />
+    <ClInclude Include="helpers\tree\impl\child_list.h" />
     <ClInclude Include="helpers\tree\impl\data_destroyer.h" />
     <ClInclude Include="helpers\tree\impl\data_type_info_table.h" />
     <ClInclude Include="helpers\tree\impl\is_node_data_with_attributes.h" />
@@ -2121,6 +2121,7 @@
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
     <None Include="helpers\tree\node.inl" />
+    <None Include="helpers\tree\node.md" />
     <None Include="helpers\windows.hint" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
