@@ -5,14 +5,7 @@
 #include "editor/subsystems/worldinput2/enums/input_device_type.h"
 
 namespace dovahkit::subsystems::worldinput2 {
-   namespace binds {
-      namespace nodes {
-         class bound_tool;
-         class editor_mode;
-         class modifier;
-      }
-      class tree;
-   }
+   class control_scheme;
 }
 class DKWorldinputControlSchemeModel;
 
@@ -20,7 +13,7 @@ class WorldinputSchemeEditDialog : public QDialog {
    Q_OBJECT;
    public:
       using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
-      using control_scheme_type = dovahkit::subsystems::worldinput2::binds::tree;
+      using control_scheme_type = dovahkit::subsystems::worldinput2::control_scheme;
       
    public:
       WorldinputSchemeEditDialog(input_device_type, QWidget* parent = nullptr);

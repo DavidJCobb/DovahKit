@@ -1,10 +1,12 @@
 #pragma once
 #include <optional>
+#include <variant>
 #include <QAbstractItemModel>
 #include <QString>
+#include "helpers/tree/data_variant.h"
 #include "helpers/keyboard/virtual_key.h"
-#include "editor/subsystems/worldinput2/bind_tree/node.h"
-#include "editor/subsystems/worldinput2/bind_tree/tree.h"
+#include "editor/subsystems/worldinput2/control_scheme/all_node_headers.h"
+#include "editor/subsystems/worldinput2/control_scheme.h"
 #include "ui/models/DKGenericTreeModel.h"
 
 class DKWorldinputControlSchemeModel;
@@ -12,10 +14,10 @@ class DKWorldinputControlSchemeModel;
 template<>
 class DKGenericTreeModelNode<DKWorldinputControlSchemeModel> : public DKGenericTreeModelNodeBase<DKWorldinputControlSchemeModel> {
    public:
-      using underlying_type = dovahkit::subsystems::worldinput2::binds::node;
-      using node_type_enum  = dovahkit::subsystems::worldinput2::binds::node_type;
+      using source_node_type = dovahkit::subsystems::worldinput2::control_scheme::node;
+      using variant_type     = cobb::node_data_variant<source_node_type, true>;
 
-      underlying_type* underlying_data = nullptr;
+      variant_type data;
       struct {
          QString name;
          QString bound_tool_name;
@@ -23,9 +25,9 @@ class DKGenericTreeModelNode<DKWorldinputControlSchemeModel> : public DKGenericT
       } cached;
 
       constexpr bool can_have_children() const noexcept {
-         if (!this->underlying_data)
+         if (std::holds_alternative<std::monostate>(this->data))
             return true;
-         return this->underlying_data->type != node_type_enum::bound_tool;
+         return !std::holds_alternative<dovahkit::subsystems::worldinput2::control_scheme_action>(this->data);
       }
 };
 
@@ -50,8 +52,7 @@ class DKWorldinputControlSchemeModel : public DKGenericTreeModel<DKWorldinputCon
       using base_type::moveItems;
 
    public:
-      using control_scheme_type  = dovahkit::subsystems::worldinput2::binds::tree;
-      using underlying_node_type = node_type::underlying_type;
+      using control_scheme_type = dovahkit::subsystems::worldinput2::control_scheme;
 
    public:
       static constexpr const auto NodeTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 1);

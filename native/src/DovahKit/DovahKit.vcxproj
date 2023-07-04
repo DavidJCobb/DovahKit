@@ -1148,6 +1148,7 @@
     <ClInclude Include="helpers\string\string_says_false.h" />
     <ClInclude Include="helpers\string\string_to_integer.h" />
     <ClInclude Include="helpers\string\strlen.h" />
+    <ClInclude Include="helpers\tree\data_variant.h" />
     <ClInclude Include="helpers\tree\impl\child_list.h" />
     <ClInclude Include="helpers\tree\impl\data_destroyer.h" />
     <ClInclude Include="helpers\tree\impl\is_node_data_with_attributes.h" />
@@ -1181,6 +1182,7 @@
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
     <ClInclude Include="helpers\type_traits\set_const.h" />
     <ClInclude Include="helpers\type_traits\strip_enum.h" />
+    <ClInclude Include="helpers\type_traits\transfer_variadics.h" />
     <ClInclude Include="helpers\type_traits\value_type_of.h" />
     <ClInclude Include="helpers\uint_of_size.h" />
     <ClInclude Include="helpers\unreachable.h" />
