@@ -16,6 +16,7 @@ namespace dovahkit::subsystems::worldedit {
 }
 namespace dovahkit::subsystems::worldinput2 {
    class combined_tool_results;
+   class control_scheme;
 }
 
 namespace dovahkit::subsystems::worldinput2 {
@@ -40,6 +41,7 @@ namespace dovahkit::subsystems::worldinput2 {
       public slots:
          void setTargetWidget(QWidget* target);
          void setBindingsFor(input_device_type, const binds::tree&);
+         void setBindingsFor(const control_scheme&);
 
       protected slots:
          void ignoreAllHeldKeys();
@@ -61,10 +63,6 @@ namespace dovahkit::subsystems::worldinput2 {
             bind_list keyboard = bind_list(input_device_type::keyboard_mouse);
             bind_list gamepad  = bind_list(input_device_type::xinput);
          } binds;
-         struct {
-            binds::tree keyboard = binds::tree(input_device_type::keyboard_mouse);
-            binds::tree gamepad  = binds::tree(input_device_type::xinput);
-         } schemes;
 
       protected:
 

@@ -2,11 +2,10 @@
 #include <QDebug>
 
 #include "editor/subsystems/worldinput2/core.h"
-#include "editor/subsystems/worldinput2/control_schemes/ck_standard.h"
-#include "editor/subsystems/worldinput2/control_schemes/debug_wasd.h"
-#include "editor/subsystems/worldinput2/control_schemes/reach.h"
-
-#include "editor/subsystems/worldinput2/bind_tree/tree.h"
+#include "editor/subsystems/worldinput2/builtin_control_schemes/ck_standard.h"
+#include "editor/subsystems/worldinput2/builtin_control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput2/builtin_control_schemes/reach.h"
+#include "editor/subsystems/worldinput2/control_scheme.h"
 
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
@@ -24,13 +23,13 @@ namespace DovahKitDebug::features {
 
       qDebug("Running Worldinput control scheme serialization tests...");
 
-      auto _compare = [](const char* name, const worldinput2::binds::tree& src) {
+      auto _compare = [](const char* name, const worldinput2::control_scheme& src) {
          cobb::bitstreams::writer writer;
          src.write(writer);
 
          cobb::bitstreams::reader reader;
          reader.set_buffer(writer.data(), writer.get_bytespan());
-         const auto dst = worldinput2::binds::tree::read(reader);
+         const auto dst = worldinput2::control_scheme::read(reader);
 
          bool equal = (src == dst);
 
@@ -41,9 +40,9 @@ namespace DovahKitDebug::features {
             }
          #endif
       };
-      _compare("CK Standard", worldinput2::default_control_schemes::ck_standard());
-      _compare("Debug WASD",  worldinput2::default_control_schemes::debug_wasd());
-      _compare("Reach",       worldinput2::default_control_schemes::reach());
+      _compare("CK Standard", worldinput2::builtin_control_schemes::ck_standard());
+      _compare("Debug WASD",  worldinput2::builtin_control_schemes::debug_wasd());
+      _compare("Reach",       worldinput2::builtin_control_schemes::reach());
 
       qDebug("All tests run.");
    }

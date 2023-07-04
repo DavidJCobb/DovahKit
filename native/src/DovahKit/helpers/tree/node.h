@@ -97,6 +97,17 @@ namespace cobb {
             return new typed_node<node, Data>(std::forward<Args>(args)...);
          }
 
+         template<typename Data> requires (supports_data_type<Data>)
+         static constexpr typed_node<node, Data>* from_data(const Data& data) {
+            if constexpr (std::is_copy_constructible_v<Data>) {
+               return new typed_node<node, Data>(data);
+            } else {
+               auto* out = new typed_node<node, Data>();
+               out->data = data;
+               return out;
+            }
+         }
+
          //
 
          template<typename Data>

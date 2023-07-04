@@ -2,7 +2,7 @@
 #include <cassert>
 #include "helpers/unreachable.h"
 #include "../control_scheme/all_node_headers.h"
-#include "../control_scheme/control_scheme.h"
+#include "../control_scheme.h"
 
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
 

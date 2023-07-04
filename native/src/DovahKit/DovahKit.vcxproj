@@ -141,11 +141,14 @@
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\ck_standard.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_schemes\reach.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\action.cpp" />
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\control_scheme.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
@@ -891,6 +894,10 @@
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h" />
     <ClInclude Include="editor\subsystems\worldinput2\bind_tree\tree.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\_helpers.h" />
     <ClInclude Include="editor\subsystems\worldinput2\chrono.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\ck_standard.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.h" />
@@ -899,7 +906,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\action.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\all_node_headers.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition.h" />
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\control_scheme.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h" />
     <ClInclude Include="editor\subsystems\worldinput2\core.h" />
     <ClInclude Include="editor\subsystems\worldinput2\debugging.h" />

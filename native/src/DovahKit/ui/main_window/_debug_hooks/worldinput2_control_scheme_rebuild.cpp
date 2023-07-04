@@ -4,7 +4,10 @@
 #include "editor/subsystems/worldinput2/algorithms/control_scheme_to_bind_list.h"
 #include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
 #include "editor/subsystems/worldinput2/control_scheme/all_node_headers.h"
-#include "editor/subsystems/worldinput2/control_scheme/control_scheme.h"
+#include "editor/subsystems/worldinput2/control_scheme.h"
+
+#include "helpers/bitstreams/reader.h"
+#include "helpers/bitstreams/writer.h"
 
 namespace {
    namespace worldedit {
@@ -272,5 +275,25 @@ namespace DovahKitDebug::features {
       #if _DEBUG
          __debugbreak();
       #endif
+         
+      auto _compare = [](const char* name, const worldinput2::control_scheme& src) {
+         cobb::bitstreams::writer writer;
+         src.write(writer);
+
+         cobb::bitstreams::reader reader;
+         reader.set_buffer(writer.data(), writer.get_bytespan());
+         const auto dst = worldinput2::control_scheme::read(reader);
+
+         bool equal = (src == dst);
+
+         qDebug("%s serialization worked? %s", name, equal ? "true" : "false");
+         #if _DEBUG
+            if (!equal) {
+               __debugbreak();
+            }
+         #endif
+      };
+      _compare("Debug WASD", scheme);
+      qDebug("All tests run.");
    }
 }

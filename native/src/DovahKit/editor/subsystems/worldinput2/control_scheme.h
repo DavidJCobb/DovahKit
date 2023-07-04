@@ -2,7 +2,7 @@
 #include <vector>
 #include <QString>
 #include "helpers/tree/node.h"
-#include "../enums/input_device_type.h"
+#include "./enums/input_device_type.h"
 
 namespace cobb::bitstreams {
    class reader;

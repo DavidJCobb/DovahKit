@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="cobb::eight_cc">
+
+      <Intrinsic Name="_ascii_printable_char" Expression="c &gt;= 0x20 &amp;&amp; c &lt;= 0x7E">
+         <Parameter Name="c" Type="char" />
+      </Intrinsic>
+      <Intrinsic Name="_ascii_printable" Expression="
+         _ascii_printable_char(bytes[0]) &amp;&amp;
+         _ascii_printable_char(bytes[1]) &amp;&amp;
+         _ascii_printable_char(bytes[2]) &amp;&amp;
+         _ascii_printable_char(bytes[3]) &amp;&amp;
+         _ascii_printable_char(bytes[4]) &amp;&amp;
+         _ascii_printable_char(bytes[5]) &amp;&amp;
+         _ascii_printable_char(bytes[6]) &amp;&amp;
+         _ascii_printable_char(bytes[7])
+      " />
+      
+      <DisplayString Condition="_ascii_printable()">{&amp;bytes,sb}</DisplayString>
       <DisplayString>{&amp;bytes,c}</DisplayString>
+      <StringView>bytes,sb</StringView>
    </Type>
 </AutoVisualizer>

@@ -11,10 +11,8 @@
 #include "editor/subsystems/worldinput2/core.h"
 
 #include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
-#include "editor/subsystems/worldinput2/bind_tree/tree.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/root.h"
+#include "editor/subsystems/worldinput2/control_scheme/all_node_headers.h"
+#include "editor/subsystems/worldinput2/control_scheme.h"
 
 #include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
 #include "editor/subsystems/worldedit/tool_system/id_of.h"
@@ -28,35 +26,39 @@ namespace {
    namespace worldinput2 {
       using namespace dovahkit::subsystems::worldinput2;
    }
+   using worldinput2::control_scheme;
+   using worldinput2::control_scheme_action;
+   using worldinput2::control_scheme_modifier;
 
    struct testing_tree {
       std::string name;
-      worldinput2::binds::tree tree;
+      worldinput2::control_scheme tree;
    };
 
-   worldinput2::binds::tree make_tree(worldinput2::input_device_type dt, std::initializer_list<worldinput2::binds::node*> nodes) {
-      worldinput2::binds::tree out(dt);
+   worldinput2::control_scheme make_tree(worldinput2::input_device_type dt, std::initializer_list<worldinput2::control_scheme::node*> nodes) {
+      control_scheme out(dt);
       for (auto* node : nodes)
-         out.root->append(*node);
+         out.top_level_nodes.push_back(node);
 
-      constexpr auto warn = [](const worldinput2::binds::tree& out) {
-         constexpr auto recurse = [&](const worldinput2::binds::node& node, auto& recurse) -> void {
-            if (auto* in = node.as<worldinput2::binds::nodes::bound_tool>()) {
-               if (in->input_sequence.is_probably_keyboard_impossible()) {
+      constexpr auto warn = [](const worldinput2::control_scheme& out) {
+         constexpr auto recurse = [&](const control_scheme::node& node, auto& recurse) -> void {
+            if (auto* in = node.as<control_scheme_action>()) {
+               if (in->data.input_sequence.is_probably_keyboard_impossible()) {
                   std::string seq;
-                  worldinput2::algorithms::input_sequence_to_string(in->input_sequence, seq);
+                  worldinput2::algorithms::input_sequence_to_string(in->data.input_sequence, seq);
                   qDebug(
                      "WARNING: One of the test bind trees contains an input sequence that may not be completable on a gamepad.\n   Node:     %s\n   Sequence: %s",
-                     qUtf8Printable(in->name),
+                     qUtf8Printable(in->data.name),
                      seq.c_str()
                   );
                }
             }
-            for (auto* child : node.child_nodes()) {
+            for (auto* child : node.children) {
                recurse(*child, recurse);
             }
          };
-         recurse(*out.root, recurse);
+         for (auto* n : out.top_level_nodes)
+            recurse(*n, recurse);
       };
       if (dt == worldinput2::input_device_type::keyboard_mouse) {
          warn(out);
@@ -65,35 +67,38 @@ namespace {
       return out;
    }
 
-   worldinput2::binds::nodes::bound_tool* make_tool_node(
+   cobb::typed_node<control_scheme::node, control_scheme_action>* make_tool_node(
       const std::string& name,
       worldinput2::button_press_type pt,
       const worldinput2::input_sequence& sequence
    ) {
-      auto* node = new worldinput2::binds::nodes::bound_tool;
-      node->name = name.c_str();
-      node->button_press_type = pt;
-      node->input_sequence    = sequence;
-      //
-      node->tool.id = worldedit::tools::id_of<worldedit::tools::debug_print>;
-      node->tool.options = new worldedit::tools::options_union(
-         worldedit::tools::debug_print::options{
-            .text = name
-         }
-      );
-      //
-      return node;
+      return control_scheme::node::from_data(control_scheme_action{
+         .name = name.c_str(),
+            //
+         .input_sequence    = sequence,
+         .button_press_type = pt,
+         //
+         .tool = {
+            .id      = worldedit::tools::id_of<worldedit::tools::debug_print>,
+            .options = new worldedit::tools::options_union(
+               worldedit::tools::debug_print::options{
+                  .text = name
+               }
+            ),
+         },
+      });
    }
-   worldinput2::binds::nodes::modifier* make_modifier_node(
+   cobb::typed_node<control_scheme::node, control_scheme_modifier>* make_modifier_node(
       const std::string& name,
       const worldinput2::input_sequence& sequence,
-      std::initializer_list<worldinput2::binds::node*> children = {}
+      std::initializer_list<control_scheme::node*> children = {}
    ) {
-      auto* node = new worldinput2::binds::nodes::modifier;
-      node->name = name.c_str();
-      node->input_sequence = sequence;
+      auto* node = control_scheme::node::from_data(control_scheme_modifier{
+         .name           = name.c_str(),
+         .input_sequence = sequence,
+      });
       for (auto* child : children) {
-         node->append(*child);
+         node->append_child(*child);
       }
       return node;
    }
@@ -1090,7 +1095,7 @@ namespace DovahKitDebug::features {
          QObject::connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [combo](int index) {
             auto& entry = testing_trees[index];
             auto& core  = dovahkit::subsystems::worldinput2::core::get();
-            core.setBindingsFor(entry.tree.device_type, entry.tree);
+            core.setBindingsFor(entry.tree);
          });
 
          layout->addWidget(frame);

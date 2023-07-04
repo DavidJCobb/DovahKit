@@ -22,8 +22,12 @@ namespace dovahkit::subsystems::worldinput2 {
 
       auto* a = (worldedit::tools::options_union*)this->tool.options;
       auto* b = (worldedit::tools::options_union*)other.tool.options;
-      if ((a == nullptr) != (b == nullptr))
-         return false;
+      //if ((a == nullptr) != (b == nullptr))
+      //   //
+      //   // This optimization doesn't work, because when reading a control scheme action from a 
+      //   // bitstream, we blindly create an options union and allow it to potentially be a no-op.
+      //   //
+      //   return false;
       if (a) {
          if (*a != *b)
             return false;
@@ -58,12 +62,11 @@ namespace dovahkit::subsystems::worldinput2 {
                break;
             }
          }
-         if (this->tool.id != worldedit::tools::id_of_none) {
-            auto* ou = new worldedit::tools::options_union;
-            *ou = worldedit::tools::options_union::construct_for_type(this->tool.id);
-            this->tool.options = ou;
-            ou->stream(s);
-         }
+
+         auto* ou = new worldedit::tools::options_union;
+         *ou = worldedit::tools::options_union::construct_for_type(this->tool.id);
+         this->tool.options = ou;
+         ou->stream(s);
       }
    }
    void control_scheme_action::stream(cobb::bitstreams::writer& s) const {

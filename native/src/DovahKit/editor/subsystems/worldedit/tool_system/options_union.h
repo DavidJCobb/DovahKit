@@ -139,6 +139,12 @@ namespace dovahkit::subsystems::worldedit::tools {
          constexpr bool operator==(const options_union&) const;
 
          static options_union construct_for_type(tool_id);
+         static constexpr bool tool_has_options(tool_id id) {
+            for (const auto& entry : _type_table)
+               if (entry.id == id)
+                  return true;
+            return false;
+         }
 
          options_union* clone() const;
 

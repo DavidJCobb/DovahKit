@@ -2106,7 +2106,7 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\control_scheme.cpp">
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\modifier.cpp">
@@ -2119,6 +2119,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -5207,7 +5216,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\control_scheme.h">
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\type_containers\fixed_map.h">
@@ -5220,6 +5229,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

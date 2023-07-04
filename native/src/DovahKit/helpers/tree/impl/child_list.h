@@ -2,6 +2,14 @@
 #include <stdexcept>
 #include <vector>
 
+#if __cpp_explicit_this_parameter >= 202110L || _MSC_VER >= 1932
+   // MSVC doesn't support the feature in modules yet, and refuses to predefine the 
+   // feature test macro on that basis. IntelliSense defines the macro, making this 
+   // a landmine. Explicit compiler version checks are needed as a workaround.
+#else
+   #error Requires support for explicit object parameters (i.e. deducing this).
+#endif
+
 namespace cobb::impl::_node {
    template<typename Node>
    class child_list {

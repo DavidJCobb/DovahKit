@@ -4,9 +4,11 @@
 #include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"
 #include "editor/subsystems/xinput/core.h"
 #include "editor/core.h"
+#include "./algorithms/control_scheme_to_bind_list.h"
 #include "./algorithms/flatten_bind_tree.h"
 #include "./bind_tree/nodes/root.h"
 #include "./tools/combined_tool_results.h"
+#include "./control_scheme.h"
 
 #include "./debugging.h"
 #include <QLabel>
@@ -133,12 +135,23 @@ namespace dovahkit::subsystems::worldinput2 {
       switch (d) {
          using _ = input_device_type;
          case _::keyboard_mouse:
-            this->schemes.keyboard = b;
-            this->binds.keyboard = algorithms::flatten_bind_tree(this->schemes.keyboard);
+            this->binds.keyboard = algorithms::flatten_bind_tree(b);
             break;
          case _::xinput:
-            this->schemes.gamepad = b;
-            this->binds.gamepad = algorithms::flatten_bind_tree(this->schemes.gamepad);
+            this->binds.gamepad = algorithms::flatten_bind_tree(b);
+            break;
+         default:
+            return;
+      }
+   }
+   void core::setBindingsFor(const control_scheme& cs) {
+      switch (cs.device_type) {
+         using _ = input_device_type;
+         case _::keyboard_mouse:
+            this->binds.keyboard = algorithms::control_scheme_to_bind_list(cs);
+            break;
+         case _::xinput:
+            this->binds.gamepad = algorithms::control_scheme_to_bind_list(cs);
             break;
          default:
             return;

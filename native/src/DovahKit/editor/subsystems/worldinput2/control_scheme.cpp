@@ -6,7 +6,7 @@
 #include "helpers/bitstreams/writer.h"
 #include "helpers/type_containers/fixed_map.h"
 
-#include "./all_node_headers.h"
+#include "./control_scheme/all_node_headers.h"
 
 namespace {
    enum class _serialized_node_type {
@@ -111,9 +111,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
       s.stream<std::bit_width(max_name_length)>(out.name);
 
-      bool presence;
-      s.stream(presence);
-      if (presence) {
+      {
          auto stream_node = [&s](this auto&& recurse) -> node* {
             const auto pos = s.get_position();
             const _serialized_node_type type = (_serialized_node_type)s.stream_bits(_serialized_node_type_bitcount);
@@ -138,7 +136,7 @@ namespace dovahkit::subsystems::worldinput2 {
             return out;
          };
 
-         uint32_t size;
+         uint32_t size = 0;
          s.stream(size);
          for (size_t i = 0; i < size; ++i) {
             out.top_level_nodes.push_back(stream_node());
