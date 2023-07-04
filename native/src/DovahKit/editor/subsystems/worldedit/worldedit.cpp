@@ -36,8 +36,8 @@ namespace {
 
 #include "editor/subsystems/worldinput2/core.h"
 #include "./tool_system/tool_results_tuple.h"
-#include "editor/subsystems/worldinput2/control_schemes/debug_wasd.h"
-#include "editor/subsystems/worldinput2/control_schemes/reach.h"
+#include "editor/subsystems/worldinput2/builtin_control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput2/builtin_control_schemes/reach.h"
 namespace {
    static constexpr bool debug_use_new_worldinput = true;
 }
@@ -123,8 +123,8 @@ namespace dovahkit::subsystems::worldedit {
          using namespace dovahkit::subsystems::worldinput2;
 
          auto& wi = worldinput2::core::get();
-         wi.setBindingsFor(worldinput2::input_device_type::keyboard_mouse, worldinput2::default_control_schemes::debug_wasd());
-         wi.setBindingsFor(worldinput2::input_device_type::xinput, worldinput2::default_control_schemes::reach());
+         wi.setBindingsFor(worldinput2::builtin_control_schemes::debug_wasd());
+         wi.setBindingsFor(worldinput2::builtin_control_schemes::reach());
       }
    }
 

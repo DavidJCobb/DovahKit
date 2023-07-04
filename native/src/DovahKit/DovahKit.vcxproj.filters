@@ -1950,25 +1950,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\node.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\tree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp">
@@ -1987,9 +1969,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\bind_list.cpp">
@@ -2022,19 +2001,10 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\reach.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_schemes\ck_standard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp">
@@ -4754,21 +4724,6 @@
     <ClInclude Include="editor\subsystems\worldinput2\defaults.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\bound_tool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\root.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\uint_of_size.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -4790,13 +4745,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\modifier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_tree\nodes\abstract_input_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\devices\abstract_device_handler.h">
@@ -4833,9 +4782,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\flatten_bind_tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\enums\axis2D.h">
@@ -4961,16 +4907,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\reach.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\_builders.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\debug_wasd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput2\raycast_requirement.h">
@@ -4989,9 +4926,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\gizmo_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_schemes\ck_standard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h">

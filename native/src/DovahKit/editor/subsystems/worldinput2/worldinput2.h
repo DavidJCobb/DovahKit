@@ -2,7 +2,6 @@
 #include <QObject>
 #include <QPointer>
 #include <QWidget>
-#include "./bind_tree/tree.h"
 #include "./devices/abstract_device_handler.h"
 #include "./devices/keyboard_mouse.h"
 #include "./devices/xinput.h"
@@ -40,7 +39,6 @@ namespace dovahkit::subsystems::worldinput2 {
 
       public slots:
          void setTargetWidget(QWidget* target);
-         void setBindingsFor(input_device_type, const binds::tree&);
          void setBindingsFor(const control_scheme&);
 
       protected slots:

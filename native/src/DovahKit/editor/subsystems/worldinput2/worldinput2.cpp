@@ -5,8 +5,6 @@
 #include "editor/subsystems/xinput/core.h"
 #include "editor/core.h"
 #include "./algorithms/control_scheme_to_bind_list.h"
-#include "./algorithms/flatten_bind_tree.h"
-#include "./bind_tree/nodes/root.h"
 #include "./tools/combined_tool_results.h"
 #include "./control_scheme.h"
 
@@ -131,19 +129,6 @@ namespace dovahkit::subsystems::worldinput2 {
       this->ignoreAllHeldKeys();
    }
 
-   void core::setBindingsFor(input_device_type d, const binds::tree& b) {
-      switch (d) {
-         using _ = input_device_type;
-         case _::keyboard_mouse:
-            this->binds.keyboard = algorithms::flatten_bind_tree(b);
-            break;
-         case _::xinput:
-            this->binds.gamepad = algorithms::flatten_bind_tree(b);
-            break;
-         default:
-            return;
-      }
-   }
    void core::setBindingsFor(const control_scheme& cs) {
       switch (cs.device_type) {
          using _ = input_device_type;

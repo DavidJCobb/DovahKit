@@ -1,11 +1,5 @@
 #include "./DKWorldinputControlSchemeModel.h"
 
-#include "editor/subsystems/worldinput2/bind_tree/nodes/abstract_input_node.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/editor_mode.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/root.h"
-
 #include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
 
 #include "ui/options_window/worldedit_tools/get_worldedit_tool_info.h"
