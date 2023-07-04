@@ -15,13 +15,9 @@ class QAction;
 class QItemSelection;
 
 namespace dovahkit::subsystems::worldinput2 {
+   class  control_scheme_action;
    class  input_sequence;
    struct raycast_requirement;
-
-   namespace binds::nodes {
-      class bound_tool;
-      class modifier;
-   }
 }
 
 class DKWorldinputInputSequenceModel;
@@ -30,13 +26,13 @@ class WorldinputBindEditDialog : public QDialog {
    Q_OBJECT;
    public:
       using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
-      using control_scheme_node_type = dovahkit::subsystems::worldinput2::binds::nodes::bound_tool;
+      using data_type = dovahkit::subsystems::worldinput2::control_scheme_action;
       
    public:
       WorldinputBindEditDialog(input_device_type, QWidget* parent = nullptr);
 
-      void initializeFrom(const control_scheme_node_type&);
-      void overwrite(control_scheme_node_type&) const;
+      void initializeFrom(const data_type&);
+      void overwrite(data_type&) const;
 
    protected:
       Ui::WorldinputBindEditDialog ui;

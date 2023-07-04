@@ -495,31 +495,19 @@ QModelIndex CLASS_NAME::index(const node_type* node, size_t column) const {
 #pragma region Subclass helpers
    CLASS_TEMPLATE_PARAMS
    void CLASS_NAME::emitNodeChanged(const node_type& node) {
-      auto* parent = node.parent_node();
-      int i = 0;
-      if (parent) {
-         i = parent->index_of_child(node);
-      }
-
-      QModelIndex start = this->createIndex(i, 0, (void*)parent);
+      QModelIndex start = this->qmi_for_node(node, 0);
       QModelIndex end;
       if constexpr (self_type::variable_column_count) {
-         end = this->createIndex(i, ((const self_type*)this)->column_count_of(node), parent);
+         end = start.siblingAtColumn( ((const self_type*)this)->column_count_of(node) );
       } else {
-         end = this->createIndex(i, self_type::max_columns, (void*)parent);
+         end = start.siblingAtColumn(self_type::max_columns);
       }
       emit dataChanged(start, end);
    }
 
    CLASS_TEMPLATE_PARAMS
    void CLASS_NAME::emitNodeChanged(const node_type& node, size_t column) {
-      auto* parent = node.parent_node();
-      int i = 0;
-      if (parent) {
-         i = parent->index_of_child(node);
-      }
-
-      QModelIndex qmi = this->createIndex(i, column, (void*)parent);
+      QModelIndex qmi = this->qmi_for_node(node, column);
       emit dataChanged(qmi, qmi);
    }
 

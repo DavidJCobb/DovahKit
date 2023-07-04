@@ -4,8 +4,8 @@
 #include "helpers/qt/combobox.h"
 #include "widgets/DKHeaderView.h"
 
-#include "editor/subsystems/worldinput2/bind_tree/nodes/bound_tool.h"
-#include "editor/subsystems/worldinput2/bind_tree/nodes/modifier.h"
+#include "editor/subsystems/worldinput2/control_scheme/action.h"
+#include "editor/subsystems/worldinput2/control_scheme.h"
 
 #include "ui/models/worldinput/DKWorldinputInputSequenceModel.h"
 #include "widgets/widget-dialogs/DKWorldinputButtonPickDialog.h"
@@ -19,7 +19,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
    QObject::connect(this->ui.buttonSave,   &QPushButton::clicked, this, &QDialog::accept);
 
-   this->ui.name->setMaxLength(control_scheme_node_type::max_name_length);
+   this->ui.name->setMaxLength(data_type::max_name_length);
 
    #pragma region Inputs tab
       {
@@ -322,7 +322,7 @@ const QItemSelection WorldinputBindEditDialog::_getSeqSelection() {
    return sm->selection();
 }
 
-void WorldinputBindEditDialog::initializeFrom(const control_scheme_node_type& node) {
+void WorldinputBindEditDialog::initializeFrom(const data_type& node) {
    this->ui.name->setText(node.name);
    
    cobb::qt::set_combobox_value(this->ui.buttonPressType,  node.button_press_type);
@@ -368,8 +368,8 @@ void WorldinputBindEditDialog::initializeFrom(const control_scheme_node_type& no
       }
    }
 }
-void WorldinputBindEditDialog::overwrite(control_scheme_node_type& node) const {
-   assert(node.name.size() < control_scheme_node_type::max_name_length);
+void WorldinputBindEditDialog::overwrite(data_type& node) const {
+   assert(node.name.size() < data_type::max_name_length);
    node.name = this->ui.name->text();
 
    node.button_press_type = (button_press_type)this->ui.buttonPressType->currentData().toInt();
