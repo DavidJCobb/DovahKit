@@ -196,3 +196,18 @@ void DKWorldinputControlSchemeModel::overwriteDestination(control_scheme_type& d
       clone(*tpn);
    }
 }
+
+DKWorldinputControlSchemeModel::node_type::variant_type DKWorldinputControlSchemeModel::infoFor(const QModelIndex& qmi) const {
+   auto* n = this->node(qmi);
+   if (!n)
+      return {};
+   return n->data;
+}
+void DKWorldinputControlSchemeModel::replaceInfoFor(const QModelIndex& qmi, const node_type::variant_type& data) {
+   auto* n = this->node(qmi);
+   if (!n)
+      return;
+   n->data = data;
+   _recache_data(*n);
+   this->emitNodeChanged(qmi);
+}

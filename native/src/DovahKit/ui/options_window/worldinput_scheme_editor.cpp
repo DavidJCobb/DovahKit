@@ -3,6 +3,14 @@
 #include "ui/models/worldinput/DKWorldinputControlSchemeModel.h"
 #include "widgets/DKHeaderView.h"
 
+#include "./worldinput_bind_editor.h"
+
+namespace {
+   using dovahkit::subsystems::worldinput2::control_scheme_action;
+   using dovahkit::subsystems::worldinput2::control_scheme_condition;
+   using dovahkit::subsystems::worldinput2::control_scheme_modifier;
+}
+
 WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QWidget* parent) : QDialog(parent), device_type(idt) {
    this->ui.setupUi(this);
 
@@ -27,7 +35,61 @@ WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QW
       auto* model = this->_model = new DKWorldinputControlSchemeModel(treeview);
       treeview->setModel(model);
    }
-   // TODO: Node edit buttons
+   QObject::connect(this->ui.buttonNewBind, &QPushButton::clicked, this, [this]() {
+      //
+      // TODO
+      //
+   });
+   QObject::connect(this->ui.buttonNewEditorModeNode, &QPushButton::clicked, this, [this]() {
+      //
+      // TODO
+      //
+   });
+   QObject::connect(this->ui.buttonNewModifier, &QPushButton::clicked, this, [this]() {
+      //
+      // TODO
+      //
+   });
+   QObject::connect(this->ui.buttonEditNode, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_getFirstSelectedNode();
+      if (!qmi.isValid())
+         return;
+      auto data = this->_model->infoFor(qmi);
+      if (std::holds_alternative<std::monostate>(data))
+         return;
+
+      bool modified = false;
+      if (std::holds_alternative<control_scheme_action>(data)) {
+         auto& casted = std::get<control_scheme_action>(data);
+         auto* editor = new WorldinputBindEditDialog(this->device_type, this);
+         editor->initializeFrom(casted);
+         auto  result = editor->exec();
+         if (result == QDialog::DialogCode::Accepted) {
+            modified = true;
+            editor->overwrite(casted);
+         }
+      } else {
+         // TODO: IMPLEMENT MODIFIER AND CONDITION EDITORS
+      }
+
+      if (modified) {
+         this->_model->replaceInfoFor(qmi, data);
+         if (auto* sm = this->ui.nodeTree->selectionModel()) {
+            //
+            // TODO: If there's a multiple-selection, deselect all but the QMI we actually edited.
+            //
+         }
+      }
+   });
+   QObject::connect(this->ui.buttonMoveNodeUp, &QPushButton::clicked, this, [this]() {
+      this->_model->moveItems(this->_getSelection(), -1);
+   });
+   QObject::connect(this->ui.buttonMoveNodeDown, &QPushButton::clicked, this, [this]() {
+      this->_model->moveItems(this->_getSelection(), 1);
+   });
+   QObject::connect(this->ui.buttonDeleteNode, &QPushButton::clicked, this, [this]() {
+      this->_model->deleteItems(this->_getSelection().indexes());
+   });
 }
 
 void WorldinputSchemeEditDialog::initializeFrom(const control_scheme_type& src) {
@@ -40,4 +102,17 @@ void WorldinputSchemeEditDialog::overwrite(control_scheme_type& dst) const {
    dst.name = this->ui.name->text();
 
    this->_model->overwriteDestination(dst);
+}
+
+QModelIndex WorldinputSchemeEditDialog::_getFirstSelectedNode() {
+   auto* sm = this->ui.nodeTree->selectionModel();
+   if (!sm)
+      return {};
+   return sm->currentIndex();
+}
+const QItemSelection WorldinputSchemeEditDialog::_getSelection() {
+   auto* sm = this->ui.nodeTree->selectionModel();
+   if (!sm)
+      return {};
+   return sm->selection();
 }

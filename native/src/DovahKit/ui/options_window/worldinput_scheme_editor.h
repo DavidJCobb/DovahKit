@@ -26,4 +26,7 @@ class WorldinputSchemeEditDialog : public QDialog {
       //
       const input_device_type device_type;
       DKWorldinputControlSchemeModel* _model = nullptr;
+
+      QModelIndex _getFirstSelectedNode();
+      const QItemSelection _getSelection();
 };

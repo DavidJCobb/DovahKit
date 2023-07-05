@@ -82,13 +82,13 @@ class DKWorldinputControlSchemeModel : public DKGenericTreeModel<DKWorldinputCon
 
    public:
 
+      node_type::variant_type infoFor(const QModelIndex&) const;
+      void replaceInfoFor(const QModelIndex&, const node_type::variant_type&);
+
       // Attempts to add the provided node as a child of the specified parent. If the specified 
       // parent is a leaf node, we add the provided node as a next-sibling if possible.
       //
       // If we successfully add the provided node, then we also take ownership of it. If we fail 
       // to add it to the model, then we delete it outright.
       //std::optional<QModelIndex> addNodeTo(node_type::underlying_type*, const QModelIndex& parent);
-
-      //std::optional<NodeInfo> infoFor(const QModelIndex&) const;
-      //void replaceInfoFor(const QModelIndex&, const NodeInfo&);
 };

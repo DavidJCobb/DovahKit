@@ -21,9 +21,11 @@ namespace DovahKitDebug::features {
 
       auto* dialog = new WorldinputSchemeEditDialog(worldinput2::input_device_type::keyboard_mouse, from);
       dialog->initializeFrom(tree);
-      dialog->exec();
+      auto result = dialog->exec();
 
-      dialog->overwrite(tree);
+      if (result == QDialog::DialogCode::Accepted) {
+         dialog->overwrite(tree);
+      }
       delete dialog;
 
       #if _DEBUG
