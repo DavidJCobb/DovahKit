@@ -36,7 +36,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
    bind_list_item& bind_list_item::operator=(const bind_list_item& src) {
       this->name = src.name;
-      this->editor_mode = src.editor_mode;
+      this->conditions = src.conditions;
       //
       this->button_press_type = src.button_press_type;
       this->input_sequence    = src.input_sequence.clone();
@@ -60,7 +60,7 @@ namespace dovahkit::subsystems::worldinput2 {
    }
    bind_list_item& bind_list_item::operator=(bind_list_item&& src) noexcept {
       std::swap(this->name,               src.name);
-      std::swap(this->editor_mode,        src.editor_mode);
+      std::swap(this->conditions,         src.conditions);
       std::swap(this->button_press_type,  src.button_press_type);
       std::swap(this->input_sequence,     src.input_sequence);
       std::swap(this->bound_tool.tool,    src.bound_tool.tool);
@@ -93,7 +93,7 @@ namespace dovahkit::subsystems::worldinput2 {
       auto& subsys = core::get(); // worldinput2
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 
-      auto current_editing_mode = worldedit::core::get().get_editor_mode();
+      auto current_conditions = control_scheme_condition::from_worldedit_state();
 
       std::vector<bind_list_item*> eligible_binds;
       std::vector<bind_list_item*> conflict_losing_binds;
@@ -135,9 +135,11 @@ namespace dovahkit::subsystems::worldinput2 {
             if (matched && !sequence.range.is_satisfied(device))
                matched = false;
          }
-         if (child.editor_mode.has_value()) {
-            if (child.editor_mode.value() != current_editing_mode)
+         if (child.conditions.has_value()) {
+            auto test = child.conditions.value() & current_conditions;
+            if (test.impossible()) {
                matched = false;
+            }
          }
          //
          if (!matched) {

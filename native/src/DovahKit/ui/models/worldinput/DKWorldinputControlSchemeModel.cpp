@@ -57,7 +57,11 @@ namespace {
             }
          }
       } else if (auto* casted = std::get_if<worldinput2::control_scheme_modifier>(&data)) {
+         model_node.cached.name = casted->name;
+
          cache_sequence(casted->input_sequence);
+      } else if (auto* casted = std::get_if<worldinput2::control_scheme_condition_node>(&data)) {
+         model_node.cached.name = casted->name;
       }
    }
 }
@@ -86,23 +90,14 @@ QVariant DKWorldinputControlSchemeModel::data_of(const node_type& node, Qt::Item
                return node.cached.input_sequence;
          }
          return {};
-      } else if (std::holds_alternative<worldinput2::control_scheme_condition>(data)) {
-         auto& casted = std::get<worldinput2::control_scheme_condition>(data);
+      } else if (std::holds_alternative<worldinput2::control_scheme_condition_node>(data)) {
+         auto& casted = std::get<worldinput2::control_scheme_condition_node>(data);
 
          switch (column) {
             case Columns::Name:
-               return tr("Mode-specific binds", "node typename");
-            case Columns::Value:
-               switch (casted.mode) {
-                  using enum dovahkit::subsystems::worldedit::editor_mode;
-                  case objects:
-                     return tr("Object Mode", "editor mode");
-                  case terrain:
-                     return tr("Landscape Mode", "editor mode");
-                  case navmesh:
-                     return tr("Navmesh Mode", "editor mode");
-               }
-               return tr("???", "editor mode");
+               return node.cached.name;
+            //case Columns::Value:
+            //   return tr("Constraints for child/descendant nodes", "condition node value text");
          }
          return {};
       }
@@ -195,6 +190,45 @@ void DKWorldinputControlSchemeModel::overwriteDestination(control_scheme_type& d
    for (auto* tpn : this->invisible_root.children()) {
       clone(*tpn);
    }
+}
+
+QModelIndex DKWorldinputControlSchemeModel::insertAfter(const QModelIndex& after, const node_type::variant_type& data) {
+   if (!after.isValid()) {
+      if (this->invisible_root.child_count() != 0)
+         return {};
+      //
+      // Allow an invalid QMI if the model is empty; insert a new top-level node.
+      //
+      auto pos = this->invisible_root.child_count();
+      this->beginInsertRows({}, pos, pos);
+
+      auto* node = new node_type;
+      this->invisible_root.append_child(*node);
+      node->data = data;
+      _recache_data(*node);
+
+      this->endInsertRows();
+      return this->index(node);
+   }
+   auto* after_node = this->node(after);
+   if (!after_node)
+      return {};
+   auto* parent_node = after_node->parent_node();
+   if (!parent_node) // should be impossible; would require that `after_node` be the invisible model root
+      return {};
+
+   auto index = parent_node->index_of_child(*after_node);
+
+   auto parent_qmi = this->index(parent_node);
+   this->beginInsertRows(parent_qmi, index + 1, index + 1);
+
+   auto* node = new node_type;
+   parent_node->insert_child(index + 1, *node);
+   node->data = data;
+   _recache_data(*node);
+
+   this->endInsertRows();
+   return this->index(node);
 }
 
 DKWorldinputControlSchemeModel::node_type::variant_type DKWorldinputControlSchemeModel::infoFor(const QModelIndex& qmi) const {

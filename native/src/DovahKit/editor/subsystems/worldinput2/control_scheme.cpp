@@ -19,9 +19,9 @@ namespace {
 namespace dovahkit::subsystems::worldinput2 {
    namespace {
       using _node_type_map = cobb::type_containers::fixed_map<
-         cobb::type_containers::fixed_map_entry<control_scheme_action,    _serialized_node_type::action>,
-         cobb::type_containers::fixed_map_entry<control_scheme_condition, _serialized_node_type::condition>,
-         cobb::type_containers::fixed_map_entry<control_scheme_modifier,  _serialized_node_type::modifier>
+         cobb::type_containers::fixed_map_entry<control_scheme_action,         _serialized_node_type::action>,
+         cobb::type_containers::fixed_map_entry<control_scheme_condition_node, _serialized_node_type::condition>,
+         cobb::type_containers::fixed_map_entry<control_scheme_modifier,       _serialized_node_type::modifier>
       >;
    }
 }

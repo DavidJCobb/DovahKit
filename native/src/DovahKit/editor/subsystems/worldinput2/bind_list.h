@@ -6,6 +6,7 @@
 #include "editor/subsystems/worldedit/enums/editor_mode.h"
 #include "editor/subsystems/worldedit/tool_system/opaque_options_union.h"
 #include "editor/subsystems/worldedit/tool_system/tool_id.h"
+#include "./control_scheme/condition.h"
 #include "./enums/button_press_type.h"
 #include "./enums/input_device_type.h"
 #include "./input_sequence.h"
@@ -27,7 +28,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
          QString name;
          //
-         std::optional<worldedit::editor_mode> editor_mode;
+         std::optional<control_scheme_condition> conditions;
          //
          button_press_type button_press_type = button_press_type::none;
          input_sequence    input_sequence;

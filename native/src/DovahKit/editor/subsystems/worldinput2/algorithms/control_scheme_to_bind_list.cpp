@@ -55,16 +55,16 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
    ) {
       auto out = bind_list(src.device_type);
 
-      struct {
-         std::optional<worldedit::editor_mode> editor_mode;
-      } current_conditions;
+      std::vector<control_scheme_condition> conditions;
 
-      auto flatten_node = [&out, &current_conditions](this auto&& recurse, const control_scheme::node& current) -> void {
+      auto flatten_node = [&out, &conditions](this auto&& recurse, const control_scheme::node& current) -> void {
          if (auto* bt = current.as<control_scheme_action>()) {
             const auto& data = bt->data;
             auto& item = out.items.emplace_back();
             item.name               = data.name;
-            item.editor_mode        = current_conditions.editor_mode;
+            if (!conditions.empty()) {
+               item.conditions = conditions.back();
+            }
             item.input_sequence     = _absolute_input_sequence(*bt);
             item.button_press_type  = data.button_press_type;
             item.bound_tool.tool    = data.tool.id;
@@ -79,20 +79,30 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
          if (!current.children.size())
             return;
 
-         auto prior_editor_mode = current_conditions.editor_mode;
-         if (auto* casted = current.as<control_scheme_condition>()) {
-            if (current_conditions.editor_mode.has_value()) {
-               if (current_conditions.editor_mode.value() != casted->data.mode) {
+         bool added_conditions = false;
+         if (auto* casted = current.as<control_scheme_condition_node>()) {
+            const auto& condition_info = casted->data.data;
+            if (condition_info.impossible()) {
+               return;
+            }
+
+            added_conditions = true;
+            if (conditions.empty()) {
+               conditions.push_back(condition_info);
+            } else {
+               auto& prior = conditions.back();
+               conditions.push_back(prior & condition_info);
+
+               if (conditions.back().impossible()) {
                   //
                   // The currently active conditions (from an ancestor of `current`) are incompatible with 
                   // the conditions on `current`; it is explicitly impossible for both sets of conditions 
                   // to be true at the same time. This means that none of `current`'s child or descendant 
                   // binds can ever trigger, so don't even bother processing them.
                   //
+                  conditions.pop_back();
                   return;
                }
-            } else {
-               current_conditions.editor_mode = casted->data.mode;
             }
          }
 
@@ -100,7 +110,9 @@ namespace dovahkit::subsystems::worldinput2::algorithms {
             recurse(*child);
          }
 
-         current_conditions.editor_mode = prior_editor_mode;
+         if (added_conditions) {
+            conditions.pop_back();
+         }
       };
       for (auto* tln : src.top_level_nodes)
          flatten_node(*tln);

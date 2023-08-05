@@ -7,6 +7,13 @@
 #include "components/extra_data/scale.h"
 #include "components/extra_data/_use_info.h"
 
+// persistence checks
+#include "./components/extra_data/location.h"
+#include "./factories/hardcoded.h"
+#include "./Activator.h"
+#include "./DefaultObjectManager.h"
+#include "./Door.h"
+
 namespace dovah::loaded_forms {
    notice_code_t ObjectReference::set_position(cobb::vector3<float> position) {
       if (this->is_working_copy)
@@ -109,6 +116,85 @@ namespace dovah::loaded_forms {
          return scale;
       }
       return scale;
+   }
+
+   bool ObjectReference::needs_persistence() const {
+      if (!this->stub.inbound.empty()) {
+         return true;
+      }
+
+      auto* base = this->base_form.get_form_stub();
+      if (base) {
+         switch (base->formID) {
+            case hardcoded_form_ids::PrisonMarker:
+            case hardcoded_form_ids::DivineMarker:
+            case hardcoded_form_ids::TempleMarker:
+            case hardcoded_form_ids::MapMarker:
+            case hardcoded_form_ids::HorseMarker:
+            case hardcoded_form_ids::MultiBoundMarker:
+            case hardcoded_form_ids::RoomMarker:
+            case hardcoded_form_ids::XMarkerHeading:
+            case hardcoded_form_ids::XMarker:
+               return true;
+         }
+      }
+      
+      loaded_form_ptr<DefaultObjectManager> dobj_loaded;
+      auto* dobj_manager = this->stub.get_owning_load_order().get_canonical_instance_of_singleton_form(form_type::default_object_manager, false);
+      if (dobj_manager) {
+         dobj_loaded = dobj_manager->load().ptr_cast<DefaultObjectManager>();
+         if (dobj_loaded) {
+            auto* extra = this->extra_data.lookup_by_type(components::extra_data_type::location);
+            if (extra) {
+
+               auto* loc = ((components::extra::location*)extra)->form.get_form_stub();
+               if (loc) {
+                  auto* PersistAll = dobj_loaded->get_entry('PLOC');
+                  if (loc == PersistAll)
+                     return true;
+               }
+
+            }
+         }
+      }
+
+      if (!base) {
+         return false;
+      }
+      switch (base->formType) {
+         case form_type::activator:
+            {
+               auto loaded_base = base->load().ptr_cast<Activator>();
+               if (loaded_base)
+                  if (loaded_base->water_type)
+                     return true;
+            }
+            break;
+         case form_type::door:
+            {
+               auto loaded_base = base->load().ptr_cast<Door>();
+               if (loaded_base)
+                  if (!loaded_base->random_destinations.empty())
+                     return true;
+            }
+            break;
+         case form_type::light:
+            if (this->stub.flags & form_flag::never_fades)
+               return true;
+            break;
+         case form_type::texture_set:
+            return true;
+         case form_type::statik:
+            if (dobj_loaded) {
+               auto* dlcm = dobj_loaded->get_entry('DLCM');
+               auto* dlzm = dobj_loaded->get_entry('DLZM');
+               if (base == dlcm || base == dlzm)
+                  return true;
+            }
+            break;
+      }
+
+      return false;
    }
 
    void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {

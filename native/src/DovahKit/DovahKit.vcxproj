@@ -139,12 +139,15 @@
     <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\action.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\condition.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\condition_node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\util\numeric_comparisons.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp" />
@@ -685,6 +688,8 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
+    <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
+    <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\debug_print.cpp" />
@@ -885,6 +890,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\all_node_headers.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition_node.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h" />
     <ClInclude Include="editor\subsystems\worldinput2\core.h" />
     <ClInclude Include="editor\subsystems\worldinput2\debugging.h" />
@@ -898,6 +904,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\enums\axis2D.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\button_release_type.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\enums\comparison_operator.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\optional_yn.h" />
     <ClInclude Include="editor\subsystems\worldinput2\enums\range_control_state.h" />
@@ -913,6 +920,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\tools\opaque_tool_options.h" />
     <ClInclude Include="editor\subsystems\worldinput2\tool_invocation_cause.h" />
     <ClInclude Include="editor\subsystems\worldinput2\util\is_delta_control.h" />
+    <ClInclude Include="editor\subsystems\worldinput2\util\numeric_comparisons.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\node.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\input.h" />
@@ -1304,6 +1312,8 @@
     <QtMoc Include="ui\models\worldinput\DKWorldinputControlSchemeModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
+    <QtMoc Include="ui\options_window\worldinput_modifier_editor.h" />
+    <QtMoc Include="ui\options_window\worldinput_condition_editor.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
@@ -2006,6 +2016,8 @@
     <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui" />
+    <QtUic Include="ui\options_window\worldinput_condition_editor.ui" />
+    <QtUic Include="ui\options_window\worldinput_modifier_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_scheme_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
@@ -2110,6 +2122,7 @@
     <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput2\inputs\button.inl" />
     <None Include="editor\subsystems\worldinput2\input_sequence.inl" />
+    <None Include="editor\subsystems\worldinput2\util\numeric_comparisons.inl" />
     <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
     <None Include="editor\subsystems\worldinput\tools\_options.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />

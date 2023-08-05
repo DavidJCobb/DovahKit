@@ -58,6 +58,8 @@ namespace dovah::loaded_forms {
 
          float get_scale() const; // applies in-game precision and range limits; if you want to know the in-ESP value, access the "scale" extra-data yourself
 
+         bool needs_persistence() const; // uses the same criteria as the 32-bit Creation Kit
+
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //

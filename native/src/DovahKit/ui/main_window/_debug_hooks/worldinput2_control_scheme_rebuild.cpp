@@ -70,6 +70,7 @@ namespace {
       using worldinput2::control_scheme;
       using worldinput2::control_scheme_action;
       using worldinput2::control_scheme_condition;
+      using worldinput2::control_scheme_condition_node;
       using worldinput2::control_scheme_modifier;
       using worldinput2::button_press_type;
       using worldinput2::input_device_type;
@@ -212,7 +213,12 @@ namespace {
          }
       }
       {  // Editor Mode: Objects
-         auto* em_node = control_scheme::node::make<control_scheme_condition>(editor_mode::objects);
+         auto* em_node = control_scheme::node::make<control_scheme_condition_node>(control_scheme_condition_node{
+            .name = "Object Mode",
+            .data = {
+               .editor_modes = editor_mode::objects,
+            }
+         });
          out.top_level_nodes.push_back(em_node);
 
          {  // Replace Selection

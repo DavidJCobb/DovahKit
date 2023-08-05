@@ -10,7 +10,7 @@ namespace cobb::bitstreams {
 }
 namespace dovahkit::subsystems::worldinput2 {
    class control_scheme_action;
-   class control_scheme_condition;
+   class control_scheme_condition_node;
    class control_scheme_modifier;
 }
 
@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
          using node = cobb::node<
             cobb::node_data_with_attributes<control_scheme_action, cobb::node_data_attribute::leaf>,
-            control_scheme_condition,
+            control_scheme_condition_node,
             control_scheme_modifier
          >;
 

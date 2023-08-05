@@ -167,8 +167,11 @@ namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
          }
       }
       {  // Editor Mode: Objects
-         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
-            .mode = editor_mode::objects,
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition_node{
+            .name = "Object Mode",
+            .data = {
+               .editor_modes = editor_mode::objects,
+            }
          });
          out.top_level_nodes.push_back(em_node);
 

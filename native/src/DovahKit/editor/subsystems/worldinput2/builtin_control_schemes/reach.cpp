@@ -83,20 +83,62 @@ namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
             .magnitudes = { 0, 0, 1 },
          })
       }));
-      out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
-         .name = "Turn Camera",
-         //
-         .input_sequence    = algorithms::input_sequence_from_string(":: Right Stick"),
-         .button_press_type = button_press_type::hold,
-         //
-         .tool = _tool_with_options(tools::turn_camera::options{
-            .magnitudes = { 1, 1 },
-            .range = {
-               .x = { camera_turn_axis::yaw,   sign::positive },
-               .y = { camera_turn_axis::pitch, sign::positive },
+      {
+         auto* node_no_selections = control_scheme_node::from_data(control_scheme_condition_node{
+            .name = "When nothing is selected...",
+            .data = {
+               .selection_count = control_scheme_condition::selection_count_comparison_set{
+                  .comparisons = {
+                     { comparison_operator::less_or_equal, 0 },
+                  }
+               }
             },
-         })
-      }));
+         });
+         out.top_level_nodes.push_back(node_no_selections);
+
+         node_no_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Turn Camera",
+            //
+            .input_sequence    = algorithms::input_sequence_from_string(":: Right Stick"),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::turn_camera::options{
+               .magnitudes = { 1, 1 },
+               .range = {
+                  .x = { camera_turn_axis::yaw,   sign::positive },
+                  .y = { camera_turn_axis::pitch, sign::positive },
+               },
+            })
+         }));
+      }
+      {
+         auto* node_selections = control_scheme_node::from_data(control_scheme_condition_node{
+            .name = "When anything is selected...",
+            .data = {
+               .selection_count = control_scheme_condition::selection_count_comparison_set{
+                  .comparisons = {
+                     { comparison_operator::greater, 0 },
+                  }
+               }
+            },
+         });
+         out.top_level_nodes.push_back(node_selections);
+
+         node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Turn Camera (TODO: Orbit Camera instead)",
+            //
+            .input_sequence    = algorithms::input_sequence_from_string(":: Right Stick"),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::turn_camera::options{
+               .magnitudes = { 1, 1 },
+               .range = {
+                  .x = { camera_turn_axis::yaw,   sign::positive },
+                  .y = { camera_turn_axis::pitch, sign::positive },
+               },
+            })
+         }));
+      }
       out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
          .name = "Boost",
          //

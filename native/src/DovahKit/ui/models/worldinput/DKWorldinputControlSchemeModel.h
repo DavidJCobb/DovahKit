@@ -82,6 +82,9 @@ class DKWorldinputControlSchemeModel : public DKGenericTreeModel<DKWorldinputCon
 
    public:
 
+      // returns QMI of inserted node, if node is inserted
+      QModelIndex insertAfter(const QModelIndex& after, const node_type::variant_type&);
+
       node_type::variant_type infoFor(const QModelIndex&) const;
       void replaceInfoFor(const QModelIndex&, const node_type::variant_type&);
 
