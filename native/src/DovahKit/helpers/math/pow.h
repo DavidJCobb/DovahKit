@@ -19,7 +19,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace cobb {
    template<typename T, typename exponent_t> requires (std::is_arithmetic_v<T> && std::is_integral_v<exponent_t>)
-   T constexpr pow(T base, exponent_t exponent) noexcept {
+   constexpr T pow(T base, exponent_t exponent) noexcept {
       return exponent == 0 ? 1 : base * pow(base, exponent - 1);
    }
 }

@@ -9,7 +9,7 @@ namespace cobb {
       //   
       //  - Named escape sequences (slash-u) are not supported, as embedding the entire 
       //    Unicode character table constexpr will make nearly all compilers explode. 
-      //    (Why the euphemism? IntelliSense tooltips break on the mere mention of them!)
+      //    (Why "slash-u"? IntelliSense tooltips break on the mere mention of them!)
       //    
       //  - Octal escape sequences (e.g. \012) are not supported, because screw octal.
       //

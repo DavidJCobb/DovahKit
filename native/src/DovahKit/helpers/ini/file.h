@@ -1,14 +1,20 @@
 #pragma once
 #include <istream>
 #include <ostream>
+#include <string>
 #include <string_view>
 #include <vector>
 #include "../passkey.h"
+#include "./types.h"
 
 namespace cobb::ini {
    class category;
+   class setting;
 
    class file {
+      public:
+         using global_setting_change_callback = void(*)(setting&, value_union old_value, value_union new_value);
+
       protected:
          // std::istringstream and similar aren't constexpr, so we need to roll our own 
          // stream-style string wrappers in order to be able to constexpr-load/save a 
@@ -84,6 +90,7 @@ namespace cobb::ini {
 
       protected:
          std::vector<category*> _categories;
+         std::vector<global_setting_change_callback> _global_change_callbacks;
 
          template<typename T>
          static void _write_category(_output_stream<T>& dst, const category&);
@@ -94,6 +101,9 @@ namespace cobb::ini {
          }
 
          constexpr category* category_by_name(std::string_view name) const;
+
+         constexpr void add_global_setting_change_callback(global_setting_change_callback);
+         constexpr void remove_global_setting_change_callback(global_setting_change_callback);
 
       protected:
          template<typename T> constexpr void _load(_input_stream<T>);
@@ -110,6 +120,7 @@ namespace cobb::ini {
          void save(std::ostream& dst, std::istream& src); // preserves the existing file's whitespace, comments, setting order, etc.; writes all setting values including those not changed from the defaults
 
          constexpr void _on_category_instantiated(::cobb::passkey<file, category>, category&);
+         constexpr void _on_setting_changed(::cobb::passkey<file, category>, setting&, value_union old_value, value_union new_value);
    };
 }
 

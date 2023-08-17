@@ -43,8 +43,10 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <EnableCppModules>false</EnableCppModules>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <EnableCppModules>false</EnableCppModules>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -54,6 +56,7 @@
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -68,6 +71,7 @@
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
@@ -97,6 +101,11 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <!-- Modules choke when using `$(IntDir)%(RelativeDir)` as the object file name. As a bonus, BuildStdModules isn't even visible or alterable in the goddamned UI... -->
+      <BuildStdModules>false</BuildStdModules>
+      <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
+      <EnableCppModules>false</EnableCppModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,6 +119,11 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <!-- Modules choke when using `$(IntDir)%(RelativeDir)` as the object file name. As a bonus, BuildStdModules isn't even visible or alterable in the goddamned UI... -->
+      <BuildStdModules>false</BuildStdModules>
+      <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
+      <EnableCppModules>false</EnableCppModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,8 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
-    <ClCompile Include="editor\subsystems\options\collection.cpp" />
-    <ClCompile Include="editor\subsystems\worldedit\options_collection.cpp" />
+    <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
@@ -525,7 +538,6 @@
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
     <ClCompile Include="helpers\ini\file.cpp" />
     <ClCompile Include="helpers\ini\file_line_parser.tests.cpp" />
-    <ClCompile Include="helpers\ini\tests.cpp" />
     <ClCompile Include="helpers\ini\value_serialization.inl" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
@@ -838,11 +850,8 @@
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="editor\ini\main.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
-    <ClInclude Include="editor\subsystems\options\basic_option.h" />
-    <ClInclude Include="editor\subsystems\options\collection.h" />
-    <ClInclude Include="editor\subsystems\options\option_definition.h" />
-    <ClInclude Include="editor\subsystems\options\option_basic_value_variant.h" />
-    <ClInclude Include="editor\subsystems\options\option_type.h" />
+    <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
+    <ClInclude Include="editor\subsystems\options\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
@@ -856,7 +865,6 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
-    <ClInclude Include="editor\subsystems\worldedit\options_collection.h" />
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
@@ -1069,7 +1077,6 @@
     <ClInclude Include="helpers\concepts\any_of_types.h" />
     <ClInclude Include="helpers\concepts\type_specialization_of.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
-    <ClInclude Include="helpers\dummy_of.h" />
     <ClInclude Include="helpers\dynamic_exact_cast.h" />
     <ClInclude Include="helpers\dynamic_fast_cast.h" />
     <ClInclude Include="helpers\flat_tree_interface\node_base.h" />
@@ -2157,7 +2164,6 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="editor\ini\main.hint" />
-    <None Include="editor\subsystems\options\collection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />
@@ -2370,4 +2376,50 @@
   </ImportGroup>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+         LogFuckingEverything;
+         $(BuildDependsOn);
+         LogFuckingEverything;
+         MakeDirsForCl
+      </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="LogFuckingEverything">
+    <Message Text="Microsoft.CppBuild.targets/MakeDirsForCl" />
+    <Message Text="=&gt; PrecompiledHeaderOutputFile  [@(CLCompile-&gt;Metadata('PrecompiledHeaderOutputFile')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; AssemblerListingLocation     [@(CLCompile-&gt;Metadata('AssemblerListingLocation')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; ObjectFileName               [@(CLCompile-&gt;Metadata('ObjectFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; ProgramDataBaseFileName      [@(CLCompile-&gt;Metadata('ProgramDataBaseFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; XMLDocumentationFileName     [@(CLCompile-&gt;Metadata('XMLDocumentationFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; BrowseInformationFile        [@(CLCompile-&gt;Metadata('BrowseInformationFile')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; PreprocessOutputPath         [@(CLCompile-&gt;Metadata('PreprocessOutputPath')-&gt;DirectoryName()-&gt;Distinct())]" />
+    <Message Text="=&gt; PreprocessorDefinitions      [@(CLCompile-&gt;Metadata('PreprocessorDefinitions')-&gt;Distinct())]" />
+    <Message Text="=&gt; ClDirsToMake                 [@(ClDirsToMake)]" />
+  </Target>
+  <!-- BEGIN JANKY WORKAROUND TO FORCE-KILL MODULES -->
+  <PropertyGroup>
+    <ComputeCompileInputsTargets>
+         $(ComputeCompileInputsTargets);
+         ForciblyDisableModules;
+      </ComputeCompileInputsTargets>
+  </PropertyGroup>
+  <Target Name="ForciblyDisableModules">
+    <PropertyGroup>
+      <EnableCppModules>false</EnableCppModules>
+      <EnableStdModules>false</EnableStdModules>
+    </PropertyGroup>
+  </Target>
+  <Target Name="ComputeStdModulesCompileInputs" Condition="'@(ClCompile)' != ''">
+    <!-- override -->
+    <PropertyGroup>
+      <EnableStdModules>false</EnableStdModules>
+    </PropertyGroup>
+  </Target>
+  <Target Name="SetModuleDependencies">
+    <!-- override -->
+    <ItemGroup>
+      <_ClCompileWithModuleDependencies Remove="@(_ClCompileWithModuleDependencies)" />
+    </ItemGroup>
+  </Target>
+  <!-- END JANKY WORKAROUND TO FORCE-KILL MODULES -->
 </Project>

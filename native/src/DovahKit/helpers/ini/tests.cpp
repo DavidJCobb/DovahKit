@@ -54,8 +54,6 @@ bTestValue=false )--");
    //
    // August 13, 2023: constinit + STL containers is broken in MSVC Debug builds.
    // https://developercommunity.visualstudio.com/t/MDd-makes-it-impossible-to-have-constin/10439085
-   // I will forever remain impressed at present-day Microsoft's ability to never 
-   // actually finish making things before publishing them.
    // 
    // For my particular use case, the static initialization order fiasco shouldn't 
    // be a risk because I intend to define an INI file and its contents inside of 

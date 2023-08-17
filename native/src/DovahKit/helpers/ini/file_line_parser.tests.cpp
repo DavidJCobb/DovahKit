@@ -3,9 +3,7 @@
 namespace {
    using parser_type = cobb::ini::file_line_parser<cobb::ini::parsing_options{}>;
 
-   using win32_parser_type = cobb::ini::file_line_parser<cobb::ini::parsing_options{
-      .mode = cobb::ini::parsing_mode::win32,
-   }>;
+   using win32_parser_type = cobb::ini::file_line_parser<cobb::ini::win32_parsing_options>;
 
    // Ensure leading and trailing whitespace is separated properly.
    static_assert(parser_type{ "  [myCategory]    " }.parse_line().leading == "  ");

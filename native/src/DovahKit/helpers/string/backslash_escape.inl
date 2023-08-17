@@ -39,24 +39,9 @@ namespace cobb {
       }
    }
 
-   enum backslash_escape_type {
-
-      // Mostly follows C++ escape sequences, with some exceptions:
-      //   
-      //  - Named escape sequences (slash-u) are not supported, as embedding the entire 
-      //    Unicode character table constexpr will make nearly all compilers explode. 
-      //    (Why the euphemism? IntelliSense tooltips break on the mere mention of them!)
-      //    
-      //  - Octal escape sequences (e.g. \012) are not supported, because screw octal.
-      //
-      cpp,
-
-      javascript,
-   };
-
    // Assumes UTF-8 text.
-   template<backslash_escape_type Mode = backslash_escape_type::cpp>
-   constexpr std::string backslash_escape(std::string_view src, char delim = '\0') {
+   template<backslash_escape_type Mode>
+   constexpr std::string backslash_escape(std::string_view src, char delim) {
       std::string out;
 
       cobb::utf8::for_each(src, [delim, &out](uint32_t c) -> void {
@@ -133,11 +118,7 @@ namespace cobb {
       return out;
    }
 
-   // Assumes UTF-8 text.
-   template<backslash_escape_type Mode = backslash_escape_type::cpp>
-   constexpr std::string backslash_unescape(std::string_view src) {
-      std::string out;
-
+   namespace impl::_backslash_unescape {
       enum class escape_type {
          none,
          unknown,
@@ -146,12 +127,21 @@ namespace cobb {
          unlimited_digits, // cpp: \x...
          brace_delimited,  // cpp: `\x{...}`; JS: `\u{...}`
       };
-
-      struct {
+      struct unescape_state {
          escape_type type        = escape_type::none;
          size_t      digits_seen = 0;
          uint32_t    codepoint   = 0;
-      } escape_state;
+      };
+   }
+
+   // Assumes UTF-8 text.
+   template<backslash_escape_type Mode>
+   constexpr std::string backslash_unescape(std::string_view src) {
+      using namespace impl::_backslash_unescape;
+
+      std::string out;
+
+      unescape_state escape_state;
 
       cobb::utf8::for_each(src, [&out, &escape_state](uint32_t c) -> void {
          if constexpr (Mode == backslash_escape_type::cpp) {

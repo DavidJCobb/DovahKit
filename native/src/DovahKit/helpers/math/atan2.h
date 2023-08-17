@@ -15,6 +15,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 #pragma once
+#include <cmath>
 #include <numbers>
 #include <type_traits>
 #include "./factorial.h"
@@ -64,7 +65,7 @@ namespace cobb {
       if (std::is_constant_evaluated()) {
          return ct::atan2(angle);
       } else {
-         return ::atan2(angle);
+         return std::atan2(angle);
       }
    }
 }

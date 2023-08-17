@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <bit>
 #include <type_traits>
 #include "_vulkan.h"
 

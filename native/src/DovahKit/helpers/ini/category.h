@@ -18,6 +18,8 @@ namespace cobb::ini {
 
       protected:
          struct _stored_change_callback {
+            constexpr bool operator==(const _stored_change_callback&) const = default;
+
             setting_change_callback callback = nullptr;
             const setting* target = nullptr;
          };
@@ -35,6 +37,11 @@ namespace cobb::ini {
          std::vector<setting*> _settings; // unowned pointers (the settings should be `constinit` or otherwise have static storage duration)
          std::vector<_stored_change_callback> _change_callbacks;
 
+         template<bool Dummy = true>
+         constexpr void _forward_change_notif(setting& s, value_union old_value, value_union new_value) {
+            this->owner._on_setting_changed({}, s, old_value, new_value);
+         }
+
       public:
          constexpr const std::vector<setting*>& settings() const noexcept {
             return this->_settings;
@@ -44,6 +51,9 @@ namespace cobb::ini {
          // strongly encouraged to define your settings as `constinit` values that can be accessed 
          // directly, to avoid run-time name lookups.
          constexpr setting* setting_by_name(std::string_view name) const;
+
+         constexpr void add_setting_change_callback(setting&, setting_change_callback);
+         constexpr void remove_setting_change_callback(setting&, setting_change_callback);
 
          constexpr void _on_setting_instantiated(::cobb::passkey<category, setting>, setting&);
          constexpr void _on_setting_changed(::cobb::passkey<category, setting>, setting&, value_union old_value, value_union new_value);

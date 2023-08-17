@@ -49,12 +49,26 @@ namespace cobb::ini {
    constexpr void file::_on_category_instantiated(::cobb::passkey<file, category>, category& c) {
       this->_categories.push_back(&c);
    }
+   constexpr void file::_on_setting_changed(::cobb::passkey<file, category>, setting& s, value_union old_value, value_union new_value) {
+      for (global_setting_change_callback entry : this->_global_change_callbacks)
+         (entry)(s, old_value, new_value);
+   }
 
    constexpr category* file::category_by_name(std::string_view name) const {
       for (auto* c : this->_categories)
          if (::cobb::strieq_ascii(name, c->name))
             return c;
       return nullptr;
+   }
+
+   constexpr void file::add_global_setting_change_callback(global_setting_change_callback f) {
+      this->_global_change_callbacks.push_back(f);
+   }
+   constexpr void file::remove_global_setting_change_callback(global_setting_change_callback f) {
+      auto& list  = this->_global_change_callbacks;
+      auto  first = std::find(list.begin(), list.end(), f);
+      if (first != list.end())
+         list.erase(first);
    }
 
    template<typename T>
@@ -181,11 +195,15 @@ namespace cobb::ini {
                .header_line = header,
             };
 
-            auto it = std::find(missing_categories.begin(), missing_categories.end(), [](const std::string& a, const std::string& b) {
-               return ::cobb::strieq_ascii(a, b);
-            });
-            if (it != missing_categories.end()) {
-               missing_categories.erase(it);
+            {
+               auto& list = missing_categories;
+               for (auto it = list.begin(); it != list.end(); ++it) {
+                  auto* cat = *it;
+                  if (::cobb::strieq_ascii(casted->name, cat->name)) {
+                     list.erase(it);
+                     break;
+                  }
+               }
             }
          } else if (auto* casted = std::get_if<file_line_parse_results::key_value_pair>(&parsed.content)) {
             category_state.body += parsed.leading;
@@ -211,7 +229,7 @@ namespace cobb::ini {
                      delim = opt_delim.value();
                }
                if (delim) {
-                  cobb::replace_all(value, delim, "\\"s + delim);
+                  cobb::replace_all(value, delim, std::string("\\") + delim);
                   category_state.body += delim;
                   category_state.body += value;
                   category_state.body += delim;
@@ -230,8 +248,6 @@ namespace cobb::ini {
             category_state.body += line;
             category_state.body += '\n';
          }
-
-         _scan_file_line(line, handle_category_line, handle_setting_line, handle_ill_formed_line, handle_no_op_line);
       }
       _write_current_category_state();
 

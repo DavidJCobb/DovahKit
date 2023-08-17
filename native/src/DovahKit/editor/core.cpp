@@ -6,9 +6,9 @@
 #include <QProcessEnvironment>
 #include <QTextCodec>
 #include <QThread>
-#include "../helpers/performance.h"
-#include "../helpers/windows_registry.h"
-#include "../helpers/qt/strings.h"
+#include "helpers/performance.h"
+#include "helpers/windows_registry.h"
+#include "helpers/qt/strings.h"
 #include "../dovah/detailed_notice.h"
 #include "../dovah/form_stub.h"
 #include "../dovah/notice_code_list.h"
@@ -30,6 +30,7 @@
 #include <QDebug>
 #include "subsystems/game_inis.h"
 #include "asset_manager/asset_manager.h"
+#include "subsystems/options/core.h"
 
 #include "form_stub_meta_type.h"
 
@@ -128,6 +129,9 @@ DovahKitCore::DovahKitCore() {
    // cyclical dependencies / infinite recursion:
    //
    QTimer::singleShot(0, []() { DovahKitAssetManager::get(); });
+
+   // As of this writing, the "options" subsystem has no dependencies on DovahKitCore.
+   dovahkit::subsystems::options::core::get_or_create();
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {

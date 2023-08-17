@@ -1,4 +1,5 @@
 #include "physical_device.h"
+#include <bit>
 #include "exceptions.h"
 
 namespace vulkanDK {

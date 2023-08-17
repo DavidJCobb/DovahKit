@@ -20,6 +20,7 @@ DKWorldinputButtonPickDialog::DKWorldinputButtonPickDialog(QWidget* parent) : QD
 
    this->ui.mouseEdit->installEventFilter(this);
    this->ui.mouseEdit->setContextMenuPolicy(Qt::PreventContextMenu);
+   this->ui.keyEdit->setMaxLength(128);
    this->ui.keyEdit->installEventFilter(this);
    this->ui.keyEdit->setContextMenuPolicy(Qt::PreventContextMenu);
 

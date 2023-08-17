@@ -8,7 +8,6 @@
 #include "helpers/arrays/make.h"
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/array_concat.h"
-#include "helpers/dummy_of.h"
 #include "helpers/miscellaneous.h" // cobb::edit_bit
 //
 #include "./DKVulkanInstance.h"
@@ -54,9 +53,6 @@ namespace {
 
    static constexpr bool debug_log_nif_to_meshes_time = true;
    static constexpr bool debug_log_nif_loading_times  = true;
-
-   template<bool Enable>
-   using _debug_log_timestamp = cobb::dummy_type_if_false<Enable, std::chrono::time_point<std::chrono::steady_clock>>;
 }
 
 namespace {

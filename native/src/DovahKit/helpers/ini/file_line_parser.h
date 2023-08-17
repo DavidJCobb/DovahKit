@@ -14,11 +14,15 @@ namespace cobb::ini {
    struct parsing_options {
       parsing_mode mode = parsing_mode::strict;
       struct {
-         const char delimiters[8] = ";";
+         char delimiters[8] = { ';', 0, 0, 0, 0, 0, 0, 0 };
       } line_comments;
-      const char string_delimiters[8] = "\"'";
+      char string_delimiters[8] = { '"', '\'', 0, 0, 0, 0, 0, 0};
    };
+   //
    static constexpr const parsing_options default_parsing_options = parsing_options{};
+   static constexpr const parsing_options win32_parsing_options = parsing_options{
+      .mode = cobb::ini::parsing_mode::win32,
+   };
 
    namespace file_line_parse_results {
       struct category_start {
