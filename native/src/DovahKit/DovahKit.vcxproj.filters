@@ -30,9 +30,6 @@
     <ClCompile Include="helpers\files.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\ini.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2115,12 +2112,36 @@
     <ClCompile Include="editor\subsystems\worldinput2\control_scheme\condition_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\options\collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\options_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\ini\tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\ini\value_serialization.inl">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\ini\file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\ini\file_line_parser.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\utf8\append.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\utf8\for_each.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\string\backslash_escape.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\ini.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\windows.h">
@@ -4070,9 +4091,6 @@
     <ClInclude Include="helpers\tuples\concat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\type_traits\is_std_tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5207,6 +5225,111 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\options\option_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\options\option_basic_value_variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\options\option_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\options\collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\options_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\options\basic_option.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\setting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\concepts\type_specialization_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\concepts\any_of_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\concepts\all_unique_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\variadic_select_by_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\last_variadic_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\first_variadic_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\split_variadics_in_half.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\index_sequences\incremented_by.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\pick_types_by_indices.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\type_traits\split_variadics_in_four.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\setting_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\value_constraint_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\value_serialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\integer_literal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\floating_point_literal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\ini\file_line_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\replace_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\backslash_escape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\unicode\character_metadata_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\unicode\is_visible.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\unicode\general_category_is_other.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\utf8\append.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\utf8\for_each.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\ini\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5770,6 +5893,8 @@
     <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
     <Text Include="editor\subsystems\worldinput\_docs\tools.txt" />
     <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
+    <Text Include="helpers\ini\INI file grammar.txt" />
+    <Text Include="helpers\ini\INI file grammar win32.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -5971,6 +6096,36 @@
     <None Include="editor\subsystems\worldinput2\util\numeric_comparisons.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="editor\subsystems\options\collection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\ini\setting.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\ini\category.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\ini\file.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\string\integer_literal.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\string\floating_point_literal.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\ini\file_line_parser.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\_generated\unicode\is_visible.js" />
+    <None Include="helpers\_generated\unicode\character_metadata.js" />
+    <None Include="helpers\_generated\unicode\is_visible.post_run_correctness_test.js" />
+    <None Include="helpers\_generated\unicode\general_category_is_other.js" />
+    <None Include="helpers\_generated\unicode\README.md" />
+    <None Include="helpers\string\backslash_escape.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\ini\main.hint" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

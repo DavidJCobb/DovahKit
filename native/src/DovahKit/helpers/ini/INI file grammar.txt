@@ -1,0 +1,47 @@
+﻿
+<ini-file> → <line> ['\r'? '\n' <line>]
+
+<whitespace> → ' ' | '\t'
+
+<line-comment> → ';' <anything>
+
+<line> → [<whitespace>] [<line-content> [<whitespace>]] [<line-comment>]
+
+<line-content> → <category-header>
+               → <key-value-pair>
+               → <anything-else> // for ill-formed lines
+
+<identifier> → /[a-f_-][0-9a-f _-]*/i
+// well, TBH, we just allow anything that isn't a comment and wouldn't move us to the next token :\
+
+<category-header> → '[' <identifier> ']'
+
+<key-value-pair> → <identifier> [<whitespace>] '=' [<whitespace>] <value>
+
+// VALUE GRAMMARS:
+
+<value> → <anything-not-whitespace-or-comment> // string
+        → '"' /[^"]|(?<=\\)"/ '"' // quoted string; may contain whitespace or comments; may contain backslash-escaped quotes
+        → "'" /[^']|(?<=\\)'/ "'" // quoted string; may contain whitespace or comments; may contain backslash-escaped quotes
+        → <boolean>
+        → <integer-literal>
+        → <floating-point-literal>
+
+<boolean> → ("true"i | "false"i) // case-insensitive
+
+<digit-base-10> → /[0-9]/
+<digit-base-16> → /[0-9A-F]/i
+
+<integer-literal> → '-'? <digit-base-10>+
+                  → '-'? "0b"i /[01]+/
+                  → '-'? "0o"i /[0-7]+/
+                  → '-'? "0x"i <digit-base-16>+
+
+<fractional-digit-sequence-base-10> → <digit-base-10>+ ['.' <digit-base-10>*] // matches 123, 123., 123.456
+                                    → '.' <digit-base-10>+ // matches .456
+
+<fractional-digit-sequence-base-16> → <digit-base-16>+ ['.' <digit-base-16>*]
+                                    → '.' <digit-base-16>+
+
+<floating-point-literal> → '-'? <fractional-digit-sequence-base-10> [('e' | 'E') <digit-base-10>+]
+<floating-point-literal> → '-'? "0x" <fractional-digit-sequence-base-16> [('p' | 'P') <digit-base-16>+]

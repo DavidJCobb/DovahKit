@@ -1,0 +1,1 @@
+#define MAKE_INI_SETTING(setting_name, initial) constinit auto setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ .name          = #setting_name, .initial_value = initial }>(category_data);

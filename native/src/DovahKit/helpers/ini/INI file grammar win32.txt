@@ -1,0 +1,34 @@
+﻿
+<line> → <comment>          // ignore anything after matched content
+       → <category>         // ignore anything after matched content
+       → <key-value-int>    // ignore anything after matched content
+       → <key-value-string> // ignore anything after matched content
+
+<comment> → ';'
+
+<category> → '[' /.*/ ']'
+// Win32 APIs don't let you retrieve the contents of empty-name sections, but 
+// their parser still recognizes a "[]" line as the start of a new section.
+
+<key> → <whitespace>? /.+/ <whitespace>?
+
+<key-value-int>    → <key> '=' <whitespace>? /[0-9]+/       <whitespace>?
+<key-value-string> → <key> '=' <whitespace>? <string-value> <whitespace>?
+
+<string-value> → /.*?/         // unquoted
+               → '"' /.*/ '"'  // double-quoted
+               → "'" /.*/ "''  // single-quoted
+//
+// Note that the latter two are greedy regexes on purpose. The following line
+//
+//    abc="def" "ghi"
+//
+// produces the following value:
+//
+//    def" "ghi
+//
+// Meanwhile, the following line is meant to match the former regex when it's 
+// placed into its context (i.e. the key-value-string rule):
+//
+//    abc="def" "ghi" jkl
+//

@@ -1,0 +1,2 @@
+
+This project is for things that I can only test at run-time. As of this writing, it's August 15th, 2023, and I need to test the *exact* behavior of `GetPrivateProfileString` *including in edge-cases*, which Microsoft has not documented, in order to try and implement the simplest yet most compatible INI reading code I can.

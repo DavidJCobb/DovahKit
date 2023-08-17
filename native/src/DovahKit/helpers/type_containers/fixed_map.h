@@ -70,6 +70,10 @@ namespace cobb::type_containers {
       }
    }
 
+   //
+   // Represents a map of types to values. All values must be of the same type.
+   // "Instantiate" a map via a using declaration, not by constructing an instance.
+   //
    template<impl::is_fixed_map_entry... Entries> requires (impl::_fixed_map::all_keys_unique<Entries...>::value && impl::_fixed_map::all_same_value_type<Entries...>::value)
    class fixed_map {
       public:
@@ -79,6 +83,12 @@ namespace cobb::type_containers {
 
          template<typename Key>
          static constexpr const bool has_key = (std::is_same_v<typename Entries::key_type, Key> || ...);
+
+         template<template<typename...> class UnpackInto>
+         using unpack_types_into = UnpackInto<typename Entries::key_type...>;
+
+         template<template<typename...> class UnpackInto, template<typename> class Wrapper>
+         using unpack_wrapped_types_into = UnpackInto<Wrapper<typename Entries::key_type>...>;
 
       protected:
          static constexpr const std::array<value_type, sizeof...(Entries)> values = {
@@ -97,12 +107,15 @@ namespace cobb::type_containers {
          template<typename Key> requires has_key<Key>
          static constexpr const value_type value_of = values[index_of_key<Key>];
 
+         // Execute a functor templated on whatever type is mapped to the input value. Note that 
+         // your functor must be valid for all types in the map (i.e. it must be able to compile 
+         // without errors for any of them).
          template<typename Functor, typename... Args>
          static constexpr bool for_value(value_type value, Functor&& functor, Args&&... args) {
             bool any_executed = (
                (
                   value == Entries::value ?
-                     functor.template operator()<typename Entries::key_type>(std::forward<Args>(args)...), true
+                     (functor.template operator()<typename Entries::key_type>(std::forward<Args>(args)...), true)
                   :
                      false
                ) ||

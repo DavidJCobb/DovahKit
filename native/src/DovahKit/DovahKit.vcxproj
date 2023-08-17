@@ -118,6 +118,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\options\collection.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\options_collection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
@@ -521,9 +523,15 @@
     <ClCompile Include="helpers\glm\cross_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec3_simd.cpp" />
     <ClCompile Include="helpers\glm\mat4_by_vec4_simd.cpp" />
-    <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\ini\file.cpp" />
+    <ClCompile Include="helpers\ini\file_line_parser.tests.cpp" />
+    <ClCompile Include="helpers\ini\tests.cpp" />
+    <ClCompile Include="helpers\ini\value_serialization.inl" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
+    <ClCompile Include="helpers\utf8\append.tests.cpp" />
+    <ClCompile Include="helpers\utf8\for_each.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -826,10 +834,15 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Halo Reach\Megalo research\ReachVariantTool\ReachVariantTool\helpers\type_traits\is_std_tuple.h" />
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
+    <ClInclude Include="editor\ini\main.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
+    <ClInclude Include="editor\subsystems\options\basic_option.h" />
+    <ClInclude Include="editor\subsystems\options\collection.h" />
+    <ClInclude Include="editor\subsystems\options\option_definition.h" />
+    <ClInclude Include="editor\subsystems\options\option_basic_value_variant.h" />
+    <ClInclude Include="editor\subsystems\options\option_type.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
@@ -843,6 +856,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
+    <ClInclude Include="editor\subsystems\worldedit\options_collection.h" />
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h" />
@@ -1051,6 +1065,9 @@
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\class_map.h" />
+    <ClInclude Include="helpers\concepts\all_unique_types.h" />
+    <ClInclude Include="helpers\concepts\any_of_types.h" />
+    <ClInclude Include="helpers\concepts\type_specialization_of.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
     <ClInclude Include="helpers\dummy_of.h" />
     <ClInclude Include="helpers\dynamic_exact_cast.h" />
@@ -1065,6 +1082,16 @@
     <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />
     <ClInclude Include="helpers\grid.h" />
+    <ClInclude Include="helpers\index_sequences\incremented_by.h" />
+    <ClInclude Include="helpers\ini\category.h" />
+    <ClInclude Include="helpers\ini\config.h" />
+    <ClInclude Include="helpers\ini\file.h" />
+    <ClInclude Include="helpers\ini\file_line_parser.h" />
+    <ClInclude Include="helpers\ini\setting.h" />
+    <ClInclude Include="helpers\ini\setting_definition.h" />
+    <ClInclude Include="helpers\ini\types.h" />
+    <ClInclude Include="helpers\ini\value_constraint_info.h" />
+    <ClInclude Include="helpers\ini\value_serialization.h" />
     <ClInclude Include="helpers\keyboard\key.h" />
     <ClInclude Include="helpers\keyboard\qt_to_vk.h" />
     <ClInclude Include="helpers\keyboard\virtual_key.h" />
@@ -1129,6 +1156,10 @@
     <ClInclude Include="helpers\small_vector.h" />
     <ClInclude Include="helpers\small_vector.h.bak" />
     <ClInclude Include="helpers\sorted_list.h" />
+    <ClInclude Include="helpers\string\backslash_escape.h" />
+    <ClInclude Include="helpers\string\floating_point_literal.h" />
+    <ClInclude Include="helpers\string\integer_literal.h" />
+    <ClInclude Include="helpers\string\replace_all.h" />
     <ClInclude Include="helpers\string\strcmp.h" />
     <ClInclude Include="helpers\string\strieq_ascii.h" />
     <ClInclude Include="helpers\string\string_says_false.h" />
@@ -1153,6 +1184,7 @@
     <ClInclude Include="helpers\tuples\index_of_first_matching_type.h" />
     <ClInclude Include="helpers\tuples\indices_of_matching_types.h" />
     <ClInclude Include="helpers\tuples\map_types.h" />
+    <ClInclude Include="helpers\tuples\pick_types_by_indices.h" />
     <ClInclude Include="helpers\tuples\prepend.h" />
     <ClInclude Include="helpers\tuples\reduce.h" />
     <ClInclude Include="helpers\tuples\unpack_types_into.h" />
@@ -1160,19 +1192,29 @@
     <ClInclude Include="helpers\tuple_transform.h" />
     <ClInclude Include="helpers\tuples\contains_type.h" />
     <ClInclude Include="helpers\type_containers\fixed_map.h" />
+    <ClInclude Include="helpers\type_traits\first_variadic_type.h" />
     <ClInclude Include="helpers\type_traits\has_std_size_getter.h" />
     <ClInclude Include="helpers\type_traits\index_of_matching_value.h" />
     <ClInclude Include="helpers\type_traits\is_literal.h" />
     <ClInclude Include="helpers\type_traits\is_std_array.h" />
     <ClInclude Include="helpers\type_traits\is_std_tuple.h" />
     <ClInclude Include="helpers\type_traits\is_std_vector.h" />
+    <ClInclude Include="helpers\type_traits\last_variadic_type.h" />
     <ClInclude Include="helpers\type_traits\set_const.h" />
+    <ClInclude Include="helpers\type_traits\split_variadics_in_four.h" />
+    <ClInclude Include="helpers\type_traits\split_variadics_in_half.h" />
     <ClInclude Include="helpers\type_traits\strip_enum.h" />
     <ClInclude Include="helpers\type_traits\transfer_variadics.h" />
     <ClInclude Include="helpers\type_traits\value_type_of.h" />
     <ClInclude Include="helpers\uint_of_size.h" />
+    <ClInclude Include="helpers\unicode\character_metadata_types.h" />
+    <ClInclude Include="helpers\unicode\general_category_is_other.h" />
+    <ClInclude Include="helpers\unicode\is_visible.h" />
     <ClInclude Include="helpers\unreachable.h" />
     <QtMoc Include="ui\main_window\render_window.h" />
+    <ClInclude Include="helpers\utf8\append.h" />
+    <ClInclude Include="helpers\utf8\for_each.h" />
+    <ClInclude Include="helpers\variadic_select_by_type.h" />
     <ClInclude Include="helpers\widen_u16_to_u32.h" />
     <ClInclude Include="nif\block.h" />
     <ClInclude Include="nif\blocks\bhkBoxShape.h" />
@@ -1968,7 +2010,6 @@
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\bitwise.h" />
     <ClInclude Include="helpers\files.h" />
-    <ClInclude Include="helpers\ini.h" />
     <ClInclude Include="helpers\windows.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
@@ -2033,6 +2074,9 @@
     <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2019.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\glm\glm.vcxproj">
+      <Project>{72c4654d-2606-4a01-b361-ab077c5f2454}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\miniz\miniz.vcxproj">
       <Project>{28161b06-6b94-4a77-84c1-29125df58551}</Project>
     </ProjectReference>
@@ -2090,6 +2134,8 @@
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
     <Text Include="editor\_docs\asset manager.txt" />
+    <Text Include="helpers\ini\INI file grammar win32.txt" />
+    <Text Include="helpers\ini\INI file grammar.txt" />
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="helpers\simd\_notes.txt" />
@@ -2110,6 +2156,8 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="editor\ini\main.hint" />
+    <None Include="editor\subsystems\options\collection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />
@@ -2129,12 +2177,24 @@
     <None Include="helpers\bitstreams\position.inl" />
     <None Include="helpers\bitstreams\reader.inl" />
     <None Include="helpers\bitstreams\writer.inl" />
+    <None Include="helpers\ini\category.inl" />
+    <None Include="helpers\ini\file.inl" />
+    <None Include="helpers\ini\file_line_parser.inl" />
+    <None Include="helpers\ini\setting.inl" />
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
+    <None Include="helpers\string\backslash_escape.inl" />
+    <None Include="helpers\string\floating_point_literal.inl" />
+    <None Include="helpers\string\integer_literal.inl" />
     <None Include="helpers\tree\node.inl" />
     <None Include="helpers\tree\node.md" />
     <None Include="helpers\windows.hint" />
+    <None Include="helpers\_generated\unicode\character_metadata.js" />
+    <None Include="helpers\_generated\unicode\general_category_is_other.js" />
+    <None Include="helpers\_generated\unicode\is_visible.js" />
+    <None Include="helpers\_generated\unicode\is_visible.post_run_correctness_test.js" />
+    <None Include="helpers\_generated\unicode\README.md" />
     <None Include="shaders\bespoke\grid\color-main.frag" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
     <None Include="shaders\bespoke\grid\color-oit.frag" />
