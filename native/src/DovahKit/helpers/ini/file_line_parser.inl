@@ -143,19 +143,51 @@ namespace cobb::ini {
          if (rhs.size() >= 2 && all_string_delimiters.contains(rhs[0])) { // Handle RHS string delimiters, if present
             char delim = rhs[0];
             if constexpr (Options.mode == parsing_mode::strict) {
+               size_t final_delim_at = std::string::npos;
                for (size_t i = rhs.find_first_of(delim, 1); i != std::string::npos; i = rhs.find_first_of(delim, i + 1)) {
                   if (i != std::string::npos && rhs[i - 1] != '\\') {
-                     rhs = rhs.substr(0, i + 1);
-                     if (rhs.find_first_of(delim, i + 1) != std::string::npos)
-                        return {}; // ill-formed: unescaped string delimiter
+                     //
+                     // We've found a possible closing string delimiter: no preceding backslash.
+                     //
+                     final_delim_at = i + 1;
                      break;
                   }
                }
-            }
-            if (rhs.back() == delim) {
-               value_delim = delim;
-               rhs.remove_prefix(1);
-               rhs.remove_suffix(1);
+               if (final_delim_at != std::string::npos) {
+                  if (final_delim_at != rhs.size() - 1) {
+                     size_t i = rhs.find_first_not_of(all_whitespace_chars, final_delim_at + 1);
+                     if (i != std::string::npos) {
+                        if constexpr (!all_comment_delimiters.empty()) {
+                           if (!all_comment_delimiters.contains(rhs[i]))
+                              //
+                              // There is additional non-comment content after the final delimiter.
+                              //
+                              final_delim_at = std::string::npos;
+                        } else {
+                           //
+                           // There is additional content after the final delimiter.
+                           //
+                           final_delim_at = std::string::npos;
+                        }
+                     }
+                  }
+                  if (final_delim_at != std::string::npos) {
+                     //
+                     // Confirmed: this is a delimited string. Trim the delimiters.
+                     //
+                     value_delim = delim;
+                     rhs = rhs.substr(1, final_delim_at - 2);
+                  }
+               }
+            } else {
+               //
+               // Win32 handling: just trim the string delimiter if it's the first and last character.
+               //
+               if (rhs.back() == delim) {
+                  value_delim = delim;
+                  rhs.remove_prefix(1);
+                  rhs.remove_suffix(1);
+               }
             }
          }
       }
@@ -177,7 +209,7 @@ namespace cobb::ini {
          }
       }
 
-      view = view.substr(rhs.size());
+      view.remove_prefix(rhs.size());
       if (value_delim != '\0') {
          view = view.substr(2);
       }

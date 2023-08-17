@@ -104,6 +104,16 @@ namespace {
       };
    }());
    
+   // Test: key/value pair with unbalanced quotation marks or multiple sets thereof: permit this; just don't strip quotes.
+   static_assert([]() -> bool {
+      auto result = parser_type{ "key=\"1\",\"2\",\"3\"" }.try_extract_key_value_pair();
+      return result.value() == cobb::ini::file_line_parse_results::key_value_pair{
+         .key         = "key",
+         .between     = "=",
+         .value_raw   = "\"1\",\"2\",\"3\"",
+      };
+   }());
+   
    // Test key/value pair with empty value.
    static_assert([]() -> bool {
       auto result = parser_type{ "key=" }.try_extract_key_value_pair();
@@ -156,6 +166,27 @@ namespace {
       std::string src = " key  =   'value'    ;     comment";
 
       auto parsed = parser_type{src}.parse_line();
+
+      std::string dst;
+      dst += parsed.leading;
+      {
+         auto& data = std::get<parser_type::key_value_pair>(parsed.content);
+         dst += data.key;
+         dst += data.between;
+         if (data.value_delim)
+            dst += data.value_delim;
+         dst += data.value_raw;
+         if (data.value_delim)
+            dst += data.value_delim;
+      }
+      dst += parsed.trailing;
+
+      return dst == src;
+   }());
+   static_assert([]() -> bool {
+      std::string src = " key  =\t\"1\",\"2\",\"3\"   ;     comment";
+
+      auto parsed = parser_type{ src }.parse_line();
 
       std::string dst;
       dst += parsed.leading;
