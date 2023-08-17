@@ -53,6 +53,8 @@ namespace {
 
 #include "vulkan/helpers/glm_transform_from_beth.h"
 
+#include "helpers/math/rotation/unit_conversion.h"
+
 namespace {
    static constexpr bool require_complete_implementation = false;
 }
@@ -1058,9 +1060,11 @@ namespace dovahkit::subsystems::worldedit {
                update.turn.roll  = data.roll;
                update.turn.pitch = data.pitch;
                update.turn.yaw   = data.yaw;
-               update.turn.scale_by_delta = false;
+               update.turn.scale_by_delta = false; // already done, if necessary, by Worldinput
                //
-               update.turn.speed = turn_speed_per_second;
+               update.turn.speed  = 1.0;
+               update.turn.yaw   *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondX.get_current_value<double>();
+               update.turn.pitch *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondY.get_current_value<double>();
             }
             sr->scene.adjust_camera(update);
          }

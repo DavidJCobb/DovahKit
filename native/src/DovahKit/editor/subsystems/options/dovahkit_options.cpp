@@ -34,13 +34,17 @@ namespace dovahkit::subsystems::options {
       // then things like Dovahscript package paths will need to be updated to do so as well.
       //
       auto path = QCoreApplication::applicationDirPath();
-      return QDir(path).absoluteFilePath("userdata/");
+      auto dir  = QDir(QDir(path).absoluteFilePath("userdata/options/"));
+      if (!dir.exists()) {
+         dir = QDir::current().absoluteFilePath("userdata/options/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
+      }
+      return dir.path() + "/";
    }
 
    void core::reload() {
-      auto path = get_userdata_path() + "options/main.ini";
+      auto path = get_userdata_path() + "main.ini";
 
-      QFile main_ini(get_userdata_path() + "options/main.ini");
+      QFile main_ini(get_userdata_path() + "main.ini");
       main_ini.open(QIODevice::ReadOnly);
       if (main_ini.isReadable()) {
          auto stream = std::ifstream(_fdopen(main_ini.handle(), "r"));
@@ -55,7 +59,7 @@ namespace dovahkit::subsystems::options {
       std::string dst;
 
       {
-         QFile existing(get_userdata_path() + "options/main.ini");
+         QFile existing(get_userdata_path() + "main.ini");
          existing.open(QIODevice::ReadOnly);
          if (existing.isReadable()) {
             auto src_stream = std::ifstream(_fdopen(existing.handle(), "r"));
@@ -65,8 +69,9 @@ namespace dovahkit::subsystems::options {
          }
       }
 
-      QSaveFile dst_file(get_userdata_path() + "options/main.ini");
-      dst_file.open(QIODevice::ReadWrite);
+      QSaveFile dst_file(get_userdata_path() + "main.ini");
+      dst_file.setDirectWriteFallback(true);
+      dst_file.open(QIODevice::WriteOnly);
       dst_file.write(dst.data(), dst.size());
       dst_file.commit();
    }

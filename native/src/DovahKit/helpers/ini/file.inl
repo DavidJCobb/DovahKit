@@ -31,6 +31,8 @@ namespace cobb::ini {
 
    template<typename T>
    /*static*/ void file::_write_category(_output_stream<T>& dst, const category& cat) {
+      if (cat.settings().empty())
+         return;
       dst.put('\n'); // MSVC treats std::fstream.put('\n') as .write("\r\n", 2) automatically, without asking, so don't put('\r')
       std::string header;
       dst.put('[');
