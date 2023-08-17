@@ -29,6 +29,15 @@
 #include "vulkan/surface_renderer.h"
 #include "widgets/DKVulkanView.h"
 
+#include "editor/subsystems/options/core.h"
+#include "editor/ini/main.h"
+namespace {
+   namespace worldedit_ini_settings {
+      using namespace dovahkit::ini::main::worldedit;
+   }
+}
+#include "editor/subsystems/game_inis.h"
+
 #include "helpers/vector.h"
 namespace {
    static constexpr const bool selection_vector_is_unordered = false;
@@ -63,6 +72,11 @@ namespace {
    static constexpr float turn_speed_per_second = glm::radians<float>(90);
 }
 
+namespace {
+   constexpr const size_t minimum_grids_to_load = 5;
+   static_assert(minimum_grids_to_load >= 1);
+}
+
 namespace dovahkit::subsystems::worldedit {
    #pragma region selected_refr_info
    core::selected_refr_info::selected_refr_info() {}
@@ -79,7 +93,27 @@ namespace dovahkit::subsystems::worldedit {
    #pragma endregion
 
    core::core() : QObject(nullptr) {
-      this->loaded_cells.resize(5);
+      #pragma region uGridsToLoad options
+      {
+         auto& subsys = dovahkit::subsystems::options::core::get();
+         QObject::connect(&subsys, &dovahkit::subsystems::options::core::mainIniSettingChanged, this, [this](cobb::ini::setting& which) {
+            if (&which == &worldedit_ini_settings::uLoadedGridSize || &which == &worldedit_ini_settings::bLoadedGridSizeOverrideFromSkyrimINI) {
+               this->_update_grid_size_from_inis();
+            }
+         });
+      }
+      {
+         auto& ini     = editor::game_inis::get_skyrim();
+         auto* setting = ini.setting("General", "uGridsToLoad");
+         if (setting) {
+            QObject::connect(setting, &cobb::qt::ini::Setting::valueChanged, this, [this]() {
+               this->_update_grid_size_from_inis();
+            });
+         }
+      }
+      #pragma endregion
+      this->loaded_cells.resize(1);
+      this->_update_grid_size_from_inis();
 
       auto& core = DovahKitCore::get();
       QObject::connect(&core, &DovahKitCore::dataAcquireComplete, this, &core::_update_default_land_textures);
@@ -126,6 +160,29 @@ namespace dovahkit::subsystems::worldedit {
          wi.setBindingsFor(worldinput2::builtin_control_schemes::debug_wasd());
          wi.setBindingsFor(worldinput2::builtin_control_schemes::reach());
       }
+   }
+
+   void core::_update_grid_size_from_inis() {
+      bool use_game_ini = worldedit_ini_settings::bLoadedGridSizeOverrideFromSkyrimINI.get_current_value<bool>();
+      auto my_own_grids = worldedit_ini_settings::uLoadedGridSize.get_current_value<unsigned int>();
+
+      if (!use_game_ini) {
+         if (my_own_grids < minimum_grids_to_load)
+            my_own_grids = minimum_grids_to_load;
+         this->setCellGridSize(my_own_grids);
+         return;
+      }
+
+      uint32_t grid = 5;
+
+      auto& ini = editor::game_inis::get_skyrim();
+      auto* setting = ini.setting("General", "uGridsToLoad");
+      if (setting) {
+         grid = setting->currentValue().toInt();
+         if (grid < minimum_grids_to_load)
+            grid = minimum_grids_to_load;
+      }
+      this->setCellGridSize(grid);
    }
 
    vulkanDK::rendered_bounds_handle core::_make_bounds_for(const refr& item, bounds_generation_source& src) {
@@ -774,16 +831,20 @@ namespace dovahkit::subsystems::worldedit {
          //
          // Fast path when viewing interiors:
          //
-         #if _DEBUG
-            this->loaded_cells.for_each([](auto& item, auto x, auto y) {
-               if (x == 0 && y == 0)
-                  return;
-               assert(!item.stub && "We weren't viewing a worldspace! There shouldn't be multiple cells loaded like this!");
-            });
-         #endif
-         auto cell_info = std::move(this->loaded_cells.at(0, 0));
-         this->loaded_cells = loaded_cell_grid(length);
-         this->loaded_cells.at(0, 0) = std::move(cell_info);
+         if (!this->loaded_cells.empty()) {
+            #if _DEBUG
+               this->loaded_cells.for_each([](auto& item, auto x, auto y) {
+                  if (x == 0 && y == 0)
+                     return;
+                  assert(!item.stub && "We weren't viewing a worldspace! There shouldn't be multiple cells loaded like this!");
+               });
+            #endif
+            auto cell_info = std::move(this->loaded_cells.at(0, 0));
+            this->loaded_cells = loaded_cell_grid(length);
+            this->loaded_cells.at(0, 0) = std::move(cell_info);
+         } else {
+            this->loaded_cells = loaded_cell_grid(length);
+         }
          return;
       }
       if (length < prior_length) {
@@ -983,11 +1044,14 @@ namespace dovahkit::subsystems::worldedit {
                // delta in Worldinput. This means that we need to turn off scaling in this particular 
                // step here.
                //
-               update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+               
+               // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
+               update.move.speed = worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>() * delta;
+
                if (this->state.camera_speed.test<camera_speed_flag::boost>())
-                  update.move.speed *= move_speed_mult_boost;
+                  update.move.speed *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
                if (this->state.camera_speed.test<camera_speed_flag::precision>())
-                  update.move.speed *= move_speed_mult_precision;
+                  update.move.speed *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
             }
             if (results.has_member<tools::turn_camera>()) {
                const auto& data = results.get_member<tools::turn_camera>();
@@ -1090,190 +1154,6 @@ namespace dovahkit::subsystems::worldedit {
                if (data.toggle_frame && prior == data.frame.a && data.frame.b != reference_frame::current) {
                   this->state.gizmo.frame = data.frame.b;
                }
-            }
-         }
-         #pragma endregion
-      } else {
-         //
-         // Update input state.
-         //
-         worldinput::combined_tool_results results;
-         double delta;
-         worldinput::core::get().update(results, delta);
-         //
-         if (!sr)
-            //
-            // Don't execute commands "blind." If there's no renderer, exit.
-            //
-            return;
-         //
-         #pragma region modify_camera_speed_flags
-         //
-         // This must run before we apply camera movements.
-         //
-         {
-            const auto& data = results.get_member<worldinput::tools::modify_camera_speed_flags>();
-            auto& mask = this->state.camera_speed;
-            {
-               constexpr auto flag = camera_speed_flag::boost;
-               switch (data.boost) {
-                  using enum worldinput::bool_operation;
-                  case set_true:
-                     mask.set<flag>();
-                     break;
-                  case set_false:
-                     mask.reset<flag>();
-                     break;
-                  case invert:
-                     mask.flip<flag>();
-                     break;
-               }
-            }
-            {
-               constexpr auto flag = camera_speed_flag::precision;
-               switch (data.precision) {
-                  using enum worldinput::bool_operation;
-                  case set_true:
-                     mask.set<flag>();
-                     break;
-                  case set_false:
-                     mask.reset<flag>();
-                     break;
-                  case invert:
-                     mask.flip<flag>();
-                     break;
-               }
-            }
-         }
-         #pragma endregion
-         #pragma region move_camera and turn_camera
-         {
-            DKVulkanCameraUpdate update;
-            update.delta_seconds = delta;
-            {
-               const auto& data = results.get_member<worldinput::tools::move_camera>();
-               update.move.direction      = { data.x, data.y, data.z };
-               update.move.scale_by_delta = false;
-               //
-               // Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
-               // delta in the code above. This means that we need to turn off scaling in this particular 
-               // step here.
-               //
-               update.move.speed = move_speed_normal * delta; // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
-               if (this->state.camera_speed.test<camera_speed_flag::boost>())
-                  update.move.speed *= move_speed_mult_boost;
-               if (this->state.camera_speed.test<camera_speed_flag::precision>())
-                  update.move.speed *= move_speed_mult_precision;
-            }
-            {
-               const auto& data = results.get_member<worldinput::tools::turn_camera>();
-               update.turn.roll  = data.roll;
-               update.turn.pitch = data.pitch;
-               update.turn.yaw   = data.yaw;
-               update.turn.scale_by_delta = false;
-               //
-               update.turn.speed = turn_speed_per_second;
-            }
-            sr->scene.adjust_camera(update);
-         }
-         #pragma endregion
-         #pragma region attempt_on_screen_selection
-         {
-            const auto& data = results.get_member<worldinput::tools::attempt_on_screen_selection>();
-            if (data.sweep) {
-//
-// TODO
-//
-static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
-            } else {
-            if (data.position == worldinput::pointer_position_type::mouse) {
-               vulkanDK::rendered_mesh_handle handle = {};
-               {
-                  vulkanDK::raycast raycast(*sr);
-                  raycast.test_flags = 0;
-                  raycast.test_flags |= vulkanDK::raycast::test_flag::meshes;
-                  sr->do_raycast(raycast);
-
-                  if (raycast.result.hit) {
-                     auto& e = raycast.result.entity;
-                     if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(e))
-                        handle = std::get<vulkanDK::rendered_mesh_handle>(e);
-                  }
-               }
-               if (!handle.empty()) {
-                  if (auto* nif = handle->owning_nif) {
-                     if (auto* stub = nif->owning_form) {
-                        switch (data.operation) {
-                           case worldinput::selection_operation::no_op:
-                              break;
-                           case worldinput::selection_operation::toggle:
-                              this->toggleRefSelectionState(*stub);
-                              break;
-                           case worldinput::selection_operation::add:
-                           case worldinput::selection_operation::remove:
-                              this->setRefSelectionState(*stub, data.operation == worldinput::selection_operation::add);
-                              break;
-                           case worldinput::selection_operation::replace:
-                              this->replaceRefSelection(*stub);
-                              break;
-                        }
-                     }
-                  }
-               }
-            } else {
-               //
-               // TODO
-               //
-               static_assert(!require_complete_implementation, "TODO: Support performing a selection at the reticle.");
-            }
-            }
-         }
-         #pragma endregion
-         #pragma region debug_dump_landscape_details
-         if (sr) {
-            const auto& data = results.get_member<worldinput::tools::debug_dump_landscape_details>();
-            if (data.exists && data.position == worldinput::pointer_position_type::mouse) {
-               vulkanDK::raycast rc(*sr);
-               rc.set_screen_relative_raycast(data.mouse.x(), data.mouse.y());
-
-               sr->do_raycast(rc);
-               if (rc.result.hit) {
-                  if (std::holds_alternative<vulkanDK::rendered_landscape_handle>(rc.result.entity)) {
-                     auto handle = std::get<vulkanDK::rendered_landscape_handle>(rc.result.entity);
-                     auto pos = rc.result.hit.position - handle->frame_drawing_data.position;
-
-                     qDebug(
-                        "Hit landscape at (%g, %g, %g).",
-                        handle->frame_drawing_data.position.x,
-                        handle->frame_drawing_data.position.y,
-                        handle->frame_drawing_data.position.z
-                     );
-                     qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
-
-                     pos /= vulkanDK::rendered_landscape::vertex_distance;
-
-                     int x = pos.x;
-                     int y = pos.y;
-                     qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
-
-                     if (x > 0 && y > 0 && x < 33 && y < 33) {
-                        vulkanDK::vertex_landscape* vert = nullptr;
-
-                        #if _DEBUG
-                        //
-                        // TODO: console-print the vert attributes
-                        //
-                        __debugbreak();
-                        #endif
-
-                     }
-                  }
-               }
-            } else {
-               //
-               // TODO
-               //
-               static_assert(!require_complete_implementation, "TODO: Support performing a query at the reticle.");
             }
          }
          #pragma endregion

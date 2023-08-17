@@ -489,8 +489,28 @@ namespace cobb {
          template<typename U> requires (std::is_convertible_v<U, length_type> || std::is_same_v<U, length_type>) constexpr resizable_square_grid(U l) {
             this->resize((length_type)l);
          }
+         constexpr resizable_square_grid(const resizable_square_grid& v) {
+            *this = v;
+         }
+         constexpr resizable_square_grid(resizable_square_grid&& v) {
+            *this = std::move(v);
+         }
          constexpr ~resizable_square_grid() {
             this->clear_and_collapse();
+         }
+
+         constexpr resizable_square_grid& operator=(const resizable_square_grid& o) {
+            this->clear_and_collapse();
+            this->resize(o.length());
+            for (size_t i = 0; i < area(); ++i) {
+               this->data()[i] = o.data()[i];
+            }
+            return *this;
+         }
+         constexpr resizable_square_grid& operator=(resizable_square_grid&& o) {
+            std::swap(this->_data, o._data);
+            std::swap(this->_length, o._length);
+            return *this;
          }
 
          constexpr length_type length() const noexcept { return _length; }

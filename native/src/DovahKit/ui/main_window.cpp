@@ -23,6 +23,7 @@
    #include "main_window/script_window_single.h"
    #include "main_window/script_window_package.h"
    //
+   #include "./options_window/options_window.h"
    #include "options_3d_input_window/options_3d_input_window.h"
 #pragma endregion
 
@@ -267,6 +268,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
    QObject::connect(this->ui.action3DViewInput, &QAction::triggered, this, [this]() {
       auto* win = Options3DInputDialog::open(this);
+      QObject::connect(win, &QDialog::finished, win, &QObject::deleteLater);
+   });
+   QObject::connect(this->ui.actionOptions, &QAction::triggered, this, [this]() {
+      auto* win = OptionsWindow::open(this);
       QObject::connect(win, &QDialog::finished, win, &QObject::deleteLater);
    });
 

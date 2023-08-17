@@ -115,6 +115,8 @@ namespace dovahkit::subsystems::worldedit {
             } selection;
          } state;
 
+         void _update_grid_size_from_inis();
+
          vulkanDK::rendered_bounds_handle _make_bounds_for(const refr&, bounds_generation_source& out);
          refr* _get_loaded_refr_info(const dovah::form_stub&);
          cell* _get_loaded_cell_info(const dovah::form_stub&);

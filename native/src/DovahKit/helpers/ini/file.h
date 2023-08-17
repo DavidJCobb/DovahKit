@@ -118,6 +118,7 @@ namespace cobb::ini {
          void load(std::istream&);
          void save(std::ostream& dst);
          void save(std::ostream& dst, std::istream& src); // preserves the existing file's whitespace, comments, setting order, etc.; writes all setting values including those not changed from the defaults
+         void save(std::string& dst, std::istream& src);
 
          constexpr void _on_category_instantiated(::cobb::passkey<file, category>, category&);
          constexpr void _on_setting_changed(::cobb::passkey<file, category>, setting&, value_union old_value, value_union new_value);

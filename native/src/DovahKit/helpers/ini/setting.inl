@@ -32,7 +32,10 @@ namespace cobb::ini {
    template<typename T>
    constexpr bool setting::is_of_type() const noexcept {
       return value_types::for_each_pair_until_true([this]<typename Key, char Value>() {
-         return Value == this->name[0];
+         if constexpr (std::is_same_v<Key, T>) {
+            return Value == this->name[0];
+         }
+         return false;
       });
    }
 
@@ -72,7 +75,7 @@ namespace cobb::ini {
    }
 
    template<typename T> requires value_types::has_key<T>
-   constexpr void setting::set_current_value(const T& v) const {
+   constexpr void setting::set_current_value(const T& v) {
       if (!this->is_of_type<T>())
          throw std::logic_error("incorrect type specified for INI setting");
       auto& info = std::get<info_type<T>>(this->info);

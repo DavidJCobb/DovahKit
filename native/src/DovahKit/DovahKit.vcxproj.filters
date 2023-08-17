@@ -2133,6 +2133,9 @@
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\ini\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6102,6 +6105,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\ini\main.hint" />
+    <None Include="helpers\string\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
@@ -2193,6 +2194,7 @@
     <None Include="helpers\string\backslash_escape.inl" />
     <None Include="helpers\string\floating_point_literal.inl" />
     <None Include="helpers\string\integer_literal.inl" />
+    <None Include="helpers\string\README.md" />
     <None Include="helpers\tree\node.inl" />
     <None Include="helpers\tree\node.md" />
     <None Include="helpers\windows.hint" />

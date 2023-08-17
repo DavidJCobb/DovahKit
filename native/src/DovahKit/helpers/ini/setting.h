@@ -67,7 +67,7 @@ namespace cobb::ini {
          // Throws if the setting is not of the requested type.
          // Throws if the value supplied does not satisfy the constraints.
          template<typename T> requires value_types::has_key<T>
-         constexpr void set_current_value(const T& v) const;
+         constexpr void set_current_value(const T& v);
 
          // This is provided in order to implement serialization and parsing of INI 
          // files. Its use outside of that task is discouraged.

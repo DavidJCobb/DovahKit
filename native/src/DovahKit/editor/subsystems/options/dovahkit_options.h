@@ -34,5 +34,6 @@ namespace dovahkit::subsystems::options {
 
       public slots:
          void reload();
+         void save();
    };
 };

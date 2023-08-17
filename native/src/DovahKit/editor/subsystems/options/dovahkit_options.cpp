@@ -2,9 +2,11 @@
 #include <cstdio>
 #include <fstream>
 #include <istream>
+#include <ostream>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QSaveFile>
 #include <QString>
 #include "editor/ini/main.h"
 
@@ -36,13 +38,36 @@ namespace dovahkit::subsystems::options {
    }
 
    void core::reload() {
-      auto path = get_userdata_path() + "main.ini";
+      auto path = get_userdata_path() + "options/main.ini";
 
-      QFile main_ini(get_userdata_path() + "main.ini");
+      QFile main_ini(get_userdata_path() + "options/main.ini");
       main_ini.open(QIODevice::ReadOnly);
       if (main_ini.isReadable()) {
          auto stream = std::ifstream(_fdopen(main_ini.handle(), "r"));
          ::dovahkit::ini::main::file_data.load(stream);
       }
+   }
+
+   void core::save() {
+      // QSaveFile::handle doesn't return a usable value, so we have to write to memory
+      // TODO: Just write my own file handling routine for it so we at least get *some* 
+      //       benefit from using streams
+      std::string dst;
+
+      {
+         QFile existing(get_userdata_path() + "options/main.ini");
+         existing.open(QIODevice::ReadOnly);
+         if (existing.isReadable()) {
+            auto src_stream = std::ifstream(_fdopen(existing.handle(), "r"));
+            ::dovahkit::ini::main::file_data.save(dst, src_stream);
+         } else {
+            ::dovahkit::ini::main::file_data.save(dst);
+         }
+      }
+
+      QSaveFile dst_file(get_userdata_path() + "options/main.ini");
+      dst_file.open(QIODevice::ReadWrite);
+      dst_file.write(dst.data(), dst.size());
+      dst_file.commit();
    }
 }

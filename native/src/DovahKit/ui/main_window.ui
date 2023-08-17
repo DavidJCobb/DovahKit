@@ -94,6 +94,7 @@
      <string>Tools</string>
     </property>
     <addaction name="action3DViewInput"/>
+    <addaction name="actionOptions"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -180,6 +181,11 @@
   <action name="action3DViewInput">
    <property name="text">
     <string>3D view input options...</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options...</string>
    </property>
   </action>
  </widget>

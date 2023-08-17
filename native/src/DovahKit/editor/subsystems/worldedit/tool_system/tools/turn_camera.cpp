@@ -2,6 +2,8 @@
 #include "../options_union.h"
 #include "../tool_results_tuple.h"
 
+#include "editor/ini/main.h"
+
 namespace {
    namespace worldedit {
       using namespace ::dovahkit::subsystems::worldedit;
@@ -37,6 +39,13 @@ namespace dovahkit::subsystems::worldedit::tools {
          }
          res.yaw   *= mod_yaw;
          res.pitch *= mod_pitch;
+         
+         if (dovahkit::ini::main::worldedit::bInvertLookX.get_current_value<bool>()) {
+            res.yaw *= -1;
+         }
+         if (dovahkit::ini::main::worldedit::bInvertLookY.get_current_value<bool>()) {
+            res.pitch *= -1;
+         }
       }
       all_results.merge_member(input, res);
    }

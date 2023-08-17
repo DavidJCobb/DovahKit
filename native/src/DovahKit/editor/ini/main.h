@@ -8,54 +8,88 @@
    //
    // August 13, 2023: constinit + STL containers is broken in MSVC Debug builds.
    // https://developercommunity.visualstudio.com/t/MDd-makes-it-impossible-to-have-constin/10439085
-   // I will forever remain impressed at present-day Microsoft's ability to never 
-   // actually finish making things before publishing them.
    // 
    // For my particular use case, the static initialization order fiasco shouldn't 
    // be a risk because I intend to define an INI file and its contents inside of 
    // a single translation unit, but there's other jank associated with static vars 
    // that I would've liked to avoid.
    // 
-   // Remove this hacky garbage as soon as Microsoft fixes things on their end!
+   // Remove this hacky garbage as soon as Microsoft fixes things on their end! Be 
+   // sure to wipe the *.cpp file as well.
    //
-   #define constinit static
+   #define MSVC_CONSTINIT_STILL_BROKEN 1
 #endif
 
 #pragma push_macro("MAKE_INI_SETTING")
+#pragma push_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
 
 #define MAKE_INI_SETTING(setting_name, initial) \
-   constinit auto setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ \
+   constinit cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ \
       .name          = #setting_name, \
-      .initial_value = initial \
+      .initial_value = initial, \
    }>(category_data);
 
+#define MAKE_INI_SETTING_WITH_CONSTRAINTS(setting_name, initial, a_constraints) \
+   constinit cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ \
+      .name          = #setting_name, \
+      .initial_value = initial, \
+      .constraints   = a_constraints, \
+   }>(category_data);
+
+#if MSVC_CONSTINIT_STILL_BROKEN
+   #define constinit extern
+
+   #undef MAKE_INI_SETTING
+   #define MAKE_INI_SETTING(setting_name, initial) \
+      extern cobb::ini::setting setting_name ;
+
+   #undef MAKE_INI_SETTING_WITH_CONSTRAINTS
+   #define MAKE_INI_SETTING_WITH_CONSTRAINTS(setting_name, initial, a_constraints) \
+      extern cobb::ini::setting setting_name ;
+#endif
+
 namespace dovahkit::ini::main {
-   constinit cobb::ini::file file_data = cobb::ini::file{};
+   constinit cobb::ini::file file_data
+      #if !MSVC_CONSTINIT_STILL_BROKEN
+      = cobb::ini::file{}
+      #endif
+   ;
 
    namespace worldedit {
-      constinit auto category_data = cobb::ini::category(file_data, "worldedit");
+      constinit cobb::ini::category category_data
+         #if !MSVC_CONSTINIT_STILL_BROKEN
+         = cobb::ini::category(file_data, "worldedit")
+         #endif
+      ;
 
-      MAKE_INI_SETTING(fCameraSpeedNormal,        (double)180.0);
-      MAKE_INI_SETTING(fCameraSpeedMultBoost,     (double)2.0);
-      MAKE_INI_SETTING(fCameraSpeedMultPrecision, (double)0.3);
-      //
-      MAKE_INI_SETTING(iLoadedGridSize, 5);
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(fCameraSpeedNormal,        (double)180.0, (cobb::ini::value_constraint_info<double>{ .min = 1.0, .max = 512.0 }));
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(fCameraSpeedMultBoost,     (double)2.0,   (cobb::ini::value_constraint_info<double>{ .min = 0.1, .max = 20.0 }));
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(fCameraSpeedMultPrecision, (double)0.3,   (cobb::ini::value_constraint_info<double>{ .min = 0.1, .max = 20.0 }));
+      
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(uLoadedGridSize, (unsigned int)5, (cobb::ini::value_constraint_info<unsigned int>{.min = 5 }));
       MAKE_INI_SETTING(bLoadedGridSizeOverrideFromSkyrimINI, true);
-   }
-   namespace worldinput {
-      constinit auto category_data = cobb::ini::category(file_data, "worldinput");
-
-      MAKE_INI_SETTING(fTurnSpeedDegreesPerSecondX, (double)90.0);
-      MAKE_INI_SETTING(fTurnSpeedDegreesPerSecondY, (double)90.0);
 
       MAKE_INI_SETTING(bInvertLookX, false);
       MAKE_INI_SETTING(bInvertLookY, true);
+
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(fTurnSpeedDegreesPerSecondX, (double)90.0, (cobb::ini::value_constraint_info<double>{.min = 1.0, .max = 720.0 }));
+      MAKE_INI_SETTING_WITH_CONSTRAINTS(fTurnSpeedDegreesPerSecondY, (double)90.0, (cobb::ini::value_constraint_info<double>{.min = 1.0, .max = 720.0 }));
+   }
+   namespace worldinput {
+      constinit cobb::ini::category category_data
+         #if !MSVC_CONSTINIT_STILL_BROKEN
+         = cobb::ini::category(file_data, "worldinput")
+         #endif
+      ;
    }
 }
+
+#undef MAKE_INI_SETTING_WITH_CONSTRAINTS
 #undef MAKE_INI_SETTING
+#pragma pop_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
 #pragma pop_macro("MAKE_INI_SETTING")
 
 // Remove this when we remove the MSVC Debug hack up above.
-#if _DEBUG && defined(_MSC_VER)
+#if MSVC_CONSTINIT_STILL_BROKEN
    #undef constinit
 #endif
