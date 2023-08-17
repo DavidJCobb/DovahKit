@@ -82,6 +82,9 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, [this]() {
       this->reject();
    });
+   QObject::connect(this->ui.buttonApply, &QPushButton::clicked, this, [this]() {
+      this->save();
+   });
 
    auto& options_core = dovahkit::subsystems::options::core::get();
    QObject::connect(&options_core, &dovahkit::subsystems::options::core::mainIniSettingChanged, this,

@@ -67,15 +67,7 @@ namespace {
 namespace {
    static constexpr auto max_selected_refr_count = vulkanDK::config::max_rendered_bounds;
 
-   static constexpr float move_speed_normal = 180.0F;
-   static constexpr float move_speed_mult_precision = 0.3F;
-   static constexpr float move_speed_mult_boost     = 2.0F;
-
-   static constexpr float turn_speed_per_second = glm::radians<float>(90);
-}
-
-namespace {
-   constexpr const size_t minimum_grids_to_load = 5;
+   static constexpr const size_t minimum_grids_to_load = 5;
    static_assert(minimum_grids_to_load >= 1);
 }
 
