@@ -43,7 +43,7 @@ namespace cobb::ini {
       return false;
    }
    constexpr bool parse_value(std::string_view raw, std::string& out) {
-      out = cobb::backslash_unescape(raw);
+      out = cobb::backslash_unescape<cobb::backslash_escape_type::javascript>(raw);
       return true;
    }
 
@@ -129,6 +129,6 @@ namespace cobb::ini {
       return out;
    }
    constexpr std::string stringify_value(const std::string& v) {
-      return cobb::backslash_escape(v);
+      return cobb::backslash_escape<cobb::backslash_escape_type::javascript>(v);
    }
 }
