@@ -1,0 +1,25 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <linearGradient id="line" gradientTransform="rotate(110)">
+         <stop offset="5%" stop-color="#228811" />
+         <stop offset="95%" stop-color="#187710" />
+      </linearGradient>
+      <linearGradient id="grad" gradientTransform="rotate(110)">
+         <stop offset="5%" stop-color="#88DD22" />
+         <stop offset="95%" stop-color="#55B218" />
+      </linearGradient>
+   </defs>
+   <path id="path"
+      d="M 50,0 L 50,100 M 0,50 L 100,50"
+      fill="none"
+      stroke="url(#line)"
+      stroke-width="25"
+   />
+   <path id="path"
+      d="M 50,12.5 L 50,87.5 M 12.5,50 L 87.5,50"
+      fill="none"
+      stroke="url(#grad)"
+      stroke-width="20"
+      stroke-linecap="square"
+   />
+</svg>

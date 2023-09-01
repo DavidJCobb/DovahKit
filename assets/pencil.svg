@@ -1,0 +1,135 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <linearGradient id="pencil-shade" gradientTransform="rotate(90 0.5 0.5)" gradientUnits="objectBoundingBox">
+         <stop offset="  0.0%" stop-color="#F2B355" />
+         <stop offset=" 25.0%" stop-color="#F2B355" />
+         <stop offset=" 25.5%" stop-color="#EE8844" />
+         <stop offset=" 75.0%" stop-color="#EE8844" />
+         <stop offset=" 75.5%" stop-color="#774422" />
+         <stop offset="100.0%" stop-color="#774422" />
+      </linearGradient>
+      <linearGradient id="eraser-shade" gradientTransform="rotate(90 0.5 0.5)" gradientUnits="objectBoundingBox">
+         <stop offset="  0.0%" stop-color="#EE5588" />
+         <stop offset=" 25.0%" stop-color="#EE5588" />
+         <stop offset=" 75.0%" stop-color="#CC3366" />
+         <stop offset="100.0%" stop-color="#BB2255" />
+      </linearGradient>
+      
+      <path id="pencil-shape"
+         d="
+            M   0,100
+            L 0,85
+            L  85,  0
+            L 100,15
+            L  15,100
+            Z"
+         stroke-width="5"
+      />
+      <clipPath id="clip-to-pencil">
+         <use href="#pencil-shape" fill="#000" stroke="#000" />
+      </clipPath>
+   </defs>
+   
+   <use href="#pencil-shape" fill="#E84" stroke="none" />
+   <g clip-path="url(#clip-to-pencil)">
+      <rect
+         stroke="none"
+         fill="url(#pencil-shade)"
+         x="-25" y="37.5"
+         width="150"
+         height="25"
+         transform-origin="center center"
+         transform="rotate(-45)"
+      />
+   </g>
+   <circle
+      id="shaved"
+      fill="#EB8"
+      cx="10"
+      cy="90"
+      r="15"
+      clip-path="url(#clip-to-pencil)"
+   />
+   <circle
+      id="tip"
+      fill="#444"
+      cx="5"
+      cy="95"
+      r="7"
+      clip-path="url(#clip-to-pencil)"
+   />
+   <g clip-path="url(#clip-to-pencil)">
+      <g transform="translate(82.5, -30)">
+         <rect
+            id="eraser"
+            stroke="#000"
+            stroke-width="2.5"
+            fill="#CCC"
+            x="0" y="-2.5"
+            width="15"
+            height="30"
+            transform-origin="center center"
+            transform="rotate(-45)"
+         />
+      </g>
+   </g>
+   <g clip-path="url(#clip-to-pencil)">
+      <g transform="translate(82.5, -30)">
+         <rect
+            id="eraser"
+            stroke="#000"
+            stroke-width="2.5"
+            fill="url(#eraser-shade)"
+            x="0" y="-2.5"
+            width="25"
+            height="30"
+            transform-origin="center center"
+            transform="rotate(-45)"
+         />
+      </g>
+   </g>
+   <use id="outline" href="#pencil-shape" fill="none" stroke="#000" />
+   
+   <script>//<![CDATA[
+const thickness    = 20;
+const stroke_width = 5;
+
+const points = [
+   [0, 100], // tip
+   [0, 100],
+   
+   // eraser
+   [100,   0],
+   [100,   0],
+   [  0, 100],
+];
+
+for(let point of points) {
+   for(let i = 0; i < point.length; ++i) {
+      let v = point[i];
+      if (v == 0)
+         point[i] += stroke_width / 2;
+      else if (v == 100)
+         point[i] -= stroke_width / 2;
+   }
+}
+
+points[1][1] -= thickness;
+points[2][0] -= thickness;
+points[3][1] += thickness;
+points[4][0] += thickness;
+
+let path = "";
+for(let i = 0; i < points.length; ++i) {
+   if (i)
+      path += " L";
+   else
+      path += "M";
+   path += " ";
+   path += points[i].join(",");
+}
+path += " Z";
+
+document.getElementById("pencil-shape").setAttribute("d", path);
+   //]]></script>
+</svg>

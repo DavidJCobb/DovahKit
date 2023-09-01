@@ -1,0 +1,172 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <style>
+svg {
+   --pencil-thickness: 25;
+
+   --pencil-thickness-px: calc(var(--pencil-thickness) * 1px);
+   
+   --pencil-straight-width: 60;
+   --pencil-eraser-metal-width: 10;
+   
+   --pencil-straight-width-px: calc(var(--pencil-straight-width) * 1px);
+   --pencil-eraser-metal-width-px: calc(var(--pencil-eraser-metal-width) * 1px);
+   --pencil-wood-width-px: calc(var(--pencil-straight-width-px) - var(--pencil-eraser-metal-width-px));
+   
+   --pencil-eraser-radius:  5;
+   --pencil-eraser-length: 10;
+   
+   --pencil-eraser-radius-px: calc(var(--pencil-eraser-radius) * 1px);
+   --pencil-eraser-raw-w: calc((var(--pencil-eraser-length) + var(--pencil-eraser-radius) * 2) * 1px);
+}
+   </style>
+
+   <g id="page">
+      <rect
+         x="7.5"
+         y="2.5"
+         width="80"
+         height="95"
+         rx="15"
+         ry="15"
+         fill="#EEE"
+         stroke="#777"
+         stroke-width="5"
+      />
+   </g>
+   
+   <defs>
+      <path
+         id="pencil-tip-shape"
+         d="M 0,12.5 L 20,0 Q 25,12.5 20,25 Z"
+      />
+      <script>//<![CDATA[
+(function() {
+   let node      = document.getElementById("pencil-tip-shape");
+   let svg       = node.closest("svg");
+   let thickness = +window.getComputedStyle(svg).getPropertyValue("--pencil-thickness");
+   if (!thickness || isNaN(thickness))
+      throw new Error("");
+   
+   let path = `M 0,${thickness/2} L 20,0 Q 25,${thickness/2} 20,${thickness} Z`;
+   node.setAttribute("d", path);
+})();
+      //]]></script>
+      
+      <rect id="pencil-eraser-shape"
+         x="70"
+         y="0"
+         width="var(--pencil-eraser-raw-w)"
+         height="var(--pencil-thickness-px)"
+         rx="5"
+         ry="5"
+      />
+      <clipPath id="pencil-clip">
+         <use href="#pencil-tip-shape" />
+         <use href="#pencil-eraser-shape" />
+         <rect
+            x="20"
+            y="0"
+            width="60"
+            height="var(--pencil-thickness-px)"
+         />
+      </clipPath>
+      <path
+         id="pencil-outline"
+         d="M 20,25 L 0,12.5 L 20,0 l 60,0 l 5,0 a 5 5 90 0 1 5 5 l 0,15a 5 5 90 0 1 -5 5 l -5, 0 Z"
+      />
+      <script>//<![CDATA[
+(function() {
+   let node  = document.getElementById("pencil-outline");
+   let svg   = node.closest("svg");
+   let style = window.getComputedStyle(svg);
+   
+   let thickness  = +style.getPropertyValue("--pencil-thickness");
+   let straight_w = +style.getPropertyValue("--pencil-straight-width");
+   if (!thickness || isNaN(thickness))
+      throw new Error("");
+   
+   let path = `M 20,${thickness} L 0,${thickness/2} L 20,0 `;
+   path += `l ${straight_w},0 `;
+   
+   {
+      let eraser_radius = +style.getPropertyValue("--pencil-eraser-radius");
+      let eraser_length = +style.getPropertyValue("--pencil-eraser-length");
+      
+      path += `l ${eraser_length - eraser_radius},0 `;
+      path += `a ${eraser_radius} ${eraser_radius} 90 0 1 ${eraser_radius} ${eraser_radius} `;
+      
+      let eraser_base = thickness - (eraser_radius * 2);
+      if (eraser_base > 0)
+         path += `l 0,${eraser_base}`;
+      path += `a ${eraser_radius} ${eraser_radius} 90 0 1 -${eraser_radius} ${eraser_radius} `;
+      path += `l -${eraser_length - eraser_radius}, 0`;
+   }
+   // TODO: ERASER
+   
+   path += ` Z`;
+   
+   node.setAttribute("d", path);
+})();
+      //]]></script>
+      
+      <filter id="turbo-cancerous-outline-workaround">
+         <feColorMatrix
+            in="SourceGraphic"
+            type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 1 0"
+         />
+         <feMorphology operator="dilate" radius="5" />
+      </filter>
+      
+      <g id="pencil" clip-path="url(#pencil-clip)">
+         <rect id="wood"
+            fill="#FB6"
+            x="20"
+            y="0"
+            width="var(--pencil-wood-width-px)"
+            height="var(--pencil-thickness-px)"
+         />
+         <use href="#pencil-tip-shape" fill="#EB8" />
+         
+         <use href="#pencil-eraser-shape" fill="#EE5588" />
+         <g id="pencil-eraser-metal">
+            <rect
+               fill="#CCC"
+               x="70"
+               y="0"
+               width="var(--pencil-eraser-metal-width-px)"
+               height="var(--pencil-thickness-px)"
+            />
+            
+            <!-- using two line elements would be cleaner, but you can't use 
+                 CSS variables on the y2 attribute -->
+            <rect
+               width="4"
+               height="calc(2px + var(--pencil-thickness-px))"
+               x="73"
+               y="-1"
+               stroke="#888"
+               stroke-width="1"
+               fill="none"
+            />
+         </g>
+         
+         <circle id="lead"
+            r="5"
+            cx="5"
+            cy="calc(var(--pencil-thickness-px) / 2)"
+            fill="#222"
+         />
+      </g>
+   </defs>
+   
+   <g id="pencil-pos" transform="translate(15 70)">
+      <g transform="rotate(-45)">
+         <use href="#pencil-outline" stroke="#220" stroke-width="10" />
+         <use href="#pencil" />
+      </g>
+   </g>
+</svg>

@@ -1,0 +1,105 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <g id="page">
+      <rect
+         x="7.5"
+         y="2.5"
+         width="80"
+         height="95"
+         rx="15"
+         ry="15"
+         fill="#EEE"
+         stroke="#777"
+         stroke-width="5"
+      />
+   </g>
+   
+   <defs>
+      <path
+         id="pencil-tip-shape"
+         d="M 0,12.5 L 20,0 Q 25,12.5 20,25 Z"
+      />
+      
+      <rect id="pencil-eraser-shape"
+         x="70"
+         y="0"
+         width="20"
+         height="25"
+         rx="5"
+         ry="5"
+      />
+      <clipPath id="pencil-clip">
+         <use href="#pencil-tip-shape" />
+         <use href="#pencil-eraser-shape" />
+         <rect
+            x="20"
+            y="0"
+            width="60"
+            height="25"
+         />
+      </clipPath>
+      <path
+         id="pencil-outline"
+         d="M 20,25 L 0,12.5 L 20,0 l 60,0 l 5,0 a 5 5 90 0 1 5 5 l 0,15a 5 5 90 0 1 -5 5 l -5, 0 Z"
+      />
+      
+      <filter id="turbo-cancerous-outline-workaround">
+         <feColorMatrix
+            in="SourceGraphic"
+            type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 1 0"
+         />
+         <feMorphology operator="dilate" radius="5" />
+      </filter>
+      
+      <g id="pencil" clip-path="url(#pencil-clip)">
+         <rect id="wood"
+            fill="#FB6"
+            x="20"
+            y="0"
+            width="50"
+            height="25"
+         />
+         <use href="#pencil-tip-shape" fill="#EB8" />
+         
+         <use href="#pencil-eraser-shape" fill="#EE5588" />
+         <g id="pencil-eraser-metal">
+            <rect
+               fill="#CCC"
+               x="70"
+               y="0"
+               width="10"
+               height="25"
+            />
+            
+            <!-- using two line elements would be cleaner, but you can't use 
+                 CSS variables on the y2 attribute -->
+            <rect
+               width="4"
+               height="27"
+               x="73"
+               y="-1"
+               stroke="#888"
+               stroke-width="1"
+               fill="none"
+            />
+         </g>
+         
+         <circle id="lead"
+            r="5"
+            cx="5"
+            cy="12.5"
+            fill="#222"
+         />
+      </g>
+   </defs>
+   
+   <g id="pencil-pos" transform="translate(15 70)">
+      <g transform="rotate(-45)">
+         <use href="#pencil-outline" stroke="#220" stroke-width="10" />
+         <use href="#pencil" />
+      </g>
+   </g>
+</svg>

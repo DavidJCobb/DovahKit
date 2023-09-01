@@ -1,0 +1,72 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <linearGradient id="line" gradientTransform="rotate(110 0.5 0.5)" gradientUnits="userSpaceOnUse">
+         <stop offset="5%" stop-color="#702211" />
+         <stop offset="95%" stop-color="#502010" />
+      </linearGradient>
+      <linearGradient id="grad" gradientTransform="rotate(110 0.5 0.5)" gradientUnits="userSpaceOnUse">
+         <stop offset="10%" stop-color="#E02211" />
+         <stop offset="95%" stop-color="#A04020" />
+      </linearGradient>
+   </defs>
+   <path id="path"
+      fill="url(#grad)"
+      stroke="url(#line)"
+      stroke-width="5"
+      stroke-linecap="butt"
+      d="M 2.5,22.5 L 22.5,2.5 L 50,30 L 77.5,2.5 L 97.5,20 L 70,50 L 97.5,77.5 L 77.5,97.5 L 50,70 L 22.5,97.5 L 2.5,77.5 L 30,50 Z"
+   />
+   <!--
+d attribute provided for non-browsers e.g. GIMP
+it was computed below
+   -->
+   <script>//<![CDATA[
+const thickness    = 25; // includes stroke
+const stroke_width =  5;
+{
+   let x_x_x = thickness - (stroke_width);
+   let y_y_y = thickness - (stroke_width / 2);
+   let inset = stroke_width / 2;
+   
+   let edge_l = inset;
+   let edge_r = 100 - inset;
+
+   let points = [];
+   
+   // Top edges:
+   points.push([edge_l, edge_l + x_x_x]);
+   points.push([edge_l + x_x_x,  edge_l]);
+   
+   points.push([50, 50 - x_x_x]);
+   
+   points.push([edge_r - x_x_x, edge_l]);
+   points.push([edge_r,         x_x_x]);
+   
+   // Righthand center-edge point:
+   points.push([50 + x_x_x, 50]);
+   
+   // Bottom edges:
+   points.push([edge_r,         edge_r - x_x_x]);
+   points.push([edge_r - x_x_x, edge_r]);
+   
+   points.push([50, 50 + x_x_x]);
+   
+   points.push([edge_l + x_x_x,  edge_r]);
+   points.push([edge_l,          edge_r - x_x_x]);
+   
+   // Righthand center-edge point:
+   points.push([50 - x_x_x, 50]);
+   
+   let path = "";
+   for(let i = 0; i < points.length; ++i) {
+      if (i == 0)
+         path += "M";
+      else
+         path += " L";
+      path += " " + points[i][0] + "," + points[i][1];
+   }
+   path += " Z";
+   document.getElementById("path").setAttribute("d", path);
+}
+   //]]></script>
+</svg>
