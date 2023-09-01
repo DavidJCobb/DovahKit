@@ -38,6 +38,7 @@ namespace {
 }
 #include "editor/subsystems/game_inis.h"
 #include "./gizmo_colors/edit_gizmo_color_scheme_manager.h"
+#include "helpers/color/rgb.h"
 
 #include "helpers/vector.h"
 namespace {
@@ -623,27 +624,22 @@ namespace dovahkit::subsystems::worldedit {
       auto* sr = this->target_view->surfaceRenderer();
       if (!sr)
          return;
-      sr->scene.gizmo_state.color_x = {
-         (float)scheme.axis_x.r / 255.0,
-         (float)scheme.axis_x.g / 255.0,
-         (float)scheme.axis_x.b / 255.0,
-      };
-      sr->scene.gizmo_state.color_y = {
-         (float)scheme.axis_y.r / 255.0,
-         (float)scheme.axis_y.g / 255.0,
-         (float)scheme.axis_y.b / 255.0,
-      };
-      sr->scene.gizmo_state.color_z = {
-         (float)scheme.axis_z.r / 255.0,
-         (float)scheme.axis_z.g / 255.0,
-         (float)scheme.axis_z.b / 255.0,
-      };
+
+      auto axis_x    = ((cobb::color::rgb_floats)scheme.axis_x).sRGB_to_linear();
+      auto axis_y    = ((cobb::color::rgb_floats)scheme.axis_y).sRGB_to_linear();
+      auto axis_z    = ((cobb::color::rgb_floats)scheme.axis_z).sRGB_to_linear();
+      auto highlight = ((cobb::color::rgb_floats)scheme.highlight).sRGB_to_linear();
+
+      sr->scene.gizmo_state.color_x = { axis_x.r, axis_x.g, axis_x.b };
+      sr->scene.gizmo_state.color_y = { axis_y.r, axis_y.g, axis_y.b };
+      sr->scene.gizmo_state.color_z = { axis_z.r, axis_z.g, axis_z.b };
       sr->scene.gizmo_state.color_highlight = {
-         (float)scheme.highlight.r / 255.0,
-         (float)scheme.highlight.g / 255.0,
-         (float)scheme.highlight.b / 255.0,
+         highlight.r,
+         highlight.g,
+         highlight.b,
          1.0, // TODO: we actually blend the highlight color within the renderer. should we let the user customize that?
       };
+      sr->force_gizmo_full_update();
    }
    
    void core::_set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x, int32_t grid_y) {

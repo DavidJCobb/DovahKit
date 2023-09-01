@@ -2,14 +2,11 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include "helpers/color/rgb.h"
 
 namespace dovahkit::subsystems::worldedit {
    struct gizmo_color_scheme {
-      struct rgb {
-         uint8_t r = 0;
-         uint8_t g = 0;
-         uint8_t b = 0;
-      };
+      using rgb = cobb::color::rgb_bytes;
 
       std::string name; // utf-8
       union {

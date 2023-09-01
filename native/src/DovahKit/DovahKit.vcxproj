@@ -532,6 +532,7 @@
     <ClCompile Include="helpers\bitstreams\tests\structs.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\where_are_we.cpp" />
     <ClCompile Include="helpers\bitstreams\tests\wrappers.cpp" />
+    <ClCompile Include="helpers\color\rgb.cpp" />
     <ClCompile Include="helpers\cpuinfo.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
@@ -544,6 +545,7 @@
     <ClCompile Include="helpers\ini\value_serialization.inl" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\math\to_ratio.tests.cpp" />
     <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
     <ClCompile Include="helpers\utf8\for_each.cpp" />
@@ -1079,6 +1081,7 @@
     <ClInclude Include="helpers\array_of_n_values.h" />
     <ClInclude Include="helpers\byteswap.h" />
     <ClInclude Include="helpers\class_map.h" />
+    <ClInclude Include="helpers\color\rgb.h" />
     <ClInclude Include="helpers\concepts\all_unique_types.h" />
     <ClInclude Include="helpers\concepts\any_of_types.h" />
     <ClInclude Include="helpers\concepts\type_specialization_of.h" />
@@ -1141,6 +1144,7 @@
     <ClInclude Include="helpers\math\sincos_int.h" />
     <ClInclude Include="helpers\math\sine.h" />
     <ClInclude Include="helpers\math\sqrt.h" />
+    <ClInclude Include="helpers\math\to_ratio.h" />
     <ClInclude Include="helpers\memset.h" />
     <ClInclude Include="helpers\dummy.h" />
     <ClInclude Include="helpers\name_of.h" />
@@ -2189,11 +2193,13 @@
     <None Include="helpers\bitstreams\position.inl" />
     <None Include="helpers\bitstreams\reader.inl" />
     <None Include="helpers\bitstreams\writer.inl" />
+    <None Include="helpers\color\rgb.inl" />
     <None Include="helpers\ini\category.inl" />
     <None Include="helpers\ini\file.inl" />
     <None Include="helpers\ini\file_line_parser.inl" />
     <None Include="helpers\ini\setting.inl" />
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
+    <None Include="helpers\math\pow.md" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
     <None Include="helpers\string\backslash_escape.inl" />

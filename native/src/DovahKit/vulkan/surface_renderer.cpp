@@ -2482,21 +2482,19 @@ namespace vulkanDK {
       if (is_gizmo_axis_highlighted(a) == v)
          return;
       this->scene.gizmo_state.set_axis_highlighted(a, v);
-      //
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.on_gizmo_state_changed();
+      this->force_gizmo_full_update();
    }
    void surface_renderer::replace_gizmo_axis_highlighted(axis3D a) {
       this->scene.gizmo_state.replace_axis_highlighted(a);
-      //
-      for (auto& fif : this->swap_chain.frames_in_flight)
-         fif.on_gizmo_state_changed();
+      this->force_gizmo_full_update();
    }
    void surface_renderer::clear_all_gizmo_axis_highlighting() {
       if (!(this->scene.gizmo_state.flags & scene_gizmo_state::flag::all_highlight))
          return;
       this->scene.gizmo_state.clear_all_axis_highlighting();
-      //
+      this->force_gizmo_full_update();
+   }
+   void surface_renderer::force_gizmo_full_update() {
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_gizmo_state_changed();
    }

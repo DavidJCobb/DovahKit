@@ -2142,6 +2142,12 @@
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\math\to_ratio.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\color\rgb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5321,6 +5327,12 @@
     <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\color\rgb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\math\to_ratio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6121,6 +6133,10 @@
     </None>
     <None Include="editor\ini\main.hint" />
     <None Include="helpers\string\README.md" />
+    <None Include="helpers\color\rgb.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\math\pow.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
