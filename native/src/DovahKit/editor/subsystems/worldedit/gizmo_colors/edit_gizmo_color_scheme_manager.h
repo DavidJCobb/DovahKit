@@ -1,8 +1,11 @@
 #pragma once
+#include <optional>
 #include <vector>
 #include <QObject>
 #include "editor/subsystems/options/core.h"
 #include "./gizmo_color_scheme.h"
+
+class QXmlStreamReader;
 
 namespace dovahkit::subsystems::worldedit {
    class gizmo_color_scheme_manager;
@@ -24,6 +27,10 @@ namespace dovahkit::subsystems::worldedit {
 
          std::vector<gizmo_color_scheme> _user_schemes;
          color_scheme_id _current_scheme;
+
+         std::optional<color_scheme_id> _parse_current_id(QXmlStreamReader&);
+         void _parse_scheme(QXmlStreamReader&);
+         void _parse_file(QXmlStreamReader&);
 
       public:
          std::vector<gizmo_color_scheme> all_hardcoded_color_schemes() const;

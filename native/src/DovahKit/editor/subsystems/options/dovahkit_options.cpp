@@ -8,10 +8,11 @@
 #include <QFile>
 #include <QSaveFile>
 #include <QString>
+#include <QTimer>
 #include "editor/ini/main.h"
 
 namespace dovahkit::subsystems::options {
-   option_collection::option_collection() {
+   void option_collection::done_constructing() {
       core::get_or_create()._register_collection({}, *this);
    }
 
@@ -84,5 +85,11 @@ namespace dovahkit::subsystems::options {
 
    void core::_register_collection(cobb::passkey<core, option_collection>, option_collection& c) {
       this->_collections.push_back(&c);
+
+      // We'll have already done our initial load, so we need to manually 
+      // tell the newly-discovered collection to load. We need a single-shot 
+      // timer because `c` registers itself during a superclass constructor, 
+      // so we can't call vfuncs on it until it actually is done constructing.
+      c.reload();
    }
 }

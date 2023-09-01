@@ -15,7 +15,8 @@ namespace dovahkit::subsystems::options {
 
    class option_collection {
       protected:
-         option_collection();
+         // DO NOT forget to call this at the end of your subclass constructor.
+         void done_constructing();
 
       public:
          virtual void reload() = 0;

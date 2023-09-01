@@ -81,7 +81,7 @@
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtModules>core;gui;help;widgets;winextras;</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtDeploy>true</QtDeploy>
   </PropertyGroup>
