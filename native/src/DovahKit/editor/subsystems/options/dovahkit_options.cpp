@@ -11,6 +11,10 @@
 #include "editor/ini/main.h"
 
 namespace dovahkit::subsystems::options {
+   option_collection::option_collection() {
+      core::get_or_create()._register_collection({}, *this);
+   }
+
    core::core() {
       //
       // NOTE: If at any point this constructor accesses DovahKitCore, then DovahKitCore's own 
@@ -42,14 +46,14 @@ namespace dovahkit::subsystems::options {
    }
 
    void core::reload() {
-      auto path = get_userdata_path() + "main.ini";
-
-      QFile main_ini(get_userdata_path() + "main.ini");
-      main_ini.open(QIODevice::ReadOnly);
-      if (main_ini.isReadable()) {
-         auto stream = std::ifstream(_fdopen(main_ini.handle(), "r"));
+      auto path = (get_userdata_path() + "main.ini").toStdWString();
+      std::ifstream stream(path, std::ios::in);
+      if (stream.good()) {
          ::dovahkit::ini::main::file_data.load(stream);
       }
+
+      for (auto* c : this->_collections)
+         c->reload();
    }
 
    void core::save() {
@@ -59,10 +63,9 @@ namespace dovahkit::subsystems::options {
       std::string dst;
 
       {
-         QFile existing(get_userdata_path() + "main.ini");
-         existing.open(QIODevice::ReadOnly);
-         if (existing.isReadable()) {
-            auto src_stream = std::ifstream(_fdopen(existing.handle(), "r"));
+         auto path = (get_userdata_path() + "main.ini").toStdWString();
+         std::ifstream src_stream(path, std::ios::in);
+         if (src_stream.good()) {
             ::dovahkit::ini::main::file_data.save(dst, src_stream);
          } else {
             ::dovahkit::ini::main::file_data.save(dst);
@@ -74,5 +77,12 @@ namespace dovahkit::subsystems::options {
       dst_file.open(QIODevice::WriteOnly);
       dst_file.write(dst.data(), dst.size());
       dst_file.commit();
+
+      for (auto* c : this->_collections)
+         c->save();
+   }
+
+   void core::_register_collection(cobb::passkey<core, option_collection>, option_collection& c) {
+      this->_collections.push_back(&c);
    }
 }

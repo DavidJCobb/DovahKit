@@ -3,7 +3,52 @@
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
 
+#include "editor/subsystems/worldedit/gizmo_colors/edit_gizmo_color_scheme_manager.h"
+
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
+
+#include <QIcon>
+#include <QImage>
+#include <QPainter>
+namespace {
+   QIcon _gizmo_colors_to_icon(const dovahkit::subsystems::worldedit::gizmo_color_scheme& scheme) {
+      QImage image(16, 16, QImage::Format::Format_ARGB32);
+
+      QPainter painter(&image);
+      painter.setPen(Qt::PenStyle::NoPen);
+
+      QPointF points[4];
+
+      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_x.r, scheme.axis_x.g, scheme.axis_x.b)));
+      points[0] = { 0,  0 };
+      points[1] = { 8,  0 };
+      points[2] = { 8,  8 };
+      points[3] = { 0, 16 };
+      painter.drawPolygon(points, 4);
+
+      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_y.r, scheme.axis_y.g, scheme.axis_y.b)));
+      points[0] = { 16,  0 };
+      points[1] = {  8,  0 };
+      points[2] = {  8,  8 };
+      points[3] = { 16, 16 };
+      painter.drawPolygon(points, 4);
+
+      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_z.r, scheme.axis_z.g, scheme.axis_z.b)));
+      points[0] = {  0, 16 };
+      points[1] = {  8,  8 };
+      points[2] = { 16, 16 };
+      painter.drawPolygon(points, 3);
+
+      painter.setPen(QColor::fromRgb(0, 0, 0));
+      painter.setBrush(QBrush(QColor::fromRgb(scheme.highlight.r, scheme.highlight.g, scheme.highlight.b)));
+      painter.drawEllipse(QPoint{ 8, 8 }, 3, 3);
+
+      painter.setBrush(Qt::BrushStyle::NoBrush);
+      painter.drawRect(0, 0, 15, 15);
+
+      return QIcon(QPixmap::fromImage(image));
+   }
+}
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -65,6 +110,47 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
             casted->setMaximum(constraints.max);
       }
    }
+
+   #pragma region Edit gizmo color scheme
+   {
+      {
+         auto& manager = dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get();
+
+         auto* widget = this->ui.editGizmoColorList;
+         widget->clear();
+
+         auto list_user = manager.all_user_color_schemes();
+         auto list_hard = manager.all_hardcoded_color_schemes();
+
+         for (const auto& item : list_user) {
+            auto icon = _gizmo_colors_to_icon(item);
+            widget->addItem(icon, QString::fromUtf8(item.name.c_str(), item.name.size()), false);
+         }
+         for (const auto& item : list_hard) {
+            auto icon = _gizmo_colors_to_icon(item);
+            widget->addItem(icon, QString::fromUtf8(item.name.c_str(), item.name.size()), true);
+         }
+
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+            auto is_hardcoded = widget->currentData().toBool();
+            this->ui.editGizmoColorDelete->setDisabled(is_hardcoded);
+            this->ui.editGizmoColorEdit->setDisabled(is_hardcoded);
+         });
+      }
+
+      QObject::connect(this->ui.editGizmoColorNew, &QPushButton::clicked, this, [this]() {
+         // TODO: Create a new color scheme containing the values of the currently 
+         //       selected scheme, and then open the edit dialog on it.
+      });
+      QObject::connect(this->ui.editGizmoColorEdit, &QPushButton::clicked, this, [this]() {
+         // TODO: Edit the currently selected color scheme, if it's not hardcoded.
+      });
+      QObject::connect(this->ui.editGizmoColorDelete, &QPushButton::clicked, this, [this]() {
+         // TODO: Delete the currently selected color scheme, if it's not hardcoded.
+         //       (Don't delete it immediately; rather, mark it for deletion if we save.)
+      });
+   }
+   #pragma endregion
 
    // After all widgets are mapped to their INI settings, pull the current values;
    this->revertChanges();
@@ -152,6 +238,27 @@ void OptionsWindow::revertChanges() {
       auto& setting = *item.setting;
       item.widget_true->setChecked(setting.get_current_value<bool>());
    }
+
+   {
+      auto* widget = this->ui.editGizmoColorList;
+      auto  id     = dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get().get_current_color_scheme_id();
+
+      bool found = false;
+      for (size_t i = 0; i < widget->count(); ++i) {
+         auto hc = widget->itemData(i).toBool();
+         if (hc != id.is_hardcoded)
+            continue;
+         if (widget->itemText(i).toUtf8().toStdString() != id.name)
+            continue;
+         found = true;
+         widget->setCurrentIndex(i);
+         break;
+      }
+      if (!found) {
+         // TODO: reload scheme list
+         // TODO: try selecting current scheme again; if absent, select "standard"
+      }
+   }
 }
 
 void OptionsWindow::save() {
@@ -178,6 +285,11 @@ void OptionsWindow::save() {
 
       setting->set_current_value<bool>(item.widget_true->isChecked());
    }
+
+   dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get().set_current_color_scheme_id({
+      .name         = this->ui.editGizmoColorList->currentText().toUtf8().toStdString(),
+      .is_hardcoded = this->ui.editGizmoColorList->currentData().toBool()
+   });
 
    dovahkit::subsystems::options::core::get().save();
 }

@@ -1,12 +1,17 @@
 <RCC>
-    <qresource prefix="/widgets">
-        <file>treeview/branch_between.gif</file>
-        <file>treeview/branch_terminal.gif</file>
-        <file>treeview/branch_v.gif</file>
-    </qresource>
-    <qresource prefix="/icons">
-        <file>refresh.png</file>
-        <file>mouse-64.png</file>
-        <file>star.png</file>
-    </qresource>
+  <qresource prefix="/widgets">
+    <file>treeview/branch_between.gif</file>
+    <file>treeview/branch_terminal.gif</file>
+    <file>treeview/branch_v.gif</file>
+  </qresource>
+  <qresource prefix="/icons">
+    <file>edit-16.png</file>
+    <file>delete-16.png</file>
+    <file>delete-64.png</file>
+    <file>add-new-list-entry-16.png</file>
+    <file>add-new-list-entry-64.png</file>
+    <file>refresh.png</file>
+    <file>mouse-64.png</file>
+    <file>star.png</file>
+  </qresource>
 </RCC>

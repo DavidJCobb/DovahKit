@@ -128,10 +128,10 @@ DovahKitCore::DovahKitCore() {
    // We want to make sure a few systems exist, but we need to construct them AFTER DovahKitCore to avoid 
    // cyclical dependencies / infinite recursion:
    //
-   QTimer::singleShot(0, []() { DovahKitAssetManager::get(); });
-
-   // As of this writing, the "options" subsystem has no dependencies on DovahKitCore.
-   dovahkit::subsystems::options::core::get_or_create();
+   QTimer::singleShot(0, []() {
+      DovahKitAssetManager::get();
+      dovahkit::subsystems::options::core::get_or_create();
+   });
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {

@@ -134,6 +134,8 @@
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
@@ -865,6 +867,9 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\reference_frame.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\selection_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h" />
+    <QtMoc Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.h" />
+    <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\gizmo_color_scheme.h" />
+    <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />

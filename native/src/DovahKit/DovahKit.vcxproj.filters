@@ -2136,6 +2136,12 @@
     <ClCompile Include="editor\ini\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5309,6 +5315,12 @@
     <ClInclude Include="editor\subsystems\options\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\gizmo_color_scheme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5809,6 +5821,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

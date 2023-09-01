@@ -1,7 +1,9 @@
 #pragma once
+#include <vector>
 #include <QObject>
 #include <QString>
 #include "helpers/ini/types.h"
+#include "helpers/passkey.h"
 #include "helpers/singleton_ex.h"
 
 namespace cobb::ini {
@@ -10,6 +12,15 @@ namespace cobb::ini {
 
 namespace dovahkit::subsystems::options {
    class core;
+
+   class option_collection {
+      protected:
+         option_collection();
+
+      public:
+         virtual void reload() = 0;
+         virtual void save() = 0;
+   };
 
    //
    // Subsystem for accessing game assets.
@@ -21,6 +32,8 @@ namespace dovahkit::subsystems::options {
          ~core();
 
          static void _main_ini_change_callback(cobb::ini::setting&, cobb::ini::value_variant prior, cobb::ini::value_variant after);
+
+         std::vector<option_collection*> _collections;
 
       public:
          using singleton_ex::get;
@@ -35,5 +48,8 @@ namespace dovahkit::subsystems::options {
       public slots:
          void reload();
          void save();
+
+      public:
+         void _register_collection(cobb::passkey<core, option_collection>, option_collection&);
    };
 };

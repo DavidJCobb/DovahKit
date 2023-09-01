@@ -16,6 +16,7 @@
 #include "./enums/camera_speed_flags.h"
 #include "./enums/editor_mode.h"
 #include "./enums/reference_frame.h"
+#include "./gizmo_colors/gizmo_color_scheme.h"
 #include "./grid_definitions.h"
 #include "./raycast_result.h"
 
@@ -135,6 +136,7 @@ namespace dovahkit::subsystems::worldedit {
          void _on_renderer_loss_imminent(vulkanDK::surface_renderer&);
          void _on_renderer_lost();
          void _update_default_land_textures();
+         void _update_gizmo_colors(const gizmo_color_scheme&);
 
          void _set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x = 0, int32_t grid_y = 0);
 

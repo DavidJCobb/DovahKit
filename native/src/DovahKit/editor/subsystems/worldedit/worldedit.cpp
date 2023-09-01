@@ -37,6 +37,7 @@ namespace {
    }
 }
 #include "editor/subsystems/game_inis.h"
+#include "./gizmo_colors/edit_gizmo_color_scheme_manager.h"
 
 #include "helpers/vector.h"
 namespace {
@@ -153,6 +154,13 @@ namespace dovahkit::subsystems::worldedit {
          auto& wi = worldinput2::core::get();
          wi.setBindingsFor(worldinput2::builtin_control_schemes::debug_wasd());
          wi.setBindingsFor(worldinput2::builtin_control_schemes::reach());
+      }
+
+      {
+         auto& mgr = gizmo_color_scheme_manager::get_or_create();
+         QObject::connect(&mgr, &gizmo_color_scheme_manager::colorSchemeChanged, this, [this](const gizmo_color_scheme& scheme) {
+            this->_update_gizmo_colors(scheme);
+         });
       }
    }
 
@@ -544,6 +552,9 @@ namespace dovahkit::subsystems::worldedit {
          auto& hooks = sr->get_hooks();
          hooks.nif_batches.on_background_use_complete = &_on_renderer_nif_batch_loaded;
       }
+      this->_update_gizmo_colors(
+         gizmo_color_scheme_manager::get_or_create().get_current_color_scheme()
+      );
    }
    void core::_on_renderer_loss_imminent(vulkanDK::surface_renderer& sr) {
       auto& hooks = sr.get_hooks();
@@ -605,6 +616,34 @@ namespace dovahkit::subsystems::worldedit {
       }
       //
       sr->set_default_land_textures(diffuse_path, normals_path);
+   }
+   void core::_update_gizmo_colors(const gizmo_color_scheme& scheme) {
+      if (!this->target_view)
+         return;
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      sr->scene.gizmo_state.color_x = {
+         (float)scheme.axis_x.r / 255.0,
+         (float)scheme.axis_x.g / 255.0,
+         (float)scheme.axis_x.b / 255.0,
+      };
+      sr->scene.gizmo_state.color_y = {
+         (float)scheme.axis_y.r / 255.0,
+         (float)scheme.axis_y.g / 255.0,
+         (float)scheme.axis_y.b / 255.0,
+      };
+      sr->scene.gizmo_state.color_z = {
+         (float)scheme.axis_z.r / 255.0,
+         (float)scheme.axis_z.g / 255.0,
+         (float)scheme.axis_z.b / 255.0,
+      };
+      sr->scene.gizmo_state.color_highlight = {
+         (float)scheme.highlight.r / 255.0,
+         (float)scheme.highlight.g / 255.0,
+         (float)scheme.highlight.b / 255.0,
+         1.0, // TODO: we actually blend the highlight color within the renderer. should we let the user customize that?
+      };
    }
    
    void core::_set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x, int32_t grid_y) {
