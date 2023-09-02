@@ -327,7 +327,7 @@ void OptionsWindow::save() {
 
    auto* model = (EditGizmoColorSchemeModel*) this->ui.editGizmoColorList->model();
    if (model)
-      model->force_replace_options();
+      model->force_replace_options(model->index(this->ui.editGizmoColorList->currentIndex(), 0, {}));
 
    dovahkit::subsystems::options::core::get().save();
 }

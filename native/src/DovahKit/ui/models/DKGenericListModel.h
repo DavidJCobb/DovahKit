@@ -66,7 +66,7 @@ class DKGenericListModel : public QAbstractItemModel {
    // Subclasses can expose these if they wish:
    protected:
       void clear();
-      void deleteItems(QModelIndexList);
+      bool deleteItems(int at, int count);
       void moveItem(const QModelIndex&, int down);
       void moveItems(const QModelIndex& start, const QModelIndex& end, int down);
       void moveItems(const QItemSelection&, int down);

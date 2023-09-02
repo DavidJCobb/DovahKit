@@ -4,6 +4,10 @@
 #include <QPixmap>
 #include "editor/subsystems/worldedit/gizmo_colors/edit_gizmo_color_scheme_manager.h"
 
+void EditGizmoColorSchemeModelNode::update_cached() {
+   this->name = QString::fromUtf8(this->data.name.c_str(), this->data.name.size());
+   this->update_icon();
+}
 void EditGizmoColorSchemeModelNode::update_icon() {
    QImage image(16, 16, QImage::Format::Format_ARGB32);
 
@@ -118,7 +122,8 @@ std::optional<EditGizmoColorSchemeModel::data_type> EditGizmoColorSchemeModel::d
 void EditGizmoColorSchemeModel::replaceDataFor(const QModelIndex& qmi, const data_type& data) {
    if (auto* node = this->node(qmi)) {
       node->data = data;
-      this->emitNodeChanged(*node);
+      node->update_cached();
+      this->emitNodeChanged(qmi);
    }
 }
 
@@ -126,6 +131,7 @@ QModelIndex EditGizmoColorSchemeModel::insert(const data_type& data) {
    this->beginInsertRows({}, this->_nodes.size(), this->_nodes.size());
 
    auto name = QString::fromUtf8(data.name.c_str(), data.name.size());
+   bool name_adjusted = false;
    {
       auto   candidate = name;
       size_t alternate = 2;
@@ -152,12 +158,16 @@ QModelIndex EditGizmoColorSchemeModel::insert(const data_type& data) {
          if (!found)
             break;
          name = candidate + " (" + QString::number(alternate++) + ")";
+         name_adjusted = true;
       }
    }
 
    auto* node = new node_type;
    this->_nodes.push_back(node);
    node->data = data;
+   if (name_adjusted) {
+      node->data.name = name.toUtf8().toStdString();
+   }
    node->name = name;
    node->is_hardcoded = false;
    node->update_icon();
@@ -165,4 +175,10 @@ QModelIndex EditGizmoColorSchemeModel::insert(const data_type& data) {
    this->endInsertRows();
 
    return index(node);
+}
+
+bool EditGizmoColorSchemeModel::removeRows(int row, int count, const QModelIndex& parent) {
+   if (parent.isValid())
+      return false;
+   return this->deleteItems(row, count);
 }

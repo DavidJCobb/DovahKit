@@ -7,6 +7,10 @@ namespace {
 }
 
 EditGizmoColorSchemeEditDialog::EditGizmoColorSchemeEditDialog(QWidget* parent) : QDialog(parent) {
+   this->ui.setupUi(this);
+
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+   QObject::connect(this->ui.buttonSave, &QPushButton::clicked, this, &QDialog::accept);
 }
 void EditGizmoColorSchemeEditDialog::initializeFrom(const gizmo_color_scheme& src) {
    this->ui.name->setText(QString::fromUtf8(src.name.c_str(), src.name.size()));

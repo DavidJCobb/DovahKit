@@ -201,25 +201,16 @@ void CLASS_NAME::clear() {
 }
 
 CLASS_TEMPLATE_PARAMS
-void CLASS_NAME::deleteItems(QModelIndexList qmi_list) {
-   if (qmi_list.isEmpty())
-      return;
-   std::vector<node_type*> targets;
-   for (const auto& qmi : qmi_list) {
-      if (!qmi.isValid() || !qmi_is_mine(qmi))
-         continue;
-      targets.push_back(node_for_qmi(qmi));
+bool CLASS_NAME::deleteItems(int at, int count) {
+   if (count < 1 || at < 0 || at + count > this->rowCount())
+      return false;
+   this->beginRemoveRows({}, at, at + count - 1);
+   for (size_t i = 0; i < count; ++i) {
+      delete this->_nodes[at + i];
    }
-   for (auto* target : targets) {
-      auto* parent = target->parent_node();
-      assert(parent != nullptr);
-      auto  index  = parent->index_of_child(*target);
-
-      this->beginRemoveRows(this->index(parent), index, index);
-      ((self_type*)this)->on_before_delete_node(*target);
-      delete target;
-      this->endRemoveRows();
-   }
+   this->_nodes.erase(this->_nodes.begin() + at, this->_nodes.begin() + at + count);
+   this->endRemoveRows();
+   return true;
 }
 
 CLASS_TEMPLATE_PARAMS

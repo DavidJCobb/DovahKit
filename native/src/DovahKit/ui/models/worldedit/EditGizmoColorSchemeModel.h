@@ -14,6 +14,7 @@ struct EditGizmoColorSchemeModelNode {
 
    QIcon icon;
 
+   void update_cached();
    void update_icon();
 };
 
@@ -42,4 +43,6 @@ class EditGizmoColorSchemeModel : public DKGenericListModel<EditGizmoColorScheme
       void replaceDataFor(const QModelIndex&, const data_type&);
 
       QModelIndex insert(const data_type&);
+
+      virtual bool removeRows(int row, int count, const QModelIndex& parent = {}) override;
 };

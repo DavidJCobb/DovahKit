@@ -221,11 +221,13 @@ namespace dovahkit::subsystems::worldedit {
                }
                parser.skipCurrentElement();
             }
+         } else {
+            parser.skipCurrentElement(); // Skipping to the end of a container manually, after a readNextStartElement loop, breaks QXmlStreamReader; thus this being an else-branch.
          }
-         parser.skipCurrentElement();
       }
       if (parser.hasError())
          return;
+      //parser.skipCurrentElement(); // Skipping to the end of a container manually, after a readNextStartElement loop, breaks QXmlStreamReader.
 
       this->set_current_color_scheme_id(current_id);
    }
@@ -237,13 +239,28 @@ namespace dovahkit::subsystems::worldedit {
       if (!file.isOpen()) {
          return;
       }
-      QString xml = file.readAll();
-
       QXmlStreamReader parser;
+
+      /*//
+      QString xml = file.readAll();
+xml = xml.trimmed();
+
       parser.addData(xml);
+      //*/
+      parser.setDevice(&file);
+
       this->_parse_file(parser);
       if (parser.hasError()) {
          #if _DEBUG
+            // These vars are just for a debugger.
+            auto e_type = parser.error();
+            auto e_text = parser.errorString();
+            auto e_line = parser.lineNumber();
+            auto e_col  = parser.columnNumber();
+            auto e_pos  = parser.characterOffset();
+            auto e_tag  = parser.name();
+            auto e_tok  = parser.tokenType();
+            auto e_toks = parser.tokenString();
             __debugbreak();
          #endif
          return;
@@ -278,7 +295,8 @@ namespace dovahkit::subsystems::worldedit {
    void gizmo_color_scheme_manager::save() {
       QString output;
       QXmlStreamWriter writer(&output);
-
+      writer.setAutoFormatting(true);
+      writer.writeStartDocument();
       writer.writeStartElement("gizmo-scheme-options");
       if (!this->_current_scheme.name.empty()) {
          writer.writeEmptyElement("current");
@@ -303,6 +321,7 @@ namespace dovahkit::subsystems::worldedit {
                for (size_t c = 0; c < 3; ++c) {
                   writer.writeAttribute(rgb_names[c], QString::number(item.axes[i].components[c]));
                }
+
                writer.writeEndElement();
             }
             {
@@ -312,6 +331,8 @@ namespace dovahkit::subsystems::worldedit {
                for (size_t c = 0; c < 3; ++c) {
                   writer.writeAttribute(rgb_names[c], QString::number(item.highlight.components[c]));
                }
+
+               writer.writeEndElement();
             }
 
             writer.writeEndElement();
@@ -319,6 +340,7 @@ namespace dovahkit::subsystems::worldedit {
          writer.writeEndElement();
       }
       writer.writeEndElement();
+      writer.writeEndDocument();
 
       auto path = dovahkit::subsystems::options::core::get().get_userdata_path() + "edit-gizmo-color-schemes.xml";
       auto file = QFile(path);

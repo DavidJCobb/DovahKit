@@ -609,34 +609,12 @@
 //
 //  - World viewing
 //
-//     - Loading NIFs and being able to render them
-//
-//        - The goal isn't to match the game exactly or even all that well. Really, we 
-//          can just throw out all data besides verts, textures, and really basic shader 
-//          properties. All we want is to be able to render the world *well enough* for 
-//          basic viewing and editing in the future.
-//
 //     - Loading and unloading cells on-demand (along with their contained references, 
 //       and the assets for those references)
 //
 //        = WE MUST IMPLEMENT SUPPORT FOR PARTIAL RECORDS FIRST.
 //
-//        - Requires a singleton to manage form and asset (un)loading. We should retain 
-//          recently-unused forms and assets in memory for a brief while, to handle the 
-//          case of the camera repeatedly panning across a cell boundary (e.g. due to 
-//          rotation) and avoid having to repeatedly reload the same content.
-//
-//           - Singleton will also need to construct landscape meshes and water planes.
-//
-//           - Singleton needs to react to forms being created, modified, or destroyed.
-//
-//              - Creating/modifying/destroying references
-//
-//              - Modifying base forms used by references
-//
 //     - Rendering abstract elements
-//
-//        - Cell borders
 //
 //        - Navmeshes
 //
@@ -660,11 +638,6 @@
 //             Window" buttons akin to those in the CK.
 //
 //              - Edit RefPickerWindow to use this API.
-//
-//     - Camera controls
-//
-//        - Keyboard-and-mouse controls should mimic the Creation Kit, while gamepad 
-//          controls should mimic Halo's Forge (classic controls, not Halo 5).
 //
 //  - World editing
 //
@@ -775,8 +748,6 @@
 //       and displace one half of the line segment either up or down slightly.
 //
 // HORIZON TASKS:
-//
-//  - Seasonal/event themes, like we did for CobbPos
 //
 //  - An option to do comprehensive error checking on-demand. We'd do this by just forcing 
 //    all forms to load briefly.
