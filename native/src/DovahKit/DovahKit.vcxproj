@@ -700,6 +700,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
@@ -712,6 +713,7 @@
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp" />
     <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp" />
+    <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
@@ -1367,12 +1369,15 @@
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputInputSequenceModel.h" />
+    <ClInclude Include="ui\models\DKGenericListModel.h" />
     <ClInclude Include="ui\models\DKGenericTreeModel.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputControlSchemeModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
     <QtMoc Include="ui\options_window\worldinput_modifier_editor.h" />
     <QtMoc Include="ui\options_window\worldinput_condition_editor.h" />
+    <QtMoc Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.h" />
+    <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
@@ -2074,6 +2079,7 @@
     <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui" />
     <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui" />
+    <QtUic Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_condition_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_modifier_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_scheme_editor.ui" />
@@ -2330,6 +2336,7 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />

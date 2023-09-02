@@ -16,6 +16,7 @@ namespace cobb::color {
          };
       };
 
+      constexpr bool operator==(const rgb_bytes&) const;
       constexpr operator rgb_floats() const;
    };
 
@@ -35,6 +36,7 @@ namespace cobb::color {
       rgb_floats sRGB_to_linear() const;
       rgb_floats linear_to_sRGB() const;
 
+      constexpr bool operator==(const rgb_floats&) const;
       constexpr operator rgb_bytes() const;
    };
 }

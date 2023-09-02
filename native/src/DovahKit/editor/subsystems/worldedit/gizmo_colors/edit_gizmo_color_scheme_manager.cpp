@@ -56,6 +56,16 @@ namespace dovahkit::subsystems::worldedit {
       std::swap(scheme.name, name_to_use);
       return name_to_use;
    }
+   void gizmo_color_scheme_manager::replace_all_user_schemes(const std::vector<gizmo_color_scheme>& list) {
+      auto prior = this->get_current_color_scheme();
+
+      this->_user_schemes = list;
+
+      auto after = this->get_current_color_scheme();
+      if (prior != after) {
+         emit this->colorSchemeChanged(after);
+      }
+   }
 
    std::optional<gizmo_color_scheme_manager::color_scheme_id> gizmo_color_scheme_manager::_parse_current_id(QXmlStreamReader& parser) {
       QString name;
@@ -129,7 +139,7 @@ namespace dovahkit::subsystems::worldedit {
             if (value == "x")
                which_axis = 0;
             else if (value == "y")
-               which_axis == 1;
+               which_axis = 1;
             else if (value == "z")
                which_axis = 2;
             else {

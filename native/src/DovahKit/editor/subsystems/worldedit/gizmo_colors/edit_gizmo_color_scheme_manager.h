@@ -45,6 +45,8 @@ namespace dovahkit::subsystems::worldedit {
          // Returns the name used. If the name you specified is taken, a number is appended.
          std::string add_new_color_scheme(const char* name, const gizmo_color_scheme& based_on);
 
+         void replace_all_user_schemes(const std::vector<gizmo_color_scheme>&);
+
          virtual void reload() override;
          virtual void save() override;
 

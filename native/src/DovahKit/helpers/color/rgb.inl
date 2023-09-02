@@ -2,6 +2,9 @@
 #include "./rgb.h"
 
 namespace cobb::color {
+   constexpr bool rgb_bytes::operator==(const rgb_bytes& o) const {
+      return this->components == o.components;
+   }
    constexpr rgb_bytes::operator rgb_floats() const {
       rgb_floats out = { (float)r, (float)g, (float)b };
       out.r /= 255.0;
@@ -32,6 +35,9 @@ namespace cobb::color {
       return out;
    }
 
+   constexpr bool rgb_floats::operator==(const rgb_floats& o) const {
+      return this->components == o.components;
+   }
    constexpr rgb_floats::operator rgb_bytes() const {
       auto src = this->clamped();
       src.r *= 255.0;

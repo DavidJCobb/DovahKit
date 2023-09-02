@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <cstdint>
 #include <string>
 #include "helpers/color/rgb.h"
 
@@ -18,5 +17,13 @@ namespace dovahkit::subsystems::worldedit {
          };
       };
       rgb highlight;
+
+      constexpr bool operator==(const gizmo_color_scheme& o) const {
+         if (this->highlight != o.highlight)
+            return false;
+         if (this->axes != o.axes)
+            return false;
+         return true;
+      }
    };
 }

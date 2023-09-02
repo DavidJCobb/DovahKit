@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EditGizmoColorSchemeEditDialog</class>
+ <widget class="QDialog" name="EditGizmoColorSchemeEditDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>310</width>
+    <height>185</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Edit gizmo color scheme</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="2,1,2">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Axis color, X:</string>
+     </property>
+     <property name="buddy">
+      <cstring>colorAxisX</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonSave">
+       <property name="text">
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Name:</string>
+     </property>
+     <property name="buddy">
+      <cstring>name</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="DKColorPickerButton" name="colorAxisX"/>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QLineEdit" name="name"/>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Axis color, Y:</string>
+     </property>
+     <property name="buddy">
+      <cstring>colorAxisY</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Axis color, Z:</string>
+     </property>
+     <property name="buddy">
+      <cstring>colorAxisZ</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Highlight color:</string>
+     </property>
+     <property name="buddy">
+      <cstring>colorHighlight</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="DKColorPickerButton" name="colorAxisY"/>
+   </item>
+   <item row="3" column="2">
+    <widget class="DKColorPickerButton" name="colorAxisZ"/>
+   </item>
+   <item row="4" column="2">
+    <widget class="DKColorPickerButton" name="colorHighlight"/>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

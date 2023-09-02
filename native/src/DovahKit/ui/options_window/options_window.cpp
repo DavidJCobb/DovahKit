@@ -4,6 +4,9 @@
 #include "editor/ini/main.h"
 
 #include "editor/subsystems/worldedit/gizmo_colors/edit_gizmo_color_scheme_manager.h"
+#include "./edit_gizmo_colors/edit_gizmo_color_editor.h"
+
+#include "ui/models/worldedit/EditGizmoColorSchemeModel.h"
 
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
 
@@ -119,35 +122,64 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          auto* widget = this->ui.editGizmoColorList;
          widget->clear();
 
-         auto list_user = manager.all_user_color_schemes();
-         auto list_hard = manager.all_hardcoded_color_schemes();
-
-         for (const auto& item : list_user) {
-            auto icon = _gizmo_colors_to_icon(item);
-            widget->addItem(icon, QString::fromUtf8(item.name.c_str(), item.name.size()), false);
-         }
-         for (const auto& item : list_hard) {
-            auto icon = _gizmo_colors_to_icon(item);
-            widget->addItem(icon, QString::fromUtf8(item.name.c_str(), item.name.size()), true);
-         }
+         auto* model = new EditGizmoColorSchemeModel(widget);
+         widget->setModel(model);
+         model->reset_from_options();
 
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
-            auto is_hardcoded = widget->currentData().toBool();
+            auto is_hardcoded = widget->currentData(EditGizmoColorSchemeModel::IsHardcodedRole).toBool();
             this->ui.editGizmoColorDelete->setDisabled(is_hardcoded);
             this->ui.editGizmoColorEdit->setDisabled(is_hardcoded);
          });
       }
 
       QObject::connect(this->ui.editGizmoColorNew, &QPushButton::clicked, this, [this]() {
-         // TODO: Create a new color scheme containing the values of the currently 
-         //       selected scheme, and then open the edit dialog on it.
+         auto* picker = this->ui.editGizmoColorList;
+         auto* model  = (EditGizmoColorSchemeModel*)picker->model();
+
+         auto qmi  = model->index(picker->currentIndex(), 0, {});
+         auto data = model->dataFor(qmi);
+         if (!data.has_value()) // should never happen
+            return;
+
+         auto* dialog = new EditGizmoColorSchemeEditDialog(this);
+         dialog->initializeFrom(data.value());
+         dialog->exec();
+         if (dialog->result() == QDialog::DialogCode::Accepted) {
+            EditGizmoColorSchemeModel::data_type created;
+            dialog->overwrite(created);
+
+            auto qmi = model->insert(created);
+            if (qmi.isValid())
+               picker->setCurrentIndex(qmi.row()); // select new scheme
+         }
       });
       QObject::connect(this->ui.editGizmoColorEdit, &QPushButton::clicked, this, [this]() {
-         // TODO: Edit the currently selected color scheme, if it's not hardcoded.
+         auto* picker = this->ui.editGizmoColorList;
+         auto* model  = (EditGizmoColorSchemeModel*)picker->model();
+         if (picker->currentData(EditGizmoColorSchemeModel::IsHardcodedRole).toBool()) {
+            return;
+         }
+         auto qmi  = model->index(picker->currentIndex(), 0, {});
+         auto data = model->dataFor(qmi);
+         if (!data.has_value())
+            return;
+
+         auto* dialog = new EditGizmoColorSchemeEditDialog(this);
+         dialog->initializeFrom(data.value());
+         dialog->exec();
+         if (dialog->result() == QDialog::DialogCode::Accepted) {
+            dialog->overwrite(data.value());
+            model->replaceDataFor(qmi, data.value());
+         }
       });
       QObject::connect(this->ui.editGizmoColorDelete, &QPushButton::clicked, this, [this]() {
-         // TODO: Delete the currently selected color scheme, if it's not hardcoded.
-         //       (Don't delete it immediately; rather, mark it for deletion if we save.)
+         auto* picker = this->ui.editGizmoColorList;
+         auto* model = (EditGizmoColorSchemeModel*)picker->model();
+         if (picker->currentData(EditGizmoColorSchemeModel::IsHardcodedRole).toBool()) {
+            return;
+         }
+         model->removeRow(picker->currentIndex());
       });
    }
    #pragma endregion
@@ -236,7 +268,14 @@ void OptionsWindow::revertChanges() {
    }
    for (auto& item : this->_mappings.radio_bool) {
       auto& setting = *item.setting;
-      item.widget_true->setChecked(setting.get_current_value<bool>());
+      auto  value   = setting.get_current_value<bool>();
+      item.widget_true->setChecked(value);
+      if (!value)
+         //
+         // Setting the "true" radio button to unchecked does not inherently 
+         // set the "false" radio button to checked. Gotta do that manually.
+         //
+         item.widget_false->setChecked(true);
    }
 
    {
@@ -286,10 +325,9 @@ void OptionsWindow::save() {
       setting->set_current_value<bool>(item.widget_true->isChecked());
    }
 
-   dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get().set_current_color_scheme_id({
-      .name         = this->ui.editGizmoColorList->currentText().toUtf8().toStdString(),
-      .is_hardcoded = this->ui.editGizmoColorList->currentData().toBool()
-   });
+   auto* model = (EditGizmoColorSchemeModel*) this->ui.editGizmoColorList->model();
+   if (model)
+      model->force_replace_options();
 
    dovahkit::subsystems::options::core::get().save();
 }

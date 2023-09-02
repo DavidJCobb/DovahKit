@@ -2148,6 +2148,12 @@
     <ClCompile Include="helpers\color\rgb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5333,6 +5339,9 @@
     <ClInclude Include="helpers\math\to_ratio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\models\DKGenericListModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5465,6 +5474,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldinput_condition_editor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -5838,6 +5850,12 @@
     <QtMoc Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6137,6 +6155,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\math\pow.md" />
+    <None Include="ui\models\DKGenericListModel.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
