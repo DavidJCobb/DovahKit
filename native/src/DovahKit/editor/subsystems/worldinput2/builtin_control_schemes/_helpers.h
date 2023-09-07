@@ -8,8 +8,6 @@
 
 namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
    inline input_sequence _single_button_sequence(const inputs::xinput_button key) {
-      using namespace worldinput2;
-
       input_sequence out;
 
       auto* g = out.root = new input_sequence::group;
@@ -19,8 +17,6 @@ namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
       return out;
    }
    inline input_sequence _single_button_sequence(const cobb::keyboard::key& key) {
-      using namespace worldinput2;
-
       input_sequence out;
 
       auto* g = out.root = new input_sequence::group;
@@ -30,8 +26,6 @@ namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
       return out;
    }
    inline input_sequence _single_button_sequence(Qt::MouseButton mb) {
-      using namespace worldinput2;
-
       input_sequence out;
 
       auto* g = out.root = new input_sequence::group;
@@ -43,7 +37,7 @@ namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
 
    template<typename Options>
    inline auto _tool_with_options(const Options& options) {
-      decltype(worldinput2::control_scheme_action::tool) out = {};
+      decltype(control_scheme_action::tool) out = {};
       out.id      = worldedit::tools::id_of<Options>;
       out.options = new worldedit::tools::options_union(options);
       return out;

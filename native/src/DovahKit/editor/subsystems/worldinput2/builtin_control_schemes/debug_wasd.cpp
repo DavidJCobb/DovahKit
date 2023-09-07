@@ -7,7 +7,7 @@ namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
    }
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
    namespace tools {
@@ -22,11 +22,11 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
-   using worldinput2::control_scheme;
-   using worldinput2::control_scheme_action;
-   using worldinput2::control_scheme_condition;
-   using worldinput2::control_scheme_modifier;
-   using control_scheme_node = worldinput2::control_scheme::node;
+   using worldinput::control_scheme;
+   using worldinput::control_scheme_action;
+   using worldinput::control_scheme_condition;
+   using worldinput::control_scheme_modifier;
+   using control_scheme_node = worldinput::control_scheme::node;
 }
 
 namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {

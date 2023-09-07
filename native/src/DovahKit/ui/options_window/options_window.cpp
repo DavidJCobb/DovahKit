@@ -15,7 +15,7 @@
 
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
 
-namespace worldinput2 {
+namespace worldinput {
    using namespace dovahkit::subsystems::worldinput2;
 }
 
@@ -93,7 +93,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          //
          auto* model = new DKWorldinputDeviceSchemesModel(widget);
          widget->setModel(model);
-         model->reload(worldinput2::input_device_type::keyboard_mouse);
+         model->reload(worldinput::input_device_type::keyboard_mouse);
 
          std::array<QPushButton*, 3> buttons = {
             this->ui.worldinputKBNew,
@@ -103,7 +103,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          for (auto* button : buttons) {
             button->setProperty("picker", QVariant::fromValue(widget));
          }
-         widget->setProperty("device-type", (int)worldinput2::input_device_type::keyboard_mouse);
+         widget->setProperty("device-type", (int)worldinput::input_device_type::keyboard_mouse);
       }
       {
          auto* widget = this->ui.worldinputGPList;
@@ -116,7 +116,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          //
          auto* model = new DKWorldinputDeviceSchemesModel(widget);
          widget->setModel(model);
-         model->reload(worldinput2::input_device_type::xinput);
+         model->reload(worldinput::input_device_type::xinput);
 
          std::array<QPushButton*, 3> buttons = {
             this->ui.worldinputGPNew,
@@ -126,7 +126,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          for (auto* button : buttons) {
             button->setProperty("picker", QVariant::fromValue(widget));
          }
-         widget->setProperty("device-type", (int)worldinput2::input_device_type::xinput);
+         widget->setProperty("device-type", (int)worldinput::input_device_type::xinput);
       }
 
       // For these handlers, `QObject::sender` is whatever QObject sent the signal we're currently reacting to, if any.
@@ -134,7 +134,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          auto* sender = (QWidget*)this->sender();
 
          auto* picker = sender->property("picker").value<QComboBox*>();
-         auto  device = (worldinput2::input_device_type)picker->property("device-type").toInt();
+         auto  device = (worldinput::input_device_type)picker->property("device-type").toInt();
          auto* model  = (DKWorldinputDeviceSchemesModel*)picker->model();
 
          auto qmi  = model->index(picker->currentIndex(), 0, {});
@@ -156,7 +156,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          auto* sender = (QWidget*)this->sender();
 
          auto* picker = sender->property("picker").value<QComboBox*>();
-         auto  device = (worldinput2::input_device_type)picker->property("device-type").toInt();
+         auto  device = (worldinput::input_device_type)picker->property("device-type").toInt();
          auto* model  = (DKWorldinputDeviceSchemesModel*)picker->model();
 
          bool hardcoded = picker->currentData(DKWorldinputDeviceSchemesModel::IsHardcodedRole).toBool();
@@ -376,9 +376,9 @@ void OptionsWindow::revertChanges() {
    }
 
    {
-      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      auto& mgr = worldinput::control_scheme_manager::get_or_create();
       {
-         auto& current = mgr.get_current_scheme(worldinput2::input_device_type::keyboard_mouse);
+         auto& current = mgr.get_current_scheme(worldinput::input_device_type::keyboard_mouse);
          auto* widget  = this->ui.worldinputKBList;
          auto* model   = (DKWorldinputDeviceSchemesModel*)widget->model();
 
@@ -387,7 +387,7 @@ void OptionsWindow::revertChanges() {
             widget->setCurrentIndex(i);
       }
       {
-         auto& current = mgr.get_current_scheme(worldinput2::input_device_type::xinput);
+         auto& current = mgr.get_current_scheme(worldinput::input_device_type::xinput);
          auto* widget  = this->ui.worldinputGPList;
          auto* model   = (DKWorldinputDeviceSchemesModel*)widget->model();
 
@@ -445,7 +445,7 @@ void OptionsWindow::save() {
    }
 
    {
-      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      auto& mgr = worldinput::control_scheme_manager::get_or_create();
       {
          auto* widget = this->ui.worldinputKBList;
          auto* model  = (DKWorldinputDeviceSchemesModel*)widget->model();

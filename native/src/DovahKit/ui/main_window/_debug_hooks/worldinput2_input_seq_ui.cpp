@@ -13,7 +13,7 @@ namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
    }
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
 }
@@ -21,15 +21,15 @@ namespace {
 namespace DovahKitDebug::features {
    /*static*/ void worldinput2_input_seq_ui::execute(QWidget* from) {
 
-      auto data = worldinput2::control_scheme_action{
+      auto data = worldinput::control_scheme_action{
          .name = "Temporary Test Node",
          //
-         .input_sequence     = worldinput2::algorithms::input_sequence_from_string("<A + S + D + [<J + K> + Z]>"),
-         .button_press_type = worldinput2::button_press_type::press,
+         .input_sequence    = worldinput::algorithms::input_sequence_from_string("<A + S + D + [<J + K> + Z]>"),
+         .button_press_type = worldinput::button_press_type::press,
       };
       //
-      data.input_sequence.range.control = worldinput2::range_input_control::mouse_move;
-      data.input_sequence.range.axes    = worldinput2::range_input_axes::y;
+      data.input_sequence.range.control = worldinput::range_input_control::mouse_move;
+      data.input_sequence.range.axes    = worldinput::range_input_axes::y;
       //
       data.input_sequence.raycast.associated_button = data.input_sequence.root->children[1]; // 'S'
       data.input_sequence.raycast.requirement.targets.object_references = true;
@@ -47,7 +47,7 @@ namespace DovahKitDebug::features {
          });
       }
 
-      auto* dialog = new WorldinputBindEditDialog(worldinput2::input_device_type::keyboard_mouse, from);
+      auto* dialog = new WorldinputBindEditDialog(worldinput::input_device_type::keyboard_mouse, from);
       dialog->initializeFrom(data);
       dialog->exec();
 

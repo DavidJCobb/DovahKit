@@ -8,7 +8,7 @@ namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
    }
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
 
@@ -24,27 +24,27 @@ namespace {
       model_node.cached.bound_tool_name.clear();
       model_node.cached.input_sequence.clear();
       //
-      auto cache_sequence = [&model_node](const worldinput2::input_sequence& seq) {
+      auto cache_sequence = [&model_node](const worldinput::input_sequence& seq) {
          std::string is;
-         worldinput2::algorithms::input_sequence_to_string(seq, is);
+         worldinput::algorithms::input_sequence_to_string(seq, is);
 
          model_node.cached.input_sequence = QString::fromStdString(is);
       };
       //
-      if (auto* casted = std::get_if<worldinput2::control_scheme_action>(&data)) {
+      if (auto* casted = std::get_if<worldinput::control_scheme_action>(&data)) {
          model_node.cached.name = casted->name;
 
          cache_sequence(casted->input_sequence);
          {
             QString prefix;
             switch (casted->button_press_type) {
-               case worldinput2::button_press_type::press:
+               case worldinput::button_press_type::press:
                   prefix = DKWorldinputControlSchemeModel::tr("Press ", "button press type prefix");
                   break;
-               case worldinput2::button_press_type::long_press:
+               case worldinput::button_press_type::long_press:
                   prefix = DKWorldinputControlSchemeModel::tr("Long Press ", "button press type prefix");
                   break;
-               case worldinput2::button_press_type::hold:
+               case worldinput::button_press_type::hold:
                   prefix = DKWorldinputControlSchemeModel::tr("Hold ", "button press type prefix");
                   break;
             }
@@ -56,11 +56,11 @@ namespace {
                model_node.cached.bound_tool_name = info->name;
             }
          }
-      } else if (auto* casted = std::get_if<worldinput2::control_scheme_modifier>(&data)) {
+      } else if (auto* casted = std::get_if<worldinput::control_scheme_modifier>(&data)) {
          model_node.cached.name = casted->name;
 
          cache_sequence(casted->input_sequence);
-      } else if (auto* casted = std::get_if<worldinput2::control_scheme_condition_node>(&data)) {
+      } else if (auto* casted = std::get_if<worldinput::control_scheme_condition_node>(&data)) {
          model_node.cached.name = casted->name;
       }
    }
@@ -77,12 +77,12 @@ QVariant DKWorldinputControlSchemeModel::data_of(const node_type& node, Qt::Item
       return {};
 
    if (role == Qt::ItemDataRole::DisplayRole || role == Qt::ItemDataRole::ToolTipRole) {
-      if (std::holds_alternative<worldinput2::control_scheme_action>(data) || std::holds_alternative<worldinput2::control_scheme_modifier>(data)) {
+      if (std::holds_alternative<worldinput::control_scheme_action>(data) || std::holds_alternative<worldinput::control_scheme_modifier>(data)) {
          switch (column) {
             case Columns::Name:
                return node.cached.name;
             case Columns::Behavior:
-               if (std::holds_alternative<worldinput2::control_scheme_modifier>(data)) {
+               if (std::holds_alternative<worldinput::control_scheme_modifier>(data)) {
                   return tr("Modifier Key", "node typename");
                }
                return node.cached.bound_tool_name;
@@ -90,8 +90,8 @@ QVariant DKWorldinputControlSchemeModel::data_of(const node_type& node, Qt::Item
                return node.cached.input_sequence;
          }
          return {};
-      } else if (std::holds_alternative<worldinput2::control_scheme_condition_node>(data)) {
-         auto& casted = std::get<worldinput2::control_scheme_condition_node>(data);
+      } else if (std::holds_alternative<worldinput::control_scheme_condition_node>(data)) {
+         auto& casted = std::get<worldinput::control_scheme_condition_node>(data);
 
          switch (column) {
             case Columns::Name:

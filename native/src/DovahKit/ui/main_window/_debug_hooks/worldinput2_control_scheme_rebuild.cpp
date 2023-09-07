@@ -13,7 +13,7 @@ namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
    }
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
    namespace tools {
@@ -28,8 +28,8 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
-   static worldinput2::input_sequence _seq_from_key(const cobb::keyboard::key& key) {
-      using namespace worldinput2;
+   static worldinput::input_sequence _seq_from_key(const cobb::keyboard::key& key) {
+      using namespace worldinput;
 
       input_sequence out;
 
@@ -39,8 +39,8 @@ namespace {
 
       return out;
    }
-   static worldinput2::input_sequence _seq_from_key(Qt::MouseButton mb) {
-      using namespace worldinput2;
+   static worldinput::input_sequence _seq_from_key(Qt::MouseButton mb) {
+      using namespace worldinput;
 
       input_sequence out;
 
@@ -66,15 +66,15 @@ namespace {
       return out;
    }
    
-   static worldinput2::control_scheme& make_scheme() {
-      using worldinput2::control_scheme;
-      using worldinput2::control_scheme_action;
-      using worldinput2::control_scheme_condition;
-      using worldinput2::control_scheme_condition_node;
-      using worldinput2::control_scheme_modifier;
-      using worldinput2::button_press_type;
-      using worldinput2::input_device_type;
-      using worldinput2::raycast_requirement;
+   static worldinput::control_scheme& make_scheme() {
+      using worldinput::control_scheme;
+      using worldinput::control_scheme_action;
+      using worldinput::control_scheme_condition;
+      using worldinput::control_scheme_condition_node;
+      using worldinput::control_scheme_modifier;
+      using worldinput::button_press_type;
+      using worldinput::input_device_type;
+      using worldinput::raycast_requirement;
 
       static auto out = control_scheme(input_device_type::keyboard_mouse);
       static bool initialized = false;
@@ -247,7 +247,7 @@ namespace {
             auto data = control_scheme_action{
                .name = "Toggle Selection",
                //
-               .input_sequence    = worldinput2::algorithms::input_sequence_from_string("[Ctrl + LMB]"),
+               .input_sequence    = worldinput::algorithms::input_sequence_from_string("[Ctrl + LMB]"),
                .button_press_type = button_press_type::press,
                //
                .tool = _tool_with_options(tools::attempt_on_screen_selection::options{
@@ -273,22 +273,22 @@ namespace {
 namespace DovahKitDebug::features {
    /*static*/ void worldinput2_control_scheme_rebuild::execute(QWidget* from) {
 
-      worldinput2::control_scheme scheme = make_scheme();
+      worldinput::control_scheme scheme = make_scheme();
       scheme.name = "Temporary Test Control Scheme";
 
-      auto flattened = worldinput2::algorithms::control_scheme_to_bind_list(scheme);
+      auto flattened = worldinput::algorithms::control_scheme_to_bind_list(scheme);
 
       #if _DEBUG
          __debugbreak();
       #endif
          
-      auto _compare = [](const char* name, const worldinput2::control_scheme& src) {
+      auto _compare = [](const char* name, const worldinput::control_scheme& src) {
          cobb::bitstreams::writer writer;
          src.write(writer);
 
          cobb::bitstreams::reader reader;
          reader.set_buffer(writer.data(), writer.get_bytespan());
-         const auto dst = worldinput2::control_scheme::read(reader);
+         const auto dst = worldinput::control_scheme::read(reader);
 
          bool equal = (src == dst);
 

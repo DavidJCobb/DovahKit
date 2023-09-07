@@ -11,7 +11,7 @@
 #include "helpers/bitstreams/writer.h"
 
 namespace {
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
 }
@@ -19,17 +19,17 @@ namespace {
 
 namespace DovahKitDebug::features {
    /*static*/ void worldinput_serialization::execute(QWidget* from) {
-      auto& core = dovahkit::subsystems::worldinput2::core::get();
+      auto& core = worldinput::core::get();
 
       qDebug("Running Worldinput control scheme serialization tests...");
 
-      auto _compare = [](const char* name, const worldinput2::control_scheme& src) {
+      auto _compare = [](const char* name, const worldinput::control_scheme& src) {
          cobb::bitstreams::writer writer;
          src.write(writer);
 
          cobb::bitstreams::reader reader;
          reader.set_buffer(writer.data(), writer.get_bytespan());
-         const auto dst = worldinput2::control_scheme::read(reader);
+         const auto dst = worldinput::control_scheme::read(reader);
 
          bool equal = (src == dst);
 
@@ -40,9 +40,9 @@ namespace DovahKitDebug::features {
             }
          #endif
       };
-      _compare("CK Standard", worldinput2::builtin_control_schemes::ck_standard());
-      _compare("Debug WASD",  worldinput2::builtin_control_schemes::debug_wasd());
-      _compare("Reach",       worldinput2::builtin_control_schemes::reach());
+      _compare("CK Standard", worldinput::builtin_control_schemes::ck_standard());
+      _compare("Debug WASD",  worldinput::builtin_control_schemes::debug_wasd());
+      _compare("Reach",       worldinput::builtin_control_schemes::reach());
 
       qDebug("All tests run.");
    }

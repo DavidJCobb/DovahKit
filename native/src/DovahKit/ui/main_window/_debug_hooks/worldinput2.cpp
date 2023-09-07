@@ -23,29 +23,29 @@ namespace {
    namespace worldedit {
       using namespace dovahkit::subsystems::worldedit;
    }
-   namespace worldinput2 {
+   namespace worldinput {
       using namespace dovahkit::subsystems::worldinput2;
    }
-   using worldinput2::control_scheme;
-   using worldinput2::control_scheme_action;
-   using worldinput2::control_scheme_modifier;
+   using worldinput::control_scheme;
+   using worldinput::control_scheme_action;
+   using worldinput::control_scheme_modifier;
 
    struct testing_tree {
       std::string name;
-      worldinput2::control_scheme tree;
+      worldinput::control_scheme tree;
    };
 
-   worldinput2::control_scheme make_tree(worldinput2::input_device_type dt, std::initializer_list<worldinput2::control_scheme::node*> nodes) {
+   worldinput::control_scheme make_tree(worldinput::input_device_type dt, std::initializer_list<worldinput::control_scheme::node*> nodes) {
       control_scheme out(dt);
       for (auto* node : nodes)
          out.top_level_nodes.push_back(node);
 
-      constexpr auto warn = [](const worldinput2::control_scheme& out) {
+      constexpr auto warn = [](const worldinput::control_scheme& out) {
          constexpr auto recurse = [&](const control_scheme::node& node, auto& recurse) -> void {
             if (auto* in = node.as<control_scheme_action>()) {
                if (in->data.input_sequence.is_probably_keyboard_impossible()) {
                   std::string seq;
-                  worldinput2::algorithms::input_sequence_to_string(in->data.input_sequence, seq);
+                  worldinput::algorithms::input_sequence_to_string(in->data.input_sequence, seq);
                   qDebug(
                      "WARNING: One of the test bind trees contains an input sequence that may not be completable on a gamepad.\n   Node:     %s\n   Sequence: %s",
                      qUtf8Printable(in->data.name),
@@ -60,7 +60,7 @@ namespace {
          for (auto* n : out.top_level_nodes)
             recurse(*n, recurse);
       };
-      if (dt == worldinput2::input_device_type::keyboard_mouse) {
+      if (dt == worldinput::input_device_type::keyboard_mouse) {
          warn(out);
       }
 
@@ -69,8 +69,8 @@ namespace {
 
    cobb::typed_node<control_scheme::node, control_scheme_action>* make_tool_node(
       const std::string& name,
-      worldinput2::button_press_type pt,
-      const worldinput2::input_sequence& sequence
+      worldinput::button_press_type pt,
+      const worldinput::input_sequence& sequence
    ) {
       return control_scheme::node::from_data(control_scheme_action{
          .name = name.c_str(),
@@ -90,7 +90,7 @@ namespace {
    }
    cobb::typed_node<control_scheme::node, control_scheme_modifier>* make_modifier_node(
       const std::string& name,
-      const worldinput2::input_sequence& sequence,
+      const worldinput::input_sequence& sequence,
       std::initializer_list<control_scheme::node*> children = {}
    ) {
       auto* node = control_scheme::node::from_data(control_scheme_modifier{
@@ -107,22 +107,22 @@ namespace {
       testing_tree{ // 4/11/2023 - PASSES
          .name = "Simple test tree",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press X",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Long Press Y",
-                  worldinput2::button_press_type::long_press,
-                  worldinput2::algorithms::input_sequence_from_string("Y")
+                  worldinput::button_press_type::long_press,
+                  worldinput::algorithms::input_sequence_from_string("Y")
                ),
                make_tool_node(
                   "Hold Z",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("Z")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("Z")
                ),
             }
          ),
@@ -130,17 +130,17 @@ namespace {
       testing_tree{ // 4/11/2023 - PASSES
          .name = "Press/Long Press basic conflict",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press X",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Long Press X",
-                  worldinput2::button_press_type::long_press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::long_press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -148,32 +148,32 @@ namespace {
       testing_tree{ // 4/11/2023 - PASSES
          .name = "Press-delays-Hold conflict resolution",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Bind #1: Press X",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #2: Hold X",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #3: Press [Y + Z]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[Y + Z]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[Y + Z]")
                ),
                make_tool_node(
                   "Bind #4: Hold Y",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("Y")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("Y")
                ),
                make_tool_node(
                   "Bind #5: Hold Z",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("Z")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("Z")
                ),
             }
          ),
@@ -181,17 +181,17 @@ namespace {
       testing_tree{ // 4/14/2023 - PASSES
          .name = "Hold-blocks-Press conflict resolution",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Hold [X + Z]",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("[X + Z]")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("[X + Z]")
                ),
                make_tool_node(
                   "Press X",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -199,27 +199,27 @@ namespace {
       testing_tree{ // 4/11/2023 - PASSES
          .name = "Basic gamepad tests",
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Press A",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("A", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("A", true)
                ),
                make_tool_node(
                   "Press B",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("B", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("B", true)
                ),
                make_tool_node(
                   "Long Press X",
-                  worldinput2::button_press_type::long_press,
-                  worldinput2::algorithms::input_sequence_from_string("X", true)
+                  worldinput::button_press_type::long_press,
+                  worldinput::algorithms::input_sequence_from_string("X", true)
                ),
                make_tool_node(
                   "Hold Y",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("Y", true)
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("Y", true)
                ),
             }
          ),
@@ -236,17 +236,17 @@ namespace {
          // Desired result: neither bind activates.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Press [LS + X]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[LS + X]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[LS + X]", true)
                ),
                make_tool_node(
                   "Press [B + X]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[B + X]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[B + X]", true)
                ),
             }
          ),
@@ -288,22 +288,22 @@ namespace {
          //     = This tests interrupting a separate-and-ordered sequence with itself.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press [A + B]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B]")
                ),
                make_tool_node(
                   "Press (X + Y)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(X + Y)")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(X + Y)")
                ),
                make_tool_node(
                   "Press <J + K>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<J + K>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<J + K>")
                ),
             }
          ),
@@ -319,17 +319,17 @@ namespace {
          // Desired result: only the `Press [A + B + X + Y]` bind activates.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Press [A + B + X + Y]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Press (LB + Y)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(LB + Y)", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(LB + Y)", true)
                ),
             }
          ),
@@ -340,17 +340,17 @@ namespace {
          // Desired result: both binds activate when pressing X.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Bind #1",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
                make_tool_node(
                   "Bind #2",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("X")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("X")
                ),
             }
          ),
@@ -358,27 +358,27 @@ namespace {
       testing_tree{ // 4/14/2023 - PASSES
          .name = "Seamless switching between Hold binds",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Hold A",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("A")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("A")
                ),
                make_tool_node(
                   "Hold (A + B)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(A + B)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(A + B)")
                ),
                make_tool_node(
                   "Hold (A + B + C)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(A + B + C)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(A + B + C)")
                ),
                make_tool_node(
                   "Hold (A + C)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(A + C)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(A + C)")
                ),
             }
          ),
@@ -396,12 +396,12 @@ namespace {
          // without having to release X between attempted activations.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press [X + Z]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[X + Z]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[X + Z]")
                ),
             }
          ),
@@ -525,22 +525,22 @@ namespace {
          //     - Bind 3 does not activate.
          //
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Bind #1: Press [A + B + X + Y]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Bind #2: Press (Y + LB)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(Y + LB)", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(Y + LB)", true)
                ),
                make_tool_node(
                   "Bind #3: Press (Y + LT)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(Y + LT)", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(Y + LT)", true)
                ),
             }
          ),
@@ -548,17 +548,17 @@ namespace {
       testing_tree{ // 4/14/2023 - PASSES
          .name = "Separate-and-ordered interruptions #1",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press <A + S + D + F>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + F>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + D + F>")
                ),
                make_tool_node(
                   "Press <A + S + D + [F + <J + K>]>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + [F + <J + K>]>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + D + [F + <J + K>]>")
                ),
             }
          ),
@@ -566,12 +566,12 @@ namespace {
       testing_tree{ // 4/14/2023 - PASSES
          .name = "Press <A + S + D + [<J + K> + Z]>",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press <A + S + D + [<J + K> + Z]>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + D + [<J + K> + Z]>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + D + [<J + K> + Z]>")
                ),
             }
          ),
@@ -579,17 +579,17 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold detail 1",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press <A + S + J>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold S",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("S")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("S")
                ),
             }
          ),
@@ -597,17 +597,17 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold detail 2",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press <A + S + J>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold (K + S)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(K + S)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(K + S)")
                ),
             }
          ),
@@ -615,17 +615,17 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold detail 3",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press <A + S + J>",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("<A + S + J>")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("<A + S + J>")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -633,17 +633,17 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold detail 4",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press (X + <A + S + J>)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(X + <A + S + J>)")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(X + <A + S + J>)")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -651,17 +651,17 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold detail 5",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press [X + <A + S + J>]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[X + <A + S + J>]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[X + <A + S + J>]")
                ),
                make_tool_node(
                   "Hold (K + <A + S>)",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("(K + <A + S>)")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("(K + <A + S>)")
                ),
             }
          ),
@@ -669,17 +669,17 @@ namespace {
       testing_tree{
          .name = "Press/Hold with common stem",
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Press [X + Y + A]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[X + Y + A]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[X + Y + A]", true)
                ),
                make_tool_node(
                   "Hold [X + Y + B]",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("[X + Y + B]", true)
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("[X + Y + B]", true)
                ),
             }
          ),
@@ -687,17 +687,17 @@ namespace {
       testing_tree{
          .name = "Advancing Press past conflict key indefinitely delays Hold?",
          .tree = make_tree(
-            worldinput2::input_device_type::xinput,
+            worldinput::input_device_type::xinput,
             {
                make_tool_node(
                   "Press [A + B + X + Y]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B + X + Y]", true)
                ),
                make_tool_node(
                   "Hold B",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("B", true)
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("B", true)
                ),
             }
          ),
@@ -705,22 +705,22 @@ namespace {
       testing_tree{
          .name = "Press-delays-Hold: outlast one Press; advanced past by another",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Bind #1: Press [A + B]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B]")
                ),
                make_tool_node(
                   "Bind #2: Press [A + B + J]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + B + J]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + B + J]")
                ),
                make_tool_node(
                   "Bind #3: Hold B",
-                  worldinput2::button_press_type::hold,
-                  worldinput2::algorithms::input_sequence_from_string("B")
+                  worldinput::button_press_type::hold,
+                  worldinput::algorithms::input_sequence_from_string("B")
                ),
             }
          ),
@@ -728,12 +728,12 @@ namespace {
       testing_tree{
          .name = "Edge-case: sequencing constraints on first item in group",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Bind #1: Press [B + [A + B]]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[B + [A + B]]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[B + [A + B]]")
                   //
                   // When this test-case was first written, the first item in an ordered  
                   // group was unaware of the timestamp of the group's own previous sibling, 
@@ -752,12 +752,12 @@ namespace {
       testing_tree{
          .name = "Redundant binds",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Bind #1: Press [A + A + B] // equivalent to [A + B]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + A + B]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + A + B]")
                   //
                   // Concurrent-and-ordered groups are stateless and allow you to advance 
                   // through multiple keys in a single frame, if those keys all went down 
@@ -767,8 +767,8 @@ namespace {
                ),
                make_tool_node(
                   "Bind #2: Press [J + [J + K]] // equivalent to [J + K]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[J + [J + K]]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[J + [J + K]]")
                   //
                   // Concurrent-and-ordered groups are stateless and allow you to advance 
                   // through multiple keys in a single frame, if those keys all went down 
@@ -782,13 +782,13 @@ namespace {
                ),
                make_tool_node(
                   "Bind #3: Press (X + (X + Y)) // equivalent to (X + Y)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(X + (X + Y))")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(X + (X + Y))")
                ),
                make_tool_node(
                   "Bind #4: Press (Q + [Q + W]) // equivalent to [Q + W]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(Q + [Q + W])")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(Q + [Q + W])")
                   //
                   // The inner ISG requires that Q and W be down on the same frame, and that 
                   // Q have gone down first. The outer ISG requires that constraint to have 
@@ -799,8 +799,8 @@ namespace {
                ),
                make_tool_node(
                   "Bind #5: Press [E + (R + E)] // equivalent to (E + R)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[E + (R + E)]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[E + (R + E)]")
                   //
                   // The outer ISG requires that E go down before or at the same time as 
                   // the inner ISG. The inner ISG goes down when R and E are pressed down, 
@@ -813,8 +813,8 @@ namespace {
                ),
                make_tool_node(
                   "Bind #6: Press [T + <C + V> + <C + V>] // impossible",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[T + <C + V> + <C + V>]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[T + <C + V> + <C + V>]")
                   //
                   // If the first separate-and-ordered group is not fully down (i.e. not on its 
                   // last key), then we don't advance past it to update the next separate-and-
@@ -834,8 +834,8 @@ namespace {
                ),
                make_tool_node(
                   "Bind #7: Press [1 + <2 + 3> + 3] // equivalent to [1 + <2 + 3>]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[1 + <2 + 3> + 3]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[1 + <2 + 3> + 3]")
                   //
                   // This is the same basic principle as Bind 1. To activate this bind, you 
                   // would press and hold 1, press and release 2, press and hold 3,... at 
@@ -850,12 +850,12 @@ namespace {
       testing_tree{
          .name = "Press [A + <J + K> + <J + K>]",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press [A + <J + K> + <J + K>]",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("[A + <J + K> + <J + K>]")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("[A + <J + K> + <J + K>]")
                ),
             }
          ),
@@ -863,12 +863,12 @@ namespace {
       testing_tree{
          .name = "Press (A + <J + K> + <J + K>)",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press (A + <J + K> + <J + K>)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(A + <J + K> + <J + K>)")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(A + <J + K> + <J + K>)")
                ),
             }
          ),
@@ -876,17 +876,17 @@ namespace {
       testing_tree{
          .name = "Press (A + <B + A>) and Press (X + <X + Y>)",
          .tree = make_tree(
-            worldinput2::input_device_type::keyboard_mouse,
+            worldinput::input_device_type::keyboard_mouse,
             {
                make_tool_node(
                   "Press (A + <B + A>)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(A + <B + A>)")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(A + <B + A>)")
                ),
                make_tool_node(
                   "Press (X + <X + Y>)",
-                  worldinput2::button_press_type::press,
-                  worldinput2::algorithms::input_sequence_from_string("(X + <X + Y>)")
+                  worldinput::button_press_type::press,
+                  worldinput::algorithms::input_sequence_from_string("(X + <X + Y>)")
                ),
             }
          ),
@@ -895,23 +895,23 @@ namespace {
          testing_tree{
             .name = "Modifier parity: Press [A + B]",
             .tree = make_tree(
-               worldinput2::input_device_type::keyboard_mouse,
+               worldinput::input_device_type::keyboard_mouse,
                {
                   make_modifier_node(
                      "Press [A + ...]",
-                     worldinput2::algorithms::input_sequence_from_string("A"),
+                     worldinput::algorithms::input_sequence_from_string("A"),
                      {
                         make_tool_node(
                            "Press [A + B]",
-                           worldinput2::button_press_type::press,
-                           worldinput2::algorithms::input_sequence_from_string("B")
+                           worldinput::button_press_type::press,
+                           worldinput::algorithms::input_sequence_from_string("B")
                         ),
                      }
                   ),
                   make_tool_node(
                      "Press [X + Y]",
-                     worldinput2::button_press_type::press,
-                     worldinput2::algorithms::input_sequence_from_string("[X + Y]")
+                     worldinput::button_press_type::press,
+                     worldinput::algorithms::input_sequence_from_string("[X + Y]")
                   ),
                }
             ),
@@ -919,23 +919,23 @@ namespace {
          testing_tree{
             .name = "Modifier parity: Press [(A + B) + C]",
             .tree = make_tree(
-               worldinput2::input_device_type::keyboard_mouse,
+               worldinput::input_device_type::keyboard_mouse,
                {
                   make_modifier_node(
                      "Press [(A + B) + ...]",
-                     worldinput2::algorithms::input_sequence_from_string("(A + B)"),
+                     worldinput::algorithms::input_sequence_from_string("(A + B)"),
                      {
                         make_tool_node(
                            "Press [(A + B) + C]",
-                           worldinput2::button_press_type::press,
-                           worldinput2::algorithms::input_sequence_from_string("C")
+                           worldinput::button_press_type::press,
+                           worldinput::algorithms::input_sequence_from_string("C")
                         ),
                      }
                   ),
                   make_tool_node(
                      "Press [(X + Z) + Y]",
-                     worldinput2::button_press_type::press,
-                     worldinput2::algorithms::input_sequence_from_string("[(X + Z) + Y]")
+                     worldinput::button_press_type::press,
+                     worldinput::algorithms::input_sequence_from_string("[(X + Z) + Y]")
                   ),
                }
             ),
@@ -945,17 +945,17 @@ namespace {
          testing_tree{
             .name = "Directional constraint tests 1",
             .tree = make_tree(
-               worldinput2::input_device_type::keyboard_mouse,
+               worldinput::input_device_type::keyboard_mouse,
                {
                   make_tool_node(
                      "Hold A :: Mouse Move",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move")
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string("A :: Mouse Move")
                   ),
                   make_tool_node(
                      "Press B :: Mouse Move",
-                     worldinput2::button_press_type::press,
-                     worldinput2::algorithms::input_sequence_from_string("B :: Mouse Move")
+                     worldinput::button_press_type::press,
+                     worldinput::algorithms::input_sequence_from_string("B :: Mouse Move")
                   ),
                }
             ),
@@ -963,17 +963,17 @@ namespace {
          testing_tree{
             .name = "Directional constraint tests 2",
             .tree = make_tree(
-               worldinput2::input_device_type::keyboard_mouse,
+               worldinput::input_device_type::keyboard_mouse,
                {
                   make_tool_node(
                      "Hold A :: Mouse Move",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move")
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string("A :: Mouse Move")
                   ),
                   make_tool_node(
                      "Hold B :: Mouse Move",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string("B :: Mouse Move")
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string("B :: Mouse Move")
                   ),
                }
             ),
@@ -981,12 +981,12 @@ namespace {
          testing_tree{
             .name = "Directional constraint tests 3 (scalar)",
             .tree = make_tree(
-               worldinput2::input_device_type::keyboard_mouse,
+               worldinput::input_device_type::keyboard_mouse,
                {
                   make_tool_node(
                      "Hold A :: Mouse Move X",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string("A :: Mouse Move X")
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string("A :: Mouse Move X")
                   ),
                }
             ),
@@ -994,12 +994,12 @@ namespace {
          testing_tree{
             .name = "Directional constraint tests 4 (gamepad)",
             .tree = make_tree(
-               worldinput2::input_device_type::xinput,
+               worldinput::input_device_type::xinput,
                {
                   make_tool_node(
                      "Hold A :: Left Stick X",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string("A :: Left Stick X", true)
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string("A :: Left Stick X", true)
                   ),
                }
             ),
@@ -1007,12 +1007,12 @@ namespace {
          testing_tree{
             .name = "Directional constraint test: Left Stick only, no buttons",
             .tree = make_tree(
-               worldinput2::input_device_type::xinput,
+               worldinput::input_device_type::xinput,
                {
                   make_tool_node(
                      "Hold <none> :: Left Stick",
-                     worldinput2::button_press_type::hold,
-                     worldinput2::algorithms::input_sequence_from_string(":: Left Stick", true)
+                     worldinput::button_press_type::hold,
+                     worldinput::algorithms::input_sequence_from_string(":: Left Stick", true)
                   ),
                }
             ),
@@ -1023,7 +1023,7 @@ namespace {
 
 namespace DovahKitDebug::features {
    /*static*/ void worldinput2::execute(QWidget* from) {
-      auto& core = dovahkit::subsystems::worldinput2::core::get();
+      auto& core = worldinput::core::get();
 
       static QTimer poll_timer;
       static QPointer<QDialog> test_window = nullptr;
@@ -1036,7 +1036,7 @@ namespace DovahKitDebug::features {
          double elapsed;
          ::worldedit::tool_results_tuple results;
 
-         dovahkit::subsystems::worldinput2::core::get().doPerFrameInputProcessing(elapsed, results);
+         worldinput::core::get().doPerFrameInputProcessing(elapsed, results);
 
          auto* label = test_window->findChild<QLabel*>("debug_output");
          if (label) {
@@ -1094,7 +1094,7 @@ namespace DovahKitDebug::features {
          }
          QObject::connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [combo](int index) {
             auto& entry = testing_trees[index];
-            auto& core  = dovahkit::subsystems::worldinput2::core::get();
+            auto& core  = worldinput::core::get();
             core.setBindingsFor(entry.tree);
          });
 
