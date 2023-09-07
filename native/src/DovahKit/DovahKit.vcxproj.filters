@@ -1827,60 +1827,6 @@
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\bind_tree\tree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\devices\keyboard_mouse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\devices\xinput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\worldinput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\inputs\bound_input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\input_result.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\attempt_on_screen_selection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\debug_dump_landscape_details.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\debug_log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\debug_placeholder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\modify_camera_speed_flags.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\move_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\turn_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\_all.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\tools\_options.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\xinput\xinputDK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4478,126 +4424,6 @@
     <ClInclude Include="vulkan\config\asset_loading.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\bind_tree\node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\bind_tree\nodes\root.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\bind_tree\tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\chrono.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\defaults.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\devices\xinput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\inputs\bound_input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\inputs\button.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\devices\keyboard_mouse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\button_state.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\input_result.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\attempt_on_screen_selection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\debug_dump_landscape_details.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\debug_log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\debug_placeholder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\modify_camera_speed_flags.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\move_camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\turn_camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\_all.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\_options.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tools\_results.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\axis2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\axis3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\bool_operation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\button_press_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\button_release_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\camera_turn_axis.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\control_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\editor_mode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\input_device_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\pointer_position_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\reference_frame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\scalar_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\selection_operation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\sign.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\enums\vector_control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\math\arcsine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5745,9 +5571,6 @@
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\subsystems\worldinput\worldinput.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="editor\subsystems\xinput\xinputDK.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -5855,10 +5678,6 @@
     <Text Include="helpers\tuples\docs.txt" />
     <Text Include="nif\blocks\_TODO.txt" />
     <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
-    <Text Include="editor\subsystems\worldinput\_docs\keyboard inputs.txt" />
-    <Text Include="editor\subsystems\worldinput\_docs\keyboard shortcuts - guidelines for defaults.txt" />
-    <Text Include="editor\subsystems\worldinput\_docs\strictly ordered tools.txt" />
-    <Text Include="editor\subsystems\worldinput\_docs\tools.txt" />
     <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
     <Text Include="helpers\ini\INI file grammar.txt" />
     <Text Include="helpers\ini\INI file grammar win32.txt" />
@@ -5989,9 +5808,6 @@
     <None Include="shaders\bespoke\grid\color.vert.spv" />
     <None Include="shaders\bespoke\grid\color-main.frag.spv" />
     <None Include="shaders\bespoke\grid\color-oit.frag.spv" />
-    <None Include="editor\subsystems\worldinput\tools\_options.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="shaders\gizmo\color.vert" />
     <None Include="shaders\gizmo\color.vert.spv" />
     <None Include="shaders\gizmo\color.frag" />
@@ -6139,7 +5955,6 @@
     <Natvis Include="vulkan\scene_entity_handle.natvis" />
     <Natvis Include="vulkan\image_metadata.natvis" />
     <Natvis Include="vulkan\image.natvis" />
-    <Natvis Include="editor\subsystems\worldinput\tools\_options.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
     <Natvis Include="editor\subsystems\worldinput2\input_sequence.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
