@@ -29,6 +29,12 @@
       .initial_value = initial, \
    }>(category_data);
 
+#define MAKE_INI_STRING_SETTING(setting_name, initial) \
+   constinit cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::string>{ \
+      .name          = #setting_name, \
+      .initial_value = initial, \
+   }>(category_data);
+
 #define MAKE_INI_SETTING_WITH_CONSTRAINTS(setting_name, initial, a_constraints) \
    constinit cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ \
       .name          = #setting_name, \
@@ -41,6 +47,10 @@
 
    #undef MAKE_INI_SETTING
    #define MAKE_INI_SETTING(setting_name, initial) \
+      extern cobb::ini::setting setting_name ;
+
+   #undef MAKE_INI_STRING_SETTING
+   #define MAKE_INI_STRING_SETTING(setting_name, initial) \
       extern cobb::ini::setting setting_name ;
 
    #undef MAKE_INI_SETTING_WITH_CONSTRAINTS
@@ -81,6 +91,9 @@ namespace dovahkit::ini::main {
          = cobb::ini::category(file_data, "worldinput")
          #endif
       ;
+
+      MAKE_INI_STRING_SETTING(sCurrentControlSchemeGamepad,  "");
+      MAKE_INI_STRING_SETTING(sCurrentControlSchemeKeyboard, "");
    }
 }
 

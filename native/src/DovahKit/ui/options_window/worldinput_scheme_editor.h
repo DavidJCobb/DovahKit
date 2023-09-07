@@ -20,6 +20,7 @@ class WorldinputSchemeEditDialog : public QDialog {
 
       void initializeFrom(const control_scheme_type&);
       void overwrite(control_scheme_type&) const;
+      control_scheme_type retrieve() const;
 
    protected:
       Ui::WorldinputSchemeEditDialog ui;

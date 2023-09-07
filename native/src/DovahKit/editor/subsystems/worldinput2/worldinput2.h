@@ -14,7 +14,6 @@ namespace dovahkit::subsystems::worldedit {
    class tool_results_tuple;
 }
 namespace dovahkit::subsystems::worldinput2 {
-   class combined_tool_results;
    class control_scheme;
 }
 

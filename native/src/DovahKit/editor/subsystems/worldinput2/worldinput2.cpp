@@ -8,15 +8,23 @@
 #include "./tools/combined_tool_results.h"
 #include "./control_scheme.h"
 
-#include "./debugging.h"
-#include <QLabel>
+#include "./builtin_control_schemes/ck_standard.h"
+#include "./builtin_control_schemes/debug_wasd.h"
+#include "./builtin_control_schemes/reach.h"
+#include "./worldinput_control_scheme_manager.h"
+
+#include "editor/ini/main.h"
+namespace {
+   namespace worldinput_ini_settings {
+      using namespace dovahkit::ini::main::worldinput;
+   }
+}
 
 namespace {
    constexpr float reset_after_lag_threshold = 3.0; // ignore all held inputs if this much time passed since we last polled
 }
 
 namespace dovahkit::subsystems::worldinput2 {
-
    core::core() {
       this->device_handlers.keyboard_mouse.recheck_mouse_metrics();
       QObject::connect((QApplication*)QApplication::instance(), &QApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
@@ -30,6 +38,18 @@ namespace dovahkit::subsystems::worldinput2 {
             return;
          this->device_handlers.keyboard_mouse.discard_raycast_results_for(*stub);
          this->device_handlers.gamepad.discard_raycast_results_for(*stub);
+      });
+
+      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      this->setBindingsFor(mgr.get_current_scheme(input_device_type::keyboard_mouse));
+      this->setBindingsFor(mgr.get_current_scheme(input_device_type::xinput));
+      QObject::connect(&mgr, &worldinput2::control_scheme_manager::controlSchemeModified, this, [this](const QString& prior_name, const worldinput2::control_scheme& data, bool current) {
+         if (!current)
+            return;
+         this->setBindingsFor(data);
+      });
+      QObject::connect(&mgr, &worldinput2::control_scheme_manager::currentSchemeChanged, this, [this](const worldinput2::control_scheme& data) {
+         this->setBindingsFor(data);
       });
    }
    core::~core() {

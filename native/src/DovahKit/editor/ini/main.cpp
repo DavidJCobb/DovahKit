@@ -10,6 +10,12 @@
          .initial_value = initial, \
       }>(category_data);
 
+   #define MAKE_INI_STRING_SETTING(setting_name, initial) \
+      cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::string>{ \
+         .name          = #setting_name, \
+         .initial_value = initial, \
+      }>(category_data);
+
    #define MAKE_INI_SETTING_WITH_CONSTRAINTS(setting_name, initial, a_constraints) \
       cobb::ini::setting setting_name = cobb::ini::setting::define<cobb::ini::setting_definition<std::decay_t<decltype(initial)>>{ \
          .name          = #setting_name, \
@@ -38,6 +44,9 @@
       }
       namespace worldinput {
          cobb::ini::category category_data = cobb::ini::category(file_data, "worldinput");
+         
+         MAKE_INI_STRING_SETTING(sCurrentControlSchemeGamepad,  "");
+         MAKE_INI_STRING_SETTING(sCurrentControlSchemeKeyboard, "");
       }
    }
 

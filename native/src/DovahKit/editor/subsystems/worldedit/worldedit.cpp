@@ -149,14 +149,6 @@ namespace dovahkit::subsystems::worldedit {
          }
       });
 
-      if constexpr (debug_use_new_worldinput) {
-         using namespace dovahkit::subsystems::worldinput2;
-
-         auto& wi = worldinput2::core::get();
-         wi.setBindingsFor(worldinput2::builtin_control_schemes::debug_wasd());
-         wi.setBindingsFor(worldinput2::builtin_control_schemes::reach());
-      }
-
       {
          auto& mgr = gizmo_color_scheme_manager::get_or_create();
          QObject::connect(&mgr, &gizmo_color_scheme_manager::colorSchemeChanged, this, [this](const gizmo_color_scheme& scheme) {
@@ -1166,6 +1158,12 @@ namespace dovahkit::subsystems::worldedit {
                   }
                }
             }
+         }
+         #pragma endregion
+         #pragma region debug_print
+         if (results.has_member<tools::debug_print>()) {
+            const auto& data = results.get_member<tools::debug_print>();
+            qDebug(data.text.c_str());
          }
          #pragma endregion
          #pragma region set_edit_gizmo_mode

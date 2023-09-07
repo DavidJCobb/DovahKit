@@ -167,6 +167,7 @@
     <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\util\numeric_comparisons.cpp" />
     <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\editor_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_tree\nodes\input.cpp" />
@@ -702,6 +703,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp" />
+    <ClCompile Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_3d_input_window\localization.cpp" />
     <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp" />
@@ -924,6 +926,7 @@
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition_node.h" />
     <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h" />
+    <QtMoc Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.h" />
     <ClInclude Include="editor\subsystems\worldinput2\core.h" />
     <ClInclude Include="editor\subsystems\worldinput2\debugging.h" />
     <ClInclude Include="editor\subsystems\worldinput2\defaults.h" />
@@ -1088,6 +1091,8 @@
     <ClInclude Include="helpers\concepts\any_of_types.h" />
     <ClInclude Include="helpers\concepts\type_specialization_of.h" />
     <ClInclude Include="helpers\constexpr_optional_type.h" />
+    <ClInclude Include="helpers\compile_time_strings\cs.h" />
+    <ClInclude Include="helpers\const_pointer_container_view.h" />
     <ClInclude Include="helpers\dynamic_exact_cast.h" />
     <ClInclude Include="helpers\dynamic_fast_cast.h" />
     <ClInclude Include="helpers\flat_tree_interface\node_base.h" />
@@ -1372,6 +1377,7 @@
     <ClInclude Include="ui\models\DKGenericListModel.h" />
     <ClInclude Include="ui\models\DKGenericTreeModel.h" />
     <QtMoc Include="ui\models\worldinput\DKWorldinputControlSchemeModel.h" />
+    <QtMoc Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.h" />
     <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h" />
     <QtMoc Include="ui\options_window\worldinput_modifier_editor.h" />

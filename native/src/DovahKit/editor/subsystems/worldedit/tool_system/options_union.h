@@ -95,7 +95,12 @@ namespace dovahkit::subsystems::worldedit::tools {
          }
 
          options_union(const options_union& o) : opaque_options_union(o.tag) {
-            memcpy(this->data.data(), &o.data, this->data.size());
+            for (const auto& entry : _type_table) {
+               if (entry.id == this->tag) {
+                  entry.construct_copy(o, *this);
+                  break;
+               }
+            }
          }
 
          ~options_union() {

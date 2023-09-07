@@ -134,6 +134,14 @@ void WorldinputSchemeEditDialog::overwrite(control_scheme_type& dst) const {
 
    this->_model->overwriteDestination(dst);
 }
+WorldinputSchemeEditDialog::control_scheme_type WorldinputSchemeEditDialog::retrieve() const {
+   control_scheme_type out(this->device_type);
+   out.name = this->ui.name->text();
+
+   this->_model->overwriteDestination(out);
+
+   return out;
+}
 
 QModelIndex WorldinputSchemeEditDialog::_getFirstSelectedNode() {
    auto* sm = this->ui.nodeTree->selectionModel();

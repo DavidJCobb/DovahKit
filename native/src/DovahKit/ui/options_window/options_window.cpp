@@ -5,52 +5,18 @@
 
 #include "editor/subsystems/worldedit/gizmo_colors/edit_gizmo_color_scheme_manager.h"
 #include "./edit_gizmo_colors/edit_gizmo_color_editor.h"
-
+//
 #include "ui/models/worldedit/EditGizmoColorSchemeModel.h"
+
+#include "editor/subsystems/worldinput2/worldinput_control_scheme_manager.h"
+#include "./worldinput_scheme_editor.h"
+//
+#include "ui/models/worldinput/DKWorldinputDeviceSchemesModel.h"
 
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
 
-#include <QIcon>
-#include <QImage>
-#include <QPainter>
-namespace {
-   QIcon _gizmo_colors_to_icon(const dovahkit::subsystems::worldedit::gizmo_color_scheme& scheme) {
-      QImage image(16, 16, QImage::Format::Format_ARGB32);
-
-      QPainter painter(&image);
-      painter.setPen(Qt::PenStyle::NoPen);
-
-      QPointF points[4];
-
-      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_x.r, scheme.axis_x.g, scheme.axis_x.b)));
-      points[0] = { 0,  0 };
-      points[1] = { 8,  0 };
-      points[2] = { 8,  8 };
-      points[3] = { 0, 16 };
-      painter.drawPolygon(points, 4);
-
-      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_y.r, scheme.axis_y.g, scheme.axis_y.b)));
-      points[0] = { 16,  0 };
-      points[1] = {  8,  0 };
-      points[2] = {  8,  8 };
-      points[3] = { 16, 16 };
-      painter.drawPolygon(points, 4);
-
-      painter.setBrush(QBrush(QColor::fromRgb(scheme.axis_z.r, scheme.axis_z.g, scheme.axis_z.b)));
-      points[0] = {  0, 16 };
-      points[1] = {  8,  8 };
-      points[2] = { 16, 16 };
-      painter.drawPolygon(points, 3);
-
-      painter.setPen(QColor::fromRgb(0, 0, 0));
-      painter.setBrush(QBrush(QColor::fromRgb(scheme.highlight.r, scheme.highlight.g, scheme.highlight.b)));
-      painter.drawEllipse(QPoint{ 8, 8 }, 3, 3);
-
-      painter.setBrush(Qt::BrushStyle::NoBrush);
-      painter.drawRect(0, 0, 15, 15);
-
-      return QIcon(QPixmap::fromImage(image));
-   }
+namespace worldinput2 {
+   using namespace dovahkit::subsystems::worldinput2;
 }
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
@@ -114,6 +80,135 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
       }
    }
 
+   #pragma region Worldinput control schemes
+   {
+      {
+         auto* widget = this->ui.worldinputKBList;
+         widget->clear();
+
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+            auto is_hardcoded = widget->currentData(EditGizmoColorSchemeModel::IsHardcodedRole).toBool();
+            this->ui.worldinputKBDelete->setDisabled(is_hardcoded);
+         });
+         //
+         auto* model = new DKWorldinputDeviceSchemesModel(widget);
+         widget->setModel(model);
+         model->reload(worldinput2::input_device_type::keyboard_mouse);
+
+         std::array<QPushButton*, 3> buttons = {
+            this->ui.worldinputKBNew,
+            this->ui.worldinputKBEdit,
+            this->ui.worldinputKBDelete,
+         };
+         for (auto* button : buttons) {
+            button->setProperty("picker", QVariant::fromValue(widget));
+         }
+         widget->setProperty("device-type", (int)worldinput2::input_device_type::keyboard_mouse);
+      }
+      {
+         auto* widget = this->ui.worldinputGPList;
+         widget->clear();
+
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+            auto is_hardcoded = widget->currentData(EditGizmoColorSchemeModel::IsHardcodedRole).toBool();
+            this->ui.worldinputGPDelete->setDisabled(is_hardcoded);
+         });
+         //
+         auto* model = new DKWorldinputDeviceSchemesModel(widget);
+         widget->setModel(model);
+         model->reload(worldinput2::input_device_type::xinput);
+
+         std::array<QPushButton*, 3> buttons = {
+            this->ui.worldinputGPNew,
+            this->ui.worldinputGPEdit,
+            this->ui.worldinputGPDelete,
+         };
+         for (auto* button : buttons) {
+            button->setProperty("picker", QVariant::fromValue(widget));
+         }
+         widget->setProperty("device-type", (int)worldinput2::input_device_type::xinput);
+      }
+
+      // For these handlers, `QObject::sender` is whatever QObject sent the signal we're currently reacting to, if any.
+      auto handler_new = [this]() {
+         auto* sender = (QWidget*)this->sender();
+
+         auto* picker = sender->property("picker").value<QComboBox*>();
+         auto  device = (worldinput2::input_device_type)picker->property("device-type").toInt();
+         auto* model  = (DKWorldinputDeviceSchemesModel*)picker->model();
+
+         auto qmi  = model->index(picker->currentIndex(), 0, {});
+         auto data = model->dataFor(qmi);
+         if (!data.has_value()) // should never happen
+            return;
+
+         auto* dialog = new WorldinputSchemeEditDialog(device, sender);
+         dialog->initializeFrom(data.value());
+         dialog->exec();
+         if (dialog->result() == QDialog::DialogCode::Accepted) {
+            auto qmi = model->insert(dialog->retrieve());
+            if (qmi.isValid())
+               picker->setCurrentIndex(qmi.row()); // select new scheme
+         }
+         dialog->deleteLater();
+      };
+      auto handler_edit = [this]() {
+         auto* sender = (QWidget*)this->sender();
+
+         auto* picker = sender->property("picker").value<QComboBox*>();
+         auto  device = (worldinput2::input_device_type)picker->property("device-type").toInt();
+         auto* model  = (DKWorldinputDeviceSchemesModel*)picker->model();
+
+         bool hardcoded = picker->currentData(DKWorldinputDeviceSchemesModel::IsHardcodedRole).toBool();
+
+         auto qmi  = model->index(picker->currentIndex(), 0, {});
+         auto data = model->dataFor(qmi);
+         if (!data.has_value())
+            return;
+
+         auto* dialog = new WorldinputSchemeEditDialog(device, sender);
+         dialog->initializeFrom(data.value());
+         dialog->exec();
+         if (dialog->result() == QDialog::DialogCode::Accepted) {
+            if (hardcoded) {
+               //
+               // Don't let users actually save changes to hardcoded schemes, but for ergonomic 
+               // reasons, let them view schemes, and take any changes they make and save those 
+               // as a new scheme.
+               //
+               auto data_after = dialog->retrieve();
+               if (data != data_after) { // only if any changes were actually made
+                  auto qmi = model->insert(data_after);
+                  if (qmi.isValid())
+                     picker->setCurrentIndex(qmi.row()); // select new scheme
+               }
+            } else {
+               dialog->overwrite(data.value());
+               model->replaceDataFor(qmi, data.value());
+            }
+         }
+         dialog->deleteLater();
+      };
+      auto handler_delete = [this]() {
+         auto* sender = (QWidget*)this->sender();
+
+         auto* picker = sender->property("picker").value<QComboBox*>();
+         auto* model  = (DKWorldinputDeviceSchemesModel*)picker->model();
+         if (picker->currentData(DKWorldinputDeviceSchemesModel::IsHardcodedRole).toBool()) {
+            return;
+         }
+         model->removeRow(picker->currentIndex());
+      };
+
+      QObject::connect(this->ui.worldinputGPNew, &QPushButton::clicked, this, handler_new);
+      QObject::connect(this->ui.worldinputKBNew, &QPushButton::clicked, this, handler_new);
+      QObject::connect(this->ui.worldinputGPEdit, &QPushButton::clicked, this, handler_edit);
+      QObject::connect(this->ui.worldinputKBEdit, &QPushButton::clicked, this, handler_edit);
+      QObject::connect(this->ui.worldinputGPDelete, &QPushButton::clicked, this, handler_delete);
+      QObject::connect(this->ui.worldinputKBDelete, &QPushButton::clicked, this, handler_delete);
+   }
+   #pragma endregion
+
    #pragma region Edit gizmo color scheme
    {
       {
@@ -153,6 +248,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
             if (qmi.isValid())
                picker->setCurrentIndex(qmi.row()); // select new scheme
          }
+         dialog->deleteLater();
       });
       QObject::connect(this->ui.editGizmoColorEdit, &QPushButton::clicked, this, [this]() {
          auto* picker = this->ui.editGizmoColorList;
@@ -172,6 +268,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
             dialog->overwrite(data.value());
             model->replaceDataFor(qmi, data.value());
          }
+         dialog->deleteLater();
       });
       QObject::connect(this->ui.editGizmoColorDelete, &QPushButton::clicked, this, [this]() {
          auto* picker = this->ui.editGizmoColorList;
@@ -279,6 +376,28 @@ void OptionsWindow::revertChanges() {
    }
 
    {
+      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      {
+         auto& current = mgr.get_current_scheme(worldinput2::input_device_type::keyboard_mouse);
+         auto* widget  = this->ui.worldinputKBList;
+         auto* model   = (DKWorldinputDeviceSchemesModel*)widget->model();
+
+         auto i = model->rowFor(current);
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+      {
+         auto& current = mgr.get_current_scheme(worldinput2::input_device_type::xinput);
+         auto* widget  = this->ui.worldinputGPList;
+         auto* model   = (DKWorldinputDeviceSchemesModel*)widget->model();
+
+         auto i = model->rowFor(current);
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+   }
+
+   {
       auto* widget = this->ui.editGizmoColorList;
       auto  id     = dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get().get_current_color_scheme_id();
 
@@ -323,6 +442,30 @@ void OptionsWindow::save() {
       auto* setting = item.setting;
 
       setting->set_current_value<bool>(item.widget_true->isChecked());
+   }
+
+   {
+      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      {
+         auto* widget = this->ui.worldinputKBList;
+         auto* model  = (DKWorldinputDeviceSchemesModel*)widget->model();
+
+         auto  i    = widget->currentIndex();
+         auto* data = model->savedSchemeAtRow(i);
+         if (data) {
+            mgr.set_current_scheme(data);
+         }
+      }
+      {
+         auto* widget = this->ui.worldinputGPList;
+         auto* model  = (DKWorldinputDeviceSchemesModel*)widget->model();
+
+         auto  i    = widget->currentIndex();
+         auto* data = model->savedSchemeAtRow(i);
+         if (data) {
+            mgr.set_current_scheme(data);
+         }
+      }
    }
 
    auto* model = (EditGizmoColorSchemeModel*) this->ui.editGizmoColorList->model();

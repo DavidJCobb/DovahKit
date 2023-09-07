@@ -233,7 +233,7 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    void gizmo_color_scheme_manager::reload() {
-      auto path = dovahkit::subsystems::options::core::get().get_userdata_path() + "edit-gizmo-color-schemes.xml";
+      auto path = dovahkit::subsystems::options::core::get().get_base_options_path() + "edit-gizmo-color-schemes.xml";
       auto file = QFile(path);
       file.open(QIODevice::ReadOnly);
       if (!file.isOpen()) {
@@ -342,7 +342,7 @@ xml = xml.trimmed();
       writer.writeEndElement();
       writer.writeEndDocument();
 
-      auto path = dovahkit::subsystems::options::core::get().get_userdata_path() + "edit-gizmo-color-schemes.xml";
+      auto path = dovahkit::subsystems::options::core::get().get_base_options_path() + "edit-gizmo-color-schemes.xml";
       auto file = QFile(path);
       file.open(QIODevice::WriteOnly);
       if (!file.isOpen()) {

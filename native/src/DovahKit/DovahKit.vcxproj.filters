@@ -2154,6 +2154,12 @@
     <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5342,6 +5348,12 @@
     <ClInclude Include="ui\models\DKGenericListModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\compile_time_strings\cs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\const_pointer_container_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5854,6 +5866,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

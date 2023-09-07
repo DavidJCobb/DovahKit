@@ -39,6 +39,18 @@ namespace dovahkit::subsystems::options {
       // then things like Dovahscript package paths will need to be updated to do so as well.
       //
       auto path = QCoreApplication::applicationDirPath();
+      auto dir  = QDir(QDir(path).absoluteFilePath("userdata/"));
+      if (!dir.exists()) {
+         dir = QDir::current().absoluteFilePath("userdata/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
+      }
+      return dir.path() + "/";
+   }
+   QString core::get_base_options_path() {
+      //
+      // TODO: We really should look into storing userdata in %APPDATA%. However, if we do, 
+      // then things like Dovahscript package paths will need to be updated to do so as well.
+      //
+      auto path = QCoreApplication::applicationDirPath();
       auto dir  = QDir(QDir(path).absoluteFilePath("userdata/options/"));
       if (!dir.exists()) {
          dir = QDir::current().absoluteFilePath("userdata/options/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
@@ -47,7 +59,7 @@ namespace dovahkit::subsystems::options {
    }
 
    void core::reload() {
-      auto path = (get_userdata_path() + "main.ini").toStdWString();
+      auto path = (get_base_options_path() + "main.ini").toStdWString();
       std::ifstream stream(path, std::ios::in);
       if (stream.good()) {
          ::dovahkit::ini::main::file_data.load(stream);
@@ -64,7 +76,7 @@ namespace dovahkit::subsystems::options {
       std::string dst;
 
       {
-         auto path = (get_userdata_path() + "main.ini").toStdWString();
+         auto path = (get_base_options_path() + "main.ini").toStdWString();
          std::ifstream src_stream(path, std::ios::in);
          if (src_stream.good()) {
             ::dovahkit::ini::main::file_data.save(dst, src_stream);
@@ -73,7 +85,7 @@ namespace dovahkit::subsystems::options {
          }
       }
 
-      QSaveFile dst_file(get_userdata_path() + "main.ini");
+      QSaveFile dst_file(get_base_options_path() + "main.ini");
       dst_file.setDirectWriteFallback(true);
       dst_file.open(QIODevice::WriteOnly);
       dst_file.write(dst.data(), dst.size());

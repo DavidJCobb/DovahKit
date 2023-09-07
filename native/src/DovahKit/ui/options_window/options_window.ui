@@ -72,19 +72,99 @@
         <number>0</number>
        </property>
        <item row="3" column="0">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Edit gizmo</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>8</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,3">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Color scheme:</string>
+              </property>
+              <property name="buddy">
+               <cstring>editGizmoColorList</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QComboBox" name="editGizmoColorList"/>
+              </item>
+              <item>
+               <widget class="QPushButton" name="editGizmoColorNew">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="accessibleName">
+                 <string>New</string>
+                </property>
+                <property name="accessibleDescription">
+                 <string>Create and edit a new color scheme based on the selected one.</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="../resources/resources.qrc">
+                  <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="editGizmoColorEdit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="accessibleName">
+                 <string>Edit</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="../resources/resources.qrc">
+                  <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="editGizmoColorDelete">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="accessibleName">
+                 <string>Delete</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="../resources/resources.qrc">
+                  <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </item>
-       <item row="2" column="0">
+       <item row="4" column="0">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
           <string>Loading</string>
@@ -127,7 +207,165 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="0">
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>Controls</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6" columnstretch="1,1,0,0,0">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Keyboard and mouse:</string>
+            </property>
+            <property name="buddy">
+             <cstring>worldinputKBList</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="worldinputKBNew">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QPushButton" name="worldinputKBEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Xbox controller:</string>
+            </property>
+            <property name="buddy">
+             <cstring>worldinputGPList</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="worldinputKBList">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="worldinputGPList">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="worldinputKBDelete">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="worldinputGPNew">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="worldinputGPEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="worldinputGPDelete">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>8</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Camera</string>
@@ -316,96 +554,6 @@
          </layout>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QGroupBox" name="groupBox_3">
-         <property name="title">
-          <string>Edit gizmo</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,3">
-            <item>
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>Color scheme:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QComboBox" name="editGizmoColorList"/>
-              </item>
-              <item>
-               <widget class="QPushButton" name="editGizmoColorNew">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="accessibleName">
-                 <string>New</string>
-                </property>
-                <property name="accessibleDescription">
-                 <string>Create and edit a new color scheme based on the selected one.</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="../resources/resources.qrc">
-                  <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="editGizmoColorEdit">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="accessibleName">
-                 <string>Edit</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="../resources/resources.qrc">
-                  <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="editGizmoColorDelete">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="accessibleName">
-                 <string>Delete</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="../resources/resources.qrc">
-                  <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="page_2"/>
@@ -454,6 +602,14 @@
  <tabstops>
   <tabstop>navbar</tabstop>
   <tabstop>stackedWidget</tabstop>
+  <tabstop>worldinputKBList</tabstop>
+  <tabstop>worldinputKBNew</tabstop>
+  <tabstop>worldinputKBEdit</tabstop>
+  <tabstop>worldinputKBDelete</tabstop>
+  <tabstop>worldinputGPList</tabstop>
+  <tabstop>worldinputGPNew</tabstop>
+  <tabstop>worldinputGPEdit</tabstop>
+  <tabstop>worldinputGPDelete</tabstop>
   <tabstop>iniPref_fCameraSpeedNormal</tabstop>
   <tabstop>iniPref_fCameraSpeedMultBoost</tabstop>
   <tabstop>iniPref_fCameraSpeedMultPrecision</tabstop>
@@ -461,11 +617,16 @@
   <tabstop>iniPref_fTurnSpeedDegreesPerSecondY</tabstop>
   <tabstop>iniPref_bInvertLookX</tabstop>
   <tabstop>iniPref_bInvertLookY</tabstop>
+  <tabstop>editGizmoColorList</tabstop>
+  <tabstop>editGizmoColorNew</tabstop>
+  <tabstop>editGizmoColorEdit</tabstop>
+  <tabstop>editGizmoColorDelete</tabstop>
   <tabstop>iniPref_bLoadedGridSizeOverrideFromSkyrimINI_false</tabstop>
   <tabstop>iniPref_uLoadedGridSize</tabstop>
   <tabstop>iniPref_bLoadedGridSizeOverrideFromSkyrimINI_true</tabstop>
   <tabstop>buttonSave</tabstop>
   <tabstop>buttonCancel</tabstop>
+  <tabstop>buttonApply</tabstop>
  </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>
