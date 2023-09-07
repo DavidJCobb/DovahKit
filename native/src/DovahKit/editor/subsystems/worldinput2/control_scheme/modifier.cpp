@@ -3,7 +3,7 @@
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    bool control_scheme_modifier::operator==(const control_scheme_modifier& other) const noexcept {
       if (this->name != other.name)
          return false;

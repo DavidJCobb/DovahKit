@@ -8,7 +8,7 @@
 
 namespace {
    namespace worldinput {
-      using namespace dovahkit::subsystems::worldinput2;
+      using namespace dovahkit::subsystems::worldinput;
    }
 }
 

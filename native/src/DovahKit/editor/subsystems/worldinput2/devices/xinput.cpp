@@ -26,11 +26,11 @@ namespace {
       xinput_button::trigger_left,
       xinput_button::trigger_right,
    };
-   static_assert(dovahkit::subsystems::worldinput2::devices::xinput::button_count == _indices_to_buttons.size());
+   static_assert(dovahkit::subsystems::worldinput::devices::xinput::button_count == _indices_to_buttons.size());
 
    constexpr size_t no_button = -1;
    //
-   size_t _button_to_index(const dovahkit::subsystems::worldinput2::inputs::button& button) {
+   size_t _button_to_index(const dovahkit::subsystems::worldinput::inputs::button& button) {
       auto b = button.gamepad;
       for (size_t i = 0; i < _indices_to_buttons.size(); ++i)
          if (_indices_to_buttons[i] == b)
@@ -39,7 +39,7 @@ namespace {
    }
 }
 
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    void xinput::ignore_all_down() {
       this->buttons.ignore_all_down();
    }

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dovahkit::subsystems::worldinput2::defaults {
+namespace dovahkit::subsystems::worldinput::defaults {
    constexpr const double press_to_long_press_threshold = 0.35; // seconds
 
    constexpr const double press_to_hold_threshold = 0.50; // seconds

@@ -9,7 +9,7 @@ namespace cobb::bitstreams {
    class writer;
 }
 
-namespace dovahkit::subsystems::worldinput2::inputs {
+namespace dovahkit::subsystems::worldinput::inputs {
    using xinput_button = subsystems::xinput::button;
 
    struct button {

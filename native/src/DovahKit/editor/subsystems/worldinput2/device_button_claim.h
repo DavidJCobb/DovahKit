@@ -1,7 +1,7 @@
 #pragma once
 #include "./chrono.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct device_button_claim {
       timestamp_t when        = zero_timestamp;
       size_t      specificity = 0;

@@ -8,7 +8,7 @@
 #define TEMPLATE_PARAMS template<size_t ButtonCount>
 #define CLASS_NAME buttoned_device<ButtonCount>
 
-namespace dovahkit::subsystems::worldinput2::devices::components {
+namespace dovahkit::subsystems::worldinput::devices::components {
    TEMPLATE_PARAMS
    constexpr void CLASS_NAME::update_button(timestamp_t now, size_t index, bool is_down) {
       bool  was_down = (this->flags[index] & device_button_state::flag::is_down) != 0;

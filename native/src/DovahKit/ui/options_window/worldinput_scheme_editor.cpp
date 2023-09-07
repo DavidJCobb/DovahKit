@@ -8,9 +8,9 @@
 #include "./worldinput_modifier_editor.h"
 
 namespace {
-   using dovahkit::subsystems::worldinput2::control_scheme_action;
-   using dovahkit::subsystems::worldinput2::control_scheme_condition_node;
-   using dovahkit::subsystems::worldinput2::control_scheme_modifier;
+   using dovahkit::subsystems::worldinput::control_scheme_action;
+   using dovahkit::subsystems::worldinput::control_scheme_condition_node;
+   using dovahkit::subsystems::worldinput::control_scheme_modifier;
 }
 
 WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QWidget* parent) : QDialog(parent), device_type(idt) {

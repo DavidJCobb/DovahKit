@@ -12,7 +12,7 @@
 
 namespace {
    namespace worldinput {
-      using namespace dovahkit::subsystems::worldinput2;
+      using namespace dovahkit::subsystems::worldinput;
    }
 }
 #include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"

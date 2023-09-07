@@ -8,7 +8,7 @@ namespace {
       using namespace dovahkit::subsystems::worldedit;
    }
    namespace worldinput {
-      using namespace dovahkit::subsystems::worldinput2;
+      using namespace dovahkit::subsystems::worldinput;
    }
    namespace tools {
       using namespace dovahkit::subsystems::worldedit::tools;
@@ -29,7 +29,7 @@ namespace {
    using control_scheme_node = worldinput::control_scheme::node;
 }
 
-namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
+namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
    // Must be a getter to avoid the static initialization order fiasco, which 
    // affects my Win32 API wrappers
    extern const control_scheme& ck_standard() {

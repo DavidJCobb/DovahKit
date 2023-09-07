@@ -12,7 +12,7 @@ class QPushButton;
 class DKWorldinputButtonPickDialog : public QDialog {
    Q_OBJECT;
    public:
-      using Button = dovahkit::subsystems::worldinput2::inputs::button;
+      using Button = dovahkit::subsystems::worldinput::inputs::button;
       using GamepadButton = decltype(Button::gamepad);
 
    public:

@@ -14,7 +14,7 @@
 class QAction;
 class QItemSelection;
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class  control_scheme_action;
    class  input_sequence;
    struct raycast_requirement;
@@ -25,8 +25,8 @@ class DKWorldinputInputSequenceModel;
 class WorldinputBindEditDialog : public QDialog {
    Q_OBJECT;
    public:
-      using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
-      using data_type = dovahkit::subsystems::worldinput2::control_scheme_action;
+      using input_device_type = dovahkit::subsystems::worldinput::input_device_type;
+      using data_type = dovahkit::subsystems::worldinput::control_scheme_action;
       
    public:
       WorldinputBindEditDialog(input_device_type, QWidget* parent = nullptr);
@@ -46,13 +46,13 @@ class WorldinputBindEditDialog : public QDialog {
       using axis3D     = dovahkit::subsystems::worldedit::axis3D;
       using gizmo_mode = dovahkit::subsystems::worldedit::gizmo_mode;
 
-      using button_press_type   = dovahkit::subsystems::worldinput2::button_press_type;
-      using optional_yn         = dovahkit::subsystems::worldinput2::optional_yn;
-      using range_input_axes    = dovahkit::subsystems::worldinput2::range_input_axes;
-      using range_input_control = dovahkit::subsystems::worldinput2::range_input_control;
-      using raycast_requirement = dovahkit::subsystems::worldinput2::raycast_requirement;
+      using button_press_type   = dovahkit::subsystems::worldinput::button_press_type;
+      using optional_yn         = dovahkit::subsystems::worldinput::optional_yn;
+      using range_input_axes    = dovahkit::subsystems::worldinput::range_input_axes;
+      using range_input_control = dovahkit::subsystems::worldinput::range_input_control;
+      using raycast_requirement = dovahkit::subsystems::worldinput::raycast_requirement;
 
-      using input_sequence = dovahkit::subsystems::worldinput2::input_sequence;
+      using input_sequence = dovahkit::subsystems::worldinput::input_sequence;
 
       const DKWorldinputInputSequenceModel* _getInputSequenceModel() const;
       DKWorldinputInputSequenceModel* _getInputSequenceModel() { return const_cast<DKWorldinputInputSequenceModel*>(std::as_const(*this)._getInputSequenceModel()); }

@@ -14,11 +14,11 @@
 namespace dovahkit::subsystems::worldedit {
    class tool_results_tuple;
 }
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct tool_invocation_cause;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class bind_list_item {
       public:
          bind_list_item() {}

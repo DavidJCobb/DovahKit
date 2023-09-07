@@ -9,7 +9,7 @@ namespace {
       using namespace dovahkit::subsystems::worldedit;
    }
    namespace worldinput {
-      using namespace dovahkit::subsystems::worldinput2;
+      using namespace dovahkit::subsystems::worldinput;
    }
 
    void _recache_data(DKGenericTreeModelNode<DKWorldinputControlSchemeModel>& model_node) {

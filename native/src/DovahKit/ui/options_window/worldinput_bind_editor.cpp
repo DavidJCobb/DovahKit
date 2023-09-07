@@ -60,7 +60,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
                return;
             }
             auto ctrl = (range_input_control)this->ui.rangeControlType->currentData().toInt();
-            if (dovahkit::subsystems::worldinput2::range_input_control_has_multiple_axes(ctrl)) {
+            if (dovahkit::subsystems::worldinput::range_input_control_has_multiple_axes(ctrl)) {
                this->ui.rangeControlAxis->setEnabled(true);
             } else {
                this->ui.rangeControlAxis->setCurrentIndex(0);
@@ -239,7 +239,7 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
                return;
             }
             const auto& info = info_opt.value();
-            if (info.type == dovahkit::subsystems::worldinput2::input_sequence::group_type::single_control) {
+            if (info.type == dovahkit::subsystems::worldinput::input_sequence::group_type::single_control) {
                this->ui.inputSeqEditSelection->setCurrentWidget(this->ui.inputSeqEditButton);
                this->ui.inputSeqButtonMakeRaycastAssoc->setChecked(model->isRaycastAssociatedButton(current));
             } else {

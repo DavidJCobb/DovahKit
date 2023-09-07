@@ -10,7 +10,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          .operation = o.operation,
       };
       if (input.has_button) {
-         if (input.button.press_type == worldinput2::button_press_type::hold && !input.button.down_state_changed_this_frame) {
+         if (input.button.press_type == worldinput::button_press_type::hold && !input.button.down_state_changed_this_frame) {
             res.sweep = true;
          }
       } else if (input.has_range) {

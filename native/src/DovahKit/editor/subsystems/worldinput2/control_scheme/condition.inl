@@ -3,7 +3,7 @@
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    constexpr bool control_scheme_condition::impossible() const noexcept {
       if (auto& cnd = this->editor_modes; cnd.has_value()) {
          if (cnd.value().empty())

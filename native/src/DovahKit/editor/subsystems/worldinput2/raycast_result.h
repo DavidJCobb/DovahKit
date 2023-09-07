@@ -3,7 +3,7 @@
 #include "./inputs/button.h"
 #include "./chrono.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    using raycast_result = worldedit::raycast_result;
 
    struct raycast_result_per_key : public raycast_result {

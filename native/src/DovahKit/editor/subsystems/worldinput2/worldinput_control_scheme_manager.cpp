@@ -28,7 +28,7 @@ namespace {
    constexpr const size_t file_header_text_length = std::extent<decltype(file_header_text)>::value; // includes the null terminator
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    namespace {
       const char* _hardcoded_scheme_name(const control_scheme& scheme) {
          if (&scheme == &builtin_control_schemes::ck_standard())

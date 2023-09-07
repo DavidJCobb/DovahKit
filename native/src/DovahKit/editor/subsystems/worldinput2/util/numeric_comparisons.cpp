@@ -1,6 +1,6 @@
 #include "./numeric_comparisons.h"
 
-namespace dovahkit::subsystems::worldinput2::util {
+namespace dovahkit::subsystems::worldinput::util {
    #pragma region tests
    static_assert(
       []() -> bool {

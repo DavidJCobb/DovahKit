@@ -123,7 +123,7 @@ WorldinputModifierEditDialog::WorldinputModifierEditDialog(input_device_type dev
                return;
             }
             const auto& info = info_opt.value();
-            if (info.type == dovahkit::subsystems::worldinput2::input_sequence::group_type::single_control) {
+            if (info.type == dovahkit::subsystems::worldinput::input_sequence::group_type::single_control) {
                this->ui.inputSeqEditSelection->setCurrentWidget(this->ui.inputSeqEditButton);
             } else {
                const auto blocker_a = QSignalBlocker(this->ui.inputSeqGroupType);

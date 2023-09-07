@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "./numeric_comparisons.h"
 
-namespace dovahkit::subsystems::worldinput2::util {
+namespace dovahkit::subsystems::worldinput::util {
    template<typename ComparandType>
    constexpr bool comparison<ComparandType>::test(comparand_type v) const {
       switch (this->op) {

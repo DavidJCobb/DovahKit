@@ -16,7 +16,7 @@
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
 
 namespace worldinput {
-   using namespace dovahkit::subsystems::worldinput2;
+   using namespace dovahkit::subsystems::worldinput;
 }
 
 OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {

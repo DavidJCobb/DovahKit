@@ -9,7 +9,7 @@
 #include "../inputs/button.h"
 #include "../input_sequence.h"
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    namespace impl::input_sequence_stringification {
       using group      = input_sequence::group;
       using group_type = input_sequence::group_type;

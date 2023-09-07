@@ -4,13 +4,13 @@
 #include "./tools/_all.h"
 #include "./tool_id.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct tool_invocation_cause;
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
    struct tool_dispatch_table_entry {
-      using invoke_handler_t         = void(const worldinput2::tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
+      using invoke_handler_t         = void(const worldinput::tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
       using invoke_hold_up_handler_t = void(const opaque_options_union&, tool_results_tuple&);
 
       const char* name = nullptr;

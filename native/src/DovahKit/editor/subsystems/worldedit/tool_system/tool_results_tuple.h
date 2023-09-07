@@ -21,8 +21,8 @@ namespace dovahkit::subsystems::worldedit {
    // Struct containing one member for each tool's results type.
    class tool_results_tuple : public tools::all_tool_results::as_tuple {
       private:
-         using timestamp_t = worldinput2::timestamp_t;
-         static constexpr const auto zero_timestamp = worldinput2::zero_timestamp;
+         using timestamp_t = worldinput::timestamp_t;
+         static constexpr const auto zero_timestamp = worldinput::zero_timestamp;
 
          using self_t  = tool_results_tuple;
          using classes = tools::all_tool_results;
@@ -98,7 +98,7 @@ namespace dovahkit::subsystems::worldedit {
          // More robust version of the above function, capable of handling the release of 
          // a Hold bind.
          template<tools::is_tool_results A>
-         void merge_member(const worldinput2::tool_invocation_cause& cause, const A& v);
+         void merge_member(const worldinput::tool_invocation_cause& cause, const A& v);
 
          void scale(double delta_seconds);
          void merge(const tool_results_tuple& merge_from);

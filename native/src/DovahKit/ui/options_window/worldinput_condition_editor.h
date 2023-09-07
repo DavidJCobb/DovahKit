@@ -7,7 +7,7 @@
 class QAction;
 class QItemSelection;
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_condition_node;
 }
 
@@ -16,8 +16,8 @@ class DKWorldinputInputSequenceModel;
 class WorldinputConditionEditDialog : public QDialog {
    Q_OBJECT;
    public:
-      using data_type = dovahkit::subsystems::worldinput2::control_scheme_condition;
-      using node_type = dovahkit::subsystems::worldinput2::control_scheme_condition_node;
+      using data_type = dovahkit::subsystems::worldinput::control_scheme_condition;
+      using node_type = dovahkit::subsystems::worldinput::control_scheme_condition_node;
       
    public:
       WorldinputConditionEditDialog(QWidget* parent = nullptr);

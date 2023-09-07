@@ -18,7 +18,7 @@
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
 #include "editor/subsystems/worldedit/tool_system/tool_dispatch_table.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    #pragma region bind_list_item
    bind_list_item::bind_list_item(const bind_list_item& other) {
       *this = other;
@@ -90,7 +90,7 @@ namespace dovahkit::subsystems::worldinput2 {
 
    #pragma region bind_list
    void bind_list::update(timestamp_t now, worldedit::tool_results_tuple& press_results, worldedit::tool_results_tuple& hold_results) {
-      auto& subsys = core::get(); // worldinput2
+      auto& subsys = core::get(); // worldinput
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 
       auto current_conditions = control_scheme_condition::from_worldedit_state();

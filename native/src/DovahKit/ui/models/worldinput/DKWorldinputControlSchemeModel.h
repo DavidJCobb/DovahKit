@@ -14,7 +14,7 @@ class DKWorldinputControlSchemeModel;
 template<>
 class DKGenericTreeModelNode<DKWorldinputControlSchemeModel> : public DKGenericTreeModelNodeBase<DKWorldinputControlSchemeModel> {
    public:
-      using source_node_type = dovahkit::subsystems::worldinput2::control_scheme::node;
+      using source_node_type = dovahkit::subsystems::worldinput::control_scheme::node;
       using variant_type     = cobb::node_data_variant<source_node_type, true>;
 
       variant_type data;
@@ -27,7 +27,7 @@ class DKGenericTreeModelNode<DKWorldinputControlSchemeModel> : public DKGenericT
       constexpr bool can_have_children() const noexcept {
          if (std::holds_alternative<std::monostate>(this->data))
             return true;
-         return !std::holds_alternative<dovahkit::subsystems::worldinput2::control_scheme_action>(this->data);
+         return !std::holds_alternative<dovahkit::subsystems::worldinput::control_scheme_action>(this->data);
       }
 };
 
@@ -52,7 +52,7 @@ class DKWorldinputControlSchemeModel : public DKGenericTreeModel<DKWorldinputCon
       using base_type::moveItems;
 
    public:
-      using control_scheme_type = dovahkit::subsystems::worldinput2::control_scheme;
+      using control_scheme_type = dovahkit::subsystems::worldinput::control_scheme;
 
    public:
       static constexpr const auto NodeTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 1);

@@ -5,7 +5,7 @@
 #include "../../device_button_claim.h"
 #include "../../device_button_state.h"
 
-namespace dovahkit::subsystems::worldinput2::devices::components {
+namespace dovahkit::subsystems::worldinput::devices::components {
    //
    // Stores `device_button_state` for an indexed set of buttons, as a struct-of-arrays. 
    // A device handler class should include an instance of this as a member, and should 

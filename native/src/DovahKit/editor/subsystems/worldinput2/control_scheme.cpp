@@ -16,7 +16,7 @@ namespace {
    };
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    namespace {
       using _node_type_map = cobb::type_containers::fixed_map<
          cobb::type_containers::fixed_map_entry<control_scheme_action,         _serialized_node_type::action>,
@@ -27,10 +27,10 @@ namespace dovahkit::subsystems::worldinput2 {
 }
 
 namespace {
-   static constexpr const size_t _serialized_node_type_bitcount = std::bit_width(dovahkit::subsystems::worldinput2::_node_type_map::count);
+   static constexpr const size_t _serialized_node_type_bitcount = std::bit_width(dovahkit::subsystems::worldinput::_node_type_map::count);
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    control_scheme::control_scheme(input_device_type d) : device_type(d) {
    }
    

@@ -64,7 +64,7 @@ namespace dovahkit::subsystems::worldedit {
    }
    
    template<tools::is_tool_results A>
-   void tool_results_tuple::merge_member(const worldinput2::tool_invocation_cause& cause, const A& v) {
+   void tool_results_tuple::merge_member(const worldinput::tool_invocation_cause& cause, const A& v) {
       if constexpr (!impl::_tool_results_tuple::can_merge<A>) {
          //
          // For now, results that don't have an explicit merge method also don't 
@@ -92,7 +92,7 @@ namespace dovahkit::subsystems::worldedit {
             this->merge_member(zero_timestamp, v);
             return;
          }
-         if (cause.button.press_type == worldinput2::button_press_type::hold) {
+         if (cause.button.press_type == worldinput::button_press_type::hold) {
             this->merge_member(cause.button.down_when, v);
             return;
          }

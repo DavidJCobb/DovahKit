@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    enum class range_control_state {
       zeroed, // The control is at a zero position (if not delta), or is not being moved (if delta).
       stale,  // The control is a delta control, and movement has not timed out yet.

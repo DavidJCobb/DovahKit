@@ -3,7 +3,7 @@
 #include "./chrono.h"
 #include "./raycast_result.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct tool_invocation_cause {
       public:
          struct {

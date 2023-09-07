@@ -2,7 +2,7 @@
 #include "../bind_list.h"
 #include "../input_sequence.h"
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    extern bool hold_blocks_press(
       const bind_list_item& press,
       const bind_list_item& hold

@@ -13,14 +13,14 @@
 namespace dovah {
    class form_stub;
 }
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    namespace inputs {
       struct button;
    }
    struct device_button_claim;
 }
 
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    class abstract_device_handler {
       public:
          virtual ~abstract_device_handler() {}

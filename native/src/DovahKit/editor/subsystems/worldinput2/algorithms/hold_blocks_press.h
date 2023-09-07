@@ -1,10 +1,10 @@
 #pragma once
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class bind_list_item;
 }
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    extern bool hold_blocks_press(
       const bind_list_item& press,
       const bind_list_item& hold

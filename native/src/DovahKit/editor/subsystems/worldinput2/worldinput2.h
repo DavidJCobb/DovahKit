@@ -13,11 +13,11 @@
 namespace dovahkit::subsystems::worldedit {
    class tool_results_tuple;
 }
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class core : public QObject {
       Q_OBJECT;
       public:

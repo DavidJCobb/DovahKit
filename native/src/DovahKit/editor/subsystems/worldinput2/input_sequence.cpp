@@ -7,7 +7,7 @@
 #include "./device_button_claim.h"
 #include "./raycast_result.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    #pragma region input_sequence::range_requirement
    bool input_sequence::range_requirement::is_satisfied(const devices::abstract_device_handler& device) const {
       if (this->control == range_input_control::none)
@@ -293,7 +293,7 @@ namespace dovahkit::subsystems::worldinput2 {
                   if (result.down_at > time)
                      time = result.down_at;
                   auto elapsed = elapsed_time(time, current_time);
-                  if (elapsed >= dovahkit::subsystems::worldinput2::defaults::key_sequence_expire_time) {
+                  if (elapsed >= dovahkit::subsystems::worldinput::defaults::key_sequence_expire_time) {
                      this->_clear_all_progress();
                      return group_update_result{
                         .status = frame_status::inactive,

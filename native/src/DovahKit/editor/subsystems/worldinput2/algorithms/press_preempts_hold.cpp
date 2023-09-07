@@ -4,7 +4,7 @@
 #include "../defaults.h"
 #include "../input_sequence.h"
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    extern press_preempt_hold_result press_preempts_hold(
       timestamp_t current_time,
       devices::abstract_device_handler& device,

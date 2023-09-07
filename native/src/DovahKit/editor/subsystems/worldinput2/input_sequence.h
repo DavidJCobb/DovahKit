@@ -19,11 +19,11 @@ namespace cobb::streams {
    class bitreader;
    class bitwriter;
 }
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    class abstract_device_handler;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class input_sequence {
       public:
          class group;

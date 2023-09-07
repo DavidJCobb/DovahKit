@@ -12,7 +12,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    class opaque_options_union;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_action {
       public:
          static constexpr const size_t max_name_length = 1023;

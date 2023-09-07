@@ -4,7 +4,7 @@
 #include "helpers/bitstreams/writer.h"
 #include "helpers/bitstreams/reader.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    #pragma region input_sequence::group
    constexpr input_sequence::group::~group() {
       for (auto* child : this->children)

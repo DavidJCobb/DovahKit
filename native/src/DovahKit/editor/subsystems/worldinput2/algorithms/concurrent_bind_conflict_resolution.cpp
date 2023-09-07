@@ -4,7 +4,7 @@
 #include "../defaults.h"
 #include "../input_sequence.h"
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    extern void concurrent_bind_conflict_resolution(
       timestamp_t current_time,
       bind_list_item& a,

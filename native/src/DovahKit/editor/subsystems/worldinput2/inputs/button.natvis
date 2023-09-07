@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-   <Type Name="dovahkit::subsystems::worldinput2::inputs::button">
+   <Type Name="dovahkit::subsystems::worldinput::inputs::button">
 
       <Intrinsic Name="_is_key" Expression="key.vk != cobb::keyboard::virtual_key::none || key.unicode || key.scan_code" />
 

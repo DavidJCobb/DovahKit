@@ -26,7 +26,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
    class _base {
       public:
-         using tool_invocation_cause = dovahkit::subsystems::worldinput2::tool_invocation_cause;
+         using tool_invocation_cause = dovahkit::subsystems::worldinput::tool_invocation_cause;
 
       public:
          static constexpr const char*          function_name = "unnamed";

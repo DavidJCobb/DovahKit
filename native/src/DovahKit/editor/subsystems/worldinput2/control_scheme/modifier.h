@@ -7,7 +7,7 @@ namespace cobb::bitstreams {
    class writer;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_modifier {
       public:
          static constexpr const size_t max_name_length = 1023;

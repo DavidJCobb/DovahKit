@@ -4,7 +4,7 @@
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 
-namespace dovahkit::subsystems::worldinput2::inputs {
+namespace dovahkit::subsystems::worldinput::inputs {
    namespace impl::_button {
       enum class serialized_type : uint8_t {
          none,
@@ -53,8 +53,8 @@ namespace dovahkit::subsystems::worldinput2::inputs {
 }
 
 #include "helpers/bitstreams/enum_serialization_options.h"
-template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput2::inputs::impl::_button::serialized_type> {
-   using value_type = dovahkit::subsystems::worldinput2::inputs::impl::_button::serialized_type;
+template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput::inputs::impl::_button::serialized_type> {
+   using value_type = dovahkit::subsystems::worldinput::inputs::impl::_button::serialized_type;
 
    static constexpr const size_t bitcount = 2;
    static constexpr const auto   valid_values = []() {
@@ -62,7 +62,7 @@ template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsyst
    }();
 };
 
-namespace dovahkit::subsystems::worldinput2::inputs {
+namespace dovahkit::subsystems::worldinput::inputs {
    constexpr void button::stream(cobb::bitstreams::reader& s) {
       using serialized_type = impl::_button::serialized_type;
 

@@ -4,7 +4,7 @@
 #include "./enums/button_press_type.h"
 #include "./chrono.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct device_button_state {
       struct flag {
          flag() = delete;

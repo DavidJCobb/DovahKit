@@ -2,11 +2,11 @@
 #include "../devices/abstract_device_handler.h"
 #include "../chrono.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class bind_list_item;
 }
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    enum class press_preempt_hold_result {
       no_conflict,
       press_delays_hold,

@@ -6,7 +6,7 @@
 #include "editor/subsystems/worldedit/tool_system/utils/all_tool_serialization_ids.h"
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    bool control_scheme_action::operator==(const control_scheme_action& other) const noexcept {
       if (this->button_press_type != other.button_press_type)
          return false;

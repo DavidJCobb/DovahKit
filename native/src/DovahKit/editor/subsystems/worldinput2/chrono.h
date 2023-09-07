@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    using timestamp_t = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
    inline constexpr timestamp_t zero_timestamp = timestamp_t(timestamp_t::duration::zero());
 

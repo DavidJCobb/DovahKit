@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "../debugging.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class combined_tool_results {
 
       protected:

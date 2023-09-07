@@ -39,7 +39,7 @@ namespace {
       }
       return 0;
    }
-   int button_to_vk(const dovahkit::subsystems::worldinput2::inputs::button& b) {
+   int button_to_vk(const dovahkit::subsystems::worldinput::inputs::button& b) {
       if (!b.key.empty()) {
          if (b.mouse != Qt::MouseButton::NoButton) {
             return qt_mouse_button_to_vk(b.mouse);
@@ -52,7 +52,7 @@ namespace {
    }
 }
 
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    bool keyboard_mouse::_mouseup_handler_for_double_click(timestamp_t now) {
       auto& last = this->mouse.last_click;
       if (last.time == timestamp_t{})

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-   <Type Name="dovahkit::subsystems::worldinput2::input_sequence">
+   <Type Name="dovahkit::subsystems::worldinput::input_sequence">
 
       <Intrinsic Name="has_range_requirement" Expression="range.control != range_input_control::none" />
 
@@ -14,10 +14,10 @@
          <Item Name="raycast" Condition="raycast.associated_button != nullptr">raycast</Item>
       </Expand>
    </Type>
-   <Type Name="dovahkit::subsystems::worldinput2::input_sequence::range_requirement">
+   <Type Name="dovahkit::subsystems::worldinput::input_sequence::range_requirement">
       <DisplayString>{control,en} on axes {axes,en}</DisplayString>
    </Type>
-   <Type Name="dovahkit::subsystems::worldinput2::input_sequence::group">
+   <Type Name="dovahkit::subsystems::worldinput::input_sequence::group">
 
       <Intrinsic Name="_child" Expression="*children[i]">
          <Parameter Name="i" Type="size_t" />

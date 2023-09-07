@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    enum class comparison_operator {
       equal,
       less,
@@ -12,8 +12,8 @@ namespace dovahkit::subsystems::worldinput2 {
 }
 
 #include "helpers/bitstreams/enum_serialization_options.h"
-template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput2::comparison_operator> {
-   using value_type = dovahkit::subsystems::worldinput2::comparison_operator;
+template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput::comparison_operator> {
+   using value_type = dovahkit::subsystems::worldinput::comparison_operator;
 
    static constexpr const size_t bitcount = 3;
    static constexpr const auto   valid_values = []() {

@@ -6,8 +6,8 @@
 
 class DKWorldinputDeviceSchemesModel;
 struct DKWorldinputDeviceSchemesModelNode {
-   using data_type       = dovahkit::subsystems::worldinput2::control_scheme;
-   using saved_data_type = dovahkit::subsystems::worldinput2::control_scheme_manager::saved_control_scheme;
+   using data_type       = dovahkit::subsystems::worldinput::control_scheme;
+   using saved_data_type = dovahkit::subsystems::worldinput::control_scheme_manager::saved_control_scheme;
 
    const saved_data_type* src = nullptr;
 };
@@ -16,9 +16,9 @@ class DKWorldinputDeviceSchemesModel : public DKGenericListModel<DKWorldinputDev
    Q_OBJECT;
    friend base_type;
    public:
-      using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
+      using input_device_type = dovahkit::subsystems::worldinput::input_device_type;
       using saved_data_type   = node_type::saved_data_type;
-      using data_type         = dovahkit::subsystems::worldinput2::control_scheme;
+      using data_type         = dovahkit::subsystems::worldinput::control_scheme;
 
    public:
       static constexpr const auto IsHardcodedRole = (Qt::ItemDataRole)(Qt::UserRole + 1);

@@ -3,7 +3,7 @@
 #include "editor/subsystems/worldedit/core.h"
 #include "../interruption_check.h"
 
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    const raycast_result_per_key& abstract_device_handler::get_raycast_result(timestamp_t now, const inputs::button& b) {
       for (const auto& item : this->raycast_results.per_button) {
          if (item.button == b) {

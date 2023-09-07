@@ -6,7 +6,7 @@
 #include "editor/subsystems/options/core.h"
 
 namespace {
-   using control_scheme_manager = dovahkit::subsystems::worldinput2::control_scheme_manager;
+   using control_scheme_manager = dovahkit::subsystems::worldinput::control_scheme_manager;
 }
 
 DKWorldinputDeviceSchemesModel::DKWorldinputDeviceSchemesModel(QObject* parent) : DKGenericListModel(parent) {
@@ -45,7 +45,7 @@ Qt::ItemFlags DKWorldinputDeviceSchemesModel::flags_of(const node_type& node, si
 void DKWorldinputDeviceSchemesModel::reload(input_device_type dt) {
    this->_last_used_device_type = dt;
    this->performReset([this, dt]() {
-      auto& mgr = dovahkit::subsystems::worldinput2::control_scheme_manager::get_or_create();
+      auto& mgr = dovahkit::subsystems::worldinput::control_scheme_manager::get_or_create();
 
       const auto& list = mgr.schemes_by_device(dt);
       this->_nodes.reserve(list.size());
@@ -79,7 +79,7 @@ void DKWorldinputDeviceSchemesModel::replaceDataFor(const QModelIndex& qmi, cons
    if (auto* node = this->node(qmi)) {
       assert(node->src);
 
-      auto& mgr = dovahkit::subsystems::worldinput2::control_scheme_manager::get();
+      auto& mgr = dovahkit::subsystems::worldinput::control_scheme_manager::get();
       mgr.overwrite_scheme(node->src, data);
 
       this->emitNodeChanged(qmi);
@@ -93,7 +93,7 @@ const DKWorldinputDeviceSchemesModel::saved_data_type* DKWorldinputDeviceSchemes
 }
 
 QModelIndex DKWorldinputDeviceSchemesModel::insert(data_type data) {
-   auto& mgr = dovahkit::subsystems::worldinput2::control_scheme_manager::get();
+   auto& mgr = dovahkit::subsystems::worldinput::control_scheme_manager::get();
    mgr.adjust_scheme_name_by_availability(data.device_type, data.name);
    const auto* src = mgr.add_scheme(data);
    if (!src)
@@ -124,7 +124,7 @@ bool DKWorldinputDeviceSchemesModel::removeRows(int row, int count, const QModel
 
    assert(node->src);
 
-   auto& mgr = dovahkit::subsystems::worldinput2::control_scheme_manager::get();
+   auto& mgr = dovahkit::subsystems::worldinput::control_scheme_manager::get();
    mgr.delete_scheme(node->src);
    return this->deleteItems(row, count);
 }

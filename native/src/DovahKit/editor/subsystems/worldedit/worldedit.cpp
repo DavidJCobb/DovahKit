@@ -945,7 +945,7 @@ namespace dovahkit::subsystems::worldedit {
       this->target_view = &view;
       //
       if constexpr (debug_use_new_worldinput) {
-         worldinput2::core::get().setTargetWidget(&view);
+         worldinput::core::get().setTargetWidget(&view);
       }
       //
       QObject::connect(&view, &DKVulkanView::rendererReady, this, &core::_on_renderer_attached, Qt::UniqueConnection);
@@ -960,7 +960,7 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &core::_on_renderer_lost);
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          if constexpr (debug_use_new_worldinput) {
-            worldinput2::core::get().setTargetWidget(nullptr);
+            worldinput::core::get().setTargetWidget(nullptr);
          }
          this->target_view = nullptr;
          //
@@ -999,7 +999,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          tool_results_tuple results;
          double delta;
-         worldinput2::core::get().doPerFrameInputProcessing(delta, results);
+         worldinput::core::get().doPerFrameInputProcessing(delta, results);
          //
          if (!sr)
             //

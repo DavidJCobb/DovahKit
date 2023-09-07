@@ -1,7 +1,7 @@
 #include "./condition.h"
 #include "editor/subsystems/worldedit/core.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    /*static*/ control_scheme_condition control_scheme_condition::from_worldedit_state() {
       auto& worldedit = subsystems::worldedit::core::get();
 

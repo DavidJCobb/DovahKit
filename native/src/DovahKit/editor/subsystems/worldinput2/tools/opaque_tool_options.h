@@ -1,7 +1,7 @@
 #pragma once
 #include <QPointF>
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    //
    // TODO: Once we implement tools, we'll have this use a `class_array` of 
    //       forward-declarations for the tool classes. That will allow us 

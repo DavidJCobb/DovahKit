@@ -3,7 +3,7 @@
 #include "./inputs/button.h"
 #include "./chrono.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct interruption_check {
       struct potentially_interrupting_button {
          inputs::button button;

@@ -10,13 +10,13 @@
 #include "./components/buttoned_device.h"
 #include "./abstract_device_handler.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    namespace inputs {
       struct button;
    }
 }
 
-namespace dovahkit::subsystems::worldinput2::devices {
+namespace dovahkit::subsystems::worldinput::devices {
    class xinput final : public abstract_device_handler {
       public:
          using button = subsystems::xinput::button;

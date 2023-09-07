@@ -31,7 +31,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       requires Tool::function_name != _base::function_name;
 
       // Tool must be invocable.
-      requires requires(const worldinput2::tool_invocation_cause& a, const opaque_options_union& b, tool_results_tuple& c) {
+      requires requires(const worldinput::tool_invocation_cause& a, const opaque_options_union& b, tool_results_tuple& c) {
          { Tool::invoke(a, b, c) } -> std::same_as<void>;
       };
       requires requires(const opaque_options_union& b, tool_results_tuple& c) {

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    enum class button_press_type : int8_t {
       none       = -1,
       press      =  0, // run the tool when the button is released, if it was held only briefly

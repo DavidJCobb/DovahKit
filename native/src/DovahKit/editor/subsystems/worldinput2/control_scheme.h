@@ -8,13 +8,13 @@ namespace cobb::bitstreams {
    class reader;
    class writer;
 }
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_action;
    class control_scheme_condition_node;
    class control_scheme_modifier;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme {
       public:
          static constexpr const size_t max_name_length = 1023;

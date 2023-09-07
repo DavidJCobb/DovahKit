@@ -9,7 +9,7 @@
 
 class QFile;
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_manager;
    class control_scheme_manager : public QObject, public cobb::singleton_ex<control_scheme_manager> {
       Q_OBJECT;

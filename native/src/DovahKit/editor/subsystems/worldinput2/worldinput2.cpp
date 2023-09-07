@@ -24,7 +24,7 @@ namespace {
    constexpr float reset_after_lag_threshold = 3.0; // ignore all held inputs if this much time passed since we last polled
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    core::core() {
       this->device_handlers.keyboard_mouse.recheck_mouse_metrics();
       QObject::connect((QApplication*)QApplication::instance(), &QApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
@@ -40,15 +40,15 @@ namespace dovahkit::subsystems::worldinput2 {
          this->device_handlers.gamepad.discard_raycast_results_for(*stub);
       });
 
-      auto& mgr = worldinput2::control_scheme_manager::get_or_create();
+      auto& mgr = worldinput::control_scheme_manager::get_or_create();
       this->setBindingsFor(mgr.get_current_scheme(input_device_type::keyboard_mouse));
       this->setBindingsFor(mgr.get_current_scheme(input_device_type::xinput));
-      QObject::connect(&mgr, &worldinput2::control_scheme_manager::controlSchemeModified, this, [this](const QString& prior_name, const worldinput2::control_scheme& data, bool current) {
+      QObject::connect(&mgr, &worldinput::control_scheme_manager::controlSchemeModified, this, [this](const QString& prior_name, const worldinput::control_scheme& data, bool current) {
          if (!current)
             return;
          this->setBindingsFor(data);
       });
-      QObject::connect(&mgr, &worldinput2::control_scheme_manager::currentSchemeChanged, this, [this](const worldinput2::control_scheme& data) {
+      QObject::connect(&mgr, &worldinput::control_scheme_manager::currentSchemeChanged, this, [this](const worldinput::control_scheme& data) {
          this->setBindingsFor(data);
       });
    }

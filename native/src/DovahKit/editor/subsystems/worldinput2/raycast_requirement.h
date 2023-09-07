@@ -6,11 +6,11 @@
 namespace dovahkit::subsystems::worldedit {
    struct raycast_result;
 }
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    using raycast_result = worldedit::raycast_result;
 }
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    struct raycast_requirement {
       public:
          using axis3D     = worldedit::axis3D;

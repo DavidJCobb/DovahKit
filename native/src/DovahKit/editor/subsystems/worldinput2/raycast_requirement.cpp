@@ -4,7 +4,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_types.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    bool raycast_requirement::is_satisfied_by(const raycast_result& res) const {
       if (this->empty())
          return true;

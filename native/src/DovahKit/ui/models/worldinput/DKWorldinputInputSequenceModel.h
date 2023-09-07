@@ -12,10 +12,10 @@ class DKWorldinputInputSequenceModel;
 template<>
 class DKGenericTreeModelNode<DKWorldinputInputSequenceModel> : public DKGenericTreeModelNodeBase<DKWorldinputInputSequenceModel> {
    public:
-      using input_sequence = dovahkit::subsystems::worldinput2::input_sequence;
+      using input_sequence = dovahkit::subsystems::worldinput::input_sequence;
       using group_type = input_sequence::group_type;
 
-      using button_data_type = dovahkit::subsystems::worldinput2::inputs::button;
+      using button_data_type = dovahkit::subsystems::worldinput::inputs::button;
 
    public:
       group_type type = group_type::concurrent_ordered;
@@ -50,11 +50,11 @@ class DKWorldinputInputSequenceModel : public DKGenericTreeModel<DKWorldinputInp
       using base_type::moveItems;
 
    public:
-      using input_sequence = dovahkit::subsystems::worldinput2::input_sequence;
+      using input_sequence = dovahkit::subsystems::worldinput::input_sequence;
       //
       using group_type = input_sequence::group_type;
 
-      using button_data_type = dovahkit::subsystems::worldinput2::inputs::button;
+      using button_data_type = dovahkit::subsystems::worldinput::inputs::button;
 
       // For outside actors.
       struct NodeInfo {

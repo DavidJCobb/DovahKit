@@ -14,7 +14,7 @@ namespace {
       using namespace dovahkit::subsystems::worldedit;
    }
    namespace worldinput {
-      using namespace dovahkit::subsystems::worldinput2;
+      using namespace dovahkit::subsystems::worldinput;
    }
    namespace tools {
       using namespace dovahkit::subsystems::worldedit::tools;
@@ -53,14 +53,14 @@ namespace {
 
    template<typename Tool>
    static auto _tool_sans_options() {
-      decltype(worldinput2::control_scheme_action::tool) out = {};
+      decltype(worldinput::control_scheme_action::tool) out = {};
       out.id = worldedit::tools::id_of<Tool>;
       return out;
    }
 
    template<typename Options>
    static auto _tool_with_options(const Options& options) {
-      decltype(worldinput2::control_scheme_action::tool) out = {};
+      decltype(worldinput::control_scheme_action::tool) out = {};
       out.id      = worldedit::tools::id_of<Options>;
       out.options = new tools::options_union(options);
       return out;

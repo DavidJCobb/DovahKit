@@ -8,7 +8,7 @@
 class QAction;
 class QItemSelection;
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    class control_scheme_modifier;
    class input_sequence;
 }
@@ -18,8 +18,8 @@ class DKWorldinputInputSequenceModel;
 class WorldinputModifierEditDialog : public QDialog {
    Q_OBJECT;
    public:
-      using input_device_type = dovahkit::subsystems::worldinput2::input_device_type;
-      using data_type = dovahkit::subsystems::worldinput2::control_scheme_modifier;
+      using input_device_type = dovahkit::subsystems::worldinput::input_device_type;
+      using data_type = dovahkit::subsystems::worldinput::control_scheme_modifier;
       
    public:
       WorldinputModifierEditDialog(input_device_type, QWidget* parent = nullptr);
@@ -32,7 +32,7 @@ class WorldinputModifierEditDialog : public QDialog {
       //
       const input_device_type device_type;
 
-      using input_sequence = dovahkit::subsystems::worldinput2::input_sequence;
+      using input_sequence = dovahkit::subsystems::worldinput::input_sequence;
 
       const DKWorldinputInputSequenceModel* _getInputSequenceModel() const;
       DKWorldinputInputSequenceModel* _getInputSequenceModel() { return const_cast<DKWorldinputInputSequenceModel*>(std::as_const(*this)._getInputSequenceModel()); }

@@ -6,7 +6,7 @@
 #include "../inputs/button.h"
 #include "../input_sequence.h"
 
-namespace dovahkit::subsystems::worldinput2::builtin_control_schemes {
+namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
    inline input_sequence _single_button_sequence(const inputs::xinput_button key) {
       input_sequence out;
 

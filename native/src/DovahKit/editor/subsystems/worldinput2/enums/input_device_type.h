@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    enum class input_device_type {
       keyboard_mouse,
       xinput,
@@ -8,8 +8,8 @@ namespace dovahkit::subsystems::worldinput2 {
 }
 
 #include "helpers/bitstreams/enum_serialization_options.h"
-template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput2::input_device_type> {
-   using value_type = dovahkit::subsystems::worldinput2::input_device_type;
+template<> struct cobb::bitstreams::enum_serialization_options<dovahkit::subsystems::worldinput::input_device_type> {
+   using value_type = dovahkit::subsystems::worldinput::input_device_type;
 
    static constexpr const size_t bitcount = 1;
    static constexpr const auto   valid_values = []() {

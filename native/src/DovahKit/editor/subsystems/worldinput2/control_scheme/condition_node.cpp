@@ -1,6 +1,6 @@
 #include "./condition_node.h"
 
-namespace dovahkit::subsystems::worldinput2 {
+namespace dovahkit::subsystems::worldinput {
    bool control_scheme_condition_node::operator==(const control_scheme_condition_node& other) const noexcept {
       if (this->name != other.name)
          return false;

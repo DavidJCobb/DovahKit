@@ -4,7 +4,7 @@
 #include <vector>
 #include "../enums/comparison_operator.h"
 
-namespace dovahkit::subsystems::worldinput2::util {
+namespace dovahkit::subsystems::worldinput::util {
    template<typename ComparandType>
    struct comparison {
       using comparand_type = ComparandType;

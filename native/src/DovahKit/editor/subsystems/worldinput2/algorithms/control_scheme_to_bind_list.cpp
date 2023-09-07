@@ -12,7 +12,7 @@ namespace {
    }
 }
 
-namespace dovahkit::subsystems::worldinput2::algorithms {
+namespace dovahkit::subsystems::worldinput::algorithms {
    namespace {
       input_sequence _absolute_input_sequence(const control_scheme::node& target) {
          const auto& target_sequence = [&target]() {
