@@ -2,7 +2,7 @@
 #include <QDialog>
 #include "ui_worldinput_scheme_editor.h"
 
-#include "editor/subsystems/worldinput2/enums/input_device_type.h"
+#include "editor/subsystems/worldinput/enums/input_device_type.h"
 
 namespace dovahkit::subsystems::worldinput {
    class control_scheme;

@@ -4,8 +4,8 @@
 #include "helpers/qt/combobox.h"
 #include "widgets/DKHeaderView.h"
 
-#include "editor/subsystems/worldinput2/control_scheme/modifier.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/control_scheme/modifier.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 
 #include "ui/models/worldinput/DKWorldinputInputSequenceModel.h"
 #include "widgets/widget-dialogs/DKWorldinputButtonPickDialog.h"

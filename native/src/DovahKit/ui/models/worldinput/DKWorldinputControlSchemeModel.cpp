@@ -1,6 +1,6 @@
 #include "./DKWorldinputControlSchemeModel.h"
 
-#include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
+#include "editor/subsystems/worldinput/algorithms/input_sequence_stringification.h"
 
 #include "ui/options_window/worldedit_tools/get_worldedit_tool_info.h"
 

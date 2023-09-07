@@ -1,8 +1,8 @@
 #pragma once
 #include "ui/models/DKGenericListModel.h"
-#include "editor/subsystems/worldinput2/enums/input_device_type.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
-#include "editor/subsystems/worldinput2/worldinput_control_scheme_manager.h"
+#include "editor/subsystems/worldinput/enums/input_device_type.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
+#include "editor/subsystems/worldinput/worldinput_control_scheme_manager.h"
 
 class DKWorldinputDeviceSchemesModel;
 struct DKWorldinputDeviceSchemesModelNode {

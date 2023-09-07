@@ -5,11 +5,11 @@
 
 #include "editor/subsystems/worldedit/enums/axis3D.h"
 #include "editor/subsystems/worldedit/enums/gizmo_mode.h"
-#include "editor/subsystems/worldinput2/enums/button_press_type.h"
-#include "editor/subsystems/worldinput2/enums/input_device_type.h"
-#include "editor/subsystems/worldinput2/enums/optional_yn.h"
-#include "editor/subsystems/worldinput2/enums/range_input_axes.h"
-#include "editor/subsystems/worldinput2/enums/range_input_control.h"
+#include "editor/subsystems/worldinput/enums/button_press_type.h"
+#include "editor/subsystems/worldinput/enums/input_device_type.h"
+#include "editor/subsystems/worldinput/enums/optional_yn.h"
+#include "editor/subsystems/worldinput/enums/range_input_axes.h"
+#include "editor/subsystems/worldinput/enums/range_input_control.h"
 
 class QAction;
 class QItemSelection;

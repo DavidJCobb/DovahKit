@@ -1,8 +1,8 @@
 #include "./worldinput2_control_scheme_ui.h"
 
 
-#include "editor/subsystems/worldinput2/builtin_control_schemes/debug_wasd.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 
 #include "ui/options_window/worldinput_scheme_editor.h"
 

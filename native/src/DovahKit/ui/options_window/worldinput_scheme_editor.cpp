@@ -1,5 +1,5 @@
 #include "./worldinput_scheme_editor.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 #include "ui/models/worldinput/DKWorldinputControlSchemeModel.h"
 #include "widgets/DKHeaderView.h"
 

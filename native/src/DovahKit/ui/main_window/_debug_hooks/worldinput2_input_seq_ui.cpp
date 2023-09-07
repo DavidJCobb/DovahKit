@@ -1,7 +1,7 @@
 #include "./worldinput2_input_seq_ui.h"
 
-#include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
-#include "editor/subsystems/worldinput2/control_scheme/action.h"
+#include "editor/subsystems/worldinput/algorithms/input_sequence_stringification.h"
+#include "editor/subsystems/worldinput/control_scheme/action.h"
 
 #include "ui/options_window/worldinput_bind_editor.h"
 

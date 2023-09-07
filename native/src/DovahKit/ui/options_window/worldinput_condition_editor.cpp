@@ -3,9 +3,9 @@
 #include "helpers/qt/basic_bindings.h"
 #include "helpers/qt/combobox.h"
 
-#include "editor/subsystems/worldinput2/control_scheme/condition.h"
-#include "editor/subsystems/worldinput2/control_scheme/condition_node.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/control_scheme/condition.h"
+#include "editor/subsystems/worldinput/control_scheme/condition_node.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 
 namespace {
    namespace worldinput {

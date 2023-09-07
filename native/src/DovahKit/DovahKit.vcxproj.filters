@@ -1854,34 +1854,34 @@
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\devices\keyboard_mouse.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\devices\keyboard_mouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\devices\xinput.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\devices\xinput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\input_sequence.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\input_sequence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\worldinput2.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\worldinput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\devices\abstract_device_handler.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\devices\abstract_device_handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\press_preempts_hold.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\hold_blocks_press.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\concurrent_bind_conflict_resolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\bind_list.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\bind_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\keyboard\key.cpp">
@@ -1911,7 +1911,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\raycast_requirement.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\raycast_requirement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp">
@@ -1986,43 +1986,43 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\modifier.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme\modifier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\action.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme\action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\algorithms\control_scheme_to_bind_list.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\control_scheme_to_bind_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\debug_wasd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\reach.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\condition.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\util\numeric_comparisons.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\util\numeric_comparisons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\control_scheme\condition_node.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\ini\value_serialization.inl">
@@ -2070,7 +2070,7 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -4541,28 +4541,28 @@
     <ClInclude Include="editor\subsystems\gui_adjust\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\button_press_type.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\button_press_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\inputs\button.h">
+    <ClInclude Include="editor\subsystems\worldinput\inputs\button.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\devices\xinput.h">
+    <ClInclude Include="editor\subsystems\worldinput\devices\xinput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\devices\keyboard_mouse.h">
+    <ClInclude Include="editor\subsystems\worldinput\devices\keyboard_mouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\chrono.h">
+    <ClInclude Include="editor\subsystems\worldinput\chrono.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\device_button_state.h">
+    <ClInclude Include="editor\subsystems\worldinput\device_button_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\button_release_type.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\button_release_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\defaults.h">
+    <ClInclude Include="editor\subsystems\worldinput\defaults.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\uint_of_size.h">
@@ -4577,58 +4577,58 @@
     <ClInclude Include="helpers\bits\replace_most_significant_bits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\input_sequence.h">
+    <ClInclude Include="editor\subsystems\worldinput\input_sequence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\devices\components\buttoned_device.h">
+    <ClInclude Include="editor\subsystems\worldinput\devices\components\buttoned_device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\input_device_type.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\input_device_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\devices\abstract_device_handler.h">
+    <ClInclude Include="editor\subsystems\worldinput\devices\abstract_device_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\owned_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\tools\combined_tool_results.h">
+    <ClInclude Include="editor\subsystems\worldinput\tools\combined_tool_results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\core.h">
+    <ClInclude Include="editor\subsystems\worldinput\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\interruption_check.h">
+    <ClInclude Include="editor\subsystems\worldinput\interruption_check.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\debugging.h">
+    <ClInclude Include="editor\subsystems\worldinput\debugging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\device_button_claim.h">
+    <ClInclude Include="editor\subsystems\worldinput\device_button_claim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\bind_list.h">
+    <ClInclude Include="editor\subsystems\worldinput\bind_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\press_preempts_hold.h">
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\press_preempts_hold.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\hold_blocks_press.h">
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\hold_blocks_press.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\concurrent_bind_conflict_resolution.h">
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\concurrent_bind_conflict_resolution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\axis2D.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\axis2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\input_sequence_stringification.h">
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\input_sequence_stringification.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\keyboard\virtual_key.h">
@@ -4640,13 +4640,13 @@
     <ClInclude Include="helpers\keyboard\qt_to_vk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\tools\opaque_tool_options.h">
+    <ClInclude Include="editor\subsystems\worldinput\tools\opaque_tool_options.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\util\is_delta_control.h">
+    <ClInclude Include="editor\subsystems\worldinput\util\is_delta_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\range_control_state.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\range_control_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_base.h">
@@ -4661,7 +4661,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\tool_invocation_cause.h">
+    <ClInclude Include="editor\subsystems\worldinput\tool_invocation_cause.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h">
@@ -4751,13 +4751,13 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\sign.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\raycast_requirement.h">
+    <ClInclude Include="editor\subsystems\worldinput\raycast_requirement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\optional_yn.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\optional_yn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\raycast_result.h">
+    <ClInclude Include="editor\subsystems\worldinput\raycast_result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h">
@@ -4904,10 +4904,10 @@
     <ClInclude Include="helpers\bitstreams\position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_control.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\range_input_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\range_input_axes.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\range_input_axes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h">
@@ -4982,40 +4982,40 @@
     <ClInclude Include="helpers\tree\impl\child_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\action.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\action.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\modifier.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\modifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\type_containers\fixed_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\algorithms\control_scheme_to_bind_list.h">
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\control_scheme_to_bind_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\all_node_headers.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\all_node_headers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\ck_standard.h">
+    <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\_helpers.h">
+    <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\debug_wasd.h">
+    <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\debug_wasd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\builtin_control_schemes\reach.h">
+    <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\reach.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\tree\data_variant.h">
@@ -5024,13 +5024,13 @@
     <ClInclude Include="helpers\type_traits\transfer_variadics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\enums\comparison_operator.h">
+    <ClInclude Include="editor\subsystems\worldinput\enums\comparison_operator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\util\numeric_comparisons.h">
+    <ClInclude Include="editor\subsystems\worldinput\util\numeric_comparisons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput2\control_scheme\condition_node.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\ini\types.h">
@@ -5577,7 +5577,7 @@
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\subsystems\worldinput2\worldinput2.h">
+    <QtMoc Include="editor\subsystems\worldinput\worldinput.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\options_window\worldinput_bind_editor.h">
@@ -5616,7 +5616,7 @@
     <QtMoc Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\subsystems\worldinput2\worldinput_control_scheme_manager.h">
+    <QtMoc Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -5678,7 +5678,7 @@
     <Text Include="helpers\tuples\docs.txt" />
     <Text Include="nif\blocks\_TODO.txt" />
     <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
-    <Text Include="editor\subsystems\worldinput2\_docs\bind tree.txt" />
+    <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="helpers\ini\INI file grammar.txt" />
     <Text Include="helpers\ini\INI file grammar win32.txt" />
   </ItemGroup>
@@ -5821,13 +5821,13 @@
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
-    <None Include="editor\subsystems\worldinput2\devices\components\buttoned_device.inl">
+    <None Include="editor\subsystems\worldinput\devices\components\buttoned_device.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="editor\subsystems\worldinput2\input_sequence.inl">
+    <None Include="editor\subsystems\worldinput\input_sequence.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="editor\subsystems\worldinput2\_docs\spec.md" />
+    <None Include="editor\subsystems\worldinput\_docs\spec.md" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -5860,7 +5860,7 @@
     <None Include="helpers\bitstreams\writer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="editor\subsystems\worldinput2\inputs\button.inl">
+    <None Include="editor\subsystems\worldinput\inputs\button.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\bitstreams\position.inl">
@@ -5873,10 +5873,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\tree\node.md" />
-    <None Include="editor\subsystems\worldinput2\control_scheme\condition.inl">
+    <None Include="editor\subsystems\worldinput\control_scheme\condition.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="editor\subsystems\worldinput2\util\numeric_comparisons.inl">
+    <None Include="editor\subsystems\worldinput\util\numeric_comparisons.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\ini\setting.inl">
@@ -5956,9 +5956,9 @@
     <Natvis Include="vulkan\image_metadata.natvis" />
     <Natvis Include="vulkan\image.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
-    <Natvis Include="editor\subsystems\worldinput2\input_sequence.natvis" />
+    <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
-    <Natvis Include="editor\subsystems\worldinput2\inputs\button.natvis" />
+    <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />

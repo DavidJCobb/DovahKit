@@ -1,5 +1,5 @@
 #pragma once
-#include "./worldinput2.h"
+#include "./worldinput.h"
 
 //
 // Qt's code generation system -- specifically, the MOC -- doesn't understand what 

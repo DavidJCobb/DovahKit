@@ -3,7 +3,7 @@
 #include <QAbstractItemModel>
 #include <QString>
 #include "helpers/keyboard/virtual_key.h"
-#include "editor/subsystems/worldinput2/input_sequence.h"
+#include "editor/subsystems/worldinput/input_sequence.h"
 #include "ui/models/DKGenericTreeModel.h"
 #include "widgets/widget-dialogs/DKWorldinputButtonPickDialog.h"
 

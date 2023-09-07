@@ -5,8 +5,8 @@
 #include <QString>
 #include "helpers/tree/data_variant.h"
 #include "helpers/keyboard/virtual_key.h"
-#include "editor/subsystems/worldinput2/control_scheme/all_node_headers.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/control_scheme/all_node_headers.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 #include "ui/models/DKGenericTreeModel.h"
 
 class DKWorldinputControlSchemeModel;

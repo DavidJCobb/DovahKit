@@ -3,7 +3,7 @@
 #include <QDialog>
 #include <QString>
 #include "helpers/keyboard/virtual_key.h"
-#include "editor/subsystems/worldinput2/inputs/button.h"
+#include "editor/subsystems/worldinput/inputs/button.h"
 
 class QComboBox;
 class QLineEdit;

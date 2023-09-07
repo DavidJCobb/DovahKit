@@ -8,7 +8,7 @@
 //
 #include "ui/models/worldedit/EditGizmoColorSchemeModel.h"
 
-#include "editor/subsystems/worldinput2/worldinput_control_scheme_manager.h"
+#include "editor/subsystems/worldinput/worldinput_control_scheme_manager.h"
 #include "./worldinput_scheme_editor.h"
 //
 #include "ui/models/worldinput/DKWorldinputDeviceSchemesModel.h"

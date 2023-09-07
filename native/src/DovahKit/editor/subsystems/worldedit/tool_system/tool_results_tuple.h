@@ -1,7 +1,7 @@
 #pragma once
 #include <bitset>
-#include "editor/subsystems/worldinput2/chrono.h"
-#include "editor/subsystems/worldinput2/tool_invocation_cause.h"
+#include "editor/subsystems/worldinput/chrono.h"
+#include "editor/subsystems/worldinput/tool_invocation_cause.h"
 #include "./concepts/is_tool.h"
 #include "./concepts/is_tool_results.h"
 #include "./concepts/tool_results_or_tool_with_results.h"

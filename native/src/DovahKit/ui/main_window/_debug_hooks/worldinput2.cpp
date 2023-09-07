@@ -8,11 +8,11 @@
 #include <QPushButton>
 #include <QPointer>
 #include <QTimer>
-#include "editor/subsystems/worldinput2/core.h"
+#include "editor/subsystems/worldinput/core.h"
 
-#include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
-#include "editor/subsystems/worldinput2/control_scheme/all_node_headers.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/algorithms/input_sequence_stringification.h"
+#include "editor/subsystems/worldinput/control_scheme/all_node_headers.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 
 #include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
 #include "editor/subsystems/worldedit/tool_system/id_of.h"

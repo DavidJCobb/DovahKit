@@ -1,11 +1,11 @@
 #include "./worldinput_serialization.h"
 #include <QDebug>
 
-#include "editor/subsystems/worldinput2/core.h"
-#include "editor/subsystems/worldinput2/builtin_control_schemes/ck_standard.h"
-#include "editor/subsystems/worldinput2/builtin_control_schemes/debug_wasd.h"
-#include "editor/subsystems/worldinput2/builtin_control_schemes/reach.h"
-#include "editor/subsystems/worldinput2/control_scheme.h"
+#include "editor/subsystems/worldinput/core.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/ck_standard.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
+#include "editor/subsystems/worldinput/control_scheme.h"
 
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
@@ -15,7 +15,7 @@ namespace {
       using namespace dovahkit::subsystems::worldinput;
    }
 }
-#include "editor/subsystems/worldinput2/algorithms/input_sequence_stringification.h"
+#include "editor/subsystems/worldinput/algorithms/input_sequence_stringification.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void worldinput_serialization::execute(QWidget* from) {

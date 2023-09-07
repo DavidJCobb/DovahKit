@@ -43,10 +43,10 @@ namespace {
    static constexpr const bool selection_vector_is_unordered = false;
 }
 
-#include "editor/subsystems/worldinput2/core.h"
+#include "editor/subsystems/worldinput/core.h"
 #include "./tool_system/tool_results_tuple.h"
-#include "editor/subsystems/worldinput2/builtin_control_schemes/debug_wasd.h"
-#include "editor/subsystems/worldinput2/builtin_control_schemes/reach.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
+#include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
 namespace {
    static constexpr bool debug_use_new_worldinput = true;
 }

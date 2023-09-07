@@ -2,7 +2,7 @@
 #include <concepts>
 #include <type_traits>
 #include "helpers/tuples/contains_type_matching_functor.h"
-#include "editor/subsystems/worldinput2/tool_invocation_cause.h"
+#include "editor/subsystems/worldinput/tool_invocation_cause.h"
 
 #include "../concepts/tool_with_options.h"
 #include "../concepts/tool_with_results.h"

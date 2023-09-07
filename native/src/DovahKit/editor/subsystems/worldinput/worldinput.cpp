@@ -1,4 +1,4 @@
-#include "./worldinput2.h"
+#include "./worldinput.h"
 #include <QApplication>
 #include "helpers/unreachable.h"
 #include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"

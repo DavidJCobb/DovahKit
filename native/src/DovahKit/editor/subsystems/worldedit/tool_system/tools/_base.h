@@ -5,7 +5,7 @@
 #include "helpers/bitstreams/round_trip_test.h"
 #include "helpers/eight_cc.h"
 #include "helpers/enum_flags.h"
-#include "editor/subsystems/worldinput2/tool_invocation_cause.h"
+#include "editor/subsystems/worldinput/tool_invocation_cause.h"
 #include "../../enums/editor_mode.h"
 
 namespace dovahkit::subsystems::worldedit {
