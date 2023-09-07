@@ -403,7 +403,7 @@ void OptionsWindow::revertChanges() {
 
       bool found = false;
       for (size_t i = 0; i < widget->count(); ++i) {
-         auto hc = widget->itemData(i).toBool();
+         auto hc = widget->itemData(i, EditGizmoColorSchemeModel::IsHardcodedRole).toBool();
          if (hc != id.is_hardcoded)
             continue;
          if (widget->itemText(i).toUtf8().toStdString() != id.name)

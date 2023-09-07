@@ -65,12 +65,12 @@ WorldinputConditionEditDialog::WorldinputConditionEditDialog(QWidget* parent) : 
    #pragma region Selection count
    {
       this->ui.numSelectionsComparison->clear();
-      this->ui.numSelectionsComparison->addItem(tr("="), (int)worldinput::comparison_operator::equal);
-      this->ui.numSelectionsComparison->addItem(tr("≠"), (int)worldinput::comparison_operator::not_equal);
-      this->ui.numSelectionsComparison->addItem(tr(">"), (int)worldinput::comparison_operator::greater);
-      this->ui.numSelectionsComparison->addItem(tr("≥"), (int)worldinput::comparison_operator::greater_or_equal);
-      this->ui.numSelectionsComparison->addItem(tr("<"), (int)worldinput::comparison_operator::less);
-      this->ui.numSelectionsComparison->addItem(tr("≤"), (int)worldinput::comparison_operator::less_or_equal);
+      this->ui.numSelectionsComparison->addItem(QString("="), (int)worldinput::comparison_operator::equal);
+      this->ui.numSelectionsComparison->addItem(QString::fromUtf8((const char*)u8"≠"), (int)worldinput::comparison_operator::not_equal);
+      this->ui.numSelectionsComparison->addItem(QString(">"), (int)worldinput::comparison_operator::greater);
+      this->ui.numSelectionsComparison->addItem(QString::fromUtf8((const char*)u8"≥"), (int)worldinput::comparison_operator::greater_or_equal);
+      this->ui.numSelectionsComparison->addItem(QString("<"), (int)worldinput::comparison_operator::less);
+      this->ui.numSelectionsComparison->addItem(QString::fromUtf8((const char*)u8"≤"), (int)worldinput::comparison_operator::less_or_equal);
 
       QObject::connect(this->ui.numSelectionsEnable, &QCheckBox::toggled, this, [this](bool checked) {
          this->_update_selection_count_constraint();
@@ -139,10 +139,15 @@ void WorldinputConditionEditDialog::initializeFrom(const node_type& src) {
    #pragma endregion
    #pragma region Selection count
    {
+      std::array<const QSignalBlocker, 3> blockers = {
+         QSignalBlocker(this->ui.numSelectionsEnable),
+         QSignalBlocker(this->ui.numSelectionsComparison),
+         QSignalBlocker(this->ui.numSelectionsComparand)
+      };
+
       this->ui.numSelectionsEnable->setChecked(false);
       this->ui.numSelectionsComparison->setEnabled(false);
       this->ui.numSelectionsComparand->setEnabled(false);
-
 
       const auto& constraint_opt = this->_data.selection_count;
       if (constraint_opt.has_value()) {

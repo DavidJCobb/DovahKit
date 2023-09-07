@@ -1473,34 +1473,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKBoundInputWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\options_window\options_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\options_3d_input_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\Options3DControlSchemeModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\localization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\overlays\fps.cpp">
@@ -1912,12 +1885,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\xinput\gamepad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\windows.cpp">
@@ -4661,9 +4628,6 @@
     <ClInclude Include="editor\subsystems\xinput\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\options_3d_input_window\tool_options\_all.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5461,15 +5425,6 @@
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\options_3d_input_window\options_3d_input_window.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -5778,37 +5733,10 @@
     <QtMoc Include="widgets\DKVulkanView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKBoundInputWidget.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widgets\DKKeyPickerWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\options_window\options_window.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_move_camera.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_turn_camera.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_log.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_debug_placeholder.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\options_3d_input_window.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_base.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\Options3DControlSchemeModel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\localization.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\worldedit\worldedit.h">
@@ -5821,12 +5749,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\xinput\xinputDK.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_modify_camera_speed_flags.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\options_3d_input_window\tool_options\tool_options_attempt_on_screen_selection.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h">

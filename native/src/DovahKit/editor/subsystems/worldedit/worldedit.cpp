@@ -13,8 +13,6 @@
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
-#include "editor/subsystems/worldinput/core.h"
-#include "editor/subsystems/worldinput/tools/_results.h"
 #include "editor/subsystems/game_inis.h"
 #include "helpers/qt/strings.h"
 #include "helpers/type_traits/value_type_of.h"
@@ -53,6 +51,7 @@ namespace {
    static constexpr bool debug_use_new_worldinput = true;
 }
 
+#include "vulkan/data/DKVulkanCameraUpdate.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 
 #include "helpers/math/rotation/unit_conversion.h"
@@ -947,8 +946,6 @@ namespace dovahkit::subsystems::worldedit {
       //
       if constexpr (debug_use_new_worldinput) {
          worldinput2::core::get().setTargetWidget(&view);
-      } else {
-         worldinput::core::get().setTargetView(&view);
       }
       //
       QObject::connect(&view, &DKVulkanView::rendererReady, this, &core::_on_renderer_attached, Qt::UniqueConnection);
@@ -964,8 +961,6 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
          if constexpr (debug_use_new_worldinput) {
             worldinput2::core::get().setTargetWidget(nullptr);
-         } else {
-            worldinput::core::get().setTargetView(nullptr);
          }
          this->target_view = nullptr;
          //

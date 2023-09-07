@@ -4,31 +4,30 @@
 #include <QMessageBox>
 #include <QShowEvent>
 #include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
-#include "../helpers/qt/strings.h"
-#include "../editor/core.h"
-#include "../editor/open_window_for_form.h"
-#include "../dovah/files/file_load_order.h"
+#include "helpers/qt/strings.h"
+#include "editor/core.h"
+#include "editor/open_window_for_form.h"
+#include "dovah/files/file_load_order.h"
 #pragma region subwindows
-   #include "main_window/cell_view.h"
-   #include "main_window/object_window.h"
-   #include "main_window/log_window.h"
-   #include "main_window/render_window.h"
+   #include "./main_window/cell_view.h"
+   #include "./main_window/object_window.h"
+   #include "./main_window/log_window.h"
+   #include "./main_window/render_window.h"
 #pragma endregion
 #pragma region dialogs
-   #include "main_window/load_window.h"
-   #include "main_window/save_window.h"
-   #include "main_window/file_metadata_window.h"
-   #include "main_window/game_setting_window.h"
-   #include "main_window/default_object_window.h"
-   #include "main_window/script_window_single.h"
-   #include "main_window/script_window_package.h"
+   #include "./main_window/load_window.h"
+   #include "./main_window/save_window.h"
+   #include "./main_window/file_metadata_window.h"
+   #include "./main_window/game_setting_window.h"
+   #include "./main_window/default_object_window.h"
+   #include "./main_window/script_window_single.h"
+   #include "./main_window/script_window_package.h"
    //
    #include "./options_window/options_window.h"
-   #include "options_3d_input_window/options_3d_input_window.h"
 #pragma endregion
 
-#include "../dovah/files/common.h"
-#include "../dovah/form_stub.h"
+#include "dovah/files/common.h"
+#include "dovah/form_stub.h"
 
 // For the "Windows" menu
 #include "form_windows/_base.h"
@@ -266,10 +265,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       modal->deleteLater();
    });
 
-   QObject::connect(this->ui.action3DViewInput, &QAction::triggered, this, [this]() {
-      auto* win = Options3DInputDialog::open(this);
-      QObject::connect(win, &QDialog::finished, win, &QObject::deleteLater);
-   });
    QObject::connect(this->ui.actionOptions, &QAction::triggered, this, [this]() {
       auto* win = OptionsWindow::open(this);
       QObject::connect(win, &QDialog::finished, win, &QObject::deleteLater);

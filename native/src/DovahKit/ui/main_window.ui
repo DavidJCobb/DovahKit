@@ -93,7 +93,6 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="action3DViewInput"/>
     <addaction name="actionOptions"/>
    </widget>
    <addaction name="menuFile"/>
