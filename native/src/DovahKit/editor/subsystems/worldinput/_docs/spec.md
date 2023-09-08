@@ -10,7 +10,7 @@ A bind list item has the following properties:
 * **Editor mode:** An optional enumeration indicating the Worldedit editor modes in which this bind is active. If the property is not set, then the bind is active in all modes.
 * **Input sequence:** The input sequence that the user must enter in order to activate this bind.
 * **Button press type:** The button press type associated with the input sequence: does the user have to press, long press, or hold the inputs?
-* **Bound tool and associated options:** The Worldedit editing tool or function to invoke when the bind list item activates, along with the parameters to use when invoking it.
+* **Bound tool and associated options:** The Worldedit editing tool or function to make a request of when the bind list item activates, along with the parameters to use when making that request.
 
 #### Persistent run-time-only state
 Bind list items store the following values:
@@ -38,7 +38,7 @@ Input nodes have input sequences attached to them. Bound tool nodes additionally
 #### Subtypes
 
 ##### Bound tool node
-A bound tool node has both a bound input, an associated tool, and a set of tool parameters. A tool is any function that can be invoked by the user. Tools include:
+A bound tool node has both a bound input, an associated tool, and a set of tool parameters. A tool is any function that can be activated by the user. Tools include:
 
 * Move camera
 * Turn camera
@@ -310,18 +310,29 @@ Specificity is an opaque value: the precise values are not meaningful; values ar
 
 <span style="page-break-after: always"></span>
 
-## Tool invocation cause
+## Tool
 
-A data structure that gets passed to tools when they're invoked. It has the following properties:
+A tool is any function that can be activated via an input made to the Render Window. The input system belongs to a system called Worldinput; tools belong to a separate system called Worldedit.
 
-* **"Has button" flag:** Indicates that the [input sequence](#input-sequence) which triggered this invocation has one or more buttons.
-* **"Has range" flag:** Indicates that the input sequence which triggered this invocation has a [range constraint](#range-constraint).
-* **Button press type:** The [button press type](#button-press-type) of the bind that triggered this invocation.
-* **"Button is down" flag:** Indicates that this invocation is the result of a button currently being down (i.e. the button press type is Hold). This is redundant with the button press type, but may be used in the future.
-* **"Down status changed on this frame" flag:** Primarily useful for Hold binds, to know whether the current invocation is the result of the bind beginning to activate or remaining active over multiple frames. For tools that toggle some setting, for example, this is what allows them to toggle once when a Hold bind goes down and toggle back when it's released, rather than toggling every single frame. 
+The basic pattern is this:
+
+* A bind in Worldinput is invoked. That bind makes a *request* of a Worldedit tool.
+* The Worldedit tool returns a *response* representing parameters for a queued action to take.
+* Worldinput merges all *responses* received for each given tool, and delivers the merged responses to whatever called it (in practice, Worldedit).
+* Worldedit *invokes* each tool for which a response is present, passing the response as parameters for the invocation. This actually activates the tool and performs an action in the Render Window.
+
+## Tool request cause
+
+A data structure that gets passed to tools when they're requested. It has the following properties:
+
+* **"Has button" flag:** Indicates that the [input sequence](#input-sequence) which triggered this request has one or more buttons.
+* **"Has range" flag:** Indicates that the input sequence which triggered this request has a [range constraint](#range-constraint).
+* **Button press type:** The [button press type](#button-press-type) of the bind that triggered this request.
+* **"Button is down" flag:** Indicates that this request is the result of a button currently being down (i.e. the button press type is Hold). This is redundant with the button press type, but may be used in the future.
+* **"Down status changed on this frame" flag:** Primarily useful for Hold binds, to know whether the current request is the result of the bind beginning to activate or remaining active over multiple frames. For tools that toggle some setting, for example, this is what allows them to toggle once when a Hold bind goes down and toggle back when it's released, rather than toggling every single frame. 
 * **Range value:** X- and Y-axis values for a range input control.
 * **"Range is delta" flag:** Indicates that the range value represents a [delta](#delta-controls) rather than an absolute position.
-* **Raycast result:** Present only when the tool is invoked as the result of an input sequence with a [raycast constraint](#raycast-constraint). Contains the result of the raycast that allowed the input sequence to proceed.
+* **Raycast result:** Present only when the tool is requested as the result of an input sequence with a [raycast constraint](#raycast-constraint). Contains the result of the raycast that allowed the input sequence to proceed.
 
 
 <span style="page-break-after: always"></span>
@@ -904,7 +915,7 @@ An [input node](#input-node) <var>Node</var>'s absolute input sequence is define
             1. Overwrite <var>Button</var>'s previous-frame claim with <var>Button</var>'s current-frame claim.
       1. Reset <var>Button</var>'s current-frame claim.
 1. Run the [bind list update algorithm](#bind-list-update-algorithm).
-1. Deliver all queued (and merged, if applicable) bound function invocations to the outside world i.e. to Worldedit.[^3]
+1. Deliver all queued (and merged, if applicable) bound function responses to the outside world i.e. to Worldedit.[^3]
 
 [^3]: Algorithms in this document describe Worldinput as executing input nodes' bound tools. This is a simplification. In reality, Worldinput passes parameters to those tools as appropriate and receives queued actions, merging them if a tool is triggered more than once in a single frame. The queued actions are then delivered to the outside world at the end of input processing. In other words: we're not running editor operations in the middle of processing input; we do all input processing, and then we actually run the editor operations that the user's inputs triggered.
 
@@ -1033,7 +1044,7 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
       1. If the range control is a delta control:
          1. If the range control is stale, then set <var>RangeIsStale</var> to *true*.
    1. If <var>RangeIsStale</var> is *false*:
-      1. Let <var>Cause</var> be a tool invocation cause.
+      1. Let <var>Cause</var> be a tool request cause.
       1. If <var>EligibleBind</var>'s input sequence contains any buttons, then set <var>Cause</var>'s "has button" flag to *true*.
       1. If <var>EligibleBind</var> has a range constraint, then set <var>Cause</var>'s "has range" flag to *true*.
       1. If <var>EligibleBind</var>'s button press type is Hold, then set <var>Cause</var>'s "button is down" flag to *true*.

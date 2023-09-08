@@ -13,6 +13,7 @@
 #include "./core.h"
 #include "./defaults.h"
 #include "./interruption_check.h"
+#include "./tool_request_cause.h"
 //
 #include "editor/subsystems/worldedit/core.h"
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
@@ -68,28 +69,28 @@ namespace dovahkit::subsystems::worldinput {
       return *this;
    }
 
-   void bind_list_item::invoke(worldedit::tool_results_tuple& out, const tool_invocation_cause& cause) const {
+   void bind_list_item::invoke(worldedit::tool_response_tuple& out, const tool_request_cause& cause) const {
       if (this->bound_tool.tool == worldedit::tools::id_of_none) {
          return;
       }
       assert(this->bound_tool.options != nullptr);
 
       auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
-      table.invoke(cause, *this->bound_tool.options, out);
+      table.request(cause, *this->bound_tool.options, out);
    }
-   void bind_list_item::invoke_for_hold_release(worldedit::tool_results_tuple& out) const {
+   void bind_list_item::invoke_for_hold_release(worldedit::tool_response_tuple& out) const {
       if (this->bound_tool.tool == worldedit::tools::id_of_none) {
          return;
       }
       assert(this->bound_tool.options != nullptr);
 
       auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
-      table.invoke_hold_release(*this->bound_tool.options, out);
+      table.request_hold_release(*this->bound_tool.options, out);
    }
    #pragma endregion
 
    #pragma region bind_list
-   void bind_list::update(timestamp_t now, worldedit::tool_results_tuple& press_results, worldedit::tool_results_tuple& hold_results) {
+   void bind_list::update(timestamp_t now, worldedit::tool_response_tuple& press_results, worldedit::tool_response_tuple& hold_results) {
       auto& subsys = core::get(); // worldinput
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 
@@ -452,7 +453,7 @@ namespace dovahkit::subsystems::worldinput {
             }
          }
          if (!is_stale) {
-            tool_invocation_cause cause;
+            tool_request_cause cause;
             //
             cause.has_button = node->input_sequence.has_any_buttons();
             cause.has_range  = node->input_sequence.has_range_requirement();

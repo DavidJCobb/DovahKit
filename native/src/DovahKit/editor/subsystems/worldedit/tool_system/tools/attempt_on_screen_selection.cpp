@@ -1,12 +1,12 @@
 #include "attempt_on_screen_selection.h"
 #include "../options_union.h"
-#include "../tool_results_tuple.h"
+#include "../tool_response_tuple.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void attempt_on_screen_selection::invoke(const tool_invocation_cause& input, const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void attempt_on_screen_selection::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_responses) {
       const options& o = raw_options.as<options>();
       //
-      results res = {
+      response res = {
          .operation = o.operation,
       };
       if (input.has_button) {
@@ -23,9 +23,9 @@ namespace dovahkit::subsystems::worldedit::tools {
             res.target       = raycast.target_info.form;
          }
       }
-      all_results.merge_member(input, res);
+      all_responses.merge_member(input, res);
    }
-   /*static*/ void attempt_on_screen_selection::invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&) {
+   /*static*/ void attempt_on_screen_selection::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
       // No-op.
    }
 }

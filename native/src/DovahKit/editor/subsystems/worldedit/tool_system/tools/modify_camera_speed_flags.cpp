@@ -1,6 +1,6 @@
 #include "./modify_camera_speed_flags.h"
 #include "../options_union.h"
-#include "../tool_results_tuple.h"
+#include "../tool_response_tuple.h"
 
 namespace {
    namespace worldedit {
@@ -9,14 +9,14 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   void modify_camera_speed_flags::results::merge(const results& from) {
+   void modify_camera_speed_flags::response::merge(const response& from) {
       if (from.boost != bool_operation::no_op)
          this->boost = from.boost;
       if (from.precision != bool_operation::no_op)
          this->precision = from.precision;
    }
 
-   /*static*/ void modify_camera_speed_flags::invoke(const tool_invocation_cause& input, const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void modify_camera_speed_flags::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       const auto& o = raw_options.as<options>();
       //
       // TODO: Handle ReferenceFrames here, or provide an option for them in DKVulkanCameraUpdate. 
@@ -27,7 +27,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       // Currently, we always treat movement as camera-relative (comments on DKVulkanCameraUpdate 
       // saying it's world-relative are currently wrong).
       //
-      results res = {
+      response res = {
          .boost     = o.boost,
          .precision = o.precision,
       };
@@ -54,10 +54,10 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
       all_results.merge_member(input, res);
    }
-   /*static*/ void modify_camera_speed_flags::invoke_for_hold_release(const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void modify_camera_speed_flags::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
-      results res = {
+      response res = {
          .boost     = o.boost,
          .precision = o.precision,
       };

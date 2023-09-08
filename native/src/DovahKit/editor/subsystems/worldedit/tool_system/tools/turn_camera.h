@@ -42,18 +42,18 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;
          };
-         struct results {
+         struct response {
             float yaw   = 0.0; // per tick
             float pitch = 0.0; // per tick
             float roll  = 0.0; // per tick
 
             constexpr void scale(double delta_seconds);
-            constexpr void merge(const results& from);
+            constexpr void merge(const response& from);
          };
 
       public:
-         static void invoke(const tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
-         static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
+         static void request(const tool_request_cause&, const opaque_options_union&, tool_response_tuple&);
+         static void request_for_hold_release(const opaque_options_union&, tool_response_tuple&);
    };
 }
 

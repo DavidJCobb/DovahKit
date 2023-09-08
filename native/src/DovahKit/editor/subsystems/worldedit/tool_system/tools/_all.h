@@ -2,10 +2,10 @@
 #include <concepts>
 #include <type_traits>
 #include "helpers/tuples/contains_type_matching_functor.h"
-#include "editor/subsystems/worldinput/tool_invocation_cause.h"
+#include "editor/subsystems/worldinput/tool_request_cause.h"
 
 #include "../concepts/tool_with_options.h"
-#include "../concepts/tool_with_results.h"
+#include "../concepts/tool_with_response.h"
 #include "../all_tools.h"
 
 #include "./attempt_on_screen_selection.h"
@@ -20,7 +20,7 @@
 
 namespace dovahkit::subsystems::worldedit {
    class opaque_options_union;
-   class tool_results_tuple;
+   class tool_response_tuple;
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
@@ -31,11 +31,11 @@ namespace dovahkit::subsystems::worldedit::tools {
       requires Tool::function_name != _base::function_name;
 
       // Tool must be invocable.
-      requires requires(const worldinput::tool_invocation_cause& a, const opaque_options_union& b, tool_results_tuple& c) {
-         { Tool::invoke(a, b, c) } -> std::same_as<void>;
+      requires requires(const worldinput::tool_request_cause& a, const opaque_options_union& b, tool_response_tuple& c) {
+         { Tool::request(a, b, c) } -> std::same_as<void>;
       };
-      requires requires(const opaque_options_union& b, tool_results_tuple& c) {
-         { Tool::invoke_for_hold_release(b, c) } -> std::same_as<void>;
+      requires requires(const opaque_options_union& b, tool_response_tuple& c) {
+         { Tool::request_for_hold_release(b, c) } -> std::same_as<void>;
       };
 
       // Tool must have a valid ID to use for serialization.
@@ -73,13 +73,13 @@ namespace dovahkit::subsystems::worldedit::tools {
    static_assert(
       []() constexpr -> bool {
          constexpr bool any_two_same = all_tools::template for_each_until_true<[]<typename A>() -> bool {
-            if constexpr (tool_with_results<A>) {
+            if constexpr (tool_with_response<A>) {
                return all_tools::for_each_until_true<[]<typename B>() -> bool {
                   if constexpr (std::is_same_v<A, B>) {
                      return false;
                   }
-                  if constexpr (tool_with_results<B>) {
-                     return std::is_same_v<typename A::results, typename B::results>;
+                  if constexpr (tool_with_response<B>) {
+                     return std::is_same_v<typename A::response, typename B::response>;
                   }
                   return false;
                }>();
@@ -106,10 +106,10 @@ namespace dovahkit::subsystems::worldedit::tools {
       []() constexpr -> bool {
          constexpr bool valid = all_tools::for_each_until_true<[]<typename A>() -> bool {
             if constexpr (A::is_raycast_sensitive) {
-               if constexpr (tool_with_results<A>) {
-                  using results = typename A::results;
-                  if constexpr (requires(results& a, const results& b) { a.merge(b); }) {
-                     // Fail: Results are mergeable.
+               if constexpr (tool_with_response<A>) {
+                  using response = typename A::response;
+                  if constexpr (requires(response & a, const response & b) { a.merge(b); }) {
+                     // Fail: Responses are mergeable.
                      return false;
                   }
                }

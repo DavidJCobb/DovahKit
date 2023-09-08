@@ -1893,7 +1893,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.cpp">
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp">
@@ -4661,7 +4661,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\tool_invocation_cause.h">
+    <ClInclude Include="editor\subsystems\worldinput\tool_request_cause.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h">
@@ -4688,25 +4688,25 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\id_of.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\tool_for_response_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tools_with_responses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_response_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_response.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_results_or_tool_with_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_response_or_tool_with_response.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h">
@@ -4772,7 +4772,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_response.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_options.h">
@@ -5834,7 +5834,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\options_union.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="editor\subsystems\worldedit\tool_system\tool_results_tuple.inl">
+    <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl">

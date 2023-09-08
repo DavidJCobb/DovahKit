@@ -24,18 +24,18 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;
          };
-         struct results {
+         struct response {
             std::string text;
 
-            constexpr void merge(const results& from) {
+            constexpr void merge(const response& from) {
                this->text += '\n';
                this->text += from.text;
             }
          };
 
       public:
-         static void invoke(const tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
-         static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
+         static void request(const tool_request_cause&, const opaque_options_union&, tool_response_tuple&);
+         static void request_for_hold_release(const opaque_options_union&, tool_response_tuple&);
    };
 }
 

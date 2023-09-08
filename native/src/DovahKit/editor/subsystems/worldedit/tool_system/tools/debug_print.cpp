@@ -1,6 +1,6 @@
 #include "./debug_print.h"
 #include "../options_union.h"
-#include "../tool_results_tuple.h"
+#include "../tool_response_tuple.h"
 
 #include <QString>
 
@@ -11,10 +11,10 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void debug_print::invoke(const tool_invocation_cause& input, const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void debug_print::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
-      results res = { o.text };
+      response res = { o.text };
 
       if (input.has_range) {
          auto x = input.range.x;
@@ -33,10 +33,10 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       all_results.merge_member(input, res);
    }
-   /*static*/ void debug_print::invoke_for_hold_release(const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void debug_print::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
-      results res;
+      response res;
       res.text = std::string{"[Hold-Release] "} + o.text;
       all_results.merge_member(res);
    }

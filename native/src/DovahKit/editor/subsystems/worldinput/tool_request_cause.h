@@ -4,7 +4,7 @@
 #include "./raycast_result.h"
 
 namespace dovahkit::subsystems::worldinput {
-   struct tool_invocation_cause {
+   struct tool_request_cause {
       public:
          struct {
             bool down_state_changed_this_frame = false;

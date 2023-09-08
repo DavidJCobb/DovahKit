@@ -1,11 +1,10 @@
 #include "./worldinput.h"
 #include <QApplication>
 #include "helpers/unreachable.h"
-#include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"
+#include "editor/subsystems/worldedit/tool_system/tool_response_tuple.h"
 #include "editor/subsystems/xinput/core.h"
 #include "editor/core.h"
 #include "./algorithms/control_scheme_to_bind_list.h"
-#include "./tools/combined_tool_results.h"
 #include "./control_scheme.h"
 
 #include "./builtin_control_schemes/ck_standard.h"
@@ -72,7 +71,7 @@ namespace dovahkit::subsystems::worldinput {
       this->device_handlers.keyboard_mouse.ignore_all_down();
       this->device_handlers.gamepad.ignore_all_down();
    }
-   void core::doPerFrameInputProcessing(double& elapsed_seconds, tool_results_tuple& out) {
+   void core::doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out) {
       timestamp_t now = current_time();
       elapsed_seconds = elapsed_time(this->state.last_update, now);
       this->state.last_update = now;
@@ -102,8 +101,8 @@ namespace dovahkit::subsystems::worldinput {
       //
       // Run the bind tree update algorithm:
       //
-      tool_results_tuple press_results;
-      tool_results_tuple hold_results;
+      tool_response_tuple press_results;
+      tool_response_tuple hold_results;
       this->binds.keyboard.update(now, press_results, hold_results);
       this->binds.gamepad.update(now, press_results, hold_results);
       //

@@ -12,10 +12,10 @@
 #include "./input_sequence.h"
 
 namespace dovahkit::subsystems::worldedit {
-   class tool_results_tuple;
+   class tool_response_tuple;
 }
 namespace dovahkit::subsystems::worldinput {
-   struct tool_invocation_cause;
+   struct tool_request_cause;
 }
 
 namespace dovahkit::subsystems::worldinput {
@@ -47,8 +47,8 @@ namespace dovahkit::subsystems::worldinput {
 
          // Pass `pos` and `pos_is_delta` if the associated input sequence has a directional constraint; pass whatever's associated with the specified scalar or vector input control.
          // For a scalar input control, the value is always in pos.x(), even if the scalar is generated from e.g. the vertical axis of a vector.
-         void invoke(worldedit::tool_results_tuple&, const tool_invocation_cause&) const;
-         void invoke_for_hold_release(worldedit::tool_results_tuple&) const;
+         void invoke(worldedit::tool_response_tuple&, const tool_request_cause&) const;
+         void invoke_for_hold_release(worldedit::tool_response_tuple&) const;
    };
 
    class bind_list {
@@ -65,6 +65,6 @@ namespace dovahkit::subsystems::worldinput {
          std::vector<bind_list_item*> last_frame_active_hold_binds;
 
       public:
-         void update(timestamp_t now, worldedit::tool_results_tuple& press_results, worldedit::tool_results_tuple& hold_results);
+         void update(timestamp_t now, worldedit::tool_response_tuple& press_results, worldedit::tool_response_tuple& hold_results);
    };
 }

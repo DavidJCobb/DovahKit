@@ -17,7 +17,7 @@
 #include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
 #include "editor/subsystems/worldedit/tool_system/id_of.h"
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
-#include "editor/subsystems/worldedit/tool_system/tool_results_tuple.h"
+#include "editor/subsystems/worldedit/tool_system/tool_response_tuple.h"
 
 namespace {
    namespace worldedit {
@@ -1034,7 +1034,7 @@ namespace DovahKitDebug::features {
             return;
 
          double elapsed;
-         ::worldedit::tool_results_tuple results;
+         ::worldedit::tool_response_tuple results;
 
          worldinput::core::get().doPerFrameInputProcessing(elapsed, results);
 

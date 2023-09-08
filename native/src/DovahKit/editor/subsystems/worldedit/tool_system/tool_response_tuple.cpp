@@ -1,17 +1,17 @@
-#include "./tool_results_tuple.h"
+#include "./tool_response_tuple.h"
 
 namespace dovahkit::subsystems::worldedit {
-   void tool_results_tuple::scale(double delta_seconds) {
+   void tool_response_tuple::scale(double delta_seconds) {
       classes::for_each<[]<typename T>(self_t* self, const double delta_seconds) {
-         if constexpr (impl::_tool_results_tuple::can_scale<T>) {
+         if constexpr (impl::_tool_response_tuple::can_scale<T>) {
             if (self->has_member<T>())
                std::get<T>(*self).scale(delta_seconds);
          }
       }>(this, delta_seconds);
    }
-   void tool_results_tuple::merge(const tool_results_tuple& merge_from) {
+   void tool_response_tuple::merge(const tool_response_tuple& merge_from) {
       classes::for_each<[]<typename T>(self_t* self, const self_t& source) {
-         if constexpr (impl::_tool_results_tuple::can_merge<T>) {
+         if constexpr (impl::_tool_response_tuple::can_merge<T>) {
             if (source.has_member<T>())
                self->merge_member<T>(source.get_member<T>());
          }

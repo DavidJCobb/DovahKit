@@ -1,13 +1,13 @@
 #include "move_camera.h"
 #include "../options_union.h"
-#include "../tool_results_tuple.h"
+#include "../tool_response_tuple.h"
 
 namespace {
    namespace worldedit {
       using namespace ::dovahkit::subsystems::worldedit;
    }
 
-   void _apply(worldedit::tools::move_camera::results& out, float input, worldedit::axis3D axis, worldedit::sign sign) {
+   void _apply(worldedit::tools::move_camera::response& out, float input, worldedit::axis3D axis, worldedit::sign sign) {
       using namespace dovahkit::subsystems::worldedit;
       //
       if (sign == sign::negative)
@@ -27,7 +27,7 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void move_camera::invoke(const tool_invocation_cause& input, const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void move_camera::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
       // TODO: Handle ReferenceFrames here, or provide an option for them in DKVulkanCameraUpdate. 
@@ -38,7 +38,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       // Currently, we always treat movement as camera-relative (comments on DKVulkanCameraUpdate 
       // saying it's world-relative are currently wrong).
       //
-      results res = {
+      response res = {
          .x = o.magnitudes.x,
          .y = o.magnitudes.y,
          .z = o.magnitudes.z,
@@ -49,7 +49,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
       all_results.merge_member(input, res);
    }
-   /*static*/ void move_camera::invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&) {
+   /*static*/ void move_camera::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
       // No-op.
    }
 }

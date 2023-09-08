@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          // no options or results
 
       public:
-         static void invoke(const tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
-         static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
+         static void request(const tool_request_cause&, const opaque_options_union&, tool_response_tuple&);
+         static void request_for_hold_release(const opaque_options_union&, tool_response_tuple&);
    };
 }

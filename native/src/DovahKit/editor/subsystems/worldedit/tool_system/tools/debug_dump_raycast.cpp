@@ -1,6 +1,6 @@
 #include "./debug_dump_raycast.h"
 #include "../options_union.h"
-#include "../tool_results_tuple.h"
+#include "../tool_response_tuple.h"
 
 #include "dovah/form_stub.h"
 
@@ -42,7 +42,7 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void debug_dump_raycast::invoke(const tool_invocation_cause& input, const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void debug_dump_raycast::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
       if (!input.button.down_state_changed_this_frame) {
          return;
       }
@@ -52,6 +52,6 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       _print_raycast(input.raycast.value());
    }
-   /*static*/ void debug_dump_raycast::invoke_for_hold_release(const opaque_options_union& raw_options, tool_results_tuple& all_results) {
+   /*static*/ void debug_dump_raycast::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
    }
 }

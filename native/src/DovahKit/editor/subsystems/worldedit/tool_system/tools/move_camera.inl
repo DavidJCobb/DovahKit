@@ -30,12 +30,12 @@ namespace dovahkit::subsystems::worldedit::tools {
    }
    static_assert(cobb::bitstreams::round_trip_test<move_camera::options>, "Assert: round-trip bitstream serialization produces correct results.");
 
-   constexpr void move_camera::results::scale(double delta_seconds) {
+   constexpr void move_camera::response::scale(double delta_seconds) {
       this->x *= delta_seconds;
       this->y *= delta_seconds;
       this->z *= delta_seconds;
    }
-   constexpr void move_camera::results::merge(const results& from) {
+   constexpr void move_camera::response::merge(const response& from) {
       this->x += from.x;
       this->y += from.y;
       this->z += from.z;

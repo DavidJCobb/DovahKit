@@ -5,11 +5,11 @@
 #include "helpers/bitstreams/round_trip_test.h"
 #include "helpers/eight_cc.h"
 #include "helpers/enum_flags.h"
-#include "editor/subsystems/worldinput/tool_invocation_cause.h"
+#include "editor/subsystems/worldinput/tool_request_cause.h"
 #include "../../enums/editor_mode.h"
 
 namespace dovahkit::subsystems::worldedit {
-   class tool_results_tuple;
+   class tool_response_tuple;
 
    namespace tools {
       class opaque_options_union;
@@ -26,7 +26,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
    class _base {
       public:
-         using tool_invocation_cause = dovahkit::subsystems::worldinput::tool_invocation_cause;
+         using tool_request_cause = dovahkit::subsystems::worldinput::tool_request_cause;
 
       public:
          static constexpr const char*          function_name = "unnamed";
@@ -41,6 +41,6 @@ namespace dovahkit::subsystems::worldedit::tools {
    template<typename T> concept tool_with_options_member_type = requires { typename T::options; requires std::is_base_of_v<_base, T>; };
    template<typename T> concept tool_sans_options_member_type = !tool_with_options_member_type<T> && std::is_base_of_v<_base, T>;
 
-   template<typename T> concept tool_with_results_member_type = requires { typename T::results; requires std::is_base_of_v<_base, T>; };
-   template<typename T> concept tool_sans_results_member_type = !tool_with_results_member_type<T> && std::is_base_of_v<_base, T>;
+   template<typename T> concept tool_with_response_member_type = requires { typename T::response; requires std::is_base_of_v<_base, T>; };
+   template<typename T> concept tool_sans_response_member_type = !tool_with_response_member_type<T> && std::is_base_of_v<_base, T>;
 }

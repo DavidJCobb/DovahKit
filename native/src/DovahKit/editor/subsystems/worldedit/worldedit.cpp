@@ -44,7 +44,7 @@ namespace {
 }
 
 #include "editor/subsystems/worldinput/core.h"
-#include "./tool_system/tool_results_tuple.h"
+#include "./tool_system/tool_response_tuple.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
 namespace {
@@ -997,7 +997,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          // Update input state.
          //
-         tool_results_tuple results;
+         tool_response_tuple results;
          double delta;
          worldinput::core::get().doPerFrameInputProcessing(delta, results);
          //

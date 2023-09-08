@@ -18,13 +18,13 @@ namespace dovahkit::subsystems::worldedit::tools {
          static constexpr const bool is_raycast_sensitive = true;
 
       public:
-         struct results {
+         struct response {
             glm::vec3         hit_position = { 0, 0, 0 };
             dovah::form_stub* target       = nullptr;
          };
 
       public:
-         static void invoke(const tool_invocation_cause&, const opaque_options_union&, tool_results_tuple&);
-         static void invoke_for_hold_release(const opaque_options_union&, tool_results_tuple&);
+         static void request(const tool_request_cause&, const opaque_options_union&, tool_response_tuple&);
+         static void request_for_hold_release(const opaque_options_union&, tool_response_tuple&);
    };
 }

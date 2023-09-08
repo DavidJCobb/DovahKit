@@ -11,7 +11,7 @@
 #include "./raycast_result.h"
 
 namespace dovahkit::subsystems::worldedit {
-   class tool_results_tuple;
+   class tool_response_tuple;
 }
 namespace dovahkit::subsystems::worldinput {
    class control_scheme;
@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::worldinput {
    class core : public QObject {
       Q_OBJECT;
       public:
-         using tool_results_tuple = worldedit::tool_results_tuple;
+         using tool_response_tuple = worldedit::tool_response_tuple;
 
       protected:
          core();
@@ -43,7 +43,7 @@ namespace dovahkit::subsystems::worldinput {
       protected slots:
          void ignoreAllHeldKeys();
       public slots:
-         void doPerFrameInputProcessing(double& elapsed_seconds, tool_results_tuple& out); // both args are out-variables
+         void doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out); // both args are out-variables
 
       protected:
          struct {
