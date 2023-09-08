@@ -41,3 +41,11 @@ namespace dovahkit::subsystems::worldedit::tools {
       all_results.merge_member(res);
    }
 }
+
+//#include "../../core.h" // not needed for this tool
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void debug_print::invoke(const response& params) {
+      qDebug(params.text.c_str());
+   }
+}

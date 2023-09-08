@@ -29,3 +29,36 @@ namespace dovahkit::subsystems::worldedit::tools {
       // No-op.
    }
 }
+
+#include "../../core.h"
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void attempt_on_screen_selection::invoke(const response& params) {
+      auto& worldedit_core = core::get();
+
+      if (params.sweep) {
+         //
+         // TODO
+         //
+         #if !_DEBUG
+            static_assert(false, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
+         #endif
+      }
+      if (auto* stub = params.target; stub && dovah::form_type_info::form_type_is_reference(stub->formType)) {
+         switch (params.operation) {
+            case selection_operation::no_op:
+               break;
+            case selection_operation::toggle:
+               worldedit_core.toggleRefSelectionState(*stub);
+               break;
+            case selection_operation::add:
+            case selection_operation::remove:
+               worldedit_core.setRefSelectionState(*stub, params.operation == selection_operation::add);
+               break;
+            case selection_operation::replace:
+               worldedit_core.replaceRefSelection(*stub);
+               break;
+         }
+      }
+   }
+}

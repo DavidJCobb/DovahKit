@@ -159,13 +159,21 @@ namespace dovahkit::subsystems::worldedit {
 
          raycast_result raycast_at(int view_x, int view_y) const;
 
-         inline size_t cell_grid_size() const noexcept {
+         constexpr size_t cell_grid_size() const noexcept {
             return this->loaded_cells.length();
          }
 
-         inline editor_mode get_editor_mode() const {
+         constexpr editor_mode get_editor_mode() const {
             return this->state.mode;
          }
+
+         bool get_camera_speed_flag(camera_speed_flag) const;
+         void modify_camera_speed_flag(camera_speed_flag, bool_operation);
+
+         constexpr reference_frame get_edit_gizmo_frame() const { return this->state.gizmo.frame; }
+         constexpr gizmo_mode      get_edit_gizmo_mode() const { return this->state.gizmo.mode; }
+         void set_edit_gizmo_frame(reference_frame);
+         void set_edit_gizmo_mode(gizmo_mode);
 
       signals:
          void cellLoaded(dovah::form_stub&);

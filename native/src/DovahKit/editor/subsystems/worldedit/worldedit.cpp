@@ -47,9 +47,6 @@ namespace {
 #include "./tool_system/tool_response_tuple.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
-namespace {
-   static constexpr bool debug_use_new_worldinput = true;
-}
 
 #include "vulkan/data/DKVulkanCameraUpdate.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
@@ -944,9 +941,7 @@ namespace dovahkit::subsystems::worldedit {
       assert(this->target_view == nullptr);
       this->target_view = &view;
       //
-      if constexpr (debug_use_new_worldinput) {
-         worldinput::core::get().setTargetWidget(&view);
-      }
+      worldinput::core::get().setTargetWidget(&view);
       //
       QObject::connect(&view, &DKVulkanView::rendererReady, this, &core::_on_renderer_attached, Qt::UniqueConnection);
       if (auto* sr = view.surfaceRenderer()) {
@@ -959,9 +954,7 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&view, &DKVulkanView::rendererErrorKillImminent, this, &core::_on_renderer_loss_imminent);
       QObject::connect(&view, &DKVulkanView::rendererKilledDueToError, this, &core::_on_renderer_lost);
       QObject::connect(&view, &QObject::destroyed, this, [this]() {
-         if constexpr (debug_use_new_worldinput) {
-            worldinput::core::get().setTargetWidget(nullptr);
-         }
+         worldinput::core::get().setTargetWidget(nullptr);
          this->target_view = nullptr;
          //
          this->_on_renderer_lost();
@@ -991,7 +984,7 @@ namespace dovahkit::subsystems::worldedit {
             sr->clear_all_gizmo_axis_highlighting();
          }
       }
-      if constexpr (debug_use_new_worldinput) {
+      {
          auto cursor_pos = view.mapFromGlobal(QCursor::pos()); // TODO: GET THIS FROM THE INPUT SYSTEM?
 
          //
@@ -1006,6 +999,46 @@ namespace dovahkit::subsystems::worldedit {
             // Don't execute commands "blind." If there's no renderer, exit.
             //
             return;
+
+         //
+         // TODO: Instead of manually executing each tool's behaviors here, we should statically 
+         //       loop over `all_tools_by_execution_order` and invoke the tools one by one. Skip 
+         //       any tool that doesn't have a `response` type, for now. (In the future, we'll 
+         //       want to maybe redesign `tool_response_tuple` so that tools with no `response` 
+         //       type still have a presence bit; then we can invoke them without arguments.)
+         // 
+         //       We will need to provide passkey-based APIs for the various functions. Some tools 
+         //       can have public APIs since we'll want to be able to invoke them from the UI as 
+         //       well (e.g. a tool to toggle cell borders).
+         // 
+         //       Passkeyed functions needed:
+         // 
+         //        - _adjust_camera // Handles both movement and turning
+         //        - _get_scene_entity_handle_for_form
+         //           - For the `debug_dump_landscape_details` tool, which has a LAND form stub.
+         // 
+         //       Public functions needed:
+         // 
+         //        - [DONE] modify_camera_speed_flag(camera_speed_flag, bool_operation)
+         //        - [DONE] set_edit_gizmo_frame(reference_frame)
+         //        - [DONE] set_edit_gizmo_mode(gizmo_mode)
+         // 
+         //       Tool invoke handlers needed:
+         // 
+         //        - Some combined handler for `move_camera` and `turn_camera`.
+         //        - debug_dump_landscape_details
+         // 
+         //       Unfinished tool tasks:
+         // 
+         //        - "Sweep" behavior for attempt_on_screen_selection
+         // 
+         //        - Consider adjusting compile-time tool validation so that tools must have an 
+         //          `invoke` function to be valid, and tools with responses must take a response 
+         //          as an argument. Only do this if we adjust `tool_response_tuple` so that it 
+         //          tracks a presence bit for tools without responses.
+         // 
+         // TODO: Consider renaming or typedeffing `DKVulkanCameraUpdate` to `camera_adjustment`.
+         //
          
          #pragma region modify_camera_speed_flags
          if (results.has_member<tools::modify_camera_speed_flags>()) {
@@ -1013,37 +1046,7 @@ namespace dovahkit::subsystems::worldedit {
             // This must run before we apply camera movements.
             //
             const auto& data = results.get_member<tools::modify_camera_speed_flags>();
-            auto& mask = this->state.camera_speed;
-            {
-               constexpr auto flag = camera_speed_flag::boost;
-               switch (data.boost) {
-                  using enum worldedit::bool_operation;
-                  case set_true:
-                     mask.set<flag>();
-                     break;
-                  case set_false:
-                     mask.reset<flag>();
-                     break;
-                  case invert:
-                     mask.flip<flag>();
-                     break;
-               }
-            }
-            {
-               constexpr auto flag = camera_speed_flag::precision;
-               switch (data.precision) {
-                  using enum worldedit::bool_operation;
-                  case set_true:
-                     mask.set<flag>();
-                     break;
-                  case set_false:
-                     mask.reset<flag>();
-                     break;
-                  case invert:
-                     mask.flip<flag>();
-                     break;
-               }
-            }
+            tools::modify_camera_speed_flags::invoke(data);
          }
          #pragma endregion
          #pragma region move_camera and turn_camera
@@ -1086,28 +1089,7 @@ namespace dovahkit::subsystems::worldedit {
          #pragma region attempt_on_screen_selection
          if (results.has_member<tools::attempt_on_screen_selection>()) {
             const auto& data = results.get_member<tools::attempt_on_screen_selection>();
-            if (data.sweep) {
-               //
-               // TODO
-               //
-               static_assert(!require_complete_implementation, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
-            }
-            if (auto* stub = data.target; stub && dovah::form_type_info::form_type_is_reference(stub->formType)) {
-               switch (data.operation) {
-                  case selection_operation::no_op:
-                     break;
-                  case selection_operation::toggle:
-                     this->toggleRefSelectionState(*stub);
-                     break;
-                  case selection_operation::add:
-                  case selection_operation::remove:
-                     this->setRefSelectionState(*stub, data.operation == selection_operation::add);
-                     break;
-                  case selection_operation::replace:
-                     this->replaceRefSelection(*stub);
-                     break;
-               }
-            }
+            tools::attempt_on_screen_selection::invoke(data);
          }
          #pragma endregion
          #pragma region debug_dump_landscape_details
@@ -1158,27 +1140,13 @@ namespace dovahkit::subsystems::worldedit {
          #pragma region debug_print
          if (results.has_member<tools::debug_print>()) {
             const auto& data = results.get_member<tools::debug_print>();
-            qDebug(data.text.c_str());
+            tools::debug_print::invoke(data);
          }
          #pragma endregion
          #pragma region set_edit_gizmo_mode
          if (results.has_member<tools::set_edit_gizmo_mode>()) {
             const auto& data = results.get_member<tools::set_edit_gizmo_mode>();
-
-            if (data.modify_gizmo) {
-               auto prior = this->state.gizmo.mode;
-               this->state.gizmo.mode = data.gizmo.a;
-               if (prior == data.gizmo.a && data.toggle_gizmo) {
-                  this->state.gizmo.mode = data.gizmo.b;
-               }
-            }
-            if (data.frame.a != reference_frame::current) {
-               auto prior = this->state.gizmo.frame;
-               this->state.gizmo.frame = data.frame.a;
-               if (data.toggle_frame && prior == data.frame.a && data.frame.b != reference_frame::current) {
-                  this->state.gizmo.frame = data.frame.b;
-               }
-            }
+            tools::set_edit_gizmo_mode::invoke(data);
          }
          #pragma endregion
       }
@@ -1387,6 +1355,34 @@ namespace dovahkit::subsystems::worldedit {
       }
 
       return out;
+   }
+
+   bool core::get_camera_speed_flag(camera_speed_flag flag) const {
+      return this->state.camera_speed.test(flag);
+   }
+
+   void core::modify_camera_speed_flag(camera_speed_flag flag, bool_operation op) {
+      auto& mask = this->state.camera_speed;
+      switch (op) {
+         using enum worldedit::bool_operation;
+         case set_true:
+            mask.set(flag);
+            break;
+         case set_false:
+            mask.reset(flag);
+            break;
+         case invert:
+            mask.flip(flag);
+            break;
+      }
+   }
+   void core::set_edit_gizmo_frame(reference_frame f) {
+      if (f == reference_frame::current)
+         return;
+      this->state.gizmo.frame = f;
+   }
+   void core::set_edit_gizmo_mode(gizmo_mode m) {
+      this->state.gizmo.mode = m;
    }
 
    void core::setRefSelectionState(dovah::form_stub& stub, bool state) {

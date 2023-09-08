@@ -21,3 +21,26 @@ namespace dovahkit::subsystems::worldedit::tools {
       //
    }
 }
+
+#include "../../core.h"
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void set_edit_gizmo_mode::invoke(const response& params) {
+      auto& worldedit_core = core::get();
+
+      if (params.modify_gizmo) {
+         auto prior = worldedit_core.get_edit_gizmo_mode();
+         auto after = params.gizmo.a;
+         if (prior == after && params.toggle_gizmo)
+            after = params.gizmo.b;
+         worldedit_core.set_edit_gizmo_mode(after);
+      }
+      if (params.frame.a != reference_frame::current) {
+         auto prior = worldedit_core.get_edit_gizmo_frame();
+         auto after = params.frame.a;
+         if (prior == after && params.toggle_frame && params.frame.b != reference_frame::current)
+            after = params.frame.b;
+         worldedit_core.set_edit_gizmo_frame(after);
+      }
+   }
+}

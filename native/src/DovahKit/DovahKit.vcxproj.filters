@@ -5144,6 +5144,9 @@
     <ClInclude Include="helpers\const_pointer_container_view.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\all_tools_by_execution_order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

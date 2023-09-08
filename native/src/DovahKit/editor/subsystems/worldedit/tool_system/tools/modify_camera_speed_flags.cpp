@@ -75,3 +75,13 @@ namespace dovahkit::subsystems::worldedit::tools {
       all_results.merge_member(res);
    }
 }
+
+#include "../../core.h"
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void modify_camera_speed_flags::invoke(const response& params) {
+      auto& worldedit_core = core::get();
+      worldedit_core.modify_camera_speed_flag(camera_speed_flag::boost,     params.boost);
+      worldedit_core.modify_camera_speed_flag(camera_speed_flag::precision, params.precision);
+   }
+}

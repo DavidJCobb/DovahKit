@@ -849,6 +849,7 @@
     <ClInclude Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.h" />
     <ClInclude Include="editor\subsystems\worldedit\grid_definitions.h" />
     <ClInclude Include="editor\subsystems\worldedit\raycast_result.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\all_tools_by_execution_order.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_response.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_options.h" />
