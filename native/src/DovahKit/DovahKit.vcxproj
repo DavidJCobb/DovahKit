@@ -140,6 +140,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
@@ -860,6 +861,8 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\_base.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.h" />
@@ -1337,6 +1340,7 @@
     <ClInclude Include="vulkan\config\throttle_fps.h" />
     <ClInclude Include="vulkan\config\use_inverted_depth.h" />
     <ClInclude Include="vulkan\config\validation_layers.h" />
+    <ClInclude Include="vulkan\data\camera_coordinate_change.h" />
     <ClInclude Include="vulkan\data\DKVulkanCameraUpdate.h" />
     <ClInclude Include="vulkan\data\vulkan_formats.h" />
     <ClInclude Include="vulkan\data\vulkan_format_info_from_format_name.h" />

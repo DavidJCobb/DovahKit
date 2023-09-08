@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <QObject>
+#include "helpers/passkey.h"
 #include "helpers/resizable_grid.h"
 #include "helpers/singleton_ex.h"
 #include "helpers/vector3.h"
@@ -12,6 +13,7 @@
 #include "vulkan/rendered_nif.h"
 #include "vulkan/scene_entity_handle.h"
 
+#include "./enums/bool_operation.h"
 #include "./enums/bounds_generation_source.h"
 #include "./enums/camera_speed_flags.h"
 #include "./enums/editor_mode.h"
@@ -27,7 +29,17 @@ namespace dovah {
    }
 }
 namespace vulkanDK {
+   namespace data {
+      struct camera_coordinate_change;
+   }
    class surface_renderer;
+}
+
+namespace dovahkit::subsystems::worldedit::tools {
+   namespace tandem {
+      class adjust_camera;
+   }
+   class debug_dump_landscape_details;
 }
 
 namespace dovahkit::subsystems::worldedit {
@@ -103,6 +115,8 @@ namespace dovahkit::subsystems::worldedit {
          std::vector<refr> loaded_refs;
          //
          struct {
+            double last_frame_delta = 0;
+
             camera_speed_flags camera_speed;
             editor_mode mode = editor_mode::objects;
 
@@ -174,6 +188,11 @@ namespace dovahkit::subsystems::worldedit {
          constexpr gizmo_mode      get_edit_gizmo_mode() const { return this->state.gizmo.mode; }
          void set_edit_gizmo_frame(reference_frame);
          void set_edit_gizmo_mode(gizmo_mode);
+
+         #pragma region Passkeyed functions for tools
+         void _adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change&);
+         void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
+         #pragma endregion
 
       signals:
          void cellLoaded(dovah::form_stub&);

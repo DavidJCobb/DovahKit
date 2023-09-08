@@ -36,8 +36,7 @@
 #include "./enums/axis3D.h"
 #include "./enums/gizmo_mode.h"
 
-class  DKVulkanInstance;
-struct DKVulkanCameraUpdate;
+class DKVulkanInstance;
 namespace dovah {
    namespace loaded_forms {
       namespace components {

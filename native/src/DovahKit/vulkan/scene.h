@@ -18,9 +18,11 @@
 #include "./scene_gizmo_state.h"
 #include "./scene_global_state.h"
 
-struct DKVulkanCameraUpdate;
 namespace nifDK {
    class file;
+}
+namespace vulkanDK::data {
+   struct camera_coordinate_change;
 }
 
 namespace vulkanDK {
@@ -75,7 +77,7 @@ namespace vulkanDK {
 
          void update_projection(VkExtent2D render_area);
          void update_camera();
-         void adjust_camera(const DKVulkanCameraUpdate&);
+         void adjust_camera(const data::camera_coordinate_change&);
 
          void update_sun_shadows();
 

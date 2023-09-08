@@ -44,11 +44,13 @@ namespace {
 }
 
 #include "editor/subsystems/worldinput/core.h"
+#include "./tool_system/all_tools_by_execution_order.h"
 #include "./tool_system/tool_response_tuple.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
 
 #include "vulkan/data/DKVulkanCameraUpdate.h"
+#include "vulkan/data/camera_coordinate_change.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 
 #include "helpers/math/rotation/unit_conversion.h"
@@ -993,6 +995,7 @@ namespace dovahkit::subsystems::worldedit {
          tool_response_tuple results;
          double delta;
          worldinput::core::get().doPerFrameInputProcessing(delta, results);
+         this->state.last_frame_delta = delta;
          //
          if (!sr)
             //
@@ -1000,155 +1003,20 @@ namespace dovahkit::subsystems::worldedit {
             //
             return;
 
-         //
-         // TODO: Instead of manually executing each tool's behaviors here, we should statically 
-         //       loop over `all_tools_by_execution_order` and invoke the tools one by one. Skip 
-         //       any tool that doesn't have a `response` type, for now. (In the future, we'll 
-         //       want to maybe redesign `tool_response_tuple` so that tools with no `response` 
-         //       type still have a presence bit; then we can invoke them without arguments.)
-         // 
-         //       We will need to provide passkey-based APIs for the various functions. Some tools 
-         //       can have public APIs since we'll want to be able to invoke them from the UI as 
-         //       well (e.g. a tool to toggle cell borders).
-         // 
-         //       Passkeyed functions needed:
-         // 
-         //        - _adjust_camera // Handles both movement and turning
-         //        - _get_scene_entity_handle_for_form
-         //           - For the `debug_dump_landscape_details` tool, which has a LAND form stub.
-         // 
-         //       Public functions needed:
-         // 
-         //        - [DONE] modify_camera_speed_flag(camera_speed_flag, bool_operation)
-         //        - [DONE] set_edit_gizmo_frame(reference_frame)
-         //        - [DONE] set_edit_gizmo_mode(gizmo_mode)
-         // 
-         //       Tool invoke handlers needed:
-         // 
-         //        - Some combined handler for `move_camera` and `turn_camera`.
-         //        - debug_dump_landscape_details
-         // 
-         //       Unfinished tool tasks:
-         // 
-         //        - "Sweep" behavior for attempt_on_screen_selection
-         // 
-         //        - Consider adjusting compile-time tool validation so that tools must have an 
-         //          `invoke` function to be valid, and tools with responses must take a response 
-         //          as an argument. Only do this if we adjust `tool_response_tuple` so that it 
-         //          tracks a presence bit for tools without responses.
-         // 
-         // TODO: Consider renaming or typedeffing `DKVulkanCameraUpdate` to `camera_adjustment`.
-         //
-         
-         #pragma region modify_camera_speed_flags
-         if (results.has_member<tools::modify_camera_speed_flags>()) {
-            //
-            // This must run before we apply camera movements.
-            //
-            const auto& data = results.get_member<tools::modify_camera_speed_flags>();
-            tools::modify_camera_speed_flags::invoke(data);
-         }
-         #pragma endregion
-         #pragma region move_camera and turn_camera
-         if (results.has_member<tools::move_camera>() || results.has_member<tools::turn_camera>()) {
-            DKVulkanCameraUpdate update;
-            update.delta_seconds = delta;
-            if (results.has_member<tools::move_camera>()) {
-               const auto& data = results.get_member<tools::move_camera>();
-               update.move.direction      = { data.x, data.y, data.z };
-               // TODO: Apply reference frame here?
-               update.move.scale_by_delta = false;
+         tools::all_tools_by_execution_order::for_each([&results]<typename Current>() {
+            if constexpr (tools::is_tandem_invocation<Current>) {
                //
-               // ^- Results from non-tap binds (e.g. "while" binds, scalars, vectors) get scaled by the 
-               // delta in Worldinput. This means that we need to turn off scaling in this particular 
-               // step here.
+               // The "invoke in tandem" base class will dispatch all relevant response objects to the 
+               // subclass.
                //
-               
-               // must specify this (as speed * elapsed) rather than relying on direction alone, because the direction vector gets normalized when we pass it in
-               update.move.speed = worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>() * delta;
-
-               if (this->state.camera_speed.test<camera_speed_flag::boost>())
-                  update.move.speed *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
-               if (this->state.camera_speed.test<camera_speed_flag::precision>())
-                  update.move.speed *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
-            }
-            if (results.has_member<tools::turn_camera>()) {
-               const auto& data = results.get_member<tools::turn_camera>();
-               update.turn.roll  = data.roll;
-               update.turn.pitch = data.pitch;
-               update.turn.yaw   = data.yaw;
-               update.turn.scale_by_delta = false; // already done, if necessary, by Worldinput
-               //
-               update.turn.speed  = 1.0;
-               update.turn.yaw   *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondX.get_current_value<double>();
-               update.turn.pitch *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondY.get_current_value<double>();
-            }
-            sr->scene.adjust_camera(update);
-         }
-         #pragma endregion
-         #pragma region attempt_on_screen_selection
-         if (results.has_member<tools::attempt_on_screen_selection>()) {
-            const auto& data = results.get_member<tools::attempt_on_screen_selection>();
-            tools::attempt_on_screen_selection::invoke(data);
-         }
-         #pragma endregion
-         #pragma region debug_dump_landscape_details
-         if (results.has_member<tools::debug_dump_landscape_details>()) {
-            const auto& data = results.get_member<tools::debug_dump_landscape_details>();
-
-            bool found = false;
-            if (data.target && data.target->formType == dovah::form_type::land) {
-               for (auto& item : this->loaded_cells) {
-                  if (item.land && &(item.land->stub) == data.target) {
-                     found = true;
-
-                     auto& handle = item.vulkan_handles.landscape;
-                     if (!handle.empty()) {
-                        auto pos = data.hit_position - handle->frame_drawing_data.position;
-
-                        qDebug(
-                           "Hit landscape at (%g, %g, %g).",
-                           handle->frame_drawing_data.position.x,
-                           handle->frame_drawing_data.position.y,
-                           handle->frame_drawing_data.position.z
-                        );
-                        qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
-
-                        pos /= vulkanDK::rendered_landscape::vertex_distance;
-
-                        int x = pos.x;
-                        int y = pos.y;
-                        qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
-
-                        if (x > 0 && y > 0 && x < 33 && y < 33) {
-                           vulkanDK::vertex_landscape* vert = nullptr;
-
-                           #if _DEBUG
-                           //
-                           // TODO: console-print the vert attributes
-                           //
-                           __debugbreak();
-                           #endif
-                        }
-                     }
-                     break;
-                  }
+               Current::invoke<Current>(results);
+            } else if constexpr (tools::tool_response_or_tool_with_response<Current>) {
+               if (results.has_member<Current>()) {
+                  const auto& data = results.get_member<Current>();
+                  Current::invoke(data);
                }
             }
-         }
-         #pragma endregion
-         #pragma region debug_print
-         if (results.has_member<tools::debug_print>()) {
-            const auto& data = results.get_member<tools::debug_print>();
-            tools::debug_print::invoke(data);
-         }
-         #pragma endregion
-         #pragma region set_edit_gizmo_mode
-         if (results.has_member<tools::set_edit_gizmo_mode>()) {
-            const auto& data = results.get_member<tools::set_edit_gizmo_mode>();
-            tools::set_edit_gizmo_mode::invoke(data);
-         }
-         #pragma endregion
+         });
       }
       //
       // Done processing all tools.
@@ -1384,6 +1252,55 @@ namespace dovahkit::subsystems::worldedit {
    void core::set_edit_gizmo_mode(gizmo_mode m) {
       this->state.gizmo.mode = m;
    }
+
+
+   #pragma region Passkeyed functions for tools
+   void core::_adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change& update) {
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      sr->scene.adjust_camera(update);
+   }
+   void core::_debug_dump_landscape_raycast(cobb::passkey<core, tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position) {
+      if (landscape.formType != dovah::form_type::land) {
+         qDebug("The hit form is not a landscape.");
+         return;
+      }
+
+      vulkanDK::rendered_landscape_handle handle;
+      for (auto& item : this->loaded_cells) {
+         if (item.land && &(item.land->stub) == &landscape) {
+            handle = item.vulkan_handles.landscape;
+            break;
+         }
+      }
+      if (handle.empty()) {
+         qDebug("Landscape form %08X has no scene entity handle.", landscape.formID);
+         return;
+      }
+
+      auto pos = hit_position - handle->frame_drawing_data.position;
+      qDebug(
+         "Hit landscape at (%g, %g, %g).",
+         handle->frame_drawing_data.position.x,
+         handle->frame_drawing_data.position.y,
+         handle->frame_drawing_data.position.z
+      );
+      qDebug(" - Landscape-relative position: (%g, %g, %g)", pos.x, pos.y, pos.z);
+
+      pos /= vulkanDK::rendered_landscape::vertex_distance;
+
+      int x = pos.x;
+      int y = pos.y;
+      qDebug(" - Landscape-relative vertex row/col: (%d, %d)", x, y);
+
+      if (x > 0 && y > 0 && x < 33 && y < 33) {
+         //
+         // TODO: console-print the nearest vertex's attributes.
+         //
+      }
+   }
+   #pragma endregion
 
    void core::setRefSelectionState(dovah::form_stub& stub, bool state) {
       auto* ref_info = this->_get_loaded_refr_info(stub);

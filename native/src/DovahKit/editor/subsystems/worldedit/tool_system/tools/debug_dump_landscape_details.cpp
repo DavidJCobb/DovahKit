@@ -24,3 +24,16 @@ namespace dovahkit::subsystems::worldedit::tools {
       all_results.merge_member(res);
    }
 }
+
+#include "../../core.h"
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void debug_dump_landscape_details::invoke(const response& params) {
+      auto& worldedit_core = core::get();
+      if (!params.target) {
+         qDebug("No landscape form was hit.");
+         return;
+      }
+      worldedit_core._debug_dump_landscape_raycast({}, *params.target, params.hit_position);
+   }
+}

@@ -17,6 +17,7 @@
 #include "./helpers/cubemap_helpers.h"
 #include "./helpers/extract_frustum_normals.h"
 #include "./data/DKVulkanCameraUpdate.h"
+#include "./data/camera_coordinate_change.h"
 
 // for NIF support
 #include "nif/file.h"
@@ -93,16 +94,13 @@ namespace vulkanDK {
       this->global_state.camera_pos = cs.position;
       this->update_sun_shadows();
    }
-   void scene::adjust_camera(const DKVulkanCameraUpdate& change) {
+   void scene::adjust_camera(const data::camera_coordinate_change& change) {
       constexpr float epsilon    = 0.00001;
       constexpr float epsilon_sq = epsilon * epsilon;
-      if (change.delta_seconds == 0)
-         return;
-      //
-      auto move    = change.move.direction;
-      bool do_move = (glm::length2(move) >= epsilon_sq);
-      bool do_turn = change.has_turn();
-      //
+
+      bool do_move = (glm::length2(change.move) >= epsilon_sq);
+      bool do_turn = (glm::length2(change.turn) >= epsilon_sq);
+
       if (do_turn) {
          //
          // Continually modifying  a matrix opens us up to floating-point  inaccuracy and 
@@ -110,18 +108,10 @@ namespace vulkanDK {
          // a decent enough way to  prevent this, though it means we have to regenerate a 
          // matrix after each camera adjustment.
          //
-         const auto& turn = change.turn;
-         float speed = turn.speed;
-         if (change.turn.scale_by_delta)
-            speed *= change.delta_seconds;
-         float z = turn.yaw   * speed;
-         float y = turn.roll  * speed;
-         float x = turn.pitch * speed;
-         //
          auto& cs = this->camera;
-         cs.yaw   += z;
-         cs.roll  += y;
-         cs.pitch += x;
+         cs.yaw   += change.turn.z;
+         cs.roll  += change.turn.y;
+         cs.pitch += change.turn.x;
       }
       if (do_move) {
          //
@@ -141,25 +131,18 @@ namespace vulkanDK {
          //  +Y = Down
          //  +Z = Forward (Depth)
          // 
-         // So to start with, we need to swap and possibly negate some axes.
+         // So to start with, we need to swap and negate some axes.
          //
+         auto move = change.move;
          std::swap(move.z, move.y);
          move.z = -move.z;
-         //
-         // This turns our "camera-as-object"-relative movement vector into a camera-relative 
-         // movement vector.
-         //
-         float mod = change.move.speed;
-         if (change.move.scale_by_delta)
-            mod *= change.delta_seconds;
-         move = glm::normalize(move) * mod; // NOTE: glm::normalize doesn't check for zero vectors; produces NaN
          //
          // Now, we need to make it world-relative.
          //
          move = glm::inverse(glm::mat3x3(this->global_state.view)) * move;
          this->camera.position += move;
       }
-      //
+
       if (do_move || do_turn) {
          this->update_camera();
          this->mark_light_shadows_dirty();
