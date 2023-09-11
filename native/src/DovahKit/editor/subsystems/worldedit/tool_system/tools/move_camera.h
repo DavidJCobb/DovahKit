@@ -34,12 +34,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                   reference_frame baseline  = reference_frame::camera;
                   reference_frame selection = reference_frame::camera;
                } reference_frames;
-               struct __anonymous_struct {
-                  __anonymous_default_equality;
-                  float x = 0;
-                  float y = 0;
-                  float z = 0;
-               } magnitudes;
+               cobb::vector3<float> magnitudes;
                struct __anonymous_struct {
                   __anonymous_default_equality;
                   range_mapping x = range_mapping{ axis3D::x, sign::positive };
@@ -50,9 +45,8 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr void stream(cobb::bitstreams::writer&) const;
          };
          struct response {
-            float x = 0;
-            float y = 0;
-            float z = 0;
+            cobb::vector3<float> held;
+            cobb::vector3<float> instant;
 
             constexpr void scale(double delta_seconds);
             constexpr void merge(const response& from);

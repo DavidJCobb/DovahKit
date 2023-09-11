@@ -5929,6 +5929,9 @@
     <None Include="ui\models\DKGenericListModel.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="helpers\vector3.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

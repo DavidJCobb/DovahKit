@@ -32,17 +32,13 @@ namespace cobb {
       public:
          static constexpr const size_t axis_count = 3;
          using value_type = T;
-         
-         union {
-            struct {
-               value_type x;
-               value_type y;
-               value_type z;
-            };
-            std::array<value_type, axis_count> components = { T(0), T(0), T(0) };
-         };
+
+         value_type x = T{0};
+         value_type y = T{0};
+         value_type z = T{0};
 
          constexpr vector3() {}
+
          constexpr vector3(value_type x, value_type y, value_type z) : x(x), y(y), z(z) {}
 
          // Constructor to allow narrowing conversions (e.g. double -> float) without manual casts
@@ -67,6 +63,7 @@ namespace cobb {
          constexpr operator std::array<U, axis_count>() const noexcept {
             return { this->x, this->y, this->z };
          }
+
          std::array<value_type, axis_count> to_array() const noexcept {
             return { this->x, this->y, this->z };
          }
@@ -80,153 +77,48 @@ namespace cobb {
             return out;
          }
 
-         constexpr value_type& operator[](size_t i) noexcept {
-            return this->components[i];
-         }
-         constexpr const value_type& operator[](size_t i) const noexcept {
-            return this->components[i];
-         }
+         constexpr value_type& operator[](size_t i) noexcept;
+         constexpr const value_type& operator[](size_t i) const noexcept;
          
-         constexpr vector3 cross(const vector3& other) const noexcept {
-            vector3 result;
-            result.x = y * other.z - z * other.y;
-            result.y = z * other.x - x * other.z;
-            result.z = x * other.y - y * other.x;
-            return result;
-         }
-         constexpr value_type dot(const vector3& other) const noexcept {
-            return (this->x * other.x) + (this->y * other.y) + (this->z * other.z);
-         }
-         constexpr value_type length_sq() const noexcept {
-            return this->dot(*this);
-         }
-         constexpr value_type length() const noexcept {
-            return ::cobb::sqrt(this->length_sq());
-         }
+         constexpr vector3 cross(const vector3& other) const noexcept;
+         constexpr value_type dot(const vector3& other) const noexcept;
+         constexpr value_type length_sq() const noexcept;
+         constexpr value_type length() const noexcept;
          constexpr vector3& normalize() noexcept {
             *this /= this->length();
             return *this;
          }
-         constexpr vector3 normalized() const noexcept {
-            return vector3(*this).normalize();
-         }
-         constexpr vector3 projected(const vector3& other) const noexcept {
-            return other * (this->dot(other) / other.dot(other));
-         }
-         constexpr vector3 projected_onto_axis(const vector3& other) const noexcept { // same as `projected` but assumes a normalized argument
-            return other * (this->dot(other));
-         }
-         constexpr value_type square() const noexcept { // equivalent operation to taking the dot product of the vector with itself
-            return this->length_sq();
-         }
+         constexpr vector3 normalized() const noexcept;
+         constexpr vector3 projected(const vector3& other) const noexcept;
+         constexpr vector3 projected_onto_axis(const vector3& normalized_axis) const noexcept; // same as `projected` but assumes a normalized argument
+         constexpr value_type square() const noexcept; // equivalent operation to taking the dot product of the vector with itself
          
          #pragma region vector-with-vector operators
-         template<vector3_like<value_type> O>
-         constexpr vector3& operator+=(const O& other) noexcept {
-            x += other.x;
-            y += other.y;
-            z += other.z;
-            return *this;
-         }
-         template<vector3_like<value_type> O>
-         constexpr vector3& operator-=(const O& other) noexcept {
-            x -= other.x;
-            y -= other.y;
-            z -= other.z;
-            return *this;
-         }
-         template<vector3_like<value_type> O>
-         constexpr vector3 operator+(const O& other) const noexcept {
-            vector3 result = *this;
-            result += other;
-            return result;
-         }
-         template<vector3_like<value_type> O>
-         constexpr vector3 operator-(const O& other) const noexcept {
-            vector3 result = *this;
-            result -= other;
-            return result;
-         }
+         template<typename O> constexpr vector3& operator+=(const O& other) noexcept requires vector3_like<O, value_type>;
+         template<typename O> constexpr vector3& operator-=(const O& other) noexcept requires vector3_like<O, value_type>;
+
+         template<typename O> constexpr vector3 operator+(const O& other) const noexcept requires vector3_like<O, value_type>;
+         template<typename O> constexpr vector3 operator-(const O& other) const noexcept requires vector3_like<O, value_type>;
          #pragma endregion
 
          #pragma region vector-with-scalar operators
             #pragma region modify self
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator+=(U other) noexcept {
-               x += other;
-               y += other;
-               z += other;
-               return *this;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator-=(U other) noexcept {
-               x -= other;
-               y -= other;
-               z -= other;
-               return *this;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator*=(U other) noexcept {
-               x *= other;
-               y *= other;
-               z *= other;
-               return *this;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator/=(U other) noexcept {
-               x /= other;
-               y /= other;
-               z /= other;
-               return *this;
-            }
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator+=(U other) noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator-=(U other) noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator*=(U other) noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3& operator/=(U other) noexcept;
             #pragma endregion
-            //
             #pragma region create new
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator+(U other) const noexcept {
-               vector3 result = *this;
-               result += other;
-               return result;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator-(U other) const noexcept {
-               vector3 result = *this;
-               result -= other;
-               return result;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator*(U other) const noexcept {
-               vector3 result = *this;
-               result *= other;
-               return result;
-            }
-            template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator/(U other) const noexcept {
-               vector3 result = *this;
-               result /= other;
-               return result;
-            }
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator+(U other) const noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator-(U other) const noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator*(U other) const noexcept;
+               template<typename U> requires std::is_arithmetic_v<U> constexpr vector3 operator/(U other) const noexcept;
             #pragma endregion
          #pragma endregion
 
-         constexpr vector3 operator-() const noexcept {
-            vector3 result = *this;
-            result *= -1;
-            return result;
-         }
+         constexpr vector3 operator-() const noexcept;
 
-         #pragma region Comparisons
-         constexpr bool operator==(const vector3& other) const noexcept {
-            if (this->x != other.x)
-               return false;
-            if (this->y != other.y)
-               return false;
-            if (this->z != other.z)
-               return false;
-            return true;
-         }
-         constexpr bool operator!=(const vector3& other) const noexcept {
-            if (this->x == other.x)
-               return false;
-            if (this->y == other.y)
-               return false;
-            if (this->z == other.z)
-               return false;
-            return true;
-         }
-         #pragma endregion
+         constexpr bool operator==(const vector3& other) const noexcept;
    };
 
    template<typename Struct, typename ValueType = float> concept vector3_identical = requires(Struct x) {
@@ -235,9 +127,12 @@ namespace cobb {
       { x.y } -> std::same_as<ValueType>;
       { x.z } -> std::same_as<ValueType>;
       #if __INTELLISENSE__
-         // for some weird reason, IntelliSense defines an "__EDG__" macro, which disables the STL's 
-         // definition of std::is_layout_compatible[_v]. we therefore have to use the compiler intrinsic 
-         // directly, or IntelliSense will puke. [12/3/2022]
+         // IntelliSense uses the Edison Design Group compiler, and the MSVC STL definition of 
+         // std::is_layout_compatible[_v] is disabled when "__EDG__" is present. We therefore 
+         // have to use the compiler intrinsic directly, or IntelliSense will puke.
+         // 
+         //    [12/3/2022] [still in effect as of 9/10/2023]
+         // 
          requires __is_layout_compatible(Struct, vector3<ValueType>);
       #else
          requires std::is_layout_compatible_v<Struct, vector3<ValueType>>;
@@ -251,3 +146,5 @@ namespace cobb {
       return *(const vector3<ValueType>*)(&o);
    }
 };
+
+#include "./vector3.inl"

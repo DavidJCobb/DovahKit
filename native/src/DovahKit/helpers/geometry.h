@@ -63,8 +63,8 @@ namespace cobb {
             //
             for (int i = 0; i < vector_type::axis_count; ++i) {
                number_type pos = ptt_l[i];
-               number_type min = this->min.components[i] + mp_l[i];
-               number_type max = this->max.components[i] + mp_l[i];
+               number_type min = this->min[i] + mp_l[i];
+               number_type max = this->max[i] + mp_l[i];
                if (pos < min || pos > max)
                   return false;
             }
@@ -114,8 +114,8 @@ namespace cobb {
                number_type sum = 0.0F;
                number_type max = center_diff.dot(axis);
                for (int i = 0; i < vector_type::axis_count; ++i) {
-                  sum += std::abs((a_axes[i] * half_a.components[i]).dot(axis));
-                  sum += std::abs((b_axes[i] * half_b.components[i]).dot(axis));
+                  sum += std::abs((a_axes[i] * half_a[i]).dot(axis));
+                  sum += std::abs((b_axes[i] * half_b[i]).dot(axis));
                   if (sum >= max)
                      return false;
                }

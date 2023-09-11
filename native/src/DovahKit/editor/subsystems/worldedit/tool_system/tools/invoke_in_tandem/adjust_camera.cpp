@@ -11,6 +11,11 @@ namespace {
    namespace worldedit_ini_settings {
       using namespace dovahkit::ini::main::worldedit;
    }
+
+   // If enabled, "held" movement vectors (see comments below) will be normalized if their length 
+   // is greater than one. This prevents "strafe-running" and other speed quirks. This shouldn't 
+   // be necessary for gamepad input, but would be needed for keyboard input.
+   constexpr const bool normalize_super_movements = true;
 }
 
 namespace dovahkit::subsystems::worldedit::tools::tandem {
@@ -19,45 +24,47 @@ namespace dovahkit::subsystems::worldedit::tools::tandem {
 
       vulkanDK::data::camera_coordinate_change update;
       if (params_move) {
+         //
+         // The "move" params include two movement vectors: the "instant" vector and the "held" 
+         // vector. The former vector represents sudden jumps triggered by instantaneous inputs 
+         // e.g. the immediate press or release of a button. The latter vector represents speeds 
+         // per second for movements triggered by sustained inputs, like holding a button down.
+         // 
+         // The "held" vector should be scaled by any relevant movement speed prefs, whereas the 
+         // "instant" vector should not. Neither vector should be scaled by the frame delta: the 
+         // "held" vector will already have been scaled within Worldinput, so multiplying in any 
+         // speed-per-second values is all that's needed.
+         //
          const auto& data = *params_move;
-         update.move = { data.x, data.y, data.z };
-               
+         update.move = data.held.to_struct<glm::vec3>();
+         if constexpr (normalize_super_movements) {
+            const auto len = glm::length(update.move);
+            if (len > 1.0)
+               update.move /= len;
+         }
+         //
+         // Apply movement speeds per second:
+         //
          update.move *= worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>();
          //
          if (worldedit_core.get_camera_speed_flag(camera_speed_flag::boost))
             update.move *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
          if (worldedit_core.get_camera_speed_flag(camera_speed_flag::precision))
             update.move *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
+
+         update.move += data.instant.to_struct<glm::vec3>();
       }
       if (params_turn) {
+         //
+         // Camera turning makes the same "held" and "instant" distinction as camera movement.
+         //
          const auto& data = *params_turn;
-         update.turn = { data.pitch, data.roll, data.yaw };
+         update.turn = data.held.to_struct<glm::vec3>();
          update.turn.z *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondX.get_current_value<double>();
          update.turn.x *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondY.get_current_value<double>();
+
+         update.turn += data.instant.to_struct<glm::vec3>();
       }
-
-      //
-      // NOTE: Movement and look speeds should apply to Hold movements, including those 
-      //       triggered by the mouse and joysticks; however, if someone wants to make a 
-      //       keybind like "jump 16 units to the left when I press a key," that shouldn't 
-      //       have movement or look speeds applied.
-      // 
-      //       To accomplish this, we'll probably have to have both of these tools' response 
-      //       types store two sets of coordinates: "instant" coordinates that we don't scale 
-      //       (and that the tool itself doesn't scale by frame time), and "non-instant" 
-      //       coordinates that do get scaled (both here and by the tool itself).
-      //
-
-      //
-      // NOTE: We no longer normalize the movement direction and then apply a speed to scale 
-      //       it by. I expect this to be friendlier to gamepad inputs (not yet tested), but 
-      //       it means that "strafe-running" now happens: for keyboard use, diagonal inputs 
-      //       are faster than cardinal. (Joysticks should be normalized.)
-      // 
-      //       I think that for Hold inputs, we should check if the movement vector has a 
-      //       length greater than 1, and only if so, we should normalize it. We can do that 
-      //       during the "scale" step, before we scale by the frame time.
-      //
 
       worldedit_core._adjust_camera({}, update);
    }

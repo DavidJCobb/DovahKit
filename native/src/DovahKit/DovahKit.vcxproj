@@ -2135,6 +2135,7 @@
     <None Include="helpers\string\README.md" />
     <None Include="helpers\tree\node.inl" />
     <None Include="helpers\tree\node.md" />
+    <None Include="helpers\vector3.inl" />
     <None Include="helpers\windows.hint" />
     <None Include="helpers\_generated\unicode\character_metadata.js" />
     <None Include="helpers\_generated\unicode\general_category_is_other.js" />

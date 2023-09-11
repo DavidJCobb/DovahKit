@@ -1,5 +1,6 @@
 #pragma once
 #include "helpers/macros/default_comparable_anonymous_struct.h"
+#include "helpers/vector3.h"
 #include "./_base.h"
 #include "../../enums/camera_turn_axis.h"
 #include "../../enums/reference_frame.h"
@@ -43,9 +44,8 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr void stream(cobb::bitstreams::writer&) const;
          };
          struct response {
-            float yaw   = 0.0; // per tick
-            float pitch = 0.0; // per tick
-            float roll  = 0.0; // per tick
+            cobb::vector3<float> held;    // x, y, z = pitch, roll, yaw
+            cobb::vector3<float> instant; // x, y, z = pitch, roll, yaw
 
             constexpr void scale(double delta_seconds);
             constexpr void merge(const response& from);

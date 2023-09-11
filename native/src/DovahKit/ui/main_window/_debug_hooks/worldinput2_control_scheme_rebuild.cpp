@@ -131,7 +131,7 @@ namespace {
                      .baseline  = reference_frame::camera,
                      .selection = reference_frame::camera,
                   },
-                  .magnitudes = { .x = item.x, .y = item.y, .z = item.z },
+                  .magnitudes = { item.x, item.y, item.z },
                }),
             };
 
