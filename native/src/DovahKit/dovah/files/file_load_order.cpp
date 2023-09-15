@@ -233,7 +233,7 @@ namespace dovah {
          auto* stub = pair.second;
          if (!stub || stub->formType == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never have outbound references, so we can skip them
             continue;
-         stub->send_inbound_refs();
+         stub->send_inbound_refs({});
       }
    }
 
@@ -547,7 +547,7 @@ namespace dovah {
             //
             auto* old_parent = target->get_parent_form();
             if (old_parent && old_parent != new_parent) {
-               old_parent->_remove_child_topic_info(*target, false);
+               old_parent->_remove_child_topic_info({}, *target, false);
                //
                if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                   //
@@ -589,7 +589,7 @@ namespace dovah {
          }
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
          target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
-         target->_set_parent_form_one_way(new_parent);
+         target->_set_parent_form_one_way({}, new_parent);
          delete stub;
          stub = target;
       } else {

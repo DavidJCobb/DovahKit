@@ -67,15 +67,15 @@ namespace dovah {
       for (size_t i = 0; i < size; ++i) {
          auto& entry = this->_pending.fixed[i];
          if (auto* to_stub = entry.target_stub)
-            this->_stub._add_one_way_outbound_reference(to_stub, entry.flags);
+            this->_stub._add_one_way_outbound_reference({}, to_stub, entry.flags);
          else
-            this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
+            this->_stub._add_one_way_outbound_reference({}, entry.target_id, entry.flags);
       }
       for (auto& entry : this->_pending.extra) {
          if (auto* to_stub = entry.target_stub)
-            this->_stub._add_one_way_outbound_reference(to_stub, entry.flags);
+            this->_stub._add_one_way_outbound_reference({}, to_stub, entry.flags);
          else
-            this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
+            this->_stub._add_one_way_outbound_reference({}, entry.target_id, entry.flags);
       }
       this->clear_pending_use_info();
    }

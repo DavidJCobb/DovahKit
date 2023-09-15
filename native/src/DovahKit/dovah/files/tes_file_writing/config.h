@@ -27,6 +27,11 @@ namespace dovah::tes_file_writing {
       uint16_t version_control_2 = 0;
       game     output_game       = game::skyrim_classic;
 
+      struct {
+         bool add_flag_when_needed      = false;
+         bool remove_flag_when_unneeded = false;
+      } persistent_refs;
+
       static write_config for_skyrim_classic();
       static write_config for_skyrim_special();
       static write_config for_game(dovah::game);

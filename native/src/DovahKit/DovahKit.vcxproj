@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
@@ -829,6 +830,10 @@
   <ItemGroup>
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
+    <ClInclude Include="dovah\form_stubs\passkeys\build_use_info_during_load.h" />
+    <ClInclude Include="dovah\form_stubs\passkeys\force_form_load.h" />
+    <ClInclude Include="dovah\utils\file_prefix.h" />
+    <ClInclude Include="dovah\utils\refs_need_persistence_checker.h" />
     <ClInclude Include="editor\ini\main.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
@@ -2101,6 +2106,7 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="dovah\utils\file_prefix.inl" />
     <None Include="editor\ini\main.hint" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />

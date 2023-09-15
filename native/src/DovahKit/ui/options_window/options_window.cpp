@@ -1,4 +1,5 @@
 #include "options_window.h"
+#include <cassert>
 #include <QButtonGroup>
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
@@ -25,7 +26,51 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
       this->close();
       return;
    }
+
+   #pragma region Set up page switcher
+   {
+      constexpr int WidgetColumn = 0;
+      constexpr Qt::ItemDataRole WidgetRole = Qt::UserRole;
+
+      auto* switcher = this->ui.navbar;
+      auto* stacker  = this->ui.stackedWidget;
+
+      QTreeWidgetItem* current = nullptr;
+
+      switcher->clear();
+      {
+         auto* item = new QTreeWidgetItem;
+         item->setText(WidgetColumn, tr("Loading and Saving", "navbar page name"));
+         item->setData(WidgetColumn, WidgetRole, QVariant::fromValue<QWidget*>(this->ui.pageTESData));
+         switcher->addTopLevelItem(item);
+
+         current = item;
+      }
+      {
+         auto* item = new QTreeWidgetItem;
+         item->setText(WidgetColumn, tr("Render Window", "navbar page name"));
+         item->setData(WidgetColumn, WidgetRole, QVariant::fromValue<QWidget*>(this->ui.pageRenderWindow));
+         switcher->addTopLevelItem(item);
+      }
+
+      assert(current);
+      switcher->setCurrentItem(current);
+      stacker->setCurrentWidget(current->data(WidgetColumn, WidgetRole).value<QWidget*>());
+
+      QObject::connect(switcher, &QTreeWidget::currentItemChanged, this, [this](QTreeWidgetItem* item) {
+         this->ui.stackedWidget->setCurrentWidget(item->data(WidgetColumn, WidgetRole).value<QWidget*>());
+      });
+   }
+   #pragma endregion
+   
    //
+   // First, the basic mappings. We'll loop over these lists and automatically connect INI settings to 
+   // their widgets, for basic things like checkboxes, radio buttons, and spinboxes.
+   //
+   #pragma region Loading and Saving
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bApplyRefPersistenceAsNeeded, this->ui.iniPref_bApplyRefPersistenceAsNeeded);
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bClearRefPersistenceWhenAble, this->ui.iniPref_bClearRefPersistenceWhenAble);
+   #pragma endregion
    #pragma region Render Window
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldedit::fCameraSpeedNormal,           this->ui.iniPref_fCameraSpeedNormal);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldedit::fCameraSpeedMultBoost,        this->ui.iniPref_fCameraSpeedMultBoost);

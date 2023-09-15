@@ -2076,6 +2076,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5159,6 +5162,18 @@
     <ClInclude Include="vulkan\data\camera_coordinate_change.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\refs_need_persistence_checker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\file_prefix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\passkeys\force_form_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\passkeys\build_use_info_during_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5930,6 +5945,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\vector3.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\utils\file_prefix.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

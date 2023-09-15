@@ -6,6 +6,7 @@
 #include "forms/factories/hardcoded.h"
 #include "forms/factories/use_info.h"
 #include "forms/Form.h"
+#include "utils/file_prefix.h"
 #include "form_stub_addenda.h"
 #include "form_stub_heap.h"
 #include "form_stub_use_info_builder.h"
@@ -137,7 +138,7 @@ namespace dovah {
       //
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
-   void form_stub::_do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept {
+   void form_stub::_do_custom_parse_impl(tes_file_reading::basic_reader* reader, custom_parse_functor_type loader) noexcept {
       if (!this->has_source_files())
          return; // no files to load from
       //
@@ -190,6 +191,10 @@ namespace dovah {
       }
    }
 
+   loaded_form_ptr<loaded_forms::Form> form_stub::load_even_if_unsafe(form_stub_passkeys::force_form_load) {
+      return this->_load(true);
+   }
+
    loaded_form_ptr<loaded_forms::Form> form_stub::load() {
       return this->_load();
    }
@@ -202,10 +207,18 @@ namespace dovah {
          return false;
       return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
    }
-   void form_stub::do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept {
+   void form_stub::do_custom_parse(tes_file_reading::basic_reader* reader, custom_parse_functor_type loader) noexcept {
       if (this->_get_load_order().is_form_loading_blocked(this)) // don't allow a load if the file's load order is in the middle of a save operation or some other unsafe circumstance
          return;
-      this->_do_custom_parse(reader, loader);
+      this->_do_custom_parse_impl(reader, loader);
+   }
+
+   void form_stub::do_custom_parse_during_serialization(
+      form_stub_passkeys::force_form_load,
+      tes_file_reading::basic_reader* reader,
+      custom_parse_functor_type loader
+   ) noexcept {
+      this->_do_custom_parse_impl(reader, loader);
    }
 
    #pragma region form_stub file list
@@ -494,7 +507,7 @@ namespace dovah {
    #pragma endregion
 
    #pragma region form_stub use info functions
-   void form_stub::build_outbound_refs(tes_file_reading::basic_reader& reader) noexcept {
+   void form_stub::build_outbound_refs(form_stub_passkeys::build_use_info_during_load, tes_file_reading::basic_reader& reader) noexcept {
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
@@ -531,7 +544,7 @@ namespace dovah {
       reader.file_size = 0;
       reader.loader    = nullptr;
    }
-   void form_stub::send_inbound_refs() noexcept {
+   void form_stub::send_inbound_refs(form_stub_passkeys::build_use_info_during_load) noexcept {
       //
       // This function takes all outbound connections and creates, for the connected forms, inbound 
       // connections from this form. It is intended only for use at the tail end of the (file_load_order) 
@@ -544,10 +557,10 @@ namespace dovah {
       //
       for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it) {
          if (it->second.other)
-            it->second.other->receive_inbound_ref(this, it->second.refcount, it->second.flags);
+            it->second.other->receive_inbound_ref({}, this, it->second.refcount, it->second.flags);
       }
    }
-   void form_stub::receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
+   void form_stub::receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
       auto& list  = this->inbound;
       auto& entry = list[inbound->formID];
       entry.other     = inbound;
@@ -555,7 +568,7 @@ namespace dovah {
       entry.flags    |= flags;
    }
 
-   void form_stub::_add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info_entry::flags_t flags) {
       //
       // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
       // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
@@ -581,7 +594,7 @@ namespace dovah {
       if (flags)
          entry.flags |= flags;
    }
-   void form_stub::_add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info_entry::flags_t flags) {
       //
       // Please refer to the documentation comments in this function's other overload.
       //
@@ -598,7 +611,7 @@ namespace dovah {
          entry.flags |= flags;
       }
    }
-   void form_stub::_set_parent_form_one_way(form_stub* parent) {
+   void form_stub::_set_parent_form_one_way(form_stub_passkeys::build_use_info_during_load, form_stub* parent) {
       //
       // When setting a parent form during the load process (i.e. before the use info build step), 
       // you should use this function instead of (set_parent_form). This is because at the end of 
@@ -623,7 +636,7 @@ namespace dovah {
       //
       // Set the new parent form.
       //
-      this->_add_one_way_outbound_reference(parent, use_info_entry::flag::parent_child);
+      this->_add_one_way_outbound_reference({}, parent, use_info_entry::flag::parent_child);
    }
    #pragma endregion
 
@@ -640,7 +653,7 @@ namespace dovah {
       return &this->files.entries[i];
    }
 
-   void form_stub::_insert_child_topic_info(form_stub& info, size_t at) {
+   void form_stub::_insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at) {
       assert(info.get_parent_form() == this);
       //
       if (!this->addenda)
@@ -676,7 +689,7 @@ namespace dovah {
       }
       list.insert(list.cbegin() + at, &info);
    }
-   void form_stub::_remove_child_topic_info(form_stub& info, bool loading) {
+   void form_stub::_remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading) {
       if (loading && info.test_record_flags(tes_file_record_header::flag::partial))
          return;
       if (!this->addenda)
@@ -799,7 +812,7 @@ namespace dovah {
          return;
       this->revoke_outbound_reference(parent, use_info_entry::flag::parent_child);
       if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
-         parent->_remove_child_topic_info(*this, false);
+         parent->_remove_child_topic_info({}, *this, false);
    }
    void form_stub::set_parent_form(form_stub* target) noexcept {
       auto* parent = this->get_parent_form();
@@ -810,7 +823,7 @@ namespace dovah {
          return;
       this->replace_outbound_reference(0, target, use_info_entry::flag::parent_child);
       if (target->formType == form_type::topic && this->formType == form_type::topic_info)
-         target->_insert_child_topic_info(*this);
+         target->_insert_child_topic_info({}, *this);
    }
    #pragma endregion
 
@@ -980,8 +993,8 @@ namespace dovah {
       if (!new_stub)
          return;
       //
-      this->_add_one_way_outbound_reference(new_stub, flags);
-      new_stub->receive_inbound_ref(this, 1, flags);
+      this->_add_one_way_outbound_reference({}, new_stub, flags);
+      new_stub->receive_inbound_ref({}, this, 1, flags);
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
       auto& lo       = this->_get_load_order();

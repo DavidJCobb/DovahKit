@@ -2,6 +2,7 @@
 
 #if MSVC_CONSTINIT_STILL_BROKEN
    #pragma push_macro("MAKE_INI_SETTING")
+   #pragma push_macro("MAKE_INI_STRING_SETTING")
    #pragma push_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
 
    #define MAKE_INI_SETTING(setting_name, initial) \
@@ -26,6 +27,12 @@
    namespace dovahkit::ini::main {
       cobb::ini::file file_data = cobb::ini::file{};
 
+      namespace saving {
+         cobb::ini::category category_data = cobb::ini::category(file_data, "saving");
+
+         MAKE_INI_SETTING(bApplyRefPersistenceAsNeeded, true);
+         MAKE_INI_SETTING(bClearRefPersistenceWhenAble, false);
+      }
       namespace worldedit {
          cobb::ini::category category_data = cobb::ini::category(file_data, "worldedit");
 
@@ -51,7 +58,9 @@
    }
 
    #undef MAKE_INI_SETTING_WITH_CONSTRAINTS
+   #undef MAKE_INI_STRING_SETTING
    #undef MAKE_INI_SETTING
    #pragma pop_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
+   #pragma pop_macro("MAKE_INI_STRING_SETTING")
    #pragma pop_macro("MAKE_INI_SETTING")
 #endif

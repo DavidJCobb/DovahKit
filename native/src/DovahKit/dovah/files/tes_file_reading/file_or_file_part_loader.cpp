@@ -55,7 +55,7 @@ namespace dovah::tes_file_reading {
    }
    bool file_or_file_part_loader::set_stub_parent(form_stub* stub, bare_form_id_t parentID) {
       if (!parentID) {
-         stub->_set_parent_form_one_way(nullptr);
+         stub->_set_parent_form_one_way({}, nullptr);
          return true;
       }
       auto& lo     = this->get_file_loader().get_load_interface(*this).owner;
@@ -72,7 +72,7 @@ namespace dovah::tes_file_reading {
          //
          return false;
       }
-      stub->_set_parent_form_one_way(parent);
+      stub->_set_parent_form_one_way({}, parent);
       return true;
    }
    bool file_or_file_part_loader::commit_stub(form_stub*& stub) {
@@ -224,7 +224,7 @@ namespace dovah::tes_file_reading {
       //
       #pragma region INFO post-handling
       if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted))
-         parent_topic->_insert_child_topic_info(stub, insert_info_at);
+         parent_topic->_insert_child_topic_info({}, stub, insert_info_at);
       #pragma endregion
    }
 

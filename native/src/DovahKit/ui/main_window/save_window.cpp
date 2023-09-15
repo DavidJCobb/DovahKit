@@ -9,6 +9,8 @@
 #include "../../dovah/notice_code_list.h"
 #include "../main_window.h"
 
+#include "editor/ini/main.h"
+
 ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
@@ -135,6 +137,12 @@ void ActiveFileSaveDialog::commit() {
    auto config = dovah::tes_file_writing::write_config::for_game(game);
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  this->ui.flagLight->isChecked());
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::master, this->ui.flagMaster->isChecked());
+   {
+      using namespace dovahkit::ini::main;
+
+      config.persistent_refs.add_flag_when_needed      = saving::bApplyRefPersistenceAsNeeded.get_current_value<bool>();
+      config.persistent_refs.remove_flag_when_unneeded = saving::bClearRefPersistenceWhenAble.get_current_value<bool>();
+   }
    //
    // TODO: We should preserve any flags on the original file, unless they are flags controllable 
    // from this UI, or unless they are flags for things we can't edit (e.g. localized strings).

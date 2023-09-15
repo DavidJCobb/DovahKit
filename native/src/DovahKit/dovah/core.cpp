@@ -11,15 +11,6 @@ namespace dovah {
       return false;
    }
 
-   /*static*/ file_prefix file_prefix::from_form_id(bare_form_id_t id, bool is_skyrim_classic) noexcept {
-      if (!id)
-         return file_prefix();
-      uint8_t prefix = id >> 0x18;
-      if (is_skyrim_classic || prefix != 0xFE)
-         return file_prefix::make_heavy(prefix);
-      return file_prefix::make_light((id >> 0xC) & 0xFFF);
-   }
-
    #pragma region form_reference_t
    bare_form_id_t form_reference_t::formID() const noexcept {
       return this->stub ? this->stub->formID : 0;
@@ -57,6 +48,9 @@ namespace dovah {
    //
    dialogue_quest_reference_t::dialogue_quest_reference_t() : form_reference_t(use_info_entry::flag::dialogue_quest) {};
    dialogue_quest_reference_t::dialogue_quest_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_quest, s) {};
+   //
+   water_acti_type_reference_t::water_acti_type_reference_t() : form_reference_t(use_info_entry::flag::water_acti_type) {};
+   water_acti_type_reference_t::water_acti_type_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::water_acti_type, s) {};
 
    void clear_form_reference_list(std::vector<form_reference_t>& list, loaded_forms::Form& owner) {
       for (auto& id : list)

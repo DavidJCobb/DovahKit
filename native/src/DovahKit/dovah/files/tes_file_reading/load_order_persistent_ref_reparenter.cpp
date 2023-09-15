@@ -68,7 +68,7 @@ namespace dovah::tes_file_reading {
       const auto& cells = this->owner.cells_for_current_world;
       for (size_t i = this->range.start; i < this->range.end; ++i) {
          auto& item = list[i];
-         item.refr->_do_custom_parse(this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
+         item.refr->do_custom_parse_during_serialization({}, this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;
@@ -84,7 +84,7 @@ namespace dovah::tes_file_reading {
             }
             form_stub* cell = cells.cell_for_position(x, y);
             if (cell) {
-               refr._set_parent_form_one_way(cell);
+               refr._set_parent_form_one_way({}, cell);
                item.cell = cell;
                item.gx   = cell->addenda->grid_coords.x;
                item.gy   = cell->addenda->grid_coords.y;
@@ -153,7 +153,7 @@ namespace dovah::tes_file_reading {
             if ((item.gy >= 0) != this->y_pos)
                continue;
          }
-         item.cell->receive_inbound_ref(item.refr, 1, use_info_entry::flag::parent_child);
+         item.cell->receive_inbound_ref({}, item.refr, 1, use_info_entry::flag::parent_child);
       }
    }
    //

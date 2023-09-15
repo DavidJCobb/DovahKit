@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include "file_load_order_normalizer.h"
+#include "../utils/file_prefix.h"
 #include "../detailed_notice.h"
 #include "../form_stub.h"
 #include "../localized_strings.h"

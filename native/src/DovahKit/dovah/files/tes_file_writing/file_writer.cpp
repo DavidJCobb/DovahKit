@@ -6,6 +6,7 @@
 #include "../../form_stub_addenda.h"
 #include "../../form_stub_helpers.h"
 #include "../../forms/Form.h"
+#include "../../forms/ObjectReference.h"
 #include "../../notice_code_list.h"
 #include "../common.h"
 extern "C" {
@@ -13,16 +14,40 @@ extern "C" {
 }
 
 namespace {
-   static constexpr int record_compress_threshold = 0x280;
+   constexpr const auto reference_form_types = []() {
+      constexpr const size_t count = []() {
+         size_t n = 0;
+         for (const auto& item : dovah::form_types)
+            if (dovah::form_type_info::form_type_is_reference(item.formType))
+               ++n;
+         return n;
+      }();
+
+      std::array<dovah::form_type_t, count> out = {};
+      size_t n = 0;
+      for (const auto& item : dovah::form_types)
+         if (dovah::form_type_info::form_type_is_reference(item.formType))
+            out[n++] = item.formType;
+      return out;
+   }();
 }
 
 namespace dovah::tes_file_writing {
-   file_writer::file_writer(file_load_order& owner, file_loader& source, const write_config& cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+   file_writer::file_writer(file_load_order& owner, file_loader& source, const write_config& cfg)
+      :
+      owner(owner),
+      source(source),
+      _record(*this),
+      _subrecord(*this),
+      ref_persistence_checker(owner)
+   {
       this->config = cfg;
-      //
+      
       this->use_string_table = (this->source.header.flags & tes_file_flag::localized_string_table) != 0;
       if (!this->config.record_version)
          this->config.record_version = this->source.header.record_version;
+
+      this->ref_persistence_checker._set_is_during_save({});
    }
    file_writer::~file_writer() {
       this->stream.close();
@@ -173,7 +198,7 @@ namespace dovah::tes_file_writing {
       --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
    bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
-      auto loaded = stub->_load(true);
+      auto loaded = stub->load_even_if_unsafe({});
       if (loaded) {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
@@ -422,6 +447,18 @@ namespace dovah::tes_file_writing {
       //
       if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(stub)) {
          if (cell->needs_save()) {
+            //
+            // NOTE: You may be aware that persistent refs need to be handled differently from 
+            //       normal refs. On load, we reparent them from the worldspace persistent cell 
+            //       into whatever cell their coordinates would place them in, so on save, we 
+            //       need to be sure to serialize them into the persistent cell rather than 
+            //       into what DovahKit views as their parent form.
+            // 
+            //       Don't worry about it. We deal with that in `_write_child_forms_for_cell`. 
+            //       The persistent cell reaches into its owning worldspace and looks up all of 
+            //       the persistent refs therein; the non-persistent cells skip persistent refs 
+            //       when serializing their own children; and it all works out.
+            //
             (open_group_if_needed)();
             this->_write_form(cell);
          }
@@ -566,6 +603,48 @@ namespace dovah::tes_file_writing {
       return true;
    }
 
+   void file_writer::_update_ref_persistence_pre_save() {
+      //
+      // It's tempting to do this as we save the REFRs (and other REFR subclasses e.g. ACHR), 
+      // since we load the REFRs in full at that time. However, REFRs in an exterior space 
+      // are only saved when we save the cell that they should be serialized into... and we 
+      // only know which cell that is based on the REFR's persistent flag. So we have to set 
+      // the flag in advance.
+      // 
+      // In practice, it's simplest to just update persistence flags before we even save any 
+      // data at all.
+      //
+      bool do_flag   = this->config.persistent_refs.add_flag_when_needed;
+      bool do_unflag = this->config.persistent_refs.remove_flag_when_unneeded;
+      if (!do_flag && !do_unflag)
+         return;
+      
+      for (const auto ft : reference_form_types) {
+         this->owner.for_each_active_file_form_of_type(ft, [this, do_flag, do_unflag](dovah::form_stub* refr) -> bool {
+            bool should_check = do_flag && do_unflag;
+            if (!should_check) {
+               bool already = refr->test_record_flags(dovah::loaded_forms::ObjectReference::form_flag::persistent);
+               if (do_flag && !already)
+                  should_check = true;
+               else if (do_unflag && already)
+                  should_check = true;
+               //
+               if (!should_check)
+                  return false;
+            }
+
+            bool needs_persistence = this->ref_persistence_checker.check_ref(*refr);
+            if (do_flag && needs_persistence) {
+               refr->flags |= dovah::loaded_forms::ObjectReference::form_flag::persistent;
+            } else if (do_unflag && !needs_persistence) {
+               refr->flags &= ~dovah::loaded_forms::ObjectReference::form_flag::persistent;
+            }
+
+            return false;
+         });
+      }
+   }
+
    group& file_writer::open_group(tes_file_group_type group_type, uint32_t label, uint32_t unknown) {
       int32_t parent = -1;
       for (uint32_t i = 0; i < this->_groups.size(); i++) {
@@ -626,6 +705,7 @@ namespace dovah::tes_file_writing {
       this->stream.open(this->path, std::ios_base::binary | std::ios_base::trunc);
    }
    bool file_writer::write() {
+      this->_update_ref_persistence_pre_save();
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {
          auto form_type = form_type_info::signature_to_form_type(signature);

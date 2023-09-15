@@ -1445,6 +1445,9 @@ namespace dovah::game_ini {
                   { "fFlyingMountSlowestSpeedMult", 0.25F },
                   { "fFlyingMountTutorialMessageDelay", 15.0F },
                #pragma endregion
+               #pragma region G
+                  { "uGridsToLoad", 5 },
+               #pragma endregion
                #pragma region L
                   { "fLoadGameFadeSecs", 1.0F },
                #pragma endregion

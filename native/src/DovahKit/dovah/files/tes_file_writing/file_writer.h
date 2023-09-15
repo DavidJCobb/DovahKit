@@ -6,6 +6,7 @@
 #include <vector>
 #include "config.h"
 #include "elements.h"
+#include "../../utils/refs_need_persistence_checker.h"
 #include "../../detailed_notice.h"
 
 namespace dovah {
@@ -40,6 +41,8 @@ namespace dovah {
             file_load_order& owner;
             file_loader&     source;
             //
+            refs_need_persistence_checker ref_persistence_checker;
+            //
             std::array<group, max_group_depth> _groups;
             record    _record;
             subrecord _subrecord;
@@ -72,11 +75,13 @@ namespace dovah {
             }
             //
             bool _can_serialize_form(const form_stub*) const noexcept;
-            //
+
+            void _update_ref_persistence_pre_save();
+            
          public:
             file_writer(file_load_order&, file_loader&, const write_config& cfg);
             ~file_writer();
-            //
+            
             #pragma region config
             std::filesystem::path path;
             write_config config;
@@ -95,7 +100,7 @@ namespace dovah {
                } record_and_group_count;
                std::unordered_map<bare_form_id_t, form_stub_write_info> form_stubs;
             } fixup_data;
-            //
+            
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
                   auto& group = this->_groups[i];

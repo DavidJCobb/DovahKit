@@ -11,6 +11,9 @@
 #include "core.h"
 #include "files/common.h"
 
+#include "./form_stubs/passkeys/build_use_info_during_load.h"
+#include "./form_stubs/passkeys/force_form_load.h"
+
 namespace dovah {
    class  file_load_order;
    struct tes_file_record_header;
@@ -24,17 +27,11 @@ namespace dovah {
       class basic_reader;
       class file_or_file_part_loader;
       class file_loader;
-      class threaded_load_order_use_info_builder;
-      class load_order_persistent_ref_reparenter;
       class record;
-   }
-   namespace tes_file_writing {
-      class file_writer;
    }
 
    class form_stub;
    class form_stub_addenda;
-   class form_stub_use_info_builder;
 
    template<typename loaded_form_t> class loaded_form_ptr;
 
@@ -87,6 +84,7 @@ namespace dovah {
             object_reference = 0x02, // REFR/NAME: the user-form is a reference and the used-form is its base form
             dialogue_branch  = 0x04, // DIAL/BNAM
             dialogue_quest   = 0x08, // DIAL/QNAM and DLBR/QNAM
+            water_acti_type  = 0x10, // ACTI/WNAM: a water activator's water type
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -112,15 +110,11 @@ namespace dovah {
       template<typename loaded_form_t> friend class loaded_form_ptr;
       friend file_load_order;
       friend tes_file_reading::file_or_file_part_loader;
-      friend tes_file_reading::threaded_load_order_use_info_builder;
-      friend tes_file_reading::load_order_persistent_ref_reparenter;
-      friend tes_file_writing::file_writer;
-      friend form_stub_use_info_builder;
       //
       public:
          form_stub();
          ~form_stub();
-         //
+         
          struct flag {
             flag() = delete;
             enum type : uint8_t {
@@ -146,8 +140,9 @@ namespace dovah {
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
+
          using owner_file_t = tes_file_reading::file_loader;
-         //
+         
          struct file_data {
             owner_file_t* pointer = nullptr;
             uint32_t      offset  = 0;
@@ -159,16 +154,15 @@ namespace dovah {
             file_data* entries = nullptr;
             int16_t    count   = 0; // values below 0 are illegal
          };
-         //
+
+         using custom_parse_functor_type = std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)>;
+         
       protected:
          union { // a stub must ALWAYS have at least one source file, unless it's literally in the middle of being loaded from that source file.
             file_data      file;
             file_data_list files;
          };
          std::atomic<uint32_t> refcount = 0;
-         void build_outbound_refs(tes_file_reading::basic_reader&) noexcept;
-         void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
-         void receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags = 0) noexcept;
          
          file_load_order& _get_load_order() const noexcept;
 
@@ -176,7 +170,7 @@ namespace dovah {
          loaded_form_ptr<loaded_forms::Form> _load(bool even_if_during_file_load = false);
 
          // An internal-only version of (form_stub::do_custom_parse) which can be used by (file_load_order) during the file load process.
-         void _do_custom_parse(tes_file_reading::basic_reader*, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> functor) noexcept;
+         void _do_custom_parse_impl(tes_file_reading::basic_reader*, custom_parse_functor_type functor) noexcept;
 
          void _unload_form();
          
@@ -187,15 +181,31 @@ namespace dovah {
          void _adopt_source_file_list(const form_stub* other); // prepends
          void _set_source_file_list(const std::vector<file_data>&);
          //
-         void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void _add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
-         void _set_parent_form_one_way(form_stub* parent); // use during load
-         //
          file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
-         void _insert_child_topic_info(form_stub& info, size_t at = std::string::npos); // inserts (info) into the addendum info list, without form type checks or managing parenthood
-         void _remove_child_topic_info(form_stub& info, bool loading); // removes (info) from the addendum info list, without form type checks or managing parenthood
-         //
+         
+      public:
+         #pragma region Passkeyed methods
+         void build_outbound_refs(form_stub_passkeys::build_use_info_during_load, tes_file_reading::basic_reader&) noexcept;
+         void send_inbound_refs(form_stub_passkeys::build_use_info_during_load) noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
+         void receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags = 0) noexcept;
+
+         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info_entry::flags_t flags = 0);
+         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         void _set_parent_form_one_way(form_stub_passkeys::build_use_info_during_load, form_stub* parent);
+
+         void _insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at = std::string::npos); // inserts (info) into the addendum info list, without form type checks or managing parenthood
+         void _remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading); // removes (info) from the addendum info list, without form type checks or managing parenthood
+
+         loaded_form_ptr<loaded_forms::Form> load_even_if_unsafe(form_stub_passkeys::force_form_load);
+
+         void do_custom_parse_during_serialization(
+            form_stub_passkeys::force_form_load,
+            tes_file_reading::basic_reader* reader,
+            custom_parse_functor_type loader
+         ) noexcept;
+         #pragma endregion
+
       public:
          form_stub_addenda* addenda = nullptr;
          bare_form_id_t formID   = 0; // form ID (file-local)
@@ -224,7 +234,7 @@ namespace dovah {
          // pass your own reader object. If you do pass a reader, it must be blank, so that it can be "adopted" 
          // by the form's source files and then eventually severed from them.
          //
-         void do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept;
+         void do_custom_parse(tes_file_reading::basic_reader* reader, custom_parse_functor_type loader) noexcept;
          
          #pragma region Source file member functions
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;

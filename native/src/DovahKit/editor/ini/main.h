@@ -21,6 +21,7 @@
 #endif
 
 #pragma push_macro("MAKE_INI_SETTING")
+#pragma push_macro("MAKE_INI_STRING_SETTING")
 #pragma push_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
 
 #define MAKE_INI_SETTING(setting_name, initial) \
@@ -65,6 +66,16 @@ namespace dovahkit::ini::main {
       #endif
    ;
 
+   namespace saving {
+      constinit cobb::ini::category category_data
+         #if !MSVC_CONSTINIT_STILL_BROKEN
+         = cobb::ini::category(file_data, "saving")
+         #endif
+      ;
+
+      MAKE_INI_SETTING(bApplyRefPersistenceAsNeeded, true);
+      MAKE_INI_SETTING(bClearRefPersistenceWhenAble, false);
+   }
    namespace worldedit {
       constinit cobb::ini::category category_data
          #if !MSVC_CONSTINIT_STILL_BROKEN
@@ -98,8 +109,10 @@ namespace dovahkit::ini::main {
 }
 
 #undef MAKE_INI_SETTING_WITH_CONSTRAINTS
+#undef MAKE_INI_STRING_SETTING
 #undef MAKE_INI_SETTING
 #pragma pop_macro("MAKE_INI_SETTING_WITH_CONSTRAINTS")
+#pragma pop_macro("MAKE_INI_STRING_SETTING")
 #pragma pop_macro("MAKE_INI_SETTING")
 
 // Remove this when we remove the MSVC Debug hack up above.
