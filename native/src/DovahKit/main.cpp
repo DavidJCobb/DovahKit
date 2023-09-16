@@ -649,6 +649,8 @@
 //
 //        - REFRs defined in ESP files are de facto persistent, so this would have to 
 //          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
+// 
+//           - Workaround for the CK not properly flagging all unique actors as persistent?
 //
 //     - REFRs that have the "deleted" flag set at save time need to be subject to the 
 //       undelete-and-disable procedure, as deleted REFRs can crash the game on exit and, 
