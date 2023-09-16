@@ -5950,6 +5950,7 @@
     <None Include="dovah\utils\file_prefix.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

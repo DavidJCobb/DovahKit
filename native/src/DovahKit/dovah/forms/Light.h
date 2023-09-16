@@ -55,7 +55,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          components::object_bounds bounds; // OBND
          components::model_ts model; // MODL, MODT, MODS
-         components::destruction_stage_data destruction_data; // DEST
+         std::optional<components::destruction_stage_data> destruction_data; // DEST
          //
          light_flags_t     light_flags = 0;
          engine_light_type light_type  = engine_light_type::omni;

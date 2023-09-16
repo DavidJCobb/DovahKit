@@ -31,7 +31,9 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               this->destruction_data.load(subrecord, intfc);
+               if (!this->destruction_data.has_value())
+                  this->destruction_data.emplace();
+               this->destruction_data.value().load(subrecord, intfc);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -263,7 +265,7 @@ namespace dovah::loaded_forms {
                      auto val = this->ai.aggro.warn;
                      this->ai.aggro.warn        = 0;
                      this->ai.aggro.warn_attack = val;
-                     this->ai.aggro.attack      = val >> 2;
+                     this->ai.aggro.attack      = val / 4;
                   }
                   this->ai.aggression = (ActorBase::aggression)aggression;
                   this->ai.assistance = (ActorBase::assistance)assistance;
@@ -663,5 +665,553 @@ namespace dovah::loaded_forms {
          }
       }
       attack_data.commit(uib);
+   }
+   bool ActorBase::_clone_impl(Form* out) const noexcept {
+      if (out->formType != form_type)
+         return false;
+      auto copy = (ActorBase*)out;
+      
+      // components
+      copy->attack_data.clone_from(this->attack_data, *copy);
+      copy->bounds = this->bounds;
+      {
+         auto& src_opt = this->destruction_data;
+         auto& dst_opt = copy->destruction_data;
+         if (dst_opt.has_value()) {
+            dst_opt.value().clear(*copy);
+            dst_opt = {};
+         }
+         if (src_opt.has_value()) {
+            dst_opt.emplace();
+            dst_opt.value().clone_from(src_opt.value(), *copy);
+         }
+      }
+      copy->inventory.clone_from(this->inventory, *copy);
+      copy->keywords.clone_from(this->keywords, *copy);
+      copy->script_data.clone_from(this->script_data, *copy);
+
+      copy->name        = this->name;
+      copy->short_name  = this->short_name;
+      copy->actor_flags = this->actor_flags;
+      copy->race.set(*copy, this->race);
+      {  // ai
+         copy_form_reference_list(*copy, copy->ai.package_list, this->ai.package_list);
+         copy->ai.default_package_list.set(*copy, this->ai.default_package_list);
+         {
+            auto& src = this->ai.package_override_lists;
+            auto& dst = copy->ai.package_override_lists;
+            dst.combat.set(*copy, src.combat);
+            dst.guard_warn.set(*copy, src.guard_warn);
+            dst.observe_corpse.set(*copy, src.observe_corpse);
+            dst.spectator.set(*copy, src.spectator);
+         }
+         copy->ai.aggression   = this->ai.aggression;
+         copy->ai.confidence   = this->ai.confidence;
+         copy->ai.energy_level = this->ai.energy_level;
+         copy->ai.morality     = this->ai.morality;
+         copy->ai.mood         = this->ai.mood;
+         copy->ai.assistance   = this->ai.assistance;
+         //
+         copy->ai.aggro = this->ai.aggro;
+      }
+      {  // face
+         auto& src = this->face;
+         auto& dst = copy->face;
+         dst.texture_set.set(*copy, src.texture_set);
+         dst.morphs = src.morphs;
+         dst.parts  = src.parts;
+      }
+      {
+         auto& src = this->far_away;
+         auto& dst = copy->far_away;
+         dst.model.set(*copy, src.model);
+         dst.distance = src.distance;
+      }
+      {
+         auto& src = this->head;
+         auto& dst = copy->head;
+         copy_form_reference_list(*copy, dst.hair_colors, src.hair_colors);
+         copy_form_reference_list(*copy, dst.head_parts,  src.head_parts);
+      }
+      {
+         auto& src = this->outfits;
+         auto& dst = copy->outfits;
+         dst.normal.set(*copy, src.normal);
+         dst.sleeping.set(*copy, src.sleeping);
+      }
+      {
+         auto& src = this->stats;
+         auto& dst = copy->stats;
+         dst.base    = src.base;
+         dst.offsets = src.offsets;
+         dst.level              = src.level;
+         dst.calc_min_level     = src.calc_min_level;
+         dst.calc_max_level     = src.calc_max_level;
+         dst.speed_mult         = src.speed_mult;
+         dst.disposition        = src.disposition;
+         dst.bleedout_threshold = src.bleedout_threshold;
+         dst.combat_class.set(*copy, src.combat_class);
+         dst.combat_style.set(*copy, src.combat_style);
+      }
+      copy->template_data.actor.set(*copy, this->template_data.actor);
+      copy->template_data.flags = this->template_data.flags;
+      //
+      {
+         auto& src = this->creature_sounds;
+         auto& dst = copy->creature_sounds;
+         dst.resize(src.size());
+         for (size_t i = 0; i < src.size(); ++i) {
+            dst[i].type   = src[i].type;
+            dst[i].sound.set(*copy, src[i].sound);
+            dst[i].chance = src[i].chance;
+         }
+      }
+      copy->crime_faction.set(*copy, this->crime_faction);
+      copy->death_item.set(*copy, this->death_item);
+      {
+         auto& src = this->faction_memberships;
+         auto& dst = copy->faction_memberships;
+         dst.resize(src.size());
+         for (size_t i = 0; i < src.size(); ++i) {
+            dst[i].faction.set(*copy, src[i].faction);
+            dst[i].rank = src[i].rank;
+         }
+      }
+      copy->geared_up_weapons = this->geared_up_weapons;
+      copy->gift_filter.set(*copy, this->gift_filter);
+      copy_form_reference_list(*copy, copy->perks, this->perks);
+      copy->sound_level = this->sound_level;
+      copy_form_reference_list(*copy, copy->spells, this->spells);
+      copy->texture_lighting = this->texture_lighting;
+      copy->tint_layers = this->tint_layers;
+      copy->voicetype.set(*copy, this->voicetype);
+      copy->worn_armor.set(*copy, this->worn_armor);
+      copy->height = this->height;
+      copy->weight = this->weight;
+
+      return true;
+   }
+   bool ActorBase::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc);
+      auto& OBND = record.open_next_subrecord('OBND');
+      this->bounds.save(OBND, intfc);
+      OBND.close();
+      {
+         auto& ACBS = record.open_next_subrecord('ACBS');
+         if (record.version() < 0x1D) {
+            ACBS.write(this->actor_flags);
+            ACBS.write(this->stats.offsets.magicka);
+            ACBS.write(this->stats.offsets.stamina);
+            ACBS.skip_bytes(2);                                   // 08
+            ACBS.write(this->stats.level);          // 0A -> 08
+            ACBS.write(this->stats.calc_min_level); // 0C -> 0A
+            ACBS.write(this->stats.calc_max_level); // 0E -> 0C
+            ACBS.write(this->stats.speed_mult);     // 10 -> 0E
+            ACBS.write(this->stats.disposition);    // 12 -> 10
+            ACBS.write(this->template_data.flags); // 14 -> 12
+            ACBS.write(this->stats.offsets.health);  // 16 -> 14
+            ACBS.write(this->stats.bleedout_threshold); // 18 -> 16
+         } else {
+            ACBS.write(this->actor_flags);
+            ACBS.write(this->stats.offsets.magicka);
+            ACBS.write(this->stats.offsets.stamina);
+            ACBS.write(this->stats.level);
+            ACBS.write(this->stats.calc_min_level);
+            ACBS.write(this->stats.calc_max_level);
+            ACBS.write(this->stats.speed_mult);
+            ACBS.write(this->stats.disposition);
+            ACBS.write(this->template_data.flags);
+            ACBS.write(this->stats.offsets.health);
+            ACBS.write(this->stats.bleedout_threshold);
+         }
+         ACBS.close();
+      }
+      for (const auto& entry : this->faction_memberships) {
+         auto& SNAM = record.open_next_subrecord('SNAM');
+         SNAM.write(entry.faction);
+         SNAM.write(entry.rank);
+         SNAM.close();
+      }
+      record.write_formID_subrecord('INAM', this->death_item, true);
+      record.write_formID_subrecord('VTCK', this->voicetype, true);
+      record.write_formID_subrecord('TPLT', this->template_data.actor, true);
+      record.write_formID_subrecord('RNAM', this->race);
+      if (!this->spells.empty()) {
+         {
+            auto& SPCT = record.open_next_subrecord('SPCT');
+            SPCT.write((uint32_t)this->spells.size());
+            SPCT.close();
+         }
+         for (const auto& entry : this->spells) {
+            record.write_formID_subrecord('SPLO', entry);
+         }
+      }
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().save(record, intfc);
+      record.write_formID_subrecord('WNAM', this->worn_armor, true);
+      record.write_formID_subrecord('ANAM', this->far_away.model, true);
+      this->attack_data.save(record, intfc);
+      record.write_formID_subrecord('SPOR', this->ai.package_override_lists.spectator, true);
+      record.write_formID_subrecord('OCOR', this->ai.package_override_lists.observe_corpse, true);
+      record.write_formID_subrecord('GWOR', this->ai.package_override_lists.guard_warn, true);
+      record.write_formID_subrecord('ECOR', this->ai.package_override_lists.combat, true);
+      if (!this->perks.empty()) {
+         {
+            auto& PRKZ = record.open_next_subrecord('PRKZ');
+            PRKZ.write((uint32_t)this->perks.size());
+            PRKZ.close();
+         }
+         for (const auto& entry : this->perks) {
+            record.write_formID_subrecord('PRKR', entry);
+         }
+      }
+      this->inventory.save(record, intfc);
+      {
+         auto& AIDT = record.open_next_subrecord('AIDT');
+         AIDT.write(this->ai.aggression);        // 00
+         AIDT.write(this->ai.confidence);        // 01
+         AIDT.write(this->ai.energy_level);      // 02
+         AIDT.write(this->ai.morality);          // 03
+         AIDT.write(this->ai.mood);              // 04
+         AIDT.write(this->ai.assistance);        // 05
+         AIDT.write(this->ai.aggro.use_radius);  // 06
+         AIDT.skip_bytes(1);                     // 07
+         AIDT.write(this->ai.aggro.warn);        // 08
+         if (record.version() < 0x21) {
+            AIDT.write(this->ai.aggro.warn_attack); // 08
+            AIDT.write(this->ai.aggro.warn_attack); // 0C // unused
+            AIDT.write(this->ai.aggro.attack);      // 10
+         } else {
+            AIDT.write(this->ai.aggro.warn);        // 08
+            AIDT.write(this->ai.aggro.warn_attack); // 0C
+            AIDT.write(this->ai.aggro.attack);      // 10
+         }
+         AIDT.close();
+      }
+      for (const auto& entry : this->ai.package_list) {
+         record.write_formID_subrecord('PKID', entry, true);
+      }
+      this->keywords.save(record, intfc);
+      record.write_formID_subrecord('CNAM', this->stats.combat_class);
+      if (!this->name.empty()) {
+         auto& FULL = record.open_next_subrecord('FULL');
+         FULL.write(this->name);
+         FULL.close();
+      }
+      if (!this->short_name.empty()) {
+         auto& SHRT = record.open_next_subrecord('SHRT');
+         SHRT.write(this->short_name);
+         SHRT.close();
+      }
+      {  // marker subrecord (how janky.)
+         auto& DATA = record.open_next_subrecord('DATA');
+         DATA.close();
+      }
+      {
+         auto& DNAM = record.open_next_subrecord('DNAM');
+         for (auto& byte : this->stats.base.skills.list)
+            DNAM.write(byte);
+         for (auto& byte : this->stats.offsets.skills.list)
+            DNAM.write(byte);
+         DNAM.write(this->stats.base.health);
+         DNAM.write(this->stats.base.magicka);
+         DNAM.write(this->stats.base.stamina);
+         DNAM.skip_bytes(2);
+         DNAM.write(this->far_away.distance);
+         DNAM.write(this->geared_up_weapons);
+         DNAM.close();
+      }
+      for (const auto& entry : this->head.head_parts) {
+         record.write_formID_subrecord('PNAM', entry);
+      }
+      for (const auto& entry : this->head.hair_colors) {
+         record.write_formID_subrecord('HCLF', entry);
+      }
+      record.write_formID_subrecord('ZNAM', this->stats.combat_style, true);
+      record.write_formID_subrecord('GNAM', this->gift_filter, true);
+      //
+      // A NAM5 subrecord, empty or with dummy bytes, can be found here, but the game doesn't 
+      // seem to load it.
+      //
+      {
+         auto& NAM6 = record.open_next_subrecord('NAM6');
+         NAM6.write(this->height);
+         NAM6.close();
+      }
+      {
+         auto& NAM7 = record.open_next_subrecord('NAM7');
+         NAM7.write(this->weight);
+         NAM7.close();
+      }
+      {
+         auto& NAM8 = record.open_next_subrecord('NAM8');
+         NAM8.write((uint32_t)this->sound_level);
+         NAM8.close();
+      }
+      for (const auto& entry : this->creature_sounds) {
+         {
+            auto& CSDT = record.open_next_subrecord('CDST');
+            CSDT.write((uint32_t)entry.type);
+            CSDT.close();
+         }
+         record.write_formID_subrecord('CSDI', entry.sound, true);
+         {
+            auto& CSDC = record.open_next_subrecord('CSDC');
+            CSDC.write(entry.chance);
+            CSDC.close();
+         }
+      }
+      //
+      // xEdit would write a CSCR here (and skip CSDT/CSDI/CSDC if so), but it seems like the game 
+      // never actually reads CSCR.
+      //
+      record.write_formID_subrecord('DOFT', this->outfits.normal, true);
+      record.write_formID_subrecord('SOFT', this->outfits.sleeping, true);
+      record.write_formID_subrecord('DPLT', this->ai.default_package_list, true);
+      record.write_formID_subrecord('CRIF', this->crime_faction, true);
+      record.write_formID_subrecord('FTST', this->face.texture_set, true);
+      {
+         auto& QNAM = record.open_next_subrecord('QNAM');
+         QNAM.write(this->texture_lighting.r);
+         QNAM.write(this->texture_lighting.g);
+         QNAM.write(this->texture_lighting.b);
+         QNAM.close();
+      }
+      {
+         auto& NAM9 = record.open_next_subrecord('NAM9');
+         NAM9.write(this->face.morphs.nose.length);
+         NAM9.write(this->face.morphs.nose.height);
+         NAM9.write(this->face.morphs.jaw.height);
+         NAM9.write(this->face.morphs.jaw.width);
+         NAM9.write(this->face.morphs.jaw.depth);
+         NAM9.write(this->face.morphs.cheeks.height);
+         NAM9.write(this->face.morphs.cheeks.depth);
+         NAM9.write(this->face.morphs.eyes.height);
+         NAM9.write(this->face.morphs.eyes.width);
+         NAM9.write(this->face.morphs.brows.height);
+         NAM9.write(this->face.morphs.brows.width);
+         NAM9.write(this->face.morphs.brows.depth);
+         NAM9.write(this->face.morphs.lips.height);
+         NAM9.write(this->face.morphs.lips.depth);
+         NAM9.write(this->face.morphs.chin.width);
+         NAM9.write(this->face.morphs.chin.height);
+         NAM9.write(this->face.morphs.chin.depth);
+         NAM9.write(this->face.morphs.eyes.depth);
+         NAM9.write(this->face.morphs.unknown);
+         NAM9.close();
+      }
+      {
+         auto& NAMA = record.open_next_subrecord('NAMA');
+         NAMA.write(this->face.parts.nose);
+         NAMA.write(this->face.parts.unknown);
+         NAMA.write(this->face.parts.eyes);
+         NAMA.write(this->face.parts.mouth);
+         NAMA.close();
+      }
+      for (const auto& entry : this->tint_layers) {
+         {
+            auto& TINI = record.open_next_subrecord('TINI');
+            TINI.write(entry.index);
+            TINI.close();
+         }
+         {
+            auto& TINC = record.open_next_subrecord('TINC');
+            TINC.write(entry.color.r);
+            TINC.write(entry.color.g);
+            TINC.write(entry.color.b);
+            TINC.write(entry.color.unused);
+            TINC.close();
+         }
+         {
+            auto& TINV = record.open_next_subrecord('TINV');
+            TINV.write(entry.interpolation);
+            TINV.close();
+         }
+         {
+            auto& TIAS = record.open_next_subrecord('TIAS');
+            TIAS.write(entry.preset);
+            TIAS.close();
+         }
+      }
+      return true;
+   }
+   void ActorBase::_sever_outbound_references_impl(form_stub& other) noexcept {
+      // components
+      this->attack_data.sever_outbound_references_to(other, *this);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().sever_outbound_references_to(other, *this);
+      this->inventory.sever_outbound_references_to(other, *this);
+      this->keywords.sever_outbound_references_to(other, *this);
+      this->script_data.sever_outbound_references_to(other, *this);
+
+      this->race.clear_if(*this, other);
+      {  // ai
+         remove_form_from_reference_list(this->ai.package_list, other, *this);
+         this->ai.default_package_list.clear_if(*this, other);
+         {
+            auto& dst = this->ai.package_override_lists;
+            dst.combat.clear_if(*this, other);
+            dst.guard_warn.clear_if(*this, other);
+            dst.observe_corpse.clear_if(*this, other);
+            dst.spectator.clear_if(*this, other);
+         }
+      }
+      {  // face
+         auto& dst = this->face;
+         dst.texture_set.clear_if(*this, other);
+      }
+      this->far_away.model.clear_if(*this, other);
+      {
+         auto& dst = this->head;
+         remove_form_from_reference_list(dst.hair_colors, other, *this);
+         remove_form_from_reference_list(dst.head_parts,  other, *this);
+      }
+      {
+         auto& dst = this->outfits;
+         dst.normal.clear_if(*this, other);
+         dst.sleeping.clear_if(*this, other);
+      }
+      {
+         auto& dst = this->stats;
+         dst.combat_class.clear_if(*this, other);
+         dst.combat_style.clear_if(*this, other);
+      }
+      this->template_data.actor.clear_if(*this, other);
+      //
+      {
+         bool  any = false;
+         auto& dst = this->creature_sounds;
+         for (size_t i = 0; i < dst.size(); ++i) {
+            dst[i].sound.clear_if(*this, other);
+            if (dst[i].sound == nullptr)
+               any = true;
+         }
+         if (any) {
+            std::erase_if(dst, [](const auto& entry) -> bool { return entry.sound == nullptr; });
+         }
+      }
+      this->crime_faction.clear_if(*this, other);
+      this->death_item.clear_if(*this, other);
+      {
+         bool  any = false;
+         auto& dst = this->faction_memberships;
+         for (size_t i = 0; i < dst.size(); ++i) {
+            dst[i].faction.clear_if(*this, other);
+            if (dst[i].faction == nullptr)
+               any = true;
+         }
+         if (any) {
+            std::erase_if(dst, [](const auto& entry) -> bool { return entry.faction == nullptr; });
+         }
+      }
+      this->gift_filter.clear_if(*this, other);
+      remove_form_from_reference_list(this->perks,  other, *this);
+      remove_form_from_reference_list(this->spells, other, *this);
+      this->voicetype.clear_if(*this, other);
+      this->worn_armor.clear_if(*this, other);
+   }
+   void ActorBase::_clear_impl() noexcept {
+      // components
+      this->attack_data.clear(*this);
+      this->bounds.clear();
+      if (this->destruction_data.has_value()) {
+         this->destruction_data.value().clear(*this);
+         this->destruction_data = {};
+      }
+      this->inventory.clear(*this);
+      this->keywords.clear(*this);
+      this->script_data.clear(*this);
+
+      this->name.reset();
+      this->short_name.reset();
+      this->actor_flags = 0;
+      this->race.set(*this, nullptr);
+      {  // ai
+         clear_form_reference_list(this->ai.package_list, *this);
+         this->ai.default_package_list.set(*this, nullptr);
+         {
+            auto& dst = this->ai.package_override_lists;
+            dst.combat.set(*this, nullptr);
+            dst.guard_warn.set(*this, nullptr);
+            dst.observe_corpse.set(*this, nullptr);
+            dst.spectator.set(*this, nullptr);
+         }
+         this->ai.aggression   = aggression::unaggressive;
+         this->ai.confidence   = confidence::average;
+         this->ai.energy_level = 50;
+         this->ai.morality     = morality::no_crime;
+         this->ai.mood         = mood::neutral;
+         this->ai.assistance   = assistance::helps_friends_and_allies;
+         //
+         this->ai.aggro = {};
+         this->ai.aggro.warn = 0;
+         this->ai.aggro.warn_attack = 0;
+         this->ai.aggro.attack = 0;
+      }
+      {  // face
+         auto& dst = this->face;
+         dst.texture_set.set(*this, nullptr);
+         dst.morphs = {};
+         dst.parts  = {};
+         dst.parts.unknown = -1;
+      }
+      this->far_away.model.set(*this, nullptr);
+      this->far_away.distance = 0;
+      {
+         auto& dst = this->head;
+         clear_form_reference_list(dst.hair_colors, *this);
+         clear_form_reference_list(dst.head_parts,  *this);
+      }
+      {
+         auto& dst = this->outfits;
+         dst.normal.set(*this, nullptr);
+         dst.sleeping.set(*this, nullptr);
+      }
+      {
+         auto& dst = this->stats;
+         dst.base    = {};
+         dst.offsets = {};
+         dst.level   = 1;
+         dst.calc_min_level = 0;
+         dst.calc_max_level = 0;
+         dst.speed_mult     = 0;
+         dst.disposition    = 0;
+         dst.bleedout_threshold = 0;
+         dst.combat_class.set(*this, nullptr);
+         dst.combat_style.set(*this, nullptr);
+         //
+         for (auto& skill : dst.base.skills.list)
+            skill = 5;
+      }
+      this->template_data.actor.set(*this, nullptr);
+      this->template_data.flags = 0;
+      //
+      {
+         auto& dst = this->creature_sounds;
+         for (size_t i = 0; i < dst.size(); ++i) {
+            dst[i].sound.set(*this, nullptr);
+         }
+         dst.clear();
+      }
+      this->crime_faction.set(*this, nullptr);
+      this->death_item.set(*this, nullptr);
+      {
+         auto& dst = this->faction_memberships;
+         for (size_t i = 0; i < dst.size(); ++i) {
+            dst[i].faction.set(*this, nullptr);
+         }
+         dst.clear();
+      }
+      this->geared_up_weapons = 0;
+      this->gift_filter.set(*this, nullptr);
+      clear_form_reference_list(this->perks, *this);
+      this->sound_level = 0;
+      clear_form_reference_list(this->spells, *this);
+      this->texture_lighting = {};
+      this->tint_layers.clear();
+      this->voicetype.set(*this, nullptr);
+      this->worn_armor.set(*this, nullptr);
+      this->height = 1.0;
+      this->weight = 0.0;
    }
 }

@@ -27,7 +27,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
          components::model_ts model;
-         components::destruction_stage_data destruction_data; // DEST
+         std::optional<components::destruction_stage_data> destruction_data; // DEST
          localized_string name; // FULL
          components::container_data inventory;
          container_flags_t container_flags = 0;

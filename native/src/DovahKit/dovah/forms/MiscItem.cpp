@@ -44,7 +44,9 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               this->destruction_data.load(subrecord, intfc);
+               if (!this->destruction_data.has_value())
+                  this->destruction_data.emplace();
+               this->destruction_data.value().load(subrecord, intfc);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -141,7 +143,18 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
-      copy->destruction_data.clone_from(this->destruction_data, *copy);
+      {
+         auto& src_opt = this->destruction_data;
+         auto& dst_opt = copy->destruction_data;
+         if (dst_opt.has_value()) {
+            dst_opt.value().clear(*copy);
+            dst_opt = {};
+         }
+         if (src_opt.has_value()) {
+            dst_opt.emplace();
+            dst_opt.value().clone_from(src_opt.value(), *copy);
+         }
+      }
       copy->keywords.clone_from(this->keywords, *copy);
       copy->name         = this->name;
       copy->icon         = this->icon;
@@ -164,7 +177,8 @@ namespace dovah::loaded_forms {
          record.write_string_subrecord('ICON', this->icon);
       if (!this->message_icon.empty())
          record.write_string_subrecord('MICO', this->message_icon);
-      this->destruction_data.save(record, intfc);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().save(record, intfc);
       record.write_formID_subrecord('YNAM', this->take_sound, true);
       record.write_formID_subrecord('ZNAM', this->drop_sound, true);
       auto& DATA = record.open_next_subrecord('DATA');
@@ -175,7 +189,10 @@ namespace dovah::loaded_forms {
    }
    void MiscItem::_clear_impl() noexcept {
       this->bounds.clear();
-      this->destruction_data.clear(*this);
+      if (this->destruction_data.has_value()) {
+         this->destruction_data.value().clear(*this);
+         this->destruction_data = {};
+      }
       this->keywords.clear(*this);
       this->model.clear(*this);
       this->script_data.clear(*this);
@@ -188,7 +205,8 @@ namespace dovah::loaded_forms {
       this->message_icon.clear();
    }
    void MiscItem::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->destruction_data.sever_outbound_references_to(other, *this);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().sever_outbound_references_to(other, *this);
       this->keywords.sever_outbound_references_to(other, *this);
       this->model.sever_outbound_references_to(other, *this);
       this->script_data.sever_outbound_references_to(other, *this);

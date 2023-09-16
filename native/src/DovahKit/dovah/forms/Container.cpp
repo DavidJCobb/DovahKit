@@ -36,7 +36,9 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               this->destruction_data.load(subrecord, intfc);
+               if (!this->destruction_data.has_value())
+                  this->destruction_data.emplace();
+               this->destruction_data.value().load(subrecord, intfc);
                break;
             case 'DATA':
                subrecord.read(this->container_flags);
@@ -123,7 +125,18 @@ namespace dovah::loaded_forms {
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
       copy->inventory.clone_from(this->inventory, *copy);
-      copy->destruction_data.clone_from(this->destruction_data, *copy);
+      {
+         auto& src_opt = this->destruction_data;
+         auto& dst_opt = copy->destruction_data;
+         if (dst_opt.has_value()) {
+            dst_opt.value().clear(*copy);
+            dst_opt = {};
+         }
+         if (src_opt.has_value()) {
+            dst_opt.emplace();
+            dst_opt.value().clone_from(src_opt.value(), *copy);
+         }
+      }
       copy->container_flags = this->container_flags;
       copy->name   = this->name;
       copy->weight = this->weight;
@@ -141,7 +154,8 @@ namespace dovah::loaded_forms {
       FULL.close();
       this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       this->inventory.save(record, intfc);
-      this->destruction_data.save(record, intfc);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().save(record, intfc);
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->container_flags);
       DATA.write(this->weight);
@@ -154,7 +168,8 @@ namespace dovah::loaded_forms {
       this->script_data.sever_outbound_references_to(other, *this);
       this->model.sever_outbound_references_to(other, *this);
       this->inventory.sever_outbound_references_to(other, *this);
-      this->destruction_data.sever_outbound_references_to(other, *this);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().sever_outbound_references_to(other, *this);
       //
       this->open_sound.clear_if(*this, other);
       this->close_sound.clear_if(*this, other);
@@ -163,7 +178,10 @@ namespace dovah::loaded_forms {
       this->script_data.clear(*this);
       this->model.clear(*this);
       this->bounds.clear();
-      this->destruction_data.clear(*this);
+      if (this->destruction_data.has_value()) {
+         this->destruction_data.value().clear(*this);
+         this->destruction_data = {};
+      }
       this->name.reset();
       this->inventory.clear(*this);
       this->container_flags = 0;

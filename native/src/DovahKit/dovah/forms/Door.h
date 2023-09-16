@@ -37,7 +37,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
          components::model_ts model;
-         components::destruction_stage_data destruction_data; // DEST
+         std::optional<components::destruction_stage_data> destruction_data; // DEST
          localized_string name; // FULL
          door_flags_t     door_flags = 0; // FNAM
          form_reference_t open_sound;  // SNAM // form type is SNDR

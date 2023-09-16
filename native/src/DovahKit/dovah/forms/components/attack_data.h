@@ -22,19 +22,23 @@ namespace dovah {
          };
          using flags_t = std::underlying_type_t<flag::type>;
 
+         struct attack {
+            float   damage_mult   = 1.0F; // ATKD+0x00
+            float   attack_chance = 1.0F; // ATKD+0x04
+            form_reference_t attack_spell; // ATKD+0x08
+            flags_t flags         = 0; // ATKD+0x0C
+            float   attack_angle  = 0.0F; // ATKD+0x10
+            float   strike_angle  = 0.0F; // ATKD+0x14 // defaults to GMST:fCombatHitConeAngle
+            float   stagger       = 0.0F; // ATKD+0x18
+            form_reference_t keyword; // ATKD+0x1C
+            float   knockdown     = 0.0F; // ATKD+0x20
+            float   recovery_time = 0.0F; // ATKD+0x24
+            float   stamina_mult  = 1.0F; // ATKD+0x28
+            std::string event; // ATKE
+         };
+
          form_reference_t race; // ATKR
-         float   damage_mult   = 1.0F; // ATKD+0x00
-         float   attack_chance = 1.0F; // ATKD+0x04
-         form_reference_t attack_spell; // ATKD+0x08
-         flags_t flags         = 0; // ATKD+0x0C
-         float   attack_angle  = 0.0F; // ATKD+0x10
-         float   strike_angle  = 0.0F; // ATKD+0x14 // defaults to GMST:fCombatHitConeAngle
-         float   stagger       = 0.0F; // ATKD+0x18
-         form_reference_t keyword; // ATKD+0x1C
-         float   knockdown     = 0.0F; // ATKD+0x20
-         float   recovery_time = 0.0F; // ATKD+0x24
-         float   stamina_mult  = 1.0F; // ATKD+0x28
-         std::string event; // ATKE
+         std::vector<attack> attacks;
          //
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_record_writer&, load_order_interfaces::form_save& intfc);
@@ -44,8 +48,7 @@ namespace dovah {
          
          struct use_info_state {
             form_id_t race;
-            form_id_t spell;
-            form_id_t keyword;
+            std::vector<form_id_t> attack_forms;
             //
             void read(tes_record_reader&);
             void commit(form_stub_use_info_builder&);

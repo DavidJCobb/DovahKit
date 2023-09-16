@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include "Form.h"
 #include "_common.h"
@@ -160,7 +161,7 @@ namespace dovah::loaded_forms {
 
          components::attack_data             attack_data; // ATKR, ATKD+ATKE
          components::object_bounds           bounds; // OBND
-         components::destruction_stage_data  destruction_data; // DEST
+         std::optional<components::destruction_stage_data> destruction_data; // DEST
          components::container_data          inventory;
          components::keyword_list            keywords; // KSIZ, KWDA
          components::papyrus_attachment_data script_data; // VMAD
@@ -196,44 +197,44 @@ namespace dovah::loaded_forms {
          struct {
             struct {
                struct {
-                  float length;
-                  float height;
+                  float length = 0;
+                  float height = 0;
                } nose;
                struct {
-                  float height;
-                  float width;
-                  float depth;
+                  float height = 0;
+                  float width  = 0;
+                  float depth  = 0;
                } jaw;
                struct {
-                  float height;
-                  float depth;
+                  float height = 0;
+                  float depth  = 0;
                } cheeks;
                struct {
-                  float height;
-                  float width;
-                  float depth; // read AFTER chin
+                  float height = 0;
+                  float width  = 0;
+                  float depth  = 0; // read AFTER chin
                } eyes;
                struct {
-                  float height;
-                  float width;
-                  float depth;
+                  float height = 0;
+                  float width  = 0;
+                  float depth  = 0;
                } brows;
                struct {
-                  float height;
-                  float depth;
+                  float height = 0;
+                  float depth  = 0;
                } lips;
                struct {
-                  float width;
-                  float height;
-                  float depth;
+                  float width  = 0;
+                  float height = 0;
+                  float depth  = 0;
                } chin;
-               float unknown;
+               float unknown = 0;
             } morphs; // NAM9 // The game doesn't even bother to store this if they're all zero.
             struct {
-               uint32_t nose;
-               uint32_t unknown;
-               uint32_t eyes;
-               uint32_t mouth;
+               int32_t nose    = 0;
+               int32_t unknown = -1;
+               int32_t eyes    = 0;
+               int32_t mouth   = 0;
             } parts; // NAMA
             form_reference_t texture_set; // FTST
          } face;
@@ -298,5 +299,11 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         
+      protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+         virtual void _clear_impl() noexcept override;
    };
 }

@@ -43,6 +43,7 @@ namespace dovah {
       //
       loaded_forms::Activator,
       loaded_forms::Actor,
+      loaded_forms::ActorBase,
       loaded_forms::Cell,
       loaded_forms::Color,
       loaded_forms::Container,

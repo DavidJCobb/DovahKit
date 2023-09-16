@@ -26,7 +26,7 @@ namespace dovah::loaded_forms {
          components::object_bounds bounds; // OBND
          components::model_ts model; // MODL, MODT, MODS
          components::papyrus_attachment_data script_data; // VMAD
-         components::destruction_stage_data destruction_data; // DEST
+         std::optional<components::destruction_stage_data> destruction_data; // DEST
          components::keyword_list keywords; // KSIZ, KWDA
          //
          localized_string name; // FULL

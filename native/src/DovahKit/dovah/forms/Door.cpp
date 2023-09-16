@@ -34,7 +34,9 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               this->destruction_data.load(subrecord, intfc);
+               if (!this->destruction_data.has_value())
+                  this->destruction_data.emplace();
+               this->destruction_data.value().load(subrecord, intfc);
                break;
             case 'SNAM': // open sound
                if (subrecord.read(this->open_sound)) {
@@ -140,7 +142,18 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
-      copy->destruction_data.clone_from(this->destruction_data, *copy);
+      {
+         auto& src_opt = this->destruction_data;
+         auto& dst_opt = copy->destruction_data;
+         if (dst_opt.has_value()) {
+            dst_opt.value().clear(*copy);
+            dst_opt = {};
+         }
+         if (src_opt.has_value()) {
+            dst_opt.emplace();
+            dst_opt.value().clone_from(src_opt.value(), *copy);
+         }
+      }
       copy->door_flags = this->door_flags;
       copy->name   = this->name;
       copy->open_sound.set(*copy, this->open_sound);
@@ -159,7 +172,8 @@ namespace dovah::loaded_forms {
       FULL.write(this->name);
       FULL.close();
       this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
-      this->destruction_data.save(record, intfc);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().save(record, intfc);
       record.write_formID_subrecord('SNAM', this->open_sound, true);
       record.write_formID_subrecord('ANAM', this->close_sound, true);
       record.write_formID_subrecord('BNAM', this->loop_sound, true);
@@ -173,7 +187,8 @@ namespace dovah::loaded_forms {
    void Door::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
       this->model.sever_outbound_references_to(other, *this);
-      this->destruction_data.sever_outbound_references_to(other, *this);
+      if (this->destruction_data.has_value())
+         this->destruction_data.value().sever_outbound_references_to(other, *this);
       //
       this->open_sound.clear_if(*this, other);
       this->close_sound.clear_if(*this, other);
@@ -184,7 +199,10 @@ namespace dovah::loaded_forms {
       this->script_data.clear(*this);
       this->model.clear(*this);
       this->bounds.clear();
-      this->destruction_data.clear(*this);
+      if (this->destruction_data.has_value()) {
+         this->destruction_data.value().clear(*this);
+         this->destruction_data = {};
+      }
       this->name.reset();
       this->door_flags = 0;
       this->open_sound.set(*this, nullptr);

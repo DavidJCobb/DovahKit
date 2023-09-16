@@ -2107,6 +2107,7 @@
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
+    <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="editor\ini\main.hint" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />

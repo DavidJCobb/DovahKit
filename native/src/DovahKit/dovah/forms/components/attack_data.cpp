@@ -24,26 +24,27 @@ namespace dovah::loaded_forms::components {
          return;
       }
       if (signature == 'ATKD') {
+         auto& dst = this->attacks.emplace_back();
          if (subrecord.is_in_bounds(0x2C)) {
-            subrecord.unchecked_read(this->damage_mult);
-            subrecord.unchecked_read(this->attack_chance);
-            if (subrecord.read(this->attack_spell)) {
+            subrecord.unchecked_read(dst.damage_mult);
+            subrecord.unchecked_read(dst.attack_chance);
+            if (subrecord.read(dst.attack_spell)) {
                intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::spell, form_type::shout }, intfc.target_stub, this->attack_spell)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::spell, form_type::shout }, intfc.target_stub, dst.attack_spell)
                );
             }
-            subrecord.unchecked_read(this->flags);
-            subrecord.unchecked_read(this->attack_angle);
-            subrecord.unchecked_read(this->strike_angle);
-            subrecord.unchecked_read(this->stagger);
-            if (subrecord.read(this->keyword)) {
+            subrecord.unchecked_read(dst.flags);
+            subrecord.unchecked_read(dst.attack_angle);
+            subrecord.unchecked_read(dst.strike_angle);
+            subrecord.unchecked_read(dst.stagger);
+            if (subrecord.read(dst.keyword)) {
                intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->keyword)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, dst.keyword)
                );
             }
-            subrecord.unchecked_read(this->knockdown);
-            subrecord.unchecked_read(this->recovery_time);
-            subrecord.unchecked_read(this->stamina_mult);
+            subrecord.unchecked_read(dst.knockdown);
+            subrecord.unchecked_read(dst.recovery_time);
+            subrecord.unchecked_read(dst.stamina_mult);
          }
          //
          // The game assumes that the subrecord after ATKD is ATKE. Bethesda tried to check the signature, but 
@@ -59,11 +60,15 @@ namespace dovah::loaded_forms::components {
             warning.set_cause_subrecord(next.signature());
             intfc.log_load_warning(warning);
          }
-         subrecord.read(this->event);
+         subrecord.read(dst.event);
          return;
       }
       if (signature == 'ATKE') {
-         subrecord.read(this->event);
+         if (this->attacks.empty()) {
+            this->attacks.emplace_back();
+         }
+         auto& prev = this->attacks.back();
+         subrecord.read(prev.event);
          return;
       }
    }
@@ -72,59 +77,68 @@ namespace dovah::loaded_forms::components {
       //
       // TODO: under what conditions do we write ATKD+ATKE?
       //
-      auto& ATKD = record.open_next_subrecord('ATKD');
-      ATKD.write(this->damage_mult);
-      ATKD.write(this->attack_chance);
-      ATKD.write(this->attack_spell);
-      ATKD.write(this->flags);
-      ATKD.write(this->attack_angle);
-      ATKD.write(this->strike_angle);
-      ATKD.write(this->stagger);
-      ATKD.write(this->keyword);
-      ATKD.write(this->knockdown);
-      ATKD.write(this->recovery_time);
-      ATKD.write(this->stamina_mult);
-      ATKD.close();
-      record.write_string_subrecord('ATKE', this->event);
+      for (const auto& entry : this->attacks) {
+         auto& ATKD = record.open_next_subrecord('ATKD');
+         ATKD.write(entry.damage_mult);
+         ATKD.write(entry.attack_chance);
+         ATKD.write(entry.attack_spell);
+         ATKD.write(entry.flags);
+         ATKD.write(entry.attack_angle);
+         ATKD.write(entry.strike_angle);
+         ATKD.write(entry.stagger);
+         ATKD.write(entry.keyword);
+         ATKD.write(entry.knockdown);
+         ATKD.write(entry.recovery_time);
+         ATKD.write(entry.stamina_mult);
+         ATKD.close();
+         record.write_string_subrecord('ATKE', entry.event);
+      }
    }
    void attack_data::clone_from(const attack_data& original, loaded_forms::Form& owner_of_clone) noexcept {
       this->race.set(owner_of_clone, original.race);
       //
-      this->damage_mult = original.damage_mult;
-      this->attack_chance = original.attack_chance;
-      this->attack_spell.set(owner_of_clone, original.attack_spell);
-      this->flags = original.flags;
-      this->attack_angle = original.attack_angle;
-      this->strike_angle = original.strike_angle;
-      this->stagger = original.stagger;
-      this->keyword.set(owner_of_clone, original.keyword);
-      this->knockdown = original.knockdown;
-      this->recovery_time = original.recovery_time;
-      this->stamina_mult = original.stamina_mult;
-      //
-      this->event = original.event;
+      for (auto& entry : this->attacks) {
+         entry.attack_spell.set(owner_of_clone, nullptr);
+         entry.keyword.set(owner_of_clone, nullptr);
+      }
+      this->attacks.clear();
+
+      size_t size = original.attacks.size();
+      this->attacks.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         const auto& src = original.attacks[i];
+         auto& dst = this->attacks[i];
+
+         dst.damage_mult = src.damage_mult;
+         dst.attack_chance = src.attack_chance;
+         dst.attack_spell.set(owner_of_clone, src.attack_spell);
+         dst.flags = src.flags;
+         dst.attack_angle = src.attack_angle;
+         dst.strike_angle = src.strike_angle;
+         dst.stagger = src.stagger;
+         dst.keyword.set(owner_of_clone, src.keyword);
+         dst.knockdown = src.knockdown;
+         dst.recovery_time = src.recovery_time;
+         dst.stamina_mult = src.stamina_mult;
+         //
+         dst.event = src.event;
+      }
    }
    void attack_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->race.clear_if(my_owner, target);
-      this->attack_spell.clear_if(my_owner, target);
-      this->keyword.clear_if(my_owner, target);
+      for (auto& entry : this->attacks) {
+         entry.attack_spell.clear_if(my_owner, target);
+         entry.keyword.clear_if(my_owner, target);
+      }
    }
    void attack_data::clear(loaded_forms::Form& my_owner) {
       this->race.set(my_owner, nullptr);
       //
-      this->damage_mult = 1.0F;
-      this->attack_chance = 1.0F;
-      this->attack_spell.set(my_owner, nullptr);
-      this->flags = 0;
-      this->attack_angle = 0;
-      this->strike_angle = 0;
-      this->stagger = 0;
-      this->keyword.set(my_owner, nullptr);
-      this->knockdown = 0;
-      this->recovery_time = 0;
-      this->stamina_mult = 1;
-      //
-      this->event.clear();
+      for (auto& entry : this->attacks) {
+         entry.attack_spell.set(my_owner, nullptr);
+         entry.keyword.set(my_owner, nullptr);
+      }
+      this->attacks.clear();
    }
 
    void attack_data::use_info_state::read(tes_record_reader& record) {
@@ -147,10 +161,13 @@ namespace dovah::loaded_forms::components {
       if (signature == 'ATKD') {
          if (subrecord.is_in_bounds(0x2C)) {
             subrecord.skip_bytes(8);
-            subrecord.read(this->race);
-            subrecord.read(this->spell);
+            subrecord.read(form_id);
+            if (form_id)
+               this->attack_forms.push_back(form_id);
             subrecord.skip_bytes(0x10);
-            subrecord.read(this->keyword);
+            subrecord.read(form_id);
+            if (form_id)
+               this->attack_forms.push_back(form_id);
             subrecord.skip_bytes(0x0C);
          }
          //
@@ -165,7 +182,7 @@ namespace dovah::loaded_forms::components {
    }
    void attack_data::use_info_state::commit(form_stub_use_info_builder& uib) {
       uib.add_outbound_reference(this->race);
-      uib.add_outbound_reference(this->spell);
-      uib.add_outbound_reference(this->keyword);
+      for(auto id : this->attack_forms)
+         uib.add_outbound_reference(id);
    }
 }

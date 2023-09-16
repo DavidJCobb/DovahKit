@@ -635,9 +635,9 @@ namespace dovah::tes_file_writing {
 
             bool needs_persistence = this->ref_persistence_checker.check_ref(*refr);
             if (do_flag && needs_persistence) {
-               refr->flags |= dovah::loaded_forms::ObjectReference::form_flag::persistent;
+               refr->edit_record_flags(dovah::loaded_forms::ObjectReference::form_flag::persistent, true);
             } else if (do_unflag && !needs_persistence) {
-               refr->flags &= ~dovah::loaded_forms::ObjectReference::form_flag::persistent;
+               refr->edit_record_flags(dovah::loaded_forms::ObjectReference::form_flag::persistent, false);
             }
 
             return false;
