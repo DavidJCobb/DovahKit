@@ -726,6 +726,7 @@
     <ClCompile Include="vulkan\helpers\convert_access_flags_and_pipeline_stages.cpp" />
     <ClCompile Include="vulkan\helpers\extract_frustum_normals.cpp" />
     <ClCompile Include="vulkan\helpers\glm_transform_from_beth.cpp" />
+    <ClCompile Include="vulkan\helpers\nif\set_root_transform.cpp" />
     <ClCompile Include="vulkan\helpers\vertex_index_list.cpp" />
     <ClCompile Include="vulkan\image.cpp" />
     <ClCompile Include="vulkan\loaded_texture.cpp" />
@@ -1380,6 +1381,7 @@
     <ClInclude Include="vulkan\helpers\land\vertex_index_conversions.h" />
     <ClInclude Include="vulkan\helpers\land\vulkan_vertex_indices_for_outline.h" />
     <ClInclude Include="vulkan\helpers\mesh\vertices_from_NiTriShapeData.h" />
+    <ClInclude Include="vulkan\helpers\nif\set_root_transform.h" />
     <ClInclude Include="vulkan\helpers\specialization_map_entry_for_member.h" />
     <ClInclude Include="vulkan\helpers\vertex_index_list.h" />
     <ClInclude Include="vulkan\helpers\vertex_indices_for_quad_grid.h" />

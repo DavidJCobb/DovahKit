@@ -2079,6 +2079,9 @@
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\helpers\nif\set_root_transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5172,6 +5175,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_stubs\passkeys\build_use_info_during_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\helpers\nif\set_root_transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

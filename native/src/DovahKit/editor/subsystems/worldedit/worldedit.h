@@ -181,6 +181,7 @@ namespace dovahkit::subsystems::worldedit {
          bool is_ref_loaded(const dovah::form_stub*) const;
          bool is_ref_selected(const dovah::form_stub*) const;
 
+         cobb::vector3<float> get_selection_centroid() const;
          std::vector<dovah::form_stub*> get_selected_refs() const;
 
          raycast_result raycast_at(int view_x, int view_y) const;

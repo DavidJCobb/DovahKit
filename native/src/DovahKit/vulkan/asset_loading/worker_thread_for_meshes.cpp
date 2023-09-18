@@ -305,6 +305,12 @@ namespace vulkanDK::asset_loading {
          _import_state state;
          state.transform = item.transform;
 
+         //
+         // NOTE: This process is responsible for fully configuring the `rendered_mesh` data for 
+         // the NIF, including the transforms for each mesh. The logic for handling transforms 
+         // should be kept roughly consistent with `vulkanDK::helpers::nif::set_root_transform`, 
+         // though that function will be much simpler since it only needs to handle transforms.
+         //
          nif.root_node->walk_tree(
             state,
             [](NiNode* node, _import_state& state) {

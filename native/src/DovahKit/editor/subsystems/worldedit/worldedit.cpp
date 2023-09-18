@@ -52,8 +52,8 @@ namespace {
 #include "editor/subsystems/worldinput/builtin_control_schemes/debug_wasd.h"
 #include "editor/subsystems/worldinput/builtin_control_schemes/reach.h"
 
-#include "vulkan/data/DKVulkanCameraUpdate.h"
 #include "vulkan/data/camera_coordinate_change.h"
+#include "vulkan/helpers/nif/set_root_transform.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 
 #include "helpers/math/rotation/unit_conversion.h"
@@ -1169,6 +1169,26 @@ namespace dovahkit::subsystems::worldedit {
       return false;
    }
 
+   cobb::vector3<float> core::get_selection_centroid() const {
+      cobb::vector3<float> out;
+      size_t count = 0;
+
+      if (this->get_editor_mode() == editor_mode::objects) {
+         for (const auto& item : this->state.selection.refs) {
+            assert(item.stub);
+            auto loaded = item.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (loaded) {
+               ++count;
+               out += loaded->position;
+            }
+         }
+      }
+
+      if (count > 0)
+         out /= count;
+
+      return out;
+   }
    std::vector<dovah::form_stub*> core::get_selected_refs() const {
       std::vector<dovah::form_stub*> out;
       out.reserve(this->state.selection.refs.size());
@@ -1279,27 +1299,26 @@ namespace dovahkit::subsystems::worldedit {
 
       constexpr const float interior_cell_lateral_constraint = 30000;
 
-      cobb::vector3<float> selection_centroid;
+      cobb::vector3<float> selection_centroid = this->get_selection_centroid();
+
+      cobb::vector3<float> adjust_pos;
       {
-         size_t count = 0;
-         if (this->state.mode == editor_mode::objects) {
-            for (auto& sel_info : this->state.selection.refs) {
-               assert(sel_info.stub);
-               auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
-               if (!loaded)
-                  continue;
-               ++count;
-               selection_centroid += loaded->position;
-            }
+         adjust_pos = adjust.pos;
+         switch (adjust.frame) {
+            case reference_frame::camera:
+               // TODO: camera-relative movement
+               break;
+            case reference_frame::local:
+               // TODO: movement relative to the most recently selected ref
+               break;
          }
-         if (count > 0)
-            selection_centroid /= count;
       }
 
-      glm::mat4 centroid_transform;
       glm::mat4 centroid_inverse;
       glm::mat4 centroid_post_adjust;
       {
+         glm::mat4 centroid_transform;
+         
          cobb::vector3<float> rot = adjust.rot;
          switch (adjust.frame) {
             case reference_frame::world:
@@ -1311,7 +1330,7 @@ namespace dovahkit::subsystems::worldedit {
          }
          centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, rot, 1.0F);
          centroid_inverse     = glm::inverse(centroid_transform);
-         centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid + adjust.pos, rot + adjust.rot, 1.0F);
+         centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid, rot + adjust.rot, 1.0F);
       }
 
       bool is_interior = false;
@@ -1325,7 +1344,7 @@ namespace dovahkit::subsystems::worldedit {
          // Check constraints.
          //
          if (is_interior) {
-            for (auto& sel_info : this->state.selection.refs) {
+            for (const auto& sel_info : this->state.selection.refs) {
                assert(sel_info.stub);
                auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
                if (!loaded)
@@ -1336,6 +1355,9 @@ namespace dovahkit::subsystems::worldedit {
                auto sel_final = sel_pivot * centroid_post_adjust;
 
                auto& sel_final_pos = sel_final[3];
+               sel_final_pos.x += adjust_pos.x;
+               sel_final_pos.y += adjust_pos.y;
+               sel_final_pos.z += adjust_pos.z;
                if (sel_final_pos.x > interior_cell_lateral_constraint || sel_final_pos.y > interior_cell_lateral_constraint) {
                   return false;
                }
@@ -1353,13 +1375,26 @@ namespace dovahkit::subsystems::worldedit {
             auto gx_prior = dovah::world_coordinate_to_grid_coordinate(loaded->position.x);
             auto gy_prior = dovah::world_coordinate_to_grid_coordinate(loaded->position.y);
 
-            auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
-            auto sel_pivot = centroid_inverse     * sel_world;
-            auto sel_final = centroid_post_adjust * sel_pivot;
+            cobb::vector3<float> pos_after;
+            cobb::vector3<float> rot_after;
+            if (this->state.selection.refs.size() == 1) {
+               //
+               // For a single ref, just keep things simple.
+               //
+               pos_after = loaded->position + adjust_pos;
+               rot_after = loaded->rotation + adjust.rot; // TODO: this misses the code above that accounts for the reference frame!
+            } else {
+               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+               auto sel_pivot = centroid_inverse * sel_world;
+               auto sel_final = centroid_post_adjust * sel_pivot;
+
+               pos_after = cobb::vector3<float>(sel_final[3]) + adjust_pos;
+               glm::extractEulerAngleXYZ(sel_final, rot_after.x, rot_after.y, rot_after.z);
+            }
 
             if (!is_interior) {
-               auto gx_after = dovah::world_coordinate_to_grid_coordinate(loaded->position.x);
-               auto gy_after = dovah::world_coordinate_to_grid_coordinate(loaded->position.y);
+               auto gx_after = dovah::world_coordinate_to_grid_coordinate(pos_after.x);
+               auto gy_after = dovah::world_coordinate_to_grid_coordinate(pos_after.y);
                if (gx_prior != gx_after || gy_prior != gy_after) {
                   //
                   // Re-parent the ref to the cell we're moving it into.
@@ -1396,13 +1431,21 @@ namespace dovahkit::subsystems::worldedit {
                }
             }
 
-            loaded->position = cobb::vector3<float>(sel_final[3].x, sel_final[3].y, sel_final[3].z);
-            glm::extractEulerAngleXYZ(sel_final, loaded->rotation.x, loaded->rotation.y, loaded->rotation.z);
+            loaded->position = pos_after;
+            loaded->rotation = rot_after;
             //
+            auto transform_after = vulkanDK::glm_transform_from_beth(pos_after, rot_after, loaded->get_scale());
+            //
+            if (!sel_info.handle.empty()) {
+               sel_info.handle->set_transform(transform_after);
+            }
             if (auto* ref_info = this->_get_loaded_refr_info(*sel_info.stub)) {
-               //
-               // TODO: Tell the surface renderer to recalculate the rendered NIF's transforms!
-               //
+               if (ref_info->nif && ref_info->nif->did_load_succeed()) {
+                  //
+                  // Update the REFR's rendered NIF and its constituent meshes.
+                  //
+                  vulkanDK::helpers::nif::set_root_transform(*ref_info->nif, transform_after);
+               }
             }
          }
       }

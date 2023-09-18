@@ -29,5 +29,6 @@ namespace vulkanDK {
 
          void set_size(const glm::vec3& min, const glm::vec3& max);
          void set_size_and_transform(const glm::vec3& min, const glm::vec3& max, const glm::mat4& pivot_transform);
+         void set_transform(const glm::mat4& pivot_transform);
    };
 }

@@ -43,4 +43,20 @@ namespace vulkanDK {
       //
       this->on_frame_drawing_data_changed();
    }
+   void rendered_bounds::set_transform(const glm::mat4& pivot_transform) {
+      this->_pivot_transform = pivot_transform;
+      //
+      glm::vec3 local_center = (this->_max + this->_min) / 2.0F;
+      //
+      this->frame_drawing_data.pivot_offset = local_center;
+      this->frame_drawing_data.transform = pivot_transform;
+      this->frame_drawing_data.transform[3] += glm::vec4(local_center, 0.0F);
+      //
+      glm::vec3 size = (this->_max - this->_min) / 2.0F;
+      this->frame_drawing_data.transform[0] *= size.x;
+      this->frame_drawing_data.transform[1] *= size.y;
+      this->frame_drawing_data.transform[2] *= size.z;
+      //
+      this->on_frame_drawing_data_changed();
+   }
 }

@@ -37,6 +37,8 @@
 #include "vulkan/helpers/glm_transform_from_beth.h"
 #include "vulkan/enums/gizmo_mode.h"
 
+#include "helpers/math/rotation/unit_conversion.h"
+
 RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    this->setWindowTitle(tr("Render Window"));
    this->setMinimumSize({ 150, 150 });
@@ -340,6 +342,8 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          rot.z = QInputDialog::getDouble(this, "Z", "Rotate Z", 0, -360, 360, 4, &ok);
          if (!ok)
             return;
+
+         rot *= cobb::degrees_to_radians_mult;
          
          std::decay_t<decltype(worldedit)>::coordinate_adjustment adjustment;
          adjustment.pos = pos;
