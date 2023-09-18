@@ -5711,6 +5711,7 @@
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="helpers\ini\INI file grammar.txt" />
     <Text Include="helpers\ini\INI file grammar win32.txt" />
+    <Text Include="dovah\_docs\interior cell coordinate limits.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -5951,6 +5952,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
+    <None Include="dovah\_docs\TO-DO LIST.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

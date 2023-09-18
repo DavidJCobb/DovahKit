@@ -1,5 +1,8 @@
 #include "worldedit.h"
 #include <algorithm> // std::swap
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include "dovah/forms/factories/hardcoded.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub_helpers.h"
@@ -207,11 +210,14 @@ namespace dovahkit::subsystems::worldedit {
       }
       return sr->add_bounds(bounds_min, bounds_max, transform);
    }
-   core::refr* core::_get_loaded_refr_info(const dovah::form_stub& stub) {
+   const core::refr* core::_get_loaded_refr_info(const dovah::form_stub& stub) const {
       for (auto& item : this->loaded_refs)
          if (item.stub == &stub)
             return &item;
       return nullptr;
+   }
+   core::refr* core::_get_loaded_refr_info(const dovah::form_stub& stub) {
+      return const_cast<core::refr*>(std::as_const(*this)._get_loaded_refr_info(stub));
    }
    core::cell* core::_get_loaded_cell_info(const dovah::form_stub& stub) {
       for (auto& item : this->loaded_cells)
@@ -219,6 +225,21 @@ namespace dovahkit::subsystems::worldedit {
             return &item;
       return nullptr;
    }
+
+
+   const core::selected_refr_info* core::_get_primary_selected_refr_info() const {
+      auto& list = this->state.selection.refs;
+      if (list.empty())
+         return nullptr;
+      auto& item = list.back();
+      assert(item.stub != nullptr);
+      return &item;
+
+   }
+   core::selected_refr_info* core::_get_primary_selected_refr_info() {
+      return const_cast<core::selected_refr_info*>(std::as_const(*this)._get_primary_selected_refr_info());
+   }
+
    void core::_unload_refr(refr& refr, bool handle_deselection) {
       auto* stub = refr.stub;
       if (handle_deselection) {
@@ -393,6 +414,7 @@ namespace dovahkit::subsystems::worldedit {
       if (!this->target_view)
          return;
       assert(cell && cell->formType == dovah::form_type::cell);
+      assert(this->loaded_cells.contains_coordinate(gx, gy));
       auto& loaded = this->loaded_cells.at(gx, gy);
       assert(!loaded.stub && "Why is a cell already in this spot?");
       if constexpr (debug_log_area_load_unload) {
@@ -1026,34 +1048,32 @@ namespace dovahkit::subsystems::worldedit {
          gizmo_mode mode_to_use = this->state.gizmo.mode;
 
          if (mode_to_use != gizmo_mode::none) {
-            if (this->state.selection.refs.empty()) {
+            auto* sel_info = this->_get_primary_selected_refr_info();
+            if (!sel_info) {
                mode_to_use = gizmo_mode::none;
             } else {
-               auto& item = this->state.selection.refs.back();
-               if (item.stub) {
-                  auto loaded = item.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
-                  //
-                  auto rot = glm::fvec3{ 0, 0, 0 };
-                  switch (this->state.gizmo.frame) {
-                     case reference_frame::current:
-                     case reference_frame::world:
-                        break;
-                     case reference_frame::local:
-                        rot = loaded->rotation.to_struct<glm::fvec3>();
-                        break;
-                     case reference_frame::camera:
-                        if constexpr (require_complete_implementation) {
-                           static_assert(!require_complete_implementation, "TODO: Implement camera-relative edit gizmo!");
-                        }
-                        break;
-                  }
-                  //
-                  transform = vulkanDK::glm_transform_from_beth(
-                     loaded->position.to_struct<glm::fvec3>(),
-                     rot,
-                     1.0
-                  );
+               auto loaded = sel_info->stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+               //
+               auto rot = glm::fvec3{ 0, 0, 0 };
+               switch (this->state.gizmo.frame) {
+                  case reference_frame::current:
+                  case reference_frame::world:
+                     break;
+                  case reference_frame::local:
+                     rot = loaded->rotation.to_struct<glm::fvec3>();
+                     break;
+                  case reference_frame::camera:
+                     if constexpr (require_complete_implementation) {
+                        static_assert(!require_complete_implementation, "TODO: Implement camera-relative edit gizmo!");
+                     }
+                     break;
                }
+               //
+               transform = vulkanDK::glm_transform_from_beth(
+                  loaded->position.to_struct<glm::fvec3>(),
+                  rot,
+                  1.0
+               );
             }
          }
          sr->set_gizmo_mode(mode_to_use);
@@ -1253,6 +1273,142 @@ namespace dovahkit::subsystems::worldedit {
       this->state.gizmo.mode = m;
    }
 
+   bool core::try_adjust_selection_coordinates(const coordinate_adjustment& adjust) {
+      if (this->target_area.cell == nullptr) // no cell loaded
+         return false;
+
+      constexpr const float interior_cell_lateral_constraint = 30000;
+
+      cobb::vector3<float> selection_centroid;
+      {
+         size_t count = 0;
+         if (this->state.mode == editor_mode::objects) {
+            for (auto& sel_info : this->state.selection.refs) {
+               assert(sel_info.stub);
+               auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+               if (!loaded)
+                  continue;
+               ++count;
+               selection_centroid += loaded->position;
+            }
+         }
+         if (count > 0)
+            selection_centroid /= count;
+      }
+
+      glm::mat4 centroid_transform;
+      glm::mat4 centroid_inverse;
+      glm::mat4 centroid_post_adjust;
+      {
+         cobb::vector3<float> rot = adjust.rot;
+         switch (adjust.frame) {
+            case reference_frame::world:
+            case reference_frame::current:
+               break;
+            case reference_frame::camera:
+               // TODO: rot = camera's orientation;
+               break;
+         }
+         centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, rot, 1.0F);
+         centroid_inverse     = glm::inverse(centroid_transform);
+         centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid + adjust.pos, rot + adjust.rot, 1.0F);
+      }
+
+      bool is_interior = false;
+      if (this->target_area.world == nullptr) {
+         assert(this->target_area.cell->is_exterior_cell() == false);
+         is_interior = true;
+      }
+
+      if (this->state.mode == editor_mode::objects) {
+         //
+         // Check constraints.
+         //
+         if (is_interior) {
+            for (auto& sel_info : this->state.selection.refs) {
+               assert(sel_info.stub);
+               auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+               if (!loaded)
+                  continue;
+
+               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+               auto sel_pivot = sel_world * centroid_inverse;
+               auto sel_final = sel_pivot * centroid_post_adjust;
+
+               auto& sel_final_pos = sel_final[3];
+               if (sel_final_pos.x > interior_cell_lateral_constraint || sel_final_pos.y > interior_cell_lateral_constraint) {
+                  return false;
+               }
+            }
+         }
+         //
+         // Apply movement if able.
+         //
+         for (auto& sel_info : this->state.selection.refs) {
+            assert(sel_info.stub);
+            auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (!loaded)
+               continue;
+
+            auto gx_prior = dovah::world_coordinate_to_grid_coordinate(loaded->position.x);
+            auto gy_prior = dovah::world_coordinate_to_grid_coordinate(loaded->position.y);
+
+            auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+            auto sel_pivot = centroid_inverse     * sel_world;
+            auto sel_final = centroid_post_adjust * sel_pivot;
+
+            if (!is_interior) {
+               auto gx_after = dovah::world_coordinate_to_grid_coordinate(loaded->position.x);
+               auto gy_after = dovah::world_coordinate_to_grid_coordinate(loaded->position.y);
+               if (gx_prior != gx_after || gy_prior != gy_after) {
+                  //
+                  // Re-parent the ref to the cell we're moving it into.
+                  //
+                  auto* destination_cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(this->target_area.world, gx_after, gy_after);
+                  if (!destination_cell) {
+                     //
+                     // Create the destination cell.
+                     //
+                     auto request = DovahKitCore::get().request_form_creation(dovah::form_type::cell);
+                     request.set_parent_form(this->target_area.world);
+                     request.cell_grid_coordinates.present = true;
+                     request.cell_grid_coordinates.x = gx_after;
+                     request.cell_grid_coordinates.y = gy_after;
+                     destination_cell = request.commit();
+                     if (!destination_cell) {
+                        //
+                        // Cell creation failed.
+                        //
+                        #if _DEBUG
+                           __debugbreak();
+                        #endif
+                        continue;
+                     } else {
+                        //
+                        // We want to load the newly-created cell, if possible.
+                        //
+                        if (this->loaded_cells.contains_coordinate(gx_after, gy_after)) {
+                           this->_load_cell(destination_cell, gx_after, gy_after);
+                        }
+                     }
+                  }
+                  sel_info.stub->set_parent_form(destination_cell);
+               }
+            }
+
+            loaded->position = cobb::vector3<float>(sel_final[3].x, sel_final[3].y, sel_final[3].z);
+            glm::extractEulerAngleXYZ(sel_final, loaded->rotation.x, loaded->rotation.y, loaded->rotation.z);
+            //
+            if (auto* ref_info = this->_get_loaded_refr_info(*sel_info.stub)) {
+               //
+               // TODO: Tell the surface renderer to recalculate the rendered NIF's transforms!
+               //
+            }
+         }
+      }
+
+      return true;
+   }
 
    #pragma region Passkeyed functions for tools
    void core::_adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change& update) {

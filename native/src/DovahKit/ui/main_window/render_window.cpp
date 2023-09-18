@@ -80,6 +80,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       layout->addWidget(sb, 0);
    }
 
+   // camera jump to coords
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Set Camera Position");
@@ -136,7 +137,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       //
       this->toolbar->addWidget(button);
    }
-   //
+   
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Import base form...");
@@ -190,7 +191,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       //
       this->toolbar->addWidget(button);
    }
-   //
+   
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Debug frustrums");
@@ -229,7 +230,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       this->toolbar->addWidget(widget);
    }
-   //
+   
    {
       auto* widget = new QCheckBox("Landscape wire", this->toolbar);
       QObject::connect(widget, &QCheckBox::toggled, this, [this, view](bool checked) {
@@ -247,7 +248,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       });
       this->toolbar->addWidget(widget);
    }
-   //
+   
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Debugbreak on next draw");
@@ -258,23 +259,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       //
       this->toolbar->addWidget(button);
    }
-   //
-   {
-      auto* holder = new QWidget(this->toolbar);
-      auto* layout = new QHBoxLayout(holder);
-      layout->addWidget(new QLabel("uGrids:  "));
-      auto* widget = new QSpinBox();
-      layout->addWidget(widget);
-      widget->setMinimum(1);
-      widget->setMaximum(25);
-      widget->setSingleStep(2);
-      widget->setValue(dovahkit::subsystems::worldedit::core::get().cell_grid_size());
-      QObject::connect(widget, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, view](int value) {
-         dovahkit::subsystems::worldedit::core::get().setCellGridSize(value);
-      });
-      this->toolbar->addWidget(holder);
-   }
-   //
+   
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Land borders");
@@ -285,7 +270,8 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       //
       this->toolbar->addWidget(button);
    }
-   //
+   
+   // gizmo tests
    {
       auto* button = new QToolButton(this->toolbar);
       button->setText("Gizmo test");
@@ -319,5 +305,54 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          sr->set_gizmo_mode((vulkanDK::gizmo_mode)i);
       });
       this->toolbar->addWidget(widget);
+   }
+
+   {
+      auto* button = new QToolButton(this->toolbar);
+      button->setText("Move Selection");
+      QObject::connect(button, &QAbstractButton::clicked, this, [this, view]() {
+         auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create();
+         if (worldedit.get_selected_refs().empty()) {
+            QMessageBox::warning(this, "Error", "No refs selected");
+            return;
+         }
+
+         cobb::vector3<float> pos;
+         cobb::vector3<float> rot;
+         bool ok;
+         //
+         pos.x = QInputDialog::getDouble(this, "X", "Translate X", 0, -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         pos.y = QInputDialog::getDouble(this, "Y", "Translate Y", 0, -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         pos.z = QInputDialog::getDouble(this, "Z", "Translate Z", 0, -999999, 999999, 4, &ok);
+         if (!ok)
+            return;
+         //
+         rot.x = QInputDialog::getDouble(this, "X", "Rotate X", 0, -360, 360, 4, &ok);
+         if (!ok)
+            return;
+         rot.y = QInputDialog::getDouble(this, "Y", "Rotate Y", 0, -360, 360, 4, &ok);
+         if (!ok)
+            return;
+         rot.z = QInputDialog::getDouble(this, "Z", "Rotate Z", 0, -360, 360, 4, &ok);
+         if (!ok)
+            return;
+         
+         std::decay_t<decltype(worldedit)>::coordinate_adjustment adjustment;
+         adjustment.pos = pos;
+         adjustment.rot = rot;
+
+         bool result = worldedit.try_adjust_selection_coordinates(adjustment);
+         if (!result) {
+            QMessageBox::warning(this, "Error", "Adjustment failed");
+            return;
+         }
+      });
+      button->setIcon(this->style()->standardIcon(QStyle::SP_VistaShield));
+      //
+      this->toolbar->addWidget(button);
    }
 }

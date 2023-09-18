@@ -151,6 +151,14 @@ namespace cobb {
          constexpr coordinate_type top() const noexcept { return -(this->height() / 2); }
          constexpr coordinate_type bottom() const noexcept { return (this->height() / 2) - (this->height() % 2 ? 0 : 1); }
 
+         constexpr bool contains_coordinate(coordinate_type x, coordinate_type y) {
+            if (x < left() || x > right())
+               return false;
+            if (y < top() || y > bottom())
+               return false;
+            return true;
+         }
+
          constexpr value_type* data() noexcept { return (value_type*) this->_data; }
          constexpr const value_type* data() const noexcept { return (value_type*)this->_data; }
 
@@ -521,6 +529,14 @@ namespace cobb {
          constexpr coordinate_type right() const noexcept { return (this->length() / 2) - (this->length() % 2 ? 0 : 1); }
          constexpr coordinate_type top() const noexcept { return left(); }
          constexpr coordinate_type bottom() const noexcept { return right(); }
+
+         constexpr bool contains_coordinate(coordinate_type x, coordinate_type y) {
+            if (x < left() || x > right())
+               return false;
+            if (y < top() || y > bottom())
+               return false;
+            return true;
+         }
 
          constexpr value_type* data() noexcept { return (value_type*) this->_data; }
          constexpr const value_type* data() const noexcept { return (value_type*)this->_data; }

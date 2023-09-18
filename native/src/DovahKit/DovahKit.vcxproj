@@ -2051,6 +2051,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />
     <Text Include="dovah\_docs\asset paths.txt" />
@@ -2108,6 +2109,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
+    <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />

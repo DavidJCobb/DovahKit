@@ -58,6 +58,12 @@ namespace dovahkit::subsystems::worldedit {
 
          using gizmo_mode = vulkanDK::gizmo_mode;
 
+         struct coordinate_adjustment {
+            reference_frame frame = reference_frame::world;
+            cobb::vector3<float> pos;
+            cobb::vector3<float> rot;
+         };
+
       protected:
          using form_stub       = dovah::form_stub;
          using loaded_land_ptr = dovah::loaded_form_ptr<dovah::loaded_forms::Landscape>;
@@ -133,8 +139,14 @@ namespace dovahkit::subsystems::worldedit {
          void _update_grid_size_from_inis();
 
          vulkanDK::rendered_bounds_handle _make_bounds_for(const refr&, bounds_generation_source& out);
+
+         const refr* _get_loaded_refr_info(const dovah::form_stub&) const;
          refr* _get_loaded_refr_info(const dovah::form_stub&);
          cell* _get_loaded_cell_info(const dovah::form_stub&);
+
+         const selected_refr_info* _get_primary_selected_refr_info() const;
+         selected_refr_info* _get_primary_selected_refr_info();
+
          void _unload_refr(refr&, bool handle_deselection = true); // does not remove the refr from the loaded refs list; caller must do that
          void _unload_refr(dovah::form_stub&);
          void _unload_cell(cell&);
@@ -188,6 +200,8 @@ namespace dovahkit::subsystems::worldedit {
          constexpr gizmo_mode      get_edit_gizmo_mode() const { return this->state.gizmo.mode; }
          void set_edit_gizmo_frame(reference_frame);
          void set_edit_gizmo_mode(gizmo_mode);
+
+         bool try_adjust_selection_coordinates(const coordinate_adjustment&);
 
          #pragma region Passkeyed functions for tools
          void _adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change&);
