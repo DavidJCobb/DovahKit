@@ -116,7 +116,7 @@ bool DKWorldinputDeviceSchemesModel::removeRows(int row, int count, const QModel
 
    if (row < 0)
       return false;
-   if (count < 1 || row + count >= this->_nodes.size())
+   if (count < 1 || row + count > this->_nodes.size())
       return false;
    auto* node = this->_nodes[row];
    if (!node)

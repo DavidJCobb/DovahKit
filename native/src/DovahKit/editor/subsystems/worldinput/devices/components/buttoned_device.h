@@ -30,6 +30,8 @@ namespace dovahkit::subsystems::worldinput::devices::components {
 
          constexpr void ignore_all_down();
 
+         constexpr void ignore_button(size_t);
+
          constexpr device_button_state get_button_state(size_t index) const;
    };
 }

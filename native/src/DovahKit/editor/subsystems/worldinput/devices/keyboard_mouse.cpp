@@ -74,6 +74,30 @@ namespace dovahkit::subsystems::worldinput::devices {
       this->raycast_results.this_frame = {};
       this->update_buttons(now);
       this->update_pointer(view);
+
+      //
+      // We should ignore mousedowns that occur while the mouse is out of bounds, e.g. clicking 
+      // on the Render Window toolbar while the Render Window (and thus its 3D view) has focus.
+      //
+      {
+         auto geom = view.geometry();
+         auto rel  = view.mapFromGlobal(this->mouse.pos);
+         if (!geom.contains(rel)) {
+            auto _clear_mousedown = [this](unsigned int vk) {
+               constexpr auto desired_flags = device_button_state::flag::is_down | device_button_state::flag::down_state_changed_on_this_frame;
+
+               if ((this->buttons.flags[vk] & desired_flags) == desired_flags) {
+                  this->buttons.ignore_button(vk);
+               }
+            };
+
+            _clear_mousedown(VK_LBUTTON);
+            _clear_mousedown(VK_RBUTTON);
+            _clear_mousedown(VK_MBUTTON);
+            _clear_mousedown(VK_XBUTTON1);
+            _clear_mousedown(VK_XBUTTON2);
+         }
+      }
    }
    void keyboard_mouse::update_buttons(timestamp_t now) {
       for (size_t i = 0; i < vk_code_count; ++i) {

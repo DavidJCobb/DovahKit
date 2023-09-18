@@ -45,8 +45,19 @@ namespace dovahkit::subsystems::worldinput::devices::components {
    constexpr void CLASS_NAME::ignore_all_down() {
       for (size_t i = 0; i < button_count; ++i) {
          if (this->flags[i] & device_button_state::flag::is_down) {
-            this->claims[i].existing.specificity = std::numeric_limits<size_t>::max();
+            auto& claim = this->claims[i].existing;
+            claim.specificity = std::numeric_limits<size_t>::max();
+            claim.when        = timestamp_t::max();
          }
+      }
+   }
+
+   TEMPLATE_PARAMS
+   constexpr void CLASS_NAME::ignore_button(size_t index) {
+      if (this->flags[index] & device_button_state::flag::is_down) {
+         auto& claim = this->claims[index].existing;
+         claim.specificity = std::numeric_limits<size_t>::max();
+         claim.when        = timestamp_t::max();
       }
    }
 

@@ -198,7 +198,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          }
          {  // Toggle Selection
             auto* node = control_scheme_node::from_data(control_scheme_action{
-               .name = "Replace Selection",
+               .name = "Toggle Selection",
                //
                .input_sequence    = algorithms::input_sequence_from_string("[Ctrl + LMB]"),
                .button_press_type = button_press_type::press,
@@ -210,7 +210,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             em_node->append_child(*node);
 
             auto& is = node->data.input_sequence;
-            is.raycast.associated_button = is.root;
+            is.raycast.associated_button = is.root->children[1]; // LMB
             is.raycast.requirement = raycast_requirement{
                .targets = {
                   .object_references = true,
