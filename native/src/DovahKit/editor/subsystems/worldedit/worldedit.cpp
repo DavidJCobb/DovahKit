@@ -683,7 +683,7 @@ namespace dovahkit::subsystems::worldedit {
          highlight.b,
          1.0, // TODO: we actually blend the highlight color within the renderer. should we let the user customize that?
       };
-      sr->force_gizmo_full_update();
+      sr->force_gizmo_color_update();
    }
    
    void core::_set_current_area_impl(dovah::form_stub* cell_or_world, int32_t grid_x, int32_t grid_y) {

@@ -197,6 +197,7 @@ namespace vulkanDK {
             bool must_re_record_graphics = true;
             bool must_re_record_ui       = true;
             //
+            bool must_update_gizmo_color = true;
             bool must_update_gizmo_state = true;
          } state;
       public:
@@ -228,6 +229,9 @@ namespace vulkanDK {
             }
          }
          void on_gizmo_mode_changed();
+         void on_gizmo_color_changed() {
+            this->state.must_update_gizmo_color = true;
+         }
          void on_gizmo_state_changed() {
             this->state.must_update_gizmo_state = true;
          }

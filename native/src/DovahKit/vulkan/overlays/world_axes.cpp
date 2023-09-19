@@ -189,6 +189,29 @@ namespace vulkanDK::overlays {
             vertices[i] = model[i];
             indices[i]  = i;
          }
+
+         {
+            auto& oc = this->style.override_colors;
+            if (oc.enabled) {
+               vertices[0].color = oc.x;
+               vertices[1].color = oc.x;
+
+               vertices[2].color = oc.y;
+               vertices[3].color = oc.y;
+
+               vertices[4].color = oc.z;
+               vertices[5].color = oc.z;
+               if (oc.x == glm::vec3{1, 0, 0} && oc.y == glm::vec3{0, 1, 0} && oc.z == glm::vec3{0, 0, 1}) {
+                  //
+                  // HACK: If this is just the standard gizmo color scheme, use a slightly lighter 
+                  //       shade of blue. This is purely so that if I'm testing with no loaded cell, 
+                  //       at night, with a bluelight filter, I don't think the Z-axis is missing.
+                  //
+                  vertices[4].color = { 0.1, 0.4, 1.0 };
+                  vertices[5].color = { 0.1, 0.4, 1.0 };
+               }
+            }
+         }
       }
       staging.unmap_memory(data);
       //
@@ -199,6 +222,18 @@ namespace vulkanDK::overlays {
    void world_axes::handle_resize(surface_renderer& sr) {
       auto& sre = this->owner->surface_extent;
       this->active = (sre.width >= viewport_w) && (sre.height >= viewport_h);
+   }
+
+   void world_axes::set_colors(glm::vec3 x, glm::vec3 y, glm::vec3 z) {
+      auto& oc = this->style.override_colors;
+      oc.enabled = true;
+      oc.x = x;
+      oc.y = y;
+      oc.z = z;
+   }
+   void world_axes::clear_colors() {
+      auto& oc = this->style.override_colors;
+      oc.enabled = false;
    }
 
    bool world_axes::needs_redraw() const {

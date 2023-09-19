@@ -2494,6 +2494,10 @@ namespace vulkanDK {
       this->scene.gizmo_state.clear_all_axis_highlighting();
       this->force_gizmo_full_update();
    }
+   void surface_renderer::force_gizmo_color_update() {
+      for (auto& fif : this->swap_chain.frames_in_flight)
+         fif.on_gizmo_color_changed();
+   }
    void surface_renderer::force_gizmo_full_update() {
       for (auto& fif : this->swap_chain.frames_in_flight)
          fif.on_gizmo_state_changed();

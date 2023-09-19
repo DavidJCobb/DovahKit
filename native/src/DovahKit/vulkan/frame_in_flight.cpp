@@ -353,8 +353,19 @@ namespace vulkanDK {
       });
       this->_update_drawn_scene_entity_frame_data<rendered_light>();
       this->_update_shader_texture_descriptors(); // can invalidate command buffers, so must run before we check whether command buffers need refilling
-      if (this->state.must_update_gizmo_state) {
+      if (this->state.must_update_gizmo_state || this->state.must_update_gizmo_color) {
          this->_update_shader_global_gizmo_state();
+
+         if (this->state.must_update_gizmo_color) {
+            this->state.must_update_gizmo_color = false;
+
+            auto& scene = this->get_scene();
+            auto& src   = scene.gizmo_state;
+            
+            auto& wa = this->overlays.world_axes;
+            wa.set_colors(src.color_x, src.color_y, src.color_z);
+            wa.create_geometry();
+         }
       }
       this->owner->scene.update_light_shadows(*this);
       {

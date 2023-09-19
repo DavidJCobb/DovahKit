@@ -77,6 +77,13 @@ namespace vulkanDK::overlays {
          bool active = true;
          struct {
             float thickness = 2.0;
+
+            struct {
+               bool enabled = false;
+               glm::vec3 x;
+               glm::vec3 y;
+               glm::vec3 z;
+            } override_colors;
          } style;
          struct {
             glm::vec3 last_camera_rotation = { 0, 0, 0 };
@@ -97,6 +104,10 @@ namespace vulkanDK::overlays {
          void create_geometry();
 
          void handle_resize(surface_renderer&);
+
+         // Must call `create_geometry` after either of these.
+         void set_colors(glm::vec3 x, glm::vec3 y, glm::vec3 z);
+         void clear_colors();
 
          bool needs_redraw() const;
 
