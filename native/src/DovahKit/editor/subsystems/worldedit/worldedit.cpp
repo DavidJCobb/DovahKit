@@ -1349,16 +1349,22 @@ namespace dovahkit::subsystems::worldedit {
                auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
                if (!loaded)
                   continue;
+               
+               cobb::vector3<float> pos_after;
+               if (this->state.selection.refs.size() == 1) {
+                  //
+                  // For a single ref, just keep things simple.
+                  //
+                  pos_after = loaded->position + adjust_pos;
+               } else {
+                  auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+                  auto sel_pivot = centroid_inverse     * sel_world;
+                  auto sel_final = centroid_post_adjust * sel_pivot;
 
-               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
-               auto sel_pivot = sel_world * centroid_inverse;
-               auto sel_final = sel_pivot * centroid_post_adjust;
+                  pos_after = cobb::vector3<float>(sel_final[3]) + adjust_pos;
+               }
 
-               auto& sel_final_pos = sel_final[3];
-               sel_final_pos.x += adjust_pos.x;
-               sel_final_pos.y += adjust_pos.y;
-               sel_final_pos.z += adjust_pos.z;
-               if (sel_final_pos.x > interior_cell_lateral_constraint || sel_final_pos.y > interior_cell_lateral_constraint) {
+               if (fabs(pos_after.x) > interior_cell_lateral_constraint || fabs(pos_after.y) > interior_cell_lateral_constraint) {
                   return false;
                }
             }
@@ -1385,7 +1391,7 @@ namespace dovahkit::subsystems::worldedit {
                rot_after = loaded->rotation + adjust.rot; // TODO: this misses the code above that accounts for the reference frame!
             } else {
                auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
-               auto sel_pivot = centroid_inverse * sel_world;
+               auto sel_pivot = centroid_inverse     * sel_world;
                auto sel_final = centroid_post_adjust * sel_pivot;
 
                pos_after = cobb::vector3<float>(sel_final[3]) + adjust_pos;
