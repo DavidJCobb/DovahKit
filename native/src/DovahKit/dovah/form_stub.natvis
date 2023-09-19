@@ -1,7 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   
+   <!-- Helpers for showing use info. -->
+   <Type Name="std::pair&lt;unsigned int const, dovah::use_info_entry&gt;" IncludeView="dkFormOutbound">
+      <DisplayString Condition="second.flags &amp; dovah::use_info_entry::flag::object_reference">base form</DisplayString>
+      <DisplayString Condition="second.flags &amp; dovah::use_info_entry::flag::parent_child">parent form</DisplayString>
+      <DisplayString>general</DisplayString>
+   </Type>
+   <Type Name="std::pair&lt;unsigned int const, dovah::use_info_entry&gt;" IncludeView="dkFormOutboundStub">
+      <DisplayString>{second.other,na}</DisplayString>
+      <Expand>
+         <ExpandedItem>second.other</ExpandedItem>
+      </Expand>
+   </Type>
+   <Type Name="std::map&lt;*&gt;" IncludeView="dkFormOutbound">
+      <DisplayString>{{ size={_Mypair._Myval2._Myval2._Mysize} }}</DisplayString>
+      <Expand>
+         <TreeItems>
+           <Size>_Mypair._Myval2._Myval2._Mysize</Size>
+           <HeadPointer>_Mypair._Myval2._Myval2._Myhead-&gt;_Parent</HeadPointer>
+           <LeftPointer>_Left</LeftPointer>
+           <RightPointer>_Right</RightPointer>
+           <ValueNode Condition="_Isnil == 0" Name="[{_Myval,view(dkFormOutbound)}]">_Myval,view(dkFormOutboundStub)</ValueNode>
+         </TreeItems>
+      </Expand>
+   </Type>
+   
    <Type Name="dovah::form_stub">
-
       <Intrinsic Name="_signature_char" Expression="
          ((const char*)&amp;dovah::form_types[formType].signature + (3 - a)),[1]nasb
       ">
@@ -26,6 +51,8 @@
       <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb}</DisplayString>
       <Expand>
          <Item Name="[form type]">dovah::form_types[formType].name,sb</Item>
+         <Item Name="[form ID]">formID,x</Item>
+         <Item Name="[editor ID]">editorID,sb</Item>
          <Synthetic Name="[flags]">
             <DisplayString>{(int)flags,2X}</DisplayString>
             <Expand>
@@ -54,69 +81,17 @@
          <Item Name="[loaded form]" Condition="form != nullptr">form</Item>
          <Item Name="[working copy]" Condition="working_copy != nullptr">working_copy</Item>
          <Synthetic Name="[use info]">
-            <DisplayString>{outbound.size(),d} outbound refs; {inbound.size(),d} inbound</DisplayString>
+            <DisplayString>{outbound._Mypair._Myval2._Myval2._Mysize,d} outbound refs; {inbound._Mypair._Myval2._Myval2._Mysize,d} inbound</DisplayString>
             <Expand>
-               <Synthetic Name="outbound">
-                  <Expand>
-                     <ExpandedItem>outbound</ExpandedItem>
-                  </Expand>
-               </Synthetic>
+               <Item Name="outbound">outbound,view(dkFormOutbound)</Item>
                <Synthetic Name="inbound">
+                     <DisplayString>{inbound}</DisplayString>
                   <Expand>
                      <ExpandedItem>inbound</ExpandedItem>
                   </Expand>
                </Synthetic>
             </Expand>
          </Synthetic>
-         <CustomListItems Condition="_form_type_is_ref(formType)">
-            <!--
-               std::map works as follows:
-               
-                - It's a binary tree, so every node has a left child and a right child.
-               
-                - The "head" node isn't actually part of the tree, but rather is a sentinel.
-                
-                   - The parent of the "head" node is the root node.
-                   
-                   - The left and right "children" of the "head" node are the smallest and largest 
-                     values in the tree.
-                
-                - If a node has no left child, its "left" pointer will point to the head node; thus 
-                  also to the right child and pointer.
-            -->
-            <Variable Name="head" InitialValue="outbound._Mypair._Myval2._Myval2._Myhead" />
-            <Variable Name="node" InitialValue="head->_Parent" />
-
-            <Variable Name="base_form"   InitialValue="(dovah::form_stub*)nullptr" />
-            <Variable Name="parent_cell" InitialValue="(dovah::form_stub*)nullptr" />
-
-            <Loop>
-               <Break Condition="node == nullptr" />
-               <Loop>
-                  <Break Condition="node-&gt;_Left == nullptr || node-&gt;_Left == head" />
-                  <Exec>node = node-&gt;_Left</Exec>
-               </Loop>
-               <If Condition="node-&gt;_Isnil == 0">
-                  <If Condition="node-&gt;_Myval.second.flags &amp; dovah::use_info_entry::flag::object_reference">
-                     <Exec>base_form = node-&gt;_Myval.second.other</Exec>
-                  </If>
-                  <If Condition="node-&gt;_Myval.second.flags &amp; dovah::use_info_entry::flag::parent_child">
-                     <Exec>parent_cell = node-&gt;_Myval.second.other,na</Exec>
-                  </If>
-               </If>
-               <Break Condition="base_form &amp;&amp; parent_cell" />
-               <Break Condition="node-&gt;_Parent == nullptr" />
-               <Exec>node = node-&gt;_Parent</Exec>
-               <Loop>
-                  <Break Condition="node-&gt;_Right != nullptr &amp;&amp; node-&gt;_Right != head" />
-                  <Exec>node = node-&gt;_Parent</Exec>
-               </Loop>
-               <Break Condition="node-&gt;_Right == nullptr || node-&gt;_Right == head" />
-               <Exec>node = node-&gt;_Right</Exec>
-            </Loop>
-            <Item Name="[ref base form]"   Condition="base_form">base_form,na</Item>
-            <Item Name="[ref parent cell]" Condition="parent_cell">parent_cell,na</Item>
-         </CustomListItems>
       </Expand>
    </Type>
 </AutoVisualizer>

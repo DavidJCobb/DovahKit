@@ -36,6 +36,15 @@ namespace dovahkit::subsystems::worldedit::tools {
 
          static constexpr const bool is_raycast_sensitive = false;
          static constexpr const editor_mode_set supported_editor_modes = all_editor_modes;
+
+      public:
+         // Subclasses should override this if they have options to offer.
+         struct options {
+            constexpr void stream(cobb::bitstreams::reader&) {}
+            constexpr void stream(cobb::bitstreams::writer&) const {}
+
+            constexpr bool operator==(const options&) const = default;
+         };
    };
 
    template<typename T> concept tool_with_options_member_type = requires { typename T::options; requires std::is_base_of_v<_base, T>; };

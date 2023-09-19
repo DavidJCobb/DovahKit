@@ -209,6 +209,10 @@ namespace dovahkit::subsystems::worldedit {
          void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
          #pragma endregion
 
+      protected:
+         void _select_ref(refr&);
+         void _on_ref_deselected(dovah::form_stub&);
+
       signals:
          void cellLoaded(dovah::form_stub&);
          void cellUnloaded(dovah::form_stub&);

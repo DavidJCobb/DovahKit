@@ -1,5 +1,7 @@
 
 
+This is a longer-term to-do list.
+
 Also refer to comments in `main.cpp`, though many were written years ago...
 
 
@@ -9,6 +11,11 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 * Consider altering the subclasses of `form_reference_t` to rely on a template. We can avoid a dependency on the form stub header if we move `use_info_entry` to its own file (and perhaps even move the use info entry flags-mask out of that struct and into its own separate file, too).
 
+## Loading
+* `add_hardcoded_forms_to_load_order` in `dovah/forms/factories/hardcoded.h` is only used by the file load process and should be passkeyed somehow.
+* `build_hardcoded_form_outbound_refs` in `dovah/forms/factories/hardcoded.h` is only used by the file load process and should be passkeyed somehow.
+* `instantiate_hardcoded_form` in `dovah/forms/factories/hardcoded.h` is only used by `form_stub` when loading full form data, and should be passkeyed somehow.
+
 ## Saving
 
 * Undelete-and-disable all flagged-as-deleted REFR overrides on save? (If so, make it a configurable option; default `false` in the backend; default `true` in the frontend e.g. INI settings.)
@@ -16,6 +23,12 @@ Also refer to comments in `main.cpp`, though many were written years ago...
   * NAVM too?
 
 ## Form data
+
+### Components
+* Make the helper functions on `object_bounds` `constexpr`.
+* `container_entry::condition` is a struct containing a presence bool and a float; change it to `std::optional<float>`.
+* Split `papyrus.h` into a subfolder with different headers for each of the structs used to define an attached ScriptObject.
+* Un-nest `script_data::script` and friends; we already have all of it in a namespace i.e. `dovah::loaded_forms::components::papyrus`. Rename `script_data` to `attachment_data` or something.
 
 ### ActorBase (NPC_)
 * NAM9 (Face Morphs) should not be serialized if all the values are 0.
@@ -29,7 +42,18 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 ## Dovahscript
 
-* It'd be worth investigating whether template metaprogramming can cut down on the boilerplate and copying-and-pasting used throughout the Lua API implementations. We could write templates for accessing form properties, which take lambdas or pointers-to-member to perform the requisite access, for example. My only concern is that we might end up annihilating script performance when compiling in Debug, as *nothing* gets inlined; even `__forceinline` is disobeyed.
+* It'd be worth investigating whether template metaprogramming can cut down on the boilerplate and copying-and-pasting used throughout the Lua API implementations. We could write templates for accessing form properties, which take lambdas or pointers-to-members to perform the requisite access, for example. My only concern is that we might end up annihilating script performance when compiling in Debug, as *nothing* gets inlined; even `__forceinline` is disobeyed.
+  * Pointers-to-members would avoid the overhead associated with accessor lambdas, but C++ has a hole in the standard: there's no way to get a pointer-to-member of a nested struct. A template powered by macros and `offsetof` could simulate that capability.
+
+
+## Worldedit/Worldinput
+
+* The current system for tools is still a bit messy...
+  * The `tool_response_tuple` struct should include presence bits for any tools that don't define a `response` type. That way, tools that have no specific response details to offer (e.g. "do this thing, with no parameters" tools, common in debugging) are still representable.
+  * Action nodes are capable of having a `nullptr` options-union pointer, which will trigger an assertion failure when the bind list is processed. Can we make it so that an action node will *always* have a valid options pointer, e.g. because it constructs the options-union in its constructor and uses a smart pointer for ownership/overwrites? (It'd have to be a custom smart pointer or a `std::unique_ptr` with a custom deleter, to account for the way we subclass things.)
+    * The problem with this is that we don't want to have to include the non-opaque options union header in the action node header and, transitiviely, in every header that ever touches control schemes.
+      * But the control scheme header already forward-declares the node types, does it not? So this shouldn't be a problem.
+  * We should modify `options_union` to be capable of representing tools that have no `options` struct. (We've already indirectly done this by having the tool base class declare an empty `options` type as a band-aid for the above-mentioned assertion failure, but that means that `options_union` now defines dispatch table entries for these no-op structs, which is wasteful. It'd be nice if `options_union`'s type-tag could refer to any tool and we just had functionality in place for tools with no options.)
 
 
 ## Worldinput

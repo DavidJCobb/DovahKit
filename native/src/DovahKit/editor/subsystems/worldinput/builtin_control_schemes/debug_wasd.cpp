@@ -46,9 +46,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .input_sequence    = _single_button_sequence(cobb::keyboard::key(cobb::keyboard::virtual_key::numpad_0)),
             .button_press_type = button_press_type::press,
             //
-            .tool = {
-               .id = worldedit::tools::id_of<worldedit::tools::debug_dump_raycast>
-            }
+            .tool = _tool_sans_options<worldedit::tools::debug_dump_raycast>(),
          });
 
          auto& is = node->data.input_sequence;

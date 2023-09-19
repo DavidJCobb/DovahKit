@@ -355,6 +355,13 @@ namespace dovahkit::subsystems::worldedit {
          this->_unload_cell(item);
    }
    bool core::_load_refr(dovah::form_stub& stub, cobb::vector3<float>& out_pos, cobb::vector3<float>& out_rot, bool& out_is_coc) {
+      #if _DEBUG
+         if (stub.get_content_if_loaded()) {
+            for (const auto& item : this->loaded_refs)
+               assert(item.stub != &stub && "Don't call _load_refr on refs that are already loaded!");
+         }
+      #endif
+
       auto* base = dovah::form_stub_helpers::get_base_form(&stub);
       if (!base)
          return false;
@@ -427,13 +434,14 @@ namespace dovahkit::subsystems::worldedit {
             loaded.land = land->load().ptr_cast<dovah::loaded_forms::Landscape>();
          }
       }
-      //
+      
       size_t refr_count = 0;
       //
       glm::fvec3 cell_position = { 0, 0, 0 };
       float cell_land_max = 0;
       //
       auto* sr = this->target_view->surfaceRenderer();
+
       if (loaded.land) {
          cell_land_max = loaded.land->maximum_height();
          //
@@ -447,10 +455,34 @@ namespace dovahkit::subsystems::worldedit {
          //
          loaded.vulkan_handles.landscape = sr->add_landscape(cell_position, *loaded.land);
       }
-      dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &refr_count](dovah::form_stub* stub) {
+
+      //
+      // This will be a rare case, and will generally happen if the user moves a selected 
+      // REFR outside of the loaded area.
+      //
+      bool any_refs_already_loaded = false;
+      for (const auto& item : this->loaded_refs) {
+         if (!item.stub)
+            continue;
+         if (item.stub->get_parent_form() == cell) {
+            any_refs_already_loaded = true;
+            break;
+         }
+      }
+
+      dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &refr_count, any_refs_already_loaded](dovah::form_stub* stub) {
          if (stub->formType != dovah::form_type::reference)
             return false;
-         //
+
+         if (any_refs_already_loaded) {
+            for (const auto& item : this->loaded_refs)
+               if (item.stub == stub)
+                  //
+                  // This ref is already loaded. Loading it a second time will break things.
+                  //
+                  return false;
+         }
+         
          cobb::vector3<float> pos;
          cobb::vector3<float> rot;
          bool is_coc;
@@ -458,7 +490,7 @@ namespace dovahkit::subsystems::worldedit {
          if (!this->_load_refr(*stub, pos, rot, is_coc))
             return false;
          ++refr_count;
-         //
+         
          return false;
       });
       //
@@ -1294,7 +1326,7 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    bool core::try_adjust_selection_coordinates(const coordinate_adjustment& adjust) {
-      if (this->target_area.cell == nullptr) // no cell loaded
+      if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
          return false;
 
       constexpr const float interior_cell_lateral_constraint = 30000;
@@ -1507,6 +1539,38 @@ namespace dovahkit::subsystems::worldedit {
    }
    #pragma endregion
 
+   void core::_select_ref(refr& info) {
+      auto& stub = *info.stub;
+
+      auto& list = this->state.selection.refs;
+      if (list.size() >= max_selected_refr_count) {
+         return;
+      }
+      bounds_generation_source source_info;
+      list.push_back({ &stub, _make_bounds_for(info, source_info) });
+      if (source_info != bounds_generation_source::undefined && source_info != bounds_generation_source::nif) {
+         list.back().update_on_nif_load = true;
+      }
+      emit this->refSelected(stub);
+      emit this->refSelectionChanged(stub, true);
+   }
+   void core::_on_ref_deselected(dovah::form_stub& stub) {
+      if (auto* parent_cell = stub.get_parent_form()) {
+         assert(parent_cell->formType == dovah::form_type::cell);
+         if (!this->is_cell_loaded(parent_cell)) {
+            //
+            // The user can have a selected ref that exists in an unloaded cell, if they've 
+            // moved the ref beyond the loaded area while viewing a worldspace. In that case, 
+            // we should unload any such refs once they're deselected, if they still aren't 
+            // in a loaded cell at that time.
+            //
+            this->_unload_refr(stub);
+         }
+      }
+      emit this->refDeselected(stub);
+      emit this->refSelectionChanged(stub, false);
+   }
+
    void core::setRefSelectionState(dovah::form_stub& stub, bool state) {
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)
@@ -1520,24 +1584,14 @@ namespace dovahkit::subsystems::worldedit {
       if (has == state)
          return;
       if (state) {
-         if (list.size() >= max_selected_refr_count) {
-            return;
-         }
-         bounds_generation_source source_info;
-         list.push_back({ &stub, _make_bounds_for(*ref_info, source_info) });
-         if (source_info != bounds_generation_source::undefined && source_info != bounds_generation_source::nif) {
-            list.back().update_on_nif_load = true;
-         }
-         emit this->refSelected(stub);
-         emit this->refSelectionChanged(stub, true);
+         this->_select_ref(*ref_info);
       } else {
          if constexpr (selection_vector_is_unordered) {
             cobb::unordered_erase(list, it);
          } else {
             list.erase(it);
          }
-         emit this->refDeselected(stub);
-         emit this->refSelectionChanged(stub, false);
+         this->_on_ref_deselected(stub);
       }
    }
    void core::toggleRefSelectionState(dovah::form_stub& stub) {
@@ -1550,21 +1604,14 @@ namespace dovahkit::subsystems::worldedit {
       auto& list = this->state.selection.refs;
       auto  it   = std::find_if(list.begin(), list.end(), [&stub](const cobb::value_type_of<decltype(list)>& item) { return item.stub == &stub; });
       if (it == list.end()) {
-         bounds_generation_source source_info;
-         list.push_back({ &stub, _make_bounds_for(*ref_info, source_info) });
-         if (source_info != bounds_generation_source::undefined && source_info != bounds_generation_source::nif) {
-            list.back().update_on_nif_load = true;
-         }
-         emit this->refSelected(stub);
-         emit this->refSelectionChanged(stub, true);
+         this->_select_ref(*ref_info);
       } else {
          if constexpr (selection_vector_is_unordered) {
             cobb::unordered_erase(list, it);
          } else {
             list.erase(it);
          }
-         emit this->refDeselected(stub);
-         emit this->refSelectionChanged(stub, false);
+         this->_on_ref_deselected(stub);
       }
    }
    void core::deselectAllRefs() {
@@ -1578,8 +1625,7 @@ namespace dovahkit::subsystems::worldedit {
       list.clear();
       //
       for (auto* stub : deselected) {
-         emit this->refDeselected(*stub);
-         emit this->refSelectionChanged(*stub, false);
+         this->_on_ref_deselected(*stub);
       }
    }
    void core::replaceRefSelection(dovah::form_stub& stub) {

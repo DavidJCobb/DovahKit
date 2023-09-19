@@ -42,4 +42,12 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
       out.options = new worldedit::tools::options_union(options);
       return out;
    }
+
+   template<typename Tool>
+   inline auto _tool_sans_options() {
+      decltype(control_scheme_action::tool) out = {};
+      out.id      = worldedit::tools::id_of<Tool>;
+      out.options = new worldedit::tools::options_union(typename Tool::options{});
+      return out;
+   }
 }

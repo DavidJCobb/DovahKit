@@ -1,6 +1,9 @@
 
 * Type-safe flags-masks all over the backend. It's trivial to do this with templates now, so the "non-strict enum inside a struct" trick isn't needed anymore.
-* Better access specifiers for `form_stub`'s members.
+  * That said, the "non-strict enum inside a struct" trick allows "subclassing enums" when one wrapper struct subclasses another. Never tried doing that with template-based flags masks before...
+    * Constexpr validation of flags, in the context of subclassable/extensible flags masks, would require explicit object parameter support ("deducing `this`"), which is busted in IntelliSense as of this writing (9/18/2023; definitions work; calls show false-positive errors).
+* Better access specifiers for `form_stub`'s members. Lots of stuff is public when it should arguably be private with a `constexpr const auto&` getter and maybe some passkeyed non-const accessors.
+* Revise `loaded_form_ptr` to be much more ergonomic. Having to get an untyped smart pointer via `form_stub::load` and manually call `ptr_cast` on it is annoying.
 * Rename `dovah::loaded_forms` to just `dovah::forms`. We'd still want to call these things "loaded form classes," but naming the namespace that feels redundant; that you have an instance of one of these classes on hand implies that you've loaded it.
 * Move `dovah::loaded_forms::components` to `dovah::form_components`.
 * Change how form components are handled:
