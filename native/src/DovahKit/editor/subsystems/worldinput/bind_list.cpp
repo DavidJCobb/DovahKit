@@ -11,7 +11,7 @@
 #include "./tools/opaque_tool_options.h"
 #include "./util/is_delta_control.h"
 #include "./core.h"
-#include "./defaults.h"
+#include "./config.h"
 #include "./interruption_check.h"
 #include "./tool_request_cause.h"
 //
@@ -103,7 +103,7 @@ namespace dovahkit::subsystems::worldinput {
                   case button_press_type::long_press:
                      {
                         auto down_for = elapsed_time(sequence.state.went_down_at, now);
-                        if (down_for >= defaults::press_to_long_press_threshold)
+                        if (down_for >= config::press_to_long_press_threshold())
                            matched = true;
                      }
                      break;

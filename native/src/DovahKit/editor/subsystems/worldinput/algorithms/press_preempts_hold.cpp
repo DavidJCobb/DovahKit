@@ -1,7 +1,7 @@
 #include "./press_preempts_hold.h"
 #include "helpers/unreachable.h"
 #include "../bind_list.h"
-#include "../defaults.h"
+#include "../config.h"
 #include "../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput::algorithms {
@@ -190,9 +190,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
 
       auto elapsed_h = elapsed_time(hold.input_sequence.state.went_down_at, current_time);
       {
-         auto disambig = defaults::press_to_hold_threshold;
+         auto disambig = config::press_to_hold_threshold();
          if (press.button_press_type == button_press_type::long_press)
-            disambig += defaults::press_to_long_press_threshold;
+            disambig += config::press_to_long_press_threshold();
 
          if (elapsed_h > disambig) {
             //

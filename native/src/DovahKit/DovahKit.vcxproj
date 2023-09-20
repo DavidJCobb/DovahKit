@@ -158,6 +158,7 @@
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\debug_wasd.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\reach.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput\config.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme\action.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition.cpp" />
@@ -903,6 +904,7 @@
     <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\reach.h" />
     <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\_helpers.h" />
     <ClInclude Include="editor\subsystems\worldinput\chrono.h" />
+    <ClInclude Include="editor\subsystems\worldinput\config.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\action.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\all_node_headers.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h" />
@@ -912,7 +914,6 @@
     <QtMoc Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.h" />
     <ClInclude Include="editor\subsystems\worldinput\core.h" />
     <ClInclude Include="editor\subsystems\worldinput\debugging.h" />
-    <ClInclude Include="editor\subsystems\worldinput\defaults.h" />
     <ClInclude Include="editor\subsystems\worldinput\devices\abstract_device_handler.h" />
     <ClInclude Include="editor\subsystems\worldinput\devices\components\buttoned_device.h" />
     <ClInclude Include="editor\subsystems\worldinput\devices\keyboard_mouse.h" />

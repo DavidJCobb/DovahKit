@@ -1,7 +1,6 @@
 #pragma once
 #include "./buttoned_device.h"
 #include <limits>
-#include "../../defaults.h"
 
 #pragma push_macro("TEMPLATE_PARAMS")
 #pragma push_macro("CLASS_NAME")

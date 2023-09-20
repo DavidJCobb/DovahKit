@@ -62,6 +62,9 @@
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
      </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
      <widget class="QWidget" name="pageTESData">
       <layout class="QGridLayout" name="gridLayout_7">
        <item row="0" column="0">
@@ -258,16 +261,6 @@
           <string>Controls</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_6" columnstretch="1,1,0,0,0">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>Keyboard and mouse:</string>
-            </property>
-            <property name="buddy">
-             <cstring>worldinputKBList</cstring>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="2">
            <widget class="QPushButton" name="worldinputKBNew">
             <property name="sizePolicy">
@@ -285,50 +278,13 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="3">
-           <widget class="QPushButton" name="worldinputKBEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLabel" name="label_11">
             <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="../resources/resources.qrc">
-              <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Xbox controller:</string>
+             <string>Press to Long Press threshold:</string>
             </property>
             <property name="buddy">
-             <cstring>worldinputGPList</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="worldinputKBList">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="worldinputGPList">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+             <cstring>iniPref_fPressToLongPressThreshold</cstring>
             </property>
            </widget>
           </item>
@@ -349,20 +305,102 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="worldinputGPNew">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="worldinputGPList">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+           </widget>
+          </item>
+          <item row="2" column="2" colspan="3">
+           <widget class="QDoubleSpinBox" name="iniPref_fPressToLongPressThreshold">
+            <property name="whatsThis">
+             <string>If a button is held for this amount of time or longer, and then released, it counts as a Long Press. If it's held more briefly and then released, it counts as a Press.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string> s</string>
+            </property>
+            <property name="maximum">
+             <double>20.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.350000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Keyboard and mouse:</string>
+            </property>
+            <property name="buddy">
+             <cstring>worldinputKBList</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="worldinputGPDelete">
             <property name="text">
              <string/>
             </property>
             <property name="icon">
              <iconset resource="../resources/resources.qrc">
-              <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
+              <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Long Press to Hold threshold:</string>
+            </property>
+            <property name="buddy">
+             <cstring>iniPref_fPressToHoldThreshold</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="worldinputKBList">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" colspan="3">
+           <widget class="QDoubleSpinBox" name="iniPref_fPressToHoldThreshold">
+            <property name="whatsThis">
+             <string>If a Press action and a Hold action are mapped to the same keys, then holding those keys for this long will cause the Hold action to &quot;win.&quot; If a Long Press and a Hold action are mapped to the same keys, then it's this amount of time plus the Press to Long Press threshold.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string> s</string>
+            </property>
+            <property name="maximum">
+             <double>20.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.500000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Xbox controller:</string>
+            </property>
+            <property name="buddy">
+             <cstring>worldinputGPList</cstring>
             </property>
            </widget>
           </item>
@@ -383,14 +421,66 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="4">
-           <widget class="QPushButton" name="worldinputGPDelete">
+          <item row="0" column="3">
+           <widget class="QPushButton" name="worldinputKBEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string/>
             </property>
             <property name="icon">
              <iconset resource="../resources/resources.qrc">
-              <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+              <normaloff>:/icons/edit-16.png</normaloff>:/icons/edit-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="worldinputGPNew">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resources.qrc">
+              <normaloff>:/icons/add-new-list-entry-16.png</normaloff>:/icons/add-new-list-entry-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Key sequence expire time:</string>
+            </property>
+            <property name="buddy">
+             <cstring>iniPref_fKeySequenceExpireTime</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2" colspan="3">
+           <widget class="QDoubleSpinBox" name="iniPref_fKeySequenceExpireTime">
+            <property name="whatsThis">
+             <string>If a button mapping requires you to press and release multiple keys in sequence, then this is the maximum amount of time that can pass between a key-up and a key-down before you fail the button combo.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string> s</string>
+            </property>
+            <property name="maximum">
+             <double>20.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.250000000000000</double>
             </property>
            </widget>
           </item>
@@ -654,6 +744,9 @@
   <tabstop>worldinputGPNew</tabstop>
   <tabstop>worldinputGPEdit</tabstop>
   <tabstop>worldinputGPDelete</tabstop>
+  <tabstop>iniPref_fPressToLongPressThreshold</tabstop>
+  <tabstop>iniPref_fPressToHoldThreshold</tabstop>
+  <tabstop>iniPref_fKeySequenceExpireTime</tabstop>
   <tabstop>iniPref_fCameraSpeedNormal</tabstop>
   <tabstop>iniPref_fCameraSpeedMultBoost</tabstop>
   <tabstop>iniPref_fCameraSpeedMultPrecision</tabstop>
@@ -671,6 +764,8 @@
   <tabstop>buttonSave</tabstop>
   <tabstop>buttonCancel</tabstop>
   <tabstop>buttonApply</tabstop>
+  <tabstop>iniPref_bApplyRefPersistenceAsNeeded</tabstop>
+  <tabstop>iniPref_bClearRefPersistenceWhenAble</tabstop>
  </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>

@@ -103,6 +103,10 @@ namespace dovahkit::ini::main {
          #endif
       ;
 
+      MAKE_INI_SETTING(fPressToLongPressThreshold, 0.35);
+      MAKE_INI_SETTING(fPressToHoldThreshold,      0.50);
+      MAKE_INI_SETTING(fKeySequenceExpireTime,     0.25);
+
       MAKE_INI_STRING_SETTING(sCurrentControlSchemeGamepad,  "");
       MAKE_INI_STRING_SETTING(sCurrentControlSchemeKeyboard, "");
    }

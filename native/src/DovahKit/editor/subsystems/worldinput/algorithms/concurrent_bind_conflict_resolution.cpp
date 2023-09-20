@@ -1,7 +1,7 @@
 #include "./concurrent_bind_conflict_resolution.h"
 #include "../enums/button_press_type.h"
 #include "../bind_list.h"
-#include "../defaults.h"
+#include "../config.h"
 #include "../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput::algorithms {
@@ -32,7 +32,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
             auto& press  = a.button_press_type == button_press_type::press ? a : b;
             auto& longer = (&press == &a) ? b : a;
             //
-            if (elapsed_time(longer.input_sequence.state.went_down_at, current_time) >= defaults::press_to_long_press_threshold) {
+            if (elapsed_time(longer.input_sequence.state.went_down_at, current_time) >= config::press_to_long_press_threshold()) {
                winner = &longer;
                return;
             }

@@ -2088,6 +2088,9 @@
     <ClCompile Include="editor\subsystems\worldinput\util\tool_binding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4577,9 +4580,6 @@
     <ClInclude Include="editor\subsystems\worldinput\enums\button_release_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\defaults.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\uint_of_size.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5187,6 +5187,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

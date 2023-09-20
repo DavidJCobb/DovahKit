@@ -2,7 +2,6 @@
 #include <array>
 #include "helpers/unreachable.h"
 #include "../inputs/button.h"
-#include "../defaults.h"
 #include "../interruption_check.h"
 
 namespace {

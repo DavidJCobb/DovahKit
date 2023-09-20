@@ -72,6 +72,10 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bClearRefPersistenceWhenAble, this->ui.iniPref_bClearRefPersistenceWhenAble);
    #pragma endregion
    #pragma region Render Window
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldinput::fKeySequenceExpireTime,     this->ui.iniPref_fKeySequenceExpireTime);
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldinput::fPressToHoldThreshold,      this->ui.iniPref_fPressToHoldThreshold);
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldinput::fPressToLongPressThreshold, this->ui.iniPref_fPressToLongPressThreshold);
+      //
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldedit::fCameraSpeedNormal,           this->ui.iniPref_fCameraSpeedNormal);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldedit::fCameraSpeedMultBoost,        this->ui.iniPref_fCameraSpeedMultBoost);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::worldedit::fCameraSpeedMultPrecision,    this->ui.iniPref_fCameraSpeedMultPrecision);

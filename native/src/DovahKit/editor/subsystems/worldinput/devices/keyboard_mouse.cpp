@@ -3,7 +3,6 @@
 #include <QCursor>
 #include <QWidget>
 #include "helpers/windows.h"
-#include "../defaults.h"
 #include "../interruption_check.h"
 #include "../inputs/button.h"
 
