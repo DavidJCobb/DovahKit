@@ -58,7 +58,7 @@ namespace dovahkit::subsystems::worldinput::util {
       return true;
    }
    bool tool_binding::compare_slow_fields(const tool_binding& other) const {
-      if constexpr (options_union_can_be_no_op) {
+      if constexpr (!options_union_can_be_no_op) {
          //
          // This optimization doesn't work, because when reading a control scheme action from a 
          // bitstream, we blindly create an options union and allow it to potentially be a no-op.
