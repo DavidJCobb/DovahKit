@@ -145,6 +145,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
@@ -168,6 +169,7 @@
     <ClCompile Include="editor\subsystems\worldinput\input_sequence.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\raycast_requirement.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\util\numeric_comparisons.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput\util\tool_binding.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\worldinput.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.cpp" />
     <ClCompile Include="dovahscript\api_helpers\load_resource.cpp" />
@@ -970,6 +972,7 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit\worldedit.h" />
+    <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h" />
     <ClInclude Include="editor\subsystems\xinput\chrono.h" />
     <ClInclude Include="editor\subsystems\xinput\config\trigger_threshold_for_button.h" />
     <ClInclude Include="editor\subsystems\xinput\core.h" />

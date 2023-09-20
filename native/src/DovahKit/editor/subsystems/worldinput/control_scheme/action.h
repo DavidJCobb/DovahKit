@@ -1,6 +1,7 @@
 #pragma once
 #include <QString>
 #include "../enums/button_press_type.h"
+#include "../util/tool_binding.h"
 #include "../input_sequence.h"
 #include "editor/subsystems/worldedit/tool_system/tool_id.h"
 
@@ -21,10 +22,7 @@ namespace dovahkit::subsystems::worldinput {
          QString name;
          typename input_sequence    input_sequence;
          typename button_press_type button_press_type = button_press_type::press;
-         struct {
-            worldedit::tools::tool_id               id = worldedit::tools::id_of_none;
-            worldedit::tools::opaque_options_union* options = nullptr;
-         } tool;
+         util::tool_binding tool;
 
          bool operator==(const control_scheme_action&) const noexcept;
 

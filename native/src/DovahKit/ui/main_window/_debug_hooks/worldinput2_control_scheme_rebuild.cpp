@@ -55,14 +55,19 @@ namespace {
    static auto _tool_sans_options() {
       decltype(worldinput::control_scheme_action::tool) out = {};
       out.id = worldedit::tools::id_of<Tool>;
+      if constexpr (worldedit::tools::tool_with_options<Tool>) {
+         out.options.reset(new tools::options_union(typename Tool::options{}));
+      } else {
+         out.options.reset(new tools::options_union());
+      }
       return out;
    }
 
    template<typename Options>
    static auto _tool_with_options(const Options& options) {
       decltype(worldinput::control_scheme_action::tool) out = {};
-      out.id      = worldedit::tools::id_of<Options>;
-      out.options = new tools::options_union(options);
+      out.id = worldedit::tools::id_of<Options>;
+      out.options.reset(new tools::options_union(options));
       return out;
    }
    

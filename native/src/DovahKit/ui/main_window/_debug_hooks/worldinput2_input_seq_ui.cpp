@@ -37,10 +37,10 @@ namespace DovahKitDebug::features {
       if constexpr (true) { // tool test
          using namespace dovahkit::subsystems::worldedit;
 
-         data.tool.id      = tools::id_of<tools::modify_camera_speed_flags>;
-         data.tool.options = new tools::options_union;
+         data.tool.id = tools::id_of<tools::modify_camera_speed_flags>;
+         data.tool.options.reset(new tools::options_union);
 
-         auto* ou = (tools::options_union*)data.tool.options;
+         auto* ou = (tools::options_union*)data.tool.options.get();
          *ou = tools::options_union(tools::modify_camera_speed_flags::options{
             .boost     = bool_operation::set_true,
             .precision = bool_operation::set_false,

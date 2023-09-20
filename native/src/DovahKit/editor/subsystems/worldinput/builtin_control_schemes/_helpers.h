@@ -38,16 +38,20 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
    template<typename Options>
    inline auto _tool_with_options(const Options& options) {
       decltype(control_scheme_action::tool) out = {};
-      out.id      = worldedit::tools::id_of<Options>;
-      out.options = new worldedit::tools::options_union(options);
+      out.id = worldedit::tools::id_of<Options>;
+      out.options.reset(new worldedit::tools::options_union(options));
       return out;
    }
 
    template<typename Tool>
    inline auto _tool_sans_options() {
       decltype(control_scheme_action::tool) out = {};
-      out.id      = worldedit::tools::id_of<Tool>;
-      out.options = new worldedit::tools::options_union(typename Tool::options{});
+      out.id = worldedit::tools::id_of<Tool>;
+      if constexpr (worldedit::tools::tool_with_options<Tool>) {
+         out.options.reset(new worldedit::tools::options_union(typename Tool::options{}));
+      } else {
+         out.options.reset(new worldedit::tools::options_union());
+      }
       return out;
    }
 }

@@ -9,6 +9,7 @@
 #include "./control_scheme/condition.h"
 #include "./enums/button_press_type.h"
 #include "./enums/input_device_type.h"
+#include "./util/tool_binding.h"
 #include "./input_sequence.h"
 
 namespace dovahkit::subsystems::worldedit {
@@ -33,10 +34,7 @@ namespace dovahkit::subsystems::worldinput {
          button_press_type button_press_type = button_press_type::none;
          input_sequence    input_sequence;
          //
-         struct {
-            worldedit::tools::tool_id               tool    = worldedit::tools::id_of_none;
-            worldedit::tools::opaque_options_union* options = nullptr;
-         } bound_tool;
+         util::tool_binding bound_tool;
 
          mutable struct {
             bool press_blocked_hold : 1 = false; // cross-frame Hold node state for Press-preempts-Hold

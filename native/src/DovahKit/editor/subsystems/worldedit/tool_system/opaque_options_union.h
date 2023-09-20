@@ -7,6 +7,11 @@ namespace dovahkit::subsystems::worldedit::tools {
 
 namespace dovahkit::subsystems::worldedit::tools {
    class opaque_options_union {
+      public:
+         struct deleter {
+            void operator()(opaque_options_union*);
+         };
+
       protected:
          tool_id tag = id_of_none;
 

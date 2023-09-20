@@ -78,9 +78,9 @@ namespace {
          .input_sequence    = sequence,
          .button_press_type = pt,
          //
-         .tool = {
-            .id      = worldedit::tools::id_of<worldedit::tools::debug_print>,
-            .options = new worldedit::tools::options_union(
+         .tool = worldinput::util::tool_binding{
+            worldedit::tools::id_of<worldedit::tools::debug_print>,
+            new worldedit::tools::options_union(
                worldedit::tools::debug_print::options{
                   .text = name
                }

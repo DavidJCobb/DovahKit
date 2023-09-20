@@ -28,63 +28,50 @@ namespace dovahkit::subsystems::worldinput {
       *this = std::move(other);
    }
 
-   bind_list_item::~bind_list_item() {
-      if (auto*& p = this->bound_tool.options) {
-         delete ((worldedit::tools::options_union*)p);
-         p = nullptr;
-      }
-   }
+   bind_list_item::~bind_list_item() {}
 
    bind_list_item& bind_list_item::operator=(const bind_list_item& src) {
+      if (this == &src)
+         return *this;
+
       this->name = src.name;
       this->conditions = src.conditions;
-      //
+      
       this->button_press_type = src.button_press_type;
       this->input_sequence    = src.input_sequence.clone();
-      //
-      this->bound_tool.tool   = src.bound_tool.tool;
-      {
-         auto*& mine = this->bound_tool.options;
-         const auto* const& theirs = src.bound_tool.options;
-         if (mine) {
-            if (theirs) {
-               *((worldedit::tools::options_union*)mine) = *((worldedit::tools::options_union*)theirs);
-            } else {
-               delete ((worldedit::tools::options_union*)mine);
-               mine = nullptr;
-            }
-         } else if (theirs) {
-            mine = ((worldedit::tools::options_union*)theirs)->clone();
-         }
-      }
+      
+      this->bound_tool = src.bound_tool;
+
       return *this;
    }
    bind_list_item& bind_list_item::operator=(bind_list_item&& src) noexcept {
-      std::swap(this->name,               src.name);
-      std::swap(this->conditions,         src.conditions);
-      std::swap(this->button_press_type,  src.button_press_type);
-      std::swap(this->input_sequence,     src.input_sequence);
-      std::swap(this->bound_tool.tool,    src.bound_tool.tool);
-      std::swap(this->bound_tool.options, src.bound_tool.options);
+      if (this == &src)
+         return *this;
+
+      std::swap(this->name,              src.name);
+      std::swap(this->conditions,        src.conditions);
+      std::swap(this->button_press_type, src.button_press_type);
+      std::swap(this->input_sequence,    src.input_sequence);
+      std::swap(this->bound_tool,        src.bound_tool);
       return *this;
    }
 
    void bind_list_item::invoke(worldedit::tool_response_tuple& out, const tool_request_cause& cause) const {
-      if (this->bound_tool.tool == worldedit::tools::id_of_none) {
+      if (this->bound_tool.id == worldedit::tools::id_of_none) {
          return;
       }
       assert(this->bound_tool.options != nullptr);
 
-      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
+      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.id];
       table.request(cause, *this->bound_tool.options, out);
    }
    void bind_list_item::invoke_for_hold_release(worldedit::tool_response_tuple& out) const {
-      if (this->bound_tool.tool == worldedit::tools::id_of_none) {
+      if (this->bound_tool.id == worldedit::tools::id_of_none) {
          return;
       }
       assert(this->bound_tool.options != nullptr);
 
-      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.tool];
+      auto& table = worldedit::tools::tool_dispatch_table[this->bound_tool.id];
       table.request_hold_release(*this->bound_tool.options, out);
    }
    #pragma endregion

@@ -362,7 +362,7 @@ void WorldinputBindEditDialog::initializeFrom(const data_type& node) {
       const auto& tbl = dovahkit::ui::worldedit::options_widget_dispatch_table;
       for (const auto& entry : tbl) {
          if (entry.id == node.tool.id) {
-            (entry.to_ui)(this->_tool_options_widget, *(const dovahkit::subsystems::worldedit::tools::options_union*)node.tool.options);
+            (entry.to_ui)(this->_tool_options_widget, *(const dovahkit::subsystems::worldedit::tools::options_union*)node.tool.options.get());
             break;
          }
       }
@@ -405,28 +405,22 @@ void WorldinputBindEditDialog::overwrite(data_type& node) const {
       auto& dst = node.tool;
       dst.id = this->ui.toolSelector->currentData().toInt();
       if (dst.id == dovahkit::subsystems::worldedit::tools::id_of_none) {
-         if (dst.options) {
-            delete dst.options;
-            dst.options = nullptr;
-         }
+         dst.options.reset(nullptr);
       } else {
          if (this->_tool_options_widget) {
             if (!dst.options) {
-               dst.options = new options_union;
+               dst.options.reset(new options_union);
             }
 
             const auto& tbl = dovahkit::ui::worldedit::options_widget_dispatch_table;
             for (const auto& entry : tbl) {
                if (entry.id == dst.id) {
-                  (entry.to_data)(this->_tool_options_widget, *(options_union*)dst.options);
+                  (entry.to_data)(this->_tool_options_widget, *(options_union*)dst.options.get());
                   break;
                }
             }
          } else {
-            if (dst.options) {
-               delete dst.options;
-               dst.options = nullptr;
-            }
+            dst.options.reset(nullptr);
          }
       }
    }

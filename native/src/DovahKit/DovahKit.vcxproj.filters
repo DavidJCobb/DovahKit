@@ -2082,6 +2082,12 @@
     <ClCompile Include="vulkan\helpers\nif\set_root_transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\util\tool_binding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5178,6 +5184,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\helpers\nif\set_root_transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

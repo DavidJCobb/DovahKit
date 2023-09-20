@@ -65,12 +65,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
             if (!conditions.empty()) {
                item.conditions = conditions.back();
             }
-            item.input_sequence     = _absolute_input_sequence(*bt);
-            item.button_press_type  = data.button_press_type;
-            item.bound_tool.tool    = data.tool.id;
-            if (data.tool.options != nullptr && data.tool.id != worldedit::tools::id_of_none) {
-               item.bound_tool.options = ((worldedit::tools::options_union*)data.tool.options)->clone();
-            }
+            item.input_sequence    = _absolute_input_sequence(*bt);
+            item.button_press_type = data.button_press_type;
+            item.bound_tool        = data.tool;
 
             // Action nodes are leaf nodes, so don't check for children to process.
             return;

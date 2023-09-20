@@ -11,7 +11,7 @@ namespace dovahkit::subsystems::worldinput {
       if (this->button_press_type != other.button_press_type)
          return false;
 
-      if (this->tool.id != other.tool.id)
+      if (!this->tool.compare_fast_fields(other.tool))
          return false;
 
       if (this->name != other.name)
@@ -20,18 +20,9 @@ namespace dovahkit::subsystems::worldinput {
       if (this->input_sequence != other.input_sequence)
          return false;
 
-      auto* a = (worldedit::tools::options_union*)this->tool.options;
-      auto* b = (worldedit::tools::options_union*)other.tool.options;
-      //if ((a == nullptr) != (b == nullptr))
-      //   //
-      //   // This optimization doesn't work, because when reading a control scheme action from a 
-      //   // bitstream, we blindly create an options union and allow it to potentially be a no-op.
-      //   //
-      //   return false;
-      if (a) {
-         if (*a != *b)
-            return false;
-      }
+      if (!this->tool.compare_slow_fields(other.tool))
+         return false;
+
       return true;
    }
 
@@ -65,7 +56,7 @@ namespace dovahkit::subsystems::worldinput {
 
          auto* ou = new worldedit::tools::options_union;
          *ou = worldedit::tools::options_union::construct_for_type(this->tool.id);
-         this->tool.options = ou;
+         this->tool.options.reset(ou);
          ou->stream(s);
       }
    }
@@ -85,7 +76,7 @@ namespace dovahkit::subsystems::worldinput {
          s.stream(codes[(size_t)this->tool.id]);
 
          if (this->tool.options != nullptr) {
-            ((worldedit::tools::options_union*)this->tool.options)->stream(s);
+            ((worldedit::tools::options_union*)this->tool.options.get())->stream(s);
          } else {
             s.stream(false);
          }
