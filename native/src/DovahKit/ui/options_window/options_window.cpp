@@ -1,5 +1,6 @@
 #include "options_window.h"
 #include <cassert>
+#include <stdexcept>
 #include <QButtonGroup>
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
@@ -227,7 +228,7 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
                //
                auto data_after = dialog->retrieve();
                if (data != data_after) { // only if any changes were actually made
-                  auto qmi = model->insert(data_after);
+                  QModelIndex qmi = model->insert(data_after);
                   if (qmi.isValid())
                      picker->setCurrentIndex(qmi.row()); // select new scheme
                }

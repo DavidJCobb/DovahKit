@@ -21,13 +21,16 @@ namespace dovahkit::subsystems::worldinput {
          using scheme_filename_type = QString;
 
          struct saved_control_scheme : control_scheme {
-            using control_scheme::control_scheme;
-            saved_control_scheme(const control_scheme& d) : control_scheme(d) {}
-            saved_control_scheme(control_scheme&& d) : control_scheme(std::move(d)) {}
+            friend class control_scheme_manager;
+            protected:
+               using control_scheme::control_scheme;
+               saved_control_scheme(const control_scheme& d) : control_scheme(d) {}
+               saved_control_scheme(control_scheme&& d) : control_scheme(std::move(d)) {}
 
-            scheme_filename_type filename; // can only be blank for hardcoded schemes
+            public:
+               scheme_filename_type filename; // can only be blank for hardcoded schemes
 
-            inline bool is_hardcoded() const { return filename.isEmpty(); }
+               inline bool is_hardcoded() const { return filename.isEmpty() || filename[0] == '?'; }
          };
 
       protected:
@@ -96,6 +99,13 @@ namespace dovahkit::subsystems::worldinput {
             if (n.empty())
                return nullptr;
             return this->lookup_scheme(d, QString::fromUtf8(n.data(), n.size()));
+         }
+
+         const saved_control_scheme* lookup_scheme_by_filename(input_device_type, const scheme_filename_type&) const;
+         const saved_control_scheme* lookup_scheme_by_filename(input_device_type d, const std::string& n) const {
+            if (n.empty())
+               return nullptr;
+            return this->lookup_scheme_by_filename(d, QString::fromUtf8(n.data(), n.size()));
          }
 
          void reload_all_control_schemes();

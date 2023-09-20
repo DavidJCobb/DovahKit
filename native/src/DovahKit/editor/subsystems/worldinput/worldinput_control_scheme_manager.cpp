@@ -39,6 +39,15 @@ namespace dovahkit::subsystems::worldinput {
             return "Reach";
          return nullptr;
       }
+      const char* _hardcoded_scheme_filename(const control_scheme& scheme) {
+         if (&scheme == &builtin_control_schemes::ck_standard())
+            return "?ck";
+         if (&scheme == &builtin_control_schemes::debug_wasd())
+            return "?wasd";
+         if (&scheme == &builtin_control_schemes::reach())
+            return "?reach";
+         return nullptr;
+      }
    }
 
    control_scheme_manager::control_scheme_manager() {
@@ -102,6 +111,18 @@ namespace dovahkit::subsystems::worldinput {
    }
 
    bool control_scheme_manager::adjust_scheme_name_by_availability(input_device_type dt, scheme_name_type& name) {
+      {
+         bool taken = false;
+         for (const auto* item : this->_get_schemes_by_device(dt)) {
+            if (item->name == name) {
+               taken = true;
+               break;
+            }
+         }
+         if (!taken)
+            return false;
+      }
+
       QStringView candidate = name;
       size_t      alternate = 2;
       if (name.endsWith(')')) {
@@ -128,8 +149,24 @@ namespace dovahkit::subsystems::worldinput {
          }
          if (!found)
             break;
+
          name = candidate.toString() + " (" + QString::number(alternate++) + ")";
          adjusted = true;
+         //
+         if (name.size() > control_scheme::max_name_length) {
+            if (candidate.isEmpty()) {
+               //
+               // We failed to find a unique name. That isn't a serious problem, since we no longer 
+               // use schemes' user-facing names as unique identifiers. This whole function only even 
+               // exists because auto-renaming schemes to unique names is user-friendly, but if we 
+               // fail to do so, that doesn't break anything (anymore).
+               //
+               return false;
+            }
+            candidate = candidate.left(candidate.size() - 1);
+            alternate = 2;
+            name = candidate.toString() + " (" + QString::number(alternate++) + ")";
+         }
       }
       return adjusted;
    }
@@ -179,6 +216,7 @@ namespace dovahkit::subsystems::worldinput {
 
    void control_scheme_manager::overwrite_scheme(const saved_control_scheme* const_dst, const control_scheme& src) {
       assert(const_dst != nullptr);
+      assert(!const_dst->is_hardcoded());
       saved_control_scheme* dst = nullptr;
       {
          auto& list = this->_get_schemes_by_device(src.device_type);
@@ -207,21 +245,13 @@ namespace dovahkit::subsystems::worldinput {
 
       this->_save_scheme(file, src);
 
-      bool is_current = this->is_current_scheme(const_dst);
-      if (is_current) {
-         //
-         // The currently-active control scheme was renamed. Update the INI setting accordingly.
-         //
-         auto& setting = _current_scheme_setting(const_dst->device_type);
-         setting.set_current_value<std::string>(dst->name.toUtf8().toStdString());
-      }
-
-      emit this->controlSchemeModified(prior_name, *dst, is_current);
+      emit this->controlSchemeModified(prior_name, *dst, this->is_current_scheme(const_dst));
    }
 
    void control_scheme_manager::delete_scheme(const saved_control_scheme* const_target) {
       assert(const_target != nullptr);
       assert(!const_target->filename.isEmpty());
+      assert(const_target->filename[0] != '?'); // hardcoded scheme sentinel
 
       auto& list = this->_get_schemes_by_device(const_target->device_type);
       auto  it   = std::find(list.begin(), list.end(), const_target);
@@ -246,6 +276,16 @@ namespace dovahkit::subsystems::worldinput {
       return nullptr;
    }
 
+   const control_scheme_manager::saved_control_scheme* control_scheme_manager::lookup_scheme_by_filename(input_device_type dt, const scheme_filename_type& name) const {
+      if (name.isEmpty())
+         return nullptr;
+      auto& list = this->_get_schemes_by_device(dt);
+      for (auto* item : list)
+         if (item->filename == name)
+            return item;
+      return nullptr;
+   }
+
    void control_scheme_manager::reload_all_control_schemes() {
       emit this->beforeReloadAll();
       this->_clear_all_schemes();
@@ -254,7 +294,8 @@ namespace dovahkit::subsystems::worldinput {
          auto add_hardcoded_scheme = [this](const control_scheme& scheme) {
             auto& list = this->_get_schemes_by_device(scheme.device_type);
             list.push_back(new saved_control_scheme(scheme));
-            list.back()->name = _hardcoded_scheme_name(scheme);
+            list.back()->name     = _hardcoded_scheme_name(scheme);
+            list.back()->filename = _hardcoded_scheme_filename(scheme);
          };
          add_hardcoded_scheme(builtin_control_schemes::ck_standard());
          add_hardcoded_scheme(builtin_control_schemes::debug_wasd());
@@ -275,10 +316,13 @@ namespace dovahkit::subsystems::worldinput {
          if (!loaded.has_value())
             continue;
 
-         auto* saved = new saved_control_scheme(std::move(loaded.value()));
-
          auto info = QFileInfo(file);
-         saved->filename = info.completeBaseName();
+         auto fn   = info.completeBaseName();
+         if (fn.isEmpty() || fn[0] == '?') // hardcoded scheme sentinel (should be impossible here)
+            continue;
+
+         auto* saved = new saved_control_scheme(std::move(loaded.value()));
+         saved->filename = fn;
 
          this->_get_schemes_by_device(saved->device_type).push_back(saved);
       }
@@ -296,7 +340,7 @@ namespace dovahkit::subsystems::worldinput {
 
       const saved_control_scheme* scheme = nullptr;
       if (!name.isEmpty())
-         scheme = this->lookup_scheme(dt, name);
+         scheme = this->lookup_scheme_by_filename(dt, name);
       if (scheme)
          return *scheme;
 
@@ -305,15 +349,15 @@ namespace dovahkit::subsystems::worldinput {
          switch (dt) {
             case input_device_type::keyboard_mouse:
             default:
-               name_std = _hardcoded_scheme_name(builtin_control_schemes::debug_wasd());
+               name_std = _hardcoded_scheme_filename(builtin_control_schemes::debug_wasd());
                break;
             case input_device_type::xinput:
-               name_std = _hardcoded_scheme_name(builtin_control_schemes::reach());
+               name_std = _hardcoded_scheme_filename(builtin_control_schemes::reach());
                break;
          }
          name = QString::fromUtf8(name_std.c_str(), name_std.size());
       }
-      scheme = this->lookup_scheme(dt, name);
+      scheme = this->lookup_scheme_by_filename(dt, name);
       assert(scheme != nullptr);
       //
       this->set_current_scheme(scheme);
@@ -342,7 +386,7 @@ namespace dovahkit::subsystems::worldinput {
       auto& setting = _current_scheme_setting(dt);
 
       auto current = setting.get_current_value<std::string>();
-      auto desired = scheme->name.toUtf8().toStdString();
+      auto desired = scheme->filename.toUtf8().toStdString();
       if (current == desired)
          return;
 
@@ -355,12 +399,6 @@ namespace dovahkit::subsystems::worldinput {
          return false;
 
       auto& current = this->get_current_scheme(scheme->device_type);
-      if (&current == scheme)
-         return true;
-
-      if (!scheme->is_hardcoded())
-         return false;
-
-      return (*scheme == current);
+      return (&current == scheme);
    }
 }

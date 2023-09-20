@@ -33,7 +33,6 @@ namespace cobb::ini {
    /*static*/ void file::_write_category(_output_stream<T>& dst, const category& cat) {
       if (cat.settings().empty())
          return;
-      dst.put('\n'); // MSVC treats std::fstream.put('\n') as .write("\r\n", 2) automatically, without asking, so don't put('\r')
       std::string header;
       dst.put('[');
       dst << cat.name;
@@ -46,6 +45,7 @@ namespace cobb::ini {
          dst << stringify_value(v);
          dst << '\n';
       }
+      dst.put('\n'); // IIRC MSVC treats std::fstream.put('\n') as .write("\r\n", 2) automatically, without asking, so don't put('\r')
    }
 
    constexpr void file::_on_category_instantiated(::cobb::passkey<file, category>, category& c) {
@@ -134,6 +134,10 @@ namespace cobb::ini {
 
       bool before_all_categories = true;
 
+      //
+      // NOTE: This struct also handles any leading whitespace and comments prior to the first category 
+      // in the file.
+      //
       struct {
          category*   data = nullptr;
          std::string header_line;
@@ -142,14 +146,21 @@ namespace cobb::ini {
       } category_state;
 
       auto _write_current_category_state = [&category_state, &dst]() {
-         dst << category_state.header_line;
+         if (!category_state.header_line.empty()) {
+            dst << category_state.header_line;
+            dst << '\n';
+         }
          if (auto* cat = category_state.data) {
             //
             // Write any settings that weren't in the original file.
             //
             for (auto* setting : cat->settings()) {
-               if (std::find(category_state.found.begin(), category_state.found.end(), setting) != category_state.found.end())
-                  continue;
+               {
+                  auto& list = category_state.found;
+                  auto  it   = std::find(list.begin(), list.end(), setting);
+                  if (it != list.end())
+                     continue;
+               }
                dst << setting->name;
                dst << '=';
                dst << stringify_value(setting->get_current_value_variant());
@@ -157,23 +168,6 @@ namespace cobb::ini {
             }
          }
          dst << category_state.body;
-      };
-      
-      auto handle_setting_line = [this, &category_state](std::string_view setting_name, std::string_view setting_value, const std::string_view trailing) {
-         setting* current_setting = category_state.data->setting_by_name(std::string(setting_name).c_str());
-         if (!current_setting) {
-            category_state.body.append(setting_name);
-            category_state.body += '='; // TODO: this won't preserve space-padding around the equals
-            category_state.body.append(setting_value);
-            category_state.body.append(trailing);
-            category_state.body += '\n';
-            return;
-         }
-         category_state.body.append(setting_name);
-         category_state.body += '='; // TODO: this won't preserve space-padding around the equals
-         category_state.body.append(stringify_value(current_setting->get_current_value_variant()));
-         category_state.body.append(trailing);
-         category_state.body += '\n';
       };
 
       std::string line;
@@ -208,6 +202,12 @@ namespace cobb::ini {
                }
             }
          } else if (auto* casted = std::get_if<file_line_parse_results::key_value_pair>(&parsed.content)) {
+            //
+            // There is one weakness to this design: if a setting appears multiple times in the existing 
+            // file, we'll keep all of those redundant lines, though we do also update all of them to the 
+            // current value.
+            //
+
             category_state.body += parsed.leading;
 
             setting* current_setting = category_state.data->setting_by_name(casted->key);
@@ -237,6 +237,13 @@ namespace cobb::ini {
                   category_state.body += delim;
                } else {
                   category_state.body += value;
+               }
+
+               {
+                  auto& list = category_state.found;
+                  auto  it = std::find(list.begin(), list.end(), current_setting);
+                  if (it == list.end())
+                     list.push_back(current_setting);
                }
             }
 
