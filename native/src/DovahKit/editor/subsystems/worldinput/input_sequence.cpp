@@ -967,5 +967,25 @@ namespace dovahkit::subsystems::worldinput {
          }
       }
    }
+
+   void input_sequence::assert_validity() const {
+      if (auto* isg = this->raycast.associated_button)
+         assert(isg->type == group_type::single_control);
+
+      auto per_group = []<typename Self>(this Self&& recurse, group& current) -> void {
+         switch (current.type) {
+            case group_type::single_control:
+               assert(current.children.empty());
+               break;
+            default:
+               for (auto* child : current.children) {
+                  assert(child != nullptr);
+                  recurse(*child);
+               }
+         }
+      };
+      if (this->root)
+         per_group(*this->root);
+   }
    #pragma endregion
 }

@@ -180,4 +180,22 @@ namespace dovahkit::subsystems::worldinput {
          stream_node( *(this->top_level_nodes[i]) );
       }
    }
+
+   void control_scheme::assert_validity() const {
+      assert(this->name.size() <= max_name_length);
+
+      auto per_node = [](this auto&& recurse, node& target) -> void {
+         if (auto* casted = target.as<control_scheme_action>()) {
+            casted->data.assert_validity();
+         }
+         if (auto* casted = target.as<control_scheme_modifier>()) {
+            casted->data.assert_validity();
+            for (auto* child : casted->children) {
+               recurse(*child);
+            }
+         }
+      };
+      for (auto* current : this->top_level_nodes)
+         per_node(*current);
+   }
 }

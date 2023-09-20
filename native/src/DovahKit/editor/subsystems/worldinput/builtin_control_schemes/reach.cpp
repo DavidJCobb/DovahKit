@@ -182,6 +182,8 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          };
       }
 
+      out.assert_validity();
+
       return out;
    }
 }

@@ -215,6 +215,8 @@ namespace dovahkit::subsystems::worldinput {
 
          constexpr void stream(cobb::bitstreams::reader&);
          constexpr void stream(cobb::bitstreams::writer&) const;
+
+         void assert_validity() const;
    };
 }
 

@@ -20,4 +20,9 @@ namespace dovahkit::subsystems::worldinput {
       s.stream<std::bit_width(max_name_length)>(name);
       s.stream(input_sequence);
    }
+
+   void control_scheme_modifier::assert_validity() const {
+      assert(this->name.size() <= max_name_length);
+      this->input_sequence.assert_validity();
+   }
 }

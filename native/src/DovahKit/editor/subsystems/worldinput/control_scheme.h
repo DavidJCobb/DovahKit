@@ -52,5 +52,7 @@ namespace dovahkit::subsystems::worldinput {
          //
          static control_scheme read(cobb::bitstreams::reader&);
          void write(cobb::bitstreams::writer&) const;
+
+         void assert_validity() const;
    };
 }

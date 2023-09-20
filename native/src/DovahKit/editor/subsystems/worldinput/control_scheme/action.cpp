@@ -82,4 +82,23 @@ namespace dovahkit::subsystems::worldinput {
          }
       }
    }
+
+   void control_scheme_action::assert_validity() const {
+      assert(this->name.size() <= max_name_length);
+      this->input_sequence.assert_validity();
+
+      //
+      // The current design for tools requires that an options union be present when 
+      // requesting a tool. The following functions assert that one is present:
+      // 
+      //    bind_list_item::invoke
+      //    bind_list_item::invoke_for_hold_release
+      // 
+      // If ever one isn't present, they'll have nothing to pass to the tool "request" 
+      // function. They can't construct a dummy union without including the header for 
+      // `options_union` and, by extension, the headers for every tool and all of the 
+      // related machinery.
+      //
+      assert(this->tool.options);
+   }
 }
