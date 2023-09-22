@@ -3,5 +3,6 @@
 #include "./debug_print.h"
 #include "./modify_camera_speed_flags.h"
 #include "./move_camera.h"
+#include "./move_selection.h"
 #include "./set_edit_gizmo_mode.h"
 #include "./turn_camera.h"

@@ -45,9 +45,9 @@ namespace dovahkit::ui::worldedit::tools {
          groupbox->setLayout(gb_layout);
 
          {
-            auto* explain = new QLabel(tr("When this tool is bound to a range control, such as a joystick, the control's position will be multiplied into the tool's magnitude. You can control how the control is mapped here.", "range control explanation"));
+            auto* explain = new QLabel(tr("When this tool is bound to a range control, such as a joystick, the control's position will be multiplied into the tool's magnitude. You can configure how the control is mapped here.", "range control explanation"));
             explain->setWordWrap(true);
-            gb_layout->addWidget(explain, gb_row, 0, 1, 2);
+            gb_layout->addWidget(explain, gb_row, 0, 1, 3);
             ++gb_row;
          }
 

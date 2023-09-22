@@ -54,6 +54,10 @@
          return {
             .name = QObject::tr("Camera: Move", "Worldedit tool name"),
          };
+      case id_of<move_selection>:
+         return {
+            .name = QObject::tr("Selection: Move (Translate)", "Worldedit tool name"),
+         };
       case id_of< set_edit_gizmo_mode>:
          return {
             .name        = QObject::tr("Edit Gizmo: Change Mode and/or Reference Frame", "Worldedit tool name"),

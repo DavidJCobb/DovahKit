@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WorldeditToolOptionsMoveSelection</class>
+ <widget class="QWidget" name="WorldeditToolOptionsMoveSelection">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>409</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Movement type</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QRadioButton" name="movementTypeCursor">
+        <property name="text">
+         <string>Move to follow the cursor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="movementTypeCustom">
+        <property name="text">
+         <string>Custom movement (uses settings below)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QGroupBox" name="customMovementGroupbox">
+     <property name="title">
+      <string>Custom movement options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Magnitude:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>X</string>
+          </property>
+          <property name="buddy">
+           <cstring>customMagnitudeX</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="customMagnitudeX">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <double>4096.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Y</string>
+          </property>
+          <property name="buddy">
+           <cstring>customMagnitudeY</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="customMagnitudeY">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <double>4096.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Z</string>
+          </property>
+          <property name="buddy">
+           <cstring>customMagnitudeZ</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="customMagnitudeZ">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <double>4096.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="title">
+         <string>Range control mapping</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Input Y-Axis:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Input X-Axis:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="rangeXAxis"/>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="rangeXSign"/>
+         </item>
+         <item row="2" column="2">
+          <widget class="QComboBox" name="rangeYSign"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="rangeYAxis"/>
+         </item>
+         <item row="0" column="0" colspan="3">
+          <widget class="QLabel" name="rangeExplanation">
+           <property name="text">
+            <string>When this tool is bound to a range control, such as a joystick, the control's position will be multiplied into the tool's magnitude. You can configure how the control is mapped here.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="transformFrame"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Reference frame:</string>
+     </property>
+     <property name="buddy">
+      <cstring>transformFrame</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Constraints</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Reference frame:</string>
+        </property>
+        <property name="buddy">
+         <cstring>constraintFrame</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="constraintFrame"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Allow movement along:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QCheckBox" name="constraintX">
+          <property name="text">
+           <string>X</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="constraintY">
+          <property name="text">
+           <string>Y</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="constraintZ">
+          <property name="text">
+           <string>Z</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>transformFrame</tabstop>
+  <tabstop>constraintFrame</tabstop>
+  <tabstop>constraintX</tabstop>
+  <tabstop>constraintY</tabstop>
+  <tabstop>constraintZ</tabstop>
+  <tabstop>movementTypeCursor</tabstop>
+  <tabstop>movementTypeCustom</tabstop>
+  <tabstop>customMagnitudeX</tabstop>
+  <tabstop>customMagnitudeY</tabstop>
+  <tabstop>customMagnitudeZ</tabstop>
+  <tabstop>rangeXAxis</tabstop>
+  <tabstop>rangeXSign</tabstop>
+  <tabstop>rangeYAxis</tabstop>
+  <tabstop>rangeYSign</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

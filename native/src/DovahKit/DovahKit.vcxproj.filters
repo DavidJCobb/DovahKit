@@ -2091,6 +2091,12 @@
     <ClCompile Include="editor\subsystems\worldinput\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5192,6 +5198,12 @@
     <ClInclude Include="editor\subsystems\worldinput\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5318,6 +5330,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -5971,6 +5986,9 @@
     </None>
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

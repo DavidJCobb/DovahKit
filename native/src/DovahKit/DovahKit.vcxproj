@@ -146,6 +146,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
@@ -694,6 +695,7 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp" />
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.cpp" />
@@ -874,6 +876,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\_base.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
@@ -1319,6 +1322,7 @@
     <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\debug_print.h" />
@@ -2017,6 +2021,7 @@
     <QtUic Include="ui\main_window\script_window_package.ui" />
     <QtUic Include="ui\main_window\script_window_single.ui" />
     <QtUic Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.ui" />
+    <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui" />
     <QtUic Include="ui\options_window\worldinput_condition_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_modifier_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_scheme_editor.ui" />
@@ -2122,6 +2127,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\options_union.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />
