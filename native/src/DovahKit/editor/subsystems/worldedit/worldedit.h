@@ -40,6 +40,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class adjust_camera;
    }
    class debug_dump_landscape_details;
+   class move_selection;
 }
 
 namespace dovahkit::subsystems::worldedit {

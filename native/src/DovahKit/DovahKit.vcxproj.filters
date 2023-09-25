@@ -4721,7 +4721,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_response_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h">
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_response.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_response.h">

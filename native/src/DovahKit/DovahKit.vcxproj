@@ -866,7 +866,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_response.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_options.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_with_response.h" />
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_results.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_response.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_response_or_tool_with_response.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h" />

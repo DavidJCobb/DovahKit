@@ -39,7 +39,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          // We're not allowing movement along *any* axis... so we're not allowing movement. 
          // Exit without giving any response.
          //
-         return;
+  //       return; // broken; no idea why; whole thing needs revision anyway
       }
 
       auto constraint_frame = o.constraints.frame;
@@ -85,5 +85,47 @@ namespace dovahkit::subsystems::worldedit::tools {
    }
    /*static*/ void move_selection::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
       // No-op.
+   }
+}
+
+#include "../../core.h"
+#include "editor/ini/main.h"
+#include "vulkan/data/camera_coordinate_change.h"
+namespace {
+   namespace worldedit_ini_settings {
+      using namespace dovahkit::ini::main::worldedit;
+   }
+}
+
+namespace dovahkit::subsystems::worldedit::tools {
+   /*static*/ void move_selection::invoke(const response& params) {
+      auto& worldedit_core = core::get();
+
+      auto held_move = params.held.world;
+      {
+         held_move *= worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>();
+         //
+         if (worldedit_core.get_camera_speed_flag(camera_speed_flag::boost))
+            held_move *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
+         if (worldedit_core.get_camera_speed_flag(camera_speed_flag::precision))
+            held_move *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
+      }
+
+      auto adjust = core::coordinate_adjustment{
+         .frame = reference_frame::world,
+         .pos   = held_move + params.instant.world,
+         .rot   = {}
+      };
+      bool success = worldedit_core.try_adjust_selection_coordinates(adjust);
+      if (success) {
+         if (false) { // TODO: "also move camera" option
+            vulkanDK::data::camera_coordinate_change update;
+            //
+            // TODO: I don't want to copy and paste all the "move camra" code from the `adjust_camera` 
+            //       invocation-in-tandem. We should factor that out into a function that takes the 
+            //       "held" movement and the "instant" movement and applies movement speeds as needed.
+            //
+         }
+      }
    }
 }

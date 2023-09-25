@@ -65,9 +65,9 @@ namespace dovahkit::subsystems::worldinput {
    /*static*/ cobb::ini::setting& control_scheme_manager::_current_scheme_setting(input_device_type dt) {
       switch (dt) {
          case input_device_type::keyboard_mouse:
-            return worldinput_ini_settings::sCurrentControlSchemeGamepad;
-         case input_device_type::xinput:
             return worldinput_ini_settings::sCurrentControlSchemeKeyboard;
+         case input_device_type::xinput:
+            return worldinput_ini_settings::sCurrentControlSchemeGamepad;
       }
       cobb::unreachable();
    }

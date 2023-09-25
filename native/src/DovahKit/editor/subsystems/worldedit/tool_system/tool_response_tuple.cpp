@@ -5,7 +5,7 @@ namespace dovahkit::subsystems::worldedit {
       classes::for_each<[]<typename T>(self_t* self, const double delta_seconds) {
          if constexpr (impl::_tool_response_tuple::can_scale<T>) {
             if (self->has_member<T>())
-               std::get<T>(*self).scale(delta_seconds);
+               std::get<T>(self->data).scale(delta_seconds);
          }
       }>(this, delta_seconds);
    }

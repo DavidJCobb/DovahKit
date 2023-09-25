@@ -4,7 +4,7 @@
 namespace dovahkit::subsystems::worldedit {
    template<tools::tool_response_or_tool_with_response T>
    constexpr const tool_response_tuple::_to_response<T>& tool_response_tuple::get_member() const {
-      return std::get<_to_response<T>>(*this);
+      return std::get<_to_response<T>>(this->data);
    }
 
    template<tools::tool_response_or_tool_with_response T>
@@ -14,13 +14,13 @@ namespace dovahkit::subsystems::worldedit {
    
    template<tools::tool_response_or_tool_with_response T>
    void tool_response_tuple::set_member(const _to_response<T>& v) {
-      std::get<_to_response<T>>(*this) = v;
+      std::get<_to_response<T>>(this->data) = v;
       this->presence.set(_presence_bit_index_of<T>);
    }
 
    template<tools::is_tool_response A>
    void tool_response_tuple::set_member(const A& v) {
-      std::get<A>(*this) = v;
+      std::get<A>(this->data) = v;
       this->presence.set(_presence_bit_index_of<A>);
    }
    
@@ -28,19 +28,19 @@ namespace dovahkit::subsystems::worldedit {
    void tool_response_tuple::merge_member(const A& v) {
       if constexpr (impl::_tool_response_tuple::can_merge<A>) {
          if (this->presence.test(_presence_bit_index_of<A>)) {
-            std::get<A>(*this).merge(v);
+            std::get<A>(this->data).merge(v);
             return;
          }
       }
-      std::get<A>(*this) = v;
       this->presence.set(_presence_bit_index_of<A>);
+      std::get<A>(this->data) = v;
    }
 
    template<tools::is_tool_response A>
    void tool_response_tuple::merge_member(timestamp_t time, const A& v) {
       if constexpr (response_types_with_timestamps::contains_type<A> && impl::_tool_response_tuple::can_merge<A>) {
          auto& ts     = this->input_timestamps[response_types_with_timestamps::index_of_type<A>()];
-         auto& stored = std::get<A>(*this);
+         auto& stored = std::get<A>(this->data);
          if (this->presence.test(_presence_bit_index_of<A>)) {
             if (ts <= time) {
                // argument results are newer (e.g. if two "while" binds are held concurrently, prefer the more recently pressed of the two)
@@ -60,7 +60,7 @@ namespace dovahkit::subsystems::worldedit {
          return;
       }
       this->presence.set(_presence_bit_index_of<A>);
-      std::get<A>(*this) = v;
+      std::get<A>(this->data) = v;
    }
    
    template<tools::is_tool_response A>
@@ -71,7 +71,7 @@ namespace dovahkit::subsystems::worldedit {
          // use timestaps or ordering. Maybe we'll change that someday.
          //
          this->presence.set(_presence_bit_index_of<A>);
-         std::get<A>(*this) = v;
+         std::get<A>(this->data) = v;
          return;
       }
       if constexpr (tools::tool_for_response_type<A>::compile_time_options.use_strict_ordering == false) {

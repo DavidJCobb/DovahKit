@@ -29,6 +29,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class debug_dump_landscape_details,
       class debug_dump_raycast,
       class debug_print,
-      class set_edit_gizmo_mode
+      class set_edit_gizmo_mode,
+      class move_selection
    >;
 }

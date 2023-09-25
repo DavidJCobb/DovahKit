@@ -4,7 +4,9 @@
 #include "editor/subsystems/worldinput/tool_request_cause.h"
 #include "./concepts/is_tool.h"
 #include "./concepts/is_tool_response.h"
+#include "./concepts/tool_or_tool_response.h"
 #include "./concepts/tool_response_or_tool_with_response.h"
+#include "./concepts/tool_with_response.h"
 #include "./utils/all_tools_with_responses.h"
 #include "./utils/all_tool_response_types.h"
 #include "./utils/tool_for_response_type.h"
@@ -18,8 +20,22 @@ namespace dovahkit::subsystems::worldedit {
       template<typename Response> concept can_merge = requires(Response & x, const Response & y) { { x.merge(std::forward<const Response&>(y)) }; };
    }
 
-   // Struct containing one member for each tool's response type.
-   class tool_response_tuple : public tools::all_tool_response_types::as_tuple {
+   class tool_response_tuple {
+
+      //
+      // NOTE: If you ever experience errors where MSVC just completely fucks up all the member 
+      // offsets, e.g. accesses to `this->presence` compiling such that they read from and clobber 
+      // random tuple members, then clean and rebuild the project. This can happen if MSVC fails 
+      // to properly recompile some of the code for this template, while somehow inconsistently 
+      // recompiling other code for this template (i.e. outdated members, up-to-date constructor).
+      // 
+      // If you see issues where all tools suddenly stop working even though they're properly 
+      // emitting responses, then check the disassembly for this class's `merge_member` templated 
+      // method. Step through until the breakpoint writes ECX for the `std::bitset` method calls, 
+      // and then double-check via the Watch panel that ECX is the same as `&this->presence`. If 
+      // it isn't, then MSVC fucked up the member offsets.
+      //
+
       private:
          using timestamp_t = worldinput::timestamp_t;
          static constexpr const auto zero_timestamp = worldinput::zero_timestamp;
@@ -34,10 +50,8 @@ namespace dovahkit::subsystems::worldedit {
          template<typename T> requires (tools::all_tools_with_responses::contains_type<T> || tools::is_tool_response<T>)
          using _to_response = std::conditional_t<tools::all_tools_with_responses::contains_type<T>, typename T::response, T>;
 
-      public:
-         using tuple::tuple; // inherit constructor, etc.
-
       protected:
+
          //
          // Some tools are sensitive to activation order within a single frame. Consider, for 
          // example, a tool which sets some enum within the editor state, such that a non-"while" 
@@ -54,6 +68,8 @@ namespace dovahkit::subsystems::worldedit {
 
          std::bitset<tools::all_tools_with_responses::count> presence;
 
+         tools::all_tool_response_types::as_tuple data;
+
          template<tools::tool_response_or_tool_with_response T>
          static constexpr const size_t _presence_bit_index_of = []() -> size_t {
             if constexpr (tools::is_tool<T>) {
@@ -64,7 +80,6 @@ namespace dovahkit::subsystems::worldedit {
          }();
 
       public:
-
          template<tools::tool_response_or_tool_with_response T>
          constexpr bool has_member() const {
             return this->presence.test(_presence_bit_index_of<T>);
