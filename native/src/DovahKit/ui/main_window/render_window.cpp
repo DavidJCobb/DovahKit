@@ -346,8 +346,8 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          rot *= cobb::degrees_to_radians_mult;
          
          std::decay_t<decltype(worldedit)>::coordinate_adjustment adjustment;
-         adjustment.pos = pos;
-         adjustment.rot = rot;
+         adjustment.translate = pos;
+         adjustment.rotate.euler = rot;
 
          bool result = worldedit.try_adjust_selection_coordinates(adjustment);
          if (!result) {

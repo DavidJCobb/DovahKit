@@ -3,12 +3,7 @@
    <Type Name="cobb::node&lt;*&gt;">
       <DisplayString>{{ node, type {(unsigned int)_type,d}, with {children._list.size(),d} children }}</DisplayString>
       <Expand>
-         <Item Optional="true" Name="[test5]" Condition="_type == 0 &amp;&amp; 5">*(cobb::impl::_node::strip_node_data_options&lt;$T1&gt;::type*)_untyped_data()</Item>
-         <Item Optional="true" Name="[test6]" Condition="_type == 0 &amp;&amp; 6">*(all_data_types::nth_type&lt;0&gt;*)_untyped_data()</Item>
-         <Item Optional="true" Name="[test1]" Condition="_type == 0 &amp;&amp; true">*($T1::data_type*)_untyped_data()</Item>
-         <Item Optional="true" Name="[test0]" Condition="_type == 0">*($T1*)_untyped_data()</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 0">as&lt;$T1&gt;()-&gt;data</Item>
-         <Item Optional="true" Name="[data]" Condition="_type == 0">as&lt;$T1::data_type&gt;()-&gt;data</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 1">as&lt;$T2&gt;()-&gt;data</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 2">as&lt;$T3&gt;()-&gt;data</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 3">as&lt;$T4&gt;()-&gt;data</Item>
@@ -18,6 +13,14 @@
          <Item Optional="true" Name="[data]" Condition="_type == 7">as&lt;$T8&gt;()-&gt;data</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 8">as&lt;$T9&gt;()-&gt;data</Item>
          <Item Optional="true" Name="[data]" Condition="_type == 9">as&lt;$T10&gt;()-&gt;data</Item>
+         
+         <!-- wrapped data -->
+         <Item Optional="true" Name="[data]" Condition="_type == 0">*($T1::data_type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 1">*($T2::data_type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 2">*($T3::data_type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 3">*($T4::data_type*)_untyped_data()</Item>
+         <Item Optional="true" Name="[data]" Condition="_type == 4">*($T5::data_type*)_untyped_data()</Item>
+         
          <Item Name="[parent]">_parent</Item>
          <Item Name="[children]">children._list</Item>
       </Expand>

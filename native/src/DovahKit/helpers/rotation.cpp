@@ -93,22 +93,6 @@ namespace {
 }
 namespace cobb {
    #pragma region rotation_matrix
-   rotation_matrix::value_type rotation_matrix::determinant() const noexcept {
-      // [a, b, c,
-      //  d, e, f,
-      //  g, h, i]
-      value_type a = this->data[0][0];
-      value_type b = this->data[0][1];
-      value_type c = this->data[0][2];
-      value_type d = this->data[1][0];
-      value_type e = this->data[1][1];
-      value_type f = this->data[1][2];
-      value_type g = this->data[2][0];
-      value_type h = this->data[2][1];
-      value_type i = this->data[2][2];
-      return (a*e*i) + (b*f*g) + (c*d*h) - (c*e*g) - (b*d*i) - (a*f*h);
-   }
-
    /*static*/ rotation_matrix rotation_matrix::construct_from_x(double radians, bool righthanded) {
       //
       // For lefthanded:
@@ -120,7 +104,7 @@ namespace cobb {
       // up flipping the signs on two values.
       //
       rotation_matrix out;
-      auto& d = out.data;
+      auto& d = out.rows;
       value_type c = std::cos(radians);
       value_type s = std::sin(radians);
       d[0][0] = 1.0F;
@@ -145,7 +129,7 @@ namespace cobb {
       // up flipping the signs on two values.
       //
       rotation_matrix out;
-      auto& d = out.data;
+      auto& d = out.rows;
       value_type c = std::cos(radians);
       value_type s = std::sin(radians);
       d[0][0] = c;
@@ -170,7 +154,7 @@ namespace cobb {
       // up flipping the signs on two values.
       //
       rotation_matrix out;
-      auto& d = out.data;
+      auto& d = out.rows;
       value_type c = std::cos(radians);
       value_type s = std::sin(radians);
       d[0][0] = c;
@@ -210,9 +194,9 @@ namespace cobb {
          return output;
       } else if (abs(output.angle - pi) > EPSILON) { // not a 180-degree angle
          double a = 2.0F * sin(output.angle);
-         output.x = (this->data[2][1] - this->data[1][2]) / a;
-         output.y = (this->data[0][2] - this->data[2][0]) / a;
-         output.z = (this->data[1][0] - this->data[0][1]) / a;
+         output.x = (this->rows[2][1] - this->rows[1][2]) / a;
+         output.y = (this->rows[0][2] - this->rows[2][0]) / a;
+         output.z = (this->rows[1][0] - this->rows[0][1]) / a;
          return output;
       }
       //
@@ -223,17 +207,17 @@ namespace cobb {
       // Source for the math: http://sourceforge.net/p/mjbworld/discussion/122133/thread/912b44f7
       //
       if (abs(output.angle - pi) < 0.001F) {
-         output.x = sqrt(this->data[0][0] + 1.0F) / 2.0F;
-         output.y = sqrt(this->data[1][1] + 1.0F) / 2.0F;
-         output.z = sqrt(this->data[2][2] + 1.0F) / 2.0F;
+         output.x = sqrt(this->rows[0][0] + 1.0F) / 2.0F;
+         output.y = sqrt(this->rows[1][1] + 1.0F) / 2.0F;
+         output.z = sqrt(this->rows[2][2] + 1.0F) / 2.0F;
          //
          // We don't know the signs of the above terms. Per our second source, we can start 
          // to figure that out by finding the largest term, and then...
          //
          int i = output.highest_axis();
-         int iSignX = data[i][0] < 0 ? -1 : 1;
-         int iSignY = data[i][1] < 0 ? -1 : 1;
-         int iSignZ = data[i][2] < 0 ? -1 : 1;
+         int iSignX = rows[i][0] < 0 ? -1 : 1;
+         int iSignY = rows[i][1] < 0 ? -1 : 1;
+         int iSignZ = rows[i][2] < 0 ? -1 : 1;
          output.x *= iSignX;
          output.y *= iSignY;
          output.z *= iSignZ;
@@ -278,7 +262,7 @@ namespace cobb {
       // us, that element in the matrix is -sin(y) at matrix position (0, 2), and 
       // so we do this:
       //
-      output.y = asin(_passive_atrig_clamp(-this->data[0][2]));
+      output.y = asin(_passive_atrig_clamp(-this->rows[0][2]));
       double fCosY = cos(output.y);
       //
       // That axis is our skeleton key. In our case, we cracked it from a sine, 
@@ -299,14 +283,14 @@ namespace cobb {
          //
          // Source: https://web.archive.org/web/20051124013711/http://skal.planet-d.net/demo/matrixfaq.htm#Q37
          //
-         double u = this->data[2][2] / fCosY;
-         double v = this->data[1][2] / fCosY;
+         double u = this->rows[2][2] / fCosY;
+         double v = this->rows[1][2] / fCosY;
          output.x = atan2(v, u);
          //
          // And we can do the same for Z:
          //
-         u = this->data[0][0] / fCosY;
-         v = this->data[0][1] / fCosY;
+         u = this->rows[0][0] / fCosY;
+         v = this->rows[0][1] / fCosY;
          output.z = atan2(v, u);
          return output;
       }
@@ -327,8 +311,8 @@ namespace cobb {
       //
       // And as above, we can derive (z) by using atan2 on both of those values.
       //
-      double u = this->data[1][1];
-      double v = -this->data[1][0];
+      double u = this->rows[1][1];
+      double v = -this->rows[1][0];
       output.x = 0.0F;
       output.z = atan2(v, u);
       return output;
@@ -344,25 +328,25 @@ namespace cobb {
          a = sqrt(a + 1.0F);
          q.w = a / 2.0F;
          a = 0.5F / a;
-         q.x = (this->data[2][1] - this->data[1][2]) * a;
-         q.y = (this->data[0][2] - this->data[2][0]) * a;
-         q.z = (this->data[1][0] - this->data[0][1]) * a;
+         q.x = (this->rows[2][1] - this->rows[1][2]) * a;
+         q.y = (this->rows[0][2] - this->rows[2][0]) * a;
+         q.z = (this->rows[1][0] - this->rows[0][1]) * a;
       } else {
          uint8_t i = 0;
-         if (this->data[1][1] > this->data[0][0])
+         if (this->rows[1][1] > this->rows[0][0])
             i = 1;
-         if (this->data[2][2] > this->data[i][i])
+         if (this->rows[2][2] > this->rows[i][i])
             i = 2;
          uint8_t j = (i + 1) % 3;
          uint8_t k = (j + 1) % 3;
          //
-         a = sqrt(this->data[i][i] - this->data[j][j] - this->data[k][k] + 1.0F);
+         a = sqrt(this->rows[i][i] - this->rows[j][j] - this->rows[k][k] + 1.0F);
          q[i + 1] = a / 2.0F; // i == 0, 1, 2 -> x, y, z
          if (a)
             a = 0.5 / a;
-         q.w = (this->data[k][j] - this->data[j][k]) * a;
-         q[j + 1] = (this->data[j][i] + this->data[i][j]) * a;
-         q[k + 1] = (this->data[k][i] + this->data[i][k]) * a;
+         q.w = (this->rows[k][j] - this->rows[j][k]) * a;
+         q[j + 1] = (this->rows[j][i] + this->rows[i][j]) * a;
+         q[k + 1] = (this->rows[k][i] + this->rows[i][k]) * a;
       }
       return q;
    };
@@ -382,15 +366,15 @@ namespace cobb {
       double y = this->y / length;
       double z = this->z / length;
       //
-      output.data[0][0] = c + pow(x, 2) * inv_c; // top row
-      output.data[0][1] = x * y * inv_c - z * s;
-      output.data[0][2] = x * z * inv_c - y * s;
-      output.data[1][0] = y * x * inv_c + z * s; // middle row
-      output.data[1][1] = c + pow(y, 2) * inv_c;
-      output.data[1][2] = y * z * inv_c - x * s;
-      output.data[2][0] = z * x * inv_c - y * s; // bottom row
-      output.data[2][1] = z * y * inv_c + x * s;
-      output.data[2][2] = c + pow(z, 2) * inv_c;
+      output.rows[0][0] = c + pow(x, 2) * inv_c; // top row
+      output.rows[0][1] = x * y * inv_c - z * s;
+      output.rows[0][2] = x * z * inv_c - y * s;
+      output.rows[1][0] = y * x * inv_c + z * s; // middle row
+      output.rows[1][1] = c + pow(y, 2) * inv_c;
+      output.rows[1][2] = y * z * inv_c - x * s;
+      output.rows[2][0] = z * x * inv_c - y * s; // bottom row
+      output.rows[2][1] = z * y * inv_c + x * s;
+      output.rows[2][2] = c + pow(z, 2) * inv_c;
       //
       return output;
    }
@@ -448,15 +432,15 @@ namespace cobb {
       //   sin(x)sin(y)cos(z) - cos(x)sin(z)  ,  sin(x)sin(y)sin(z) + cos(x)cos(z)  ,  sin(x)cos(y) ,
       //   cos(x)sin(y)cos(z) + sin(x)sin(z)  ,  cos(x)sin(y)sin(z) - sin(x)cos(z)  ,  cos(x)cos(y) ]
       //
-      output.data[0][0] = cy*cz; // top row
-      output.data[0][1] = cy*sz;
-      output.data[0][2] = -sy;
-      output.data[1][0] = sx*sy*cz - cx*sz; // middle row
-      output.data[1][1] = sx*sy*sz + cx*cz;
-      output.data[1][2] = sx*cy;
-      output.data[2][0] = cx*sy*cz + sx*sz; // bottom row
-      output.data[2][1] = cx*sy*sz - sx*cz;
-      output.data[2][2] = cx*cy;
+      output.rows[0][0] = cy*cz; // top row
+      output.rows[0][1] = cy*sz;
+      output.rows[0][2] = -sy;
+      output.rows[1][0] = sx*sy*cz - cx*sz; // middle row
+      output.rows[1][1] = sx*sy*sz + cx*cz;
+      output.rows[1][2] = sx*cy;
+      output.rows[2][0] = cx*sy*cz + sx*sz; // bottom row
+      output.rows[2][1] = cx*sy*sz - sx*cz;
+      output.rows[2][2] = cx*cy;
       //
       return output;
    }
@@ -530,15 +514,15 @@ namespace cobb {
       //source.normalize();
       //
       rotation_matrix output;
-      output.data[0][0] = 1.0F - 2.0F * pow(source.y, 2) - 2.0F * pow(source.z, 2);
-      output.data[0][1] = (2.0F * source.x * source.y) - (2.0F * source.z * source.w);
-      output.data[0][2] = (2.0F * source.x * source.z) + (2.0F * source.y * source.w);
-      output.data[1][0] = (2.0F * source.x * source.y) + (2.0F * source.z * source.w);
-      output.data[1][1] = 1.0F - 2.0F * pow(source.x, 2) - 2.0F * pow(source.z, 2);
-      output.data[1][2] = (2.0F * source.y * source.z) - (2.0F * source.x * source.w);
-      output.data[2][0] = (2.0F * source.x * source.z) - (2.0F * source.y * source.w);
-      output.data[2][1] = (2.0F * source.y * source.z) + (2.0F * source.x * source.w);
-      output.data[2][2] = 1.0F - 2.0F * pow(source.x, 2) - 2.0F * pow(source.y, 2);
+      output.rows[0][0] = 1.0F - 2.0F * pow(source.y, 2) - 2.0F * pow(source.z, 2);
+      output.rows[0][1] = (2.0F * source.x * source.y) - (2.0F * source.z * source.w);
+      output.rows[0][2] = (2.0F * source.x * source.z) + (2.0F * source.y * source.w);
+      output.rows[1][0] = (2.0F * source.x * source.y) + (2.0F * source.z * source.w);
+      output.rows[1][1] = 1.0F - 2.0F * pow(source.x, 2) - 2.0F * pow(source.z, 2);
+      output.rows[1][2] = (2.0F * source.y * source.z) - (2.0F * source.x * source.w);
+      output.rows[2][0] = (2.0F * source.x * source.z) - (2.0F * source.y * source.w);
+      output.rows[2][1] = (2.0F * source.y * source.z) + (2.0F * source.x * source.w);
+      output.rows[2][2] = 1.0F - 2.0F * pow(source.x, 2) - 2.0F * pow(source.y, 2);
       return output;
    };
    #pragma endregion
@@ -574,7 +558,7 @@ namespace cobb {
       }
       {
          rotation_matrix world = (rotation_matrix)basis.rotation;
-         world.transpose_in_place();
+         world.transpose();
          out.position = world * this->position;
          //
          // Convert the parent's world-relative position to parent-relative coordinates, and then 

@@ -17,7 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <array>
 #include "./math/rotation/unit_conversion.h"
-#include "matrix.h"
+#include "./math/matrix.h"
 #include "unreachable.h"
 
 namespace cobb {
@@ -100,13 +100,8 @@ namespace cobb {
          explicit operator quaternion() const;
 
          rotation_matrix() {}
-         rotation_matrix(const super_t& m) { memcpy(&this->data, &m.data, sizeof(data)); } // needed for matrix methods that return matrices
-         rotation_matrix(super_t&& m) { memcpy(&this->data, &m.data, sizeof(data)); } // needed for matrix methods that return matrices
-
-         value_type determinant() const noexcept;
-         inline value_type trace() const noexcept {
-            return this->data[0][0] + this->data[1][1] + this->data[2][2];
-         }
+         rotation_matrix(const super_t& m) { memcpy(&this->rows, &m.rows, sizeof(rows)); } // needed for matrix methods that return matrices
+         rotation_matrix(super_t&& m) { memcpy(&this->rows, &m.rows, sizeof(rows)); } // needed for matrix methods that return matrices
 
          static rotation_matrix construct_from_x(double radians, bool righthanded); // Skyrim is lefthanded
          static rotation_matrix construct_from_y(double radians, bool righthanded);
@@ -117,9 +112,9 @@ namespace cobb {
          template<typename U> requires std::is_arithmetic_v<U>
          std::array<U, 3> operator*(const std::array<U, 3>& vec) const noexcept { // loop-free multiply by column (equivalent to applying (this) to (vec) as a reference frame)
             std::array<U, 3> vResult;
-            vResult[0] = (this->data[0][0] * vec[0]) + (this->data[0][1] * vec[1]) + (this->data[0][2] * vec[2]);
-            vResult[1] = (this->data[1][0] * vec[0]) + (this->data[1][1] * vec[1]) + (this->data[1][2] * vec[2]);
-            vResult[2] = (this->data[2][0] * vec[0]) + (this->data[2][1] * vec[1]) + (this->data[2][2] * vec[2]);
+            vResult[0] = (this->rows[0][0] * vec[0]) + (this->rows[0][1] * vec[1]) + (this->rows[0][2] * vec[2]);
+            vResult[1] = (this->rows[1][0] * vec[0]) + (this->rows[1][1] * vec[1]) + (this->rows[1][2] * vec[2]);
+            vResult[2] = (this->rows[2][0] * vec[0]) + (this->rows[2][1] * vec[1]) + (this->rows[2][2] * vec[2]);
             return vResult;
          }
 
@@ -128,19 +123,7 @@ namespace cobb {
             super_t::operator*=(other);
             return *this;
          }
-         rotation_matrix transpose() const noexcept {
-            rotation_matrix result = *this;
-            result.transpose_in_place();
-            return result;
-         }
 
-         std::array<value_type, 3> column(int which) const noexcept {
-            std::array<value_type, 3> out;
-            out[0] = this->data[0][which];
-            out[1] = this->data[1][which];
-            out[2] = this->data[2][which];
-            return out;
-         }
          inline std::array<value_type, 3> local_x_axis() const noexcept { return this->column(0); }
          inline std::array<value_type, 3> local_y_axis() const noexcept { return this->column(1); }
          inline std::array<value_type, 3> local_z_axis() const noexcept { return this->column(2); }

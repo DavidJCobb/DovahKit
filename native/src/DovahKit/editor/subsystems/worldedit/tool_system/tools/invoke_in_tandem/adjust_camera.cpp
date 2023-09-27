@@ -45,13 +45,7 @@ namespace dovahkit::subsystems::worldedit::tools::tandem {
          //
          // Apply movement speeds per second:
          //
-         update.move *= worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>();
-         //
-         if (worldedit_core.get_camera_speed_flag(camera_speed_flag::boost))
-            update.move *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
-         if (worldedit_core.get_camera_speed_flag(camera_speed_flag::precision))
-            update.move *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
-
+         update.move *= worldedit_core.get_camera_move_speed();
          update.move += data.instant.to_struct<glm::vec3>();
       }
       if (params_turn) {
@@ -66,6 +60,6 @@ namespace dovahkit::subsystems::worldedit::tools::tandem {
          update.turn += data.instant.to_struct<glm::vec3>();
       }
 
-      worldedit_core._adjust_camera({}, update);
+      worldedit_core.adjust_camera(update);
    }
 }

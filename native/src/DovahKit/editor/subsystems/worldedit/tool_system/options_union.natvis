@@ -38,6 +38,11 @@
             *(move_camera::options*)&amp;data[0]
          </Item>
          <Item Optional="true"
+            Name="[data: move_selection]"
+         >
+            *(move_selection::options*)&amp;data[0]
+         </Item>
+         <Item Optional="true"
             Name="[data: set_edit_gizmo_mode]"
          >
             *(set_edit_gizmo_mode::options*)&amp;data[0]

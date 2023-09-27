@@ -57,7 +57,7 @@ namespace cobb {
          }
 
          [[nodiscard]] bool separating_axis_test(const vector_type& my_position, const vector_type& point_to_test) const noexcept {
-            auto local = this->rotation.transpose();
+            auto local = this->rotation.transposed();
             auto ptt_l = local * point_to_test.to_array();
             auto mp_l  = local * my_position.to_array();
             //
@@ -99,8 +99,8 @@ namespace cobb {
             vector_type a_axes[vector_type::axis_count];
             vector_type b_axes[vector_type::axis_count];
             {
-               auto local_a = this->rotation.transpose();
-               auto local_b = other.rotation.transpose();
+               auto local_a = this->rotation.transposed();
+               auto local_b = other.rotation.transposed();
                for (int i = 0; i < vector_type::axis_count; ++i) {
                   a_axes[i] = vector_type(local_a.column(i));
                   b_axes[i] = vector_type(local_b.column(i));

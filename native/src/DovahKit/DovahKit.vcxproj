@@ -534,6 +534,8 @@
     <ClCompile Include="helpers\ini\value_serialization.inl" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
+    <ClCompile Include="helpers\math\matrix.cpp" />
+    <ClCompile Include="helpers\math\permutation_parity.tests.cpp" />
     <ClCompile Include="helpers\math\to_ratio.tests.cpp" />
     <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
@@ -1089,6 +1091,7 @@
     <ClInclude Include="helpers\math\geometry\ray_plane_intersection.h" />
     <ClInclude Include="helpers\math\geometry\ray_sphere_intersection.h" />
     <ClInclude Include="helpers\math\geometry\ray_triangle_intersection.h" />
+    <ClInclude Include="helpers\math\permutation_parity.h" />
     <ClInclude Include="helpers\math\pow.h" />
     <ClInclude Include="helpers\math\quadratic_roots.h" />
     <ClInclude Include="helpers\math\rotation\unit_conversion.h" />
@@ -1868,7 +1871,7 @@
     <ClInclude Include="helpers\lua\tostringex.h" />
     <ClInclude Include="helpers\lua\warning.h" />
     <ClInclude Include="helpers\math.h" />
-    <ClInclude Include="helpers\matrix.h" />
+    <ClInclude Include="helpers\math\matrix.h" />
     <ClInclude Include="helpers\passkey.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\qt\can_have_model.h" />
@@ -2147,6 +2150,7 @@
     <None Include="helpers\ini\file_line_parser.inl" />
     <None Include="helpers\ini\setting.inl" />
     <None Include="helpers\macros\default_comparable_anonymous_struct.hint" />
+    <None Include="helpers\math\matrix.inl" />
     <None Include="helpers\math\pow.md" />
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\small_vector.inl" />

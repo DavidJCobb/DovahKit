@@ -24,6 +24,9 @@ namespace dovahkit::subsystems::worldedit::tools {
                   bool x = false; // If `true`, movement will not occur along the X-axis.
                   bool y = false; // If `true`, movement will not occur along the Y-axis.
                   bool z = false; // If `true`, movement will not occur along the Z-axis.
+
+                  constexpr bool any_locked() const noexcept { return x || y || z; }
+                  constexpr bool no_movement_allowed() const noexcept { return x && y && z; }
                };
 
                struct range_mapping {
@@ -38,13 +41,14 @@ namespace dovahkit::subsystems::worldedit::tools {
                //
                bool follow_pointer = false; // mutually exclusive with `magnitudes` and `range`
                //
+               bool also_move_camera = false;
                cobb::vector3<float> magnitudes;
                struct {
                   range_mapping x = range_mapping{ axis3D::x, sign::positive };
                   range_mapping y = range_mapping{ axis3D::y, sign::negative };
                } range;
                //
-               constraint_data constraints;
+               constraint_data locked_axes;
 
                constexpr bool operator==(const options& v) const noexcept;
 
@@ -53,14 +57,11 @@ namespace dovahkit::subsystems::worldedit::tools {
          };
          struct response {
             struct by_temporality {
-               cobb::vector3<float> camera;
-               cobb::vector3<float> local;
-               cobb::vector3<float> world;
+               cobb::vector3<float> magnitude;
+               //
                struct {
-                  uint8_t camera = 0;
-                  uint8_t local  = 0;
-                  uint8_t world  = 0;
-               } constraints;
+                  cobb::vector3<float> magnitude;
+               } camera;
                //
                struct {
                   bool camera = false;
@@ -70,7 +71,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                      uint8_t camera = 0;
                      uint8_t local  = 0;
                      uint8_t world  = 0;
-                  } constraints;
+                  } locked_axes;
                } follow_pointer;
 
                constexpr void merge(const by_temporality& from);

@@ -10,15 +10,16 @@
          <Parameter Name="n" Type="double" />
       </Intrinsic>
       
-      <DisplayString>{{ size={$T1,d}x{$T2,d} (column-major) }}</DisplayString>
+      <DisplayString>{{ size={$T1,d}x{$T2,d} (column-major: cols x rows) }}</DisplayString>
       <Expand>
-         <Synthetic Name="[direction]">
+         <Synthetic Name="[matrix info]">
             <DisplayString>Matrix is column-major; displayed indices are [X][Y].</DisplayString>
          </Synthetic>
          <Synthetic Name="[transform]" Condition="$T1 &gt;= 3 &amp;&amp; $T2 &gt;= 3">
-            <DisplayString>&lt;position and scale&gt;</DisplayString>
+            <DisplayString Condition="$T2 == 3">&lt;rotation and scale&gt;</DisplayString>
+            <DisplayString>&lt;position, rotation, and scale&gt;</DisplayString>
             <Expand>
-               <Synthetic Name="[position]">
+               <Synthetic Name="[position]" Condition="$T2 &gt; 3">
                   <Expand>
                      <Item Name="[x]">value[3].x</Item>
                      <Item Name="[y]">value[3].y</Item>

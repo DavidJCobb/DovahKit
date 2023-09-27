@@ -15,7 +15,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          if (this->range.y != other.range.y)
             return false;
       }
-      if (this->constraints != other.constraints)
+      if (this->locked_axes != other.locked_axes)
          return false;
       return true;
    }
@@ -27,6 +27,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       );
       if (!follow_pointer) {
          s.stream(
+            also_move_camera,
             magnitudes.x,
             magnitudes.y,
             magnitudes.z,
@@ -37,10 +38,10 @@ namespace dovahkit::subsystems::worldedit::tools {
          );
       }
       s.stream(
-         constraints.frame,
-         constraints.x,
-         constraints.y,
-         constraints.z
+         locked_axes.frame,
+         locked_axes.x,
+         locked_axes.y,
+         locked_axes.z
       );
    }
    constexpr void move_selection::options::stream(cobb::bitstreams::writer& s) const {
@@ -50,6 +51,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       );
       if (!follow_pointer) {
          s.stream(
+            also_move_camera,
             magnitudes.x,
             magnitudes.y,
             magnitudes.z,
@@ -60,23 +62,18 @@ namespace dovahkit::subsystems::worldedit::tools {
          );
       }
       s.stream(
-         constraints.frame,
-         constraints.x,
-         constraints.y,
-         constraints.z
+         locked_axes.frame,
+         locked_axes.x,
+         locked_axes.y,
+         locked_axes.z
       );
    }
    static_assert(cobb::bitstreams::round_trip_test<move_selection::options>, "Assert: round-trip bitstream serialization produces correct results.");
 
    constexpr void move_selection::response::by_temporality::merge(const by_temporality& from) {
-      this->camera += from.camera;
-      this->local  += from.local;
-      this->world  += from.world;
+      this->magnitude += from.magnitude;
 
-      // Use the least-constrained movement.
-      this->constraints.camera &= from.constraints.camera;
-      this->constraints.local  &= from.constraints.local;
-      this->constraints.world  &= from.constraints.world;
+      this->camera.magnitude += from.camera.magnitude;
 
       auto& fp_src = from.follow_pointer;
       auto& fp_dst = this->follow_pointer;
@@ -85,15 +82,14 @@ namespace dovahkit::subsystems::worldedit::tools {
       fp_dst.world  |= fp_src.world;
 
       // Use the least-constrained movement.
-      fp_dst.constraints.camera &= fp_src.constraints.camera;
-      fp_dst.constraints.local  &= fp_src.constraints.local;
-      fp_dst.constraints.world  &= fp_src.constraints.world;
+      fp_dst.locked_axes.camera &= fp_src.locked_axes.camera;
+      fp_dst.locked_axes.local  &= fp_src.locked_axes.local;
+      fp_dst.locked_axes.world  &= fp_src.locked_axes.world;
    }
    //
    constexpr void move_selection::response::scale(double delta_seconds) {
-      this->held.camera *= delta_seconds;
-      this->held.local  *= delta_seconds;
-      this->held.world  *= delta_seconds;
+      this->held.magnitude *= delta_seconds;
+      this->held.camera.magnitude *= delta_seconds;
    }
    constexpr void move_selection::response::merge(const response& from) {
       this->held.merge(from.held);

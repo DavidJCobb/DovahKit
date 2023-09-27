@@ -24,12 +24,18 @@ namespace dovahkit::subsystems::worldedit::tools {
 
    using all_tools_by_execution_order = cobb::class_array<
       class modify_camera_speed_flags,
+
+      // Should run in advance of most tools. It converts between reference frames 
+      // and applies frame-relative constraints during the input-handling step (since 
+      // there's no way to collate that stuff without an expansible list), so it'll 
+      // have already reacted to conditions that the other tools would change.
+      class move_selection,
+
       class tandem::adjust_camera,
       class attempt_on_screen_selection,
       class debug_dump_landscape_details,
       class debug_dump_raycast,
       class debug_print,
-      class set_edit_gizmo_mode,
-      class move_selection
+      class set_edit_gizmo_mode
    >;
 }

@@ -60,9 +60,11 @@ namespace dovahkit::subsystems::worldedit {
          using gizmo_mode = vulkanDK::gizmo_mode;
 
          struct coordinate_adjustment {
-            reference_frame frame = reference_frame::world;
-            cobb::vector3<float> pos;
-            cobb::vector3<float> rot;
+            struct {
+               cobb::vector3<float> euler;
+               reference_frame      frame = reference_frame::world;
+            } rotate;
+            cobb::vector3<float> translate;
          };
 
       protected:
@@ -87,6 +89,8 @@ namespace dovahkit::subsystems::worldedit {
             form_stub* stub = nullptr;
             vulkanDK::rendered_bounds_handle handle;
             bool update_on_nif_load = false;
+
+            loaded_refr_ptr loaded_ref_info() const;
          };
 
          struct refr {
@@ -183,6 +187,7 @@ namespace dovahkit::subsystems::worldedit {
          bool is_ref_selected(const dovah::form_stub*) const;
 
          cobb::vector3<float> get_selection_centroid() const;
+         size_t get_selection_count() const;
          std::vector<dovah::form_stub*> get_selected_refs() const;
 
          raycast_result raycast_at(int view_x, int view_y) const;
@@ -197,16 +202,20 @@ namespace dovahkit::subsystems::worldedit {
 
          bool get_camera_speed_flag(camera_speed_flag) const;
          void modify_camera_speed_flag(camera_speed_flag, bool_operation);
+         //
+         float get_camera_move_speed() const;
 
          constexpr reference_frame get_edit_gizmo_frame() const { return this->state.gizmo.frame; }
          constexpr gizmo_mode      get_edit_gizmo_mode() const { return this->state.gizmo.mode; }
          void set_edit_gizmo_frame(reference_frame);
          void set_edit_gizmo_mode(gizmo_mode);
 
+         glm::mat3 get_frame_rotation_matrix(reference_frame) const;
+
+         void adjust_camera(vulkanDK::data::camera_coordinate_change&);
          bool try_adjust_selection_coordinates(const coordinate_adjustment&);
 
          #pragma region Passkeyed functions for tools
-         void _adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change&);
          void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
          #pragma endregion
 

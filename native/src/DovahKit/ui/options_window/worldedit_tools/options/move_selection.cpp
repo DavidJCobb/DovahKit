@@ -49,16 +49,16 @@ namespace dovahkit::ui::worldedit::tools {
          cf = widget_constrain;
          tf = widget_movement;
          tf.beginOneWaySync(this->_state.current_options.frame);
-         cf.beginOneWaySync(this->_state.current_options.constraints.frame);
+         cf.beginOneWaySync(this->_state.current_options.locked_axes.frame);
       }
       QObject::connect(this->ui.constraintX, &QCheckBox::toggled, this, [this](bool checked) {
-         this->_state.current_options.constraints.x = !checked;
+         this->_state.current_options.locked_axes.x = !checked;
       });
-      QObject::connect(this->ui.constraintX, &QCheckBox::toggled, this, [this](bool checked) {
-         this->_state.current_options.constraints.y = !checked;
+      QObject::connect(this->ui.constraintY, &QCheckBox::toggled, this, [this](bool checked) {
+         this->_state.current_options.locked_axes.y = !checked;
       });
-      QObject::connect(this->ui.constraintX, &QCheckBox::toggled, this, [this](bool checked) {
-         this->_state.current_options.constraints.z = !checked;
+      QObject::connect(this->ui.constraintZ, &QCheckBox::toggled, this, [this](bool checked) {
+         this->_state.current_options.locked_axes.z = !checked;
       });
       {
          this->ui.customMagnitudeX->setRange(-4096, 4096);
@@ -69,6 +69,8 @@ namespace dovahkit::ui::worldedit::tools {
          cobb::qt::bind(this->ui.customMagnitudeX, fields.x);
          cobb::qt::bind(this->ui.customMagnitudeY, fields.y);
          cobb::qt::bind(this->ui.customMagnitudeZ, fields.z);
+
+         cobb::qt::bind(this->ui.alsoMoveCamera, this->_state.current_options.also_move_camera);
       }
       {
          auto& wrappers = this->_widget_wrappers.range;
@@ -117,15 +119,15 @@ namespace dovahkit::ui::worldedit::tools {
       this->_state.current_options = v;
 
       this->_widget_wrappers.transformFrame.setValueSilent(v.frame);
-      this->_widget_wrappers.constraintFrame.setValueSilent(v.constraints.frame);
+      this->_widget_wrappers.constraintFrame.setValueSilent(v.locked_axes.frame);
       {
          const auto blocker_x = QSignalBlocker(this->ui.constraintX);
          const auto blocker_y = QSignalBlocker(this->ui.constraintY);
          const auto blocker_z = QSignalBlocker(this->ui.constraintZ);
 
-         this->ui.constraintX->setChecked(!v.constraints.x);
-         this->ui.constraintY->setChecked(!v.constraints.y);
-         this->ui.constraintZ->setChecked(!v.constraints.z);
+         this->ui.constraintX->setChecked(!v.locked_axes.x);
+         this->ui.constraintY->setChecked(!v.locked_axes.y);
+         this->ui.constraintZ->setChecked(!v.locked_axes.z);
       }
       {
          const auto blocker_1 = QSignalBlocker(this->_typeButtonGroup);
@@ -144,6 +146,10 @@ namespace dovahkit::ui::worldedit::tools {
          this->ui.customMagnitudeX->setValue(v.magnitudes.x);
          this->ui.customMagnitudeY->setValue(v.magnitudes.y);
          this->ui.customMagnitudeZ->setValue(v.magnitudes.z);
+      }
+      {
+         const auto blocker = QSignalBlocker(this->ui.alsoMoveCamera);
+         this->ui.alsoMoveCamera->setChecked(v.also_move_camera);
       }
       {
          const auto& fields = this->_state.current_options.range;

@@ -87,6 +87,12 @@ namespace dovahkit::subsystems::worldedit {
       std::swap(this->update_on_nif_load, o.update_on_nif_load);
       return *this;
    }
+
+   core::loaded_refr_ptr core::selected_refr_info::loaded_ref_info() const {
+      if (this->stub)
+         return this->stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+      return {};
+   }
    #pragma endregion
 
    core::core() : QObject(nullptr) {
@@ -1221,6 +1227,13 @@ namespace dovahkit::subsystems::worldedit {
 
       return out;
    }
+   size_t core::get_selection_count() const {
+      switch (this->get_editor_mode()) {
+         case editor_mode::objects:
+            return this->state.selection.refs.size();
+      }
+      return 0;
+   }
    std::vector<dovah::form_stub*> core::get_selected_refs() const {
       std::vector<dovah::form_stub*> out;
       out.reserve(this->state.selection.refs.size());
@@ -1300,7 +1313,6 @@ namespace dovahkit::subsystems::worldedit {
    bool core::get_camera_speed_flag(camera_speed_flag flag) const {
       return this->state.camera_speed.test(flag);
    }
-
    void core::modify_camera_speed_flag(camera_speed_flag flag, bool_operation op) {
       auto& mask = this->state.camera_speed;
       switch (op) {
@@ -1316,6 +1328,18 @@ namespace dovahkit::subsystems::worldedit {
             break;
       }
    }
+   //
+   float core::get_camera_move_speed() const {
+      float speed = worldedit_ini_settings::fCameraSpeedNormal.get_current_value<double>();
+      
+      if (this->get_camera_speed_flag(camera_speed_flag::boost))
+         speed *= worldedit_ini_settings::fCameraSpeedMultBoost.get_current_value<double>();
+      if (this->get_camera_speed_flag(camera_speed_flag::precision))
+         speed *= worldedit_ini_settings::fCameraSpeedMultPrecision.get_current_value<double>();
+
+      return speed;
+   }
+
    void core::set_edit_gizmo_frame(reference_frame f) {
       if (f == reference_frame::current)
          return;
@@ -1325,44 +1349,95 @@ namespace dovahkit::subsystems::worldedit {
       this->state.gizmo.mode = m;
    }
 
+   glm::mat3 core::get_frame_rotation_matrix(reference_frame frame) const {
+      if (frame == reference_frame::current) {
+         frame = this->get_edit_gizmo_frame();
+      }
+
+      switch (frame) {
+         case reference_frame::local:
+            if (this->get_selection_count() != 0) {
+               auto* info = this->_get_primary_selected_refr_info();
+               if (info) {
+                  auto loaded = info->loaded_ref_info();
+                  if (loaded) {
+                     return glm::mat3(vulkanDK::glm_transform_from_beth({ 0, 0, 0 }, loaded->rotation, 1.0));
+                  }
+               }
+            }
+            break;
+         case reference_frame::camera:
+            if (auto* sr = this->target_view->surfaceRenderer()) {
+               auto& cs = sr->scene.camera;
+
+               return glm::mat3(glm::eulerAngleXYZ(3.14159265358979323846F / 2.0F, 0.0F, 0.0F) * glm::eulerAngleXYZ(cs.pitch, cs.roll, cs.yaw));
+
+               return glm::mat3(
+                  glm::eulerAngleXYZ(cs.pitch, cs.roll, cs.yaw)
+               );
+
+               return glm::mat3(vulkanDK::glm_transform_from_beth(
+                  sr->scene.camera.position,
+                  { cs.pitch, cs.roll, cs.yaw },
+                  1.0
+               ));
+            }
+            break;
+      }
+      return glm::mat3(1);
+   }
+
+   void core::adjust_camera(vulkanDK::data::camera_coordinate_change& update) {
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      sr->scene.adjust_camera(update);
+   }
    bool core::try_adjust_selection_coordinates(const coordinate_adjustment& adjust) {
       if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
          return false;
 
       constexpr const float interior_cell_lateral_constraint = 30000;
 
-      cobb::vector3<float> selection_centroid = this->get_selection_centroid();
-
-      cobb::vector3<float> adjust_pos;
-      {
-         adjust_pos = adjust.pos;
-         switch (adjust.frame) {
-            case reference_frame::camera:
-               // TODO: camera-relative movement
-               break;
-            case reference_frame::local:
-               // TODO: movement relative to the most recently selected ref
-               break;
-         }
-      }
+      bool only_rotating_one_ref = this->get_selection_count() == 1;
 
       glm::mat4 centroid_inverse;
       glm::mat4 centroid_post_adjust;
+      //
+      cobb::vector3<float> single_ref_rotation;
+      //
       {
-         glm::mat4 centroid_transform;
-         
-         cobb::vector3<float> rot = adjust.rot;
-         switch (adjust.frame) {
-            case reference_frame::world:
-            case reference_frame::current:
-               break;
+         single_ref_rotation = adjust.rotate.euler;
+         //
+         auto f = adjust.rotate.frame;
+         if (f == reference_frame::current)
+            f = this->get_edit_gizmo_frame();
+         //
+         switch (f) {
             case reference_frame::camera:
-               // TODO: rot = camera's orientation;
+            case reference_frame::local:
+               {
+                  auto mat = this->get_frame_rotation_matrix(f);
+                  single_ref_rotation = single_ref_rotation.to_struct<glm::vec3>() * mat;
+               }
                break;
          }
-         centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, rot, 1.0F);
-         centroid_inverse     = glm::inverse(centroid_transform);
-         centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid, rot + adjust.rot, 1.0F);
+
+         if (!only_rotating_one_ref) {
+            cobb::vector3<float> selection_centroid = this->get_selection_centroid();
+            glm::mat4 centroid_transform;
+            
+            cobb::vector3<float> primary_selection_euler = {};
+            if (auto* info = this->_get_primary_selected_refr_info()) {
+               auto loaded = info->loaded_ref_info();
+               if (loaded)
+                  primary_selection_euler = loaded->rotation;
+            }
+
+            centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler, 1.0F);
+            centroid_inverse     = glm::inverse(centroid_transform);
+            centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler + single_ref_rotation, 1.0F);
+         }
       }
 
       bool is_interior = false;
@@ -1383,17 +1458,17 @@ namespace dovahkit::subsystems::worldedit {
                   continue;
                
                cobb::vector3<float> pos_after;
-               if (this->state.selection.refs.size() == 1) {
+               if (only_rotating_one_ref) {
                   //
                   // For a single ref, just keep things simple.
                   //
-                  pos_after = loaded->position + adjust_pos;
+                  pos_after = loaded->position + adjust.translate;
                } else {
                   auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
                   auto sel_pivot = centroid_inverse     * sel_world;
                   auto sel_final = centroid_post_adjust * sel_pivot;
 
-                  pos_after = cobb::vector3<float>(sel_final[3]) + adjust_pos;
+                  pos_after = cobb::vector3<float>(sel_final[3]) + adjust.translate;
                }
 
                if (fabs(pos_after.x) > interior_cell_lateral_constraint || fabs(pos_after.y) > interior_cell_lateral_constraint) {
@@ -1415,18 +1490,18 @@ namespace dovahkit::subsystems::worldedit {
 
             cobb::vector3<float> pos_after;
             cobb::vector3<float> rot_after;
-            if (this->state.selection.refs.size() == 1) {
+            if (only_rotating_one_ref) {
                //
                // For a single ref, just keep things simple.
                //
-               pos_after = loaded->position + adjust_pos;
-               rot_after = loaded->rotation + adjust.rot; // TODO: this misses the code above that accounts for the reference frame!
+               pos_after = loaded->position + adjust.translate;
+               rot_after = loaded->rotation + single_ref_rotation; // TODO: this misses the code above that accounts for the reference frame!
             } else {
                auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
                auto sel_pivot = centroid_inverse     * sel_world;
                auto sel_final = centroid_post_adjust * sel_pivot;
 
-               pos_after = cobb::vector3<float>(sel_final[3]) + adjust_pos;
+               pos_after = cobb::vector3<float>(sel_final[3]) + adjust.translate;
                glm::extractEulerAngleXYZ(sel_final, rot_after.x, rot_after.y, rot_after.z);
             }
 
@@ -1492,12 +1567,6 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    #pragma region Passkeyed functions for tools
-   void core::_adjust_camera(cobb::passkey<core, tools::tandem::adjust_camera>, vulkanDK::data::camera_coordinate_change& update) {
-      auto* sr = this->target_view->surfaceRenderer();
-      if (!sr)
-         return;
-      sr->scene.adjust_camera(update);
-   }
    void core::_debug_dump_landscape_raycast(cobb::passkey<core, tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position) {
       if (landscape.formType != dovah::form_type::land) {
          qDebug("The hit form is not a landscape.");

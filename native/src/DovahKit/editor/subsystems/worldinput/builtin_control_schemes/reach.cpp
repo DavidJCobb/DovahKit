@@ -37,52 +37,6 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          return out;
       initialized = true;
 
-      out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
-         .name = "Move Camera Laterally",
-         //
-         .input_sequence    = algorithms::input_sequence_from_string(":: Left Stick"),
-         .button_press_type = button_press_type::hold,
-         //
-         .tool = _tool_with_options(tools::move_camera::options{
-            .reference_frames = {
-               .baseline = reference_frame::camera,
-               .selection = reference_frame::camera,
-            },
-            .magnitudes = { 1, 1, 0 },
-            .range = {
-               .x = { axis3D::x, sign::positive },
-               .y = { axis3D::y, sign::positive },
-            },
-         })
-      }));
-      out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
-         .name = "Move Camera Down",
-         //
-         .input_sequence    = _single_button_sequence(inputs::xinput_button::lb),
-         .button_press_type = button_press_type::hold,
-         //
-         .tool = _tool_with_options(tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = reference_frame::camera,
-               .selection = reference_frame::camera,
-            },
-            .magnitudes = { 0, 0, -1 },
-         })
-      }));
-      out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
-         .name = "Move Camera Up",
-         //
-         .input_sequence    = _single_button_sequence(inputs::xinput_button::rb),
-         .button_press_type = button_press_type::hold,
-
-         .tool = _tool_with_options(tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = reference_frame::camera,
-               .selection = reference_frame::camera,
-            },
-            .magnitudes = { 0, 0, 1 },
-         })
-      }));
       {
          auto* node_no_selections = control_scheme_node::from_data(control_scheme_condition_node{
             .name = "When nothing is selected...",
@@ -95,7 +49,53 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             },
          });
          out.top_level_nodes.push_back(node_no_selections);
+         
+         node_no_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Camera Laterally",
+            //
+            .input_sequence    = algorithms::input_sequence_from_string(":: Left Stick"),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::move_camera::options{
+               .reference_frames = {
+                  .baseline = reference_frame::camera,
+                  .selection = reference_frame::camera,
+               },
+               .magnitudes = { 1, 1, 0 },
+               .range = {
+                  .x = { axis3D::x, sign::positive },
+                  .y = { axis3D::y, sign::positive },
+               },
+            })
+         }));
+         node_no_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Camera Down",
+            //
+            .input_sequence    = _single_button_sequence(inputs::xinput_button::lb),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::move_camera::options{
+               .reference_frames = {
+                  .baseline  = reference_frame::camera,
+                  .selection = reference_frame::camera,
+               },
+               .magnitudes = { 0, 0, -1 },
+            })
+         }));
+         node_no_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Camera Up",
+            //
+            .input_sequence    = _single_button_sequence(inputs::xinput_button::rb),
+            .button_press_type = button_press_type::hold,
 
+            .tool = _tool_with_options(tools::move_camera::options{
+               .reference_frames = {
+                  .baseline  = reference_frame::camera,
+                  .selection = reference_frame::camera,
+               },
+               .magnitudes = { 0, 0, 1 },
+            })
+         }));
          node_no_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
             .name = "Turn Camera",
             //
@@ -123,7 +123,51 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             },
          });
          out.top_level_nodes.push_back(node_selections);
+         
+         node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Cam and Selection Laterally",
+            //
+            .input_sequence    = algorithms::input_sequence_from_string(":: Left Stick"),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::move_selection::options{
+               .frame = reference_frame::camera,
+               .also_move_camera = true,
+               .magnitudes = { 1, 1, 0 },
+               .range = {
+                  .x = { axis3D::x, sign::positive },
+                  .y = { axis3D::y, sign::positive },
+               },
+               .locked_axes = {
+                  .frame = reference_frame::world,
+                  .z = true,
+               },
+            })
+         }));
+         node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Cam and Selection Down",
+            //
+            .input_sequence    = _single_button_sequence(inputs::xinput_button::lb),
+            .button_press_type = button_press_type::hold,
+            //
+            .tool = _tool_with_options(tools::move_selection::options{
+               .frame = reference_frame::camera,
+               .also_move_camera = true,
+               .magnitudes = { 0, 0, -1 },
+            })
+         }));
+         node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
+            .name = "Move Cam and Selection Up",
+            //
+            .input_sequence    = _single_button_sequence(inputs::xinput_button::rb),
+            .button_press_type = button_press_type::hold,
 
+            .tool = _tool_with_options(tools::move_selection::options{
+               .frame = reference_frame::camera,
+               .also_move_camera = true,
+               .magnitudes = { 0, 0, 1 },
+            })
+         }));
          node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
             .name = "Turn Camera (TODO: Orbit Camera instead)",
             //

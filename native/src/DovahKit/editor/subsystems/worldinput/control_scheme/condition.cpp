@@ -12,7 +12,7 @@ namespace dovahkit::subsystems::worldinput {
       {
          out.selection_count = selection_count_comparison_set{};
          out.selection_count.value().comparisons.push_back(selection_count_comparison_set::comparison_type{
-            .op        = comparison_operator::less_or_equal,
+            .op        = comparison_operator::equal,
             .comparand = worldedit.get_selected_refs().size()
          });
       }

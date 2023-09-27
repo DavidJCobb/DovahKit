@@ -58,7 +58,7 @@ namespace {
          cobb::rotation_matrix raw;
          if (lua_isnumber(L, 1)) {
             for (int i = 0; i < 9; ++i)
-               raw[i] = lua_tonumber(L, i + 2);
+               raw.at(i) = lua_tonumber(L, i + 2);
             cls::push_new_instance(L, raw);
             return 1;
          }
@@ -77,7 +77,7 @@ namespace {
                   lua_geti(L, 1, y + 1);
                   for (int x = 0; x < 3; ++x) {
                      lua_geti(L, 2, x + 1);
-                     raw[y * 3 + x] = lua_tonumber(L, 3);
+                     raw[y][x] = lua_tonumber(L, 3);
                      lua_settop(L, 2);
                   }
                   lua_settop(L, 1);
@@ -88,7 +88,7 @@ namespace {
                //
                for (int i = 0; i < 9; ++i) {
                   lua_geti(L, 1, i + 1);
-                  raw[i] = lua_tonumber(L, 2);
+                  raw.at(i) = lua_tonumber(L, 2);
                   lua_settop(L, 1);
                }
             }
@@ -98,7 +98,7 @@ namespace {
          }
          for (int y = 0; y < decltype(raw)::height; ++y)
             for (int x = 0; x < decltype(raw)::width; ++x)
-               raw.data[y][x] = 0;
+               raw.rows[y][x] = 0;
          cls::push_new_instance(L, {});
          return 1;
       }
@@ -202,7 +202,7 @@ namespace {
                a *= b;
                lua_settop(L, 1);
                for (int i = 0; i < 9; ++i) {
-                  lua_pushnumber(L, a[i]);
+                  lua_pushnumber(L, a.at(i));
                   lua_seti(L, 1, i + 1);
                }
                return 1;
@@ -260,7 +260,7 @@ namespace {
          lua_settop(L, 1);
          //
          auto m = cls::extract_from_stack(L, 1);
-         m.transpose_in_place();
+         m.transpose();
          cls::push_new_instance(L, m);
          return 1;
       }
@@ -269,9 +269,9 @@ namespace {
          lua_settop(L, 1);
          //
          auto m = cls::extract_from_stack(L, 1);
-         m.transpose_in_place();
+         m.transpose();
          for (int i = 0; i < 9; ++i) {
-            lua_pushnumber(L, m[i]);
+            lua_pushnumber(L, m.at(i));
             lua_seti(L, 1, i + 1);
          }
          return 1;
@@ -297,7 +297,7 @@ namespace dovahscript::lua_classes {
       auto prior = lua_gettop(L);
       for (int i = 0; i < 9; ++i) {
          lua_geti(L, stack_pos, i + 1);
-         raw[i] = lua_tonumber(L, prior + 1);
+         raw.at(i) = lua_tonumber(L, prior + 1);
          lua_settop(L, prior);
       }
       return raw;
@@ -308,7 +308,7 @@ namespace dovahscript::lua_classes {
       luaL_getmetatable(L, cls::metatable_key);
       lua_setmetatable (L, index);
       for (int i = 0; i < 9; ++i) {
-         lua_pushnumber(L, raw[i]);
+         lua_pushnumber(L, raw.at(i));
          lua_rawseti   (L, index, i + 1);
       }
    }

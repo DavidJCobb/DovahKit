@@ -204,7 +204,16 @@ namespace cobb {
          return out;
       }();
 
-      return (handlers[this->_type])(*this, other);
+      bool data_is_equal = (handlers[this->_type])(*this, other);
+      if (!data_is_equal)
+         return false;
+
+      size_t size = this->children.size();
+      for (size_t i = 0; i < size; ++i)
+         if (*this->children[i] != *other.children[i])
+            return false;
+
+      return true;
    }
 }
 
