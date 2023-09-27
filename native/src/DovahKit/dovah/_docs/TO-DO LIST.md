@@ -92,3 +92,12 @@ Currently, you can block an outer node from activating by shadowing it with a du
 * If the Object Window is filtered to Actors of a given race, then right-clicking and creating a new Actor should set it to that race by default.
 
 * If the Object Window is filtered to female Actors, then right-clicking and creating a new Actor should flag it as female by default.
+
+
+# Last-minute verification
+
+Here's ElminsterAU's test procedure for xEdit, as planned for Starfield:
+
+> I still have about 35 record types which haven't been property checked at all yet (over 200 done though), after which comes the test to copy as override every one if the 3.5 million records in Starfield.esm into a new module which has Starfield.esm listed as it's 2nd master (so that the copying must change the stored FormID), making sure all copies show up as ITMs, and finally in game testing with this "everything overridden" esm
+
+We can't run that *exact* procedure for DovahKit and Skyrim because I don't plan on having DovahKit launch with support for every one of Skyrim's 120+ form types. However, we could run this procedure for all supported form types. We'd have to doctor an empty ESP in xEdit to have Skyrim.esm as its second master and a dummy master as the first, but after that, the in-DovahKit test procedure *should* be as simple as using a Lua script to flag as edited every supported form type from Skyrim.esm. Then, we save it, load the game with it, and see if anything breaks. (Could also use xEdit to verify that every record is an ITM, though I don't know how manageable that'll be since Skyrim.esm uses form version numbers other than the most recent whereas IIRC DovahKit will always use the most recent form version; may need to write xEdit scripts to rule out false negatives like those.)

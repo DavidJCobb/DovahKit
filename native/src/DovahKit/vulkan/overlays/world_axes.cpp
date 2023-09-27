@@ -11,6 +11,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+namespace {
+}
+
 namespace vulkanDK::overlays {
    world_axes::world_axes() {
    }
@@ -135,19 +138,22 @@ namespace vulkanDK::overlays {
       auto& sr  = *this->owner;
       auto& vib = this->vertex_and_index_buffer;
       //
-      constexpr VkDeviceSize buffer_size_v = sizeof(_vertex)  * vertex_count;
-      constexpr VkDeviceSize buffer_size_i = sizeof(uint16_t) * index_count;
-      constexpr VkDeviceSize buffer_size   = buffer_size_v + buffer_size_i;
+      vib = sr.create_buffer(_vib_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      this->update_geometry();
+   }
+   void world_axes::update_geometry() {
+      auto& sr  = *this->owner;
+      auto& vib = this->vertex_and_index_buffer;
       //
-      auto  staging = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      auto  staging = sr.create_buffer(_vib_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       void* data    = staging.map_memory();
-      memset(data, 0, buffer_size);
+      memset(data, 0, _vib_size);
       //
       {
          static_assert(vertices_per_axis == 2,      "Model design changed; rewrite this code.");
          static_assert(index_count == vertex_count, "Model design changed; rewrite this code.");
          auto* vertices = (_vertex*)data;
-         auto* indices  = (uint16_t*)((std::intptr_t)data + buffer_size_v);
+         auto* indices  = (uint16_t*)((std::intptr_t)data + _vib_indices_offset);
          //
          constexpr auto model = std::array{
             // x:
@@ -215,7 +221,6 @@ namespace vulkanDK::overlays {
       }
       staging.unmap_memory(data);
       //
-      vib = sr.create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       vib.copy_from(staging);
    }
 

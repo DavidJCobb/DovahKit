@@ -120,6 +120,7 @@ namespace dovahkit::subsystems::worldedit {
 
       auto& core = DovahKitCore::get();
       QObject::connect(&core, &DovahKitCore::dataAcquireComplete, this, &core::_update_default_land_textures);
+      QObject::connect(&core, &DovahKitCore::dataAbandonImminent, this, &core::unloadAll);
       QObject::connect(&core, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* form, bool just_flagging) {
          if (form->formType == dovah::form_type::cell) {
             this->_unload_cell(form);
@@ -357,6 +358,38 @@ namespace dovahkit::subsystems::worldedit {
       return;
    }
    void core::_unload_all_cells() {
+      //
+      // Let's start by manually clearing all selections and unloading all REFRs. We 
+      // could just have `_unload_cell` do it, but doing it here is more optimal: we 
+      // already know that we want to unload all CELLs and REFRs, so why even bother 
+      // searching the full ref list for each ref individually when what we want is 
+      // to blow away the whole list?
+      // 
+      // In addition, handling REFRs here also deals with an important edge-case: a 
+      // REFR can be selected and dragged into an unloaded CELL, in which case we don't 
+      // force-load the cell. If we rely entirely on `_unload_cell` to unload refs, then 
+      // we miss those refs.
+      // 
+      // This function is the key cleanup function for Worldedit: if data is unloaded 
+      // (e.g. because the user is loading a new set of ESP files), we tell Worldedit 
+      // to load a nullptr area, which calls this function (thereby releasing all of 
+      // our pointers to form stubs and loaded game data) and then sets a few other 
+      // things up (e.g. the debug grid shown when in no loaded area).
+      //
+      this->state.selection.refs.clear();
+      {
+         auto& list = this->loaded_refs;
+         for (auto& item : list) {
+            this->_unload_refr(item, false);
+         }
+         list.clear();
+      }
+
+      //
+      // TODO: When we implement navmeshing, we'll want to release navmesh data here 
+      // as well.
+      //
+
       for (auto& item : this->loaded_cells)
          this->_unload_cell(item);
    }
@@ -844,6 +877,15 @@ namespace dovahkit::subsystems::worldedit {
             // Hide the debug grid if we're loading any environment; show it if we're nowhere.
             //
             sr->set_debug_grid_visible(!cell && !world);
+            if (!cell && !world) {
+               //
+               // If we're going nowhere, set the default camera coords.
+               //
+               sr->scene.camera.position = { 2.0F, 2.0F, 2.0F };
+               sr->scene.camera.yaw      = glm::radians(-45.0F);
+               sr->scene.camera.pitch    = glm::radians(-45.0F);
+               sr->scene.update_camera();
+            }
             //
             // Set lighting and fog params.
             //
@@ -892,6 +934,22 @@ namespace dovahkit::subsystems::worldedit {
                sgs.fog_plane_far  = 160000;
                sgs.fog_power      = 1.0F;
                sgs.fog_max        = 1.0F;
+               sgs.interior_clip_distance = 0.0F;
+            } else {
+               //
+               // We're loading "nowhere." Reset the default lighting.
+               //
+               auto& sgs = sr->scene.global_state;
+               sgs.ambient_light_color = { 0.1, 0.1, 0.1 };
+               //
+               sgs.sun_dir = glm::normalize(glm::vec3{ 0.1, 0, -1 });;
+               sgs.sun_color = { 1, 1, 1 };
+               sgs.sun_space = glm::mat4(1);
+               //
+               sgs.fog_color_near = sgs.fog_color_far = { 0, 0, 0 };
+               sgs.fog_plane_near = 0;
+               sgs.fog_plane_far = 7000;
+               sgs.fog_power = sgs.fog_max = 1.0F;
                sgs.interior_clip_distance = 0.0F;
             }
          }
@@ -1370,17 +1428,21 @@ namespace dovahkit::subsystems::worldedit {
             if (auto* sr = this->target_view->surfaceRenderer()) {
                auto& cs = sr->scene.camera;
 
+               //
+               // The SR-side camera angles are basically the same as Skyrim's except that a pitch of 0 
+               // is looking straight up at the sky. I don't know why offhand; probably I just screwed 
+               // up handling the axis/frame conventions. I don't want to mess with renderer internals 
+               // right now, so we'll just use a matrix multiplication to correct for it:
+               //
                return glm::mat3(glm::eulerAngleXYZ(3.14159265358979323846F / 2.0F, 0.0F, 0.0F) * glm::eulerAngleXYZ(cs.pitch, cs.roll, cs.yaw));
 
-               return glm::mat3(
-                  glm::eulerAngleXYZ(cs.pitch, cs.roll, cs.yaw)
-               );
-
+               /*//
                return glm::mat3(vulkanDK::glm_transform_from_beth(
                   sr->scene.camera.position,
                   { cs.pitch, cs.roll, cs.yaw },
                   1.0
                ));
+               //*/
             }
             break;
       }
@@ -1703,5 +1765,9 @@ namespace dovahkit::subsystems::worldedit {
    }
    void core::setCellGridSize(int size) {
       this->_resize_cell_grid(size);
+   }
+
+   void core::unloadAll() {
+      this->_set_current_area_impl(nullptr);
    }
 }

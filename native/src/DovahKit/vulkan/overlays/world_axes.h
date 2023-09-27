@@ -26,22 +26,22 @@ namespace vulkanDK::overlays {
    class world_axes {
       public:
          // Config:
-         static constexpr uint32_t viewport_w = 64;
-         static constexpr uint32_t viewport_h = 64;
-         static constexpr bool     assume_always_redraw = true;
+         static constexpr const uint32_t viewport_w = 64;
+         static constexpr const uint32_t viewport_h = 64;
+         static constexpr const bool     assume_always_redraw = true;
          //
-         static constexpr float axis_arrow_length   = 5;
-         static constexpr float axis_line_thickness = 2;
+         static constexpr const float axis_arrow_length   = 5;
+         static constexpr const float axis_line_thickness = 2;
 
          // For other compile-time systems' reference:
-         static constexpr size_t texture_count = 1;
-         static constexpr graphics_shader::id_type shader_id = "WrldAxes";
+         static constexpr const size_t texture_count = 1;
+         static constexpr const graphics_shader::id_type shader_id = "WrldAxes";
 
          // Magic numbers:
-         static constexpr size_t axis_count        = 3;
-         static constexpr size_t vertices_per_axis = 2;
-         static constexpr size_t vertex_count      = axis_count * vertices_per_axis;
-         static constexpr size_t index_count       = vertex_count;
+         static constexpr const size_t axis_count        = 3;
+         static constexpr const size_t vertices_per_axis = 2;
+         static constexpr const size_t vertex_count      = axis_count * vertices_per_axis;
+         static constexpr const size_t index_count       = vertex_count;
 
       protected:
          struct _vertex {
@@ -64,7 +64,12 @@ namespace vulkanDK::overlays {
                };
             }
          };
-         static constexpr size_t _vib_indices_offset = sizeof(_vertex) * vertex_count;
+         //
+         static constexpr VkDeviceSize _vib_size_v = sizeof(_vertex) * vertex_count;
+         static constexpr VkDeviceSize _vib_size_i = sizeof(uint16_t) * index_count;
+         static constexpr VkDeviceSize _vib_size   = _vib_size_v + _vib_size_i;
+         //
+         static constexpr size_t _vib_indices_offset = _vib_size_v;
 
          static void _update_shader_render_area(graphics_shader& shader, VkExtent2D surface_extent);
 
@@ -102,6 +107,7 @@ namespace vulkanDK::overlays {
          void initialize_descriptor_sets(frame_in_flight&);
          void setup_shader_parameter_buffers();
          void create_geometry();
+         void update_geometry();
 
          void handle_resize(surface_renderer&);
 

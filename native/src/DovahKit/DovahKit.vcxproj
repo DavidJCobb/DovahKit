@@ -2134,6 +2134,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />
+    <None Include="editor\subsystems\worldedit\_docs\general notes.md" />
     <None Include="editor\subsystems\worldinput\control_scheme\condition.inl" />
     <None Include="editor\subsystems\worldinput\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput\inputs\button.inl" />

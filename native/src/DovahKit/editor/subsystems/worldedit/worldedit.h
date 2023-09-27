@@ -240,5 +240,7 @@ namespace dovahkit::subsystems::worldedit {
          void deselectAllRefs();
          void replaceRefSelection(dovah::form_stub&);
          void setCellGridSize(int);
+
+         void unloadAll();
    };
 }

@@ -364,7 +364,7 @@ namespace vulkanDK {
             
             auto& wa = this->overlays.world_axes;
             wa.set_colors(src.color_x, src.color_y, src.color_z);
-            wa.create_geometry();
+            wa.update_geometry();
          }
       }
       this->owner->scene.update_light_shadows(*this);

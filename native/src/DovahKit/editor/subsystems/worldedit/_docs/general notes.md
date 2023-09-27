@@ -1,0 +1,13 @@
+
+Worldedit and Worldinput are designed to cooperate like so:
+
+* Worldedit owns a number of "tool" classes. (These are more like compile-time singletons: they aren't instantiable and have no state, but do contain static member functions.) Each "tool" represents a single editing operation that can be bound to an input within the Render Window.
+* A tool can be *requested*, with *options* passed to it, and it will return a *response*. This response represents a queued editing operation.
+* Worldinput, then, will request tools based on the input mappings it's been given to work with. When a tool is invoked by multiple active mappings, its responses are all coalesced together. The coalesced responses are eventually returned to Worldedit.
+* Worldedit then *invokes* the tool, passing its own response back to it; "invocation" is when the editing operation is carried out.
+
+In general, a tool response should consist of the bare minimum information needed to queue execution of an editing operation, i.e. "what to do;" figuring out how to actually do it should happen during invocation. However, there are exceptions:
+
+* The `move_selection` tool allows users to specify the reference frame along which the selected objects should be moved. Users can also constrain the movement to only certain axes, and these constraints can be applied to a reference frame other than the one used for movement. (A plain-English example: in Halo: Reach, with an object selected, the left stick moves the object along camera-relative axes, but constrains it to the world XY plane.) We apply reference frames and constraints during input handling (i.e. when responses are generated) rather than during invocation because that's the only way to handle them that is both accurate and efficient.
+
+  Given two movement inputs on the same frame, each movement's constraints must be applied before the movements are coalesced. If we didn't allow the movement and its constraints to use different reference frames, then we could apply the constraints at response time while deferring handling of the reference frames to invocation time. Since the two can differ, however, the only way to apply constraints is to convert across reference frames. Ultimately, the only way we could ever defer handling of constraints and reference frames to invocation time would be to have `move_selection`'s response consist of a variable length list i.e. a heap-allocated buffer, which we'd be creating and destroying on every frame; this would be inefficient. Better to handle constraints and reference frames at response time, keeping things moving smoothly at the cost of a little design purity.

@@ -6001,6 +6001,7 @@
     <None Include="helpers\math\matrix.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="editor\subsystems\worldedit\_docs\general notes.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
