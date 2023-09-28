@@ -32,25 +32,6 @@ namespace {
 //
 
 namespace vulkanDK {
-
-   //
-   // Camera axes (matching Skyrim):
-   // 
-   //    Lefthanded (clockwise) extrinsic XYZ Euler
-   //    +X = Right
-   //    +Y = Forward
-   //    +Z = Up
-   // 
-   // View-space axes:
-   // 
-   //    Lefthanded (clockwise) Euler
-   //    +X = Right
-   //    +Y = Down
-   //    -Z = Forward (Depth)
-   // 
-   // A clip-space rotation of (0, 0, 0) aims us such that -Z is forward, +Y is up, and +X is right.
-   //
-
    void camera::_fire_callback(bool translated, bool rotated) {
       if (!this->_callback.functor)
          return;
@@ -131,42 +112,13 @@ namespace vulkanDK {
    }
 
    bool camera::arcball(glm::vec3 pivot, glm::vec3 turn) {
-      //this->aim_at_target(pivot); // BROKEN
-
-      if constexpr (false) { // force look at target (BROKEN)
-         //
-         // If we're looking at a steep vertical angle, let's try to maintain it.
-         //
-         glm::vec3 up = glm::normalize(-this->_view_matrix[0]);
-         if (fabs(up.z) < 0.8) {
-            up = glm::vec3{ 0.0, 0.0, 1.0 };
-         } else {
-            glm::vec3 forward = glm::normalize(-this->_view_matrix[1]);
-            glm::vec3 test    = glm::cross(forward, up);
-            if (glm::length2(test) < 0.1) {
-               //
-               // The `pivot` object is in the same direction as our up-vector (or in the 
-               // exact opposite direction), so we can't keep the up-vector.
-               //
-               up = glm::vec3{ 0.0, 0.0, 1.0 };
-            }
-         }
-         //
-         auto look = glm::lookAtLH(this->_position, pivot, up);
-         glm::extractEulerAngleXYZ(look, this->_rotation.x, this->_rotation.y, this->_rotation.z);
-         this->_rotation *= -1;
-      }
-
       bool do_turn = glm::length2(turn) > epsilon_sq;
 
       if (do_turn) {
          this->_rotation -= turn;
 
          auto distance = glm::distance(this->_position, pivot);
-         //
-         glm::vec4 offset = { 0, 0, 1, 0 };
-         offset = glm::eulerAngleZYX(-this->_rotation.z, -this->_rotation.y, -this->_rotation.x) * offset;
-         offset *= distance;
+         glm::vec4 offset = (this->camera_matrix() * glm::vec4{ 0, -1, 0, 0 }) * distance;
          //
          this->_position = glm::vec3(offset) + pivot;
 
@@ -176,64 +128,6 @@ namespace vulkanDK {
       this->_fire_callback(do_turn, true);
 
       return true;
-   }
-
-   // TODO: BROKEN
-   void camera::aim_at_target(glm::vec3 pivot) {
-      glm::vec3 forward = glm::normalize(pivot - this->_position);
-      glm::vec3 up      = glm::normalize(this->_view_matrix[2]);
-      if (fabs(up.z) < 0.8) {
-         //
-         // If we're not looking at a steep vertical angle already, then discard the 
-         // camera's up-vector and recompute it from the forward vector.
-         //
-         up = glm::vec3{ 0.0, 0.0, 1.0 };
-      } else {
-         //
-         // Let's test to see if we can maintain camera-up.
-         //
-         auto test = glm::cross(forward, up);
-         if (glm::length2(test) < (1.0 - epsilon)) {
-            //
-            // The `pivot` object is in the same direction as our up-vector (or in the 
-            // exact opposite direction), so we can't keep the up-vector.
-            //
-            up = glm::vec3{ 0.0, 0.0, 1.0 };
-         }
-      }
-      glm::vec3 side;
-      //
-      if constexpr (righthanded) {
-         side = glm::normalize(glm::cross(forward, up));
-         up   = glm::cross(side, forward);
-      } else {
-         side = glm::normalize(glm::cross(up, forward));
-         up   = glm::cross(forward, side);
-      }
-
-      glm::mat4 matrix = glm::mat4(1);
-      matrix[0][0] = side.x;
-      matrix[1][0] = side.y;
-      matrix[2][0] = side.z;
-      matrix[0][1] = up.x;
-      matrix[1][1] = up.y;
-      matrix[2][1] = up.z;
-      if constexpr (righthanded) {
-         matrix[0][2] = -forward.x;
-         matrix[1][2] = -forward.y;
-         matrix[2][2] = -forward.z;
-      } else {
-         matrix[0][2] = forward.x;
-         matrix[1][2] = forward.y;
-         matrix[2][2] = forward.z;
-      }
-      matrix[3] = glm::vec4(this->_position, 1.0F);
-
-      this->_view_matrix = matrix;
-      glm::extractEulerAngleXYZ(matrix, this->_rotation.x, this->_rotation.y, this->_rotation.z);
-      this->_rotation.y = 0; // no roll
-
-      this->_fire_callback(false, true);
    }
 
    glm::mat4 camera::camera_matrix() const {

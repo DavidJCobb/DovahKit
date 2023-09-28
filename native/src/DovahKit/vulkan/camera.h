@@ -33,8 +33,6 @@ namespace vulkanDK {
          // is applied.
          bool arcball(glm::vec3 pivot, glm::vec3 turn);
 
-         void aim_at_target(glm::vec3);
-
       public:
          constexpr const glm::vec3& position() const { return this->_position; }
          constexpr const glm::vec3& rotation() const { return this->_rotation; }
