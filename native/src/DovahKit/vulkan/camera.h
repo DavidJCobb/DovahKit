@@ -10,7 +10,7 @@ namespace vulkanDK {
 
       protected:
          glm::vec3 _position;
-         glm::vec3 _rotation; // Same axis conventions as Skyrim.
+         glm::vec3 _rotation; // pitch, roll, yaw
          glm::mat4 _view_matrix;
 
          struct {
@@ -22,6 +22,9 @@ namespace vulkanDK {
          void _update_view_matrix();
 
       public:
+         bool translate_absolute(glm::vec3 move);
+         bool translate_relative(glm::vec3 move);
+
          // Apply camera-relative movement and turning. Returns true if any change is made.
          bool adjust(glm::vec3 move, glm::vec3 turn);
 

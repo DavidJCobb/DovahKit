@@ -36,7 +36,7 @@ namespace cobb::glm {
 
       ::glm::mat4 out;
       out[0][0] = cy*cz;
-      out[0][1] = sx*cz*sy - cx*sz;
+      out[0][1] = sx*sy*cz - cx*sz;
       out[0][2] = cx*sy*cz + sx*sz;
       out[0][3] = 0;
       out[1][0] = cy*sz;
@@ -46,6 +46,68 @@ namespace cobb::glm {
       out[2][0] = -sy;
       out[2][1] = sx*cy;
       out[2][2] = cx*cy;
+      out[2][3] = 0;
+      out[3][0] = 0;
+      out[3][1] = 0;
+      out[3][2] = 0;
+      out[3][3] = 1;
+      return out;
+   }
+
+   template<handedness Handedness>
+   ::glm::mat4 euler_intrinsic_xzy_to_mat(::glm::vec3 angles) {
+      constexpr const float handedness_flip = (Handedness == handedness::right) ? -1.0 : 1.0;
+
+      auto cx = cos(angles.x);
+      auto cy = cos(angles.y);
+      auto cz = cos(angles.z);
+      auto sx = sin(angles.x * handedness_flip);
+      auto sy = sin(angles.y * handedness_flip);
+      auto sz = sin(angles.z * handedness_flip);
+
+      ::glm::mat4 out;
+      out[0][0] = cy*cz;
+      out[0][1] = sx*sy - cx*cy*sz;
+      out[0][2] = cx*sy + sx*cy*sz;
+      out[0][3] = 0;
+      out[1][0] = sz;
+      out[1][1] = cx*cz;
+      out[1][2] = -sx*cz;
+      out[1][3] = 0;
+      out[2][0] = -sy*cz;
+      out[2][1] = sx*cy + cx*sy*sz;
+      out[2][2] = cx*cy - sx*sy*sz;
+      out[2][3] = 0;
+      out[3][0] = 0;
+      out[3][1] = 0;
+      out[3][2] = 0;
+      out[3][3] = 1;
+      return out;
+   }
+
+   template<handedness Handedness>
+   ::glm::mat4 euler_intrinsic_yzx_to_mat(::glm::vec3 angles) {
+      constexpr const float handedness_flip = (Handedness == handedness::right) ? -1.0 : 1.0;
+
+      auto cx = cos(angles.x);
+      auto cy = cos(angles.y);
+      auto cz = cos(angles.z);
+      auto sx = sin(angles.x * handedness_flip);
+      auto sy = sin(angles.y * handedness_flip);
+      auto sz = sin(angles.z * handedness_flip);
+
+      ::glm::mat4 out;
+      out[0][0] = cy*cz;
+      out[0][1] = -sz;
+      out[0][2] = sy*cz;
+      out[0][3] = 0;
+      out[1][0] = sx*sy + cx*cy*sz;
+      out[1][1] = cx*cz;
+      out[1][2] = cx*sy*sz - sx*cy;
+      out[1][3] = 0;
+      out[2][0] = sx*cy*sz - cx*sy;
+      out[2][1] = sx*cz;
+      out[2][2] = sx*sy*sz + cx*cy;
       out[2][3] = 0;
       out[3][0] = 0;
       out[3][1] = 0;
@@ -88,6 +150,11 @@ namespace cobb::glm {
    template<handedness Handedness>
    ::glm::mat4 euler_extrinsic_xyz_to_mat(::glm::vec3 angles) {
       return euler_intrinsic_zyx_to_mat<Handedness>(angles);
+   }
+
+   template<handedness Handedness>
+   ::glm::mat4 euler_extrinsic_yzx_to_mat(::glm::vec3 angles) {
+      return euler_intrinsic_xzy_to_mat<Handedness>(angles);
    }
 
    template<handedness Handedness>

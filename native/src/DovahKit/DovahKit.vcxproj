@@ -2299,6 +2299,7 @@
     <None Include="vulkan\scene.inl" />
     <None Include="vulkan\scene_entities\base.inl" />
     <None Include="vulkan\scene_gizmo_state.inl" />
+    <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\ScreenShot278.bmp" />

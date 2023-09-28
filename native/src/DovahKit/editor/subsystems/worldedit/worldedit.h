@@ -218,6 +218,7 @@ namespace dovahkit::subsystems::worldedit {
 
          void adjust_camera(vulkanDK::data::camera_coordinate_change&);
          void orbit_camera(camera_orbit_target pivot, cobb::vector3<float> euler_radians);
+         void translate_camera(cobb::vector3<float>, reference_frame);
          bool try_adjust_selection_coordinates(const coordinate_adjustment&);
 
          #pragma region Passkeyed functions for tools

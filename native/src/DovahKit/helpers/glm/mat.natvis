@@ -276,7 +276,7 @@
             <Loop Condition="x &lt; $T1">
                <Exec>y = 0</Exec>
                <Loop Condition="y &lt; $T2">
-                  <Item Name="[{x,d}][{y,d}]">((const float*)(&amp;value[x]))[y]</Item>
+                  <Item Name="[{x,d}][{y,d}] (col {x,d} row {y,d})">((const float*)(&amp;value[x]))[y],f</Item>
                   <Exec>++y</Exec>
                </Loop>
                <Exec>++x</Exec>

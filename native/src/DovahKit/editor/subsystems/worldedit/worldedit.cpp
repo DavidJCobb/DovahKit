@@ -1449,6 +1449,30 @@ namespace dovahkit::subsystems::worldedit {
 
       sr->scene.camera.arcball(pivot.to_struct<glm::vec3>(), euler_radians.to_struct<glm::vec3>());
    }
+   void core::translate_camera(cobb::vector3<float> move, reference_frame frame) {
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      auto& cam = sr->scene.camera;
+
+      if (frame == reference_frame::current) {
+         frame = this->get_edit_gizmo_frame();
+      }
+      switch (frame) {
+         case reference_frame::camera:
+            cam.translate_relative(move.to_struct<glm::vec3>());
+            break;
+         case reference_frame::world:
+            cam.translate_absolute(move.to_struct<glm::vec3>());
+            break;
+         case reference_frame::local:
+            {
+               auto mat = this->get_frame_rotation_matrix(frame);
+               cam.translate_absolute(mat * move.to_struct<glm::vec3>());
+            }
+            break;
+      }
+   }
    bool core::try_adjust_selection_coordinates(const coordinate_adjustment& adjust) {
       if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
          return false;

@@ -6023,6 +6023,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

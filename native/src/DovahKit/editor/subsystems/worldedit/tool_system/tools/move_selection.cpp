@@ -142,13 +142,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          cam_move += params.instant.camera.magnitude;
 
          if (cam_move.x || cam_move.y || cam_move.z) {
-
-            // `adjust_camera` takes camera-relative coordinates for translation.
-            auto cam_mat = worldedit_core.get_frame_rotation_matrix(reference_frame::camera);
-
-            vulkanDK::data::camera_coordinate_change update;
-            update.move = glm::inverse(cam_mat) * cam_move.to_struct<glm::vec3>();
-            worldedit_core.adjust_camera(update);
+            worldedit_core.translate_camera(cam_move, reference_frame::world);
          }
       }
    }
