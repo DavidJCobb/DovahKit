@@ -1,4 +1,7 @@
 #include "./camera.h"
+#include "helpers/glm/euler_to_matrix.h"
+#include "helpers/math/rotation/unit_conversion.h"
+#include "./helpers/glm_transform_from_beth.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -10,8 +13,10 @@
 #include <glm/gtx/rotate_vector.hpp> // glm::rotate on vectors
 
 namespace {
-   constexpr float epsilon    = 0.00001;
-   constexpr float epsilon_sq = epsilon * epsilon;
+   constexpr const float epsilon    = 0.00001;
+   constexpr const float epsilon_sq = epsilon * epsilon;
+   //
+   constexpr const float ninety_degrees = 90.0F * cobb::degrees_to_radians_mult;
 }
 
 //
@@ -50,8 +55,89 @@ namespace vulkanDK {
       (this->_callback.functor)(this->_callback.context, translated, rotated);
    }
    void camera::_update_view_matrix() {
-      auto rot = glm::eulerAngleZYX(-this->_rotation.z, -this->_rotation.y, -this->_rotation.x);
-      this->_view_matrix = glm::translate(glm::inverse(rot), -this->_position);
+      //
+      // We need to convert our rotation from Skyrim axis conventions to the 
+      // Vulkan clip-space axis conventions. Then, we need to construct a view 
+      // matrix.
+      // 
+      //    SKYRIM AXIS CONVENTIONS
+      //    Intrinsic lefthanded (clockwise) XYZ
+      //    +X = Right
+      //    +Y = Forward
+      //    +Z = Up
+      // 
+      //    VULKAN CLIP-SPACE AXIS CONVENTIONS
+      //    Righthanded (counterclockwise)
+      //    +X = Right
+      //    +Y = Down
+      //    +Z = Forward (Depth)
+      // 
+      // We perform a clip-space Y-axis flip within our projection matrix, which 
+      // has the effect of swapping from lefthanded to righthanded. As such, the 
+      // view matrix that we create here must produce lefthanded output. However, 
+      // the view matrix will still be responsible for swapping which axes affect 
+      // which physical dimensions, i.e. which way is vertical.
+      // 
+      // Through trial and error, I've determined that we can get our axes aimed 
+      // in the right directions through these transformations:
+      // 
+      //  - Subtract 90deg from X, and then negate it.
+      //  - Pass Y verbatim.
+      //  - Negate Z.
+      // 
+      // Don't even goddamn ask me how that works. I've spent the last eight or 
+      // so hours at *least* trying to figure this out and I'm not any closer to 
+      // understanding it.
+      // 
+      // As for the basics of view matrices, though, this lovely SO answer is a 
+      // great explanation:
+      // 
+      //    https://stackoverflow.com/a/22621286
+      //
+      // Let T be the transformation matrix.
+      // Let R be the rotation matrix.
+      // Let V be the view matrix.
+      // 
+      // Let Ex, Ey, and Ez be the Euler rotations.
+      // Let Px, Py, and Pz be the position coordinates.
+      // 
+      // Let X, Y, and Z be the rotation matrices for each Euler component.
+      // Let M(...) be the rotation matrix for a given Euler component.
+      // 
+      //    V = (TR)^-1
+      // 
+      //    V = R^-1 * T^-1
+      //      = R^-1 * TranslationMatrix(-Px, -Py, -Pz)
+      // 
+      //    R    = XYZ
+      //    R^-1 = (XYZ)^-1
+      //    R^-1 = Z^-1 * Y^-1 * X^-1
+      // 
+      // The inverse of a single-axis rotation matrix is its transpose. By 
+      // happenstance, transposing the matrix is equivalent to flipping the 
+      // signs on all sine calls, which in turn is equivalent to negating 
+      // the angle (because sin(-a) = -sin(a), but cos(-a) = cos(a)). Ergo:
+      // 
+      //    R^-1 = M(-Ez) * M(-Ey) * M(-Ex)
+      // 
+      // The inverse of a ZYX rotation matrix, then, can be said to be a 
+      // "-X-Y-Z" matrix; and the inverse of an XYZ rotation matrix can be 
+      // said to be an "-Z-Y-X" matrix.
+      //
+
+      // -----------------------------------------------------------------
+
+      // (Intrinsic XYZ)^-1 = Intrinsic -Z-Y-X
+      //
+      // In addition, we need to convert from the Skyrim axes to the view-
+      // space axes.
+
+      glm::mat4 rot = cobb::glm::euler_intrinsic_xyz_to_mat<cobb::glm::handedness::left>(glm::vec3{
+         -(this->_rotation.x - ninety_degrees),
+         this->_rotation.y,
+         -this->_rotation.z
+      });
+      this->_view_matrix = glm::translate(rot, -this->_position);
    }
 
    bool camera::adjust(glm::vec3 move, glm::vec3 turn) {
@@ -87,6 +173,7 @@ namespace vulkanDK {
          // 
          // So to start with, we need to swap and negate some axes.
          //
+         #if 0
          std::swap(move.z, move.y);
          move.z = -move.z;
          //
@@ -94,6 +181,9 @@ namespace vulkanDK {
          //
          move = glm::inverse(glm::mat3x3(this->_view_matrix)) * move;
          this->_position += move;
+         #else
+         this->_position += this->camera_rotation_matrix() * move;
+         #endif
       }
 
       if (do_move || do_turn) {
@@ -208,6 +298,13 @@ namespace vulkanDK {
       this->_rotation.y = 0; // no roll
 
       this->_fire_callback(false, true);
+   }
+
+   glm::mat4 camera::camera_matrix() const {
+      return vulkanDK::glm_transform_from_beth({ 0, 0, 0 }, this->_rotation, 1.0);
+   }
+   glm::mat3 camera::camera_rotation_matrix() const {
+      return glm::mat3(cobb::glm::euler_intrinsic_xyz_to_mat<cobb::glm::handedness::left>(this->_rotation));
    }
 
    void camera::set_position(const glm::vec3& v) {

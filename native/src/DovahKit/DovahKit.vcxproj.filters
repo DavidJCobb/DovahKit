@@ -5228,6 +5228,9 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_orbit_target.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\glm\euler_to_matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -1054,6 +1054,7 @@
     <ClInclude Include="helpers\generic_reader_ex.h" />
     <ClInclude Include="helpers\glm\constexpr.h" />
     <ClInclude Include="helpers\glm\cross_simd.h" />
+    <ClInclude Include="helpers\glm\euler_to_matrix.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec3_simd.h" />
     <ClInclude Include="helpers\glm\mat4_by_vec4_simd.h" />
     <ClInclude Include="helpers\glm\type_traits.h" />

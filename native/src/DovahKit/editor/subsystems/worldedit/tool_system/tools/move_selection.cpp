@@ -70,7 +70,7 @@ namespace dovahkit::subsystems::worldedit::tools {
             auto& worldedit_core = core::get();
 
             auto frame_mat = worldedit_core.get_frame_rotation_matrix(o.frame);
-            vec = vec.to_struct<glm::vec3>() * frame_mat;
+            vec = frame_mat * vec.to_struct<glm::vec3>();
          }
          if (o.locked_axes.any_locked()) {
             if (o.locked_axes.frame == reference_frame::world) {
@@ -147,7 +147,7 @@ namespace dovahkit::subsystems::worldedit::tools {
             auto cam_mat = worldedit_core.get_frame_rotation_matrix(reference_frame::camera);
 
             vulkanDK::data::camera_coordinate_change update;
-            update.move = cam_move.to_struct<glm::vec3>() * glm::inverse(cam_mat);
+            update.move = glm::inverse(cam_mat) * cam_move.to_struct<glm::vec3>();
             worldedit_core.adjust_camera(update);
          }
       }

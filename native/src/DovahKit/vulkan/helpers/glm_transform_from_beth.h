@@ -21,9 +21,4 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace vulkanDK {
    extern glm::mat4 glm_transform_from_beth(const glm::vec3& pos, glm::vec3 rot, float scale);
    extern glm::mat4 glm_transform_from_beth(const cobb::vector3<float>& pos, cobb::vector3<float> rot, float scale);
-
-   extern glm::vec3 glm_transform_rotation_from_beth(const glm::vec3& rot);
-   extern glm::vec3 glm_transform_rotation_from_beth(const cobb::vector3<float>& rot);
-   extern void glm_transform_rotation_from_beth_in_place(glm::vec3& rot);
-   extern void glm_transform_rotation_from_beth_in_place(float& x, float& y, float& z);
 }

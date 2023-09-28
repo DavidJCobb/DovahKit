@@ -589,7 +589,7 @@ namespace dovahkit::subsystems::worldedit {
          coc_pos.z += 160; // the CK uses a vertical offset as well
          sr->scene.camera.set_coordinates(
             coc_pos,
-            glm::fvec3{ coc_rot.x - glm::radians<float>(90), 0.0, coc_rot.z }
+            glm::fvec3{ coc_rot.x, 0.0, coc_rot.z }
          );
       } else {
          if (stub.is_exterior_cell()) {
@@ -1028,7 +1028,7 @@ namespace dovahkit::subsystems::worldedit {
                glm::fvec3 pos = { loaded->position.x, loaded->position.y, loaded->position.z };
                pos.z += 160;
 
-               glm::fvec3 rot = { glm::radians<float>(-90), 0, loaded->rotation.z };
+               glm::fvec3 rot = { 0, 0, loaded->rotation.z };
 
                sr->scene.camera.set_coordinates(pos, rot);
             }
@@ -1419,22 +1419,7 @@ namespace dovahkit::subsystems::worldedit {
          case reference_frame::camera:
             if (auto* sr = this->target_view->surfaceRenderer()) {
                auto& cs = sr->scene.camera;
-
-               //
-               // The SR-side camera angles are basically the same as Skyrim's except that a pitch of 0 
-               // is looking straight up at the sky. I don't know why offhand; probably I just screwed 
-               // up handling the axis/frame conventions. I don't want to mess with renderer internals 
-               // right now, so we'll just use a matrix multiplication to correct for it:
-               //
-               return glm::mat3(glm::eulerAngleXYZ(3.14159265358979323846F / 2.0F, 0.0F, 0.0F) * glm::eulerAngleXYZ(cs.rotation().x, cs.rotation().y, cs.rotation().z));
-
-               /*//
-               return glm::mat3(vulkanDK::glm_transform_from_beth(
-                  sr->scene.camera.position,
-                  { cs.pitch, cs.roll, cs.yaw },
-                  1.0
-               ));
-               //*/
+               return cs.camera_rotation_matrix();
             }
             break;
       }

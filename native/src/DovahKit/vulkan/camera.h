@@ -10,7 +10,7 @@ namespace vulkanDK {
 
       protected:
          glm::vec3 _position;
-         glm::vec3 _rotation; // euler angles: pitch, roll, yaw, i.e. nose up/down, lean, heading
+         glm::vec3 _rotation; // Same axis conventions as Skyrim.
          glm::mat4 _view_matrix;
 
          struct {
@@ -36,6 +36,9 @@ namespace vulkanDK {
          constexpr const glm::vec3& position() const { return this->_position; }
          constexpr const glm::vec3& rotation() const { return this->_rotation; }
          constexpr const glm::mat4& view_matrix() const { return this->_view_matrix; }
+
+         glm::mat4 camera_matrix() const;
+         glm::mat3 camera_rotation_matrix() const;
 
          void set_position(const glm::vec3&);
          void set_rotation(const glm::vec3& pitch_roll_yaw_radians);

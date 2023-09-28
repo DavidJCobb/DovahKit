@@ -10,7 +10,7 @@
 #include "NiMatrix33.h"
 
 namespace {
-   constexpr bool glm_is_righthanded = true;
+   constexpr bool glm_is_righthanded = false;
    constexpr bool skyrim_is_righthanded = false;
 }
 
@@ -28,56 +28,6 @@ namespace nifDK {
    glm::mat4 NiTransform::to_matrix() const {
       glm::mat4 out = glm::mat4(this->rotation);
       out = glm::transpose(out); // GLM is column-major; NiMatrix33 is row-major.
-      if constexpr (glm_is_righthanded == skyrim_is_righthanded) {
-         //
-         // Skyrim uses lefthanded XYZ Euler, where Z+ is upward, Y+ is forward, and X+ is right. 
-         // GLM, on the other hand, is righthanded by default. This means that we need to convert 
-         // our handedness.
-         // 
-         // Sadly, there's no quick shortcut. Given separate matrices for X, Y, and Z, you can 
-         // swap handedness by taking the transpose of each... but that doesn't work once they've 
-         // been multiplied together. We have to extract our Euler values, negate them all, and 
-         // then combine them back into a new matrix.
-         //
-         {
-            //
-            // For an explanation, see the `/cobb/rotation.cpp` file.
-            //
-            constexpr float EPSILON = 0.000001;
-            //
-            float x;
-            float y = asin(-out[2][0]); // col 2, row 0 == sin(y)
-            float z;
-            //
-            double u; // cos_
-            double v; // sin_
-            //
-            float cosY = cos(y);
-            if (fabs(cosY) > EPSILON) {
-               u = out[2][2] / cosY; // u == cosX
-               v = out[2][1] / cosY; // v == sinX
-               x = atan2(v, u);
-               //
-               u = out[0][0] / cosY; // u == cosZ
-               v = out[1][0] / cosY; // v == sinZ
-               z = atan2(v, u);
-            } else {
-               z = 0;
-               u = out[1][1]; // -sinX*sinY*sinZ + cosX*cosZ == -sinX*sinY*0 + cosX*1 == cosX
-               v = -out[0][1]; //  cosX*sinY*sinZ + sinX*cosZ ==  cosX*sinY*0 + sinX*1 == sinX
-               x = atan2(v, u);
-            }
-            //
-            // Now that we've extracted the coordinates, we need to swap the handedness and then 
-            // pass them into a GLM function to build a left-handed matrix out of the now left-
-            // handed values.
-            //
-            x = -x;
-            y = -y;
-            z = -z;
-            out = glm::eulerAngleXYZ(x, y, z);
-         }
-      }
       /*
       // Consider:
       //
@@ -86,8 +36,6 @@ namespace nifDK {
       //      glm::vec3(this->scale)
       //   ) * glm::mat4(this->rotation);
       //
-      // The above code would work if NIF angles were righthanded.
-      //
       // glm::scale just multiplies the first three columns of the first argument by the three 
       // scalars (one per axis) supplied in the second argument. NiTransform only does uniform 
       // scaling, so the scalars will all be equivalent; and the input matrix is promoted from 
@@ -95,7 +43,8 @@ namespace nifDK {
       // just go ahead and multiply the whole matrix by the scalar.
       //
       // Next, we apply the translation. In practice,  this literally just replaces the fourth 
-      // column with the translation promoted to a vec4, while changing nothing else.
+      // column with the translation promoted to a vec4 (fixing the multiplied [3][3] value in 
+      // the process), while changing nothing else.
       //
       //*/
       out *= this->scale;
