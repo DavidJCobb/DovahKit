@@ -245,11 +245,7 @@ namespace vulkanDK::overlays {
       auto& scene  = this->owner->scene;
       auto& camera = scene.camera;
       auto& prior  = this->state.last_camera_rotation;
-      if (camera.pitch != prior.x)
-         return true;
-      if (camera.roll != prior.y)
-         return true;
-      if (camera.yaw != prior.z)
+      if (camera.rotation() != prior)
          return true;
       return false;
    }
@@ -259,11 +255,11 @@ namespace vulkanDK::overlays {
       auto& scene  = this->owner->scene;
       auto& camera = scene.camera;
       state.view = glm::inverse(glm::translate(
-         glm::eulerAngleZYX(-camera.yaw, -camera.roll, -camera.pitch),
+         glm::eulerAngleZYX(-camera.rotation().z, -camera.rotation().y, -camera.rotation().x),
          glm::vec3{ 0, 0, axis_arrow_length * 4 }
       ));
       this->shader_params.uniform.unmap_memory(&state);
-      this->state.last_camera_rotation = { camera.pitch, camera.roll, camera.yaw };
+      this->state.last_camera_rotation = camera.rotation();
    }
    void world_axes::draw_call(VkCommandBuffer command_buffer) {
       if (!this->active)

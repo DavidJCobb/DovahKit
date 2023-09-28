@@ -92,17 +92,17 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          //
          auto& camera = view->surfaceRenderer()->scene.camera;
          //
-         pos.x = QInputDialog::getDouble(this, "X", "Input X-coordinate", camera.position.x, -999999, 999999, 4, &ok);
+         pos.x = QInputDialog::getDouble(this, "X", "Input X-coordinate", camera.position().x, -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-coordinate", camera.position.y, -999999, 999999, 4, &ok);
+         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-coordinate", camera.position().y, -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-coordinate", camera.position.z, -999999, 999999, 4, &ok);
+         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-coordinate", camera.position().z, -999999, 999999, 4, &ok);
          if (!ok)
             return;
          //
-         view->surfaceRenderer()->set_camera_position(pos);
+         camera.set_position(pos);
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_VistaShield));
       //
@@ -118,22 +118,19 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          auto& scene  = view->surfaceRenderer()->scene;
          auto& camera = scene.camera;
          //
-         pos.x = QInputDialog::getDouble(this, "X", "Input X-rotation (pitch)", cobb::radians_to_degrees(camera.pitch), -999999, 999999, 4, &ok);
+         pos.x = QInputDialog::getDouble(this, "X", "Input X-rotation (pitch)", cobb::radians_to_degrees(camera.rotation().x), -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-rotation (roll)", cobb::radians_to_degrees(camera.roll), -999999, 999999, 4, &ok);
+         pos.y = QInputDialog::getDouble(this, "Y", "Input Y-rotation (roll)", cobb::radians_to_degrees(camera.rotation().y), -999999, 999999, 4, &ok);
          if (!ok)
             return;
-         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-rotation (yaw)", cobb::radians_to_degrees(camera.yaw), -999999, 999999, 4, &ok);
+         pos.z = QInputDialog::getDouble(this, "Z", "Input Z-rotation (yaw)", cobb::radians_to_degrees(camera.rotation().z), -999999, 999999, 4, &ok);
          if (!ok)
             return;
          for (int i = 0; i < 3; ++i)
             pos[i] = cobb::degrees_to_radians(pos[i]);
          //
-         camera.pitch = pos.x;
-         camera.roll  = pos.y;
-         camera.yaw   = pos.z;
-         scene.update_camera();
+         camera.set_rotation(pos);
       });
       button->setIcon(this->style()->standardIcon(QStyle::SP_VistaShield));
       //

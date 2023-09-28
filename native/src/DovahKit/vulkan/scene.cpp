@@ -37,12 +37,27 @@ namespace {
 }
 
 namespace vulkanDK {
-   scene::scene() {
+   scene_camera::scene_camera(scene& o) {
+      this->_callback = {
+         .context = &o,
+         .functor = [](void* context, bool translated, bool rotated) {
+            auto& owner = *(scene*)context;
+            owner.global_state.view       = owner.camera.view_matrix();
+            owner.global_state.camera_pos = owner.camera.position();
+            if (translated) {
+               owner.mark_light_shadows_dirty();
+               owner.update_sun_shadows();
+            }
+         }
+      };
+   }
+
+   scene::scene() : camera(*this) {
       this->global_state.ambient_light_color = { 0.1, 0.1, 0.1 };
-      this->camera.position = { 2.0F, 2.0F, 2.0F };
-      this->camera.yaw   = glm::radians(-45.0F);
-      this->camera.pitch = glm::radians(-45.0F);
-      this->update_camera();
+      this->camera.set_coordinates(
+         { 2.0F, 2.0F, 2.0F },
+         { glm::radians(-45.0F), 0, glm::radians(-45.0F) }
+      );
    }
 
    void scene::update_projection(VkExtent2D render_area) {
@@ -87,71 +102,13 @@ namespace vulkanDK {
       //
       this->update_sun_shadows();
    }
-   void scene::update_camera() {
-      auto& cs  = this->camera;
-      auto  rot = glm::eulerAngleZYX(-cs.yaw, -cs.roll, -cs.pitch); // negate all three values to turn lefthanded rotations (Skyrim-space) to righthanded (Vulkan-space)
-      this->global_state.view       = glm::translate(glm::inverse(rot), -cs.position);
-      this->global_state.camera_pos = cs.position;
-      this->update_sun_shadows();
-   }
    void scene::adjust_camera(const data::camera_coordinate_change& change) {
-      constexpr float epsilon    = 0.00001;
-      constexpr float epsilon_sq = epsilon * epsilon;
-
-      bool do_move = (glm::length2(change.move) >= epsilon_sq);
-      bool do_turn = (glm::length2(change.turn) >= epsilon_sq);
-
-      if (do_turn) {
-         //
-         // Continually modifying  a matrix opens us up to floating-point  inaccuracy and 
-         // therefore to "creeping roll" within the camera.  Storing bare Euler angles is 
-         // a decent enough way to  prevent this, though it means we have to regenerate a 
-         // matrix after each camera adjustment.
-         //
-         auto& cs = this->camera;
-         cs.yaw   += change.turn.z;
-         cs.roll  += change.turn.y;
-         cs.pitch += change.turn.x;
-      }
-      if (do_move) {
-         //
-         // We need to start with a vector that's relative to the camera's reference frame. 
-         // However, the camera uses different axes than we expect.
-         // 
-         // We want to be able to treat the camera as just another object, and objects in 
-         // Skyrim use these directions:
-         // 
-         //  +X = Right
-         //  +Y = Forward
-         //  +Z = Up
-         // 
-         // However, the camera's local axes are:
-         // 
-         //  +X = Right
-         //  +Y = Down
-         //  +Z = Forward (Depth)
-         // 
-         // So to start with, we need to swap and negate some axes.
-         //
-         auto move = change.move;
-         std::swap(move.z, move.y);
-         move.z = -move.z;
-         //
-         // Now, we need to make it world-relative.
-         //
-         move = glm::inverse(glm::mat3x3(this->global_state.view)) * move;
-         this->camera.position += move;
-      }
-
-      if (do_move || do_turn) {
-         this->update_camera();
-         this->mark_light_shadows_dirty();
-      }
+      this->camera.adjust(change.move, change.turn);
    }
 
    void scene::update_sun_shadows() {
-      glm::vec3 sun_pos  = (this->global_state.sun_dir * -(shadow_draw_distance / 2.0F)) + this->camera.position;
-      glm::mat4 sun_view = glm::lookAt(sun_pos, this->camera.position, glm::vec3(0, 0, 1));
+      glm::vec3 sun_pos  = (this->global_state.sun_dir * -(shadow_draw_distance / 2.0F)) + this->camera.position();
+      glm::mat4 sun_view = glm::lookAt(sun_pos, this->camera.position(), glm::vec3(0, 0, 1));
       glm::mat4 sun_proj;
       {
          constexpr float near = 0.01F;
@@ -210,7 +167,7 @@ namespace vulkanDK {
          if (!light.can_cast_shadows())
             continue;
          //
-         auto distance = glm::distance((glm::vec3)light.transform()[3], this->camera.position);
+         auto distance = glm::distance((glm::vec3)light.transform()[3], this->camera.position());
          //
          for (size_t j = 0; j < nearest.size(); ++j) {
             auto& entry = nearest[j];
@@ -293,8 +250,8 @@ namespace vulkanDK {
 
    frustum scene::get_current_view_frustum(float near, float far) const {
       frustum out;
-      auto& camera     = this->camera;
-      auto  camera_rot = glm::eulerAngleXYZ(-camera.yaw, -camera.roll, -camera.pitch);
+      auto&       camera     = this->camera;
+      glm::mat4   camera_rot = glm::eulerAngleXYZ(-camera.rotation().x, -camera.rotation().y, -camera.rotation().z);
       const auto& camera_up      = camera_rot[0]; // local Z
       const auto& camera_forward = camera_rot[1]; // local Y
       const auto& camera_right   = camera_rot[2]; // local X
@@ -331,7 +288,7 @@ namespace vulkanDK {
          auto y = camera_up    * (h_far / 2.0F);
          //
          auto& pf = out.planes.far;
-         pf.center = camera.position + glm::vec3(camera_forward * far);
+         pf.center = camera.position() + glm::vec3(camera_forward * far);
          pf.upper_left  = pf.center + glm::vec3( y - x);
          pf.upper_right = pf.center + glm::vec3( y + x);
          pf.lower_left  = pf.center + glm::vec3(-y - x);
@@ -342,7 +299,7 @@ namespace vulkanDK {
          auto y = camera_up    * (h_near / 2.0F);
          //
          auto& pf = out.planes.near;
-         pf.center = camera.position + glm::vec3(camera_forward * near);
+         pf.center = camera.position() + glm::vec3(camera_forward * near);
          pf.upper_left  = pf.center + glm::vec3( y - x);
          pf.upper_right = pf.center + glm::vec3( y + x);
          pf.lower_left  = pf.center + glm::vec3(-y - x);

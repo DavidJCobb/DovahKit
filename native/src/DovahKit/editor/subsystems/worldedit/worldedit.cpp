@@ -587,14 +587,10 @@ namespace dovahkit::subsystems::worldedit {
       //
       if (found_coc_marker) {
          coc_pos.z += 160; // the CK uses a vertical offset as well
-         sr->set_camera_position(coc_pos);
-         //
-         auto& scene = sr->scene;
-         auto& camera = scene.camera;
-         camera.pitch = coc_rot.x - glm::radians<float>(90);
-         camera.roll  = 0.0;
-         camera.yaw   = coc_rot.z;
-         scene.update_camera();
+         sr->scene.camera.set_coordinates(
+            coc_pos,
+            glm::fvec3{ coc_rot.x - glm::radians<float>(90), 0.0, coc_rot.z }
+         );
       } else {
          if (stub.is_exterior_cell()) {
             auto pos = cell_position;
@@ -881,10 +877,10 @@ namespace dovahkit::subsystems::worldedit {
                //
                // If we're going nowhere, set the default camera coords.
                //
-               sr->scene.camera.position = { 2.0F, 2.0F, 2.0F };
-               sr->scene.camera.yaw      = glm::radians(-45.0F);
-               sr->scene.camera.pitch    = glm::radians(-45.0F);
-               sr->scene.update_camera();
+               sr->scene.camera.set_coordinates(
+                  { 2.0F, 2.0F, 2.0F },
+                  { glm::radians(-45.0F), 0, glm::radians(-45.0F) }
+               );
             }
             //
             // Set lighting and fog params.
@@ -1031,14 +1027,10 @@ namespace dovahkit::subsystems::worldedit {
             if (loaded) {
                glm::fvec3 pos = { loaded->position.x, loaded->position.y, loaded->position.z };
                pos.z += 160;
-               sr->set_camera_position(pos);
-               //
-               auto& scene  = sr->scene;
-               auto& camera = scene.camera;
-               camera.pitch = glm::radians<float>(-90);
-               camera.roll  = 0.0;
-               camera.yaw   = loaded->rotation.z;
-               scene.update_camera();
+
+               glm::fvec3 rot = { glm::radians<float>(-90), 0, loaded->rotation.z };
+
+               sr->scene.camera.set_coordinates(pos, rot);
             }
          }
       }
@@ -1179,7 +1171,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          // Process (un)loading cells as the camera moves.
          //
-         const auto& camera_pos = sr->scene.camera.position;
+         const auto& camera_pos = sr->scene.camera.position();
          int32_t cgx = dovah::world_coordinate_to_grid_coordinate(camera_pos.x);
          int32_t cgy = dovah::world_coordinate_to_grid_coordinate(camera_pos.y);
 
@@ -1434,7 +1426,7 @@ namespace dovahkit::subsystems::worldedit {
                // up handling the axis/frame conventions. I don't want to mess with renderer internals 
                // right now, so we'll just use a matrix multiplication to correct for it:
                //
-               return glm::mat3(glm::eulerAngleXYZ(3.14159265358979323846F / 2.0F, 0.0F, 0.0F) * glm::eulerAngleXYZ(cs.pitch, cs.roll, cs.yaw));
+               return glm::mat3(glm::eulerAngleXYZ(3.14159265358979323846F / 2.0F, 0.0F, 0.0F) * glm::eulerAngleXYZ(cs.rotation().x, cs.rotation().y, cs.rotation().z));
 
                /*//
                return glm::mat3(vulkanDK::glm_transform_from_beth(
@@ -1454,6 +1446,23 @@ namespace dovahkit::subsystems::worldedit {
       if (!sr)
          return;
       sr->scene.adjust_camera(update);
+   }
+   void core::orbit_camera(camera_orbit_target target, cobb::vector3<float> euler_radians) {
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+
+      cobb::vector3<float> pivot;
+      switch (target) {
+         case camera_orbit_target::primary_selection:
+            pivot = this->state.previous_selection_pivot; // TODO: What if the user has never selected anything before?
+            break;
+         case camera_orbit_target::selection_centroid:
+            pivot = this->get_selection_centroid();
+            break;
+      }
+
+      sr->scene.camera.arcball(pivot.to_struct<glm::vec3>(), euler_radians.to_struct<glm::vec3>());
    }
    bool core::try_adjust_selection_coordinates(const coordinate_adjustment& adjust) {
       if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
@@ -1682,6 +1691,10 @@ namespace dovahkit::subsystems::worldedit {
       if (source_info != bounds_generation_source::undefined && source_info != bounds_generation_source::nif) {
          list.back().update_on_nif_load = true;
       }
+
+      if (info.form)
+         this->state.previous_selection_pivot = info.form->position;
+
       emit this->refSelected(stub);
       emit this->refSelectionChanged(stub, true);
    }
@@ -1698,6 +1711,14 @@ namespace dovahkit::subsystems::worldedit {
             this->_unload_refr(stub);
          }
       }
+
+      if (!this->state.selection.refs.empty()) {
+         const auto& info = this->state.selection.refs.back();
+         auto loaded = info.loaded_ref_info();
+         if (loaded)
+            this->state.previous_selection_pivot = loaded->position;
+      }
+
       emit this->refDeselected(stub);
       emit this->refSelectionChanged(stub, false);
    }

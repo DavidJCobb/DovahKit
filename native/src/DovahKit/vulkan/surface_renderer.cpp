@@ -2440,19 +2440,10 @@ namespace vulkanDK {
    }
 
    void surface_renderer::move_camera(const glm::vec3& move, const glm::vec3& turn) {
-      auto& gs     = this->scene.global_state;
-      auto& camera = gs.view;
-      //
-      auto rot = glm::eulerAngleZY(turn.z, turn.y);
-      rot *= glm::eulerAngleX(turn.x);
-      //
-      camera *= rot;
-      auto position = glm::inverse(glm::mat3x3(camera)) * move;
-      camera = glm::translate(camera, position);
+      this->scene.camera.adjust(move, turn);
    }
    void surface_renderer::set_camera_position(const glm::vec3& position) {
-      this->scene.camera.position = position;
-      this->scene.update_camera();
+      this->scene.camera.set_position(position);
    }
 
    gizmo_mode surface_renderer::get_gizmo_mode() const {

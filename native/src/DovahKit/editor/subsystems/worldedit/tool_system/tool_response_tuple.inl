@@ -39,7 +39,7 @@ namespace dovahkit::subsystems::worldedit {
    template<tools::is_tool_response A>
    void tool_response_tuple::merge_member(timestamp_t time, const A& v) {
       if constexpr (response_types_with_timestamps::contains_type<A> && impl::_tool_response_tuple::can_merge<A>) {
-         auto& ts     = this->input_timestamps[response_types_with_timestamps::index_of_type<A>()];
+         auto& ts     = this->input_timestamps[response_types_with_timestamps::index_of_type<A>];
          auto& stored = std::get<A>(this->data);
          if (this->presence.test(_presence_bit_index_of<A>)) {
             if (ts <= time) {

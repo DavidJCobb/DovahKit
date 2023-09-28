@@ -147,6 +147,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
@@ -716,6 +717,7 @@
     <ClCompile Include="vulkan\asset_loading\worker_thread_for_nifs.cpp" />
     <ClCompile Include="vulkan\asset_loading\worker_thread_for_textures.cpp" />
     <ClCompile Include="vulkan\buffer.cpp" />
+    <ClCompile Include="vulkan\camera.cpp" />
     <ClCompile Include="vulkan\command_buffer.cpp" />
     <ClCompile Include="vulkan\compute_shader.cpp" />
     <ClCompile Include="vulkan\dds\header.cpp" />
@@ -850,6 +852,7 @@
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bounds_generation_source.h" />
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_orbit_target.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\camera_turn_axis.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\editor_mode.h" />
@@ -879,6 +882,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
@@ -1344,6 +1348,7 @@
     <ClInclude Include="vulkan\asset_loading\worker_thread_for_nifs.h" />
     <ClInclude Include="vulkan\asset_loading\worker_thread_for_textures.h" />
     <ClInclude Include="vulkan\buffer.h" />
+    <ClInclude Include="vulkan\camera.h" />
     <ClInclude Include="vulkan\command_buffer.h" />
     <ClInclude Include="vulkan\compute_shader.h" />
     <ClInclude Include="vulkan\config\antialiasing.h" />
@@ -2131,6 +2136,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\options_union.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />

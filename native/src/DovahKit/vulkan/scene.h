@@ -8,6 +8,7 @@
 #include "./config/scene_limits.h"
 #include "./scene_entities/all_types.h"
 #include "./scene_entities/fif_sync_state.h"
+#include "./camera.h"
 #include "./frustum.h"
 #include "./loaded_texture.h"
 #include "./loaded_texture_index.h"
@@ -35,6 +36,11 @@ namespace vulkanDK {
       };
    }
 
+   class scene_camera : public camera {
+      public:
+         scene_camera(scene&);
+   };
+
    class scene {
       public:
          static constexpr size_t index_of_none = std::numeric_limits<size_t>::max();
@@ -58,12 +64,7 @@ namespace vulkanDK {
             VkExtent2D bounds = {};
             float      aspect = 0;
          } last_known_view_info;
-         struct {
-            float yaw   = 0.0; // clockwise; heading
-            float pitch = 0.0; // clockwise; nose up/down
-            float roll  = 0.0; // clockwise; sideways lean
-            glm::vec3 position = { 0, 0, 0 };
-         } camera;
+         scene_camera       camera;
          scene_global_state global_state; // GPU-side state
          scene_gizmo_state  gizmo_state;
          scene_entities::fif_sync_state light_shadow_state;
@@ -76,7 +77,6 @@ namespace vulkanDK {
          }
 
          void update_projection(VkExtent2D render_area);
-         void update_camera();
          void adjust_camera(const data::camera_coordinate_change&);
 
          void update_sun_shadows();

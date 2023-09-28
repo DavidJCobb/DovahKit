@@ -2103,6 +2103,12 @@
     <ClCompile Include="helpers\math\matrix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5213,6 +5219,15 @@
     <ClInclude Include="helpers\math\permutation_parity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\enums\camera_orbit_target.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6002,6 +6017,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\_docs\general notes.md" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

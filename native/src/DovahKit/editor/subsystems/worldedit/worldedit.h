@@ -15,6 +15,7 @@
 
 #include "./enums/bool_operation.h"
 #include "./enums/bounds_generation_source.h"
+#include "./enums/camera_orbit_target.h"
 #include "./enums/camera_speed_flags.h"
 #include "./enums/editor_mode.h"
 #include "./enums/reference_frame.h"
@@ -139,6 +140,9 @@ namespace dovahkit::subsystems::worldedit {
             struct {
                std::vector<selected_refr_info> refs;
             } selection;
+
+            // for "Orbit Camera" tool
+            cobb::vector3<float> previous_selection_pivot;
          } state;
 
          void _update_grid_size_from_inis();
@@ -213,6 +217,7 @@ namespace dovahkit::subsystems::worldedit {
          glm::mat3 get_frame_rotation_matrix(reference_frame) const;
 
          void adjust_camera(vulkanDK::data::camera_coordinate_change&);
+         void orbit_camera(camera_orbit_target pivot, cobb::vector3<float> euler_radians);
          bool try_adjust_selection_coordinates(const coordinate_adjustment&);
 
          #pragma region Passkeyed functions for tools

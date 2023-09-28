@@ -15,6 +15,7 @@ namespace {
    }
    using worldedit::axis3D;
    using worldedit::bool_operation;
+   using worldedit::camera_orbit_target;
    using worldedit::camera_turn_axis;
    using worldedit::editor_mode;
    using worldedit::gizmo_mode;
@@ -169,17 +170,18 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             })
          }));
          node_selections->append_child(*control_scheme_node::from_data(control_scheme_action{
-            .name = "Turn Camera (TODO: Orbit Camera instead)",
+            .name = "Orbit Camera",
             //
             .input_sequence    = algorithms::input_sequence_from_string(":: Right Stick"),
             .button_press_type = button_press_type::hold,
             //
-            .tool = _tool_with_options(tools::turn_camera::options{
+            .tool = _tool_with_options(tools::orbit_camera::options{
                .magnitudes = { 1, 1 },
                .range = {
                   .x = { camera_turn_axis::yaw,   sign::positive },
                   .y = { camera_turn_axis::pitch, sign::positive },
                },
+               .target = camera_orbit_target::primary_selection,
             })
          }));
       }
