@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <QPainter>
 #include <QResource>
+#include "helpers/glm/euler_to_matrix.h"
+#include "helpers/math/rotation/unit_conversion.h"
 #include "../frame_in_flight.h"
 #include "../surface_renderer.h"
 
@@ -12,6 +14,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 namespace {
+   constexpr const float ninety_degrees = 90.0F * cobb::degrees_to_radians_mult;
 }
 
 namespace vulkanDK::overlays {
@@ -252,12 +255,18 @@ namespace vulkanDK::overlays {
 
    void world_axes::prepare_for_render() {
       auto& state  = *(_shader_state*)this->shader_params.uniform.map_memory();
-      auto& scene  = this->owner->scene;
-      auto& camera = scene.camera;
-      state.view = glm::inverse(glm::translate(
-         glm::eulerAngleZYX(-camera.rotation().z, -camera.rotation().y, -camera.rotation().x),
-         glm::vec3{ 0, 0, axis_arrow_length * 4 }
-      ));
+      auto& camera = this->owner->scene.camera;
+      {
+         auto& rot = camera.rotation();
+         auto  mat = cobb::glm::euler_intrinsic_yzx_to_mat<cobb::glm::handedness::left>(glm::vec3{
+            (rot.x - ninety_degrees),
+            rot.y,
+            rot.z
+         });
+         mat = glm::translate(mat, glm::vec3{ 0, 0, axis_arrow_length * 4 });
+         mat = glm::inverse(mat);
+         state.view = mat;
+      }
       this->shader_params.uniform.unmap_memory(&state);
       this->state.last_camera_rotation = camera.rotation();
    }
