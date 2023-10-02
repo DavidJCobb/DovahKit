@@ -1,17 +1,11 @@
 #pragma once
 #include <type_traits>
-#include "./reader.h"
-#include "./writer.h"
 #include "./round_trip_test_scramble.h"
 
+
 namespace cobb::bitstreams {
-   //
-   // This template can be used to check whether a struct passes a round-trip 
-   // serialization test. That is: if we create an instance, write it, and then 
-   // read what we've just written, do we get consistent results?
-   //
-   template<typename T>
-   constexpr const bool round_trip_test = []() {
+   template<typename T, auto... MemberPointers> requires (std::is_member_object_pointer_v<decltype(MemberPointers)> && ...)
+   constexpr const bool round_trip_test_with_targeted_scramble() {
       if constexpr (
          sizeof(T) == 0
          || std::is_empty_v<T> // guard against a bug in MSVC's bit-cast intrinsic affecting empty structs, which are technically sizeof 1
@@ -25,12 +19,13 @@ namespace cobb::bitstreams {
          w.stream(src);
 
          T dst = {};
-         if constexpr (std::is_trivially_copyable_v<T>) {
+         if constexpr (sizeof...(MemberPointers) > 0) {
             //
-            // Scramble `dst` before the read, so that a totally failed or no-op read 
-            // doesn't automatically compare as equal.
+            // Scramble those members that we have been asked to scramble prior to the 
+            // read, so that totally failed or no-op reads don't automatically compare 
+            // equal.
             //
-            round_trip_test_scramble(dst);
+            (round_trip_test_scramble(dst.*MemberPointers), ...);
          }
 
          reader r;
@@ -39,5 +34,5 @@ namespace cobb::bitstreams {
 
          return src == dst;
       }
-   }();
+   }
 }

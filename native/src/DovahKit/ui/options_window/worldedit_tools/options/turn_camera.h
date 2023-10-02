@@ -3,6 +3,7 @@
 #include <QWidget>
 #include "helpers/qt/wrappers/enum_combobox.h"
 #include "editor/subsystems/worldedit/tool_system/tools/turn_camera.h"
+#include "./util/WorldeditToolRangeInputScalesWidget.h"
 
 class QComboBox;
 
@@ -29,16 +30,7 @@ namespace dovahkit::ui::worldedit::tools {
                QDoubleSpinBox* yaw   = nullptr;
                QDoubleSpinBox* pitch = nullptr;
             } magnitude;
-            struct {
-               struct {
-                  EnumCombobox<dovahkit::subsystems::worldedit::camera_turn_axis> axis;
-                  EnumCombobox<dovahkit::subsystems::worldedit::sign> sign;
-               } x;
-               struct {
-                  EnumCombobox<dovahkit::subsystems::worldedit::camera_turn_axis> axis;
-                  EnumCombobox<dovahkit::subsystems::worldedit::sign> sign;
-               } y;
-            } range;
+            WorldeditToolRangeInputScalesWidget* range = nullptr;
          } _subwidgets;
    };
 }

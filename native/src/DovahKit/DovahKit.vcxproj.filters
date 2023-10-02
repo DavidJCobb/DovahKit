@@ -2109,6 +2109,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5231,6 +5234,15 @@
     <ClInclude Include="helpers\glm\euler_to_matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\round_trip_test_scramble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitstreams\round_trip_test_with_targeted_scramble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5360,6 +5372,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\util\worldedit_tool_range_input_scales.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -5709,6 +5724,9 @@
     <QtMoc Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6024,6 +6042,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
+    <None Include="editor\subsystems\worldinput\util\range_input_scales.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

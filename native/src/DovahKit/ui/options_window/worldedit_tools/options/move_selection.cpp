@@ -72,47 +72,7 @@ namespace dovahkit::ui::worldedit::tools {
 
          cobb::qt::bind(this->ui.alsoMoveCamera, this->_state.current_options.also_move_camera);
       }
-      {
-         auto& wrappers = this->_widget_wrappers.range;
-         wrappers.x.axis = this->ui.rangeXAxis;
-         wrappers.x.sign = this->ui.rangeXSign;
-         wrappers.y.axis = this->ui.rangeYAxis;
-         wrappers.y.sign = this->ui.rangeYSign;
-
-         auto& fields  = this->_state.current_options.range;
-
-         {
-            using enum_type = decltype(wrappers.x.axis)::value_type;
-            using item_type = std::pair<enum_type, const char*>;
-
-            constexpr const auto items = std::array{
-               item_type{ enum_type::x, "X" },
-               item_type{ enum_type::y, "Y" },
-               item_type{ enum_type::z, "Z" },
-            };
-
-            wrappers.x.axis.addItems(items);
-            wrappers.y.axis.addItems(items);
-            //
-            wrappers.x.axis.beginOneWaySync(fields.x.axis);
-            wrappers.y.axis.beginOneWaySync(fields.y.axis);
-         }
-         {
-            using enum_type = decltype(wrappers.x.sign)::value_type;
-            using item_type = std::pair<enum_type, const char*>;
-
-            constexpr const auto items = std::array{
-               item_type{ enum_type::positive, "Positive" },
-               item_type{ enum_type::negative, "Negative" },
-            };
-
-            wrappers.x.sign.addItems(items);
-            wrappers.y.sign.addItems(items);
-            //
-            wrappers.x.sign.beginOneWaySync(fields.x.sign);
-            wrappers.y.sign.beginOneWaySync(fields.y.sign);
-         }
-      }
+      this->ui.rangeInputScales->setSyncTarget(&this->_state.current_options.range);
    }
 
    void move_selection::set_options(const options_type& v) {
@@ -151,15 +111,6 @@ namespace dovahkit::ui::worldedit::tools {
          const auto blocker = QSignalBlocker(this->ui.alsoMoveCamera);
          this->ui.alsoMoveCamera->setChecked(v.also_move_camera);
       }
-      {
-         const auto& fields = this->_state.current_options.range;
-         auto& wrappers = this->_widget_wrappers.range;
-
-         wrappers.x.axis.setValue(fields.x.axis);
-         wrappers.y.axis.setValue(fields.y.axis);
-
-         wrappers.x.sign.setValue(fields.x.sign);
-         wrappers.y.sign.setValue(fields.y.sign);
-      }
+      this->ui.rangeInputScales->reloadFromSyncTarget();
    }
 }

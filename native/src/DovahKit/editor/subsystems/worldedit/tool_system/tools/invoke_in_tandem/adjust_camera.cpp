@@ -27,7 +27,6 @@ namespace dovahkit::subsystems::worldedit::tools::tandem {
       auto& worldedit_core = core::get();
 
       if (params_move || params_turn) {
-         vulkanDK::data::camera_coordinate_change update;
          if (params_move) {
             //
             // The "move" params include two movement vectors: the "instant" vector and the "held" 
@@ -41,30 +40,35 @@ namespace dovahkit::subsystems::worldedit::tools::tandem {
             // speed-per-second values is all that's needed.
             //
             const auto& data = *params_move;
-            update.move = data.held.to_struct<glm::vec3>();
+            auto move = data.held.to_struct<glm::vec3>();
             if constexpr (normalize_super_movements) {
-               const auto len = glm::length(update.move);
+               const auto len = glm::length(move);
                if (len > 1.0)
-                  update.move /= len;
+                  move /= len;
             }
             //
             // Apply movement speeds per second:
             //
-            update.move *= worldedit_core.get_camera_move_speed();
-            update.move += data.instant.to_struct<glm::vec3>();
+            move *= worldedit_core.get_camera_move_speed();
+            move += data.instant.to_struct<glm::vec3>();
+
+            worldedit_core.translate_camera(move, reference_frame::world);
          }
          if (params_turn) {
             //
             // Camera turning makes the same "held" and "instant" distinction as camera movement.
             //
+            vulkanDK::data::camera_coordinate_change update;
+
             const auto& data = *params_turn;
             update.turn = data.held.to_struct<glm::vec3>();
             update.turn.z *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondX.get_current_value<double>();
             update.turn.x *= cobb::degrees_to_radians_mult * worldedit_ini_settings::fTurnSpeedDegreesPerSecondY.get_current_value<double>();
-
+            //
             update.turn += data.instant.to_struct<glm::vec3>();
+
+            worldedit_core.adjust_camera(update);
          }
-         worldedit_core.adjust_camera(update);
       }
 
       if (params_orbit) {

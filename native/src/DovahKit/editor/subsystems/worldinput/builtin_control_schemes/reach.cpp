@@ -23,6 +23,8 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
+   using range_input_scales = worldinput::util::range_input_scales;
+
    using worldinput::control_scheme;
    using worldinput::control_scheme_action;
    using worldinput::control_scheme_condition;
@@ -58,12 +60,9 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
             //
             .tool = _tool_with_options(tools::move_camera::options{
-               .reference_frames = {
-                  .baseline = reference_frame::camera,
-                  .selection = reference_frame::camera,
-               },
+               .frame      = reference_frame::camera,
                .magnitudes = { 1, 1, 0 },
-               .range = {
+               .range = range_input_scales{
                   .x = { axis3D::x, sign::positive },
                   .y = { axis3D::y, sign::positive },
                },
@@ -76,10 +75,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
             //
             .tool = _tool_with_options(tools::move_camera::options{
-               .reference_frames = {
-                  .baseline  = reference_frame::camera,
-                  .selection = reference_frame::camera,
-               },
+               .frame      = reference_frame::camera,
                .magnitudes = { 0, 0, -1 },
             })
          }));
@@ -90,10 +86,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
 
             .tool = _tool_with_options(tools::move_camera::options{
-               .reference_frames = {
-                  .baseline  = reference_frame::camera,
-                  .selection = reference_frame::camera,
-               },
+               .frame      = reference_frame::camera,
                .magnitudes = { 0, 0, 1 },
             })
          }));
@@ -104,10 +97,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
             //
             .tool = _tool_with_options(tools::turn_camera::options{
-               .magnitudes = { 1, 1 },
-               .range = {
-                  .x = { camera_turn_axis::yaw,   sign::positive },
-                  .y = { camera_turn_axis::pitch, sign::positive },
+               .magnitudes = { 1, 0, 1 },
+               .range = range_input_scales{
+                  .x = { axis3D::z, sign::positive },
+                  .y = { axis3D::x, sign::positive },
                },
             })
          }));
@@ -135,7 +128,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                .frame = reference_frame::camera,
                .also_move_camera = true,
                .magnitudes = { 1, 1, 0 },
-               .range = {
+               .range = range_input_scales{
                   .x = { axis3D::x, sign::positive },
                   .y = { axis3D::y, sign::positive },
                },
@@ -152,7 +145,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
             //
             .tool = _tool_with_options(tools::move_selection::options{
-               .frame = reference_frame::camera,
+               .frame = reference_frame::world,
                .also_move_camera = true,
                .magnitudes = { 0, 0, -1 },
             })
@@ -164,7 +157,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
 
             .tool = _tool_with_options(tools::move_selection::options{
-               .frame = reference_frame::camera,
+               .frame = reference_frame::world,
                .also_move_camera = true,
                .magnitudes = { 0, 0, 1 },
             })
@@ -176,14 +169,40 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .button_press_type = button_press_type::hold,
             //
             .tool = _tool_with_options(tools::orbit_camera::options{
-               .magnitudes = { 1, 1 },
-               .range = {
-                  .x = { camera_turn_axis::yaw,   sign::positive },
-                  .y = { camera_turn_axis::pitch, sign::positive },
+               .magnitudes = { 1, 0, 1 },
+               .range = range_input_scales{
+                  .x = { axis3D::z, sign::positive },
+                  .y = { axis3D::x, sign::positive },
                },
                .target = camera_orbit_target::primary_selection,
             })
          }));
+
+         {
+            auto* modifier = control_scheme_node::from_data(control_scheme_modifier{
+               .name = "Right Trigger",
+               .input_sequence = _single_button_sequence(inputs::xinput_button::rt),
+            });
+            node_selections->append_child(*modifier);
+            
+            modifier->append_child(*control_scheme_node::from_data(control_scheme_action{
+               .name = "Zoom",
+               //
+               .input_sequence    = algorithms::input_sequence_from_string(":: Left Stick Y"),
+               .button_press_type = button_press_type::hold,
+               //
+               .tool = _tool_with_options(tools::move_camera::options{
+                  .magnitudes = { 0, 1, 0 },
+                  .range = range_input_scales{
+                     .x = { axis3D::x, sign::positive },
+                     .y = { axis3D::y, sign::positive },
+                  },
+               })
+            }));
+            //
+            // TOOD: Rotate selection on `:: Left Stick X`
+            //
+         }
       }
       out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{
          .name = "Boost",

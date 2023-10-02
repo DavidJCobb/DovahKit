@@ -863,9 +863,6 @@ namespace dovahkit::subsystems::worldinput {
       return (this->clone() <<= nested);
    }
    input_sequence& input_sequence::operator<<=(const input_sequence& nested) {
-      if (!nested.root)
-         return *this;
-
       if (this->has_range_requirement() && nested.has_range_requirement()) {
          throw std::logic_error(
             "An input sequence can only have one directional requirement; "
@@ -876,6 +873,12 @@ namespace dovahkit::subsystems::worldinput {
       if (nested.has_range_requirement()) {
          this->range = nested.range;
       }
+
+      if (!nested.root)
+         //
+         // Can occur with empty sequences, or with range-input-only "sequences."
+         //
+         return *this;
 
       group* last_terminal;
       group* parent_of_last;

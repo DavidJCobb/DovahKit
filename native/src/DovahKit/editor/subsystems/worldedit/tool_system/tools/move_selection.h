@@ -1,9 +1,12 @@
 #pragma once
 #include "./_base.h"
+//
+#include <optional>
 #include "helpers/vector3.h"
 #include "../../enums/axis3D.h"
 #include "../../enums/reference_frame.h"
 #include "../../enums/sign.h"
+#include "editor/subsystems/worldinput/util/range_input_scales.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
    class move_selection : public _base {
@@ -29,13 +32,6 @@ namespace dovahkit::subsystems::worldedit::tools {
                   constexpr bool no_movement_allowed() const noexcept { return x && y && z; }
                };
 
-               struct range_mapping {
-                  constexpr bool operator==(const range_mapping& v) const noexcept = default;
-
-                  axis3D axis;
-                  sign   sign;
-               };
-
             public:
                reference_frame frame = reference_frame::world;
                //
@@ -43,10 +39,7 @@ namespace dovahkit::subsystems::worldedit::tools {
                //
                bool also_move_camera = false;
                cobb::vector3<float> magnitudes;
-               struct {
-                  range_mapping x = range_mapping{ axis3D::x, sign::positive };
-                  range_mapping y = range_mapping{ axis3D::y, sign::negative };
-               } range;
+               std::optional<worldinput::util::range_input_scales> range;
                //
                constraint_data locked_axes;
 
@@ -57,10 +50,10 @@ namespace dovahkit::subsystems::worldedit::tools {
          };
          struct response {
             struct by_temporality {
-               cobb::vector3<float> magnitude;
+               cobb::vector3<float> magnitude; // world-relative translation magnitude
                //
                struct {
-                  cobb::vector3<float> magnitude;
+                  cobb::vector3<float> magnitude; // world-relative translation magnitude
                } camera;
                //
                struct {

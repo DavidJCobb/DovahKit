@@ -132,10 +132,7 @@ namespace {
                .button_press_type = button_press_type::hold,
                //
                .tool = _tool_with_options(tools::move_camera::options{
-                  .reference_frames = {
-                     .baseline  = reference_frame::camera,
-                     .selection = reference_frame::camera,
-                  },
+                  .frame      = reference_frame::camera,
                   .magnitudes = { item.x, item.y, item.z },
                }),
             };
@@ -164,7 +161,7 @@ namespace {
                .button_press_type = button_press_type::hold,
                //
                .tool = _tool_with_options(tools::turn_camera::options{
-                  .magnitudes = { .yaw = item.yaw, .pitch = item.pitch },
+                  .magnitudes = { item.yaw, 0, item.pitch },
                }),
             };
 

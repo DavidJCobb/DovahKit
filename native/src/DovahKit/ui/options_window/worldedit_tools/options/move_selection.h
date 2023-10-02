@@ -33,16 +33,6 @@ namespace dovahkit::ui::worldedit::tools {
          struct {
             EnumCombobox<dovahkit::subsystems::worldedit::reference_frame> transformFrame;
             EnumCombobox<dovahkit::subsystems::worldedit::reference_frame> constraintFrame;
-            struct {
-               struct {
-                  EnumCombobox<dovahkit::subsystems::worldedit::axis3D> axis;
-                  EnumCombobox<dovahkit::subsystems::worldedit::sign>   sign;
-               } x;
-               struct {
-                  EnumCombobox<dovahkit::subsystems::worldedit::axis3D> axis;
-                  EnumCombobox<dovahkit::subsystems::worldedit::sign>   sign;
-               } y;
-            } range;
          } _widget_wrappers;
    };
 }

@@ -46,6 +46,13 @@
       <string>Custom movement options</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="alsoMoveCamera">
+        <property name="text">
+         <string>Also move camera, if movement is successful</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
@@ -118,56 +125,7 @@
        </layout>
       </item>
       <item row="2" column="0" colspan="2">
-       <widget class="QGroupBox" name="groupBox_4">
-        <property name="title">
-         <string>Range control mapping</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Input Y-Axis:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>Input X-Axis:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="rangeXAxis"/>
-         </item>
-         <item row="1" column="2">
-          <widget class="QComboBox" name="rangeXSign"/>
-         </item>
-         <item row="2" column="2">
-          <widget class="QComboBox" name="rangeYSign"/>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="rangeYAxis"/>
-         </item>
-         <item row="0" column="0" colspan="3">
-          <widget class="QLabel" name="rangeExplanation">
-           <property name="text">
-            <string>When this tool is bound to a range control, such as a joystick, the control's position will be multiplied into the tool's magnitude. You can configure how the control is mapped here.</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="alsoMoveCamera">
-        <property name="text">
-         <string>Also move camera, if movement is successful</string>
-        </property>
-       </widget>
+       <widget class="WorldeditToolRangeInputScalesWidget" name="rangeInputScales" native="true"/>
       </item>
      </layout>
     </widget>
@@ -266,6 +224,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>WorldeditToolRangeInputScalesWidget</class>
+   <extends>QWidget</extends>
+   <header>ui/options_window/worldedit_tools/options/util/WorldeditToolRangeInputScalesWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>transformFrame</tabstop>
   <tabstop>constraintFrame</tabstop>
@@ -277,10 +243,6 @@
   <tabstop>customMagnitudeX</tabstop>
   <tabstop>customMagnitudeY</tabstop>
   <tabstop>customMagnitudeZ</tabstop>
-  <tabstop>rangeXAxis</tabstop>
-  <tabstop>rangeXSign</tabstop>
-  <tabstop>rangeYAxis</tabstop>
-  <tabstop>rangeYSign</tabstop>
  </tabstops>
  <resources/>
  <connections/>

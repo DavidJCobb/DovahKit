@@ -4,6 +4,7 @@
 #include "../../enums/camera_orbit_target.h"
 #include "../../enums/camera_turn_axis.h"
 #include "../../enums/sign.h"
+#include "editor/subsystems/worldinput/util/range_input_scales.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
    class orbit_camera : public _base {
@@ -19,23 +20,9 @@ namespace dovahkit::subsystems::worldedit::tools {
             public:
                constexpr bool operator==(const options& v) const noexcept;
 
-               struct range_mapping {
-                  constexpr bool operator==(const range_mapping& v) const noexcept = default;
-
-                  camera_turn_axis axis;
-                  sign             sign;
-               };
-
             public:
-               struct _ {
-                  constexpr bool operator==(const _& v) const noexcept = default;
-                  float yaw   = 0;
-                  float pitch = 0;
-               } magnitudes;
-               struct {
-                  range_mapping x = range_mapping{ camera_turn_axis::pitch, sign::positive };
-                  range_mapping y = range_mapping{ camera_turn_axis::yaw,   sign::negative };
-               } range;
+               cobb::vector3<float> magnitudes; // pitch, roll, yaw
+               std::optional<worldinput::util::range_input_scales> range;
                camera_orbit_target target = camera_orbit_target::primary_selection;
 
                constexpr void stream(cobb::bitstreams::reader&);

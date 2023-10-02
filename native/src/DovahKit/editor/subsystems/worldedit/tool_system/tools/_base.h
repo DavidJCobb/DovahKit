@@ -3,6 +3,7 @@
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 #include "helpers/bitstreams/round_trip_test.h"
+#include "helpers/bitstreams/round_trip_test_with_targeted_scramble.h"
 #include "helpers/eight_cc.h"
 #include "helpers/enum_flags.h"
 #include "editor/subsystems/worldinput/tool_request_cause.h"

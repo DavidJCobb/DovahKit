@@ -22,6 +22,8 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
+   using range_input_scales = worldinput::util::range_input_scales;
+
    using worldinput::control_scheme;
    using worldinput::control_scheme_action;
    using worldinput::control_scheme_condition;
@@ -46,10 +48,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          .button_press_type = button_press_type::hold,
          //
          .tool = _tool_with_options(tools::turn_camera::options{
-            .magnitudes = { 1, 1 },
-            .range = {
-               .x = { camera_turn_axis::yaw,   sign::positive },
-               .y = { camera_turn_axis::pitch, sign::positive },
+            .magnitudes = { 1, 0, 1 },
+            .range = range_input_scales{
+               .x = { axis3D::z, sign::positive },
+               .y = { axis3D::x, sign::positive },
             },
          })
       }));
@@ -60,12 +62,9 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          .button_press_type = button_press_type::hold,
          //
          .tool = _tool_with_options(worldedit::tools::move_camera::options{
-            .reference_frames = {
-               .baseline  = reference_frame::camera,
-               .selection = reference_frame::camera,
-            },
+            .frame      = reference_frame::camera,
             .magnitudes = { 1, 0, 1 },
-            .range = {
+            .range = range_input_scales{
                .x = { axis3D::x, sign::positive },
                .y = { axis3D::y, sign::positive },
             },
@@ -81,10 +80,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          .button_press_type = button_press_type::hold,
          //
          .tool = _tool_with_options(worldedit::tools::turn_camera::options{
-            .magnitudes = { 1, 1 },
-            .range = {
-               .x = { camera_turn_axis::yaw,   sign::positive },
-               .y = { camera_turn_axis::pitch, sign::positive },
+            .magnitudes = { 1, 0, 1 },
+            .range = range_input_scales{
+               .x = { axis3D::z, sign::positive },
+               .y = { axis3D::x, sign::positive },
             },
          })
       }));

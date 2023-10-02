@@ -1,10 +1,10 @@
 #pragma once
-#include "helpers/macros/default_comparable_anonymous_struct.h"
 #include "helpers/vector3.h"
 #include "./_base.h"
 #include "../../enums/camera_turn_axis.h"
 #include "../../enums/reference_frame.h"
 #include "../../enums/sign.h"
+#include "editor/subsystems/worldinput/util/range_input_scales.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
    class turn_camera : public _base {
@@ -21,24 +21,8 @@ namespace dovahkit::subsystems::worldedit::tools {
                constexpr bool operator==(const options& v) const noexcept = default;
 
             public:
-               struct __anonymous_struct {
-                  __anonymous_default_equality;
-                  float yaw   = 0;
-                  float pitch = 0;
-               } magnitudes;
-               struct __anonymous_struct {
-                  __anonymous_default_equality;
-                  struct __anonymous_struct {
-                     __anonymous_default_equality;
-                     camera_turn_axis axis = camera_turn_axis::yaw;
-                     sign sign = sign::positive;
-                  } x;
-                  struct __anonymous_struct {
-                     __anonymous_default_equality;
-                     camera_turn_axis axis = camera_turn_axis::pitch;
-                     sign sign = sign::positive;
-                  } y;
-               } range;
+               cobb::vector3<float> magnitudes; // pitch, roll, yaw
+               std::optional<worldinput::util::range_input_scales> range;
 
                constexpr void stream(cobb::bitstreams::reader&);
                constexpr void stream(cobb::bitstreams::writer&) const;
@@ -58,4 +42,3 @@ namespace dovahkit::subsystems::worldedit::tools {
 }
 
 #include "./turn_camera.inl"
-#include "helpers/macros/default_comparable_anonymous_struct.undef.h"

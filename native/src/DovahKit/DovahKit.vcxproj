@@ -699,6 +699,7 @@
     <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.cpp" />
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.cpp" />
@@ -982,6 +983,7 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit\worldedit.h" />
+    <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h" />
     <ClInclude Include="editor\subsystems\xinput\chrono.h" />
     <ClInclude Include="editor\subsystems\xinput\config\trigger_threshold_for_button.h" />
@@ -1022,6 +1024,8 @@
     <ClInclude Include="helpers\bitstreams\reader.h" />
     <ClInclude Include="helpers\bitstreams\round_trip_test.h" />
     <ClInclude Include="helpers\bitstreams\override_bitcount.h" />
+    <ClInclude Include="helpers\bitstreams\round_trip_test_scramble.h" />
+    <ClInclude Include="helpers\bitstreams\round_trip_test_with_targeted_scramble.h" />
     <ClInclude Include="helpers\bitstreams\util\bitcount_of_type.h" />
     <ClInclude Include="helpers\bitstreams\util\bitpacked_primitive_type.h" />
     <ClInclude Include="helpers\bitstreams\util\enum_has_contiguous_valid_values.h" />
@@ -1331,6 +1335,7 @@
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />
+    <QtMoc Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\debug_print.h" />
@@ -2031,6 +2036,7 @@
     <QtUic Include="ui\main_window\script_window_single.ui" />
     <QtUic Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui" />
+    <QtUic Include="ui\options_window\worldedit_tools\options\util\worldedit_tool_range_input_scales.ui" />
     <QtUic Include="ui\options_window\worldinput_condition_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_modifier_editor.ui" />
     <QtUic Include="ui\options_window\worldinput_scheme_editor.ui" />
@@ -2147,6 +2153,7 @@
     <None Include="editor\subsystems\worldinput\inputs\button.inl" />
     <None Include="editor\subsystems\worldinput\input_sequence.inl" />
     <None Include="editor\subsystems\worldinput\util\numeric_comparisons.inl" />
+    <None Include="editor\subsystems\worldinput\util\range_input_scales.inl" />
     <None Include="editor\subsystems\worldinput\_docs\spec.md" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="helpers\bitstreams\position.inl" />
