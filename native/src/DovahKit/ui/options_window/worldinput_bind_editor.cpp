@@ -302,6 +302,11 @@ WorldinputBindEditDialog::WorldinputBindEditDialog(input_device_type device_type
          });
       }
    #pragma endregion
+
+   // Cross-tab functionality:
+
+   QObject::connect(this->ui.rangeControlType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WorldinputBindEditDialog::_updateToolOptionsForRangeInput);
+   QObject::connect(this->ui.rangeControlAxis, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WorldinputBindEditDialog::_updateToolOptionsForRangeInput);
 }
 
 const DKWorldinputInputSequenceModel* WorldinputBindEditDialog::_getInputSequenceModel() const {
@@ -443,4 +448,15 @@ void WorldinputBindEditDialog::_setUpToolOptionsUI(int tool_id) {
       return;
 
    this->ui.toolOptionsWrapper->layout()->addWidget(this->_tool_options_widget);
+   this->_updateToolOptionsForRangeInput();
+}
+
+void WorldinputBindEditDialog::_updateToolOptionsForRangeInput() {
+   if (!this->_tool_options_widget)
+      return;
+
+   auto ctrl = (range_input_control) this->ui.rangeControlType->currentData().toInt();
+   auto axes = (range_input_axes)    this->ui.rangeControlAxis->currentData().toInt();
+
+   this->_tool_options_widget->onRangeInputChanged(ctrl, axes);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "./enums/button_press_type.h"
+#include "./enums/range_input_axes.h"
 #include "./chrono.h"
 #include "./raycast_result.h"
 
@@ -17,6 +18,7 @@ namespace dovahkit::subsystems::worldinput {
             float x = 0;
             float y = 0;
             bool  is_delta = false;
+            range_input_axes axes = range_input_axes::all;
          } range;
          //
          bool has_button : 1 = false;

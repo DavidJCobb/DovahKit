@@ -20,8 +20,18 @@ namespace dovahkit::subsystems::worldinput::util {
    }
 
    constexpr void range_input_scales::scale(cobb::vector3<float>& out, const tool_request_cause& input) const {
-      this->x.scale(out, input.range.x);
-      this->y.scale(out, input.range.y);
+      if (input.range.axes == range_input_axes::y) {
+         //
+         // When a range input is passed as a single axis, it's passed as the X-axis; so we 
+         // need to route the "X-axis input" to our Y-axis options in this case.
+         //
+         this->y.scale(out, input.range.x);
+      } else if (input.range.axes == range_input_axes::x) {
+         this->x.scale(out, input.range.x);
+      } else {
+         this->x.scale(out, input.range.x);
+         this->y.scale(out, input.range.y);
+      }
    }
    
    constexpr void range_input_scales::stream(cobb::bitstreams::reader& s) {

@@ -9,7 +9,7 @@
 #include "helpers/qt/basic_bindings.h"
 
 namespace dovahkit::ui::worldedit::tools {
-   move_selection::move_selection(QWidget* parent) : QWidget(parent) {
+   move_selection::move_selection(QWidget* parent) : base(parent) {
       this->ui.setupUi(this);
       {
          auto* group = this->_typeButtonGroup = new QButtonGroup(this);
@@ -112,5 +112,9 @@ namespace dovahkit::ui::worldedit::tools {
          this->ui.alsoMoveCamera->setChecked(v.also_move_camera);
       }
       this->ui.rangeInputScales->reloadFromSyncTarget();
+   }
+
+   void move_selection::onRangeInputChanged(dovahkit::subsystems::worldinput::range_input_control ctrl, dovahkit::subsystems::worldinput::range_input_axes axes) {
+      this->ui.rangeInputScales->adjustForRangeInput(ctrl, axes);
    }
 }

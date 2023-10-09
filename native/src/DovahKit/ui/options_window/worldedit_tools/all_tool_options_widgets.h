@@ -3,6 +3,8 @@
 
 namespace dovahkit::ui::worldedit {
    namespace tools {
+      class base;
+
       class attempt_on_screen_selection;
       class debug_print;
       class modify_camera_speed_flags;

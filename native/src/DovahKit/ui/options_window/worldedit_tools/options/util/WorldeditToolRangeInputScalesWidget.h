@@ -1,5 +1,7 @@
 #pragma once
 #include <optional>
+#include "editor/subsystems/worldinput/enums/range_input_axes.h"
+#include "editor/subsystems/worldinput/enums/range_input_control.h"
 #include "editor/subsystems/worldinput/util/range_input_scales.h"
 #include "ui_worldedit_tool_range_input_scales.h" // generated
 
@@ -7,6 +9,10 @@ class WorldeditToolRangeInputScalesWidget : public QWidget {
    Q_OBJECT;
    public:
       using data_type = dovahkit::subsystems::worldinput::util::range_input_scales;
+
+   protected:
+      using range_input_axes    = dovahkit::subsystems::worldinput::range_input_axes;
+      using range_input_control = dovahkit::subsystems::worldinput::range_input_control;
 
    public:
       WorldeditToolRangeInputScalesWidget(QWidget* parent = nullptr);
@@ -27,6 +33,8 @@ class WorldeditToolRangeInputScalesWidget : public QWidget {
 
       void reloadFromSyncTarget();
       void setSyncTarget(std::optional<data_type>*);
+
+      void adjustForRangeInput(dovahkit::subsystems::worldinput::range_input_control, dovahkit::subsystems::worldinput::range_input_axes);
 
    protected:
       Ui::WorldeditToolRangeInputScalesWidget ui;

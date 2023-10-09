@@ -444,6 +444,9 @@ namespace dovahkit::subsystems::worldinput {
             //
             cause.has_button = node->input_sequence.has_any_buttons();
             cause.has_range  = node->input_sequence.has_range_requirement();
+            if (cause.has_range) {
+               cause.range.axes = node->input_sequence.range.axes;
+            }
             //
             cause.button.is_down    = node->button_press_type == button_press_type::hold;
             cause.button.down_when  = node->input_sequence.state.went_down_at;

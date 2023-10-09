@@ -1,31 +1,15 @@
 #include "./modify_camera_speed_flags.h"
 #include <array>
-#include <QComboBox>
-#include <QGridLayout>
-#include <QLabel>
 
 namespace dovahkit::ui::worldedit::tools {
-   modify_camera_speed_flags::modify_camera_speed_flags(QWidget* parent) : QWidget(parent) {
-      auto* layout = new QGridLayout(this);
-      layout->setContentsMargins(0, 0, 0, 0);
-      this->setLayout(layout);
+   modify_camera_speed_flags::modify_camera_speed_flags(QWidget* parent) : base(parent) {
+      this->ui.setupUi(this);
+
+      this->_widget_wrappers.boost     = this->ui.boostOp;
+      this->_widget_wrappers.precision = this->ui.precisionOp;
 
       {
-         auto* label = new QLabel(tr("Boost:"), this);
-         layout->addWidget(label, 0, 0);
-      }
-      this->_subwidgets.boost = new QComboBox(this);
-      layout->addWidget(this->_subwidgets.boost, 0, 1);
-
-      {
-         auto* label = new QLabel(tr("Precision:"), this);
-         layout->addWidget(label, 1, 0);
-      }
-      this->_subwidgets.precision = new QComboBox(this);
-      layout->addWidget(this->_subwidgets.precision, 1, 1);
-
-      {
-         auto& widgets = this->_subwidgets;
+         auto& widgets = this->_widget_wrappers;
 
          using enum_type = decltype(widgets.boost)::value_type;
          using item_type = std::pair<enum_type, const char*>;
@@ -47,12 +31,12 @@ namespace dovahkit::ui::worldedit::tools {
    void modify_camera_speed_flags::set_options(const options_type& v) {
       this->_state.current_options = v;
 
-      using enum_type = decltype(this->_subwidgets.boost)::value_type;
+      using enum_type = decltype(this->_widget_wrappers.boost)::value_type;
       constexpr const auto fallback = enum_type::no_op;
 
-      if (!this->_subwidgets.boost.setValueSilent(v.boost, fallback))
+      if (!this->_widget_wrappers.boost.setValueSilent(v.boost, fallback))
          this->_state.current_options.boost = fallback;
-      if (!this->_subwidgets.precision.setValueSilent(v.precision, fallback))
+      if (!this->_widget_wrappers.precision.setValueSilent(v.precision, fallback))
          this->_state.current_options.precision = fallback;
    }
 }

@@ -1,11 +1,14 @@
 #pragma once
 #include <QWidget>
+
+#include "./_base.h"
+
 #include "editor/subsystems/worldedit/tool_system/tools/debug_print.h"
 
 class QLineEdit;
 
 namespace dovahkit::ui::worldedit::tools {
-   class debug_print : public QWidget {
+   class debug_print : public base {
       public:
          using tool         = dovahkit::subsystems::worldedit::tools::debug_print;
          using options_type = tool::options;

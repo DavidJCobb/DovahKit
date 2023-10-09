@@ -7,6 +7,11 @@
 #include "./all_tool_options_widgets.h"
 
 class QWidget;
+namespace dovahkit::ui::worldedit {
+   namespace tools {
+      class base;
+   }
+}
 
 namespace dovahkit::ui::worldedit {
    constexpr const auto options_widget_dispatch_table = []() {
@@ -16,9 +21,9 @@ namespace dovahkit::ui::worldedit {
       struct entry {
          tool_id id = dovahkit::subsystems::worldedit::tools::id_of_none;
          //
-         cobb::function_pointer<QWidget*()> make_widget = nullptr;
-         cobb::function_pointer<void(QWidget*, const options_union&)> to_ui = nullptr;
-         cobb::function_pointer<void(QWidget*, options_union&)> to_data = nullptr;
+         cobb::function_pointer<tools::base*()> make_widget = nullptr;
+         cobb::function_pointer<void(tools::base*, const options_union&)> to_ui = nullptr;
+         cobb::function_pointer<void(tools::base*, options_union&)> to_data = nullptr;
       };
 
       std::array<entry, all_tool_options_widgets::count> table = {};
@@ -27,11 +32,11 @@ namespace dovahkit::ui::worldedit {
       all_tool_options_widgets::for_each([&table, &i]<typename Current>() {
          auto& item = table[i++];
          item.id          = dovahkit::subsystems::worldedit::tools::id_of<typename Current::tool>;
-         item.make_widget = []() -> QWidget* { return new Current; };
-         item.to_ui       = [](QWidget* widget, const options_union& ou) {
+         item.make_widget = []() -> tools::base* { return new Current; };
+         item.to_ui       = [](tools::base* widget, const options_union& ou) {
             ((Current*)widget)->set_options(ou.as<typename Current::options_type>());
          };
-         item.to_data     = [](QWidget* widget, options_union& ou) {
+         item.to_data     = [](tools::base* widget, options_union& ou) {
             ou = options_union(((Current*)widget)->get_options());
          };
       });

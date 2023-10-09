@@ -38,7 +38,6 @@ WorldeditToolRangeInputScalesWidget::WorldeditToolRangeInputScalesWidget(QWidget
 std::optional<WorldeditToolRangeInputScalesWidget::data_type> WorldeditToolRangeInputScalesWidget::data() const {
    if (this->isOptional() && !this->ui.groupbox->isChecked())
       return {};
-
    return data_type{
       .x = {
          .axis = (data_type::axis3D) this->ui.xAxis->currentData().toInt(),
@@ -160,5 +159,38 @@ void WorldeditToolRangeInputScalesWidget::setSyncTarget(std::optional<data_type>
    this->sync_target = t;
    if (t) {
       *t = this->data();
+   }
+}
+
+void WorldeditToolRangeInputScalesWidget::adjustForRangeInput(dovahkit::subsystems::worldinput::range_input_control ctrl, dovahkit::subsystems::worldinput::range_input_axes axes) {
+   using namespace dovahkit::subsystems::worldinput;
+
+   bool any_control = ctrl != range_input_control::none;
+   this->ui.groupbox->setEnabled(any_control);
+
+   bool control_has_two_axes = !any_control || range_input_control_has_multiple_axes(ctrl);
+   if (!control_has_two_axes) {
+      axes = range_input_axes::x;
+   }
+
+   bool x_visible = true;
+   bool y_visible = true;
+   if (axes != range_input_axes::all) {
+      x_visible = (axes == range_input_axes::x);
+      y_visible = !x_visible;
+   }
+
+   this->ui.xLabel->setVisible(x_visible);
+   this->ui.xAxis->setVisible(x_visible);
+   this->ui.xSign->setVisible(x_visible);
+
+   this->ui.yLabel->setVisible(y_visible);
+   this->ui.yAxis->setVisible(y_visible);
+   this->ui.ySign->setVisible(y_visible);
+
+   if (!control_has_two_axes) {
+      this->ui.xLabel->setText(tr("Input Axis:"));
+   } else {
+      this->ui.xLabel->setText(tr("Input X-Axis:"));
    }
 }

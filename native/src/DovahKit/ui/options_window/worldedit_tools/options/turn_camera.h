@@ -1,14 +1,14 @@
 #pragma once
 #include <QSpinBox>
 #include <QWidget>
-#include "helpers/qt/wrappers/enum_combobox.h"
-#include "editor/subsystems/worldedit/tool_system/tools/turn_camera.h"
-#include "./util/WorldeditToolRangeInputScalesWidget.h"
 
-class QComboBox;
+#include "./_base.h"
+
+#include "editor/subsystems/worldedit/tool_system/tools/turn_camera.h"
+#include "ui_turn_camera_tool_options.h" // generated
 
 namespace dovahkit::ui::worldedit::tools {
-   class turn_camera : public QWidget {
+   class turn_camera : public base {
       public:
          using tool         = dovahkit::subsystems::worldedit::tools::turn_camera;
          using options_type = tool::options;
@@ -19,18 +19,12 @@ namespace dovahkit::ui::worldedit::tools {
          const options_type& get_options() const { return this->_state.current_options; }
          void set_options(const options_type&);
 
-      protected:
-         template<typename T> using EnumCombobox = cobb::qt::wrappers::EnumCombobox<T>;
+         virtual void onRangeInputChanged(dovahkit::subsystems::worldinput::range_input_control, dovahkit::subsystems::worldinput::range_input_axes) override;
 
+      protected:
+         Ui::WorldeditToolOptionsTurnCamera ui;
          struct {
             options_type current_options = {};
          } _state;
-         struct {
-            struct {
-               QDoubleSpinBox* yaw   = nullptr;
-               QDoubleSpinBox* pitch = nullptr;
-            } magnitude;
-            WorldeditToolRangeInputScalesWidget* range = nullptr;
-         } _subwidgets;
    };
 }

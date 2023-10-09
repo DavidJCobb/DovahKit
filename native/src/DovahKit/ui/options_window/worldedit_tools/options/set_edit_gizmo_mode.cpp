@@ -1,75 +1,18 @@
 #include "./set_edit_gizmo_mode.h"
 #include <array>
 #include <type_traits>
-#include <QComboBox>
-#include <QGroupBox>
-#include <QGridLayout>
-#include <QLabel>
-#include <QSpinBox>
 #include "helpers/qt/basic_bindings.h"
 
 namespace dovahkit::ui::worldedit::tools {
-   set_edit_gizmo_mode::set_edit_gizmo_mode(QWidget* parent) : QWidget(parent) {
-      auto* layout = new QGridLayout(this);
-      layout->setContentsMargins(0, 0, 0, 0);
-      this->setLayout(layout);
+   set_edit_gizmo_mode::set_edit_gizmo_mode(QWidget* parent) : base(parent) {
+      this->ui.setupUi(this);
 
-      int row = 0;
-
+      this->_widget_wrappers.frames.a = this->ui.frameA;
+      this->_widget_wrappers.frames.b = this->ui.frameB;
+      this->_widget_wrappers.modes.a  = this->ui.modeA;
+      this->_widget_wrappers.modes.b  = this->ui.modeB;
       {
-         auto& widgets  = this->_subwidgets.frames;
-         auto* groupbox = widgets.groupbox = new QGroupBox(tr("Reference frame"));
-         groupbox->setCheckable(true);
-         groupbox->setChecked(false);
-         layout->addWidget(groupbox, row, 0);
-
-         int   gb_row = 0;
-         auto* gb_layout = new QGridLayout(groupbox);
-         groupbox->setLayout(gb_layout);
-
-         widgets.a = new QComboBox;
-         gb_layout->addWidget(new QLabel(tr("Change to:")), gb_row, 0);
-         gb_layout->addWidget(widgets.a, gb_row, 1);
-         ++gb_row;
-
-         widgets.toggle = new QCheckBox(tr("Toggle between:"));
-         widgets.b = new QComboBox;
-         gb_layout->addWidget(widgets.toggle, gb_row, 0);
-         gb_layout->addWidget(widgets.b, gb_row, 1);
-         ++gb_row;
-      }
-      ++row;
-      
-      {
-         auto& widgets  = this->_subwidgets.modes;
-         auto* groupbox = widgets.groupbox = new QGroupBox(tr("Mode"));
-         groupbox->setCheckable(true);
-         groupbox->setChecked(false);
-         layout->addWidget(groupbox, row, 0);
-
-         int   gb_row = 0;
-         auto* gb_layout = new QGridLayout(groupbox);
-         groupbox->setLayout(gb_layout);
-
-         widgets.a = new QComboBox;
-         gb_layout->addWidget(new QLabel(tr("Change to:")), gb_row, 0);
-         gb_layout->addWidget(widgets.a, gb_row, 1);
-         ++gb_row;
-
-         widgets.toggle = new QCheckBox(tr("Toggle between:"));
-         widgets.b = new QComboBox;
-         gb_layout->addWidget(widgets.toggle, gb_row, 0);
-         gb_layout->addWidget(widgets.b, gb_row, 1);
-         ++gb_row;
-      }
-      ++row;
-
-      //
-      // Layout done; set up the fields:
-      //
-
-      {
-         auto& widgets = this->_subwidgets.frames;
+         auto& widgets = this->_widget_wrappers.frames;
 
          using enum_type = decltype(widgets.a)::value_type;
          using item_type = std::pair<enum_type, const char*>;
@@ -87,7 +30,7 @@ namespace dovahkit::ui::worldedit::tools {
          widgets.a.beginOneWaySync(fields.a);
          widgets.b.beginOneWaySync(fields.b);
 
-         QObject::connect(widgets.groupbox, &QGroupBox::toggled, this, [this, &widgets](bool checked) {
+         QObject::connect(this->ui.frameGroupbox, &QGroupBox::toggled, this, [this, &widgets](bool checked) {
             auto& data = this->_state.current_options;
             if (checked) {
                data.frame.a = widgets.a.value();
@@ -96,10 +39,10 @@ namespace dovahkit::ui::worldedit::tools {
                data.frame.a = data.frame.b = enum_type::current;
             }
          });
-         cobb::qt::bind(widgets.toggle, this->_state.current_options.toggle_frame);
+         cobb::qt::bind(this->ui.frameToggle, this->_state.current_options.toggle_frame);
       }
       {
-         auto& widgets = this->_subwidgets.modes;
+         auto& widgets = this->_widget_wrappers.modes;
 
          using enum_type = decltype(widgets.a)::value_type;
          using item_type = std::pair<enum_type, const char*>;
@@ -118,18 +61,18 @@ namespace dovahkit::ui::worldedit::tools {
          widgets.a.beginOneWaySync(fields.a);
          widgets.b.beginOneWaySync(fields.b);
 
-         QObject::connect(widgets.groupbox, &QGroupBox::toggled, this, [this, &widgets](bool checked) {
+         QObject::connect(this->ui.modeGroupbox, &QGroupBox::toggled, this, [this, &widgets](bool checked) {
             this->_state.current_options.modify_gizmo = checked;
          });
-         cobb::qt::bind(widgets.toggle, this->_state.current_options.toggle_gizmo);
+         cobb::qt::bind(this->ui.modeToggle, this->_state.current_options.toggle_gizmo);
       }
    }
 
    void set_edit_gizmo_mode::set_options(const options_type& v) {
       this->_state.current_options = v;
       {
-         auto& fields = this->_state.current_options.frame;
-         auto& widgets = this->_subwidgets.frames;
+         auto& fields  = this->_state.current_options.frame;
+         auto& widgets = this->_widget_wrappers.frames;
 
          constexpr auto fallback = decltype(fields.a)::local;
 
@@ -142,15 +85,15 @@ namespace dovahkit::ui::worldedit::tools {
          if (!widgets.b.setValueSilent(fields.b, fallback))
             fields.b = fallback;
 
-         const auto blocker_g = QSignalBlocker(widgets.groupbox);
-         const auto blocker_t = QSignalBlocker(widgets.toggle);
+         const auto blocker_g = QSignalBlocker(this->ui.frameGroupbox);
+         const auto blocker_t = QSignalBlocker(this->ui.frameToggle);
 
-         widgets.groupbox->setChecked(!no_modify);
-         widgets.toggle->setChecked(this->_state.current_options.toggle_frame);
+         this->ui.frameGroupbox->setChecked(!no_modify);
+         this->ui.frameToggle->setChecked(this->_state.current_options.toggle_frame);
       }
       {
-         auto& fields = this->_state.current_options.gizmo;
-         auto& widgets = this->_subwidgets.modes;
+         auto& fields  = this->_state.current_options.gizmo;
+         auto& widgets = this->_widget_wrappers.modes;
 
          constexpr auto fallback = decltype(fields.a)::translate;
          
@@ -159,11 +102,11 @@ namespace dovahkit::ui::worldedit::tools {
          if (!widgets.b.setValueSilent(fields.b, fallback))
             fields.b = fallback;
 
-         const auto blocker_g = QSignalBlocker(widgets.groupbox);
-         const auto blocker_t = QSignalBlocker(widgets.toggle);
+         const auto blocker_g = QSignalBlocker(this->ui.modeGroupbox);
+         const auto blocker_t = QSignalBlocker(this->ui.modeToggle);
 
-         widgets.groupbox->setChecked(this->_state.current_options.modify_gizmo);
-         widgets.toggle->setChecked(this->_state.current_options.toggle_gizmo);
+         this->ui.modeGroupbox->setChecked(this->_state.current_options.modify_gizmo);
+         this->ui.modeToggle->setChecked(this->_state.current_options.toggle_gizmo);
       }
    }
 }

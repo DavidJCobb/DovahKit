@@ -1,54 +1,34 @@
 #include "./attempt_on_screen_selection.h"
-#include <QComboBox>
-#include <QGridLayout>
-#include <QLabel>
+#include <array>
+#include <type_traits>
 
 namespace dovahkit::ui::worldedit::tools {
-   attempt_on_screen_selection::attempt_on_screen_selection(QWidget* parent) : QWidget(parent) {
-      auto* layout = new QGridLayout(this);
-      layout->setContentsMargins(0, 0, 0, 0);
-      this->setLayout(layout);
+   attempt_on_screen_selection::attempt_on_screen_selection(QWidget* parent) : base(parent) {
+      this->ui.setupUi(this);
 
+      this->_widget_wrappers.operation = this->ui.operation;
       {
-         auto* label = new QLabel(tr("Selection operation:"), this);
-         layout->addWidget(label, 0, 0);
-      }
-      this->_subwidgets.operation = new QComboBox(this);
-      layout->addWidget(this->_subwidgets.operation, 0, 1);
+         auto& widget = this->_widget_wrappers.operation;
 
-      {
-         using values = decltype(options_type::operation);
+         using enum_type = std::decay_t<decltype(widget)>::value_type;
+         using item_type = std::pair<enum_type, const char*>;
 
-         auto* widget = this->_subwidgets.operation;
-         widget->addItem(tr("Do nothing"), (int)values::no_op);
-         widget->addItem(tr("Add to selection"), (int)values::add);
-         widget->addItem(tr("Remove from selection"), (int)values::remove);
-         widget->addItem(tr("Toggle selected"), (int)values::toggle);
-         widget->addItem(tr("Replace selection"), (int)values::replace);
+         constexpr const auto items = std::array{
+            item_type{ enum_type::no_op,   "Do nothing" },
+            item_type{ enum_type::add,     "Add to selection" },
+            item_type{ enum_type::remove,  "Remove from selection" },
+            item_type{ enum_type::toggle,  "Toggle selected" },
+            item_type{ enum_type::replace, "Replace selection" },
+         };
 
-         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-            auto v = this->_subwidgets.operation->currentData().toInt();
-            this->_state.current_options.operation = (values)v;
-         });
+         widget.addItems(items);
+         widget.beginOneWaySync(this->_state.current_options.operation);
       }
    }
 
    void attempt_on_screen_selection::set_options(const options_type& v) {
       this->_state.current_options = v;
-      {
-         using values = decltype(options_type::operation);
 
-         auto* widget = this->_subwidgets.operation;
-         auto  i      = widget->findData((int)v.operation);
-
-         const auto blocker = QSignalBlocker(widget);
-
-         if (i < 0) {
-            this->_state.current_options.operation = values::no_op;
-            widget->setCurrentIndex(0);
-         } else {
-            widget->setCurrentIndex(i);
-         }
-      }
+      this->_widget_wrappers.operation.setValueSilent(v.operation);
    }
 }

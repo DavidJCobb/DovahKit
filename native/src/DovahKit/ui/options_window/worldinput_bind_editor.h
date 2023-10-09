@@ -19,6 +19,11 @@ namespace dovahkit::subsystems::worldinput {
    class  input_sequence;
    struct raycast_requirement;
 }
+namespace dovahkit::ui::worldedit {
+   namespace tools {
+      class base;
+   }
+}
 
 class DKWorldinputInputSequenceModel;
 
@@ -41,7 +46,7 @@ class WorldinputBindEditDialog : public QDialog {
       struct {
          QAction* set_raycast_associated = nullptr;
       } _treeview_context_menu;
-      QWidget* _tool_options_widget = nullptr;
+      dovahkit::ui::worldedit::tools::base* _tool_options_widget = nullptr;
 
       using axis3D     = dovahkit::subsystems::worldedit::axis3D;
       using gizmo_mode = dovahkit::subsystems::worldedit::gizmo_mode;
@@ -61,4 +66,6 @@ class WorldinputBindEditDialog : public QDialog {
       const QItemSelection _getSeqSelection();
 
       void _setUpToolOptionsUI(int tool_id);
+
+      void _updateToolOptionsForRangeInput();
 };

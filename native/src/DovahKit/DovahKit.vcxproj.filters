@@ -5243,6 +5243,9 @@
     <ClInclude Include="helpers\bitstreams\round_trip_test_with_targeted_scramble.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5375,6 +5378,21 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldedit_tools\options\util\worldedit_tool_range_input_scales.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\move_camera_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\turn_camera_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection_tool_options.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
