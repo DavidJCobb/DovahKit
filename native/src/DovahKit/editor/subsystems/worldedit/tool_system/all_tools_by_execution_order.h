@@ -31,7 +31,10 @@ namespace dovahkit::subsystems::worldedit::tools {
       // have already reacted to conditions that the other tools would change.
       class move_selection,
 
-      class tandem::adjust_camera,
+      class move_camera,
+      class turn_camera,
+      class orbit_camera,
+
       class attempt_on_screen_selection,
       class debug_dump_landscape_details,
       class debug_dump_raycast,

@@ -2073,9 +2073,6 @@
     <ClCompile Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -5187,9 +5184,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\data\camera_coordinate_change.h">

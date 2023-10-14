@@ -141,7 +141,6 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_print.cpp" />
-    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
@@ -879,7 +878,6 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\debug_print.h" />
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\adjust_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\invoke_in_tandem\_base.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_camera.h" />

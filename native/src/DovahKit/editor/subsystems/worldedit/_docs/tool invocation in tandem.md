@@ -25,6 +25,8 @@ The implementation for `_invoke_impl` can be located in a `*.cpp` file and shoul
 
 The system is metaprogrammed such that an invocation-in-tandem can use any number of tools: two, three, four, or more. Each tool should be specified as a template parameter, and `_invoke_impl` should receive one argument for each tool, in the same order as the template parameters: for a given tool `T`, the argument type is `const T::response*`.
 
+Once your invoke-in-tandem class is set up, add it to `all_tools_by_execution_order`. *Don't* list the tools it's invoking in there.
+
 # Why was this even made?
 
 Initially, Worldedit had two tools for camera control: `move_camera` and `turn_camera`. These tools supported only camera-relative transformations (no other reference frames). Any change to the camera's coordinates requires recomputing several transformation matrices within the 3D renderer, so these tools were built to be invoked in tandem: the 3D renderer offered an API to "adjust" the camera with movement and/or turning, and Worldedit wrapped this API for it to be invoked in tandem whenever either or both of the `move_camera` and `turn_camera` tools were activated.
