@@ -156,6 +156,7 @@
     <ClCompile Include="editor\subsystems\worldinput\algorithms\control_scheme_to_bind_list.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\algorithms\hold_blocks_press.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\algorithms\press_preempts_hold.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\range_control_bind_conflict_resolution.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\bind_list.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\debug_wasd.cpp" />
@@ -908,6 +909,7 @@
     <ClInclude Include="editor\subsystems\worldinput\algorithms\hold_blocks_press.h" />
     <ClInclude Include="editor\subsystems\worldinput\algorithms\input_sequence_stringification.h" />
     <ClInclude Include="editor\subsystems\worldinput\algorithms\press_preempts_hold.h" />
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\range_control_bind_conflict_resolution.h" />
     <ClInclude Include="editor\subsystems\worldinput\bind_list.h" />
     <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.h" />
     <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\debug_wasd.h" />
@@ -983,6 +985,7 @@
     <ClInclude Include="editor\helpers\form_identifiers_to_string.h" />
     <ClInclude Include="editor\subsystems\assets.h" />
     <QtMoc Include="editor\subsystems\worldedit\worldedit.h" />
+    <ClInclude Include="editor\subsystems\worldinput\util\range_control_conflict_state.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h" />
     <ClInclude Include="editor\subsystems\xinput\chrono.h" />
@@ -2154,11 +2157,13 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />
     <None Include="editor\subsystems\worldedit\_docs\general notes.md" />
+    <None Include="editor\subsystems\worldedit\_docs\tool invocation in tandem.md" />
     <None Include="editor\subsystems\worldinput\control_scheme\condition.inl" />
     <None Include="editor\subsystems\worldinput\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput\inputs\button.inl" />
     <None Include="editor\subsystems\worldinput\input_sequence.inl" />
     <None Include="editor\subsystems\worldinput\util\numeric_comparisons.inl" />
+    <None Include="editor\subsystems\worldinput\util\range_control_conflict_state.inl" />
     <None Include="editor\subsystems\worldinput\util\range_input_scales.inl" />
     <None Include="editor\subsystems\worldinput\_docs\spec.md" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />

@@ -9,6 +9,8 @@
 #include "./control_scheme/condition.h"
 #include "./enums/button_press_type.h"
 #include "./enums/input_device_type.h"
+#include "./enums/range_input_axes.h"
+#include "./util/range_control_conflict_state.h"
 #include "./util/tool_binding.h"
 #include "./input_sequence.h"
 
@@ -37,7 +39,11 @@ namespace dovahkit::subsystems::worldinput {
          util::tool_binding bound_tool;
 
          mutable struct {
-            bool press_blocked_hold : 1 = false; // cross-frame Hold node state for Press-preempts-Hold
+            // cross-frame Hold node state for Press-preempts-Hold
+            bool press_blocked_hold : 1 = false;
+
+            // mid-frame conflict resolution state for range inputs
+            util::range_control_conflict_state range_conflicted_axes;
          } state;
 
          bind_list_item& operator=(const bind_list_item&);

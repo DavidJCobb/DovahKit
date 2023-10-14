@@ -2112,6 +2112,9 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldinput\algorithms\range_control_bind_conflict_resolution.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5246,6 +5249,12 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\algorithms\range_control_bind_conflict_resolution.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\util\range_control_conflict_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6061,6 +6070,10 @@
     </None>
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
     <None Include="editor\subsystems\worldinput\util\range_input_scales.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\_docs\tool invocation in tandem.md" />
+    <None Include="editor\subsystems\worldinput\util\range_control_conflict_state.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

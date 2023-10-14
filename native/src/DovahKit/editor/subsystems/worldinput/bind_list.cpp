@@ -6,6 +6,7 @@
 #include "./algorithms/concurrent_bind_conflict_resolution.h"
 #include "./algorithms/hold_blocks_press.h"
 #include "./algorithms/press_preempts_hold.h"
+#include "./algorithms/range_control_bind_conflict_resolution.h"
 #include "./devices/abstract_device_handler.h"
 #include "./tools/combined_tool_results.h"
 #include "./tools/opaque_tool_options.h"
@@ -363,6 +364,65 @@ namespace dovahkit::subsystems::worldinput {
       }();
       #pragma endregion
 
+      if (eligible_binds.size() > 1) {  // TODO: handle range input conflicts
+         for (auto* node : eligible_binds) {
+            assert(node != nullptr);
+            node->state.range_conflicted_axes = {};
+         }
+
+         size_t ranges = 0;
+         size_t size   = eligible_binds.size();
+         for (size_t i = 0; i < size - 1; ++i) {
+            auto* node_a = eligible_binds[i];
+            if (!node_a->input_sequence.has_range_requirement())
+               continue;
+
+            ++ranges;
+
+            for (size_t j = i + 1; j < size; ++j) {
+               auto* node_b = eligible_binds[j];
+               if (!node_b->input_sequence.has_range_requirement())
+                  continue;
+
+               auto conflict_info = algorithms::range_control_bind_conflict_resolution(*node_a, *node_b);
+               //
+               node_a->state.range_conflicted_axes |= conflict_info.a_outcome;
+               node_b->state.range_conflicted_axes |= conflict_info.b_outcome;
+            }
+         }
+
+         if (ranges > 1) {
+            //
+            // If a bind loses range conflicts for all of its range axes, then it cannot trigger. 
+            // Remove these binds from the eligible binds list.
+            //
+            bool any_blocked = false;
+            for (auto*& node : eligible_binds) {
+               if (!node->input_sequence.has_range_requirement())
+                  continue;
+
+               auto& state_ra = node->state.range_conflicted_axes;
+               if (state_ra.are_axes_blocked(node->input_sequence.range.axes)) {
+                  any_blocked = true;
+                  //
+                  node = nullptr;
+               }
+            }
+            if (any_blocked) {
+               eligible_binds.erase(
+                  std::remove_if(
+                     eligible_binds.begin(),
+                     eligible_binds.end(),
+                     [](auto* current) {
+                        return current == nullptr;
+                     }
+                  ),
+                  eligible_binds.end()
+               );
+            }
+         }
+      }
+
       // Hold release.
       for (auto* hold_node : this->last_frame_active_hold_binds) {
          if (std::find(eligible_binds.begin(), eligible_binds.end(), hold_node) == eligible_binds.end()) {
@@ -426,7 +486,6 @@ namespace dovahkit::subsystems::worldinput {
 
       // Execution:
       for (auto* node : eligible_binds) {
-
          QPointF value    = { 0, 0 };
          bool    is_delta = false;
          bool    is_stale = false;
@@ -437,6 +496,39 @@ namespace dovahkit::subsystems::worldinput {
                value    = device.get_range_control_value(req.control, req.axes);
                if (is_delta)
                   is_stale = device.get_range_control_state(req.control, req.axes) == range_control_state::stale;
+
+               if (node->state.range_conflicted_axes.are_any_axes_blocked()) {
+                  auto& rca = node->state.range_conflicted_axes;
+
+                  bool zeroed_by_conflict = false;
+                  switch (req.axes) {
+                     case range_input_axes::x:
+                     case range_input_axes::y:
+                        if (rca.are_axes_blocked(req.axes)) {
+                           value.rx() = 0;
+                           zeroed_by_conflict = true;
+                        }
+                        break;
+                     case range_input_axes::all:
+                        rca.constrain_value(value);
+                        {
+                           bool x_zeroed = value.x() == 0;
+                           bool y_zeroed = value.y() == 0;
+                           switch (req.axes) {
+                              case range_input_axes::x:
+                              case range_input_axes::y: // when constraining to a single axis, input is always passed as X (for consistency with controls that only HAVE one axis)
+                                 zeroed_by_conflict = x_zeroed;
+                                 break;
+                              case range_input_axes::all:
+                                 zeroed_by_conflict = x_zeroed && y_zeroed;
+                                 break;
+                           }
+                        }
+                        break;
+                  }
+                  if (zeroed_by_conflict)
+                     continue;
+               }
             }
          }
          if (!is_stale) {

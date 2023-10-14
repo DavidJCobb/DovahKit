@@ -16,6 +16,7 @@ A bind list item has the following properties:
 Bind list items store the following values:
 
 * **Press-blocked-Hold:** For a bind list item whose button press type is Hold, this flag indicates that the bind list item has been blocked by the Press-blocks-Hold behavior. It is cleared whenever the bind list item is not eligible (i.e. when its input sequence does not have a down frame status).
+* **Range conflict state:** A set of flags, one for the X-axis and one for the Y-axis, which indicate whether the bind has lost a [range control conflict](#range-control-conflicts) for that axis. If so, the axis is "blocked" for the bind. This state is cleared before range conflicts are checked for, and then updated for the current frame.
 
 ### Relationships to bind tree node types
 All bind list items are generated from bound tool nodes.
@@ -222,6 +223,8 @@ Range constraints are also ignored by [Press-preempts-Hold](#press-preempts-hold
 * Press X :: Left Stick
 
 The decision to implement this specific behavior stems from the fact that Press-delays-Hold and Hold-blocks-Press exist to deal with conflicts arising from the same buttons being mapped to input sequences with different button press types (whereas the concurrent binds conflict resolution rules exist to deal with like press types). Range constraints are orthogonal to button press types.
+
+Note that range constraints can target just one axis on a two-axis range control, e.g. `Hold A :: Left Stick Y`. This means that a range constraint must specify not only a range control, but also what axes to use as input: X, Y, or both.
 
 ### Raycast constraint
 An input sequence can optionally require that a raycast be made and hit targets of a given type. Raycast constraints consist of two parts:
@@ -456,6 +459,34 @@ If the user presses and holds A through D, and then presses and holds X, and the
 
 #### Implementation
 This must be implemented in the [bind list update algorithm](#bind-list-update-algorithm). After we've found all eligible nodes, we must check for conflicts between any Press and Long Press eligible binds, and any Hold binds that were active on the previous frame and are not eligible on this frame.
+
+<span style="page-break-after: always"></span>
+
+### Range control conflicts
+If two different binds use the same [range control](#input-control), e.g. the same joystick on an Xbox controller, and their buttons are activated at the same time, then the binds are potentially conflicting.
+
+If both binds consume only a single axis, and they don't consume the same axis, then they are not in conflict.
+
+If one bind consumes all axes, and the other bind consumes only a single axis, then the binds are in conflict. The conflict should be resolved by forcing the other bind to act as though it consumes only the other, still-available, axis.
+
+If both binds consume the same single axis, or if both binds consume all axes, then the binds are in conflict. The [specificity](#specificity) of each bind should be compared: if one is less specific than the other, then the less-specific bind should be prevented from activating at all.
+
+These conflicts are not regarded as occurring across time; they occur only within a single frame.
+
+#### Examples
+Consider the following binds:
+
+* Hold *nothing* :: Left Stick
+* Hold RT :: Left Stick Y
+
+When the right trigger on the controller is held, and the left stick is moved, these binds conflict. The conflict should be resolved by feeding only X-axis stick movement to the former bind.
+
+Consider the following binds:
+
+* Hold *nothing* :: Right Stick
+* Hold B :: Right Stick
+
+When the B button on the controller is held, and the right stick is moved, these binds conflcit. The conflict should be resolved by allowing only the latter bind to activate, as its attendant button combination is more specific.
 
 <span style="page-break-after: always"></span>
 
@@ -1021,6 +1052,14 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
             1. If <var>Entry</var>'s node's state does not indicate that it's subject to Press-blocks-Hold:
                1. Skip to the next iteration.
          2. Remove <var>Entry</var>'s bind list item from <var>EligibleBinds</var>.
+1. **[Range control conflicts.]** Begin checking for range control conflicts.
+   1. For each entry <var>Bind</var> in <var>EligibleBinds</var>:
+      1. Update the state for <var>Bind</var>: clear the range axis "blocked" flags.
+   1. Iterate over <var>EligibleBinds</var> with a nested loop, comparing every bind to every other bind. Let <var>A</var> and <var>B</var> be any two binds being compared; for each such pair:
+      1. Run the [range conflict resolution algorithm](#range-conflict-resolution) on <var>A</var> and <var>B</var>.
+   1. For each entry <var>Bind</var> in <var>EligibleBinds</var>:
+      1. If <var>Bind</var>'s input sequence has a [range constraint](#range-constraint):
+         1. Check <var>Bind</var>'s range conflict state: if all of the axes specified in <var>Bind</var>'s range constraint are flagged as blocked, then remove <var>Bind</var> from <var>EligibleBinds</var>.
 8. **[Hold release.]** Process any Hold binds that were previously held and have now been released:
    1. For each entry <var>HoldBind</var> in <var>LastFrameActiveHoldBinds</var>:
       1. If <var>HoldBind</var> is not in <var>EligibleBinds</var>:
@@ -1038,11 +1077,15 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
    1. Let <var>RangeValue</var> be a 2D vector with floating-point components initialized to zero.
    1. Let <var>RangeIsDelta</var> be *false*.
    1. Let <var>RangeIsStale</var> be *false*.
-   1. If <var>EligibleBind</var> has a range constraint:
+   1. If <var>EligibleBind</var> has a [range constraint](#range-constraint):
       1. If the range control is a [delta control](#delta-controls), then set <var>RangeIsDelta</var> to *true*.
-      1. Set <var>RangeValue</var> to the value of the range control.
+      1. Set <var>RangeValue</var> to the value of the range control along the axes specified by the range constraint.
       1. If the range control is a delta control:
          1. If the range control is stale, then set <var>RangeIsStale</var> to *true*.
+      1. If <var>EligibleBind</var> has any range control axes flagged as "blocked" (i.e. due to losing range control conflicts):
+         1. For each blocked axis, modify <var>RangeValue</var> to set the corresponding axis magnitude to zero.
+         1. If <var>RangeValue</var> is zero on all axes:
+            1. Skip all further processing for <var>EligibleBind</var>, and proceed to the next loop iteration.
    1. If <var>RangeIsStale</var> is *false*:
       1. Let <var>Cause</var> be a tool request cause.
       1. If <var>EligibleBind</var>'s input sequence contains any buttons, then set <var>Cause</var>'s "has button" flag to *true*.
@@ -1220,6 +1263,21 @@ Given two bind list items &mdash; one, <var>PressBind</var>, whose button press 
 2. Let <var>SeqHold</var> be the terminal inputs of <var>HoldBind</var>.
 3. If any input control is present in both <var>SeqPress</var> and <var>SeqHold</var>, then return true.
 4. Return false.
+
+### Range conflict resolution
+Given two bind list items <var>A</var> and <var>B</var> that are potentially activating on the same frame (i.e. their button press type is Hold, and their input sequences are down), this algorithm determines whether the binds are in conflict, and if so, the nature of that conflict.
+
+1. If either or both of <var>A</var> and <var>B</var> lack a [range constraint](#range-constraint), then return; the binds are not in conflict.
+2. If the range requirements of <var>A</var> and <var>B</var> do not use the same [range control](#input-control), then return; the binds are not in conflict.
+3. If neither of the range requirements of <var>A</var> nor <var>B</var> use all axes of their given range control, and if they don't use the same axis, then return; the binds are not in conflict.
+4. If only one of the range requirements of <var>A</var> and <var>B</var> uses all axes of its given range control, then:
+   1. Let <var>AllAxesBind</var> be whichever of <var>A</var> and <var>B</var> has a range requirement that uses all axes of its given range control. Let <var>SingleAxisBind</var> be the other bind.
+   2. Let <var>ConflictAxis</var> be the axis used by <var>SingleAxisBind</var>.
+   3. Update the state for <var>AllAxesBind</var>: mark <var>ConflictAxis</var> as blocked.
+   4. Return.
+5. Compare the [specificity](#specificity) of the input sequences for <var>A</var> and <var>B</var>.
+6. If both binds have equal specificity, then return; the binds are not in conflict.
+7. Update the state for whichever bind has a lower specificity: mark all axes as blocked.
 
 ## Input sequence group interruption check
 This algorithm is invoked when updating a *separate and ordered* input sequence group. The algorithm requires the use of an instance of the following data structure, which is partially prepared by the [bind list update algorithm](#bind-list-update-algorithm) and then further prepared by the [input sequence update algorithm](#input-sequence-update-algorithm):
