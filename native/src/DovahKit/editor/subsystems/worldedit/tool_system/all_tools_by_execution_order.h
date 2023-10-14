@@ -3,7 +3,6 @@
 
 #include "./tools/_all.h"
 #include "./tools/invoke_in_tandem/_base.h"
-#include "./tools/invoke_in_tandem/adjust_camera.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
    namespace tandem {
