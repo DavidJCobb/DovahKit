@@ -90,13 +90,7 @@ namespace dovahkit::subsystems::worldedit::tools {
    }
 }
 
-#include "editor/ini/main.h"
 #include "vulkan/data/camera_coordinate_change.h"
-namespace {
-   namespace worldedit_ini_settings {
-      using namespace dovahkit::ini::main::worldedit;
-   }
-}
 
 namespace dovahkit::subsystems::worldedit::tools {
    /*static*/ void move_selection::invoke(const response& params) {

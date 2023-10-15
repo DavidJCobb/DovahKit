@@ -364,7 +364,8 @@ namespace dovahkit::subsystems::worldinput {
       }();
       #pragma endregion
 
-      if (eligible_binds.size() > 1) {  // TODO: handle range input conflicts
+      #pragma region Range control conflict handling
+      if (eligible_binds.size() > 1) {
          for (auto* node : eligible_binds) {
             assert(node != nullptr);
             node->state.range_conflicted_axes = {};
@@ -422,6 +423,7 @@ namespace dovahkit::subsystems::worldinput {
             }
          }
       }
+      #pragma endregion
 
       // Hold release.
       for (auto* hold_node : this->last_frame_active_hold_binds) {
