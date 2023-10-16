@@ -56,11 +56,17 @@ namespace dovahkit::subsystems::worldinput::devices {
 
          interruption_check prepare_interruption_check() const;
 
+         inline QPoint get_pointer_position() const { return this->pointer.position; }
+         inline QPoint get_pointer_position_delta() const { return this->pointer.delta; }
+
       protected:
          virtual interruption_check _prepare_interruption_check_impl() const = 0;
 
       protected:
-         QPoint pointer_position; // view-relative and in view coordinates i.e. pixels
+         struct {
+            QPoint position; // view-relative and in view coordinates i.e. pixels
+            QPoint delta;    // vector by which the position changed on this frame
+         } pointer;
          struct {
             std::vector<raycast_result_per_key> per_button;
             std::optional<raycast_result>       this_frame;

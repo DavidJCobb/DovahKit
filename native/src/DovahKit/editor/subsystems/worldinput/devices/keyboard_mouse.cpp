@@ -189,7 +189,9 @@ namespace dovahkit::subsystems::worldinput::devices {
       //
    }
    void keyboard_mouse::update_pointer(const QWidget& view) {
-      this->pointer_position = view.mapFromGlobal(this->mouse.pos);
+      auto pos_now = view.mapFromGlobal(this->mouse.pos);
+      this->pointer.delta    = pos_now - this->pointer.position;
+      this->pointer.position = pos_now;
    }
 
    void keyboard_mouse::recheck_mouse_metrics() {

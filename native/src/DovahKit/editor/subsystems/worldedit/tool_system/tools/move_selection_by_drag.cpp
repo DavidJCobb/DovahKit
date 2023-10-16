@@ -20,14 +20,16 @@ namespace dovahkit::subsystems::worldedit::tools {
             return;
       }
       
-      QPoint screen_delta = input.pointer.delta; // TODO: always supply pointer `pos` and `delta` for current device, via `tool_request_cause`
-      if (screen_delta.x() == 0 && screen_delta.y() == 0)
+      if (input.pointer.delta.x() == 0 && input.pointer.delta.y() == 0)
          return;
 
       auto& worldedit_core = core::get();
       auto  camera_matrix  = worldedit_core.get_frame_rotation_matrix(reference_frame::camera);
 
       glm::fvec3 grab_point = input.raycast.value().hit_position.value();
+
+      qDebug(" - move_selection_by_drag: cursor movement (%dpx, %dpx)", input.pointer.delta.x(), input.pointer.delta.y());
+      qDebug("    - grab point is (%f, %f, %f)", grab_point.x, grab_point.y, grab_point.z);
 
       //
       // Convert the screen delta -- the pointer movement in pixels -- into a pointer movement 
@@ -41,20 +43,27 @@ namespace dovahkit::subsystems::worldedit::tools {
          glm::fvec3 ray_after_direction;
          {
             auto pointer_pos_now  = input.pointer.pos;
-            auto pointer_pos_prev = pointer_pos_now - screen_delta;
+            auto pointer_pos_prev = pointer_pos_now - input.pointer.delta;
+
+            qDebug("    - cursor moved from (%d, %d) to (%d, %d)", pointer_pos_prev.x(), pointer_pos_prev.y(), pointer_pos_now.x(), pointer_pos_now.y());
+
+            bool renderer_available;
             //
-            worldedit_core.get_raycast_vectors( // TODO: add this API; have it wrap surface_renderer::surface_position_to_world_ray
+            renderer_available = worldedit_core.get_raycast_vectors(
                pointer_pos_prev.x(),
                pointer_pos_prev.y(),
                ray_prior_origin,
                ray_prior_direction
             );
-            worldedit_core.get_raycast_vectors(
+            renderer_available &= worldedit_core.get_raycast_vectors(
                pointer_pos_now.x(),
                pointer_pos_now.y(),
                ray_after_origin,
                ray_after_direction
             );
+            //
+            if (!renderer_available)
+               return;
          }
 
          //
@@ -127,6 +136,16 @@ namespace dovahkit::subsystems::worldedit::tools {
 
          glm::fvec3 plane_normal = glm::cross(plane_u, plane_v);
 
+         qDebug("    - 2D-in-2D to 2D-in-3D:");
+         qDebug("       - plane normal is (%f, %f, %f)", plane_normal.x, plane_normal.y, plane_normal.z);
+         qDebug("       - ray origin (prior) is (%f, %f, %f)", ray_prior_origin.x, ray_prior_origin.y, ray_prior_origin.z);
+         qDebug("       - ray origin (after) is (%f, %f, %f)", ray_after_origin.x, ray_after_origin.y, ray_after_origin.z);
+         {
+            auto _debug_delta = ray_after_origin - ray_prior_origin;
+            qDebug("          - delta: (%f, %f, %f)", _debug_delta.x, _debug_delta.y, _debug_delta.z);
+         }
+         qDebug("       - ray directions are (%f, %f, %f)", ray_prior_direction.x, ray_prior_direction.y, ray_prior_direction.z); // both directions should be essentially the same
+
          glm::fvec3 hit_prior;
          {
             float distance;
@@ -158,6 +177,8 @@ namespace dovahkit::subsystems::worldedit::tools {
          }
 
          world_delta = hit_after - hit_prior;
+
+         qDebug("       - world delta is (%f, %f, %f)", world_delta.x, world_delta.y, world_delta.z);
       }
 
       //
@@ -187,6 +208,8 @@ namespace dovahkit::subsystems::worldedit::tools {
          world_delta = drag_axis * glm::dot(world_delta, drag_axis);
       }
 
+      qDebug("    - final movement is (%f, %f, %f)", world_delta.x, world_delta.y, world_delta.z);
+
       //
       // The movement vector is now in a form suitable to be applied as a translation of 
       // the selected entities.
@@ -196,7 +219,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       res.translate_by = world_delta;
       all_results.merge_member(input, res); // TODO: nothing; this will stop being an error once this tool is added to the usual class-arrays for tools
    }
-   /*static*/ void move_selection::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
+   /*static*/ void move_selection_by_drag::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
       // No-op.
    }
 }

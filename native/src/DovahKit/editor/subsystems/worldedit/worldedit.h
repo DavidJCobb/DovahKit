@@ -215,6 +215,7 @@ namespace dovahkit::subsystems::worldedit {
          void set_edit_gizmo_mode(gizmo_mode);
 
          glm::mat3 get_frame_rotation_matrix(reference_frame) const;
+         bool get_raycast_vectors(int screen_x, int screen_y, glm::vec3& out_ray_origin, glm::vec3& out_ray_direction) const;
 
          void adjust_camera(vulkanDK::data::camera_coordinate_change&);
          void orbit_camera(camera_orbit_target pivot, cobb::vector3<float> euler_radians);

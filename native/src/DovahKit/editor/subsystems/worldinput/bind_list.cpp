@@ -82,7 +82,9 @@ namespace dovahkit::subsystems::worldinput {
       auto& subsys = core::get(); // worldinput
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 
-      auto current_conditions = control_scheme_condition::from_worldedit_state();
+      auto   current_conditions   = control_scheme_condition::from_worldedit_state();
+      QPoint device_pointer_pos   = device.get_pointer_position();
+      QPoint device_pointer_delta = device.get_pointer_position_delta();
 
       std::vector<bind_list_item*> eligible_binds;
       std::vector<bind_list_item*> conflict_losing_binds;
@@ -541,6 +543,11 @@ namespace dovahkit::subsystems::worldinput {
             if (cause.has_range) {
                cause.range.axes = node->input_sequence.range.axes;
             }
+            //
+            cause.pointer = {
+               .pos   = device_pointer_pos,
+               .delta = device_pointer_delta,
+            };
             //
             cause.button.is_down    = node->button_press_type == button_press_type::hold;
             cause.button.down_when  = node->input_sequence.state.went_down_at;

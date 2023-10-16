@@ -112,10 +112,13 @@ namespace dovahkit::subsystems::worldinput::devices {
       }
    }
    void xinput::update_pointer(const QWidget& view) {
+      this->pointer.delta.setX(0);
+      this->pointer.delta.setY(0);
+
       auto r = view.rect();
 
-      this->pointer_position.setX(r.left() + r.width() / 2);
-      this->pointer_position.setY(r.top() + r.height() / 2); // centered reticle, for now
+      this->pointer.position.setX(r.left() + r.width() / 2);
+      this->pointer.position.setY(r.top() + r.height() / 2); // centered reticle, for now
    }
 
    device_button_state xinput::get_state_of(const inputs::button& button) const {

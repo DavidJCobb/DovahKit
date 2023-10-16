@@ -15,6 +15,10 @@ namespace dovahkit::subsystems::worldinput {
             button_press_type press_type = button_press_type::press; // Hold binds may require different tool-side behaviors
          } button;
          struct {
+            QPoint pos;
+            QPoint delta;
+         } pointer;
+         struct {
             float x = 0;
             float y = 0;
             bool  is_delta = false;

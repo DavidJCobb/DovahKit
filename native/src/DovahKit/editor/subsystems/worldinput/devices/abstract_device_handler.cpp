@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::worldinput::devices {
       if (!rr.has_value()) {
          const auto& worldedit = dovahkit::subsystems::worldedit::core::get();
          //
-         rr = worldedit.raycast_at(this->pointer_position.x(), this->pointer_position.y());
+         rr = worldedit.raycast_at(this->pointer.position.x(), this->pointer.position.y());
       }
       return rr.value();
    }

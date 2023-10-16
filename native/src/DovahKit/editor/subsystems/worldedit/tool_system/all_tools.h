@@ -11,6 +11,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class modify_camera_speed_flags,
       class move_camera,
       class move_selection,
+      class move_selection_by_drag,
       class orbit_camera,
       class set_edit_gizmo_mode,
       class turn_camera//,

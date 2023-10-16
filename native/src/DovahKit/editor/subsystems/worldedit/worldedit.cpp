@@ -1425,6 +1425,16 @@ namespace dovahkit::subsystems::worldedit {
       }
       return glm::mat3(1);
    }
+   bool core::get_raycast_vectors(int screen_x, int screen_y, glm::vec3& out_ray_origin, glm::vec3& out_ray_direction) const {
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr) {
+         out_ray_origin    = { 0, 0, 0 };
+         out_ray_direction = { 0, 0, 0 };
+         return false;
+      }
+      sr->surface_position_to_world_ray(screen_x, screen_y, out_ray_origin, out_ray_direction);
+      return true;
+   }
 
    void core::adjust_camera(vulkanDK::data::camera_coordinate_change& update) {
       auto* sr = this->target_view->surfaceRenderer();

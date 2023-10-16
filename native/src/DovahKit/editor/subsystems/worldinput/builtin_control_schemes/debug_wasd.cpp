@@ -116,7 +116,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                .button_press_type = button_press_type::hold,
                //
                .tool = _tool_with_options(tools::turn_camera::options{
-                  .magnitudes = { item.yaw, 0, item.pitch },
+                  .magnitudes = { item.pitch, 0, item.yaw },
                })
             }));
          }
@@ -150,7 +150,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                .name = item.name,
                //
                .input_sequence    = _single_button_sequence(cobb::keyboard::key(item.vk)),
-               .button_press_type = button_press_type::hold,
+               .button_press_type = button_press_type::press,
                //
                .tool = _tool_with_options(tools::set_edit_gizmo_mode::options{
                   .gizmo = {
@@ -161,6 +161,45 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                   .modify_gizmo = true,
                })
             }));
+         }
+      }
+      {  // If any objects are selected...
+         auto* node_selections = control_scheme_node::from_data(control_scheme_condition_node{
+            .name = "When anything is selected...",
+            .data = {
+               .selection_count = control_scheme_condition::selection_count_comparison_set{
+                  .comparisons = {
+                     { comparison_operator::greater, 0 },
+                  }
+               }
+            },
+         });
+         out.top_level_nodes.push_back(node_selections);
+
+         {  // Translate Gizmo drag, Z-axis
+            auto* node = control_scheme_node::from_data(control_scheme_action{
+               .name = "Drag Translate Gizmo, Z-Axis",
+               //
+               .input_sequence    = algorithms::input_sequence_from_string("LMB :: Mouse Move"),
+               .button_press_type = button_press_type::hold,
+               //
+               .tool = _tool_with_options(tools::move_selection_by_drag::options{
+                  .drag_along = tools::move_selection_by_drag::options::drag_axis{
+                     .frame = reference_frame::current,
+                     .axis  = axis3D::z
+                  },
+               })
+            });
+            node_selections->append_child(*node);
+
+            auto& is = node->data.input_sequence;
+            is.raycast.associated_button = is.root;
+            is.raycast.requirement = raycast_requirement{
+               .targets = {
+                  .edit_gizmo_axis = axis3D::z,
+                  .edit_gizmo_mode = gizmo_mode::translate,
+               },
+            };
          }
       }
       {  // Editor Mode: Objects
