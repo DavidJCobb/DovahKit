@@ -2335,64 +2335,19 @@ namespace vulkanDK {
          constexpr const bool manually_preassemble_inverted_view_proj = true;
 
          glm::mat4 inverse;
+         // NOTE: glm::inverse(proj * view) == glm::inverse(view) * glm::inverse(proj)
          if constexpr (!manually_preassemble_inverted_view_proj) {
-            //glm::mat4 inverse = glm::inverse(this->scene.global_state.proj * this->scene.global_state.view);
-            // NOTE: inverse == glm::inverse(view) * glm::inverse(proj)
-
             inverse = this->scene.camera.inverse_view_matrix() * this->scene.get_inverse_projection_matrix(VkExtent2D{ this->surface_extent.width, this->surface_extent.height });
          } else {
-            //
-            // We can manually assemble our inverted matrix directly, without having to do matrix multiplications. 
-            // That said, looking at the below math, I think there's an even better way to do it: compute the 
-            // inverse view matrix using the camera function; and then manually perform vector-by-scalar mults on 
-            // the matrix's column vectors using the terms from the inverse projection matrix.
-            //
+            inverse = this->scene.camera.inverse_view_matrix();
 
-            constexpr const float draw_distance_near = 0.1F; // TODO: copied from scene.cpp; move to a config constant if this works
-            constexpr const float ninety_degrees     = 90.0F * cobb::degrees_to_radians_mult;
+            auto inv_proj = this->scene.get_inverse_projection_matrix(VkExtent2D{ this->surface_extent.width, this->surface_extent.height });
 
-            float aspect = 1.0F;
-            if (this->surface_extent.height != 0)
-               aspect = (float)this->surface_extent.width / (float)this->surface_extent.height;
-
-            auto inv_y_scale = tan(glm::radians(this->scene.config.vertical_fov_degrees) / 2.0F);
-            auto inv_x_scale = inv_y_scale * aspect;
-            if constexpr (config::is_righthanded) {
-               inv_y_scale *= -1;
-            }
-
-            const auto& cam_pos = this->scene.camera.position();
-            const auto& cam_rot = this->scene.camera.rotation();
-
-            auto cx = cos(cam_rot.x - ninety_degrees);
-            auto cy = cos(cam_rot.y);
-            auto cz = cos(cam_rot.z);
-            auto sx = sin(cam_rot.x - ninety_degrees);
-            auto sy = sin(cam_rot.y);
-            auto sz = sin(cam_rot.z);
-
-            // Via: https://mathdf.com/mat/#expr=B*inv(A)&mats=A1%2Fj_x~0~0~0!0~1%2Fj_y~0~0!0~0~0~d!0~0~-1~0%5DBc_y*c_z~s_x*s_y%2Bc_x*c_y*s_z~s_x*c_y*s_z-c_x*s_y~p_x!-s_z~c_x*c_z~s_x*c_z~p_y!s_y*c_z~c_x*s_y*s_z-s_x*c_y~s_x*s_y*s_z%2Bc_x*c_y~p_z!0~0~0~1%5D
-            inverse = glm::fmat4(
-               inv_x_scale * (cy*cz),
-               inv_x_scale * -sz,
-               inv_x_scale * (sy*cz),
-               0,
-
-               inv_y_scale * (sx*sy + cx*cy*sz),
-               inv_y_scale * (cx*cz),
-               inv_y_scale * (cx*sy*sz - sx*cy),
-               0,
-
-               cam_pos.x / draw_distance_near,
-               cam_pos.y / draw_distance_near,
-               cam_pos.z / draw_distance_near,
-               1 / draw_distance_near,
-
-               cx*sy - sx*cy*sz,
-               -sx*cz,
-               -(sx*sy*sz + cx*cy),
-               0
-            );
+            inverse[0] *= inv_proj[0][0];
+            inverse[1] *= inv_proj[1][1];
+            glm::fvec4 temp = inverse[2] * inv_proj[3][2];
+            inverse[2] = inverse[3] * inv_proj[2][3];
+            inverse[3] = temp;
          }
 
          constexpr const float depth_near = config::use_inverted_depth ? 1.0 : 0.0;
