@@ -102,6 +102,35 @@ namespace vulkanDK {
       //
       this->update_sun_shadows();
    }
+   glm::mat4 scene::get_inverse_projection_matrix(VkExtent2D render_area) const {
+      if constexpr (config::use_inverted_depth) {
+         // Used https://mathdf.com/mat/#expr=inv(A)&mats=A(1%2Ftan(f))%2F(w%2Fh)~0~0~0!0~1%2Ftan(f)~0~0!0~0~0~d!0~0~-1~0%5D
+         // to figure out the math.
+
+         float aspect = 1.0F;
+         if (render_area.height != 0.0)
+            aspect = (float)render_area.width / (float)render_area.height;
+
+         auto inv_y_scale = tan(glm::radians(this->config.vertical_fov_degrees) / 2.0F);
+         auto inv_x_scale = inv_y_scale * aspect;
+         if constexpr (config::is_righthanded) {
+            inv_y_scale *= -1;
+         }
+         //
+         // NOTE: The glm::mat4 constructor that takes sixteen scalars takes them in 
+         // column-major order -- so, the first column's X, Y, Z, and W; then the 
+         // second column; then the third; then the fourth.
+         //
+         return glm::fmat4(
+            inv_x_scale, 0, 0, 0,
+            0, inv_y_scale, 0, 0,
+            0, 0, 0, (1.0 / draw_distance_near),
+            0, 0, -1, 0
+         );
+      } else {
+         return glm::inverse(this->global_state.proj);
+      }
+   }
    void scene::adjust_camera(const data::camera_coordinate_change& change) {
       this->camera.adjust(change.move, change.turn);
    }

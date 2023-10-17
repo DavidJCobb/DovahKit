@@ -150,6 +150,15 @@ namespace vulkanDK {
       });
       return glm::mat3(rot);
    }
+   glm::mat4 camera::inverse_view_matrix() const {
+      auto rot = cobb::glm::euler_intrinsic_yzx_to_mat<cobb::glm::handedness::left>(glm::vec3{
+         this->_rotation.x - ninety_degrees,
+         this->_rotation.y,
+         this->_rotation.z
+      });
+      rot[3] = glm::vec4(this->_position, 1.0F);
+      return rot;
+   }
 
    void camera::set_position(const glm::vec3& v) {
       this->_position = v;

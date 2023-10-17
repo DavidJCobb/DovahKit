@@ -77,6 +77,7 @@ namespace vulkanDK {
          }
 
          void update_projection(VkExtent2D render_area);
+         glm::mat4 get_inverse_projection_matrix(VkExtent2D render_area) const;
          void adjust_camera(const data::camera_coordinate_change&);
 
          void update_sun_shadows();

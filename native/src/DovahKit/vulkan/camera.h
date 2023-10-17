@@ -40,6 +40,7 @@ namespace vulkanDK {
 
          glm::mat4 camera_matrix() const;
          glm::mat3 camera_rotation_matrix() const;
+         glm::mat4 inverse_view_matrix() const; // almost the same as `camera_matrix`, but with a 90deg rotation to adjust axes between world and clip space
 
          void set_position(const glm::vec3&);
          void set_rotation(const glm::vec3& pitch_roll_yaw_radians);
