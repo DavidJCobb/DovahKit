@@ -359,6 +359,16 @@ Within the Press bind, the input controls that may potentially conflict are thos
 
 A conflict is present if there is any overlap between the potentially conflicting input controls from the Hold bind, and the potentially conflicting input controls from the Press bind. The input controls among this overlap are <dfn>mutually conflicting keys</dfn>.
 
+##### Hold nodes with range constraints win if the ranges are active
+Consider the following binds:
+
+* Press LMB
+* Hold LMB :: Mouse Move
+
+The former bind defines an action that should occur when the user clicks, while the latter bind defines a click-and-drag operation. If the Press-delays-Hold conflict resolution kicks in here, then all drag operations will be delayed if there is also an action on the same mouse button. This generalizes to any device that has pointer-like behaviors.
+
+For this reason, if a conflicting Hold node's input sequence has a [range constraint](#range-constraint), and that constraint is satisfied, then the Hold node automatically wins the conflict. If in that situation the Hold node is already being delayed by Press-delays-Hold conflict resolution, then the delay stops early and the Hold node is retroamended to have won the conflict.
+
 ##### Advancing past all conflicting keys indefinitely delays the Hold node
 Consider the following binds:
 
@@ -1024,7 +1034,7 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
                   1. Increment <var>Entry</var>'s "delayed by" count by 1, and add <var>Current</var> to <var>WinningPressBinds</var>.
                1. If <var>Result</var> is *advanced past*, then set <var>Entry</var>'s "is advanced past" flag to *true*.
                1. If <var>Result</var> is *blocked*, then set <var>Entry</var>'s "is blocked" flag to *true*.
-               1. If <var>Result</var> is *hold outlasted press*, then increment <var>Entry</var>'s "outlasted" count by 1.
+               1. If <var>Result</var> is *hold outlasted press* or *hold won via range*, then increment <var>Entry</var>'s "outlasted" count by 1.
       1. Let <var>RetroamendedLosingPresses</var> be an empty list of bind list items.
       1. **[Retroamend losing presses.]** For each entry <var>Entry</var> in <var>SeenHoldBinds</var>:
          1. If <var>Entry</var>'s "is blocked" or "is advanced past" flags are set, then skip to the next iteration.
@@ -1033,7 +1043,7 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
          4. Set <var>Entry</var>'s "delayed by" count to zero.
          5. For each node <var>PressBind</var> in <var>WinningPressBinds</var>:
             1. Let <var>Result</var> be the result of running the [bind conflict resolution algorithm](#bind-conflict-resolution-algorithm) for [Presses preempting Holds](#press-preempts-hold), given <var>PressBind</var> as the "press" bind and <var>Entry</var>'s bind pointer as the "hold" bind.
-            1. If <var>Result</var> is *delayed* or *hold outlasted press*, then add <var>PressBind</var> to <var>RetroamendedLosingPresses</var>.
+            1. If <var>Result</var> is *delayed* or *hold outlasted press* or *hold won via range*, then add <var>PressBind</var> to <var>RetroamendedLosingPresses</var>.
       1. Remove from <var>WinningPressBinds</var> every bind that is also in <var>RetroamendedLosingPresses</var>.
       1. **[Salvage Hold binds that lost to a losing Press bind.]** For each <var>Entry</var> in <var>SeenHoldBinds</var>:
          1. If <var>Entry</var>'s "is blocked" flag is set, then skip to the next iteration.
@@ -1127,6 +1137,7 @@ Given two bind list items &mdash; one, <var>PressBind</var>, whose [button press
 * **blocked:** A conflict is present between these binds, the Press bind has won, and the Press bind is being released; activation of the Hold bind will be blocked outright.
 * **advanced past:** A conflict is present between these binds, and the Press bind has won by virtue of advancing past the Hold bind; activation of the Hold bind will be delayed indefinitely.
 * **hold outlasted press:** A conflict is present between these binds, and the Hold bind has won.
+* **hold won via range:** A conflict is present between these binds, and the Hold bind has won due to having a range constraint become active.
 
 This algorithm requires access to: the timestamp at which input processing began for the current frame; and the current input device.
 
@@ -1190,16 +1201,17 @@ This algorithm requires access to: the timestamp at which input processing began
 9. Let <var>AllPassed</var> be true.
 10. Let <var>AnyConflicted</var> be false.
 11. For each key <var>KeyPress</var> in <var>KeysPress</var>:
-   1. For each key <var>KeyHold</var> in <var>KeysHold</var>:
-      1. If <var>KeyPress</var>'s button is the same button referred to by <var>KeyHold</var>:
-         1. Set <var>AnyConflicted</var> to *true*.
-         2. If <var>KeyPress</var>'s "passed" bool is *false*:
-            1. Set <var>AllPassed</var> to *false*.
-         3. Break.
+    1. For each key <var>KeyHold</var> in <var>KeysHold</var>:
+       1. If <var>KeyPress</var>'s button is the same button referred to by <var>KeyHold</var>:
+          1. Set <var>AnyConflicted</var> to *true*.
+          2. If <var>KeyPress</var>'s "passed" bool is *false*:
+             1. Set <var>AllPassed</var> to *false*.
+          3. Break.
 12. If <var>AnyConflicted</var> is *false*:
-   1. Return *no conflict*.
+    1. Return *no conflict*.
 13. If <var>AllPassed</var> is *true*:[^15]
-   1. Return *advanced past*.
+    1. Return *advanced past*.
+1.  **[Hold nodes with range constraints win if the ranges are active.]** If <var>HoldBind</var>'s input sequence has a [range constraint](#range-constraint), then return *hold won via range*. (We do not have to check whether the range constraint is satisfied; it must have been, for <var>HoldBind</var> to end up here.)
 14. Let <var>ElapsedHold</var> be the difference between the current timestamp and the down timestamp for <var>HoldBind</var>'s input sequence.
 15. Let <var>DisambiguationDuration</var> be the press-to-hold time threshold.
 16. If <var>PressBind</var>'s button press type is Long Press, then increase <var>DisambiguationDuration</var> by the long press time threshold.

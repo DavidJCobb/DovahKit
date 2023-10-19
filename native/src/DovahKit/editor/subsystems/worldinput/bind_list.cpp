@@ -259,6 +259,7 @@ namespace dovahkit::subsystems::worldinput {
                      winning_press_binds.push_back(&press_bind);
                      break;
                   case hold_outlasted_press:
+                  case hold_won_via_range:
                      ++hold_info.outlasted;
                      break;
                }
@@ -288,6 +289,7 @@ namespace dovahkit::subsystems::worldinput {
                      using enum algorithms::press_preempt_hold_result;
                      case press_delays_hold:
                      case hold_outlasted_press:
+                     case hold_won_via_range:
                         retroamended_losing_presses.push_back(press_node);
                         break;
                   }

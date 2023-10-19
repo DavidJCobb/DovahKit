@@ -183,6 +183,13 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       if (!any_conflict) {
          return press_preempt_hold_result::no_conflict;
       }
+      if (hold.input_sequence.has_range_requirement()) {
+         //
+         // The Hold bind has a range constraint, and the constraint was met (it must have been, 
+         // for us to end up seeing that bind here). Allow it to win this conflict by default.
+         //
+         return press_preempt_hold_result::hold_won_via_range;
+      }
       if (all_passed) {
          // indefinite delay
          return press_preempt_hold_result::press_advanced_past_hold;

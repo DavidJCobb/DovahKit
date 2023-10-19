@@ -13,6 +13,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       press_blocks_hold,
       press_advanced_past_hold,
       hold_outlasted_press,
+      hold_won_via_range,
    };
 
    extern press_preempt_hold_result press_preempts_hold(
