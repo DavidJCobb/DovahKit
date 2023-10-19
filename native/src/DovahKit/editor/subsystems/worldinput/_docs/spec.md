@@ -1211,7 +1211,13 @@ This algorithm requires access to: the timestamp at which input processing began
     1. Return *no conflict*.
 13. If <var>AllPassed</var> is *true*:[^15]
     1. Return *advanced past*.
-1.  **[Hold nodes with range constraints win if the ranges are active.]** If <var>HoldBind</var>'s input sequence has a [range constraint](#range-constraint), then return *hold won via range*. (We do not have to check whether the range constraint is satisfied; it must have been, for <var>HoldBind</var> to end up here.)
+1.  **[Hold nodes with range constraints win if the ranges are active.]** If <var>HoldBind</var>'s input sequence has a [range constraint](#range-constraint):
+    1. If <var>PressBind</var>'s input sequence has a range constraint:
+       1. Let <var>HoldRange</var> be the range constraint for <var>HoldBind</var>'s input sequence, and let <var>PressRange</var> be the range constraint for <var>PressBind</var>'s input sequence.
+       1. If <var>HoldRange</var> and <var>PressRange</var> refer to different range controls, then return *no conflict*.
+       1. If <var>HoldRange</var> and <var>PressRange</var> refer to different axes, then return *no conflict*.
+    1. Else:
+       1. Return *hold won via range*. (We do not have to check whether the range constraint is satisfied; it must have been, for <var>HoldBind</var> to end up here.)
 14. Let <var>ElapsedHold</var> be the difference between the current timestamp and the down timestamp for <var>HoldBind</var>'s input sequence.
 15. Let <var>DisambiguationDuration</var> be the press-to-hold time threshold.
 16. If <var>PressBind</var>'s button press type is Long Press, then increase <var>DisambiguationDuration</var> by the long press time threshold.
