@@ -186,9 +186,33 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       if (hold.input_sequence.has_range_requirement()) {
          //
          // The Hold bind has a range constraint, and the constraint was met (it must have been, 
-         // for us to end up seeing that bind here). Allow it to win this conflict by default.
+         // for us to end up seeing that bind here). Allow it to win this conflict by default... 
+         // unless the Press also has a range.
          //
-         return press_preempt_hold_result::hold_won_via_range;
+         if (press.input_sequence.has_range_requirement()) {
+            //
+            // If *both* binds have range constraints, then they may not be in conflict despite 
+            // their buttons overlapping. If their ranges are different, then they're not in 
+            // conflict; if they're the same, then let normal Press-delays-Hold handling kick in.
+            //
+            auto& hold_range  = hold.input_sequence.range;
+            auto& press_range = press.input_sequence.range;
+            if (hold_range.control != press_range.control) {
+               //
+               // The controls require different ranges; regard them as not being in conflict.
+               //
+               return press_preempt_hold_result::no_conflict;
+            }
+            if (hold_range.axes != press_range.axes) {
+               //
+               // The controls don't require the exact same axes; regard them as not being in 
+               // conflict.
+               //
+               return press_preempt_hold_result::no_conflict;
+            }
+         } else {
+            return press_preempt_hold_result::hold_won_via_range;
+         }
       }
       if (all_passed) {
          // indefinite delay
