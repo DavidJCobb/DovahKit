@@ -1,25 +1,11 @@
 #include "./move_selection.h"
 #include <array>
 #include <type_traits>
-#include <QComboBox>
-#include <QGroupBox>
-#include <QGridLayout>
-#include <QLabel>
-#include <QSpinBox>
 #include "helpers/qt/basic_bindings.h"
 
 namespace dovahkit::ui::worldedit::tools {
    move_selection::move_selection(QWidget* parent) : base(parent) {
       this->ui.setupUi(this);
-      {
-         auto* group = this->_typeButtonGroup = new QButtonGroup(this);
-         group->addButton(this->ui.movementTypeCursor);
-         group->addButton(this->ui.movementTypeCustom);
-
-         QObject::connect(this->ui.movementTypeCursor, &QRadioButton::toggled, this, [this](bool checked) {
-            this->ui.customMovementGroupbox->setEnabled(!checked);
-         });
-      }
       {
          auto* widget_movement  = this->ui.transformFrame;
          auto* widget_constrain = this->ui.constraintFrame;
@@ -88,15 +74,6 @@ namespace dovahkit::ui::worldedit::tools {
          this->ui.constraintX->setChecked(!v.locked_axes.x);
          this->ui.constraintY->setChecked(!v.locked_axes.y);
          this->ui.constraintZ->setChecked(!v.locked_axes.z);
-      }
-      {
-         const auto blocker_1 = QSignalBlocker(this->_typeButtonGroup);
-         const auto blocker_2 = QSignalBlocker(this->ui.movementTypeCursor);
-         const auto blocker_3 = QSignalBlocker(this->ui.movementTypeCustom);
-
-         this->ui.movementTypeCursor->setChecked(v.follow_pointer);
-         this->ui.movementTypeCustom->setChecked(!v.follow_pointer);
-         this->ui.customMovementGroupbox->setEnabled(!v.follow_pointer);
       }
       {
          const auto blocker_x = QSignalBlocker(this->ui.customMagnitudeX);

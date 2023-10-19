@@ -176,30 +176,41 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          });
          out.top_level_nodes.push_back(node_selections);
 
-         {  // Translate Gizmo drag, Z-axis
-            auto* node = control_scheme_node::from_data(control_scheme_action{
-               .name = "Drag Translate Gizmo, Z-Axis",
-               //
-               .input_sequence    = algorithms::input_sequence_from_string("LMB :: Mouse Move"),
-               .button_press_type = button_press_type::hold,
-               //
-               .tool = _tool_with_options(tools::move_selection_by_drag::options{
-                  .drag_along = tools::move_selection_by_drag::options::drag_axis{
-                     .frame = reference_frame::current,
-                     .axis  = axis3D::z
-                  },
-               })
-            });
-            node_selections->append_child(*node);
+         {  // Translate Gizmo drag
+            for (int i = 0; i < 3; ++i) {
+               axis3D axis = axis3D::x;
+               switch (i) {
+                  case 1: axis = axis3D::y; break;
+                  case 2: axis = axis3D::z; break;
+               }
 
-            auto& is = node->data.input_sequence;
-            is.raycast.associated_button = is.root;
-            is.raycast.requirement = raycast_requirement{
-               .targets = {
-                  .edit_gizmo_axis = axis3D::z,
-                  .edit_gizmo_mode = gizmo_mode::translate,
-               },
-            };
+               QString name = "Drag Translate Gizmo, ";
+               name += (char)(i + 'X');
+               name += "-Axis";
+
+               auto* node = control_scheme_node::from_data(control_scheme_action{
+                  .name = name,
+                  //
+                  .input_sequence    = algorithms::input_sequence_from_string("LMB :: Mouse Move"),
+                  .button_press_type = button_press_type::hold,
+                  //
+                  .tool = _tool_with_options(tools::move_selection_by_drag::options{
+                     .frame    = reference_frame::current,
+                     .axis     = axis,
+                     .is_plane = false,
+                  })
+               });
+               node_selections->append_child(*node);
+
+               auto& is = node->data.input_sequence;
+               is.raycast.associated_button = is.root;
+               is.raycast.requirement = raycast_requirement{
+                  .targets = {
+                     .edit_gizmo_axis = axis,
+                     .edit_gizmo_mode = gizmo_mode::translate,
+                  },
+               };
+            }
          }
       }
       {  // Editor Mode: Objects

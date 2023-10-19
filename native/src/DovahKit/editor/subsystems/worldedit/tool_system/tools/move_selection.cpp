@@ -13,30 +13,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       response res;
       auto& dst = (input.button.press_type == worldinput::button_press_type::hold) ? res.held : res.instant;
-      if (o.follow_pointer) {
-         switch (o.frame) {
-            case reference_frame::camera: dst.follow_pointer.camera = true; break;
-            case reference_frame::local:  dst.follow_pointer.local  = true; break;
-            case reference_frame::world:  dst.follow_pointer.world  = true; break;
-         }
-         if (o.locked_axes.any_locked()) {
-            uint8_t locked_mask = 0;
-            locked_mask |= (o.locked_axes.x ? 1 : 0);
-            locked_mask |= (o.locked_axes.y ? 1 : 0) << 1;
-            locked_mask |= (o.locked_axes.z ? 1 : 0) << 2;
-
-            auto f = o.locked_axes.frame;
-            if (f == reference_frame::current)
-               f = core::get().get_edit_gizmo_frame();
-
-            auto& dst_c = dst.follow_pointer.locked_axes;
-            switch (f) {
-               case reference_frame::camera: dst_c.camera = locked_mask; break;
-               case reference_frame::local:  dst_c.local  = locked_mask; break;
-               case reference_frame::world:  dst_c.world  = locked_mask; break;
-            }
-         }
-      } else {
+      {
          cobb::vector3<float> vec = o.magnitudes;
          if (o.range.has_value()) {
             if (!input.has_range)

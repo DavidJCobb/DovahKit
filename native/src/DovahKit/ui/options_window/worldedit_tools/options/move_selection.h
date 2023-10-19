@@ -29,7 +29,6 @@ namespace dovahkit::ui::worldedit::tools {
          struct {
             options_type current_options = {};
          } _state;
-         QButtonGroup* _typeButtonGroup = nullptr;
          struct {
             EnumCombobox<dovahkit::subsystems::worldedit::reference_frame> transformFrame;
             EnumCombobox<dovahkit::subsystems::worldedit::reference_frame> constraintFrame;

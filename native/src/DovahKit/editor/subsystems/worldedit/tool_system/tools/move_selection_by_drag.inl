@@ -3,48 +3,21 @@
 
 namespace dovahkit::subsystems::worldedit::tools {
    constexpr void move_selection_by_drag::options::stream(cobb::bitstreams::reader& s) {
-      bool is_plane;
-      s.stream(is_plane);
-
-      if (!is_plane) {
-         auto& dfn = this->drag_along.emplace<drag_axis>();
-         s.stream(
-            dfn.frame,
-            dfn.axis
-         );
-      } else {
-         auto& dfn = this->drag_along.emplace<drag_plane>();
-         s.stream(
-            dfn.frame,
-            dfn.axis_u,
-            dfn.axis_v
-         );
-      }
+      s.stream(
+         is_plane,
+         frame,
+         axis
+      );
    }
    constexpr void move_selection_by_drag::options::stream(cobb::bitstreams::writer& s) const {
-      bool is_plane = std::holds_alternative<drag_plane>(this->drag_along);
-      s.stream(is_plane);
-
-      if (!is_plane) {
-         assert(std::holds_alternative<drag_axis>(this->drag_along));
-         auto& dfn = std::get<drag_axis>(this->drag_along);
-         s.stream(
-            dfn.frame,
-            dfn.axis
-         );
-      } else {
-         auto& dfn = std::get<drag_plane>(this->drag_along);
-         s.stream(
-            dfn.frame,
-            dfn.axis_u,
-            dfn.axis_v
-         );
-      }
+      s.stream(
+         is_plane,
+         frame,
+         axis
+      );
    }
 
-   // TODO: devise a round-trip test that would properly let us handle all cases of a std::variant
-   //       maybe something that just takes an already-constructed value as an argument and uses 
-   //       that as a control group, with no scrambling on read
+   static_assert(cobb::bitstreams::round_trip_test<move_selection_by_drag::options>, "Assert: round-trip bitstream serialization produces correct results.");
 
    constexpr void move_selection_by_drag::response::scale(double delta_seconds) {
    }

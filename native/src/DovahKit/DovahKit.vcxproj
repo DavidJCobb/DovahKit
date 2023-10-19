@@ -700,6 +700,7 @@
     <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.cpp" />
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
@@ -1339,6 +1340,7 @@
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />
     <QtMoc Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\_base.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h" />
@@ -2042,6 +2044,7 @@
     <QtUic Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\modify_camera_speed_flags_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\move_camera_tool_options.ui" />
+    <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_by_drag_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\turn_camera_tool_options.ui" />

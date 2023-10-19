@@ -13,12 +13,6 @@ namespace dovahkit::subsystems::worldedit::tools {
          return;
       if (!input.raycast.value().hit_position.has_value())
          return;
-
-      if (std::holds_alternative<options::drag_plane>(o.drag_along)) {
-         auto& plane_dfn = std::get<options::drag_plane>(o.drag_along);
-         if (plane_dfn.axis_u == plane_dfn.axis_v) // invalid definition for a plane
-            return;
-      }
       
       if (input.pointer.delta.x() == 0 && input.pointer.delta.y() == 0)
          return;
@@ -82,59 +76,38 @@ namespace dovahkit::subsystems::worldedit::tools {
          // project it onto the 3D axis we want to drag along, to flatten it from 2D-in-3D to 1D-in-3D, 
          // and the resulting movement vector can then be applied directly to the selection.
          //
-         glm::fvec3 plane_u;
-         glm::fvec3 plane_v;
-         if (std::holds_alternative<options::drag_axis>(o.drag_along)) {
+         glm::fvec3 plane_normal;
+         if (!o.is_plane) {
             //
             // If we're dragging along an axis, then always use the screen plane.
             //
-            plane_u = camera_matrix[0];
-            plane_v = camera_matrix[2];
-         } else if (std::holds_alternative<options::drag_plane>(o.drag_along)) {
-            auto& plane_dfn = std::get<options::drag_plane>(o.drag_along);
-
+            plane_normal = camera_matrix[1];
+         } else {
             glm::mat3 frame_matrix;
-            if (plane_dfn.frame == reference_frame::camera) {
+            if (o.frame == reference_frame::camera) {
                frame_matrix = camera_matrix;
             } else {
-               frame_matrix = worldedit_core.get_frame_rotation_matrix(plane_dfn.frame);
+               frame_matrix = worldedit_core.get_frame_rotation_matrix(o.frame);
             }
 
-            switch (plane_dfn.axis_u) {
+            switch (o.axis) { // plane normal
                case axis3D::x:
-                  plane_u = frame_matrix[0];
+                  plane_normal = frame_matrix[0];
                   break;
                case axis3D::y:
-                  plane_u = frame_matrix[1];
+                  plane_normal = frame_matrix[1];
                   break;
                case axis3D::z:
-                  plane_u = frame_matrix[2];
-                  break;
-            }
-            switch (plane_dfn.axis_v) {
-               case axis3D::x:
-                  plane_v = frame_matrix[0];
-                  break;
-               case axis3D::y:
-                  plane_v = frame_matrix[1];
-                  break;
-               case axis3D::z:
-                  plane_v = frame_matrix[2];
+                  plane_normal = frame_matrix[2];
                   break;
             }
          }
+         plane_normal = glm::normalize(plane_normal); // proofing, in case the camera ever scales or gets FP inaccuracy somehow
 
          //
          // Now that we've extracted a plane definition, we should run the ray/plane intersection 
          // tests.
          // 
-         // TODO: If all we need is the plane normal, then can we not store the plane as its normal? 
-         // For example, could the XY-plane not be encoded as the "Z-normal plane" within the options? 
-         // This has the added benefit that specifying a degenerate plane (e.g. XX, YY, ZZ) becomes 
-         // impossible.
-         //
-
-         glm::fvec3 plane_normal = glm::cross(plane_u, plane_v);
 
          qDebug("    - 2D-in-2D to 2D-in-3D:");
          qDebug("       - plane normal is (%f, %f, %f)", plane_normal.x, plane_normal.y, plane_normal.z);
@@ -187,18 +160,16 @@ namespace dovahkit::subsystems::worldedit::tools {
       // If we only want to move along a single axis, then flatten the pointer-movement-in-
       // world-units onto that axis.
       //
-      if (std::holds_alternative<options::drag_axis>(o.drag_along)) {
-         auto& axis_dfn = std::get<options::drag_axis>(o.drag_along);
-
+      if (!o.is_plane) {
          glm::fvec3 drag_axis;
          {
             glm::mat3 frame_matrix;
-            if (axis_dfn.frame == reference_frame::camera) {
+            if (o.frame == reference_frame::camera) {
                frame_matrix = camera_matrix;
             } else {
-               frame_matrix = worldedit_core.get_frame_rotation_matrix(axis_dfn.frame);
+               frame_matrix = worldedit_core.get_frame_rotation_matrix(o.frame);
             }
-            switch (axis_dfn.axis) {
+            switch (o.axis) {
                case axis3D::x: drag_axis = frame_matrix[0]; break;
                case axis3D::y: drag_axis = frame_matrix[1]; break;
                case axis3D::z: drag_axis = frame_matrix[2]; break;

@@ -10,7 +10,11 @@ namespace dovahkit::subsystems::worldinput {
          return true;
 
       if (res.target_info.edit_gizmo.mode != gizmo_mode::none) {
-         return (this->targets.edit_gizmo_mode == res.target_info.edit_gizmo.mode);
+         if (this->targets.edit_gizmo_mode != res.target_info.edit_gizmo.mode)
+            return false;
+         if (this->targets.edit_gizmo_axis != res.target_info.edit_gizmo.axis)
+            return false;
+         return true;
       }
       if (res.target_info.form) {
          auto ft = res.target_info.form->formType;

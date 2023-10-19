@@ -5,14 +5,12 @@ namespace dovahkit::subsystems::worldedit::tools {
    constexpr bool move_selection::options::operator==(const options& other) const noexcept {
       if (this->frame != other.frame)
          return false;
-      if (this->follow_pointer != other.follow_pointer)
+      if (this->also_move_camera != other.also_move_camera)
          return false;
-      if (!this->follow_pointer) {
-         if (this->magnitudes != other.magnitudes)
-            return false;
-         if (this->range != other.range)
-            return false;
-      }
+      if (this->magnitudes != other.magnitudes)
+         return false;
+      if (this->range != other.range)
+         return false;
       if (this->locked_axes != other.locked_axes)
          return false;
       return true;
@@ -21,22 +19,17 @@ namespace dovahkit::subsystems::worldedit::tools {
    constexpr void move_selection::options::stream(cobb::bitstreams::reader& s) {
       s.stream(
          frame,
-         follow_pointer
+         also_move_camera,
+         magnitudes.x,
+         magnitudes.y,
+         magnitudes.z
       );
-      if (!follow_pointer) {
-         s.stream(
-            also_move_camera,
-            magnitudes.x,
-            magnitudes.y,
-            magnitudes.z
-         );
-         {  // range
-            bool presence = false;
-            s.stream(presence);
-            if (presence) {
-               this->range.emplace();
-               s.stream(this->range.value());
-            }
+      {  // range
+         bool presence = false;
+         s.stream(presence);
+         if (presence) {
+            this->range.emplace();
+            s.stream(this->range.value());
          }
       }
       s.stream(
@@ -49,16 +42,12 @@ namespace dovahkit::subsystems::worldedit::tools {
    constexpr void move_selection::options::stream(cobb::bitstreams::writer& s) const {
       s.stream(
          frame,
-         follow_pointer
+         also_move_camera,
+         magnitudes.x,
+         magnitudes.y,
+         magnitudes.z
       );
-      if (!follow_pointer) {
-         s.stream(
-            also_move_camera,
-            magnitudes.x,
-            magnitudes.y,
-            magnitudes.z
-         );
-         
+      {  // range
          s.stream(range.has_value());
          if (range.has_value())
             s.stream(range.value());
@@ -80,7 +69,6 @@ namespace dovahkit::subsystems::worldedit::tools {
          // are safe to scramble as part of the test procedure:
          //
          &move_selection::options::frame,
-         &move_selection::options::follow_pointer,
          &move_selection::options::also_move_camera,
          &move_selection::options::magnitudes,
          &move_selection::options::locked_axes
@@ -90,19 +78,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
    constexpr void move_selection::response::by_temporality::merge(const by_temporality& from) {
       this->magnitude += from.magnitude;
-
       this->camera.magnitude += from.camera.magnitude;
-
-      auto& fp_src = from.follow_pointer;
-      auto& fp_dst = this->follow_pointer;
-      fp_dst.camera |= fp_src.camera;
-      fp_dst.local  |= fp_src.local;
-      fp_dst.world  |= fp_src.world;
-
-      // Use the least-constrained movement.
-      fp_dst.locked_axes.camera &= fp_src.locked_axes.camera;
-      fp_dst.locked_axes.local  &= fp_src.locked_axes.local;
-      fp_dst.locked_axes.world  &= fp_src.locked_axes.world;
    }
    //
    constexpr void move_selection::response::scale(double delta_seconds) {

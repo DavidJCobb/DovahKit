@@ -2115,6 +2115,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5255,6 +5258,9 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5402,6 +5408,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_by_drag_tool_options.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

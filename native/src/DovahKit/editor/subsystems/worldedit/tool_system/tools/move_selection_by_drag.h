@@ -33,10 +33,13 @@ namespace dovahkit::subsystems::worldedit::tools {
                };
 
             public:
-               std::variant<
-                  drag_axis,
-                  drag_plane
-               > drag_along;
+               reference_frame frame = reference_frame::world;
+               axis3D axis = axis3D::z;
+
+               // Indicates whether we're dragging along an axis or a plane.
+               // If true, then `axis` is the drag plane's normal (i.e. axis == z means the XY-plane).
+               // If false, then `axis` is... well, the drag axis!
+               bool is_plane = false;
 
                constexpr bool operator==(const options& v) const noexcept = default;
 

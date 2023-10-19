@@ -35,8 +35,6 @@ namespace dovahkit::subsystems::worldedit::tools {
             public:
                reference_frame frame = reference_frame::world;
                //
-               bool follow_pointer = false; // mutually exclusive with `magnitudes` and `range`
-               //
                bool also_move_camera = false;
                cobb::vector3<float> magnitudes;
                std::optional<worldinput::util::range_input_scales> range;
@@ -55,17 +53,6 @@ namespace dovahkit::subsystems::worldedit::tools {
                struct {
                   cobb::vector3<float> magnitude; // world-relative translation magnitude
                } camera;
-               //
-               struct {
-                  bool camera = false;
-                  bool local  = false;
-                  bool world  = false;
-                  struct {
-                     uint8_t camera = 0;
-                     uint8_t local  = 0;
-                     uint8_t world  = 0;
-                  } locked_axes;
-               } follow_pointer;
 
                constexpr void merge(const by_temporality& from);
             };
