@@ -574,7 +574,11 @@ namespace dovahkit::subsystems::worldinput {
             cause.range.is_delta = is_delta;
 
             if (node->input_sequence.has_raycast_requirement()) {
-               cause.raycast = device.get_raycast_result(now, node->input_sequence.raycast.associated_button->button);
+               if (node->input_sequence.raycast.requirement.timing == raycast_requirement::timing_type::per_frame) {
+                  cause.raycast = device.get_per_frame_raycast_result();
+               } else {
+                  cause.raycast = device.get_raycast_result(now, node->input_sequence.raycast.associated_button->button);
+               }
             }
 
             node->invoke((node->button_press_type == button_press_type::hold) ? hold_results : press_results, cause);

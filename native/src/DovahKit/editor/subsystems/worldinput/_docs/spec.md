@@ -1110,7 +1110,9 @@ Let <var>LastFrameActiveHoldBinds</var> be a persistent run-time-only list of [b
       1. Set <var>Cause</var>'s range value to <var>RangeValue</var>.
       1. Set <var>Cause</var>'s "range is delta" flag to <var>RangeIsDelta</var>.
       1. If <var>EligibleBind</var>'s input sequence has a [raycast constraint](#raycast-constraint):
-         1. Let <var>RaycastResult</var> be the [raycast result](#raycast-result) associated with the constraint's raycast-associated button.
+         1. Let <var>RaycastResult</var> be either of...
+            1. The [raycast result](#raycast-result) for the current frame, if <var>EligibleBind</var>'s range constraint requires that the raycast be updated per-frame.
+            1. Otherwise, the [raycast result](#raycast-result) associated with the constraint's raycast-associated button.
          2. Set <var>Cause</var>'s raycast result to a copy of <var>RaycastResult</var>.
       1. Execute <var>EligibleBind</var>'s bound tool, passing <var>Cause</var>.
    1. If <var>EligibleBind</var>'s press type is Hold, then:
