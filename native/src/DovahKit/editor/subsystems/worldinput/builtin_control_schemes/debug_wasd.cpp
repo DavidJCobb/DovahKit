@@ -176,6 +176,102 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          });
          out.top_level_nodes.push_back(node_selections);
 
+         #pragma region Transformation by steps, based on gizmo
+         {
+            auto* node_translate = control_scheme_node::from_data(control_scheme_condition_node{
+               .name = "Translate by steps",
+               .data = {
+                  .gizmo_modes = gizmo_mode::translate,
+               }
+            });
+            auto* node_rotate = control_scheme_node::from_data(control_scheme_condition_node{
+               .name = "Rotate by steps",
+               .data = {
+                  .gizmo_modes = gizmo_mode::rotate,
+               }
+            });
+            auto* node_scale = control_scheme_node::from_data(control_scheme_condition_node{
+               .name = "Scale by steps",
+               .data = {
+                  .gizmo_modes = gizmo_mode::scale,
+               }
+            });
+            node_selections->append_child(*node_translate);
+            node_selections->append_child(*node_rotate);
+            node_selections->append_child(*node_scale);
+
+            auto seq_x_inc = algorithms::input_sequence_from_string("Numpad 7");
+            auto seq_x_dec = algorithms::input_sequence_from_string("Numpad 4");
+            auto seq_y_inc = algorithms::input_sequence_from_string("Numpad 8");
+            auto seq_y_dec = algorithms::input_sequence_from_string("Numpad 5");
+            auto seq_z_inc = algorithms::input_sequence_from_string("Numpad 9");
+            auto seq_z_dec = algorithms::input_sequence_from_string("Numpad 6");
+
+            for (int i = 0; i < 3; ++i) {
+               axis3D axis = axis3D::x;
+               switch (i) {
+                  case 1: axis = axis3D::y; break;
+                  case 2: axis = axis3D::z; break;
+               }
+
+               cobb::vector3<float> magnitudes_inc;
+               cobb::vector3<float> magnitudes_dec;
+               magnitudes_inc[i] = 32.0;
+               magnitudes_dec[i] = -32.0;
+
+               QString name_inc = "Increase, ";
+               name_inc += (char)(i + 'X');
+               name_inc += "-Axis";
+
+               QString name_dec = "Decrease, ";
+               name_dec += (char)(i + 'X');
+               name_dec += "-Axis";
+
+               input_sequence seq_inc;
+               input_sequence seq_dec;
+               switch (axis) {
+                  case axis3D::x:
+                     seq_inc = seq_x_inc;
+                     seq_dec = seq_x_dec;
+                     break;
+                  case axis3D::y:
+                     seq_inc = seq_y_inc;
+                     seq_dec = seq_y_dec;
+                     break;
+                  case axis3D::z:
+                     seq_inc = seq_z_inc;
+                     seq_dec = seq_z_dec;
+                     break;
+               }
+               
+               node_translate->append_child(*control_scheme_node::from_data(control_scheme_action{
+                  .name              = name_inc,
+                  .input_sequence    = seq_inc,
+                  .button_press_type = button_press_type::press,
+                  //
+                  .tool = _tool_with_options(tools::move_selection::options{
+                     .frame      = reference_frame::current,
+                     .magnitudes = magnitudes_inc,
+                  })
+               }));
+               node_translate->append_child(*control_scheme_node::from_data(control_scheme_action{
+                  .name              = name_dec,
+                  .input_sequence    = seq_dec,
+                  .button_press_type = button_press_type::press,
+                  //
+                  .tool = _tool_with_options(tools::move_selection::options{
+                     .frame      = reference_frame::current,
+                     .magnitudes = magnitudes_dec,
+                  })
+               }));
+               //
+               // TODO: rotate
+               // TODO: scale
+               //
+            }
+         }
+         #pragma endregion
+
          {  // Translate Gizmo drag
             for (int i = 0; i < 3; ++i) {
                axis3D axis = axis3D::x;

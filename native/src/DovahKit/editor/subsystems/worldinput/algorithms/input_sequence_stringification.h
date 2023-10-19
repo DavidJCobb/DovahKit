@@ -61,6 +61,22 @@ namespace dovahkit::subsystems::worldinput::algorithms {
          _name_to_special_key{ "shift",       "Shift",       cobb::keyboard::virtual_key::shift },
          _name_to_special_key{ "space",       "Space",       cobb::keyboard::virtual_key::space },
          _name_to_special_key{ "tab",         "Tab",         cobb::keyboard::virtual_key::tab },
+         _name_to_special_key{ "numpad 0",    "Numpad 0",    cobb::keyboard::virtual_key::numpad_0 },
+         _name_to_special_key{ "numpad 1",    "Numpad 1",    cobb::keyboard::virtual_key::numpad_1 },
+         _name_to_special_key{ "numpad 2",    "Numpad 2",    cobb::keyboard::virtual_key::numpad_2 },
+         _name_to_special_key{ "numpad 3",    "Numpad 3",    cobb::keyboard::virtual_key::numpad_3 },
+         _name_to_special_key{ "numpad 4",    "Numpad 4",    cobb::keyboard::virtual_key::numpad_4 },
+         _name_to_special_key{ "numpad 5",    "Numpad 5",    cobb::keyboard::virtual_key::numpad_5 },
+         _name_to_special_key{ "numpad 6",    "Numpad 6",    cobb::keyboard::virtual_key::numpad_6 },
+         _name_to_special_key{ "numpad 7",    "Numpad 7",    cobb::keyboard::virtual_key::numpad_7 },
+         _name_to_special_key{ "numpad 8",    "Numpad 8",    cobb::keyboard::virtual_key::numpad_8 },
+         _name_to_special_key{ "numpad 9",    "Numpad 9",    cobb::keyboard::virtual_key::numpad_9 },
+         _name_to_special_key{ "numpad +",    "Numpad +",    cobb::keyboard::virtual_key::numpad_plus },
+         _name_to_special_key{ "numpad -",    "Numpad -",    cobb::keyboard::virtual_key::numpad_minus },
+         _name_to_special_key{ "numpad /",    "Numpad /",    cobb::keyboard::virtual_key::numpad_slash },
+         _name_to_special_key{ "numpad *",    "Numpad *",    cobb::keyboard::virtual_key::numpad_asterisk },
+         _name_to_special_key{ "numpad .",    "Numpad .",    cobb::keyboard::virtual_key::numpad_period },
+         _name_to_special_key{ "numpad ,",    "Numpad ,",    cobb::keyboard::virtual_key::numpad_comma },
       };
 
       struct _name_to_directional_control {

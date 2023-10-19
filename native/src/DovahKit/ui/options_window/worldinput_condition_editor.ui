@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>225</height>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,34 +55,88 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="editModeGroupbox">
-     <property name="title">
-      <string>Editing mode</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QCheckBox" name="editModeObject">
-        <property name="text">
-         <string>Allow in Object Mode</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="editModeTerrain">
-        <property name="text">
-         <string>Allow in Landscape Mode</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="editModeNavmesh">
-        <property name="text">
-         <string>Allow in Navmesh Mode</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QGroupBox" name="editModeGroupbox">
+       <property name="title">
+        <string>Editing mode</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QCheckBox" name="editModeObject">
+          <property name="text">
+           <string>Allow in Object Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="editModeTerrain">
+          <property name="text">
+           <string>Allow in Landscape Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="editModeNavmesh">
+          <property name="text">
+           <string>Allow in Navmesh Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>8</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="gizmoModeGroupbox">
+       <property name="title">
+        <string>Edit gizmo mode</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="gizmoModeNone">
+          <property name="text">
+           <string>Hidden</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gizmoModeTranslate">
+          <property name="text">
+           <string>Translate</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gizmoModeRotate">
+          <property name="text">
+           <string>Rotate</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gizmoModeScale">
+          <property name="text">
+           <string>Scale</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="numSelectionsLayout">
@@ -216,6 +270,10 @@
   <tabstop>editModeObject</tabstop>
   <tabstop>editModeTerrain</tabstop>
   <tabstop>editModeNavmesh</tabstop>
+  <tabstop>gizmoModeNone</tabstop>
+  <tabstop>gizmoModeTranslate</tabstop>
+  <tabstop>gizmoModeRotate</tabstop>
+  <tabstop>gizmoModeScale</tabstop>
   <tabstop>numSelectionsEnable</tabstop>
   <tabstop>numSelectionsComparison</tabstop>
   <tabstop>numSelectionsComparand</tabstop>

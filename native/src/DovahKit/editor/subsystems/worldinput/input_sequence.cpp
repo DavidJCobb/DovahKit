@@ -987,8 +987,8 @@ namespace dovahkit::subsystems::worldinput {
                }
          }
       };
-      if (this->root)
-         per_group(*this->root);
+      assert(this->root != nullptr);
+      per_group(*this->root);
    }
    #pragma endregion
 }

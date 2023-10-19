@@ -62,6 +62,49 @@ WorldinputConditionEditDialog::WorldinputConditionEditDialog(QWidget* parent) : 
       QObject::connect(this->ui.editModeTerrain, &QCheckBox::toggled, this, [handler](bool checked) { handler.operator()<editor_mode::terrain>(checked); });
    }
    #pragma endregion
+   #pragma region Gizmo modes
+   {
+      using gizmo_mode = dovahkit::subsystems::worldedit::gizmo_mode;
+
+      std::array<QCheckBox*, 4> all_checkboxes = {
+         this->ui.gizmoModeNone,
+         this->ui.gizmoModeTranslate,
+         this->ui.gizmoModeRotate,
+         this->ui.gizmoModeScale,
+      };
+
+      auto handler = [this, all_checkboxes]<gizmo_mode Mode>(bool checked) {
+         bool all_checked = false;
+         if (checked) {
+            all_checked = true;
+            for (const auto* widget : all_checkboxes) {
+               if (!widget->isChecked()) {
+                  all_checked = false;
+                  break;
+               }
+            }
+         }
+         if (all_checked) {
+            this->_data.gizmo_modes = {};
+            return;
+         }
+         if (!this->_data.gizmo_modes.has_value()) {
+            this->_data.gizmo_modes.emplace();
+         }
+         auto& v = this->_data.gizmo_modes.value();
+         if (checked) {
+            v.set(Mode);
+         } else {
+            v.reset(Mode);
+         }
+      };
+
+      QObject::connect(this->ui.gizmoModeNone,      &QCheckBox::toggled, this, [handler](bool checked) { handler.operator()<gizmo_mode::none>(checked); });
+      QObject::connect(this->ui.gizmoModeTranslate, &QCheckBox::toggled, this, [handler](bool checked) { handler.operator()<gizmo_mode::translate>(checked); });
+      QObject::connect(this->ui.gizmoModeRotate,    &QCheckBox::toggled, this, [handler](bool checked) { handler.operator()<gizmo_mode::rotate>(checked); });
+      QObject::connect(this->ui.gizmoModeScale,     &QCheckBox::toggled, this, [handler](bool checked) { handler.operator()<gizmo_mode::scale>(checked); });
+   }
+   #pragma endregion
    #pragma region Selection count
    {
       this->ui.numSelectionsComparison->clear();
@@ -129,6 +172,36 @@ void WorldinputConditionEditDialog::initializeFrom(const node_type& src) {
             this->ui.editModeNavmesh,
             this->ui.editModeObject,
             this->ui.editModeTerrain,
+         };
+         for (auto* widget : all_checkboxes) {
+            const QSignalBlocker blocker(widget);
+            widget->setChecked(true);
+         }
+      }
+   }
+   #pragma endregion
+   #pragma region Gizmo modes
+   {
+      using gizmo_mode = dovahkit::subsystems::worldedit::gizmo_mode;
+
+      const auto& constraint_opt = this->_data.gizmo_modes;
+      if (constraint_opt.has_value()) {
+         const auto& constraint = constraint_opt.value();
+
+         auto handler = [this, &constraint]<gizmo_mode Mode>(QCheckBox* widget) {
+            const QSignalBlocker blocker(widget);
+            widget->setChecked(constraint.test(Mode));
+         };
+         handler.operator()<gizmo_mode::none>(this->ui.gizmoModeNone);
+         handler.operator()<gizmo_mode::translate>(this->ui.gizmoModeTranslate);
+         handler.operator()<gizmo_mode::rotate>(this->ui.gizmoModeRotate);
+         handler.operator()<gizmo_mode::scale>(this->ui.gizmoModeScale);
+      } else {
+         std::array<QCheckBox*, 4> all_checkboxes = {
+            this->ui.gizmoModeNone,
+            this->ui.gizmoModeTranslate,
+            this->ui.gizmoModeRotate,
+            this->ui.gizmoModeScale,
          };
          for (auto* widget : all_checkboxes) {
             const QSignalBlocker blocker(widget);

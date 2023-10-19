@@ -8,6 +8,7 @@ namespace dovahkit::subsystems::worldinput {
       control_scheme_condition out;
 
       out.editor_modes = worldedit.get_editor_mode();
+      out.gizmo_modes  = worldedit.get_edit_gizmo_mode();
 
       {
          out.selection_count = selection_count_comparison_set{};
