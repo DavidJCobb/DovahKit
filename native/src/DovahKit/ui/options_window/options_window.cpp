@@ -15,6 +15,8 @@
 //
 #include "ui/models/worldinput/DKWorldinputDeviceSchemesModel.h"
 
+#include "./OptionsStorageLocationWidget.h"
+
 /*static*/ OptionsWindow* OptionsWindow::instance = nullptr;
 
 namespace worldinput {
@@ -53,6 +55,12 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
          item->setData(WidgetColumn, WidgetRole, QVariant::fromValue<QWidget*>(this->ui.pageRenderWindow));
          switcher->addTopLevelItem(item);
       }
+      {
+         auto* item = new QTreeWidgetItem;
+         item->setText(WidgetColumn, tr("Data Storage", "navbar page name"));
+         item->setData(WidgetColumn, WidgetRole, QVariant::fromValue<QWidget*>(this->ui.pageOptionsFilePaths));
+         switcher->addTopLevelItem(item);
+      }
 
       assert(current);
       switcher->setCurrentItem(current);
@@ -61,6 +69,65 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
       QObject::connect(switcher, &QTreeWidget::currentItemChanged, this, [this](QTreeWidgetItem* item) {
          this->ui.stackedWidget->setCurrentWidget(item->data(WidgetColumn, WidgetRole).value<QWidget*>());
       });
+   }
+   #pragma endregion
+   #pragma region Set up options file paths listing
+   {
+      auto* body   = this->ui.optionsFilePathsScrollbox->widget();
+      auto* layout = new QVBoxLayout(body);
+
+      {
+         auto* widget = new OptionsStorageLocationWidget(body);
+         layout->addWidget(widget);
+
+         widget->setName("Main settings file");
+
+         auto& mgr = dovahkit::subsystems::options::core::get_or_create();
+         widget->setFilePath(mgr.get_main_ini_path());
+      }
+      {
+         auto* widget = new OptionsStorageLocationWidget(body);
+         layout->addWidget(widget);
+
+         widget->setName("DovahKit scripts");
+         widget->setDescription("Single-file Lua scripts that use DovahKit's API.");
+
+         auto& mgr = dovahkit::subsystems::options::core::get_or_create();
+         widget->setFolderPath(mgr.get_user_script_path());
+      }
+      {
+         auto* widget = new OptionsStorageLocationWidget(body);
+         layout->addWidget(widget);
+
+         widget->setName("DovahKit script packages");
+         widget->setDescription("Each subfolder in this folder is a single \"script package,\" which will typically include multiple Lua script files and a \"manifest\" that ties them together.");
+
+         auto& mgr = dovahkit::subsystems::options::core::get_or_create();
+         widget->setFolderPath(mgr.get_user_script_package_path());
+      }
+      {
+         auto* widget = new OptionsStorageLocationWidget(body);
+         layout->addWidget(widget);
+
+         widget->setName("Render Window control schemes");
+         widget->setDescription("All user-defined control schemes are saved as binary-encoded files with the DKWI file extension.");
+
+         auto& mgr = worldinput::control_scheme_manager::get_or_create();
+         widget->setFolderPath(mgr.path_for_scheme_folder());
+      }
+      {
+         auto* widget = new OptionsStorageLocationWidget(body);
+         layout->addWidget(widget);
+
+         widget->setName("Edit gizmo color schemes");
+         widget->setDescription("All user-defined color schemes are saved in an XML-encoded file.");
+
+         auto& mgr = dovahkit::subsystems::worldedit::gizmo_color_scheme_manager::get();
+         widget->setFilePath(mgr.path_for_scheme_file());
+      }
+
+      // vertical spacer:
+      layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Fixed, QSizePolicy::MinimumExpanding));
    }
    #pragma endregion
    

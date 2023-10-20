@@ -11,6 +11,7 @@
 
 namespace {
    constexpr const auto executable_binary_extensions = cobb::arrays::make(
+      "appx", // UWP app or installer thereof
       "cpl", // Control Panel extension
       "dll", // Dynamic link library
       "exe", // Executable
@@ -19,10 +20,12 @@ namespace {
       "ins", // Internet Settings
       "inx", // InstallShield script (compiled)
       "isu", // InstallShield script (uninstall)
+      "jar", // Java archive (can be executable)
       "job", // Windows task scheduler job file
       "lnk", // Shortcut
       "msc",
       "msi", // Microsoft installer
+      "msix", // Microsoft installer (new)
       "msp", // Microsoft installer (patch)
       "mst", // Microsoft installer (transform)
       "paf", // Portable application installer

@@ -698,6 +698,7 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp" />
     <ClCompile Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.cpp" />
+    <ClCompile Include="ui\options_window\OptionsStorageLocationWidget.cpp" />
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.cpp" />
@@ -1336,6 +1337,7 @@
     <QtMoc Include="ui\options_window\worldinput_condition_editor.h" />
     <QtMoc Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.h" />
     <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h" />
+    <QtMoc Include="ui\options_window\OptionsStorageLocationWidget.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />

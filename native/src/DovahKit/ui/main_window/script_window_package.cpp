@@ -4,19 +4,15 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "../generic/DKLuaSyntaxHighlighter.h"
-#include "../../dovahscript/dovahscript_host.h"
-#include "../../editor/script_packages/manifest_parser.h"
-#include "script_window/hyperlink_confirm.h"
-#include "script_window_package/DovahscriptAuthorWidget.h"
+#include "dovahscript/dovahscript_host.h"
+#include "editor/script_packages/manifest_parser.h"
+#include "editor/subsystems/options/core.h"
+#include "./script_window/hyperlink_confirm.h"
+#include "./script_window_package/DovahscriptAuthorWidget.h"
 
 namespace {
    static QDir _get_script_path() {
-      auto path = QCoreApplication::applicationDirPath();
-      auto dir = QDir(QDir(path).absoluteFilePath("userdata/script-packages/"));
-      if (!dir.exists()) {
-         dir = QDir::current().absoluteFilePath("userdata/script-packages/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
-      }
-      return dir;
+      return dovahkit::subsystems::options::core::get().get_user_script_package_path();
    }
 }
 

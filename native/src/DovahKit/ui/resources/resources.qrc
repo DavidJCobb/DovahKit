@@ -5,6 +5,8 @@
     <file>treeview/branch_v.gif</file>
   </qresource>
   <qresource prefix="/icons">
+    <file>dogeared-page-16.png</file>
+    <file>open-folder-16.png</file>
     <file>edit-16.png</file>
     <file>delete-16.png</file>
     <file>delete-64.png</file>

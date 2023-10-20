@@ -43,6 +43,10 @@ namespace dovahkit::subsystems::options {
       public:
          QString get_userdata_path();
          QString get_base_options_path();
+         QString get_main_ini_path();
+
+         QString get_user_script_path();
+         QString get_user_script_package_path();
 
       signals:
          void mainIniSettingChanged(cobb::ini::setting&, cobb::ini::value_variant prior, cobb::ini::value_variant after);

@@ -54,11 +54,11 @@ namespace dovahkit::subsystems::worldinput {
       this->reload_all_control_schemes();
    }
 
-   /*static*/ QString control_scheme_manager::_path_for_scheme_folder() {
+   /*static*/ QString control_scheme_manager::path_for_scheme_folder() {
       return dovahkit::subsystems::options::core::get().get_base_options_path() + "worldinput-control-schemes/";
    }
    /*static*/ QString control_scheme_manager::_path_for_scheme(const scheme_filename_type& name) {
-      QDir path(_path_for_scheme_folder());
+      QDir path(path_for_scheme_folder());
       return path.absoluteFilePath(name + scheme_file_extension);
    }
 
@@ -302,7 +302,7 @@ namespace dovahkit::subsystems::worldinput {
          add_hardcoded_scheme(builtin_control_schemes::reach());
       }
       
-      auto it = QDirIterator(_path_for_scheme_folder(), QDirIterator::NoIteratorFlags);
+      auto it = QDirIterator(path_for_scheme_folder(), QDirIterator::NoIteratorFlags);
       while (it.hasNext()) {
          QString filepath = it.next();
          if (!filepath.endsWith(scheme_file_extension))

@@ -58,7 +58,6 @@ namespace dovahkit::subsystems::worldinput {
             return const_cast<std::decay_t<decltype(r)>&>(r);
          }
 
-         static QString _path_for_scheme_folder();
          static QString _path_for_scheme(const scheme_filename_type&);
 
          static cobb::ini::setting& _current_scheme_setting(input_device_type);
@@ -69,6 +68,8 @@ namespace dovahkit::subsystems::worldinput {
          void _clear_all_schemes();
 
       public:
+         static QString path_for_scheme_folder();
+
          constexpr const auto schemes_by_device(input_device_type d) const {
             return this->_get_schemes_by_device(d) | std::ranges::views::transform([](auto* e) -> const saved_control_scheme* { return e; });
          }

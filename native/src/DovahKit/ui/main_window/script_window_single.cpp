@@ -1,6 +1,7 @@
 #include "script_window_single.h"
-#include "../../dovahscript/dovahscript_host.h"
-#include "script_window/hyperlink_confirm.h"
+#include "dovahscript/dovahscript_host.h"
+#include "editor/subsystems/options/core.h"
+#include "./script_window/hyperlink_confirm.h"
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
@@ -11,12 +12,7 @@
 
 namespace {
    static QDir _get_script_path() {
-      auto path = QCoreApplication::applicationDirPath();
-      auto dir  = QDir(QDir(path).absoluteFilePath("userdata/scripts/"));
-      if (!dir.exists()) {
-         dir = QDir::current().absoluteFilePath("userdata/scripts/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
-      }
-      return dir;
+      return dovahkit::subsystems::options::core::get().get_user_script_path();
    }
 }
 

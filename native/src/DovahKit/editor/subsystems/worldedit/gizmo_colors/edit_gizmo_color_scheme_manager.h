@@ -33,6 +33,8 @@ namespace dovahkit::subsystems::worldedit {
          void _parse_file(QXmlStreamReader&);
 
       public:
+         static QString path_for_scheme_file();
+
          std::vector<gizmo_color_scheme> all_hardcoded_color_schemes() const;
          const std::vector<gizmo_color_scheme>& all_user_color_schemes() const;
 
