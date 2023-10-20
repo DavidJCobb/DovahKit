@@ -1,4 +1,20 @@
 ﻿
+# Worldinput
+
+Worldinput is the system that DovahKit uses to handle user inputs within the Render Window. This system supports the creation of powerful, flexible, and complex control schemes with a wide variety of button combination behaviors. The goal of the system was to allow wildly different control schemes to be implemented declaratively and customized by the user, with the control schemes planned for launch including:
+
+* For the keyboard and mouse:
+  * **The Creation Kit controls.** Within the Creation Kit, these are not entirely defined through a standard system, but rather are a mix of Win32 accelerator keys, mappings between individual keys and editor functions, and bespoke handlers for holding multiple keys simultaneously.
+* For an Xbox controller:
+  * **Halo: Reach's Forge controls.** These controls allow the player to act as a flycam and manipulate one object at a time, with the camera and the held object moving in tandem. Very few button combinations are used; only basic object manipulation is mapped to single buttons, with detailed editing shunted into menus.
+  * **Halo 5 and Halo Infinite's Forge controls.** These controls are more advanced; they decouple camera and selection movement in order to enable multi-selection, and they rely much more heavily on button combinations, particularly using the controller's triggers.
+
+Some additional features were also desired, such as the ability to distinguish between short and long button presses such that different actions can be mapped to each (a feature seen in Elder Scrolls Online).
+
+It's not possible to implement all of these control schemes in a system that maps hardcoded actions to single keys, and none of the systems use entirely the same logic for button combinations. As such, Worldinput supports defining control schemes as a node tree, wherein actions are bound to editing functions, called "tools," and can supply parameters to these tools. For example, when editing terrain in the Creation Kit, the number keys set the size of your current brush; in DovahKit, Worldedit is planned to have a single "modify brush size" tool, and each key will supply different options to that tool.
+
+Unfortunately, this means that Worldinput is an incredibly complex system: it has to support arbitrary inputs and input combinations, while handling conflicting binds in a manner that is reasonably intuitive, and human intuition is always surprisingly complex. Some conflicts have simple solutions, e.g. conflicts like "Hold A" and "Hold A + B:" if both keys are held, we resolve the conflict in favor of the more specific bind. However, more complex conflicts arise as a result of both the intended feature set and the varying needs of the control schemes we aim to support.
+
 # Definitions
 
 ## Bind list

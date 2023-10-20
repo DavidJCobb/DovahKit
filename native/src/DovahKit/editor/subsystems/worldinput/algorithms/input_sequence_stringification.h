@@ -102,6 +102,8 @@ namespace dovahkit::subsystems::worldinput::algorithms {
          _name_to_directional_control{ "right stick x", "Right Stick X", range_input_control::xinput_rs,  range_input_axes::x },
          _name_to_directional_control{ "right stick y", "Right Stick Y", range_input_control::xinput_rs,  range_input_axes::y },
       };
+
+      constexpr const char* const indicator_for_range_only = "-no buttons-";
    }
 
    #pragma region To string
@@ -109,63 +111,66 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       using namespace impl::input_sequence_stringification;
 
       out.clear();
-      if (!seq.root)
-         return;
 
-      auto recurse = [](const input_sequence::group& current, std::string& out, auto& recurse) constexpr -> void {
-         if (current.type == group_type::single_control) {
-            switch (current.button.mouse) {
-               case Qt::MouseButton::LeftButton:
-                  out += "LMB";
-                  return;
-               case Qt::MouseButton::RightButton:
-                  out += "RMB";
-                  return;
-               case Qt::MouseButton::MiddleButton:
-                  out += "MMB";
-                  return;
-            }
-            if (current.button.gamepad != inputs::xinput_button::none) {
-               for (const auto& known : xinput_button_names) {
-                  if (known.button == current.button.gamepad) {
+      if (seq.root) {
+         auto recurse = [](const input_sequence::group& current, std::string& out, auto& recurse) constexpr -> void {
+            if (current.type == group_type::single_control) {
+               switch (current.button.mouse) {
+                  case Qt::MouseButton::LeftButton:
+                     out += "LMB";
+                     return;
+                  case Qt::MouseButton::RightButton:
+                     out += "RMB";
+                     return;
+                  case Qt::MouseButton::MiddleButton:
+                     out += "MMB";
+                     return;
+               }
+               if (current.button.gamepad != inputs::xinput_button::none) {
+                  for (const auto& known : xinput_button_names) {
+                     if (known.button == current.button.gamepad) {
+                        out += known.name_formal;
+                        return;
+                     }
+                  }
+               }
+               for (const auto& known : special_key_names) {
+                  if (current.button.key.vk == known.code) {
                      out += known.name_formal;
                      return;
                   }
                }
-            }
-            for (const auto& known : special_key_names) {
-               if (current.button.key.vk == known.code) {
-                  out += known.name_formal;
-                  return;
-               }
-            }
 
-            out += current.button.key.get_key_name_ansi();
-            return;
-         }
-         switch (current.type) {
-            case group_type::concurrent_ordered:   out += '['; break;
-            case group_type::concurrent_unordered: out += '('; break;
-            case group_type::separated_ordered:    out += '<'; break;
-         }
-         bool is_first = true;
-         for (const auto* child : current.children) {
-            if (is_first) {
-               is_first = false;
-            } else {
-               out += " + ";
+               out += current.button.key.get_key_name_ansi();
+               return;
             }
-            recurse(*child, out, recurse);
-         }
-         switch (current.type) {
-            case group_type::concurrent_ordered:   out += ']'; break;
-            case group_type::concurrent_unordered: out += ')'; break;
-            case group_type::separated_ordered:    out += '>'; break;
-         }
-      };
-      recurse(*seq.root, out, recurse);
+            switch (current.type) {
+               case group_type::concurrent_ordered:   out += '['; break;
+               case group_type::concurrent_unordered: out += '('; break;
+               case group_type::separated_ordered:    out += '<'; break;
+            }
+            bool is_first = true;
+            for (const auto* child : current.children) {
+               if (is_first) {
+                  is_first = false;
+               } else {
+                  out += " + ";
+               }
+               recurse(*child, out, recurse);
+            }
+            switch (current.type) {
+               case group_type::concurrent_ordered:   out += ']'; break;
+               case group_type::concurrent_unordered: out += ')'; break;
+               case group_type::separated_ordered:    out += '>'; break;
+            }
+         };
+         recurse(*seq.root, out, recurse);
+      }
 
       if (seq.has_range_requirement()) {
+         if (!seq.root) {
+            out = indicator_for_range_only;
+         }
          out += " :: ";
          for (const auto& known : range_control_names) {
             if (seq.range.control == known.control && seq.range.axes == known.axes) {
@@ -189,6 +194,25 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       for (; i < str.size(); ++i) {
          const char c = str[i];
 
+         if (c == indicator_for_range_only[0]) {
+            constexpr const size_t indicator_length = sizeof(indicator_for_range_only) - 1; // don't count null terminator
+            if (i + indicator_length <= str.size()) {
+               if (!nesting.empty()) {
+                  if (std::is_constant_evaluated()) {
+                     throw;
+                  } else {
+                     qDebug("input_sequence::debug_from_string: unexpected range-control-only indicator (we are nested inside of an ISG) at position %d in: '%s'", i, str.c_str());
+                     #if _DEBUG
+                        __debugbreak();
+                     #endif
+                  }
+               }
+               i += indicator_length;
+               i - 1; // account for next loop iteration
+               continue;
+            }
+         }
+
          if (c == ':') {
             if (i + 1 < str.size()) {
                char d = str[i + 1];
@@ -210,7 +234,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                               throw;
                            } else {
                               qDebug("input_sequence::debug_from_string: unexpected %c (expected directional input only) at position %d in: '%s'", d, i, str.c_str());
-                              __debugbreak();
+                              #if _DEBUG
+                                 __debugbreak();
+                              #endif
                            }
                            break;
                      }
@@ -245,7 +271,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                         throw;
                      } else {
                         qDebug("input_sequence::debug_from_string: unrecognized range control name in: '%s'", str.c_str());
-                        __debugbreak();
+                        #if _DEBUG
+                           __debugbreak();
+                        #endif
                      }
                   }
                   break;
@@ -268,7 +296,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                   throw;
                } else {
                   qDebug("input_sequence::debug_from_string: unexpected + at position %d in: '%s'", i, str.c_str());
-                  __debugbreak();
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
                }
                [[fallthrough]];
             case ' ':
@@ -280,7 +310,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                   throw;
                } else {
                   qDebug("input_sequence::debug_from_string:: unexpected closing delimiter %c at position %d", c, i);
-                  __debugbreak();
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
                }
             }
             nesting.pop_back();
@@ -313,7 +345,9 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                   throw;
                } else {
                   qDebug("input_sequence::debug_from_string:: unexpected character %c at position %d", d, i);
-                  __debugbreak();
+                  #if _DEBUG
+                     __debugbreak();
+                  #endif
                }
             }
 

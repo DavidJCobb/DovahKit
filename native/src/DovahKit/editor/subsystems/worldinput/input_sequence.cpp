@@ -823,6 +823,8 @@ namespace dovahkit::subsystems::worldinput {
    }
 
    input_sequence& input_sequence::operator=(const input_sequence& other) {
+      if (this == &other)
+         return *this;
       if (this->root)
          delete this->root;
       if (other.root)
@@ -972,23 +974,24 @@ namespace dovahkit::subsystems::worldinput {
    }
 
    void input_sequence::assert_validity() const {
-      if (auto* isg = this->raycast.associated_button)
+      if (auto* isg = this->raycast.associated_button) {
          assert(isg->type == group_type::single_control);
-
-      auto per_group = []<typename Self>(this Self&& recurse, group& current) -> void {
-         switch (current.type) {
-            case group_type::single_control:
-               assert(current.children.empty());
-               break;
-            default:
-               for (auto* child : current.children) {
-                  assert(child != nullptr);
-                  recurse(*child);
-               }
-         }
-      };
-      assert(this->root != nullptr);
-      per_group(*this->root);
+      }
+      if (this->root) {
+         auto per_group = []<typename Self>(this Self&& recurse, group& current) -> void {
+            switch (current.type) {
+               case group_type::single_control:
+                  assert(current.children.empty());
+                  break;
+               default:
+                  for (auto* child : current.children) {
+                     assert(child != nullptr);
+                     recurse(*child);
+                  }
+            }
+         };
+         per_group(*this->root);
+      }
    }
    #pragma endregion
 }
