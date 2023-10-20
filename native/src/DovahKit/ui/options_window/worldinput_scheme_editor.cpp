@@ -9,7 +9,7 @@
 
 namespace {
    using dovahkit::subsystems::worldinput::control_scheme_action;
-   using dovahkit::subsystems::worldinput::control_scheme_condition_node;
+   using dovahkit::subsystems::worldinput::control_scheme_condition;
    using dovahkit::subsystems::worldinput::control_scheme_modifier;
 }
 
@@ -48,7 +48,7 @@ WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QW
    });
    QObject::connect(this->ui.buttonNewEditorModeNode, &QPushButton::clicked, this, [this]() {
       auto after_qmi = this->_getFirstSelectedNode();
-      auto inserted  = this->_model->insertAfter(after_qmi, control_scheme_condition_node{
+      auto inserted  = this->_model->insertAfter(after_qmi, control_scheme_condition{
          .name = tr("New Condition", "default new condition name")
       });
       if (inserted.isValid()) {
@@ -91,8 +91,8 @@ WorldinputSchemeEditDialog::WorldinputSchemeEditDialog(input_device_type idt, QW
             modified = true;
             editor->overwrite(casted);
          }
-      } else if (std::holds_alternative<control_scheme_condition_node>(data)) {
-         auto& casted = std::get<control_scheme_condition_node>(data);
+      } else if (std::holds_alternative<control_scheme_condition>(data)) {
+         auto& casted = std::get<control_scheme_condition>(data);
          auto* editor = new WorldinputConditionEditDialog(this);
          editor->initializeFrom(casted);
          auto  result = editor->exec();

@@ -82,7 +82,7 @@ namespace dovahkit::subsystems::worldinput {
       auto& subsys = core::get(); // worldinput
       devices::abstract_device_handler& device = subsys.device_by_type(this->device_type);
 
-      auto   current_conditions   = control_scheme_condition::from_worldedit_state();
+      auto   current_conditions   = condition_set::from_worldedit_state();
       QPoint device_pointer_pos   = device.get_pointer_position();
       QPoint device_pointer_delta = device.get_pointer_position_delta();
 

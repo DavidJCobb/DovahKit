@@ -74,8 +74,8 @@ namespace {
    static worldinput::control_scheme& make_scheme() {
       using worldinput::control_scheme;
       using worldinput::control_scheme_action;
+      using worldinput::condition_set;
       using worldinput::control_scheme_condition;
-      using worldinput::control_scheme_condition_node;
       using worldinput::control_scheme_modifier;
       using worldinput::button_press_type;
       using worldinput::input_device_type;
@@ -215,7 +215,7 @@ namespace {
          }
       }
       {  // Editor Mode: Objects
-         auto* em_node = control_scheme::node::make<control_scheme_condition_node>(control_scheme_condition_node{
+         auto* em_node = control_scheme::node::make<control_scheme_condition>(control_scheme_condition{
             .name = "Object Mode",
             .data = {
                .editor_modes = editor_mode::objects,

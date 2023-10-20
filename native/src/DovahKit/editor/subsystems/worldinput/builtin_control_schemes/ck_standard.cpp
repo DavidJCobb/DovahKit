@@ -22,6 +22,8 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
+   using worldinput::condition_set;
+
    using range_input_scales = worldinput::util::range_input_scales;
 
    using worldinput::control_scheme;
@@ -133,7 +135,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          })
       }));
       {  // Editor Mode: Objects
-         auto* em_node = control_scheme_node::from_data(control_scheme_condition_node{
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
             .name = "Object Mode",
             .data = {
                .editor_modes = editor_mode::objects,

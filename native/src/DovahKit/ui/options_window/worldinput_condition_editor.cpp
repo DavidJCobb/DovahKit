@@ -4,8 +4,8 @@
 #include "helpers/qt/combobox.h"
 
 #include "editor/subsystems/worldinput/control_scheme/condition.h"
-#include "editor/subsystems/worldinput/control_scheme/condition_node.h"
 #include "editor/subsystems/worldinput/control_scheme.h"
+#include "editor/subsystems/worldinput/condition_set.h"
 
 namespace {
    namespace worldinput {

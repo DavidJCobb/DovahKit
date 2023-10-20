@@ -60,7 +60,7 @@ namespace {
          model_node.cached.name = casted->name;
 
          cache_sequence(casted->input_sequence);
-      } else if (auto* casted = std::get_if<worldinput::control_scheme_condition_node>(&data)) {
+      } else if (auto* casted = std::get_if<worldinput::control_scheme_condition>(&data)) {
          model_node.cached.name = casted->name;
       }
    }
@@ -90,8 +90,8 @@ QVariant DKWorldinputControlSchemeModel::data_of(const node_type& node, Qt::Item
                return node.cached.input_sequence;
          }
          return {};
-      } else if (std::holds_alternative<worldinput::control_scheme_condition_node>(data)) {
-         auto& casted = std::get<worldinput::control_scheme_condition_node>(data);
+      } else if (std::holds_alternative<worldinput::control_scheme_condition>(data)) {
+         auto& casted = std::get<worldinput::control_scheme_condition>(data);
 
          switch (column) {
             case Columns::Name:

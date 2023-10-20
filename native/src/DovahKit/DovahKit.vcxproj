@@ -164,8 +164,8 @@
     <ClCompile Include="editor\subsystems\worldinput\config.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme\action.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme.cpp" />
+    <ClCompile Include="editor\subsystems\worldinput\condition_set.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition.cpp" />
-    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition_node.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\control_scheme\modifier.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\devices\abstract_device_handler.cpp" />
     <ClCompile Include="editor\subsystems\worldinput\devices\keyboard_mouse.cpp" />
@@ -921,9 +921,9 @@
     <ClInclude Include="editor\subsystems\worldinput\config.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\action.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\all_node_headers.h" />
-    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h" />
+    <ClInclude Include="editor\subsystems\worldinput\condition_set.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme.h" />
-    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition_node.h" />
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h" />
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\modifier.h" />
     <QtMoc Include="editor\subsystems\worldinput\worldinput_control_scheme_manager.h" />
     <ClInclude Include="editor\subsystems\worldinput\core.h" />
@@ -2164,7 +2164,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />
     <None Include="editor\subsystems\worldedit\_docs\general notes.md" />
     <None Include="editor\subsystems\worldedit\_docs\tool invocation in tandem.md" />
-    <None Include="editor\subsystems\worldinput\control_scheme\condition.inl" />
+    <None Include="editor\subsystems\worldinput\condition_set.inl" />
     <None Include="editor\subsystems\worldinput\devices\components\buttoned_device.inl" />
     <None Include="editor\subsystems\worldinput\inputs\button.inl" />
     <None Include="editor\subsystems\worldinput\input_sequence.inl" />

@@ -1,10 +1,10 @@
 #pragma once
-#include "./condition.h"
+#include "./condition_set.h"
 #include "helpers/bitstreams/reader.h"
 #include "helpers/bitstreams/writer.h"
 
 namespace dovahkit::subsystems::worldinput {
-   constexpr bool control_scheme_condition::impossible() const noexcept {
+   constexpr bool condition_set::impossible() const noexcept {
       if (auto& cnd = this->editor_modes; cnd.has_value()) {
          if (cnd.value().empty())
             return true;
@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::worldinput {
       return false;
    }
 
-   constexpr bool control_scheme_condition::operator==(const control_scheme_condition& other) const noexcept {
+   constexpr bool condition_set::operator==(const condition_set& other) const noexcept {
       if (this->editor_modes != other.editor_modes)
          return false;
       if (this->gizmo_modes != other.gizmo_modes)
@@ -31,7 +31,7 @@ namespace dovahkit::subsystems::worldinput {
       return true;
    }
 
-   constexpr control_scheme_condition& control_scheme_condition::operator&=(const control_scheme_condition& other) {
+   constexpr condition_set& condition_set::operator&=(const condition_set& other) {
       if (other.editor_modes.has_value()) {
          auto& ov = other.editor_modes.value();
          if (this->editor_modes.has_value()) {
@@ -59,7 +59,7 @@ namespace dovahkit::subsystems::worldinput {
       return *this;
    }
 
-   constexpr void control_scheme_condition::stream(cobb::bitstreams::reader& s) {
+   constexpr void condition_set::stream(cobb::bitstreams::reader& s) {
       {  // Editor modes
          auto& cnd      = this->editor_modes;
          bool  presence = s.stream_bits(1);
@@ -117,7 +117,7 @@ namespace dovahkit::subsystems::worldinput {
          }
       }
    }
-   constexpr void control_scheme_condition::stream(cobb::bitstreams::writer& s) const {
+   constexpr void condition_set::stream(cobb::bitstreams::writer& s) const {
       {  // Editor modes
          auto& cnd = this->editor_modes;
          s.stream_bits(1, cnd.has_value());

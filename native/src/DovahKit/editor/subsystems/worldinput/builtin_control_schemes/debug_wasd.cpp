@@ -24,6 +24,8 @@ namespace {
 
    using range_input_scales = worldinput::util::range_input_scales;
 
+   using worldinput::condition_set;
+
    using worldinput::control_scheme;
    using worldinput::control_scheme_action;
    using worldinput::control_scheme_condition;
@@ -164,10 +166,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          }
       }
       {  // If any objects are selected...
-         auto* node_selections = control_scheme_node::from_data(control_scheme_condition_node{
+         auto* node_selections = control_scheme_node::from_data(control_scheme_condition{
             .name = "When anything is selected...",
             .data = {
-               .selection_count = control_scheme_condition::selection_count_comparison_set{
+               .selection_count = condition_set::selection_count_comparison_set{
                   .comparisons = {
                      { comparison_operator::greater, 0 },
                   }
@@ -178,19 +180,19 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
 
          #pragma region Transformation by steps, based on gizmo
          {
-            auto* node_translate = control_scheme_node::from_data(control_scheme_condition_node{
+            auto* node_translate = control_scheme_node::from_data(control_scheme_condition{
                .name = "Translate by steps",
                .data = {
                   .gizmo_modes = gizmo_mode::translate,
                }
             });
-            auto* node_rotate = control_scheme_node::from_data(control_scheme_condition_node{
+            auto* node_rotate = control_scheme_node::from_data(control_scheme_condition{
                .name = "Rotate by steps",
                .data = {
                   .gizmo_modes = gizmo_mode::rotate,
                }
             });
-            auto* node_scale = control_scheme_node::from_data(control_scheme_condition_node{
+            auto* node_scale = control_scheme_node::from_data(control_scheme_condition{
                .name = "Scale by steps",
                .data = {
                   .gizmo_modes = gizmo_mode::scale,
@@ -310,7 +312,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          }
       }
       {  // Editor Mode: Objects
-         auto* em_node = control_scheme_node::from_data(control_scheme_condition_node{
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
             .name = "Object Mode",
             .data = {
                .editor_modes = editor_mode::objects,

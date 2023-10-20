@@ -55,7 +55,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
    ) {
       auto out = bind_list(src.device_type);
 
-      std::vector<control_scheme_condition> conditions;
+      std::vector<condition_set> conditions;
 
       auto flatten_node = [&out, &conditions](this auto&& recurse, const control_scheme::node& current) -> void {
          if (auto* bt = current.as<control_scheme_action>()) {
@@ -77,7 +77,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
             return;
 
          bool added_conditions = false;
-         if (auto* casted = current.as<control_scheme_condition_node>()) {
+         if (auto* casted = current.as<control_scheme_condition>()) {
             const auto& condition_info = casted->data.data;
             if (condition_info.impossible()) {
                return;

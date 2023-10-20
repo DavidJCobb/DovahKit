@@ -1,23 +1,20 @@
 #include "./condition.h"
-#include "editor/subsystems/worldedit/core.h"
 
 namespace dovahkit::subsystems::worldinput {
-   /*static*/ control_scheme_condition control_scheme_condition::from_worldedit_state() {
-      auto& worldedit = subsystems::worldedit::core::get();
+   bool control_scheme_condition::operator==(const control_scheme_condition& other) const noexcept {
+      if (this->name != other.name)
+         return false;
+      if (this->data != other.data)
+         return false;
+      return true;
+   }
 
-      control_scheme_condition out;
-
-      out.editor_modes = worldedit.get_editor_mode();
-      out.gizmo_modes  = worldedit.get_edit_gizmo_mode();
-
-      {
-         out.selection_count = selection_count_comparison_set{};
-         out.selection_count.value().comparisons.push_back(selection_count_comparison_set::comparison_type{
-            .op        = comparison_operator::equal,
-            .comparand = worldedit.get_selected_refs().size()
-         });
-      }
-
-      return out;
+   void control_scheme_condition::stream(cobb::bitstreams::reader& s) {
+      s.stream<std::bit_width(max_name_length)>(name);
+      s.stream(this->data);
+   }
+   void control_scheme_condition::stream(cobb::bitstreams::writer& s) const {
+      s.stream<std::bit_width(max_name_length)>(name);
+      s.stream(this->data);
    }
 }

@@ -25,6 +25,8 @@ namespace {
 
    using range_input_scales = worldinput::util::range_input_scales;
 
+   using worldinput::condition_set;
+
    using worldinput::control_scheme;
    using worldinput::control_scheme_action;
    using worldinput::control_scheme_condition;
@@ -41,10 +43,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
       initialized = true;
 
       {
-         auto* node_no_selections = control_scheme_node::from_data(control_scheme_condition_node{
+         auto* node_no_selections = control_scheme_node::from_data(control_scheme_condition{
             .name = "When nothing is selected...",
             .data = {
-               .selection_count = control_scheme_condition::selection_count_comparison_set{
+               .selection_count = condition_set::selection_count_comparison_set{
                   .comparisons = {
                      { comparison_operator::less_or_equal, 0 },
                   }
@@ -106,10 +108,10 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          }));
       }
       {
-         auto* node_selections = control_scheme_node::from_data(control_scheme_condition_node{
+         auto* node_selections = control_scheme_node::from_data(control_scheme_condition{
             .name = "When anything is selected...",
             .data = {
-               .selection_count = control_scheme_condition::selection_count_comparison_set{
+               .selection_count = condition_set::selection_count_comparison_set{
                   .comparisons = {
                      { comparison_operator::greater, 0 },
                   }

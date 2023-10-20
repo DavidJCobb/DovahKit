@@ -2013,7 +2013,7 @@
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\condition_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp">
@@ -2022,7 +2022,7 @@
     <ClCompile Include="editor\subsystems\worldinput\util\numeric_comparisons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition_node.cpp">
+    <ClCompile Include="editor\subsystems\worldinput\control_scheme\condition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\ini\value_serialization.inl">
@@ -5030,7 +5030,7 @@
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\action.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h">
+    <ClInclude Include="editor\subsystems\worldinput\condition_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\modifier.h">
@@ -5075,7 +5075,7 @@
     <ClInclude Include="editor\subsystems\worldinput\util\numeric_comparisons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition_node.h">
+    <ClInclude Include="editor\subsystems\worldinput\control_scheme\condition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\ini\types.h">
@@ -6024,7 +6024,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\tree\node.md" />
-    <None Include="editor\subsystems\worldinput\control_scheme\condition.inl">
+    <None Include="editor\subsystems\worldinput\condition_set.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldinput\util\numeric_comparisons.inl">

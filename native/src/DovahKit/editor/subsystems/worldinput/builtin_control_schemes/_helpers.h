@@ -4,6 +4,7 @@
 #include "editor/subsystems/worldedit/tool_system/options_union.h"
 #include "../control_scheme/action.h"
 #include "../inputs/button.h"
+#include "../condition_set.h"
 #include "../input_sequence.h"
 
 namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
