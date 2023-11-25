@@ -1709,24 +1709,15 @@ namespace dovahkit::subsystems::worldedit {
       constexpr const float epsilon = 0.00001F;
 
       float capped_mod = mod;
+      float centroid_mod;
       if (fabs(capped_mod) < epsilon)
          return false;
 
       bool only_transforming_one_ref = this->get_selection_count() == 1;
 
-      glm::mat4 centroid_transform;
-      glm::mat4 centroid_inverse;
+      cobb::vector3<float> centroid_position;
       if (scale_all_together && !only_transforming_one_ref) {
-         cobb::vector3<float> selection_centroid      = this->get_selection_centroid();
-         cobb::vector3<float> primary_selection_euler = {};
-         if (auto* info = this->_get_primary_selected_refr_info()) {
-            auto loaded = info->loaded_ref_info();
-            if (loaded)
-               primary_selection_euler = loaded->rotation;
-         }
-
-         centroid_transform = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler, 1.0F); // scale is irrelevant here
-         centroid_inverse   = glm::inverse(centroid_transform);
+         centroid_position = this->get_selection_centroid();
       }
 
       bool is_interior = false;
@@ -1775,7 +1766,15 @@ namespace dovahkit::subsystems::worldedit {
       // the final i.e. capped scale mod value.)
       //
       if (scale_all_together && !only_transforming_one_ref && is_interior) {
-         centroid_post_adjust = glm::scale(centroid_transform, glm::fvec3(capped_mod, capped_mod, capped_mod));
+         centroid_mod = 1.0; // fallback for safety
+         if (auto* primary = this->_get_primary_selected_refr_info()) {
+            auto loaded = primary->stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (loaded) {
+               float basis   = loaded->get_raw_scale();
+               float desired = basis + capped_mod;
+               centroid_mod = (desired / basis);
+            }
+         }
 
          for (auto& sel_info : this->state.selection.refs) {
             assert(sel_info.stub);
@@ -1783,11 +1782,10 @@ namespace dovahkit::subsystems::worldedit {
             if (!loaded)
                continue;
 
-            auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
-            auto sel_pivot = centroid_inverse     * sel_world;
-            auto sel_after = centroid_post_adjust * sel_pivot;
+            auto diff = loaded->position - centroid_position; // vector from centroid to ref pos
+            diff *= centroid_mod;
 
-            auto pos_after = sel_after[3];
+            auto pos_after = centroid_position + diff;
             if (this->are_coordinates_outside_current_space(pos_after.x, pos_after.y))
                return false;
          }
@@ -1804,13 +1802,11 @@ namespace dovahkit::subsystems::worldedit {
          loaded->set_scale(loaded->get_raw_scale() + capped_mod, false);
 
          if (scale_all_together && !only_transforming_one_ref) {
-            if (&sel_info != this->_get_primary_selected_refr_info()) {
-               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
-               auto sel_pivot = centroid_inverse     * sel_world;
-               auto sel_final = centroid_post_adjust * sel_pivot;
+            auto diff = loaded->position - centroid_position; // vector from centroid to ref pos
+            diff *= centroid_mod;
 
-               loaded->position = cobb::vector3<float>(sel_final[3]);
-            }
+            auto pos_after = centroid_position + diff;
+            loaded->position = pos_after;
          }
 
          auto transform_after = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, loaded->get_scale());
