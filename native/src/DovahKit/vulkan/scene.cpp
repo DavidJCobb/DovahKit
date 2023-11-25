@@ -61,6 +61,10 @@ namespace vulkanDK {
    }
 
    void scene::update_projection(VkExtent2D render_area) {
+      //
+      // NOTE: If we change any of the math here, be sure to update `scene::get_inverse_projection_matrix` 
+      // as well, to keep it in synch with what's done here!
+      //
       float aspect = 1.0F;
       if (render_area.height != 0.0)
          aspect = (float)render_area.width / (float)render_area.height;

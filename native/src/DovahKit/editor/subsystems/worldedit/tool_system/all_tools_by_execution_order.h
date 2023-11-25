@@ -32,6 +32,8 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       class move_selection_by_drag,
 
+      class scale_selection,
+
       class move_camera,
       class turn_camera,
       class orbit_camera,

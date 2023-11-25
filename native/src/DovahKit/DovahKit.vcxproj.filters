@@ -2121,6 +2121,9 @@
     <ClCompile Include="ui\options_window\OptionsStorageLocationWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5264,6 +5267,9 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6092,6 +6098,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

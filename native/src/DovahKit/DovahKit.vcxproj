@@ -148,6 +148,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp" />
@@ -887,6 +888,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h" />
@@ -2159,6 +2161,7 @@
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.inl" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\set_edit_gizmo_mode.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\turn_camera.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tool_response_tuple.inl" />

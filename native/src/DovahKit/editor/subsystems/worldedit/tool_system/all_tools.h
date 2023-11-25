@@ -13,6 +13,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class move_selection,
       class move_selection_by_drag,
       class orbit_camera,
+      class scale_selection,
       class set_edit_gizmo_mode,
       class turn_camera//,
    >;

@@ -72,6 +72,8 @@ namespace {
 
    static constexpr const size_t minimum_grids_to_load = 5;
    static_assert(minimum_grids_to_load >= 1);
+
+   constexpr const float interior_cell_lateral_constraint = 30000;
 }
 
 namespace dovahkit::subsystems::worldedit {
@@ -1074,6 +1076,10 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    void core::view_input_poll_handler(DKVulkanView& view) {
+      bool scaled_refs_last_frame    = this->state.scaled_refs_this_input_poll;
+      bool any_input_processing_done = false;
+      this->state.scaled_refs_this_input_poll = false;
+
       if (&view != this->target_view)
          return;
       if (!view.isListeningForInput())
@@ -1104,7 +1110,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          tool_response_tuple results;
          double delta;
-         worldinput::core::get().doPerFrameInputProcessing(delta, results);
+         any_input_processing_done = worldinput::core::get().doPerFrameInputProcessing(delta, results);
          this->state.last_frame_delta = delta;
          //
          if (!sr)
@@ -1127,6 +1133,13 @@ namespace dovahkit::subsystems::worldedit {
                }
             }
          });
+      }
+      if (any_input_processing_done) {
+         if (scaled_refs_last_frame && !this->state.scaled_refs_this_input_poll) {
+            this->_finalize_selected_refr_scaling();
+         }
+      } else {
+         this->state.scaled_refs_this_input_poll = scaled_refs_last_frame;
       }
       //
       // Done processing all tools.
@@ -1487,8 +1500,6 @@ namespace dovahkit::subsystems::worldedit {
       if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
          return false;
 
-      constexpr const float interior_cell_lateral_constraint = 30000;
-
       bool only_rotating_one_ref = this->get_selection_count() == 1;
 
       glm::mat4 centroid_inverse;
@@ -1524,9 +1535,9 @@ namespace dovahkit::subsystems::worldedit {
                   primary_selection_euler = loaded->rotation;
             }
 
-            centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler, 1.0F);
+            centroid_transform   = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler, 1.0F); // scale is irrelevant here
             centroid_inverse     = glm::inverse(centroid_transform);
-            centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler + single_ref_rotation, 1.0F);
+            centroid_post_adjust = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler + single_ref_rotation, 1.0F); // scale is irrelevant here
          }
       }
 
@@ -1554,7 +1565,7 @@ namespace dovahkit::subsystems::worldedit {
                   //
                   pos_after = loaded->position + adjust.translate;
                } else {
-                  auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+                  auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
                   auto sel_pivot = centroid_inverse     * sel_world;
                   auto sel_final = centroid_post_adjust * sel_pivot;
 
@@ -1587,7 +1598,7 @@ namespace dovahkit::subsystems::worldedit {
                pos_after = loaded->position + adjust.translate;
                rot_after = loaded->rotation + single_ref_rotation; // TODO: this misses the code above that accounts for the reference frame!
             } else {
-               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F);
+               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
                auto sel_pivot = centroid_inverse     * sel_world;
                auto sel_final = centroid_post_adjust * sel_pivot;
 
@@ -1640,7 +1651,7 @@ namespace dovahkit::subsystems::worldedit {
             auto transform_after = vulkanDK::glm_transform_from_beth(pos_after, rot_after, loaded->get_scale());
             //
             if (!sel_info.handle.empty()) {
-               sel_info.handle->set_transform(transform_after);
+               sel_info.handle->set_transform(transform_after); // update selection's drawn bounding box
             }
             if (auto* ref_info = this->_get_loaded_refr_info(*sel_info.stub)) {
                if (ref_info->nif && ref_info->nif->did_load_succeed()) {
@@ -1654,6 +1665,170 @@ namespace dovahkit::subsystems::worldedit {
       }
 
       return true;
+   }
+
+   bool core::try_scale_selection(float mod, bool scale_all_together) {
+      if (this->target_area.cell == nullptr && this->target_area.world == nullptr) // no cell loaded
+         return false;
+
+      constexpr const float scale_minimum   =   0.01F;
+      constexpr const float scale_maximum   = 100.00F;
+
+      constexpr const float epsilon = 0.00001F;
+
+      float capped_mod = mod;
+      if (fabs(capped_mod) < epsilon)
+         return false;
+
+      bool only_transforming_one_ref = this->get_selection_count() == 1;
+
+      glm::mat4 centroid_transform;
+      glm::mat4 centroid_inverse;
+      if (scale_all_together && !only_transforming_one_ref) {
+         cobb::vector3<float> selection_centroid      = this->get_selection_centroid();
+         cobb::vector3<float> primary_selection_euler = {};
+         if (auto* info = this->_get_primary_selected_refr_info()) {
+            auto loaded = info->loaded_ref_info();
+            if (loaded)
+               primary_selection_euler = loaded->rotation;
+         }
+
+         centroid_transform = vulkanDK::glm_transform_from_beth(selection_centroid, primary_selection_euler, 1.0F); // scale is irrelevant here
+         centroid_inverse   = glm::inverse(centroid_transform);
+      }
+
+      bool is_interior = false;
+      if (this->target_area.world == nullptr) {
+         assert(this->target_area.cell->is_exterior_cell() == false);
+         is_interior = true;
+      }
+
+      //
+      // Check all refs and limit the amount by which we scale, such that no ref is pushed 
+      // above the max scale or below the min scale.
+      //
+      for (auto& sel_info : this->state.selection.refs) {
+         assert(sel_info.stub);
+         auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+         if (!loaded)
+            continue;
+
+         float current = loaded->get_raw_scale();
+         {
+            bool altered = false;
+            if (current + capped_mod > scale_maximum) {
+               capped_mod = scale_maximum - current;
+               altered    = true;
+            } else if (current + capped_mod < scale_minimum) {
+               capped_mod = current - scale_minimum;
+               altered    = true;
+            }
+            if (altered) {
+               if (fabs(capped_mod) < epsilon)
+                  //
+                  // One or more refs has already hit the scale limit in whatever direction 
+                  // we're altering the scale (increase/decrease). Fail here.
+                  //
+                  return false;
+            }
+         }
+      }
+
+      glm::mat4 centroid_post_adjust;
+
+      //
+      // If we're scaling multiple refs as a unit, such that their distances to one another are 
+      // also scaled, then ensure we aren't pushing any of them into an area they're not allowed 
+      // to be in. (This has to be done in a separate loop from above, because we have to know 
+      // the final i.e. capped scale mod value.)
+      //
+      if (scale_all_together && !only_transforming_one_ref && is_interior) {
+         centroid_post_adjust = glm::scale(centroid_transform, glm::fvec3(capped_mod, capped_mod, capped_mod));
+
+         for (auto& sel_info : this->state.selection.refs) {
+            assert(sel_info.stub);
+            auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+            if (!loaded)
+               continue;
+
+            auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
+            auto sel_pivot = centroid_inverse     * sel_world;
+            auto sel_after = centroid_post_adjust * sel_pivot;
+
+            auto pos_after = sel_after[3];
+            if (fabs(pos_after.x) > interior_cell_lateral_constraint || fabs(pos_after.y) > interior_cell_lateral_constraint) {
+               return false;
+            }
+         }
+      }
+
+      //
+      // Apply the new scale factor.
+      //
+      for (auto& sel_info : this->state.selection.refs) {
+         assert(sel_info.stub);
+         auto loaded = sel_info.stub->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+         if (!loaded)
+            continue;
+         loaded->set_scale(loaded->get_raw_scale() + capped_mod, false);
+
+         if (scale_all_together && !only_transforming_one_ref) {
+            if (&sel_info != this->_get_primary_selected_refr_info()) {
+               auto sel_world = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, 1.0F); // scale is irrelevant here
+               auto sel_pivot = centroid_inverse     * sel_world;
+               auto sel_final = centroid_post_adjust * sel_pivot;
+
+               loaded->position = cobb::vector3<float>(sel_final[3]);
+            }
+         }
+
+         auto transform_after = vulkanDK::glm_transform_from_beth(loaded->position, loaded->rotation, loaded->get_scale());
+
+         if (!sel_info.handle.empty()) {
+            sel_info.handle->set_transform(transform_after); // update selection's drawn bounding box
+         }
+         if (auto* ref_info = this->_get_loaded_refr_info(*sel_info.stub)) {
+            if (ref_info->nif && ref_info->nif->did_load_succeed()) {
+               //
+               // Update the REFR's rendered NIF and its constituent meshes.
+               //
+               vulkanDK::helpers::nif::set_root_transform(*ref_info->nif, transform_after);
+            }
+         }
+      }
+      this->state.scaled_refs_this_input_poll = true;
+      return true;
+   }
+   void core::_finalize_refr_scaling(dovah::form_stub& refr) {
+      //
+      // Refs can be uniformly scaled, but during gameplay, the scaling factor has a precision 
+      // limit of 0.01 and a range of [0.01, 100.00]. (In actuality, it's stored as fixed-point 
+      // at run-time.) We *want* to honor those limits... but doing so would break inputs for 
+      // scaling refs. For example, you wouldn't be able to set a bind like "Hold this button 
+      // to scale refs at a rate of 10%/s," because the amount you'd scale by *per frame* would 
+      // be less than 0.01 (i.e. 1%).
+      // 
+      // The solution? Scaling is stored in a REFR's extra data as a single-precision float, so 
+      // we can just store full-precision values in there. Once a scaling operation is done, we 
+      // go back and update the ref to use the limited precision. We define "done" as the frame 
+      // after the last frame any scaling operation occurred, or when a ref is deselected. We 
+      // do it this way, using a state bool, so that outside code which wants to scale refs over 
+      // time doesn't have to explicitly tell us when it's done.
+      // 
+      // Note that during rendering and such, we don't need to manually apply precision limits 
+      // if we use the return value of ObjectReference::get_scale, which returns a limited value 
+      // for us.
+      //
+      auto loaded = refr.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+      if (!loaded)
+         return;
+      loaded->set_scale(loaded->get_scale(), true);
+   }
+   void core::_finalize_selected_refr_scaling() {
+      for (auto& sel_info : this->state.selection.refs) {
+         assert(sel_info.stub);
+         this->_finalize_refr_scaling(*sel_info.stub);
+      }
    }
 
    #pragma region Passkeyed functions for tools
@@ -1718,6 +1893,8 @@ namespace dovahkit::subsystems::worldedit {
       emit this->refSelectionChanged(stub, true);
    }
    void core::_on_ref_deselected(dovah::form_stub& stub) {
+      this->_finalize_refr_scaling(stub);
+
       if (auto* parent_cell = stub.get_parent_form()) {
          assert(parent_cell->formType == dovah::form_type::cell);
          if (!this->is_cell_loaded(parent_cell)) {

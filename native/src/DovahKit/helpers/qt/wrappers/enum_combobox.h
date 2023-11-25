@@ -30,6 +30,15 @@ namespace cobb::qt::wrappers {
             }
          }
 
+         template<typename Functor>
+         void addChangeListener(Functor f) {
+            auto* w = widget();
+            QObject::connect(w, QOverload<int>::of(&QComboBox::currentIndexChanged), w, [w, f](int index) {
+               auto value = (value_type)w->currentData().toInt();
+               f(value);
+            });
+         }
+
          void beginOneWaySync(value_type& target) {
             this->setValue(target);
             //

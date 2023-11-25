@@ -53,10 +53,13 @@ Also refer to comments in `main.cpp`, though many were written years ago...
   * Action nodes are capable of having a `nullptr` options-union pointer, which will trigger an assertion failure when the bind list is processed. Can we make it so that an action node will *always* have a valid options pointer, e.g. because it constructs the options-union in its constructor and uses a smart pointer for ownership/overwrites? (It'd have to be a custom smart pointer or a `std::unique_ptr` with a custom deleter, to account for the way we subclass things.)
     * The problem with this is that we don't want to have to include the non-opaque options union header in the action node header and, transitiviely, in every header that ever touches control schemes.
       * But the control scheme header already forward-declares the node types, does it not? So this shouldn't be a problem.
-  * We should modify `options_union` to be capable of representing tools that have no `options` struct. (We've already indirectly done this by having the tool base class declare an empty `options` type as a band-aid for the above-mentioned assertion failure, but that means that `options_union` now defines dispatch table entries for these no-op structs, which is wasteful. It'd be nice if `options_union`'s type-tag could refer to any tool and we just had functionality in place for tools with no options.)
+  * We should modify `options_union` to be capable of representing tools that have no `options` struct. Then, we won't need to store the tool ID alongside the `options_union` (which, being a tagged union, already has the tool ID anyway). (We've already indirectly done this by having the tool base class declare an empty `options` type as a band-aid for the above-mentioned assertion failure, but that means that `options_union` now defines dispatch table entries for these no-op structs, which is wasteful. It'd be nice if `options_union`'s type-tag could refer to any tool and we just had functionality in place for tools with no options.)
 
 
 ## Worldinput
+
+### QOL
+* Additional program-wide options (i.e. not scoped to any single control scheme) for scaling various editing operations' speeds (e.g. translate selection, rotate selection, etc.) when in the Precision or Boost camera modes. The scalars should be configurable.
 
 ### Scancodes instead of/alongside VKs
 
@@ -101,3 +104,15 @@ Here's ElminsterAU's test procedure for xEdit, as planned for Starfield:
 > I still have about 35 record types which haven't been property checked at all yet (over 200 done though), after which comes the test to copy as override every one if the 3.5 million records in Starfield.esm into a new module which has Starfield.esm listed as it's 2nd master (so that the copying must change the stored FormID), making sure all copies show up as ITMs, and finally in game testing with this "everything overridden" esm
 
 We can't run that *exact* procedure for DovahKit and Skyrim because I don't plan on having DovahKit launch with support for every one of Skyrim's 120+ form types. However, we could run this procedure for all supported form types. We'd have to doctor an empty ESP in xEdit to have Skyrim.esm as its second master and a dummy master as the first, but after that, the in-DovahKit test procedure *should* be as simple as using a Lua script to flag as edited every supported form type from Skyrim.esm. Then, we save it, load the game with it, and see if anything breaks. (Could also use xEdit to verify that every record is an ITM, though I don't know how manageable that'll be since Skyrim.esm uses form version numbers other than the most recent whereas IIRC DovahKit will always use the most recent form version; may need to write xEdit scripts to rule out false negatives like those.)
+
+# Post-launch/sustain
+
+## Renderer
+
+### Compile-time configuration
+
+Currently, the renderer doesn't have any compile-time or metaprogrammed configuration. Render passes, shaders, and other constructs exist only in the form of the code which instantiates them at run-time, for example. Scene entity count limits are defined as `constexpr` constants and aren't configurable for individual renderers. Basically, `surface_renderer` is designed for use in the Render Window, and offers no configuration that could be used to adapt it for less intensive uses, e.g. a Preview Window for individual meshes, or a renderer for NPC faces when editing them.
+
+Additionally, because scene entity limits are fixed, we pre-allocate GPU-side buffers large enough to hold everything up to those limits. As of this writing, `surface_renderer` is configured to support up to 32000 meshes in the scene at a time (remember: this is individual meshes within NIFs, not entire NIFs); `rendered_mesh` entities have 112 bytes' worth of shader parameters; each frame-in-flight needs its own copy of these, and we use two frames in flight; so that's (32000 * 112 * 2) = exactly 7KB of VRAM per renderer. Every renderer burns 7KB of VRAM even if it isn't doing anything. That's not a *lot*, but it's more than would be needed for something like a Preview Window.
+
+It'd be nice if I could use C++ templates for different kinds of renderers, with different options and whatnot. I could avoid having to drag absolutely all of the renderer code into a header by using a non-templated base class, with member functions that handle individual actions (e.g. `_instantiate_render_pass(VkRenderPass& out_handle, const render_pass_definition&)`). I could potentially also have an option to let the renderer use dynamic scene entity limits; this would allow, say, a Preview Window to set its limits to exactly the number of entities it would need for the NIF it wants to render.

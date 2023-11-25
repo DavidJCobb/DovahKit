@@ -71,7 +71,7 @@ namespace dovahkit::subsystems::worldinput {
       this->device_handlers.keyboard_mouse.ignore_all_down();
       this->device_handlers.gamepad.ignore_all_down();
    }
-   void core::doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out) {
+   bool core::doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out) {
       timestamp_t now = current_time();
       elapsed_seconds = elapsed_time(this->state.last_update, now);
       this->state.last_update = now;
@@ -83,11 +83,11 @@ namespace dovahkit::subsystems::worldinput {
          // by zero anyway.
          //
          out = {};
-         return;
+         return false;
       }
       if (!this->state.target_widget_has_focus) {
          out = {};
-         return;
+         return true;
       }
       //
       // Update input device states:
@@ -129,6 +129,7 @@ namespace dovahkit::subsystems::worldinput {
       press_results.merge(hold_results);
       //
       out = press_results;
+      return true;
    }
 
    void core::setTargetWidget(QWidget* target) {

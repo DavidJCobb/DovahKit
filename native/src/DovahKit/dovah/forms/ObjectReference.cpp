@@ -117,6 +117,27 @@ namespace dovah::loaded_forms {
       }
       return scale;
    }
+   float ObjectReference::get_raw_scale() const {
+      if (auto* extra = this->extra_data.lookup<dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale)) {
+         return extra->value;
+      }
+      return 1.0F;
+   }
+   void ObjectReference::set_scale(float v, bool with_limits) {
+      if (with_limits) {
+         if (v < 0.01F)
+            v = 0.01F;
+         else if (v > 100.0F)
+            v = 100.0F;
+         else
+            v -= std::fmod(v, 0.01F);
+      }
+      auto* extra = this->extra_data.get_or_create< dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale);
+      if (extra->value == v)
+         return;
+      extra->value = v;
+      this->stub.set_edited(true);
+   }
 
    void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);

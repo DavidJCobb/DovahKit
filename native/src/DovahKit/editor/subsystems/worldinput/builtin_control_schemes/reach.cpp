@@ -204,6 +204,23 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             //
             // TOOD: Rotate selection on `:: Left Stick X`
             //
+
+            modifier->append_child(*control_scheme_node::from_data(control_scheme_action{
+               .name = "Scale",
+               //
+               .input_sequence    = algorithms::input_sequence_from_string("LT :: Left Stick", true),
+               .button_press_type = button_press_type::hold,
+               //
+               .tool = _tool_with_options(tools::scale_selection::options{
+                  .mod                = 0.5F,
+                  .scale_all_together = true,
+                  //
+                  .range = tools::scale_selection::options::range_2D_scales{
+                     .x = sign::positive,
+                     .y = sign::positive,
+                  },
+               })
+            }));
          }
       }
       out.top_level_nodes.push_back(control_scheme_node::from_data(control_scheme_action{

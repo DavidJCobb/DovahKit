@@ -128,6 +128,7 @@ namespace dovahkit::subsystems::worldedit {
          //
          struct {
             double last_frame_delta = 0;
+            bool   scaled_refs_this_input_poll = false; // see comments for `_finalize_refr_scaling`
 
             camera_speed_flags camera_speed;
             editor_mode mode = editor_mode::objects;
@@ -221,12 +222,16 @@ namespace dovahkit::subsystems::worldedit {
          void orbit_camera(camera_orbit_target pivot, cobb::vector3<float> euler_radians);
          void translate_camera(cobb::vector3<float>, reference_frame);
          bool try_adjust_selection_coordinates(const coordinate_adjustment&);
+         bool try_scale_selection(float mod, bool scale_all_together);
 
          #pragma region Passkeyed functions for tools
          void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
          #pragma endregion
 
       protected:
+         void _finalize_refr_scaling(dovah::form_stub& refr);
+         void _finalize_selected_refr_scaling();
+
          void _select_ref(refr&);
          void _on_ref_deselected(dovah::form_stub&);
 

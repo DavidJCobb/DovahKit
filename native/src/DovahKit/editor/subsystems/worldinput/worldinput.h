@@ -43,7 +43,7 @@ namespace dovahkit::subsystems::worldinput {
       protected slots:
          void ignoreAllHeldKeys();
       public slots:
-         void doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out); // both args are out-variables
+         bool doPerFrameInputProcessing(double& elapsed_seconds, tool_response_tuple& out); // both args are out-variables
 
       protected:
          struct {

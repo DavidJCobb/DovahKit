@@ -31,6 +31,8 @@ namespace dovahkit::subsystems::worldinput::algorithms {
          _name_to_xinput_button{ "rs", "RS", inputs::xinput_button::rs },
          _name_to_xinput_button{ "lt", "LT", inputs::xinput_button::lt },
          _name_to_xinput_button{ "rt", "RT", inputs::xinput_button::rt },
+         _name_to_xinput_button{ "left trigger",  "LT", inputs::xinput_button::lt },
+         _name_to_xinput_button{ "right trigger", "RT", inputs::xinput_button::rt },
          _name_to_xinput_button{ "start",       "Start",       inputs::xinput_button::start },
          _name_to_xinput_button{ "back",        "Back",        inputs::xinput_button::back },
          _name_to_xinput_button{ "d-pad up",    "D-Pad Up",    inputs::xinput_button::d_pad_up },
@@ -208,7 +210,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                   }
                }
                i += indicator_length;
-               i - 1; // account for next loop iteration
+               i -= 1; // account for next loop iteration
                continue;
             }
          }
