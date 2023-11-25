@@ -6,7 +6,7 @@
 #include "../../enums/axis3D.h"
 #include "../../enums/reference_frame.h"
 #include "../../enums/sign.h"
-#include "editor/subsystems/worldinput/util/range_input_scales.h"
+#include "editor/subsystems/worldinput/util/range_input_scales_1D.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
    class scale_selection : public _base {
@@ -20,17 +20,9 @@ namespace dovahkit::subsystems::worldedit::tools {
       public:
          struct options {
             public:
-               struct range_2D_scales {
-                  constexpr bool operator==(const range_2D_scales& v) const noexcept = default;
-
-                  sign x = sign::positive;
-                  sign y = sign::positive;
-               };
-
-            public:
                float mod = 0; // should be +/-; it's added to the current scale, not multiplied in
                bool  scale_all_together = false; // if `true`, we also scale the distances between the refs
-               std::optional<range_2D_scales> range;
+               std::optional<worldinput::util::range_input_scales_1D> range;
 
                constexpr bool operator==(const options& v) const noexcept = default;
 

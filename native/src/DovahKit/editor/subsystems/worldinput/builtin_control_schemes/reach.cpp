@@ -23,7 +23,8 @@ namespace {
    using worldedit::selection_operation;
    using worldedit::sign;
 
-   using range_input_scales = worldinput::util::range_input_scales;
+   using range_input_scales    = worldinput::util::range_input_scales;
+   using range_input_scales_1D = worldinput::util::range_input_scales_1D;
 
    using worldinput::condition_set;
 
@@ -215,7 +216,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                   .mod                = 0.5F,
                   .scale_all_together = true,
                   //
-                  .range = tools::scale_selection::options::range_2D_scales{
+                  .range = range_input_scales_1D{
                      .x = sign::positive,
                      .y = sign::positive,
                   },

@@ -2124,6 +2124,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\options_window\worldedit_tools\options\scale_selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5270,6 +5273,12 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales_1D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\options_window\worldedit_tools\options\scale_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5420,6 +5429,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_by_drag_tool_options.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\options_window\worldedit_tools\options\scale_selection_tool_options.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -6101,6 +6113,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\worldedit\tool_system\tools\scale_selection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\worldinput\util\range_input_scales_1D.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

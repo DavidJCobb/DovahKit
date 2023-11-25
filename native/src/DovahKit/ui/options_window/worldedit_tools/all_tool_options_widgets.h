@@ -11,6 +11,7 @@ namespace dovahkit::ui::worldedit {
       class move_camera;
       class move_selection;
       class move_selection_by_drag;
+      class scale_selection;
       class set_edit_gizmo_mode;
       class turn_camera;
    }
@@ -22,6 +23,7 @@ namespace dovahkit::ui::worldedit {
       tools::move_camera,
       tools::move_selection,
       tools::move_selection_by_drag,
+      tools::scale_selection,
       tools::set_edit_gizmo_mode,
       tools::turn_camera//,
    >;

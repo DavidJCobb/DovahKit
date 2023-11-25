@@ -424,8 +424,6 @@ void WorldinputBindEditDialog::overwrite(data_type& node) const {
                   break;
                }
             }
-         } else {
-            dst.options.reset(nullptr);
          }
       }
    }

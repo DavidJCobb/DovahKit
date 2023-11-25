@@ -79,6 +79,9 @@ namespace {
             .name = "Camera: Orbit",
             .desc = "Rotate and move the camera to orbit it around the current selection. This is similar to \"arcball\" camera controls."
          };
+         out[id_of<scale_selection>] = {
+            .name = "Selection: Scale"
+         };
          out[id_of<set_edit_gizmo_mode>] = {
             .name = "Edit Gizmo: Change Mode and/or Reference Frame",
             .desc = "Switch between the translate, rotate, and scale gizmos, and/or set the reference frame used for the gizmo axes."

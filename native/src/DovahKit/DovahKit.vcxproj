@@ -703,6 +703,7 @@
     <ClCompile Include="ui\options_window\options_window.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.cpp" />
+    <ClCompile Include="ui\options_window\worldedit_tools\options\scale_selection.cpp" />
     <ClCompile Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.cpp" />
     <ClCompile Include="ui\options_window\worldinput_condition_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_modifier_editor.cpp" />
@@ -991,6 +992,7 @@
     <QtMoc Include="editor\subsystems\worldedit\worldedit.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\range_control_conflict_state.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales.h" />
+    <ClInclude Include="editor\subsystems\worldinput\util\range_input_scales_1D.h" />
     <ClInclude Include="editor\subsystems\worldinput\util\tool_binding.h" />
     <ClInclude Include="editor\subsystems\xinput\chrono.h" />
     <ClInclude Include="editor\subsystems\xinput\config\trigger_threshold_for_button.h" />
@@ -1345,6 +1347,7 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />
     <QtMoc Include="ui\options_window\worldedit_tools\options\util\WorldeditToolRangeInputScalesWidget.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection_by_drag.h" />
+    <ClInclude Include="ui\options_window\worldedit_tools\options\scale_selection.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\_base.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options_widget_dispatch_table.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\attempt_on_screen_selection.h" />
@@ -2050,6 +2053,7 @@
     <QtUic Include="ui\options_window\worldedit_tools\options\move_camera_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_by_drag_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\move_selection_tool_options.ui" />
+    <QtUic Include="ui\options_window\worldedit_tools\options\scale_selection_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\set_edit_gizmo_mode_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\turn_camera_tool_options.ui" />
     <QtUic Include="ui\options_window\worldedit_tools\options\util\worldedit_tool_range_input_scales.ui" />
@@ -2174,6 +2178,7 @@
     <None Include="editor\subsystems\worldinput\util\numeric_comparisons.inl" />
     <None Include="editor\subsystems\worldinput\util\range_control_conflict_state.inl" />
     <None Include="editor\subsystems\worldinput\util\range_input_scales.inl" />
+    <None Include="editor\subsystems\worldinput\util\range_input_scales_1D.inl" />
     <None Include="editor\subsystems\worldinput\_docs\spec.md" />
     <None Include="helpers\bitfield_array.rewrite.h.bak" />
     <None Include="helpers\bitstreams\position.inl" />

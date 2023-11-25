@@ -12,10 +12,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          s.stream(presence);
          if (presence) {
             this->range.emplace();
-            s.stream(
-               this->range.value().x,
-               this->range.value().y
-            );
+            s.stream(range.value());
          }
       }
    }
@@ -27,10 +24,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       {  // range
          s.stream(range.has_value());
          if (range.has_value()) {
-            s.stream(
-               this->range.value().x,
-               this->range.value().y
-            );
+            s.stream(range.value());
          }
       }
    }

@@ -15,33 +15,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          if (o.range.has_value()) {
             if (!input.has_range)
                return;
-
-            const auto& o_range = o.range.value();
-
-            if (input.range.axes == worldinput::range_input_axes::y) {
-               //
-               // When a range input is passed as a single axis, it's passed as the X-axis; so we 
-               // need to route the "X-axis input" to our Y-axis options in this case.
-               //
-               mod *= input.range.x;
-               if (o_range.y == sign::negative)
-                  mod *= -1;
-            } else if (input.range.axes == worldinput::range_input_axes::x) {
-               mod *= input.range.x;
-               if (o_range.x == sign::negative)
-                  mod *= -1;
-            } else {
-               cobb::vector3<float> vec{ input.range.x, input.range.y, 0 };
-               mod *= vec.length();
-               if (vec.dot({ 1, 1, 0 }) < 0) { // handle negative-magnitude X and Y
-                  mod *= -1;
-               }
-
-               bool neg_x = (o_range.x == sign::negative);
-               bool neg_y = (o_range.y == sign::negative);
-               if (neg_x ^ neg_y)
-                  mod *= -1;
-            }
+            o.range.value().scale(mod, input);
          }
          if (o.scale_all_together) {
             dst.unified = mod;
@@ -67,8 +41,6 @@ namespace dovahkit::subsystems::worldedit::tools {
       float unified    = params.held.unified    + params.instant.unified;
 
       constexpr const float epsilon = 0.0001F;
-
-      qDebug("scale_selection %f and %f", individual, unified);
 
       if (std::fabs(individual) > epsilon) {
          if (!worldedit_core.try_scale_selection(individual, false))

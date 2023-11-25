@@ -5,5 +5,6 @@
 #include "./move_camera.h"
 #include "./move_selection.h"
 #include "./move_selection_by_drag.h"
+#include "./scale_selection.h"
 #include "./set_edit_gizmo_mode.h"
 #include "./turn_camera.h"

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WorldeditToolOptionsScaleSelection</class>
+ <widget class="QWidget" name="WorldeditToolOptionsScaleSelection">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item row="2" column="0" colspan="2">
+    <widget class="QGroupBox" name="rangeGroupbox">
+     <property name="title">
+      <string>Scale by range input</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="rangeXLabel">
+        <property name="text">
+         <string>Input X-Axis:</string>
+        </property>
+        <property name="buddy">
+         <cstring>rangeXSign</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="rangeXSign"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="rangeYLabel">
+        <property name="text">
+         <string>Input Y-Axis:</string>
+        </property>
+        <property name="buddy">
+         <cstring>rangeYSign</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="rangeYSign"/>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="rangeExplain">
+        <property name="text">
+         <string>When this tool is bound to a range control, such as a joystick, these options control how the control's position is multiplied into the tool's magnitude.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QDoubleSpinBox" name="magnitude">
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="suffix">
+      <string/>
+     </property>
+     <property name="decimals">
+      <number>2</number>
+     </property>
+     <property name="minimum">
+      <double>-1000.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>8</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Magnitude:</string>
+     </property>
+     <property name="buddy">
+      <cstring>magnitude</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QCheckBox" name="scaleAllTogether">
+     <property name="text">
+      <string>Scale all selections together</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>magnitude</tabstop>
+  <tabstop>scaleAllTogether</tabstop>
+  <tabstop>rangeGroupbox</tabstop>
+  <tabstop>rangeXSign</tabstop>
+  <tabstop>rangeYSign</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
