@@ -62,6 +62,11 @@ namespace vulkanDK {
       
       glm::vec3 local_center = (max + min) / 2.0F;
 
+      //
+      // If the transformation matrix uses uniform scaling, then we need to apply that scale 
+      // factor to the bounds' internal offsets. (Non-uniform scaling is not supported, as it 
+      // won't apply to our use case: REFRs.)
+      //
       float scale = 1.0;
       scale = glm::length(pivot_transform[0]);
       if (scale <= 0.0001) {
@@ -92,6 +97,11 @@ namespace vulkanDK {
       
       glm::vec3 local_center = (this->_max + this->_min) / 2.0F;
 
+      //
+      // If the transformation matrix uses uniform scaling, then we need to apply that scale 
+      // factor to the bounds' internal offsets. (Non-uniform scaling is not supported, as it 
+      // won't apply to our use case: REFRs.)
+      //
       float scale = 1.0;
       scale = glm::length(pivot_transform[0]);
       if (scale <= 0.0001) {
