@@ -168,14 +168,21 @@ namespace dovah::loaded_forms {
          } map_offset_data; // ONAM
          float   distant_lod_multiplier = 1.0F; // NAMA
          uint8_t world_flags = 0; // DATA
-         struct { // NOTE: huge values can cause performance hits; xEdit warns if any value is outside of +/- 256
+         struct {
+            //
+            // Bounding box for the worldspace, measured in grid cells (despite being floats). This is 
+            // a range of the form [min, max), i.e. the max should be *past* the highest grid-coords 
+            // for any cell in the worldspace.
+            // 
+            // NOTE: huge values can cause performance hits; xEdit warns if any value is outside of +/- 256
+            //
             struct {
-               float x;
-               float y;
+               float x = 0;
+               float y = 0;
             } min; // NAM0
             struct {
-               float x;
-               float y;
+               float x = 0;
+               float y = 0;
             } max; // NAM9
          } bounds;
          std::string tree_canopy_shadow; // NNAM // unused

@@ -195,6 +195,8 @@ namespace dovahkit::subsystems::worldedit {
          size_t get_selection_count() const;
          std::vector<dovah::form_stub*> get_selected_refs() const;
 
+         bool are_coordinates_outside_current_space(float x, float y) const;
+
          raycast_result raycast_at(int view_x, int view_y) const;
 
          constexpr size_t cell_grid_size() const noexcept {

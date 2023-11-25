@@ -2380,13 +2380,13 @@
   </ImportGroup>
   <PropertyGroup>
     <BuildDependsOn>
-         LogFuckingEverything;
+         LogAllBuildInfo;
          $(BuildDependsOn);
-         LogFuckingEverything;
+         LogAllBuildInfo;
          MakeDirsForCl
       </BuildDependsOn>
   </PropertyGroup>
-  <Target Name="LogFuckingEverything">
+  <Target Name="LogAllBuildInfo">
     <Message Text="Microsoft.CppBuild.targets/MakeDirsForCl" />
     <Message Text="=&gt; PrecompiledHeaderOutputFile  [@(CLCompile-&gt;Metadata('PrecompiledHeaderOutputFile')-&gt;DirectoryName()-&gt;Distinct())]" />
     <Message Text="=&gt; AssemblerListingLocation     [@(CLCompile-&gt;Metadata('AssemblerListingLocation')-&gt;DirectoryName()-&gt;Distinct())]" />

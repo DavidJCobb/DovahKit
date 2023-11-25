@@ -10,6 +10,7 @@
 #include "dovah/forms/Form.h"
 #include "dovah/forms/Landscape.h"
 #include "dovah/forms/ObjectReference.h"
+#include "dovah/forms/Worldspace.h"
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
 #include "dovah/utils/world_coordinate_to_grid_coordinate.h"
@@ -1308,6 +1309,38 @@ namespace dovahkit::subsystems::worldedit {
       return out;
    }
 
+   bool core::are_coordinates_outside_current_space(float x, float y) const {
+      if (this->target_area.world == nullptr) {
+         auto* cell = this->target_area.cell;
+         if (!cell || cell->is_exterior_cell()) {
+            return false;
+         }
+         if (fabs(x) > interior_cell_lateral_constraint || fabs(y) > interior_cell_lateral_constraint) {
+            return true;
+         }
+      } else {
+         auto loaded = this->target_area.world->load().ptr_cast<dovah::loaded_forms::Worldspace>();
+         if (loaded) {
+            using world_flag = dovah::loaded_forms::Worldspace::world_flag;
+            if (loaded->world_flags & (world_flag::small_world | world_flag::fixed_dimensions)) { // which of these flags are significant? both of them?
+               //
+               // "Small World" worldspaces have finite bounds, and don't auto-generate new cells when the 
+               // player leaves those bounds. In fact, if the player leaves the bounds, then their character 
+               // model gets accidentally removed from the scene graph, softlocking the game. I assume that 
+               // objects placed out of bounds in these worldspaces would be similarly broken.
+               //
+               float grid_x = dovah::world_coordinate_to_grid_coordinate(x);
+               float grid_y = dovah::world_coordinate_to_grid_coordinate(y);
+               if (grid_x < loaded->bounds.min.x || grid_x >= loaded->bounds.max.x)
+                  return true;
+               if (grid_y < loaded->bounds.min.y || grid_y >= loaded->bounds.max.y)
+                  return true;
+            }
+         }
+      }
+      return false;
+   }
+
    raycast_result core::raycast_at(int view_x, int view_y) const {
       raycast_result out;
       
@@ -1572,9 +1605,8 @@ namespace dovahkit::subsystems::worldedit {
                   pos_after = cobb::vector3<float>(sel_final[3]) + adjust.translate;
                }
 
-               if (fabs(pos_after.x) > interior_cell_lateral_constraint || fabs(pos_after.y) > interior_cell_lateral_constraint) {
+               if (this->are_coordinates_outside_current_space(pos_after.x, pos_after.y))
                   return false;
-               }
             }
          }
          //
@@ -1756,9 +1788,8 @@ namespace dovahkit::subsystems::worldedit {
             auto sel_after = centroid_post_adjust * sel_pivot;
 
             auto pos_after = sel_after[3];
-            if (fabs(pos_after.x) > interior_cell_lateral_constraint || fabs(pos_after.y) > interior_cell_lateral_constraint) {
+            if (this->are_coordinates_outside_current_space(pos_after.x, pos_after.y))
                return false;
-            }
          }
       }
 
