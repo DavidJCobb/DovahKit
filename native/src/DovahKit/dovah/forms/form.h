@@ -1,5 +1,6 @@
 #pragma once
-#include "../core.h"
+#include "dovah/data/papyrus/scriptobject.h"
+#include "dovah/core.h"
 
 namespace dovah {
    class file_load_order;
@@ -16,11 +17,11 @@ namespace dovah {
    }
    namespace loaded_forms::components {
       namespace papyrus {
-         class script_data;
+         class attachment_data;
       }
       class  model;
       struct object_bounds;
-      using  papyrus_attachment_data = papyrus::script_data;
+      using  papyrus_attachment_data = papyrus::attachment_data;
    }
 
    namespace loaded_forms {
@@ -59,7 +60,11 @@ namespace dovah {
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
-            components::papyrus_attachment_data* get_papyrus_data() noexcept;
+            std::vector<dovah::papyrus::scriptobject> resolve_papyrus_scripts() const;
+            void overwrite_papyrus_scripts(const std::vector<dovah::papyrus::scriptobject>&);
+
+            const components::papyrus_attachment_data* get_raw_papyrus_data() const noexcept;
+            components::papyrus_attachment_data* get_raw_papyrus_data() noexcept;
             components::object_bounds* get_object_bounds() noexcept;
             components::model* get_model() noexcept;
 

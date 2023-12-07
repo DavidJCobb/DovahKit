@@ -4,11 +4,11 @@ namespace dovah::loaded_forms {
    class Form;
    namespace components {
       namespace papyrus {
-         class script_data;
+         class attachment_data;
       }
       class  model;
       struct object_bounds;
-      using  papyrus_attachment_data = papyrus::script_data;
+      using  papyrus_attachment_data = papyrus::attachment_data;
    }
 }
 

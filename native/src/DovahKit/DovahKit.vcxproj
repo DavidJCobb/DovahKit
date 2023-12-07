@@ -131,6 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\data\papyrus\property_value.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\fragment_data\package_fragment_data.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\fragment_data\perk_fragment_data.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\fragment_data\scene_fragment_data.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\fragment_data\topic_info_fragment_data.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\property.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
@@ -447,7 +458,6 @@
     <ClCompile Include="dovah\forms\components\model.cpp" />
     <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp" />
     <ClCompile Include="dovah\forms\components\package_location.cpp" />
-    <ClCompile Include="dovah\forms\components\papyrus.cpp" />
     <ClCompile Include="dovah\forms\Container.cpp" />
     <ClCompile Include="dovah\forms\DefaultObjectManager.cpp" />
     <ClCompile Include="dovah\forms\DialogueBranch.cpp" />
@@ -834,6 +844,7 @@
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
+    <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
@@ -842,10 +853,34 @@
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h" />
+    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectListModel.h" />
+    <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h" />
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
+    <ClInclude Include="dovah\data\papyrus\helpers\name_equals.h" />
+    <ClInclude Include="dovah\data\papyrus\inheritance_status.h" />
+    <ClInclude Include="dovah\data\papyrus\property.h" />
+    <ClInclude Include="dovah\data\papyrus\property_value.h" />
+    <ClInclude Include="dovah\data\papyrus\scriptobject.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\attached_script.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\attachment_data.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\attachment_header.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\basic_fragment.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\fragment_data_base.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\package_fragment_data.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\perk_fragment_data.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\scene_fragment_data.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\topic_info_fragment_data.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\fragment_data\_all.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\property.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\property_object_value.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\property_type.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\property_value.h" />
+    <ClInclude Include="dovah\forms\components\papyrus\_forward_declare_file_handling.h" />
     <ClInclude Include="dovah\form_stubs\passkeys\build_use_info_during_load.h" />
     <ClInclude Include="dovah\form_stubs\passkeys\force_form_load.h" />
     <ClInclude Include="dovah\utils\file_prefix.h" />
@@ -2013,6 +2048,7 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_windows\activator.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
@@ -2063,6 +2099,7 @@
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKScriptObjectDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -2152,6 +2189,9 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovah\data\papyrus\scriptobject.inl" />
+    <None Include="dovah\forms\components\papyrus\attached_script.inl" />
+    <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />

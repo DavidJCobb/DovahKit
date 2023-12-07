@@ -22,13 +22,20 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
   * NAVM too?
 
+## Miscellaneous
+
+* `dovah/data/actor_values.h`: this should be a `constexpr` list of PODs. Current way we define it is super old and scuffed (singleton, with a constructor wherein a local C array of definitions that gets `memcpy`'d into ` malloc`'d list).
+
 ## Form data
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.
 * `container_entry::condition` is a struct containing a presence bool and a float; change it to `std::optional<float>`.
-* Split `papyrus.h` into a subfolder with different headers for each of the structs used to define an attached ScriptObject.
-* Un-nest `script_data::script` and friends; we already have all of it in a namespace i.e. `dovah::loaded_forms::components::papyrus`. Rename `script_data` to `attachment_data` or something.
+* Papyrus
+  * Split `papyrus.h` into a subfolder with different headers for each of the structs used to define an attached ScriptObject.
+  * Rename `basic_fragment_data` to `fragment_data_base`.
+  * Un-nest `script_data::script` and friends; we already have all of it in a namespace i.e. `dovah::loaded_forms::components::papyrus`. Rename `script_data` to `attachment_data` or something.
+  * Ditch `property::value_t` in favor of a `std::variant`.
 
 ### ActorBase (NPC_)
 * NAM9 (Face Morphs) should not be serialized if all the values are 0.

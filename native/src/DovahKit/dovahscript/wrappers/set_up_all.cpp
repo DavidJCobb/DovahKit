@@ -41,9 +41,11 @@ namespace dovahscript {
       #pragma region Form wrappers
          define_wrapper_metatable<form>(L);
          #pragma region Common form components
+            /*// TODO: We are rewriting Papyrus data handling within the backend.
             define_wrapper_metatable<papyrus_root>(L);
                define_wrapper_metatable<papyrus_script>(L);
                   define_wrapper_metatable<papyrus_property>(L);
+            //*/
          #pragma endregion
          #pragma region Form types
             define_wrapper_metatable<cell>(L);
