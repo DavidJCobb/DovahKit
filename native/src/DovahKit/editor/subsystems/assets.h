@@ -8,6 +8,7 @@
 // Forward-declarations:
 namespace dovah {
    class bsa_archived_file;
+   class bsa_load_order;
 }
 
 namespace dovahkit::subsystems {
@@ -22,6 +23,8 @@ namespace dovahkit::subsystems {
       public:
          using singleton_ex::get;
          using singleton_ex::get_or_create;
+
+         const dovah::bsa_load_order* get_bsa_load_order();
 
          // The specified path should be relative to, and should not include, the Data directory. The 
          // caller should delete any returned object.

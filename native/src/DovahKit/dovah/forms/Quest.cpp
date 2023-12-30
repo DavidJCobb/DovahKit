@@ -883,7 +883,7 @@ namespace dovah::loaded_forms {
       //
       struct _pending_alias_script_data {
          alias_id_t alias_id = -1;
-         components::papyrus::script_data data;
+         components::papyrus::attachment_data data;
       };
       //
       std::vector<_pending_alias_script_data> pending_alias_scripts;
@@ -919,7 +919,7 @@ namespace dovah::loaded_forms {
                   if (!subrecord.read(count)) // alias script data count
                      break;
                   for (uint16_t i = 0; i < count; ++i) {
-                     components::papyrus::script_data::property_object_value owner;
+                     components::papyrus::property_object_value owner;
                      owner.load(this->script_data.header, subrecord);
                      if (owner.form != &this->stub) {
                         //
@@ -937,7 +937,7 @@ namespace dovah::loaded_forms {
                         warning.set_cause_subrecord(subrecord.signature());
                         if (owner.form)
                            warning.add_relevant_form(*owner.form.get_form_stub());
-                        warning.extra_integers[0] = owner.aliasID;
+                        warning.extra_integers[0] = owner.alias_id;
                         intfc.log_load_warning(warning);
                         //
                         continue;
@@ -947,7 +947,7 @@ namespace dovah::loaded_forms {
                      //
                      bool already_present = false;
                      for (auto& prior : pending_alias_scripts) {
-                        if (prior.alias_id == owner.aliasID) {
+                        if (prior.alias_id == owner.alias_id) {
                            prior.data.load(subrecord, intfc);
                            already_present = true;
                            break;
@@ -956,7 +956,7 @@ namespace dovah::loaded_forms {
                      if (already_present)
                         break;
                      auto& entry = pending_alias_scripts.emplace_back();
-                     entry.alias_id = owner.aliasID;
+                     entry.alias_id = owner.alias_id;
                      entry.data.load(subrecord, intfc);
                   }
                }
@@ -1194,14 +1194,14 @@ namespace dovah::loaded_forms {
                      if (!subrecord.read(count)) // alias script data count
                         break;
                      for (uint16_t i = 0; i < count; ++i) {
-                        components::papyrus::script_data::property_object_value owner;
+                        components::papyrus::property_object_value owner;
                         owner.load(header, subrecord);
                         if (owner.form != uib.stub()) {
-                           components::papyrus::script_data::skip_use_info(subrecord);
+                           components::papyrus::attachment_data::skip_use_info(subrecord);
                            continue;
                         }
-                        auto& entry = alias_papyrus_use_info.emplace_back(owner.aliasID, uib);
-                        components::papyrus::script_data::generate_use_info(subrecord, *entry.pending);
+                        auto& entry = alias_papyrus_use_info.emplace_back(owner.alias_id, uib);
+                        components::papyrus::attachment_data::generate_use_info(subrecord, *entry.pending);
                      }
                   }
                }
@@ -1356,9 +1356,9 @@ namespace dovah::loaded_forms {
             for (auto* a : this->aliases) {
                if (a->script_data.empty())
                   continue;
-               components::papyrus::script_data::property_object_value owner;
+               components::papyrus::property_object_value owner;
                owner.form.unmanaged_set(&this->stub);
-               owner.aliasID = a->id;
+               owner.alias_id = a->id;
                owner.save(this->script_data.header, VMAD);
                //
                a->script_data.save(VMAD, intfc);

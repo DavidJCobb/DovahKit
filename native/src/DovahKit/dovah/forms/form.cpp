@@ -16,9 +16,7 @@ namespace dovah::loaded_forms {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
    }
 
-   std::vector<dovah::papyrus::scriptobject> Form::resolve_papyrus_scripts() const {
-      std::vector<dovah::papyrus::scriptobject> dst;
-
+   dovah::papyrus::scriptobject_list Form::resolve_papyrus_scripts() const {
       loaded_form_ptr<Form> base_form;
       if (dovah::form_type_info::form_type_is_reference(this->stub.formType)) {
          auto* base_stub = form_stub_helpers::get_base_form(&this->stub);
@@ -26,98 +24,19 @@ namespace dovah::loaded_forms {
             base_form = base_stub->load();
       }
 
-      auto _copy_papyrus_property_value = [](
-         const components::papyrus::property_value& src,
-         dovah::papyrus::property_value& dst
-      ) {
-         std::visit(
-            [&dst](const auto& casted) {
-               using value_type = std::decay_t<decltype(casted)>;
-               if constexpr (std::is_same_v<value_type, components::papyrus::property_object_value>) {
-                  dst = casted;
-               } else if constexpr (std::is_same_v<value_type, std::vector<components::papyrus::property_object_value>>) {
-                  dst = std::vector<dovah::papyrus::property_object_value>{};
-                  auto& dst_casted = std::get<std::vector<dovah::papyrus::property_object_value>>(dst);
-
-                  size_t size = casted.size();
-                  dst_casted.resize(size);
-                  for (size_t i = 0; i < size; ++i) {
-                     dst_casted[i] = casted[i];
-                  }
-               } else {
-                  dst = casted;
-               }
-            },
-            src
-         );
-      };
+      auto* this_papyrus = this->get_raw_papyrus_data();
+      if (!this_papyrus) {
+         return {};
+      }
 
       if (base_form) {
          if (auto* base_papyrus = base_form->get_raw_papyrus_data()) {
-            for (auto& src_script : base_papyrus->scripts) {
-               auto& dst_script = dst.emplace_back();
-               dst_script.scriptname = src_script.name;
-               dst_script.inheritance.present_on_base = true;
-
-               size_t size = src_script.properties.size();
-               dst_script.properties.resize(size);
-               for (size_t i = 0; i < size; ++i) {
-                  auto& src_prop = src_script.properties[i];
-                  auto& dst_prop = dst_script.properties[i];
-                  dst_prop.name = src_prop.name;
-                  dst_prop.inheritance.present_on_base = true;
-                  _copy_papyrus_property_value(src_prop.value, dst_prop.value);
-               }
-            }
+            return dovah::papyrus::scriptobject_list({}, *this_papyrus, *base_papyrus);
          }
       }
-
-      if (auto* this_papyrus = this->get_raw_papyrus_data()) {
-         auto _get_or_insert = [&dst](const std::string& scriptname) -> auto& {
-            for (auto& item : dst)
-               if (item.name_matches(scriptname))
-                  return item;
-            auto& item = dst.emplace_back();
-            item.scriptname = scriptname;
-            return item;
-         };
-
-         for (auto& src_script : this_papyrus->scripts) {
-            auto& dst_script = _get_or_insert(src_script.name);
-            //
-            if (src_script.status & components::papyrus::attached_script::status_flag::inherited) {
-               dst_script.inheritance.present_on_target = true;
-            }
-            if (src_script.status & components::papyrus::attached_script::status_flag::removed) {
-               dst_script.inheritance.removed_on_target = true;
-               continue;
-            }
-
-            for (auto& src_prop : src_script.properties) {
-               if (auto* dst_prop = dst_script.lookup_property(src_prop.name)) {
-                  if (src_prop.status & components::papyrus::property::status_flag::inherited) {
-                     dst_prop->inheritance.present_on_target = true;
-                  }
-                  if (src_prop.status & components::papyrus::property::status_flag::removed) {
-                     dst_prop->inheritance.present_on_target = true; // "removed" without "inherited" is invalid
-                     dst_prop->inheritance.removed_on_target = true;
-                     break;
-                  }
-                  dst_prop->inheritance.present_on_target = true;
-                  _copy_papyrus_property_value(src_prop.value, dst_prop->value);
-                  continue;
-               }
-               auto& dst_prop = dst_script.properties.emplace_back();
-               dst_prop.name = src_prop.name;
-               dst_prop.inheritance.present_on_target = true;
-               _copy_papyrus_property_value(src_prop.value, dst_prop.value);
-            }
-         }
-      }
-
-      return dst;
+      return dovah::papyrus::scriptobject_list({}, *this_papyrus);
    }
-   void Form::overwrite_papyrus_scripts(const std::vector<dovah::papyrus::scriptobject>& src) {
+   void Form::overwrite_papyrus_scripts(const dovah::papyrus::scriptobject_list& src) {
       auto* this_papyrus = this->get_raw_papyrus_data();
       assert(this_papyrus != nullptr);
 
@@ -140,91 +59,10 @@ namespace dovah::loaded_forms {
          this_papyrus->fragment_data = fragment_data;
       }
 
-      auto _copy_papyrus_property_value = [this](
-         const dovah::papyrus::property_value& src,
-         components::papyrus::property_value& dst
-      ) {
-         using backend_object_type  = components::papyrus::property_object_value;
-         using frontend_object_type = dovah::papyrus::property_object_value;
-
-         std::visit(
-            [this, &dst](const auto& casted) {
-               using value_type = std::decay_t<decltype(casted)>;
-               if constexpr (std::is_same_v<value_type, frontend_object_type>) {
-                  dst = backend_object_type{};
-                  auto& dst_casted = std::get<backend_object_type>(dst);
-                  
-                  dst_casted.alias_id = casted.alias_id;
-                  dst_casted.form.set(*this, casted.form);
-               } else if constexpr (std::is_same_v<value_type, std::vector<frontend_object_type>>) {
-                  dst = std::vector<backend_object_type>{};
-                  auto& dst_casted = std::get<std::vector<backend_object_type>>(dst);
-
-                  size_t size = casted.size();
-                  dst_casted.resize(size);
-                  for (size_t i = 0; i < size; ++i) {
-                     dst_casted[i].alias_id = casted[i].alias_id;
-                     dst_casted[i].form.set(*this, casted[i].form);
-                  }
-               } else {
-                  dst = casted;
-               }
-            },
-            src
-         );
-      };
-
-      if (!base_papyrus) {
-         // No base form. We can import the data more simply.
-         for (auto& src_script : src) {
-            auto& dst_script = this_papyrus->scripts.emplace_back();
-            dst_script.name = src_script.scriptname;
-
-            for (auto& src_prop : src_script.properties) {
-               auto& dst_prop = dst_script.properties.emplace_back();
-               dst_prop.name = src_prop.name;
-               _copy_papyrus_property_value(src_prop.value, dst_prop.value);
-            }
-         }
+      if (base_papyrus) {
+         src._overwrite({}, *this, *this_papyrus, *base_papyrus);
       } else {
-         for (auto& src_script : src) {
-            const auto* inherited_script = base_papyrus->lookup_script(src_script.scriptname);
-
-            if (src_script.inheritance.removed_on_target && !inherited_script)
-               continue;
-
-            auto& dst_script = this_papyrus->scripts.emplace_back();
-            dst_script.name = src_script.scriptname;
-            if (inherited_script) {
-               dst_script.status |= components::papyrus::attached_script::status_flag::inherited;
-               if (src_script.inheritance.removed_on_target) {
-                  dst_script.status |= components::papyrus::attached_script::status_flag::removed;
-                  continue;
-               }
-            }
-
-            for (auto& src_prop : src_script.properties) {
-               const components::papyrus::property* inherited_property = nullptr;
-               if (inherited_script)
-                  inherited_property = inherited_script->lookup_property(src_prop.name);
-
-               if (src_prop.inheritance.removed_on_target && !inherited_property)
-                  continue;
-
-               auto& dst_prop = dst_script.properties.emplace_back();
-               dst_prop.name = src_prop.name;
-               dst_prop.status = components::papyrus::property::status_flag::altered;
-               if (inherited_property) {
-                  dst_prop.status = components::papyrus::property::status_flag::inherited;
-                  if (src_prop.inheritance.removed_on_target) {
-                     dst_prop.status = components::papyrus::property::status_flag::removed;
-                     continue;
-                  }
-               }
-               _copy_papyrus_property_value(src_prop.value, dst_prop.value);
-            }
-
-         }
+         src._overwrite({}, *this, *this_papyrus);
       }
    }
 

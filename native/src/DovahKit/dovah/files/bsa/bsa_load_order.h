@@ -90,9 +90,9 @@ namespace dovah {
          
          load_options_t load_options;
          
-         bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true);
+         bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true) const;
          
-         inline const std::filesystem::path& get_base_path() const noexcept { return this->base_path; }
+         constexpr const std::filesystem::path& get_base_path() const noexcept { return this->base_path; }
          void set_base_path(const std::filesystem::path&);
          void append_archive(const std::filesystem::path& name);
          void prepend_archive(const std::filesystem::path& name);
@@ -109,7 +109,7 @@ namespace dovah {
          //
          bsa_archive* remove_archive(const std::filesystem::path& name, bool even_if_loaded, bool delete_archive);
          
-         inline const archive_list& get_archive_list() const noexcept { return this->archives; }
+         constexpr const archive_list& get_archive_list() const noexcept { return this->archives; }
          
          void load_archives(); // asynch and multi-threaded
          void wait_for_archive_load_to_finish(); // blocks on the calling thread until all archives have either loaded, failed, or have responded to the load process being aborted

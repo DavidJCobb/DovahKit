@@ -99,10 +99,14 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->sever_outbound_references_to(target, my_owner);
    }
    void attachment_data::clear(loaded_forms::Form& my_owner) noexcept {
-      for (auto& script : this->scripts)
-         script.clear(my_owner);
+      this->clear_scripts(my_owner);
       if (this->fragment_data)
          this->fragment_data->clear(my_owner);
+   }
+
+   void attachment_data::clear_scripts(loaded_forms::Form& my_owner) {
+      for (auto& script : this->scripts)
+         script.clear(my_owner);
    }
 
    /*static*/ attachment_header attachment_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
@@ -123,7 +127,11 @@ namespace dovah::loaded_forms::components::papyrus {
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;
          attached_script::extract_name_and_skip_remainder(header, subrecord, key);
-         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) -> unsigned char {
+            if (c >= 'A' && c <= 'Z')
+               return c + 0x20;
+            return c;
+         });
          ++script_counts[key];
       }
       subrecord.seek(pos_before_scripts); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
@@ -132,7 +140,11 @@ namespace dovah::loaded_forms::components::papyrus {
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;
          subrecord.read_length_prefixed_string<2>(key);
-         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) -> unsigned char {
+            if (c >= 'A' && c <= 'Z')
+               return c + 0x20;
+            return c;
+         });
          auto& remaining = script_counts[key];
          assert(remaining > 0);
          if (--remaining == 0) {
@@ -168,18 +180,11 @@ namespace dovah::loaded_forms::components::papyrus {
          if (functor(item))
             break;
    }
-   attached_script* attachment_data::lookup_script(const std::string& name) {
-      auto& list = this->scripts;
-      for (auto& script : list)
-         if (_stricmp(script.name.c_str(), name.c_str()) == 0)
-            return &script;
-      return nullptr;
-   }
    void attachment_data::remove_script(loaded_forms::Form& owner, const std::string& name) {
       auto& list = this->scripts;
       for (auto it = list.begin(); it != list.end(); ++it) {
          auto& script = *it;
-         if (_stricmp(script.name.c_str(), name.c_str()) != 0)
+         if (dovah::papyrus::helpers::name_equals(script.name.c_str(), name.c_str()) != 0)
             continue;
          script.clear(owner);
          list.erase(it);

@@ -3,6 +3,7 @@
 #include "helpers/windows.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "../core.h"
+#include "editor/subsystems/assets.h"
 #include "asset_manager.h"
 
 #include "data/dds.h"
@@ -166,7 +167,7 @@ void DovahKitAsset::load() {
    std::unique_ptr<file_type> file;
    {
       std::filesystem::path std_path = this->_path.toStdWString();
-      file.reset(DovahKitCore::get().lookup_game_asset(std_path, true));
+      file.reset(dovahkit::subsystems::assets::get().lookup_game_asset(std_path, true));
    }
    if (!file)
       return _fail();

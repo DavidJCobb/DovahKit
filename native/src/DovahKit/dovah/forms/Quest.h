@@ -91,8 +91,8 @@ namespace dovah::loaded_forms {
             uint32_t           member = 0; // ALFD
          } fill_from_event;
          //
-         components::condition_list       conditions; // for "Find Matching Reference" or "Find Matching Location"
-         components::papyrus::script_data script_data;
+         components::condition_list          conditions; // for "Find Matching Reference" or "Find Matching Location"
+         components::papyrus_attachment_data script_data;
 
          void load(tes_record_reader&, load_order_interfaces::form_load&);
          void save(tes_record_writer&, load_order_interfaces::form_save&);

@@ -1,5 +1,5 @@
 #pragma once
-#include "dovah/data/papyrus/scriptobject.h"
+#include "dovah/data/papyrus/scriptobject_list.h"
 #include "dovah/core.h"
 
 namespace dovah {
@@ -60,8 +60,8 @@ namespace dovah {
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
-            std::vector<dovah::papyrus::scriptobject> resolve_papyrus_scripts() const;
-            void overwrite_papyrus_scripts(const std::vector<dovah::papyrus::scriptobject>&);
+            dovah::papyrus::scriptobject_list resolve_papyrus_scripts() const;
+            void overwrite_papyrus_scripts(const dovah::papyrus::scriptobject_list&);
 
             const components::papyrus_attachment_data* get_raw_papyrus_data() const noexcept;
             components::papyrus_attachment_data* get_raw_papyrus_data() noexcept;

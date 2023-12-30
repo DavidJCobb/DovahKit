@@ -4,6 +4,7 @@
 #include <vector>
 #include "./_forward_declare_file_handling.h"
 #include "./property.h"
+#include "./script_status.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -18,33 +19,11 @@ namespace dovah {
 namespace dovah::loaded_forms::components::papyrus {
    class attached_script {
       public:
-         struct status_flag {
-            status_flag() = delete;
-            enum type : uint8_t {
-               local     = 0,
-               inherited = 1, // used for a ScriptObject on a REFR, when you attach a script to a base form and then further edit its properties on a REFR
-               removed   = 2,
-
-               //
-               // CK displays different flags-masks as follows:
-               // 
-               //    0 = 0b00 = "Script added locally" or, if properties are set, "Script added and edited locally"
-               //    1 = 0b01 = "Script inherited and edited locally"
-               //    2 = 0b10 = "Script inherited from parent"
-               //    3 = 0b11 = "Script inherited and deleted locally"
-               // 
-               // Why does 2 display as "inherited" and not removed? My best guess is this: there's a difference 
-               // between reverting all REFR-side changes (e.g. those made by a master) such that the ScriptObject 
-               // is as the base form dictates, versus wholly deleting the script off the REFR such that the game 
-               // doesn't create that ScriptObject on that REFR at all; 2 would be the former; 3, the latter.
-               //
-            };
-         };
-         using status_flags = std::underlying_type_t<status_flag::type>;
+         static constexpr const size_t max_property_count = (1 << 29) - 1;
 
       public:
-         std::string  name;
-         status_flags status = status_flag::local;
+         std::string   name;
+         script_status status = script_status::defined_locally;
          std::vector<property> properties;
                   
          bool load(const attachment_header& owner, tes_subrecord_reader&);

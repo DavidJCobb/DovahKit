@@ -24,7 +24,7 @@ class DovahKitPapyrusDictionary : protected QObject {
       }
       using file_ptr_t = dovah::bsa_archived_file;
       using script_t   = dovah::compiled_papyrus_script;
-      //
+      
    protected:
       struct _std_hash_filesystem_path {
          size_t operator()(const std::filesystem::path& p) const { return std::filesystem::hash_value(p); }

@@ -16,7 +16,7 @@ namespace DovahKitDebug::features {
       if (stub) {
          auto form = stub->load();
          if (form) {
-            auto* papyrus = form->get_papyrus_data();
+            auto* papyrus = form->get_raw_papyrus_data();
             __debugbreak(); // papyrus data
             return;
          }

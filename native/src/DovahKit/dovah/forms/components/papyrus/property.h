@@ -1,29 +1,15 @@
 #pragma once
 #include "./_forward_declare_file_handling.h"
-#include "./property_type.h"
+#include "./property_status.h"
+#include "./property_value.h"
 #include "./property_value.h"
 
 namespace dovah::loaded_forms::components::papyrus {
    class property {
       public:
-         struct status_flag {
-            status_flag() = delete;
-            enum type : uint8_t {
-               altered   = 1, // property has been set on the form to which this ScriptObject is attached (i.e. script and property on base form, or script on base form and property on REFR)
-               inherited = 2, // used for a Papyrus property on a REFR, when you attach a script to a base form and then further edit its properties on a REFR
-               removed   = 3, // the CK expects this to only ever occur alongside `inherited`
-               //
-               // The CK shows "<unknown>" for combinations of flags besides 0b01, 0b10, and 0b11. The `removed` flag 
-               // is never supposed to appear on its own.
-               //
-            };
-         };
-         using status_flags = status_flag::type;
-
-      public:
-         std::string    name;
-         status_flags   status = (status_flags)0;
-         property_value value;
+         std::string     name;
+         property_status status = property_status::unknown;
+         property_value  value;
 
          constexpr property_type type() const noexcept { return property_type_for(this->value); }
          //

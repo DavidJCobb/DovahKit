@@ -885,28 +885,7 @@
     <ClCompile Include="dovahscript\tasks\s2m\renumber_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\root.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovahscript\core\collections.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\script\collection_properties.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovahscript\wrappers\form\quest.cpp">
@@ -2160,7 +2139,10 @@
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\data\papyrus\property_value.cpp">
+    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\activator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3092,31 +3074,7 @@
     <ClInclude Include="dovahscript\tasks\s2m\renumber_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\_all.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\property.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\root.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\script.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovahscript\core\collections.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\script\collection_properties.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\wrappers\form\quest.h">
@@ -5360,19 +5318,13 @@
     <ClInclude Include="dovah\forms\components\papyrus\fragment_data\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\data\papyrus\scriptobject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\data\papyrus\property.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\data\papyrus\property_value.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\data\papyrus\helpers\name_equals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\data\papyrus\inheritance_status.h">
+    <ClInclude Include="dovah\forms\components\papyrus\script_status.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\papyrus\property_status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -5898,6 +5850,9 @@
     <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\activator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6235,9 +6190,6 @@
     <None Include="dovah\forms\components\papyrus\attachment_data.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\data\papyrus\scriptobject.inl">
-      <Filter>Header Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -6247,6 +6199,18 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="shaders\ScreenShot389.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\assets\papyrus-inherited-edited.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\assets\papyrus-added.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\assets\papyrus-added-edited.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\assets\papyrus-inherited.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

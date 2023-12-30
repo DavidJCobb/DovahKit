@@ -3,6 +3,7 @@
 #include "../dovah/form_stub.h"
 #include "core.h"
 #include "../ui/main_window/form_use_info.h"
+#include "../ui/form_windows/activator.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/formlist.h"
@@ -19,6 +20,7 @@ namespace {
    }
 
    constexpr std::array factory = {
+      std::pair{ dovah::form_type::activator,     _make<FormDialogActivator> },
       std::pair{ dovah::form_type::cell,          _make<FormDialogCell> },
       std::pair{ dovah::form_type::color,         _make<FormDialogColor> },
       std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
@@ -32,7 +34,7 @@ namespace {
 
    #pragma region Compile-time sanity checks
    static_assert(
-      ([]() {
+      []() -> bool {
          constexpr auto size = factory.size();
          for (size_t i = 0; i < size; ++i) {
             auto ft = factory[i].first;
@@ -42,11 +44,11 @@ namespace {
             }
          }
          return true;
-      })(),
+      }(),
       "The factory is misconfigured: a form type is specified multiple times."
    );
    static_assert(
-      ([]() {
+      []() -> bool {
          constexpr auto size = factory.size();
          for (size_t i = 0; i < size; ++i) {
             bool is_ref = dovah::form_type_info::form_type_is_reference(factory[i].first); // make an exception for refs, because REFR subclasses will generally share the same UI as REFR
@@ -60,7 +62,7 @@ namespace {
             }
          }
          return true;
-      })(),
+      }(),
       "The factory is misconfigured: multiple form types share the same dialog."
    );
    #pragma endregion

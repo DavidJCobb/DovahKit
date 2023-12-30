@@ -25,6 +25,8 @@ namespace dovah::papyrus {
    };
 
    using property_value = std::variant<
+      std::monostate,
+      //
       property_object_value,
       std::string,
       int32_t,

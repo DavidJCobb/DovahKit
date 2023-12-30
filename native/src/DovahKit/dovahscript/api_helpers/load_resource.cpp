@@ -9,7 +9,7 @@
 #include "../../helpers/lua/error.h"
 #include "../../helpers/endian.h"
 #include "../../dovah/files/bsa/bsa_archived_file.h"
-#include "../../editor/core.h"
+#include "../../editor/subsystems/assets.h"
 
 #include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/resources.h"
@@ -324,7 +324,7 @@ namespace dovahscript::api_helpers {
          {
             auto* task = new tasks::s2m::lambda(true);
             task->handler = [path, &file]() {
-               file.reset(DovahKitCore::get().lookup_game_asset(path, true));
+               file.reset(dovahkit::subsystems::assets::get().lookup_game_asset(path, true));
             };
             send_script_task(*task);
             delete task;

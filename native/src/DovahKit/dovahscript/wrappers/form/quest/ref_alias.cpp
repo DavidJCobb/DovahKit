@@ -10,7 +10,6 @@
 #include "../../../../dovah/form_stub.h"
 #include "../../../../dovah/forms/Quest.h"
 #include "../quest.h"
-#include "../papyrus/root.h"
 
 //
 // MISSING APIS:

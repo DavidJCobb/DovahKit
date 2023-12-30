@@ -9,7 +9,14 @@ namespace dovah::loaded_forms::components::papyrus {
       uint16_t count;
       if (!subrecord.is_in_bounds(sizeof(this->status) + sizeof(count)))
          return false;
-      subrecord.unchecked_read(this->status);
+      if (header.version >= 4) {
+         uint8_t v;
+         subrecord.unchecked_read(v);
+         v &= 0b111; // the game only uses 3 bits to retain the value in memory
+         this->status = (script_status)v;
+      } else {
+         this->status = script_status::defined_locally;
+      }
       subrecord.unchecked_read(count);
       this->properties.reserve(this->properties.size() + count);
       for (uint16_t i = 0; i < count; i++) {
@@ -102,7 +109,11 @@ namespace dovah::loaded_forms::components::papyrus {
       for (uint16_t i = 0; i < prop_count; ++i) {
          std::string key;
          property::extract_name_and_skip_remainder(header, subrecord, key);
-         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) -> unsigned char {
+            if (c >= 'A' && c <= 'Z')
+               return c + 0x20;
+            return c;
+         });
          ++prop_counts[key];
       }
       subrecord.seek(pos_before_props); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
@@ -111,7 +122,11 @@ namespace dovah::loaded_forms::components::papyrus {
       for (uint16_t i = 0; i < prop_count; ++i) {
          std::string key;
          subrecord.read_length_prefixed_string<2>(key);
-         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) -> unsigned char {
+            if (c >= 'A' && c <= 'Z')
+               return c + 0x20;
+            return c;
+         });
          auto& remaining = prop_counts[key];
          assert(remaining > 0);
          if (--remaining == 0) {
@@ -137,18 +152,11 @@ namespace dovah::loaded_forms::components::papyrus {
 
    //
    
-   property* attached_script::lookup_property(const std::string& name) {
-      auto& list = this->properties;
-      for (auto& prop : list)
-         if (_stricmp(prop.name.c_str(), name.c_str()) == 0)
-            return &prop;
-      return nullptr;
-   }
    void attached_script::remove_property(loaded_forms::Form& owner, const std::string& name) {
       auto& list = this->properties;
       for (auto it = list.begin(); it != list.end(); ++it) {
          auto& prop = *it;
-         if (_stricmp(prop.name.c_str(), name.c_str()) != 0)
+         if (dovah::papyrus::helpers::name_equals(prop.name, name) != 0)
             continue;
          prop.clear(owner);
          list.erase(it);

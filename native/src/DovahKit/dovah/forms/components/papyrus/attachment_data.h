@@ -33,6 +33,8 @@ namespace dovah::loaded_forms::components::papyrus {
          void clone_from(const attachment_data& source, loaded_forms::Form& owner_of_clone) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          void clear(loaded_forms::Form& my_owner) noexcept;
+
+         void clear_scripts(loaded_forms::Form& my_owner);
          
          constexpr bool empty() const noexcept { return this->scripts.empty(); }
 

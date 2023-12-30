@@ -172,41 +172,6 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QGridLayout" name="layoutFlags">
-       <item row="0" column="1">
-        <widget class="QCheckBox" name="flagIsMarker">
-         <property name="text">
-          <string>Is Marker</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="flagChildCanUse">
-         <property name="text">
-          <string>Child Can Use</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QCheckBox" name="flagIgnoreObjectInteraction">
-         <property name="text">
-          <string>Ignore Object Interaction</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QCheckBox" name="flagIgnoredBySandbox">
-         <property name="text">
-          <string>Ignored By Sandbox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="flagDangerous">
-         <property name="text">
-          <string>Dangerous</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QCheckBox" name="flagRandomAnimStart">
          <property name="text">
@@ -221,17 +186,24 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="flagObstacle">
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="flagChildCanUse">
          <property name="text">
-          <string>Obstacle</string>
+          <string>Child Can Use</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="flagOnLocalMap">
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="flagIsMarker">
          <property name="text">
-          <string>On Local Map</string>
+          <string>Is Marker</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="flagDangerous">
+         <property name="text">
+          <string>Dangerous</string>
          </property>
         </widget>
        </item>
@@ -242,10 +214,31 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QCheckBox" name="flagPlatformLanguageTextures">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="flagIgnoreObjectInteraction">
          <property name="text">
-          <string>Has Platform-/Language-Specific Textures</string>
+          <string>Ignore Object Interaction</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="flagObstacle">
+         <property name="text">
+          <string>Obstacle</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QCheckBox" name="flagIgnoredBySandbox">
+         <property name="text">
+          <string>Ignored By Sandbox</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="flagOnLocalMap">
+         <property name="text">
+          <string>On Local Map</string>
          </property>
         </widget>
        </item>

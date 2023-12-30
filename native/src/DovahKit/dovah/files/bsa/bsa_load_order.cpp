@@ -120,7 +120,7 @@ namespace dovah {
       this->loading = false;
    }
 
-   bsa_archived_file* bsa_load_order::lookup_file(const std::string& path_and_name, bool check_for_loose_file) {
+   bsa_archived_file* bsa_load_order::lookup_file(const std::string& path_and_name, bool check_for_loose_file) const {
       if (check_for_loose_file && !this->base_path.empty()) {
          std::filesystem::path target = this->base_path;
          target /= path_and_name;

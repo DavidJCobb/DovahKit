@@ -17,7 +17,7 @@ namespace dovah::loaded_forms::components::papyrus {
 
       public:
          form_reference_t form;
-         uint16_t alias_id = -1;
+         uint16_t alias_id    = no_alias;
          uint16_t always_zero = 0;
       
          static constexpr int serialized_size = sizeof(bare_form_id_t) + sizeof(alias_id) + sizeof(always_zero);

@@ -20,7 +20,7 @@ namespace dovahscript::wrappers {
       static constexpr bool has_extra_class_setup = true;
       static void extra_class_setup(lua_State* L);
 
-      using wrapped_t = dovah::loaded_forms::components::papyrus::script_data::property;
+      using wrapped_t = dovah::loaded_forms::components::papyrus::property;
       static wrapped_t* unwrap(wrapper& w, bool must_be_end);
       static wrapped_t* unwrap(wrapper& w, bool must_be_end, uint8_t& next_depth);
    };

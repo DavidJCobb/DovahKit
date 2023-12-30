@@ -7,7 +7,7 @@ namespace dovahscript {
 }
 
 namespace dovahscript::api_helpers::papyrus {
-   using wrapped_property      = dovah::loaded_forms::components::papyrus::script_data::property;
+   using wrapped_property      = dovah::loaded_forms::components::papyrus::property;
    using papyrus_property_type = dovah::loaded_forms::components::papyrus::property_type;
 
    extern bool property_scalar_value_typecheck(lua_State* L, int stack_pos, papyrus_property_type pt);

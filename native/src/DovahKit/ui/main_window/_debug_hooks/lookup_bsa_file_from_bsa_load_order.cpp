@@ -5,15 +5,15 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include "../../../dovah/files/bsa/bsa_archived_file.h"
-#include "../../../editor/core.h"
+#include "../../../editor/subsystems/assets.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void lookup_bsa_file_from_bsa_load_order::execute(QWidget* from) {
       auto path = QInputDialog::getText(from, QObject::tr("Path of file to extract? Do not specify a Data prefix.", "debug"), QObject::tr("Path:", "debug"));
       if (path.isEmpty())
          return;
-      auto& editor = DovahKitCore::get();
-      auto* file   = editor.lookup_game_asset((const char8_t*)path.toUtf8().constData());
+      auto& assets = dovahkit::subsystems::assets::get();
+      auto* file   = assets.lookup_game_asset((const char8_t*)path.toUtf8().constData());
       if (!file) {
          QMessageBox::information(from,
             QObject::tr("Report"),

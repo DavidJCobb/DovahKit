@@ -766,55 +766,8 @@ void DovahKitCore::set_default_object(uint32_t signature, bare_form_id_t id) {
    this->set_default_object(signature, stub);
 }
 
-dovah::bsa_archived_file* DovahKitCore::lookup_loose_game_asset(const std::filesystem::path& path) {
-   std::filesystem::path loose_path;
-   if (!this->get_game_path(loose_path, this->get_current_game()))
-      return nullptr;
-   loose_path /= "Data";
-   loose_path /= path;
-   //
-   std::ifstream stream;
-   stream.open(path, std::ios_base::in | std::ios_base::binary);
-   if (!stream.is_open())
-      return nullptr;
-   std::error_code error;
-   auto size = std::filesystem::file_size(path, error);
-   if ((bool)error)
-      return nullptr;
-   //
-   cobb::generic_buffer buffer;
-   buffer.resize(size);
-   stream.read((std::ifstream::char_type*)buffer.data(), buffer.size());
-   return new dovah::bsa_archived_file(std::move(buffer));
-}
-dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::filesystem::path& path, bool allow_loose_files) {
-   if (allow_loose_files) {
-      auto* file = this->lookup_loose_game_asset(path);
-      if (file)
-         return file;
-   }
-   auto* archives = this->load_order->get_archive_list();
-   if (!archives)
-      return nullptr;
-   return archives->lookup_file(path.string(), false);
-}
-dovah::compiled_papyrus_script DovahKitCore::parse_compiled_script(const std::string& scriptname) {
-   using out_t  = dovah::compiled_papyrus_script;
-   using file_t = dovah::bsa_archived_file*;
-   //
-   std::string path = "scripts/" + scriptname + ".pex";
-   //
-   auto*  archives = this->load_order->get_archive_list();
-   file_t file = nullptr;
-   if (archives)
-      file = archives->lookup_file(path, true);
-   if (!file) {
-      return out_t(); // TODO: allow loose files
-   }
-   out_t data;
-   data.read_file(file->data(), file->size()); // NOTE: can throw exceptions
-   delete file;
-   return data;
+const dovah::bsa_load_order* DovahKitCore::get_bsa_load_order() {
+   return this->load_order->get_archive_list();
 }
 
 namespace {

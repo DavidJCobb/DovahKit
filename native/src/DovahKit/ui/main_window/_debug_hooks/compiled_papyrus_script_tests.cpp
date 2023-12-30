@@ -5,15 +5,15 @@
 #include <QMessageBox>
 #include "../../../dovah/files/bsa/bsa_archived_file.h"
 #include "../../../dovah/files/papyrus/compiled_script.h"
-#include "../../../editor/core.h"
+#include "../../../editor/subsystems/assets.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void compiled_papyrus_script_tests::execute(QWidget* window) {
       auto path = QInputDialog::getText(window, QObject::tr("Path of PEX file to test? Do not specify a Data prefix.", "debug"), QObject::tr("Path:", "debug"));
       if (path.isEmpty())
          return;
-      auto& editor = DovahKitCore::get();
-      auto* file   = editor.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
+      auto& assets = dovahkit::subsystems::assets::get();
+      auto* file   = assets.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
       if (!file) {
          QMessageBox::information(window,
             QObject::tr("Report", "debug"),

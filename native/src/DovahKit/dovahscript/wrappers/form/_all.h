@@ -2,12 +2,14 @@
 #include "cell.h"
    #include "cell/grid_coords.h"
 #include "form.h"
+/*//
    #include "papyrus/property.h"
       #include "papyrus/property/collection_array_values.h"
    #include "papyrus/root.h"
       #include "papyrus/root/collection_scripts.h"
    #include "papyrus/script.h"
       #include "papyrus/script/collection_properties.h"
+//*/
 #include "formlist.h"
    #include "formlist/collection_entries.h"
 #include "land_texture.h"

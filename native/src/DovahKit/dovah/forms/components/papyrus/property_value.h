@@ -8,6 +8,8 @@
 
 namespace dovah::loaded_forms::components::papyrus {
    using property_value = std::variant<
+      std::monostate, // NOTE: If present on a non-`property_status::inherited_and_removed` property, causes Papyrus log warnings about type mismatches.
+      //
       property_object_value,
       std::string,
       int32_t,
@@ -24,6 +26,9 @@ namespace dovah::loaded_forms::components::papyrus {
    extern property_value property_value_from_type(property_type);
 
    constexpr property_type property_type_for(const property_value& v) {
+      if (std::holds_alternative<std::monostate>(v))
+         return property_type::none;
+
       if (std::holds_alternative<property_object_value>(v))
          return property_type::object;
       if (std::holds_alternative<std::string>(v))

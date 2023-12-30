@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms::components::papyrus {
    using property_value = std::variant<
+      std::monostate,
+      //
       property_object_value,
       std::string,
       int32_t,
@@ -18,6 +20,8 @@ namespace dovah::loaded_forms::components::papyrus {
 
    extern property_value property_value_from_type(property_type v) {
       switch (v) {
+         case property_type::none: return std::monostate{};
+
          case property_type::object:  return property_object_value{};
          case property_type::string:  return std::string{};
          case property_type::integer: return int32_t{0};

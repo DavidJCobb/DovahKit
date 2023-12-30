@@ -2,30 +2,35 @@
 #include "../helpers/unordered_map.h"
 #include "../dovah/files/bsa/bsa_archived_file.h"
 #include "../dovah/files/papyrus/compiled_script.h"
-#include "core.h"
+#include "./subsystems/assets.h"
 
 /*static*/ std::filesystem::path DovahKitPapyrusDictionary::_path_from_scriptname(const QString& name) noexcept {
-   auto& editor = DovahKitCore::get();
    std::filesystem::path path = "scripts";
    path.append(name.toStdWString());
    path.replace_extension("pex");
    return path;
 }
 void DovahKitPapyrusDictionary::_register_destroy_handler(QWidget* owner, const std::filesystem::path& path) {
-   QObject::connect(owner, &QObject::destroyed, this, [this, path]() {
-      auto& entry = this->known_files[path];
-      assert(entry.refcount);
-      if (--entry.refcount)
-         return;
-      delete entry.data;
-      this->known_files.erase(path);
-   }, Qt::UniqueConnection);
+   QObject::connect(
+      owner,
+      &QObject::destroyed,
+      this,
+      [this, path]() {
+         auto& entry = this->known_files[path];
+         assert(entry.refcount);
+         if (--entry.refcount)
+            return;
+         delete entry.data;
+         this->known_files.erase(path);
+      },
+      Qt::UniqueConnection
+   );
 }
 
 DovahKitPapyrusDictionary::script_t* DovahKitPapyrusDictionary::get_script_for(QWidget* owner, const std::filesystem::path& path) {
    auto& entry = this->known_files[path];
    if (!entry.data) {
-      auto* script = DovahKitCore::get().lookup_game_asset(path);
+      auto* script = dovahkit::subsystems::assets::get().lookup_game_asset(path);
       if (script) {
          entry.data = new script_t;
          entry.data->read_file(script->data(), script->size());

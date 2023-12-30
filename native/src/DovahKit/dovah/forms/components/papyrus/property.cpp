@@ -18,7 +18,7 @@ namespace {
       using namespace dovah::loaded_forms::components::papyrus;
 
       if constexpr (std::is_same_v<T, property_object_value>) {
-         return dst.read(header, subrecord);
+         return dst.load(header, subrecord);
       } else if constexpr (std::is_same_v<T, std::string>) {
          return subrecord.read_length_prefixed_string<2>(dst);
       } else {
@@ -36,12 +36,12 @@ namespace {
       using namespace dovah::loaded_forms::components::papyrus;
 
       if constexpr (std::is_same_v<T, property_object_value>) {
-         return src.save(header, subrecord);
+         src.save(header, subrecord);
       } else if constexpr (std::is_same_v<T, std::string>) {
-         return subrecord.write_length_prefixed_string<2>(src);
+         subrecord.write_length_prefixed_string<2>(src);
       } else {
          static_assert(!std::is_same_v<T, bool> || sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
-         return subrecord.write(src);
+         subrecord.write(src);
       }
    }
 }
@@ -54,71 +54,98 @@ namespace dovah::loaded_forms::components::papyrus {
       
       property_type typecode;
       subrecord.unchecked_read(typecode);
-      subrecord.unchecked_read(this->status);
+      if (header.version >= 4) {
+         subrecord.unchecked_read(this->status);
 
-      try {
-         this->value = property_value_from_type(typecode);
-      } catch (std::runtime_error& e) {
-         // TODO: Raise a load error indicating the bad property type.
-         return false;
+         if (this->status == property_status::inherited_and_removed && typecode != property_type::none) {
+            //
+            // We don't necessarily need to warn for this, but it *is* invalid: the value 
+            // will be discarded at run-time.
+            //
+         }
       }
-      bool success = std::visit(
-         [this, &header, &subrecord](auto& dst) -> bool {
-            using value_type = std::decay_t<decltype(dst)>;
-            if constexpr (cobb::is_std_vector<value_type>) {
-               using item_type = typename value_type::value_type;
 
-               uint32_t count;
-               if (!subrecord.read(count))
-                  return false;
-               dst.resize(count);
-               for (size_t i = 0; i < count; ++i) {
-                  if constexpr (std::is_same_v<item_type, bool>) { // std::vector<bool> was a mistake
-                     uint8_t v;
-                     if (!subrecord.read(v))
-                        return false;
-                     dst[i] = v;
-                  } else {
-                     if (!_read_single_value(header, subrecord, dst[i]))
-                        return false;
+      bool success = true;
+      if (typecode != property_type::none) {
+         try {
+            this->value = property_value_from_type(typecode);
+         } catch (std::runtime_error& e) {
+            // TODO: Raise a load error indicating the bad property type.
+            return false;
+         }
+         success = std::visit(
+            [this, &header, &subrecord](auto& dst) -> bool {
+               using value_type = std::decay_t<decltype(dst)>;
+               if constexpr (cobb::is_std_vector<value_type>) {
+                  using item_type = typename value_type::value_type;
+
+                  uint32_t count;
+                  if (!subrecord.read(count))
+                     return false;
+                  dst.resize(count);
+                  for (size_t i = 0; i < count; ++i) {
+                     if constexpr (std::is_same_v<item_type, bool>) { // std::vector<bool> was a mistake
+                        uint8_t v;
+                        if (!subrecord.read(v))
+                           return false;
+                        dst[i] = v;
+                     } else {
+                        if (!_read_single_value(header, subrecord, dst[i]))
+                           return false;
+                     }
                   }
+               } else if constexpr (!std::is_same_v<value_type, std::monostate>) {
+                  if (!_read_single_value(header, subrecord, dst))
+                     return false;
                }
-            } else {
-               if (!_read_single_value(header, subrecord, dst))
-                  return false;
-            }
-            return true;
-         },
-         this->value
-      );
+               return true;
+            },
+            this->value
+         );
+      } else {
+         if (this->status != property_status::inherited_and_removed) {
+            //
+            // We don't necessarily need to warn for this, but it *is* invalid: the value 
+            // will trigger a "type mismatch" Papyrus log warning at run-time, of the 
+            // following form:
+            // 
+            //    error: Property pfBaseProperty on script aaaVMADTestButtonScript attached to EditorIDHere (090012D7) cannot be initialized because the value is the incorrect type
+            //
+            // Not sure the warning would occur if the property type on the actual PEX 
+            // script were Object/Form, though, as in that case we'd just be binding None.
+            //
+         }
+      }
       return success;
    }
    bool property::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       subrecord.write(this->type());
       subrecord.write(this->status);
-      std::visit(
-         [this, &header, &subrecord](const auto& src) {
-            using value_type = std::decay_t<decltype(src)>;
-            if constexpr (cobb::is_std_vector<value_type>) {
-               using item_type = typename value_type::value_type;
+      if (!std::holds_alternative<std::monostate>(this->value)) {
+         std::visit(
+            [this, &header, &subrecord](const auto& src) {
+               using value_type = std::decay_t<decltype(src)>;
+               if constexpr (cobb::is_std_vector<value_type>) {
+                  using item_type = typename value_type::value_type;
 
-               uint32_t count = src.size();
-               subrecord.write(count);
+                  uint32_t count = src.size();
+                  subrecord.write(count);
 
-               for (size_t i = 0; i < src.size(); ++i) {
-                  if constexpr (std::is_same_v<item_type, bool>) { // std::vector<bool> was a mistake
-                     subrecord.write(src[i]);
-                  } else {
-                     _save_single_value(header, subrecord, src[i]);
+                  for (size_t i = 0; i < src.size(); ++i) {
+                     if constexpr (std::is_same_v<item_type, bool>) { // std::vector<bool> was a mistake
+                        subrecord.write(src[i]);
+                     } else {
+                        _save_single_value(header, subrecord, src[i]);
+                     }
                   }
+               } else if constexpr (!std::is_same_v<value_type, std::monostate>) {
+                  _save_single_value(header, subrecord, src);
                }
-            } else {
-               _save_single_value(header, subrecord, src);
-            }
-         },
-         this->value
-      );
+            },
+            this->value
+         );
+      }
       return true;
    }
    void property::clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept {
