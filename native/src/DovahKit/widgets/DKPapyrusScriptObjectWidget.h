@@ -10,6 +10,12 @@ class DKPapyrusScriptObjectListModel;
    #include "./widget-models/DKPapyrusScriptObjectListModel.h"
 #endif
 
+namespace dovah::loaded_forms {
+   namespace components::papyrus {
+      class attachment_data;
+   }
+   class Form;
+}
 namespace dovah {
    class form_stub;
 }
@@ -17,14 +23,16 @@ namespace dovah {
 class DKPapyrusScriptObjectWidget : public QWidget {
    Q_OBJECT;
    public:
-      using data_type = dovah::loaded_forms::components::papyrus_attachment_data;
+      using vmad_type         = dovah::loaded_forms::components::papyrus::attachment_data;
+      using working_copy_type = dovah::loaded_forms::Form;
 
    public:
       DKPapyrusScriptObjectWidget(QWidget* parent);
 
    public slots:
       #if !defined(QT_DESIGNER_LIB)
-         void setTarget(dovah::form_stub*);
+         void setFormWorkingCopy(working_copy_type* working_copy);
+         void setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target);
       #endif
 
    signals:
@@ -42,9 +50,12 @@ class DKPapyrusScriptObjectWidget : public QWidget {
       } subwidgets;
       #if !defined(QT_DESIGNER_LIB)
       struct {
-         dovah::loaded_form_ptr<dovah::loaded_forms::Form> parent;
-         dovah::loaded_form_ptr<dovah::loaded_forms::Form> target;
-      } loaded_forms;
+         working_copy_type* form = nullptr;
+         dovah::loaded_form_ptr<dovah::loaded_forms::Form> base_form; // if `form` is a ref
+
+         vmad_type* parent = nullptr;
+         vmad_type* target = nullptr;
+      } vmad;
       #endif
       //
       DKPapyrusScriptObjectListModel* model = nullptr;

@@ -16,56 +16,6 @@ namespace dovah::loaded_forms {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
    }
 
-   dovah::papyrus::scriptobject_list Form::resolve_papyrus_scripts() const {
-      loaded_form_ptr<Form> base_form;
-      if (dovah::form_type_info::form_type_is_reference(this->stub.formType)) {
-         auto* base_stub = form_stub_helpers::get_base_form(&this->stub);
-         if (base_stub)
-            base_form = base_stub->load();
-      }
-
-      auto* this_papyrus = this->get_raw_papyrus_data();
-      if (!this_papyrus) {
-         return {};
-      }
-
-      if (base_form) {
-         if (auto* base_papyrus = base_form->get_raw_papyrus_data()) {
-            return dovah::papyrus::scriptobject_list({}, *this_papyrus, *base_papyrus);
-         }
-      }
-      return dovah::papyrus::scriptobject_list({}, *this_papyrus);
-   }
-   void Form::overwrite_papyrus_scripts(const dovah::papyrus::scriptobject_list& src) {
-      auto* this_papyrus = this->get_raw_papyrus_data();
-      assert(this_papyrus != nullptr);
-
-      loaded_form_ptr<Form> base_form;
-      const components::papyrus_attachment_data* base_papyrus = nullptr;
-      //
-      if (dovah::form_type_info::form_type_is_reference(this->stub.formType)) {
-         auto* base_stub = form_stub_helpers::get_base_form(&this->stub);
-         if (base_stub) {
-            base_form = base_stub->load();
-            if (base_form)
-               base_papyrus = base_form->get_raw_papyrus_data();
-         }
-      }
-
-      {  // Preserve fragment data; wipe everything else.
-         auto* fragment_data = this_papyrus->fragment_data;
-         this_papyrus->fragment_data = nullptr;
-         this_papyrus->clear(*this);
-         this_papyrus->fragment_data = fragment_data;
-      }
-
-      if (base_papyrus) {
-         src._overwrite({}, *this, *this_papyrus, *base_papyrus);
-      } else {
-         src._overwrite({}, *this, *this_papyrus);
-      }
-   }
-
    components::model* Form::get_model() noexcept {
       return component_access::get_model(this);
    }

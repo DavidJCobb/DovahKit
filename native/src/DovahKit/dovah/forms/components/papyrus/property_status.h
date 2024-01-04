@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace dovah::loaded_forms::components::papyrus {
    //
@@ -16,7 +17,7 @@ namespace dovah::loaded_forms::components::papyrus {
    // All other status values display "<unknown>". (Script status don't have this 
    // fallback.)
    //
-   enum class property_status {
+   enum class property_status : uint8_t {
       unknown = 0, // default used by the game for VMAD subrecords that predate the creation of this enum (VMAD header < 4)
       //
       defined_locally       = 1,

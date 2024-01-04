@@ -22,20 +22,17 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
   * NAVM too?
 
+* **The code to flag refs as persistent (when the CK would deem it appropriate) on save should be moved out of the backend so that we can handle/report failure cases appropriately.** We'd still want some sort of backend functionality, so maybe add a "request" object (akin to form creation/deletion/renumbering/etc. requests, etc.) for bulk-flagging refs as persistent. The "request" would check if there are enough available form IDs to create any persistent cells needed for to-be-flagged refs in worldspaces, failing (i.e. not flagging anything) if there aren't. The frontend could then use this "request" object and display appropriate error messages on save (while still saving, of course!) if flagging all refs as persistent is not possible.
+
 ## Miscellaneous
 
-* `dovah/data/actor_values.h`: this should be a `constexpr` list of PODs. Current way we define it is super old and scuffed (singleton, with a constructor wherein a local C array of definitions that gets `memcpy`'d into ` malloc`'d list).
+* `dovah/data/actor_values.h`: this should be a `constexpr` list of PODs. Current way we define it is super old and scuffed (singleton, with a constructor wherein a local C array of definitions that gets `memcpy`'d into a `malloc`'d list).
 
 ## Form data
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.
 * `container_entry::condition` is a struct containing a presence bool and a float; change it to `std::optional<float>`.
-* Papyrus
-  * Split `papyrus.h` into a subfolder with different headers for each of the structs used to define an attached ScriptObject.
-  * Rename `basic_fragment_data` to `fragment_data_base`.
-  * Un-nest `script_data::script` and friends; we already have all of it in a namespace i.e. `dovah::loaded_forms::components::papyrus`. Rename `script_data` to `attachment_data` or something.
-  * Ditch `property::value_t` in favor of a `std::variant`.
 
 ### ActorBase (NPC_)
 * NAM9 (Face Morphs) should not be serialized if all the values are 0.
@@ -51,9 +48,21 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 * It'd be worth investigating whether template metaprogramming can cut down on the boilerplate and copying-and-pasting used throughout the Lua API implementations. We could write templates for accessing form properties, which take lambdas or pointers-to-members to perform the requisite access, for example. My only concern is that we might end up annihilating script performance when compiling in Debug, as *nothing* gets inlined; even `__forceinline` is disobeyed.
   * Pointers-to-members would avoid the overhead associated with accessor lambdas, but C++ has a hole in the standard: there's no way to get a pointer-to-member of a nested struct. A template powered by macros and `offsetof` could simulate that capability.
+* Once we're done completely redesigning how Papyrus is handled in the backend and UI, we need to redesign how it's handled within Dovahscript. Right now, all code for this is either commented out or in files that have been excluded from the MSBuild project, since all of that code is out of date.
+  * Don't forget quest aliases' script APIs! Aliases have their own VMAD bindings that need to be accessible.
 
 
 ## Worldedit/Worldinput
+
+* **Strongly consider pushing back full Render Window support until post-launch. Strongly consider disabling the creation of new control schemes in Release builds, and disabling all editing tools in Release builds, in preparation for wholly redesigning input handling in a post-launch update. Alternatively, consider leaving these things in for ship but clearly telegraphing that they may be replaced in a future update (we have the latitude to do that since we plan on launching as a beta).**
+
+  Worldinput simply isn't as scalable as I initially believed it would be; I now believe that a scripting API would be a better way to express the various editing operations that should be possible in the Render Window, and the various ways those operations can be composed and configured. I should prototype Lua script APIs for control schemes such that new control schemes can be implemented as scripts relying entirely on event dispatch. **I should not actually implement this, even as a prototype. I should simply write the scripts for all planned control schemes, see what I want the APIs to look like, and see if I discover any edge-cases that a script API would need to deal with.** Only if writing the scripts seems easier than \*gestures wildly at the existing codebase\* all *this* should I commit to deprecating most of Worldinput and the tool system in favor of a scripted approach, with Worldedit directly exposing APIs to Lua.
+
+  * Notably, creating a scripting API for control schemes means creating a scripting API that runs on the main thread. I should do this carefully, and in such a way that a bad script (e.g. with an infinite loop) doesn't softlock the program (i.e. we shouldn't run these scripts immediately upon program startup or even the user's first GUI interaction).
+  
+    Ideally, we should be able to limit the script to only responding to events, i.e. it shouldn't even get to run "setup" code until the first event (e.g. the Render Window being focused for the first time), so that a faulty script doesn't immediately hang DovahKit on program startup. The drawback to this idea is that you wouldn't be able to write class definitions, etc., because in Lua those are run-time-executed code.
+
+    Perhaps a custom scripting language? Oh, but that should be *hella* post-launch, if we go that route...
 
 * The current system for tools is still a bit messy...
   * The `tool_response_tuple` struct should include presence bits for any tools that don't define a `response` type. That way, tools that have no specific response details to offer (e.g. "do this thing, with no parameters" tools, common in debugging) are still representable.

@@ -5,7 +5,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include "dovah/forms/Form.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/forms/ObjectReference.h"
 
 #include <QInputDialog> // placeholder
 #include <QMessageBox>
@@ -133,19 +133,6 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          if (!ok)
             return;
 
-         using vmad_data = dovah::loaded_forms::components::papyrus::attachment_data;
-
-         const vmad_data* parent = nullptr;
-         const vmad_data* target = nullptr;
-
-         if (this->loaded_forms.parent)
-            parent = this->loaded_forms.parent->get_raw_papyrus_data();
-         if (this->loaded_forms.target)
-            target = this->loaded_forms.target->get_raw_papyrus_data();
-
-         if (!parent && !target)
-            return;
-         //
          // TODO: Once we've replaced QInputDialog as described above, it will be tempting to replace 
          //       the below checks with debug-only assertions. However, if the custom dialog for 
          //       choosing a script isn't application-modal, then the user could modify the base form 
@@ -154,7 +141,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          //       with an assertion failure, lol.
          //
          if (this->model->index(scriptname).isValid()) {
-            if (parent)
+            if (this->vmad.parent)
                QMessageBox::critical(this, "Error", "Script is already attached to this form or to its base form.");
             else
                QMessageBox::critical(this, "Error", "Script is already attached to this form.");
@@ -240,41 +227,58 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
    }
 #endif
 #if !defined(QT_DESIGNER_LIB)
-   void DKPapyrusScriptObjectWidget::setTarget(dovah::form_stub* target) {
-      if (!target) {
+   void DKPapyrusScriptObjectWidget::setFormWorkingCopy(working_copy_type* target_form) {
+      if (!target_form) {
+         this->vmad = {};
+
          this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->clearTarget();
+         this->model->clearWorkingVMAD();
          return;
       }
 
-      this->loaded_forms.target = target->load();
-      if (!this->loaded_forms.target) {
-         this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->clearTarget();
-         return;
-      }
-
+      this->vmad = {};
+      this->vmad.form = target_form;
 
       bool loaded_parent = false;
       //
-      if (dovah::form_type_info::form_type_is_reference(target->formType)) {
-         auto* base = dovah::form_stub_helpers::get_base_form(target);
+      if (dovah::form_type_info::form_type_is_reference(target_form->stub.formType)) {
+         dovah::form_stub* base = ((dovah::loaded_forms::ObjectReference*)target_form)->base_form.get_form_stub();
          if (base) {
-            this->loaded_forms.parent = base->load();
-            if (this->loaded_forms.parent) {
+            this->vmad.base_form = base->load();
+            if (this->vmad.base_form) {
                loaded_parent = true;
             }
          }
       }
       //
-      auto* target_vmad = this->loaded_forms.target->get_raw_papyrus_data();
+      auto* target_vmad = target_form->get_raw_papyrus_data();
+      assert(target_vmad != nullptr);
+      this->vmad.target = target_vmad;
       if (loaded_parent) {
-         auto* parent_vmad = this->loaded_forms.parent->get_raw_papyrus_data();
-         this->model->setTarget(*target, *target_vmad, *parent_vmad);
+         auto* parent_vmad = this->vmad.base_form->get_raw_papyrus_data();
+         this->vmad.parent = parent_vmad;
+         this->model->setWorkingVMAD(*target_form, *target_vmad, *parent_vmad);
       } else {
-         this->model->setTarget(*target, *target_vmad);
+         this->model->setWorkingVMAD(*target_form, *target_vmad);
       }
 
+      this->subwidgets.buttons.wrapper->setEnabled(true);
+   }
+   void DKPapyrusScriptObjectWidget::setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target) {
+      if (!quest_working_copy) {
+         this->vmad = {};
+
+         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->model->clearWorkingVMAD();
+         return;
+      }
+
+      this->vmad = {};
+      this->vmad.form = quest_working_copy;
+
+      auto* target_vmad = quest_working_copy->get_raw_papyrus_data();
+      assert(target_vmad != nullptr);
+      this->model->setWorkingVMAD(*quest_working_copy, target);
       this->subwidgets.buttons.wrapper->setEnabled(true);
    }
 #endif

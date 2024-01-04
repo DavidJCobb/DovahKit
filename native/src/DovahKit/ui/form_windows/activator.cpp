@@ -8,7 +8,7 @@
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Activators is incomplete.");
 
-FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(dovah::form_type::quest, stub, parent) {
+FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(dovah::form_type::activator, stub, parent) {
    form_dialog_helpers::initialize(*this, stub);
    //
    {
@@ -90,7 +90,8 @@ void FormDialogActivator::_load_impl() {
       this->ui.keywords->addStub(ref.get_form_stub());
    }
 
-   this->subwidgets.papyrus->setTarget(this->stub);
+   this->subwidgets.papyrus->setFormWorkingCopy(&working);
+   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "TODO: if Papyrus ScriptObjectList model doesn't edit target VMAD in real-time, it should");
 }
 void FormDialogActivator::_save_impl() {
    //
@@ -106,6 +107,10 @@ void FormDialogActivator::_save_impl() {
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());
    editor.assign_localized_string(working.activation_verb, this->ui.activateTextOverride->text());
+   working.activation_sound.set(working, this->ui.soundActivate->formStub());
+   working.looping_sound.set(working, this->ui.soundLooping->formStub());
+   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Navmesh form flags");
+   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Water type");
    {  // Form flags
       this->stub->edit_record_flags(loaded_form_type::form_flag::child_can_use, this->ui.flagChildCanUse->isChecked());
       this->stub->edit_record_flags(loaded_form_type::form_flag::dangerous, this->ui.flagDangerous->isChecked());
@@ -119,6 +124,8 @@ void FormDialogActivator::_save_impl() {
       this->stub->edit_record_flags(loaded_form_type::form_flag::hide_from_local_map, !this->ui.flagOnLocalMap->isChecked());
       this->stub->edit_record_flags(loaded_form_type::form_flag::random_anim_start, this->ui.flagRandomAnimStart->isChecked());
    }
+   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Primitive color");
+   working.interact_keyword.set(working, this->ui.defaultInteractKeyword->formStub());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME

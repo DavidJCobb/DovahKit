@@ -3,14 +3,12 @@
 #include <string_view>
 #include <vector>
 #include "./_forward_declare_file_handling.h"
+#include "./attachment_header.h" // for whatever reason, forward-declaring this makes the linker choke and die
 #include "./property.h"
 #include "./script_status.h"
 
 namespace dovah {
    namespace loaded_forms {
-      namespace components::papyrus {
-         class attachment_header;
-      }
       class Form;
    }
    class form_stub;

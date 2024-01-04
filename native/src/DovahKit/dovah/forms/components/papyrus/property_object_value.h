@@ -1,12 +1,10 @@
 #pragma once
 #include <cstdint>
 #include "./_forward_declare_file_handling.h"
+#include "./attachment_header.h" // for whatever reason, forward-declaring this makes the linker choke and die
 #include "../../../core.h"
 
 namespace dovah::loaded_forms {
-   namespace components::papyrus {
-      class attachment_header;
-   }
    class Form;
 }
 

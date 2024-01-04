@@ -4,6 +4,7 @@
 #include <vector>
 #include <QIcon>
 #include "helpers/qt/strings.h"
+#include "dovah/forms/Form.h"
 #include "editor/core.h"
 
 /*
@@ -79,16 +80,16 @@ bool DKPapyrusScriptObjectListModel::Script::nameMatches(QString s) const {
 DKPapyrusScriptObjectListModel::DKPapyrusScriptObjectListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent,   this, &DKPapyrusScriptObjectListModel::formDeletionImminent);
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,    this, &DKPapyrusScriptObjectListModel::clearTarget);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,    this, &DKPapyrusScriptObjectListModel::clearWorkingVMAD);
 }
 
-void DKPapyrusScriptObjectListModel::setTarget(dovah::form_stub& target_stub, vmad_data& target) {
-   if (this->attached_to == &target_stub && this->vmads.target == &target && this->vmads.parent == nullptr)
+void DKPapyrusScriptObjectListModel::setWorkingVMAD(working_copy_type& working_copy, vmad_data& target) {
+   if (this->attached_to == &working_copy && this->vmads.target == &target && this->vmads.parent == nullptr)
       return;
 
    this->beginResetModel();
 
-   this->attached_to  = &target_stub;
+   this->attached_to  = &working_copy;
    this->vmads.target = &target;
    this->vmads.parent = nullptr;
 
@@ -119,13 +120,13 @@ void DKPapyrusScriptObjectListModel::setTarget(dovah::form_stub& target_stub, vm
 
    this->endResetModel();
 }
-void DKPapyrusScriptObjectListModel::setTarget(dovah::form_stub& target_stub, vmad_data& target, vmad_data& parent) {
-   if (this->attached_to == &target_stub && this->vmads.target == &target && this->vmads.parent == &parent)
+void DKPapyrusScriptObjectListModel::setWorkingVMAD(working_copy_type& working_copy, vmad_data& target, vmad_data& parent) {
+   if (this->attached_to == &working_copy && this->vmads.target == &target && this->vmads.parent == &parent)
       return;
 
    this->beginResetModel();
 
-   this->attached_to  = &target_stub;
+   this->attached_to  = &working_copy;
    this->vmads.target = &target;
    this->vmads.parent = &parent;
 
@@ -167,20 +168,20 @@ void DKPapyrusScriptObjectListModel::setTarget(dovah::form_stub& target_stub, vm
    this->endResetModel();
 }
 
-void DKPapyrusScriptObjectListModel::clearTarget() {
+void DKPapyrusScriptObjectListModel::clearWorkingVMAD() {
    this->beginResetModel();
    this->attached_to = nullptr;
    this->vmads = {};
    this->scripts.clear();
    this->endResetModel();
 }
-void DKPapyrusScriptObjectListModel::syncToTarget() {
+void DKPapyrusScriptObjectListModel::syncToWorkingVMAD() {
    if (this->attached_to == nullptr)
       return;
    if (this->vmads.target == nullptr)
       return;
 
-   auto loaded = this->attached_to->get_content_if_loaded();
+   auto* loaded = this->attached_to;
    assert(loaded);
 
    this->vmads.target->clear_scripts(*loaded);
@@ -197,8 +198,8 @@ void DKPapyrusScriptObjectListModel::syncToTarget() {
 
 #pragma region Editor core hooks
 void DKPapyrusScriptObjectListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
-   if (stub == this->attached_to && !is_just_flagged) {
-      this->clearTarget();
+   if (this->attached_to && &this->attached_to->stub == stub && !is_just_flagged) {
+      this->clearWorkingVMAD();
    }
 }
 #pragma endregion
@@ -294,12 +295,12 @@ QVariant DKPapyrusScriptObjectListModel::headerData(int section, Qt::Orientation
    }
    return {};
 }
-inline const DKPapyrusScriptObjectListModel::raw_script_info DKPapyrusScriptObjectListModel::row(int rowIndex) const noexcept {
+const DKPapyrusScriptObjectListModel::raw_script_info DKPapyrusScriptObjectListModel::row(int rowIndex) const noexcept {
    raw_script_info out;
    if (rowIndex < 0 || rowIndex >= this->scripts.size())
       return {};
 
-   out.attached_to = this->attached_to;
+   out.attached_to = &this->attached_to->stub;
 
    const auto& item = this->scripts[rowIndex];
    const auto  name = item.name.toStdString();

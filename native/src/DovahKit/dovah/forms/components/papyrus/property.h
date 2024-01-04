@@ -1,8 +1,16 @@
 #pragma once
 #include "./_forward_declare_file_handling.h"
+#include "./attachment_header.h" // for whatever reason, forward-declaring this makes the linker choke and die
 #include "./property_status.h"
 #include "./property_value.h"
 #include "./property_value.h"
+
+namespace dovah {
+   namespace loaded_forms {
+      class Form;
+   }
+   class form_stub;
+}
 
 namespace dovah::loaded_forms::components::papyrus {
    class property {

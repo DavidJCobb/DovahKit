@@ -16,6 +16,9 @@
     * Bonus points if the pointer-to-member can be to anything: if it's a `std::vector<form_reference_t>`, then we loop over it; if it's a custom struct, it can define its own "clone" function that we'll then invoke via templating.
     * And ditto for helper functions like `copy_form_reference_list`.
     * Ditto for severing outbound references to a target form, and for clearing data, too.
+    * Okay, but does C++ support nestable pointers-to-member, i.e. `&SomeStruct::nestedStruct::member` such that you could use that from a `SomeStruct`?
   * If possible, we should set `form_reference_t::operator=(const form_reference_t&) = delete`. This would significantly reduce the room for error when writing forms' boilerplate.
+    * Why did we ever even have `operator=` for that? If it's only used during load, then can we replace it with a passkeyed accessor somehow?
+  * In my bitstream classes, I implemented "multi-read" and "multi-write" methods: they used variadic template parameters to allow you to read or write fields in bulk. Can we write helper functions that behave similarly, for the various tasks a form might need to perform (i.e. clearing data, severing outbound references to a to-be-deleted form, cloning data, etc.)?
 * Improvements to form extra-data:
   * Replace `template<class E> E* extra_data_list::lookup(extra_data_type et)` with a getter that doesn't take any arguments; use a `constexpr` mapping of extra-data classes to typecodes to know what typecode to look for.

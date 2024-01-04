@@ -10,6 +10,8 @@
 class DKPapyrusScriptObjectListModel : public QAbstractTableModel {
    Q_OBJECT;
    public:
+      using working_copy_type = dovah::loaded_forms::Form;
+
       using vmad_data     = dovah::loaded_forms::components::papyrus::attachment_data;
       using vmad_script   = dovah::loaded_forms::components::papyrus::attached_script;
       using vmad_property = dovah::loaded_forms::components::papyrus::property;
@@ -43,7 +45,7 @@ class DKPapyrusScriptObjectListModel : public QAbstractTableModel {
       };
       
    protected:
-      dovah::form_stub* attached_to = nullptr;
+      working_copy_type* attached_to = nullptr; // form working copy
       struct {
          vmad_data* parent = nullptr;
          vmad_data* target = nullptr;
@@ -56,13 +58,13 @@ class DKPapyrusScriptObjectListModel : public QAbstractTableModel {
    public:
       DKPapyrusScriptObjectListModel(QObject* parent = nullptr);
       ~DKPapyrusScriptObjectListModel() {
-         this->clearTarget();
+         this->clearWorkingVMAD();
       }
 
-      void setTarget(dovah::form_stub&, vmad_data& target);
-      void setTarget(dovah::form_stub&, vmad_data& target, vmad_data& parent);
-      void clearTarget();
-      void syncToTarget();
+      void setWorkingVMAD(working_copy_type&, vmad_data& target);
+      void setWorkingVMAD(working_copy_type&, vmad_data& target, vmad_data& parent);
+      void clearWorkingVMAD();
+      void syncToWorkingVMAD();
       
       #pragma region QAbstractItemModel overrides
          QModelIndex index(int row, int column, const QModelIndex& parent) const override;
