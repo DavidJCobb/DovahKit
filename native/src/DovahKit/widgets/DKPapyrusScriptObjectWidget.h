@@ -2,12 +2,12 @@
 #include <QPushButton>
 #include <QTableView>
 
-class DKPapyrusScriptObjectListModel;
+class DKFormVMADModel;
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/core.h"
    #include "dovah/form_stub.h"
    #include "dovah/forms/components/papyrus.h"
-   #include "./widget-models/DKPapyrusScriptObjectListModel.h"
+   #include "./widget-models/DKFormVMADModel.h"
 #endif
 
 namespace dovah::loaded_forms {
@@ -58,7 +58,7 @@ class DKPapyrusScriptObjectWidget : public QWidget {
       } vmad;
       #endif
       //
-      DKPapyrusScriptObjectListModel* model = nullptr;
+      DKFormVMADModel* model = nullptr;
 
       #if !defined(QT_DESIGNER_LIB)
       void _editSelected();

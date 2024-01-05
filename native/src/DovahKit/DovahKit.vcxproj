@@ -843,13 +843,17 @@
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormVMADModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h" />
+    <QtMoc Include="widgets\widget-models\DKFormVMADModel.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectListModel.h" />
     <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h" />
@@ -2356,6 +2360,7 @@
     <None Include="vulkan\scene_entities\base.inl" />
     <None Include="vulkan\scene_gizmo_state.inl" />
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
+    <None Include="widgets\widget-models\DKFormVMADModel.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />

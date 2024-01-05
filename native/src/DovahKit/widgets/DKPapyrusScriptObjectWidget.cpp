@@ -6,6 +6,9 @@
 #include <QLabel>
 #include "dovah/forms/Form.h"
 #include "dovah/forms/ObjectReference.h"
+#if !defined(QT_DESIGNER_LIB)
+   #include "./widget-dialogs/DKScriptObjectDialog.h"
+#endif
 
 #include <QInputDialog> // placeholder
 #include <QMessageBox>
@@ -49,14 +52,14 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       auto* layout = new QVBoxLayout();
       this->setLayout(layout);
       layout->addWidget(groupbox);
+      layout->setContentsMargins(0, 0, 0, 0);
    }
 
    auto* view = this->subwidgets.view = new QTableView(this);
    auto* wrap = this->subwidgets.buttons.wrapper = new QWidget(this);
-   this->subwidgets.buttons.add           = new QPushButton(wrap);
-   this->subwidgets.buttons.properties    = new QPushButton(wrap);
-   this->subwidgets.buttons.toggle_delete = new QPushButton(wrap);
-   this->subwidgets.buttons.toggle_delete->setText(tr("Remove"));
+   this->subwidgets.buttons.add           = new QPushButton(tr("Add"),        wrap);
+   this->subwidgets.buttons.properties    = new QPushButton(tr("Properties"), wrap);
+   this->subwidgets.buttons.toggle_delete = new QPushButton(tr("Remove"),     wrap);
    //
    {
       auto* layout = new QGridLayout(groupbox);
@@ -72,7 +75,6 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       nested->addWidget(this->subwidgets.buttons.properties);
       nested->addStretch(1);
       
-      layout->setContentsMargins({ 0, 0, 0, 0 });
       nested->setContentsMargins({ 0, 0, 0, 0 });
       layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
       nested->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
@@ -88,7 +90,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       this->setTabOrder(this->subwidgets.buttons.toggle_delete, this->subwidgets.buttons.properties);
    #pragma endregion
    //
-   this->model = new DKPapyrusScriptObjectListModel(this);
+   this->model = new DKFormVMADModel(this);
    view->setIconSize(QSize(16, 16));
    view->setModel(this->model);
    #if !defined(QT_DESIGNER_LIB)
@@ -105,6 +107,13 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
    view->setCornerButtonEnabled(false);
    view->setAcceptDrops(true);
    view->setDragDropOverwriteMode(false);
+   if (auto* header = view->horizontalHeader()) {
+      header->setStretchLastSection(true);
+   }
+   if (auto* vh = view->verticalHeader()) {
+      vh->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for sane row sizing
+      vh->setVisible(false);
+   }
    //
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& selected, const QItemSelection& deselected) {
@@ -140,7 +149,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          //       able to choose a script that is already attached. We, uh, should not handle that 
          //       with an assertion failure, lol.
          //
-         if (this->model->index(scriptname).isValid()) {
+         if (this->model->scriptIndex(scriptname).isValid()) {
             if (this->vmad.parent)
                QMessageBox::critical(this, "Error", "Script is already attached to this form or to its base form.");
             else
@@ -154,24 +163,24 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       });
       QObject::connect(this->subwidgets.buttons.properties,    &QPushButton::clicked, this, [this]() { this->_editSelected(); });
       QObject::connect(this->subwidgets.buttons.toggle_delete, &QPushButton::clicked, this, [this]() {
-         auto* sm = this->subwidgets.view->selectionModel();
-         if (!sm)
-            return;
-         auto rows = sm->selectedRows();
-         if (rows.isEmpty())
-            return;
-         int row = rows[0].row();
+         QModelIndex script_qmi;
+         {
+            auto* sm = this->subwidgets.view->selectionModel();
+            if (!sm)
+               return;
+            auto rows = sm->selectedRows();
+            if (rows.isEmpty())
+               return;
+            script_qmi = rows[0];
+         }
 
-         auto raw_info = this->model->row(row);
-         if (!raw_info.attached_to)
+         auto raw_info = this->model->getScriptMetadata(script_qmi);
+         if (!raw_info.attached_on_target)
             return;
-         if (!raw_info.target_script)
-            return;
-         
-         if (!raw_info.is_inherited_and_removed()) {
-            this->model->removeScript(row);
+         if (!raw_info.inherited_and_removed) {
+            this->model->removeScript(script_qmi);
          } else {
-            this->model->undeleteInheritedScript(row);
+            this->model->undeleteInheritedScript(script_qmi);
          }
       });
    #endif
@@ -179,45 +188,51 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
 
 #if !defined(QT_DESIGNER_LIB)
    void DKPapyrusScriptObjectWidget::_editSelected() {
-      int row;
+      QModelIndex script_qmi;
       {
          auto* sm = this->subwidgets.view->selectionModel();
-         if (!sm)
-            return;
-         auto rows = sm->selectedRows();
-         if (rows.isEmpty())
-            return;
-         row = rows[0].row();
+         if (sm) {
+            auto rows = sm->selectedRows();
+            if (!rows.isEmpty())
+               script_qmi = rows[0];
+         }
       }
+      if (!script_qmi.isValid())
+         return;
 
       static_assert(!require_complete_implementation, "open properties dialog for selected scriptobject");
-      static_assert(!require_complete_implementation, "after dialog, call `this->model->refreshScript(scriptname)` in case any properties were edited");
+      auto* dialog = new DKScriptObjectDialog(*this, script_qmi);
+      auto  result = dialog->exec();
+      if (result == QDialog::Accepted) {
+         //
+         // TODO: Commit dialog results (or maybe the dialog itself should do that on accept?).
+         //
+      }
+      dialog->deleteLater();
    }
    void DKPapyrusScriptObjectWidget::_updateButtons() {
-      int row;
+      QModelIndex script_qmi;
       {
          auto* sm = this->subwidgets.view->selectionModel();
-         if (!sm) {
-            this->subwidgets.buttons.wrapper->setEnabled(false);
-            this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
-            return;
+         if (sm) {
+            auto rows = sm->selectedRows();
+            if (!rows.isEmpty())
+               script_qmi = rows[0];
          }
-         auto rows = sm->selectedRows();
-         if (rows.isEmpty()) {
-            this->subwidgets.buttons.wrapper->setEnabled(false);
-            this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
-            return;
-         }
-         row = rows[0].row();
       }
-
-      auto raw_info = this->model->row(row);
-      if (!raw_info.attached_to) {
+      if (!script_qmi.isValid()) {
          this->subwidgets.buttons.wrapper->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
-      if (!raw_info.is_inherited_and_removed()) {
+
+      auto info = this->model->getScriptMetadata(script_qmi);
+      if (!info.attached_on_target && !info.attached_on_parent) {
+         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
+         return;
+      }
+      if (!info.inherited_and_removed) {
          this->subwidgets.buttons.properties->setEnabled(true);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
       } else {
@@ -232,7 +247,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          this->vmad = {};
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->clearWorkingVMAD();
+         this->model->unsetWorkingVMAD();
          return;
       }
 
@@ -269,7 +284,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          this->vmad = {};
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->clearWorkingVMAD();
+         this->model->unsetWorkingVMAD();
          return;
       }
 
