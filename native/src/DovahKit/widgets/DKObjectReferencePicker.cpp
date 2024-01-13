@@ -6,6 +6,11 @@
    #include "dovah/form_stub.h"
 #endif
 
+namespace {
+   constexpr const bool require_render_window_pick_hook  = false;
+   constexpr const bool require_render_window_focus_hook = false;
+}
+
 DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(parent) {
    auto* layout = new QGridLayout(this);
 
@@ -17,7 +22,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       auto* widget = this->subwidgets.render_window_pick = new QPushButton(tr("Pick Reference in Render Window"), this);
       #if !defined(QT_DESIGNER_LIB)
          QObject::connect(widget, &QPushButton::clicked, this, [this]() {
-            static_assert(false, "TODO: click handler: coordinate with Worldedit/Worldinput to pick the ref");
+            static_assert(!require_render_window_pick_hook, "TODO: click handler: coordinate with Worldedit/Worldinput to pick the ref");
          });
       #endif
    }
@@ -27,6 +32,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
          widget->setAllowedFormType(dovah::form_type::cell);
          widget->setAllowNone(true); // TODO: Allow overriding the "none" text with the string "(any)"
          QObject::connect(widget, &FormPicker::formChanged, this, [this](dovah::form_stub* cell) {
+            emit this->cellChanged(cell);
             ((DKRefsInCellModel*)this->subwidgets.refr->model())->setParentCell(cell);
          });
       #else
@@ -38,7 +44,11 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       auto* widget = this->subwidgets.ref_filter_string = new QLineEdit(this);
       widget->setPlaceholderText("editor ID");
       #if !defined(QT_DESIGNER_LIB)
-         static_assert(false, "TODO: signal to update filter when field is edited");
+         QObject::connect(widget, &QLineEdit::textEdited, this, [this](const QString& text) {
+            if (!this->state.show_ref_list_filter)
+               return;
+            ((DKRefsInCellModel*)this->subwidgets.refr->model())->setFilterString(text);
+         });
       #endif
    }
    {
@@ -46,8 +56,9 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       #if !defined(QT_DESIGNER_LIB)
          auto* model = new DKRefsInCellModel(widget);
          widget->setModel(model);
-
-         static_assert(false, "TODO: model for listing refs in a cell, with an optional filter");
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+            emit this->refChanged(this->ref());
+         });
       #endif
    }
    {
@@ -57,7 +68,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
             auto* ref = this->ref();
             if (!ref)
                return;
-            static_assert(false, "TODO: focus ref in render window");
+            static_assert(!require_render_window_focus_hook, "TODO: focus ref in render window");
          });
       #endif
       layout->addWidget(widget, 2, 0, 1, 2);
@@ -123,7 +134,10 @@ void DKObjectReferencePicker::_rebuildLayout() {
    dovah::form_stub* DKObjectReferencePicker::cell() const {
       return this->subwidgets.cell->formStub();
    }
-   dovah::form_stub* DKObjectReferencePicker::ref() const;
+   dovah::form_stub* DKObjectReferencePicker::ref() const {
+      auto* widget = this->subwidgets.refr;
+      return (dovah::form_stub*) widget->currentData(DKRefsInCellModel::FormStubRole).value<void*>();
+   }
 
    void DKObjectReferencePicker::setCell(dovah::form_stub* stub) {
       if (stub) {
@@ -133,17 +147,36 @@ void DKObjectReferencePicker::_rebuildLayout() {
          this->subwidgets.cell->setFormStub(nullptr);
       }
    }
-   void DKObjectReferencePicker::setRef(dovah::form_stub* stub);
+   void DKObjectReferencePicker::setRef(dovah::form_stub* stub) {
+      auto* widget = this->subwidgets.refr;
+      auto  i      = widget->findData(QVariant::fromValue<void*>(stub), DKRefsInCellModel::FormStubRole);
+      if (i >= 0)
+         widget->setCurrentIndex(i);
+   }
 #endif
 
-void DKObjectReferencePicker::setRefFilterString(QString filter);
+void DKObjectReferencePicker::setRefFilterString(QString filter) {
+   this->state.ref_filter_string = filter;
+   #if !defined(QT_DESIGNER_LIB)
+      ((DKRefsInCellModel*)this->subwidgets.refr->model())->setFilterString(filter);
+   #endif
+}
 
 void DKObjectReferencePicker::setShowRefListFilter(bool v) {
    auto& value = this->state.ref_filter_string;
    if (value == v)
       return;
    value = v;
-   static_assert(false, "TODO: enable/disable filter on ref list based on whether we're showing/hiding the filter-related textbox");
+   #if !defined(QT_DESIGNER_LIB)
+      if (!v) {
+         //
+         // Don't apply any filters if the user can't see the UI for them.
+         //
+         ((DKRefsInCellModel*)this->subwidgets.refr->model())->setFilterString({});
+      } else {
+         ((DKRefsInCellModel*)this->subwidgets.refr->model())->setFilterString(this->refFilterString());
+      }
+   #endif
    this->_rebuildLayout();
 }
 void DKObjectReferencePicker::setShowViewRefButton(bool v) {

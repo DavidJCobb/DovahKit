@@ -47,6 +47,8 @@ class DKObjectReferencePicker : public QWidget {
       void setShowViewRefButton(bool);
 
    signals:
+      void cellChanged(dovah::form_stub*);
+      void refChanged(dovah::form_stub*);
 
    protected:
       struct {
