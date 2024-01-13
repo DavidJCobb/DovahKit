@@ -1542,4 +1542,128 @@ void DKFormVMADModel::setPropertyValue(QModelIndex qmi, const property_value& da
    QModelIndex qmi_r = qmi.siblingAtColumn(PropertyColumn::Value);
    emit dataChanged(qmi_l, qmi_r);
 }
+
+
+DKFormVMADModel::property_value DKFormVMADModel::getPropertyWorkingValue(QModelIndex qmi) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return {};
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+
+   if (prop->bindings.edited.has_value()) {
+      return prop->bindings.edited.value().value;
+   }
+   if (prop->bindings.target.has_value()) {
+      return prop->bindings.target.value().value;
+   }
+   if (prop->bindings.parent.has_value()) {
+      return prop->bindings.parent.value().value;
+   }
+
+   if (prop->type.has_value()) {
+      switch (prop->type.value().underlying_type) {
+         case vmad::property_type::boolean:
+            return false;
+         case vmad::property_type::float32:
+            return 0.0F;
+         case vmad::property_type::integer:
+            return 0;
+         case vmad::property_type::object:
+            return model::object_property_value{};
+         case vmad::property_type::string:
+            return QString{};
+
+         case vmad::property_type::array_of_boolean:
+            return std::vector<bool>{};
+         case vmad::property_type::array_of_float32:
+            return std::vector<float>{};
+         case vmad::property_type::array_of_integer:
+            return std::vector<int32_t>{};
+         case vmad::property_type::array_of_object:
+            return std::vector<model::object_property_value>{};
+         case vmad::property_type::array_of_string:
+            return std::vector<QString>{};
+      }
+   }
+
+   return {};
+}
+void DKFormVMADModel::clearPropertyWorkingValue(QModelIndex qmi) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return;
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+   auto& dst = prop->bindings.edited.emplace();
+   dst.status = property_status::inherited_and_removed;
+   dst.value  = {};
+   prop->recacheValueString();
+
+   QModelIndex qmi_l = qmi.siblingAtColumn(PropertyColumn::Name);
+   QModelIndex qmi_r = qmi.siblingAtColumn(PropertyColumn::Value);
+   emit dataChanged(qmi_l, qmi_r);
+}
+void DKFormVMADModel::revertPropertyWorkingValue(QModelIndex qmi) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return;
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+   prop->bindings.edited.reset();
+   prop->recacheValueString();
+
+   QModelIndex qmi_l = qmi.siblingAtColumn(PropertyColumn::Name);
+   QModelIndex qmi_r = qmi.siblingAtColumn(PropertyColumn::Value);
+   emit dataChanged(qmi_l, qmi_r);
+}
+void DKFormVMADModel::setPropertyWorkingValue(QModelIndex qmi, const property_value& data) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return;
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+   auto& dst = prop->bindings.edited.emplace();
+   dst.status = property_status::defined_locally;
+   dst.value  = data;
+   prop->recacheValueString();
+   
+   QModelIndex qmi_l = qmi.siblingAtColumn(PropertyColumn::Name);
+   QModelIndex qmi_r = qmi.siblingAtColumn(PropertyColumn::Value);
+   emit dataChanged(qmi_l, qmi_r);
+}
+
+void DKFormVMADModel::commitScriptWorkingProperties(QModelIndex script_qmi) {
+   assert(this->indexIsScript(script_qmi));
+
+   auto* script = this->scripts[script_qmi.row()];
+   assert(script != nullptr);
+
+   for (size_t i = 0; i < script->properties.size(); ++i) {
+      auto* prop = script->properties[i];
+      prop->bindings.target = prop->bindings.edited;
+      prop->bindings.edited.reset();
+
+      auto tl = this->index(i, PropertyColumn::Name,  script_qmi); // to refresh status icon
+      auto br = this->index(i, PropertyColumn::Value, script_qmi);
+      emit dataChanged(tl, br);
+   }
+}
+void DKFormVMADModel::discardScriptWorkingProperties(QModelIndex script_qmi) {
+   assert(this->indexIsScript(script_qmi));
+
+   auto* script = this->scripts[script_qmi.row()];
+   assert(script != nullptr);
+
+   for (size_t i = 0; i < script->properties.size(); ++i) {
+      auto* prop = script->properties[i];
+      prop->bindings.target = prop->bindings.edited;
+      prop->bindings.edited.reset();
+      prop->recacheValueString();
+      
+      auto tl = this->index(i, PropertyColumn::Name,  script_qmi); // to refresh status icon
+      auto br = this->index(i, PropertyColumn::Value, script_qmi);
+      emit dataChanged(tl, br);
+   }
+}
 #pragma endregion

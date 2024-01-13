@@ -131,6 +131,8 @@ class DKFormVMADModel : public QAbstractItemModel {
             struct {
                std::optional<Binding> parent; // base form, if the form we're currently editing is a REFR
                std::optional<Binding> target; // form we're currently editing. NOTE: should have a value if clearing an inherited property value REFR-side!
+
+               std::optional<Binding> edited; // for edits made to a bound script via the GUI, prior to them being committed ("OK") or discarded ("Cancel")
             } bindings;
             //
             QString value_string; // cached; computed from `bindings`
@@ -233,6 +235,14 @@ class DKFormVMADModel : public QAbstractItemModel {
       void clearPropertyValue(QModelIndex); // use script default
       void revertPropertyValue(QModelIndex); // revert to inherited value
       void setPropertyValue(QModelIndex, const property_value&);
+
+      property_value getPropertyWorkingValue(QModelIndex); // if no edits are pending, returns computed value
+      void clearPropertyWorkingValue(QModelIndex); // to NOT HAVE a working value, use "revert." to SET THE WORKING VALUE TO NONE, use "clear."
+      void revertPropertyWorkingValue(QModelIndex); // to NOT HAVE a working value, use "revert." to SET THE WORKING VALUE TO NONE, use "clear."
+      void setPropertyWorkingValue(QModelIndex, const property_value&);
+      //
+      void commitScriptWorkingProperties(QModelIndex script_qmi);
+      void discardScriptWorkingProperties(QModelIndex script_qmi);
 };
 
 #include "./DKFormVMADModel.inl"
