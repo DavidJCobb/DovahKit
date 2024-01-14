@@ -87,7 +87,7 @@
       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
        <item>
         <widget class="QStackedWidget" name="valueWrap">
-         <widget class="QWidget" name="valuePage_defaulted" native="true">
+         <widget class="QWidget" name="valuePage_defaulted">
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <property name="leftMargin">
             <number>0</number>
@@ -159,6 +159,42 @@
            </item>
            <item row="0" column="1">
             <widget class="FormPicker" name="valueWidget_form" native="true"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="valuePage_ref">
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="DKObjectReferencePicker" name="valueWidget_ref">
+             <property name="showRefListFilter">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -276,6 +312,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>DKObjectReferencePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKObjectReferencePicker.h</header>
+  </customwidget>
   <customwidget>
    <class>FormPicker</class>
    <extends>QWidget</extends>

@@ -2151,6 +2151,15 @@
     <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKObjectReferencePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5333,6 +5342,9 @@
     <ClInclude Include="dovah\forms\components\papyrus\property_status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_ref_picker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5863,6 +5875,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKObjectReferencePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

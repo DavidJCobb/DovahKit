@@ -60,12 +60,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -76,6 +76,10 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PreprocessorDefinitions>QT_PLUGIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Modules choke when using `$(IntDir)%(RelativeDir)` as the object file name. As a bonus, BuildStdModules isn't even visible or alterable in the goddamned UI... -->
+      <BuildStdModules>false</BuildStdModules>
+      <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,6 +94,10 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>QT_PLUGIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Modules choke when using `$(IntDir)%(RelativeDir)` as the object file name. As a bonus, BuildStdModules isn't even visible or alterable in the goddamned UI... -->
+      <BuildStdModules>false</BuildStdModules>
+      <BuildStlModules>false</BuildStlModules>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,11 +108,13 @@
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <None Include="cpp.hint" />
     <None Include="README.md" />
@@ -146,13 +156,15 @@
     <QtMoc Include="widgets\DKFormListPane.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\DKObjectReferencePicker.h" />
+    <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h" />
     <QtMoc Include="widgets\DKTextureAssetPane.h" />
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h" />
     <QtMoc Include="interfaces\DKColorPickerButtonInterface.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
     <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h" />
-    <ClInclude Include="widgets\DKHeaderView.h" />
+    <QtMoc Include="widgets\DKHeaderView.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

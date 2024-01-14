@@ -689,6 +689,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
@@ -837,6 +838,7 @@
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
+    <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
@@ -850,8 +852,11 @@
     <ClCompile Include="widgets\widget-models\DKFormVMADModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
+    <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h" />
     <QtMoc Include="widgets\widget-models\DKFormVMADModel.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h" />
@@ -1355,6 +1360,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_ref_picker.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h" />
     <QtMoc Include="ui\options_window\options_window.h" />
