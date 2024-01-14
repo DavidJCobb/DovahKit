@@ -20,11 +20,13 @@ namespace dovah {
 
 class DKObjectReferencePicker : public QWidget {
    Q_OBJECT;
+   Q_PROPERTY(bool allowNone         READ allowNone         WRITE setAllowNone DESIGNABLE true);
    Q_PROPERTY(bool showRefListFilter READ showRefListFilter WRITE setShowRefListFilter DESIGNABLE true);
    Q_PROPERTY(bool showViewRefButton READ showViewRefButton WRITE setShowViewRefButton DESIGNABLE true);
    public:
       DKObjectReferencePicker(QWidget* parent);
 
+      inline bool allowNone() const noexcept { return this->state.allow_none_ref; }
       inline bool showRefListFilter() const noexcept { return this->state.show_ref_list_filter; }
       inline bool showViewRefButton() const noexcept { return this->state.show_view_ref_button; }
 
@@ -43,6 +45,7 @@ class DKObjectReferencePicker : public QWidget {
 
       void setRefFilterString(QString);
 
+      void setAllowNone(bool);
       void setShowRefListFilter(bool);
       void setShowViewRefButton(bool);
 
@@ -66,6 +69,7 @@ class DKObjectReferencePicker : public QWidget {
          QComboBox*   refr = nullptr;
       } subwidgets;
       struct {
+         bool allow_none_ref       = false;
          bool show_ref_list_filter = false;
          bool show_view_ref_button = false;
 

@@ -13,6 +13,9 @@ namespace {
 
 DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(parent) {
    auto* layout = new QGridLayout(this);
+   layout->setContentsMargins(0, 0, 0, 0);
+
+   this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 
    this->subwidgets.labels.cell   = new QLabel(tr("Cell:"), this);
    this->subwidgets.labels.filter = new QLabel(tr("Filter refs:"), this);
@@ -162,6 +165,18 @@ void DKObjectReferencePicker::setRefFilterString(QString filter) {
    #endif
 }
 
+void DKObjectReferencePicker::setAllowNone(bool v) {
+   auto& value = this->state.allow_none_ref;
+   if (value == v)
+      return;
+   value = v;
+
+   auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+   if (v)
+      model->addPrependedRef(nullptr);
+   else
+      model->removePrependedRef(nullptr);
+}
 void DKObjectReferencePicker::setShowRefListFilter(bool v) {
    auto& value = this->state.ref_filter_string;
    if (value == v)

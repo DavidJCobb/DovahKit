@@ -39,6 +39,7 @@ class DKRefsInCellModel : public QAbstractListModel {
       QString filter_string;
 
       bool _item_matches_filter(const Item&) const;
+      bool _stub_allowed_in_model(const dovah::form_stub&) const;
 
       QVector<Item*> _handle_newly_concealed_by_filter();
       void _handle_newly_revealed_by_filter();
@@ -46,7 +47,7 @@ class DKRefsInCellModel : public QAbstractListModel {
       void _clear();
       void _filter(bool filter_made_more_specific = false);
       void _insert_sorted_item(Item*);
-      void _insert_sorted_stub(dovah::form_stub&, bool prepended);
+      void _insert_sorted_stub(dovah::form_stub*, bool prepended);
       void _sort();
       
    protected slots:
@@ -58,8 +59,8 @@ class DKRefsInCellModel : public QAbstractListModel {
       DKRefsInCellModel(QObject* parent = nullptr);
       ~DKRefsInCellModel();
 
-      void addPrependedRef(dovah::form_stub&);
-      void removePrependedRef(dovah::form_stub&);
+      void addPrependedRef(dovah::form_stub*);
+      void removePrependedRef(dovah::form_stub*);
       void clearAllPrependedRefs();
 
       dovah::form_stub* parentCell() const;

@@ -16,7 +16,8 @@ void DKRefsInCellModel::Item::updateFromStub() {
    dovah::form_stub* stub = this->stub;
    dovah::form_stub* base = nullptr;
    if (!stub) {
-      this->editor_ids = {};
+      this->editor_ids  = {};
+      this->cached_text = "NONE";
       return;
    }
 
@@ -58,6 +59,13 @@ bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
       return true;
    return item.cached_text.contains(this->filter_string, Qt::CaseInsensitive);
 }
+bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
+   if (!dovah::form_type_info::form_type_is_reference(stub.formType))
+      return false;
+   if (stub.editorID.empty())
+      return false;
+   return true;
+}
 
 void DKRefsInCellModel::_clear() {
    for (auto* item : this->filtered_out)
@@ -89,7 +97,7 @@ QVector<DKRefsInCellModel::Item*> DKRefsInCellModel::_handle_newly_concealed_by_
    if constexpr (batch_removals) {
       struct range {
          size_t start = 0;
-         size_t size = 0;
+         size_t size  = 0;
       };
       std::vector<range> ranges;
 
@@ -109,7 +117,7 @@ QVector<DKRefsInCellModel::Item*> DKRefsInCellModel::_handle_newly_concealed_by_
          }
          ranges.push_back({
             .start = i,
-            .size = 1,
+            .size  = 1,
          });
       }
 
@@ -265,7 +273,7 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
                   element = this->children[index];
                }
 
-               if (item->cached_text.compare(element->cached_text) > 0) {
+               if (item->cached_text.compare(element->cached_text, Qt::CaseInsensitive) > 0) {
                   mixed_indices.insert(mixed_indices.begin() + j, i | is_source_list_index);
                   found = true;
                   break;
@@ -329,7 +337,7 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
    }
 }
 //
-void DKRefsInCellModel::_filter(bool filter_made_more_specific = false) {
+void DKRefsInCellModel::_filter(bool filter_made_more_specific) {
 
    // Control whether we batch calls to beginInsertRows, in order to reduce UI updates and 
    // similar signal responses. Will lead to increased overhead within this function.
@@ -393,7 +401,7 @@ void DKRefsInCellModel::_insert_sorted_item(Item* item) {
          if (prior->is_prepended)
             continue;
       }
-      if (prior->cached_text.compare(item->cached_text) < 0)
+      if (prior->cached_text.compare(item->cached_text, Qt::CaseInsensitive) < 0)
          break;
    }
 
@@ -401,8 +409,8 @@ void DKRefsInCellModel::_insert_sorted_item(Item* item) {
    this->children.insert(at, item);
    this->endInsertRows();
 }
-void DKRefsInCellModel::_insert_sorted_stub(dovah::form_stub& ref, bool prepended) {
-   auto* item = new Item(&ref);
+void DKRefsInCellModel::_insert_sorted_stub(dovah::form_stub* ref, bool prepended) {
+   auto* item = new Item(ref);
    item->is_prepended = prepended;
    this->_insert_sorted_item(item);
 }
@@ -430,7 +438,7 @@ void DKRefsInCellModel::_sort() {
       } else if (b.is_prepended) {
          return false;
       }
-      return a.cached_text.compare(b.cached_text) < 0;
+      return a.cached_text.compare(b.cached_text, Qt::CaseInsensitive) < 0;
    });
 
    //
@@ -469,9 +477,9 @@ void DKRefsInCellModel::_sort() {
    emit layoutChanged();
 }
 
-void DKRefsInCellModel::addPrependedRef(dovah::form_stub& ref) {
+void DKRefsInCellModel::addPrependedRef(dovah::form_stub* ref) {
    for (auto* item : this->children) {
-      if (item->stub == &ref) {
+      if (item->stub == ref) {
          if (item->is_prepended)
             return;
          item->is_prepended = true;
@@ -481,8 +489,8 @@ void DKRefsInCellModel::addPrependedRef(dovah::form_stub& ref) {
    }
    this->_insert_sorted_stub(ref, true);
 }
-void DKRefsInCellModel::removePrependedRef(dovah::form_stub& ref) {
-   bool is_in_cell = this->parent_cell && ref.get_parent_form() == this->parent_cell;
+void DKRefsInCellModel::removePrependedRef(dovah::form_stub* ref) {
+   bool is_in_cell = this->parent_cell && ref && ref->get_parent_form() == this->parent_cell;
 
    for (size_t i = 0; i < this->children.size(); ++i) {
       auto* item = this->children[i];
@@ -493,7 +501,7 @@ void DKRefsInCellModel::removePrependedRef(dovah::form_stub& ref) {
          //
          return;
 
-      if (item->stub == &ref) {
+      if (item->stub == ref) {
 
          if (is_in_cell) {
             if (!item->is_prepended)
@@ -538,9 +546,7 @@ void DKRefsInCellModel::clearAllPrependedRefs() {
       if (!item->is_prepended)
          break;
 
-      if (!item->stub)
-         continue;
-      if (item->stub->get_parent_form() != this->parent_cell) {
+      if (!item->stub || item->stub->get_parent_form() != this->parent_cell) {
          this->beginRemoveRows({}, i, i);
          this->children.remove(i);
          delete item;
@@ -583,9 +589,10 @@ void DKRefsInCellModel::setParentCell(dovah::form_stub* cell) {
          this->beginRemoveRows({}, start, size - 1);
          for (size_t i = start; i < size; ++i)
             delete this->children[i];
-         this->children.clear();
+         this->children.resize(start);
          this->endRemoveRows();
       }
+      size = this->children.size();
    }
 
    if (!cell) {
@@ -594,7 +601,7 @@ void DKRefsInCellModel::setParentCell(dovah::form_stub* cell) {
 
    QVector<Item*> working;
    dovah::form_stub_helpers::for_each_child_form(cell, [this, &working](dovah::form_stub* ref) -> bool {
-      if (!dovah::form_type_info::form_type_is_reference(ref->formType))
+      if (!_stub_allowed_in_model(*ref))
          return false;
 
       for (auto* prepended : this->children)
@@ -606,12 +613,14 @@ void DKRefsInCellModel::setParentCell(dovah::form_stub* cell) {
 
       return false;
    });
-   this->beginInsertRows({}, size, size + working.size() - 1);
-   this->children.reserve(size + working.size());
-   for (auto* item : working)
-      this->children.push_back(item);
-   this->endInsertRows();
-   this->_sort();
+   if (!working.empty()) {
+      this->beginInsertRows({}, size, size + working.size() - 1);
+      this->children.reserve(size + working.size());
+      for (auto* item : working)
+         this->children.push_back(item);
+      this->endInsertRows();
+      this->_sort();
+   }
 }
 
 QString DKRefsInCellModel::filterString() const {
@@ -635,13 +644,15 @@ dovah::form_stub* DKRefsInCellModel::ref(QModelIndex qmi) const {
 
 #pragma region Editor core hooks
 void DKRefsInCellModel::formCreated(dovah::form_stub* stub) {
+   if (!stub) // this signal should've used a ref...
+      return;
    if (!dovah::form_type_info::form_type_is_reference(stub->formType))
       return;
    if (!this->parent_cell)
       return;
    if (stub->get_parent_form() != this->parent_cell)
       return;
-   this->_insert_sorted_stub(*stub, false);
+   this->_insert_sorted_stub(stub, false);
 }
 void DKRefsInCellModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    if (!stub) // this signal should've used a ref...
@@ -665,6 +676,8 @@ void DKRefsInCellModel::formDeletionImminent(const dovah::form_stub* stub, bool 
    }
 }
 void DKRefsInCellModel::formModified(dovah::form_stub* stub) {
+   if (!stub) // this signal should've used a ref...
+      return;
    if (!dovah::form_type_info::form_type_is_reference(stub->formType))
       return;
 
@@ -677,9 +690,10 @@ void DKRefsInCellModel::formModified(dovah::form_stub* stub) {
       if (item->stub != stub)
          continue;
 
-      if (!item->is_prepended && !in_our_cell) {
+      if ((!item->is_prepended && !in_our_cell) || !_stub_allowed_in_model(*stub)) {
          //
-         // Ref was reparented and is no longer in the cell we're interested in.
+         // Ref was reparented and is no longer in the cell we're interested in, OR 
+         // the stub had its editor ID cleared or was otherwise made unsuitable.
          //
          this->beginRemoveRows({}, i, i);
          this->children.remove(i);
@@ -694,11 +708,15 @@ void DKRefsInCellModel::formModified(dovah::form_stub* stub) {
       return;
    }
 
-   if (in_our_cell) {
+   //
+   // The stub is not currently in this model.
+   //
+
+   if (in_our_cell && _stub_allowed_in_model(*stub)) {
       //
       // Ref was reparented into the cell we're interested in.
       //
-      this->_insert_sorted_stub(*stub, false);
+      this->_insert_sorted_stub(stub, false);
    }
 }
 #pragma endregion
@@ -716,8 +734,6 @@ QModelIndex DKRefsInCellModel::parent(const QModelIndex& index) const {
    return {};
 }
 int DKRefsInCellModel::rowCount(const QModelIndex& parent) const {
-   if (parent.column() > 0)
-      return 0;
    return this->children.size();
 }
 int DKRefsInCellModel::columnCount(const QModelIndex& item) const {

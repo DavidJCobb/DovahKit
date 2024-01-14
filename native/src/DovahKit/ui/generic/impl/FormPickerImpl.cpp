@@ -233,7 +233,7 @@ namespace FormPickerImpl {
          for (int i = start; i < end; ++i) {
             auto* entry = source.itemAtRow(i);
             auto it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
-               return a->editorID < b->editorID;
+               return a->editorID.compare(b->editorID, Qt::CaseInsensitive) < 0;
             });
             int pos = it - sorted.begin();
             if (!this->ongoing_fill.filling)
@@ -294,9 +294,9 @@ namespace FormPickerImpl {
             return;
          iterator    it;
          QModelIndex parent;
-         if (entry->editorID < prior) { // moving it to a spot higher in the list
+         if (entry->editorID.compare(prior, Qt::CaseInsensitive) < 0) { // moving it to a spot higher in the list
             it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
-               return a->editorID < b->editorID;
+               return a->editorID.compare(b->editorID, Qt::CaseInsensitive) < 0;
             });
             int to = it - sorted.begin();
             this->beginMoveRows(parent, i, i, parent, to); // when moving items anywhere except down in the same parent, the last arg is the destination index
@@ -305,7 +305,7 @@ namespace FormPickerImpl {
             this->endMoveRows(); // handles persistent model indexes for us
          } else { // moving it to a spot later in the list
             it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
-               return a->editorID < b->editorID;
+               return a->editorID.compare(b->editorID, Qt::CaseInsensitive) < 0;
             });
             int to = it - sorted.begin() - 1;
             this->beginMoveRows(parent, i, i, parent, to + 1); // when moving items down in the same parent, the last arg is the spot AFTER the destination index, because this API is cursed
