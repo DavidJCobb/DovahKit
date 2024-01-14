@@ -12,6 +12,8 @@ namespace DovahKitDebug::features {
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       
       widget->setAllowNone(true);
+      widget->setShowRefListFilter(true);
+      widget->setShowViewRefButton(true);
 
       layout->addWidget(widget);
       QObject::connect(widget, &DKObjectReferencePicker::refChanged, widget, [widget](dovah::form_stub* stub) {

@@ -26,11 +26,14 @@ class DKRefsInCellModel : public QAbstractListModel {
             } editor_ids;
 
             bool is_prepended = false;
+            bool no_editor_id = false;
             QString cached_text;
             
             Item() {}
             Item(dovah::form_stub*);
             void updateFromStub(); // update the form's identifying information, e.g. its editor ID
+
+            bool sortAbove(const Item&) const;
       };
 
       QVector<Item*> children;     // always kept sorted

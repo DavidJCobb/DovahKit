@@ -3,12 +3,20 @@
 #include <QGridLayout>
 #include <QLabel>
 #if !defined(QT_DESIGNER_LIB)
+   #include "dovah/forms/factories/hardcoded.h" // for PlayerRef form ID
    #include "dovah/form_stub.h"
+   #include "editor/subsystems/worldedit/core.h"
+   #include "editor/core.h"
 #endif
 
 namespace {
-   constexpr const bool require_render_window_pick_hook  = false;
-   constexpr const bool require_render_window_focus_hook = false;
+   constexpr const bool require_render_window_pick_hook =
+      #if _DEBUG
+         false
+      #else
+         true
+      #endif
+   ;
 }
 
 DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(parent) {
@@ -71,11 +79,56 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
             auto* ref = this->ref();
             if (!ref)
                return;
-            static_assert(!require_render_window_focus_hook, "TODO: focus ref in render window");
+
+            auto& worldedit = dovahkit::subsystems::worldedit::core::get();
+            worldedit.center_on_refr(*ref);
          });
       #endif
       layout->addWidget(widget, 2, 0, 1, 2);
    }
+
+   #if !defined(QT_DESIGNER_LIB)
+   {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
+         auto* ref_model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+
+         if (this->state.allow_none_ref) {
+            //
+            // Unloading game data clears out the DKRefsInCellModel and its prepended stubs, 
+            // even a `nullptr` stub. (And even if it didn't, the model is coded so that 
+            // adding the same prepended ref twice won't break anything.)
+            //
+            ref_model->addPrependedRef(nullptr);
+         }
+
+         if (auto* player_ref = DovahKitCore::get().get_form(dovah::hardcoded_form_ids::PlayerRef)) {
+            //
+            // Always prepend PlayerRef. They're not placed in any one cell, so there's no 
+            // way to select them otherwise.
+            //
+            ref_model->addPrependedRef(player_ref);
+         }
+      });
+      if (editor.has_data()) {
+         //
+         // The above only runs when we load data while the widget exists; if data is loaded 
+         // already when the widget is created, we gotta fetch it here too.
+         // 
+         // NOTE: We need "allow none" to default to TRUE so that, when we add "None" and 
+         // "PlayerRef" to the list, we always add "None" first and "None" is therefore 
+         // always the default selection (rather than "PlayerRef").
+         //
+         auto* ref_model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+         if (this->state.allow_none_ref) {
+            ref_model->addPrependedRef(nullptr);
+         }
+         if (auto* player_ref = editor.get_form(dovah::hardcoded_form_ids::PlayerRef)) {
+            ref_model->addPrependedRef(player_ref);
+         }
+      }
+   }
+   #endif
 
    this->_rebuildLayout();
 }
@@ -151,6 +204,12 @@ void DKObjectReferencePicker::_rebuildLayout() {
       }
    }
    void DKObjectReferencePicker::setRef(dovah::form_stub* stub) {
+      if (stub) {
+         auto* cell = stub->get_parent_form();
+         if (cell && cell->formType == dovah::form_type::cell) {
+            this->setCell(cell);
+         }
+      }
       auto* widget = this->subwidgets.refr;
       auto  i      = widget->findData(QVariant::fromValue<void*>(stub), DKRefsInCellModel::FormStubRole);
       if (i >= 0)
@@ -178,7 +237,7 @@ void DKObjectReferencePicker::setAllowNone(bool v) {
       model->removePrependedRef(nullptr);
 }
 void DKObjectReferencePicker::setShowRefListFilter(bool v) {
-   auto& value = this->state.ref_filter_string;
+   auto& value = this->state.show_ref_list_filter;
    if (value == v)
       return;
    value = v;

@@ -4,6 +4,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_helpers.h"
 #include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
 
 #define TEST_FILTERING_INVARIANTS _DEBUG
 
@@ -22,15 +23,28 @@ void DKRefsInCellModel::Item::updateFromStub() {
    }
 
    this->editor_ids.ref = stub->get_editor_id();
+   this->no_editor_id = this->editor_ids.ref.isEmpty();
+
+   QString me = this->editor_ids.ref;
+   if (me.isEmpty())
+      me = editor_helpers::form_identifiers_to_string(stub);
 
    base = dovah::form_stub_helpers::get_base_form(stub);
    if (base) {
       this->editor_ids.base = base->get_editor_id();
-      this->cached_text = QString("%1 (%2)").arg(this->editor_ids.ref).arg(this->editor_ids.base);
+      this->cached_text = QString("%1 (%2)").arg(me).arg(this->editor_ids.base);
    } else {
       this->editor_ids.base.clear();
-      this->cached_text = QString("%1 (NONE)").arg(this->editor_ids.ref);
+      this->cached_text = QString("%1 (NONE)").arg(me);
    }
+}
+
+bool DKRefsInCellModel::Item::sortAbove(const Item& other) const {
+   if (this->is_prepended != other.is_prepended)
+      return this->is_prepended;
+   if (this->no_editor_id != other.no_editor_id)
+      return !this->no_editor_id;
+   return this->cached_text.compare(other.cached_text, Qt::CaseInsensitive) < 0;
 }
 #pragma endregion
 
@@ -57,13 +71,17 @@ DKRefsInCellModel::~DKRefsInCellModel() {
 bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
    if (this->filter_string.isEmpty())
       return true;
+   if (item.is_prepended) // never filter force-prepended items out
+      return true;
    return item.cached_text.contains(this->filter_string, Qt::CaseInsensitive);
 }
 bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
    if (!dovah::form_type_info::form_type_is_reference(stub.formType))
       return false;
+   /*//
    if (stub.editorID.empty())
       return false;
+   //*/
    return true;
 }
 
@@ -246,13 +264,13 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
 
       constexpr const size_t is_source_list_index = (size_t)1 << (sizeof(size_t) * 8 - 1);
 
-      std::vector<int> mixed_indices;
+      std::vector<size_t> mixed_indices;
       size_t count_revealed = 0;
       {
          {
             size_t size = this->children.size();
             mixed_indices.resize(size);
-            for (int i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
                mixed_indices[i] = i;
          }
 
@@ -273,7 +291,7 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
                   element = this->children[index];
                }
 
-               if (item->cached_text.compare(element->cached_text, Qt::CaseInsensitive) > 0) {
+               if (!item->sortAbove(*element)) {
                   mixed_indices.insert(mixed_indices.begin() + j, i | is_source_list_index);
                   found = true;
                   break;
@@ -401,7 +419,7 @@ void DKRefsInCellModel::_insert_sorted_item(Item* item) {
          if (prior->is_prepended)
             continue;
       }
-      if (prior->cached_text.compare(item->cached_text, Qt::CaseInsensitive) < 0)
+      if (!prior->sortAbove(*item))
          break;
    }
 
@@ -431,14 +449,7 @@ void DKRefsInCellModel::_sort() {
    std::stable_sort(mapping.begin(), mapping.end(), [this](const size_t i, const size_t j) {
       const auto& a = *this->children[i];
       const auto& b = *this->children[j];
-
-      if (a.is_prepended) {
-         if (!b.is_prepended)
-            return true;
-      } else if (b.is_prepended) {
-         return false;
-      }
-      return a.cached_text.compare(b.cached_text, Qt::CaseInsensitive) < 0;
+      return a.sortAbove(b);
    });
 
    //
@@ -741,13 +752,13 @@ int DKRefsInCellModel::columnCount(const QModelIndex& item) const {
 }
 Qt::ItemFlags DKRefsInCellModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
-      return Qt::ItemIsDropEnabled;
+      return {};
    return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
 }
 QVariant DKRefsInCellModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid() || index.model() != this)
       return {};
-   auto item = (Item*)index.internalPointer();
+   auto item = (const Item*)index.internalPointer();
    switch (role) {
       case Qt::DisplayRole:
       case Qt::ToolTipRole:

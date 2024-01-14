@@ -69,7 +69,7 @@ class DKObjectReferencePicker : public QWidget {
          QComboBox*   refr = nullptr;
       } subwidgets;
       struct {
-         bool allow_none_ref       = false;
+         bool allow_none_ref       = true;
          bool show_ref_list_filter = false;
          bool show_view_ref_button = false;
 

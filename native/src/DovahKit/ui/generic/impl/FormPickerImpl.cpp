@@ -378,7 +378,7 @@ namespace FormPickerImpl {
                return true;
             if (!b->stub && a->stub)
                return false;
-            return a->editorID < b->editorID;
+            return a->editorID.compare(b->editorID, Qt::CaseInsensitive) < 0;
          });
          sorted.insert(it, entry);
       }
