@@ -114,6 +114,13 @@ and not single fields), and it would  run directly counter to one of DovahKit's
 design pillars: handling game data as a thing-in-itself rather than focusing on 
 the file format.
 
+(You might think that if the "early,"  discarded, WNAM subrecords refer to some 
+form,  and that form is deleted,  that we'd then need  to update the form which 
+contains the WNAMs and sever the reference, by WNAM, to the to-be-deleted form. 
+In reality, there is no need: when we go to save the edited plug-in, we'll only 
+serialize the sole valid WNAM: we implicitly sever these "phantom" uses at save 
+time.)
+
 Snippet A, then,  is the right approach, even though Snippet  B is considerably 
 cleaner and simpler. What a shame.
 
@@ -155,12 +162,12 @@ been loaded. This means two things:
    b) When we read that  Papyrus data, we cannot be certain  that the specified 
       alias or log entry actually exists.
 
-On top of this, the decision  decision that was made  for Quests was to discard 
-any Papyrus data that attempts to attach itself to a part of the form that does 
-not exist (i.e.  a non-existent alias  or log entry). This means  that we can't 
-just blindly generate use info for  quest-specific Papyrus data as we encounter 
-it, because we'd end up  generating use info for data that  isn't retained when 
-the form is actually loaded. So what do we do?
+On top of this, the design decision that was made for Quests was to discard any 
+Papyrus data that attempts to attach itself to a part of the form that does not 
+exist (i.e.  a non-existent alias or log entry). This means  that we can't just 
+blindly generate use info for  quest-specific  Papyrus data as we encounter it,
+because we'd end up  generating use info for data that  isn't retained when the 
+form is actually loaded. So what do we do?
 
 Well, log entry script  fragments don't ever actually  refer to other forms, so 
 we can completely ignore them for use  info. That leaves alias Papyrus data. We 

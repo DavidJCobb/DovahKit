@@ -145,6 +145,7 @@
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
+    <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
@@ -865,6 +866,9 @@
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="dovah\data\papyrus\helpers\name_equals.h" />
+    <ClInclude Include="dovah\files\bsa\archive_header.h" />
+    <ClInclude Include="dovah\files\bsa\packed_file_info.h" />
+    <ClInclude Include="dovah\files\bsa\packed_folder_info.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attached_script.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attachment_data.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attachment_header.h" />
@@ -890,6 +894,7 @@
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
+    <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
@@ -2184,10 +2189,14 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovah\files\bsa\bsa_archive.inl" />
+    <None Include="dovah\files\bsa\packed_folder_info.inl" />
+    <None Include="dovah\files\bsa\README.md" />
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
+    <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />

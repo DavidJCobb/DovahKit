@@ -18,29 +18,14 @@ load its data in full. The full list of fields is:
    form ID
       The form's form ID, relative to the full load order.
 
+   form type
+      The form's type, as an enum.
+
    editor ID
       The form's editor ID, as indicated by the last loaded record.
 
    use info (inbound and outbound)
       Information used to track references between forms.
-
-   parent form ID
-      The form ID of  the form's parent, relative to the full  load order. This 
-      information is not part  of the form itself, and  so must be preserved in 
-      the stub by the file load process.
-
-   group type
-      Used to remember  what GRUP type the form loaded from.  This is currently 
-      used to know  whether to save an ObjectReference into a cell's  temporary 
-      or persistent child  group (it's saved into the  same GRUP type it loaded 
-      from),  but this will likely not be a tenable solution once we  implement 
-      world editing.
-
-      It's  currently also  used to tell a worldspace's  persistent cell  apart 
-      from its other cells, but that's not how the game does things.
-
-   cell grid coordinates
-      Used for exterior cells; loaded from CELL/XCLC.
 
    file info
       A list of file  reader pointers and,  for each file,  the offset into the 
@@ -221,9 +206,7 @@ doubly-linked lists.  A block list can be assigned to an  individual thread, or
 it can be retained as a single "unowned" list. When a thread closes, its blocks 
 are merged into the "unowned" list; when a new thread spawns, the blocks in the 
 "unowned" list are given to it to use.  Threads can allocate memory without the 
-need to lock; however, freeing memory requires a lock,  and locking also occurs 
-when threads open and close,  regardless of whether they ever actually allocate 
-any form stubs.
+need to lock; however, freeing memory requires a lock.
 
 This doesn't result in us totally avoiding  all locking, as locks are still hit 
 when we actually insert  new form stubs  into the  file load order's form maps, 

@@ -108,7 +108,7 @@ namespace dovah {
       this->_read(folder.hash);
       uint32_t count = 0;
       this->_read(count);
-      if (this->header.version <= bsa_header::version::skyrim_classic) {
+      if (this->header.version <= bsa::archive_header::version::skyrim_classic) {
          uint32_t offset;
          this->_read(offset);
          folder.offset = offset;
@@ -121,7 +121,7 @@ namespace dovah {
       auto pos = this->stream_position;
       //
       this->stream_position = folder.offset;
-      if (this->header.flags & bsa_header::flag::include_directory_names) {
+      if (this->header.flags & bsa::archive_header::flag::include_directory_names) {
          uint8_t length;
          this->_read(length);
          folder.name.resize(length);
@@ -149,7 +149,7 @@ namespace dovah {
       this->_unchecked_read(file.offset);
       //
       auto pos = this->stream_position;
-      if (this->header.flags & bsa_header::flag::embed_filenames) {
+      if (this->header.flags & bsa::archive_header::flag::embed_filenames) {
          this->stream_position = file.offset;
          //
          uint8_t     length;
@@ -166,7 +166,7 @@ namespace dovah {
             file.name = full_path;
          else
             file.name = full_path.substr(index + 1);
-      } else if (this->header.flags & bsa_header::flag::include_filenames) {
+      } else if (this->header.flags & bsa::archive_header::flag::include_filenames) {
          uint64_t start = this->filename_blob_offset + this->last_filename_offset;
          this->stream_position = start;
          this->_read(file.name);
@@ -218,7 +218,7 @@ namespace dovah {
       if (this->header.folder_offset != 0x24) {
          dovah::logging::print_line("Warning: The BSA we're loading seems to have unknown content between its file header and its folder listing, or its header is longer than we expect.");
       }
-      this->needs_endianness_flip = this->header.flags & bsa_header::flag::big_endian;
+      this->needs_endianness_flip = this->header.flags & bsa::archive_header::flag::big_endian;
       if constexpr (std::endian::native == std::endian::big)
          this->needs_endianness_flip = !this->needs_endianness_flip;
       this->filename_blob_offset = this->header.expected_filename_blob_position();
@@ -234,145 +234,22 @@ namespace dovah {
    }
 
    #pragma region File lookup and retrieval
-   const bsa_archive::file_entry* bsa_archive::folder_entry::find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept {
-      for (auto& file : this->files) {
-         if (file.hash > file_hash)
-            return nullptr;
-         if (file.hash == file_hash) {
-            if (!file_name.empty() && !file.name.empty()) {
-               if (_stricmp(file_name.data(), file.name.data()) != 0)
-                  continue;
-            }
-            return &file;
-         }
-      }
-      return nullptr;
-   }
-   const bsa_archive::file_entry* bsa_archive::find_file(const bs_hash& folder_hash, const bs_hash& file_hash, const std::string& folder_name, const std::string& file_name) const noexcept {
-      for (auto& folder : this->folders) {
-         if (folder.hash > folder_hash)
-            return nullptr;
-         if (folder.hash == folder_hash) {
-            if (!folder_name.empty() && !folder.name.empty()) {
-               if (_stricmp(folder_name.data(), folder.name.data()) != 0)
-                  continue;
-            }
-            return folder.find_file(file_hash, file_name);
-         }
-      }
-      return nullptr;
-   }
-   bsa_archived_file* bsa_archive::retrieve_entry(const bsa_archive::file_entry& entry) const {
-      assert(this->mapping);
-      if (entry.corrupt)
-         return nullptr;
-      auto size = entry.size();
-      if (!size)
-         return nullptr;
-      //
-      uint64_t offset = entry.offset;
-      assert(offset + size <= this->mapping.size());
-      if (this->header.flags & bsa_header::flag::embed_filenames) {
-         uint8_t length;
-         this->_read_at(length, offset);
-         offset += sizeof(length) + length;
-      }
-      bool compressed = entry.non_default_compression();
-      if (this->header.flags & bsa_header::flag::compressed_by_default)
-         compressed = !compressed;
-      //
-      auto out = new bsa_archived_file;
-      if (compressed) {
-         auto*  data = this->mapping.data();
-         size_t size = this->mapping.size();
-         size_t at   = offset;
-         //
-         uint32_t length;
-         if (at + sizeof(length) >= size)
-            return nullptr;
-         length = *(uint32_t*)((std::intptr_t)data + at);
-         //
-         uint64_t    input_pos  = offset + sizeof(length);
-         const void* input      = (const uint8_t*)data + input_pos;
-         uint32_t    input_size = size - 4;
-         if (length) {
-            out->owned.resize(length);
-            if (this->header.version <= bsa_header::version::skyrim_classic) {
-               //
-               // Prior to FO4/SSE, BSA files used zlib.
-               //
-               uint32_t out_size = length;
-               uncompress((Bytef*)out->owned.raw(), (uLongf*)&out_size, (Bytef*)input, input_size);
-               if (out_size != length) {
-                  dovah::logging::print_line("Size mismatch for zlib-decompressed BSA file with contents at %08X! Expected final size %08X, got size %08X.", input_pos, length, out->owned.size());
-               }
-            } else {
-               //
-               // As of FO4/SSE, BSA files use LZ4 frames (as opposed to simple LZ4 blocks).
-               //
-               LZ4F_dctx* context;
-               auto status = LZ4F_createDecompressionContext(&context, LZ4F_VERSION);
-               if (LZ4F_isError(status)) {
-                  dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", status);
-                  out->error = bsa_archived_file::error_code::lz4_error;
-                  out->owned.clear();
-               } else {
-                  LZ4F_decompressOptions_t options = { 0, 0, 0, 0 };
-                  //
-                  size_t destination_size = out->owned.size();
-                  size_t source_size      = input_size;
-                  auto result = LZ4F_decompress(context, out->owned.data(), &destination_size, input, &source_size, &options);
-                  if (LZ4F_isError(result)) {
-                     dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", result);
-                     out->error = bsa_archived_file::error_code::lz4_error;
-                     out->owned.clear();
-                  } else if (result) {
-                     dovah::logging::print_line("Size mismatch for LZ4-decompressed BSA file with contents at %08X? Remaining bytecount is roughly %08X.", input_pos, result);
-                  }
-               }
-               LZ4F_freeDecompressionContext(context);
-            }
-         }
-      } else {
-         out->shared.data = this->mapping.data_at(offset);
-         out->shared.size = size;
-      }
-      return out;
-   }
-
    bsa_archived_file* bsa_archive::lookup_file(const bs_hash& folder, const bs_hash& file) const {
-      std::string empty;
-      auto* entry = this->find_file(folder, file, empty, empty);
+      auto* entry = this->lookup_file_info(folder, file);
       if (!entry)
          return nullptr;
-      return this->retrieve_entry(*entry);
+      return this->read_contents_of(*entry);
    }
    bsa_archived_file* bsa_archive::lookup_file(const std::string& path_and_name) const {
       if (path_and_name.empty())
          return nullptr;
-      //
+      
       std::string folder_name;
       std::string file_name;
-      std::locale c_locale;
-      //
-      size_t size = path_and_name.size();
-      char   last = '\0';
-      for (size_t i = 0; i < size; ++i) {
-         auto c = path_and_name[i];
-         if (c == '\\' || c == '/') {
-            if (file_name.empty()) // skip leading and redundant slashes
-               continue;
-            if (!folder_name.empty())
-               folder_name += '\\';
-            folder_name += file_name;
-            file_name.clear();
-         } else {
-            file_name += tolower(c, c_locale);
-         }
-      }
+      split_path_and_filename(path_and_name, folder_name, file_name);
       if (folder_name.empty() || file_name.empty())
          return nullptr; // as of Oblivion, Bethesda's code can't hash empty strings
-      //
+      
       std::string extension;
       std::string bare_name = file_name;
       size_t      ext_index = file_name.find_last_of('.');
@@ -384,30 +261,85 @@ namespace dovah {
       }
       bs_hash folder = bs_hash(folder_name.c_str(), nullptr);
       bs_hash file   = bs_hash(bare_name.c_str(), extension.empty() ? nullptr : extension.c_str());
-      auto*   entry  = this->find_file(folder, file, folder_name, file_name);
-      if (!entry)
+
+      return this->lookup_file(folder, file);
+   }
+
+   bsa_archived_file* bsa_archive::read_contents_of(const bsa::packed_file_info& file_info) const {
+      assert(this->mapping);
+      if (file_info.corrupt)
          return nullptr;
-      return this->retrieve_entry(*entry);
+      auto size = file_info.size();
+      if (!size)
+         return nullptr;
+      
+      uint64_t offset = file_info.offset;
+      assert(offset + size <= this->mapping.size());
+      if (this->header.flags & bsa::archive_header::flag::embed_filenames) {
+         uint8_t length;
+         this->_read_at(length, offset);
+         offset += sizeof(length) + length;
+      }
+      
+      auto out = std::make_unique<bsa_archived_file>();
+
+      if (!this->packed_file_is_compressed(file_info)) {
+         out->shared.data = this->mapping.data_at(offset);
+         out->shared.size = size;
+         return out.release();
+      }
+
+      auto*  data = this->mapping.data();
+      size_t size = this->mapping.size();
+      size_t at   = offset;
+      //
+      uint32_t length;
+      if (at + sizeof(length) >= size)
+         return nullptr;
+      length = *(uint32_t*)((std::intptr_t)data + at);
+      //
+      uint64_t    input_pos  = offset + sizeof(length);
+      const void* input      = (const uint8_t*)data + input_pos;
+      uint32_t    input_size = size - 4;
+      if (length) {
+         out->owned.resize(length);
+         if (this->header.version <= bsa::archive_header::version::skyrim_classic) {
+            //
+            // Prior to FO4/SSE, BSA files used zlib.
+            //
+            uint32_t out_size = length;
+            uncompress((Bytef*)out->owned.raw(), (uLongf*)&out_size, (Bytef*)input, input_size);
+            if (out_size != length) {
+               dovah::logging::print_line("Size mismatch for zlib-decompressed BSA file with contents at %08X! Expected final size %08X, got size %08X.", input_pos, length, out->owned.size());
+            }
+         } else {
+            //
+            // As of FO4/SSE, BSA files use LZ4 frames (as opposed to simple LZ4 blocks).
+            //
+            LZ4F_dctx* context;
+            auto status = LZ4F_createDecompressionContext(&context, LZ4F_VERSION);
+            if (LZ4F_isError(status)) {
+               dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", status);
+               out->error = bsa_archived_file::error_code::lz4_error;
+               out->owned.clear();
+            } else {
+               LZ4F_decompressOptions_t options = { 0, 0, 0, 0 };
+               //
+               size_t destination_size = out->owned.size();
+               size_t source_size      = input_size;
+               auto result = LZ4F_decompress(context, out->owned.data(), &destination_size, input, &source_size, &options);
+               if (LZ4F_isError(result)) {
+                  dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", result);
+                  out->error = bsa_archived_file::error_code::lz4_error;
+                  out->owned.clear();
+               } else if (result) {
+                  dovah::logging::print_line("Size mismatch for LZ4-decompressed BSA file with contents at %08X? Remaining bytecount is roughly %08X.", input_pos, result);
+               }
+            }
+            LZ4F_freeDecompressionContext(context);
+         }
+      }
+      return out.release();
    }
    #pragma endregion
-
-   bool bsa_archive::for_each_folder(std::function<bool(const folder_entry&)> functor) const {
-      for (auto& folder : this->folders)
-         if (functor(folder))
-            return true;
-      return false;
-   }
-   bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, std::function<bool(const folder_entry&, const file_entry&)> functor) const {
-      for (auto& file : folder.files)
-         if (functor(folder, file))
-            return true;
-      return false;
-   }
-
-   bool bsa_archive::file_is_compressed(const file_entry& file) const noexcept {
-      bool result = file.non_default_compression();
-      if (this->header.flags & bsa_header::flag::compressed_by_default)
-         result = !result;
-      return result;
-   }
 }

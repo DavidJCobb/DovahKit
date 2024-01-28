@@ -1,6 +1,7 @@
 #include "compiled_script.h"
 #include <cassert>
 #include <stdexcept>
+#include "../../data/papyrus/helpers/name_equals.h"
 
 namespace dovah {
    std::array<papyrus_assembly_opcode, 36> papyrus_assembly_opcode::list = {{
@@ -200,7 +201,7 @@ namespace dovah {
       //
       uint32_t base = this->file._pos;
       uint32_t size;
-      this->_read(size);
+      this->_read(size); // untrustworthy even if bounds-checked against the filesize, due to Bethesda's mistakes. do not use. see backend docs on compiled scripts.
       //
       this->_read_string_index(data.superclass);
       this->_read_string_index(data.docstring);
@@ -226,9 +227,6 @@ namespace dovah {
       //
       // Done.
       //
-      if (this->file._pos != base + size) {
-         // TODO: warn?
-      }
    }
 
    void compiled_papyrus_script::read_file(const void* buffer, size_t size) {
@@ -277,5 +275,14 @@ namespace dovah {
       this->objects.resize(count);
       for (auto& o : this->objects)
          this->_read(o);
+   }
+
+   const compiled_papyrus_script::object* compiled_papyrus_script::lookup_object(const std::string& name) const {
+      for (auto it = this->objects.rbegin(); it != this->objects.rend(); ++it) {
+         const auto& item = *it;
+         if (dovah::papyrus::helpers::name_equals(item.name, name))
+            return &item;
+      }
+      return nullptr;
    }
 }

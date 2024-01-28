@@ -2160,6 +2160,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5345,6 +5348,15 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_ref_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\bsa\archive_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\packed_folder_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\packed_file_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5883,6 +5895,9 @@
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6221,6 +6236,14 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="widgets\widget-models\DKFormVMADModel.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\_docs\compiled script files.md" />
+    <None Include="dovah\files\bsa\README.md" />
+    <None Include="dovah\files\bsa\bsa_archive.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\bsa\packed_folder_info.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

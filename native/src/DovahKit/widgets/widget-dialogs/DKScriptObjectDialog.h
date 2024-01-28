@@ -12,4 +12,10 @@ class DKScriptObjectDialog : public QDialog {
    protected:
       Ui::DKScriptObjectDialog ui;
       QPersistentModelIndex scriptQMI;
+
+      QModelIndex _selectedPropertyQMI() const;
+
+      void _showSelectedProperty();
+
+      void _setCurrentlyFocusedValue(QVariant);
 };

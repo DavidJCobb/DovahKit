@@ -8,17 +8,15 @@ shipped to the public does  not allow the editing  or saving of masters, so the
 modding community has generally avoided saving files as masters unless doing so 
 was necessary for the file to function properly in-game.
 
-"Plug-ins" appear to  be intended as  work-in-progress files,  but because they 
-have long been  the only files that  the Creation Kit could edit  or save, they 
-are the de-facto standard for virtually all mods.  This is not purely semantic; 
-the game does treat  masters and  plug-ins differently,  with the  most notable 
-such difference being that ObjectReferences (REFRs and similar)  defined inside 
-of a plug-in are permanently persistent  regardless of whether they are flagged 
-or encoded as such within the file.  (This is believed to have been intended as 
-a debugging aid, but in practice, it means that plug-ins contribute more to the 
-ref handle limit than they need to; especially large mods must be masters.)  In 
-addition, the Creation Kit doesn't allow files to use plug-ins as dependencies, 
-though the game engine itself does not enforce any such limitation.
+"Plug-ins" were, traditionally, the only files that public builds of Bethesda's 
+Creation Kit could save;  they are thus the de-facto standard for virtually all 
+mods. This is not purely a semantic difference: the game has different behavior 
+when loading  masters versus plug-ins, with  the most notable  difference being 
+that all ObjectReferences  (REFRs and similar) defined  inside of a plug-in are 
+permanently persistent, regardless of whether hhey have been flagged as such in 
+the file data. Additionally, the Creation  Kit doesn't allow files to rely on a
+plug-in as a dependency, though the game engine itself doesn't enforce any such 
+limitation.
 
 "Light" files were introduced with Skyrim Special Edition, and exist as a means 
 of cramming a larger amount  of content into a  smaller load order. Light files 
@@ -50,3 +48,20 @@ because doing so is much easier.
 
 DovahKit will load light files' forms into the 0xFE slot at run-time in mimicry 
 of the actual game.  DovahKit is not alone in this regard; xEdit does the same.
+
+
+===  Different perspectives on plug-ins =======================================
+
+Some believe that plug-ins were meant for work-in-progress files only, and that 
+their handling of ObjectReferences is intended as a debugging aid. Because that 
+handling of persistence can cause large-scale mods to contribute heavily to the 
+game's reference handle limit (a cap on how many refs can be retained in RAM at 
+any one time), it's believed that masters are meant for finished works and that 
+masters should be preferred even for mods.
+
+It has been noted by others that officially released mods published by Bethesda 
+in venues such as the Steam Workshop have been released as plug-ins. Bethesda's 
+games have historically forced masters to load before plug-ins  (new games just
+hardcode a specific load order for official content). These facts have led some 
+to think that plug-ins are explicitly meant to be used for mods, with differing 
+persistence behaviors being meant as "training wheels."

@@ -444,7 +444,12 @@ QString DKFormVMADModel::Property::typeString() const {
          case property_type::array_of_string:
             out = "String[]";
             break;
+
+         default:
+            return {};
       }
+   } else {
+      return {};
    }
    out += "?";
    return out;
@@ -1544,6 +1549,18 @@ void DKFormVMADModel::setPropertyValue(QModelIndex qmi, const property_value& da
 }
 
 
+std::optional<DKFormVMADModel::property_status> DKFormVMADModel::getPropertyWorkingStatus(QModelIndex qmi) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return {};
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+
+   if (prop->bindings.edited.has_value()) {
+      return prop->bindings.edited.value().status;
+   }
+   return prop->getComputedStatus();
+}
 DKFormVMADModel::property_value DKFormVMADModel::getPropertyWorkingValue(QModelIndex qmi) {
    auto* script = this->_getContainingScript(qmi);
    if (!script)
@@ -1665,5 +1682,87 @@ void DKFormVMADModel::discardScriptWorkingProperties(QModelIndex script_qmi) {
       auto br = this->index(i, PropertyColumn::Value, script_qmi);
       emit dataChanged(tl, br);
    }
+}
+
+QString DKFormVMADModel::getPropertyWorkingValueStringified(QModelIndex qmi, size_t array_index) {
+   auto* script = this->_getContainingScript(qmi);
+   if (!script)
+      return;
+   auto* prop = (Property*)qmi.internalPointer();
+   assert(prop != nullptr);
+
+   auto _stringify = [](const property_value& value, size_t array_index = 0) -> QString {
+      QString out;
+      std::visit(
+         [&out, array_index](const auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               if (array_index <= v.size())
+                  out = _properties::stringify_value(v[array_index]);
+            } else {
+               out = _properties::stringify_value(v);
+            }
+         },
+         value
+      );
+      return out;
+   };
+   
+   if (auto& bind_opt = prop->bindings.edited; bind_opt.has_value()) {
+      auto& bind = bind_opt.value();
+      switch (bind.status) {
+         case property_status::unknown:
+         case property_status::defined_locally:
+            return _stringify(bind.value, array_index);
+         case property_status::inherited_and_removed:
+            return "None";
+      }
+   }
+   if (auto& bind_opt = prop->bindings.target; bind_opt.has_value()) {
+      auto& bind = bind_opt.value();
+      switch (bind.status) {
+         case property_status::unknown:
+         case property_status::defined_locally:
+            return _stringify(bind.value, array_index);
+         case property_status::inherited_and_removed:
+            return "None";
+      }
+   }
+   if (auto& bind_opt = prop->bindings.parent; bind_opt.has_value()) {
+      auto& bind = bind_opt.value();
+      switch (bind.status) {
+         case property_status::defined_locally:
+         case property_status::defined_only_on_base:
+            return _stringify(bind.value, array_index);
+      }
+   }
+   return "<<Default>>";
+}
+
+DKFormVMADModel::PropertyMetadata DKFormVMADModel::getPropertyWorkingMetadata(QModelIndex qmi) {
+   Property* prop;
+   {
+      auto* script = this->_getContainingScript(qmi);
+      if (!script)
+         return {};
+      prop = (Property*)qmi.internalPointer();
+      assert(prop != nullptr);
+   }
+
+   PropertyMetadata out;
+
+   if (prop->bindings.edited.has_value()) {
+      out.status = prop->bindings.edited.value().status;
+   } else {
+      out.status = prop->getComputedStatus();
+   }
+
+   if (prop->type.has_value()) {
+      out.typeinfo.underlying = prop->type.value().underlying_type;
+      out.typeinfo.scriptname = prop->type.value().name;
+   }
+   out.typeinfo.display_typename = prop->typeString();
+
+   return out;
 }
 #pragma endregion

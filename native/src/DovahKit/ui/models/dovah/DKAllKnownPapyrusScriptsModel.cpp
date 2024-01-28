@@ -85,6 +85,8 @@ namespace {
       if (!bsa_order)
          return;
 
+      dovah::bs_hash folder_hash(path, nullptr);
+
       auto& bsa_list = bsa_order->get_archive_list(); // TODO: this is intended to give us const access to the BSAs, but since it's a vector of pointers, we have non-const access too
       for (auto it = bsa_list.rbegin(); it != bsa_list.rend(); ++it) {
          //
@@ -95,31 +97,36 @@ namespace {
          // go over loose files before BSAs.)
          //
          const auto* bsa = *it;
-         for (const auto& folder : bsa->folder_list()) {
-            if (folder.name.empty())
-               continue;
-            if (!cobb::strieq_ascii(folder.name, path))
-               continue;
-            for (const auto& file_info : folder.files) {
-               const auto& file_name = file_info.name;
-               if (file_name.empty())
-                  continue;
-               size_t name_len = file_name.size();
-               if (name_len < 5) // size of "x.pex"
-                  continue;
-               if (file_name[name_len - 4] != '.')
-                  continue;
-               if (!cobb::strieq_ascii(std::string_view(file_info.name.c_str() + name_len - 3, 3), desired_ext))
-                  continue;
+         if (!bsa->retains_filenames())
+            //
+            // Files in this archive are identified only by hash; there's no way to recover the 
+            // original file extension.
+            //
+            continue;
 
-               dovah::bsa_archived_file* archived_file = bsa.retrieve_entry(file_info); // TODO: make this function public and document it; it shouldn't need to be private
-               if (!archived_file)
-                  continue;
-               //
-               functor(std::as_const(*archived_file));
-               //
-               delete archived_file;
-            }
+         const auto* folder_info = bsa->lookup_folder_info(folder_hash, path);
+         if (!folder_info)
+            continue;
+         
+         for (const auto& file_info : folder.files) {
+            const auto& file_name = file_info.name;
+            if (file_name.empty())
+               continue;
+            size_t name_len = file_name.size();
+            if (name_len < 5) // size of "x.pex"
+               continue;
+            if (file_name[name_len - 4] != '.')
+               continue;
+            if (!cobb::strieq_ascii(std::string_view(file_info.name.c_str() + name_len - 3, 3), desired_ext))
+               continue;
+
+            auto* archived_file = bsa.read_contents_of(file_info);
+            if (!archived_file)
+               continue;
+            //
+            functor(std::as_const(*archived_file));
+            //
+            delete archived_file;
          }
       }
    }

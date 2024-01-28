@@ -87,6 +87,24 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       layout->addWidget(widget, 2, 0, 1, 2);
    }
 
+   #pragma region Tab order
+   {
+      auto* cell_picker =
+         #if !defined(QT_DESIGNER_LIB)
+            this->subwidgets.cell
+         #else
+            this->subwidgets.fake_formpicker
+         #endif
+      ;
+      this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+      this->setFocusProxy(this->subwidgets.render_window_pick);
+      this->setTabOrder(this->subwidgets.render_window_pick, cell_picker);
+      this->setTabOrder(cell_picker,                         this->subwidgets.ref_filter_string);
+      this->setTabOrder(this->subwidgets.ref_filter_string,  this->subwidgets.refr);
+      this->setTabOrder(this->subwidgets.refr,               this->subwidgets.render_window_focus);
+   }
+   #pragma endregion
+
    #if !defined(QT_DESIGNER_LIB)
    {
       auto& editor = DovahKitCore::get();
@@ -205,7 +223,8 @@ void DKObjectReferencePicker::_rebuildLayout() {
 
    void DKObjectReferencePicker::setCell(dovah::form_stub* stub) {
       if (stub) {
-         assert(stub->formType == dovah::form_type::cell);
+         if (stub->formType != dovah::form_type::cell)
+            return;
          this->subwidgets.cell->setFormStub(stub);
       } else {
          this->subwidgets.cell->setFormStub(nullptr);
@@ -213,6 +232,8 @@ void DKObjectReferencePicker::_rebuildLayout() {
    }
    void DKObjectReferencePicker::setRef(dovah::form_stub* stub) {
       if (stub) {
+         if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+            return;
          auto* cell = stub->get_parent_form();
          if (cell && cell->formType == dovah::form_type::cell) {
             this->setCell(cell);

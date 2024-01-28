@@ -51,6 +51,7 @@ class DKFormVMADModel : public QAbstractItemModel {
       DKFormVMADModel(QObject* parent = nullptr);
       ~DKFormVMADModel();
 
+   public:
       struct ScriptColumn {
          enum {
             Name,
@@ -69,10 +70,38 @@ class DKFormVMADModel : public QAbstractItemModel {
       };
       static constexpr const size_t PropertyColumnCount = PropertyColumn::_Count;
 
+   public:
+      using script_status   = dovah::loaded_forms::components::papyrus::script_status;
+      using property_status = dovah::loaded_forms::components::papyrus::property_status;
+      using property_type   = dovah::loaded_forms::components::papyrus::property_type;
+
       struct ScriptMetadata {
          bool attached_on_parent    = false;
          bool attached_on_target    = false;
          bool inherited_and_removed = false;
+      };
+
+      struct PropertyMetadata {
+         std::optional<property_status> status;
+         struct {
+            std::optional<property_type> underlying;
+            QString scriptname; // if available via underlying PEX
+            QString display_typename;
+         } typeinfo;
+         struct {
+            dovah::form_type_t type = dovah::form_type::none;
+            //
+            bool not_a_form    = false;
+            bool unidentified  = true; // e.g. a PEX failed to load or had cyclical inheritance
+            bool is_alias_type = false;
+         } underlying_form_typeinfo;
+
+         constexpr bool has_underlying_form_type() const {
+            return !underlying_form_typeinfo.not_a_form && !underlying_form_typeinfo.unidentified;
+         }
+         constexpr dovah::form_type_t underlying_form_type() const {
+            return underlying_form_typeinfo.type;
+         }
       };
 
    public:
@@ -82,11 +111,6 @@ class DKFormVMADModel : public QAbstractItemModel {
       using vmad_script   = dovah::loaded_forms::components::papyrus::attached_script;
       using vmad_property = dovah::loaded_forms::components::papyrus::property;
 
-      using property_type = dovah::loaded_forms::components::papyrus::property_type;
-
-      using script_status   = dovah::loaded_forms::components::papyrus::script_status;
-      using property_status = dovah::loaded_forms::components::papyrus::property_status;
-      
       struct object_property_value {
          static constexpr const uint16_t no_alias = 0xFFFF;
 
@@ -236,6 +260,7 @@ class DKFormVMADModel : public QAbstractItemModel {
       void revertPropertyValue(QModelIndex); // revert to inherited value
       void setPropertyValue(QModelIndex, const property_value&);
 
+      std::optional<property_status> getPropertyWorkingStatus(QModelIndex); // if no edits are pending, returns computed status. empty = defined in script but not on form
       property_value getPropertyWorkingValue(QModelIndex); // if no edits are pending, returns computed value
       void clearPropertyWorkingValue(QModelIndex); // to NOT HAVE a working value, use "revert." to SET THE WORKING VALUE TO NONE, use "clear."
       void revertPropertyWorkingValue(QModelIndex); // to NOT HAVE a working value, use "revert." to SET THE WORKING VALUE TO NONE, use "clear."
@@ -243,6 +268,10 @@ class DKFormVMADModel : public QAbstractItemModel {
       //
       void commitScriptWorkingProperties(QModelIndex script_qmi);
       void discardScriptWorkingProperties(QModelIndex script_qmi);
+
+      QString getPropertyWorkingValueStringified(QModelIndex, size_t array_index = 0);
+
+      PropertyMetadata getPropertyWorkingMetadata(QModelIndex qmi);
 };
 
 #include "./DKFormVMADModel.inl"

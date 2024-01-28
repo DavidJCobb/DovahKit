@@ -213,7 +213,9 @@ namespace dovah {
          } debug;
          std::vector<user_flag> user_flags;
          std::vector<object> objects;
-         //
+         
          void read_file(const void* buffer, size_t size);
+
+         const object* lookup_object(const std::string&) const;
    };
 }
