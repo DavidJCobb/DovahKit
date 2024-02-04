@@ -103,10 +103,10 @@ namespace dovah {
                out = cobb::byteswap(out);
          }
          
-         constexpr bool is_eof() const noexcept {
+         inline bool is_eof() const noexcept {
             return this->stream_position >= this->mapping.size();
          }
-         constexpr bool is_in_bounds(uint32_t bytes) const noexcept {
+         inline bool is_in_bounds(uint32_t bytes) const noexcept {
             return ((uint64_t)this->stream_position + bytes) < this->mapping.size();
          }
          
@@ -133,8 +133,11 @@ namespace dovah {
 
          constexpr bool packed_file_is_compressed(const file_entry&) const noexcept;
 
-         constexpr bool for_each_folder(std::function<bool(const folder_entry&)> functor) const;
-         constexpr bool for_each_file_in_folder(const folder_entry&, std::function<bool(const folder_entry&, const file_entry&)> functor) const;
+         template<typename Functor>
+         constexpr bool for_each_folder(Functor&& functor) const requires std::is_invocable_r_v<bool, Functor, const folder_entry&>;
+         
+         template<typename Functor>
+         constexpr bool for_each_file_in_folder(const folder_entry&, Functor&& functor) const requires std::is_invocable_r_v<bool, Functor, const folder_entry&, const file_entry&>;
 
          constexpr const bsa::packed_folder_info* lookup_folder_info(const bs_hash& folder_hash) const;
          constexpr const bsa::packed_folder_info* lookup_folder_info(const bs_hash& folder_hash, const std::string& folder_name) const;

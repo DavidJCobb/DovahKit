@@ -721,6 +721,7 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
+    <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
@@ -841,6 +842,7 @@
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp" />
+    <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
@@ -856,6 +858,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\DKQuestAliasPicker.h" />
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h" />
@@ -1248,6 +1251,7 @@
     <ClInclude Include="helpers\utf8\append.h" />
     <ClInclude Include="helpers\utf8\for_each.h" />
     <ClInclude Include="helpers\variadic_select_by_type.h" />
+    <ClInclude Include="helpers\vectors\map_to_new_type.h" />
     <ClInclude Include="helpers\widen_u16_to_u32.h" />
     <ClInclude Include="nif\block.h" />
     <ClInclude Include="nif\blocks\bhkBoxShape.h" />
@@ -1401,6 +1405,9 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\turn_camera.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\_all.h" />
     <QtMoc Include="ui\options_window\worldinput_scheme_editor.h" />
+    <ClInclude Include="ui\types\papyrus\property_value.h" />
+    <ClInclude Include="ui\types\papyrus\value_type.h" />
+    <ClInclude Include="ui\types\quest_alias.h" />
     <ClInclude Include="vulkan\abstract_renderer.h" />
     <ClInclude Include="vulkan\asset_loading\load_queue.h" />
     <ClInclude Include="vulkan\asset_loading\queued_nif_load.h" />
@@ -2197,6 +2204,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\compiled script files.md" />
+    <None Include="dovah\_docs\papyrus script bindings.md" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />
@@ -2368,6 +2376,7 @@
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />
+    <None Include="ui\types\papyrus\property_value.inl" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="vulkan\frame_in_flight.inl" />

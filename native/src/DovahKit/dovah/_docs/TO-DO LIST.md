@@ -58,6 +58,11 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 * Conditions can refer to a piece of package data on the condition's owning package; they refer to that data by index. If the package is edited and its data is rearranged, how do we find and update all referencing conditions?
   * This isn't as much of a concern as it seems like. The only time conditions have owning packages (and therefore the only time they can refer to package data) is when they exist inside of a `PACK` form. As long as the UI for editing `PACK` forms is carefully implemented to update conditions everywhere in the package when package data are added, removed, or reordered, we should be fine.
 
+### Worldspace (WRLD)
+* Per xEdit Discord, `MHDT` subrecord (Max Height Data) might be coalesced across all overrides, preferring the highest vertex at any given point. It'd make sense: it'd be the only way to allow MHDT to work reliably given any situation where one mod adds a ref high in the air (such that dragons must fly above it) but the winning WRLD record doesn't "know about" that ref.
+  
+  We should verify this by RE-ing the loader in LE, and again in SSE if we don't see this behavior in LE.
+
 
 
 

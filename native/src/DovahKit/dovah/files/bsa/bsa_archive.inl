@@ -20,13 +20,16 @@ namespace dovah {
       }
    }
 
-   constexpr bool bsa_archive::for_each_folder(std::function<bool(const folder_entry&)> functor) const {
+   template<typename Functor>
+   constexpr bool bsa_archive::for_each_folder(Functor&& functor) const requires std::is_invocable_r_v<bool, Functor, const folder_entry&> {
       for (auto& folder : this->folders)
          if (functor(folder))
             return true;
       return false;
    }
-   constexpr bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, std::function<bool(const folder_entry&, const file_entry&)> functor) const {
+
+   template<typename Functor>
+   constexpr bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, Functor&& functor) const requires std::is_invocable_r_v<bool, Functor, const folder_entry&, const file_entry&> {
       for (auto& file : folder.files)
          if (functor(folder, file))
             return true;

@@ -1687,7 +1687,7 @@ void DKFormVMADModel::discardScriptWorkingProperties(QModelIndex script_qmi) {
 QString DKFormVMADModel::getPropertyWorkingValueStringified(QModelIndex qmi, size_t array_index) {
    auto* script = this->_getContainingScript(qmi);
    if (!script)
-      return;
+      return {};
    auto* prop = (Property*)qmi.internalPointer();
    assert(prop != nullptr);
 
@@ -1758,7 +1758,7 @@ DKFormVMADModel::PropertyMetadata DKFormVMADModel::getPropertyWorkingMetadata(QM
    }
 
    if (prop->type.has_value()) {
-      out.typeinfo.underlying = prop->type.value().underlying_type;
+      //out.typeinfo.underlying = prop->type.value().underlying_type; // TODO
       out.typeinfo.scriptname = prop->type.value().name;
    }
    out.typeinfo.display_typename = prop->typeString();

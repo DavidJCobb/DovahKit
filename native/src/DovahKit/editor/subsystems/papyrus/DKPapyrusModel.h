@@ -94,7 +94,7 @@ class DKPapyrusModel : public QAbstractItemModel {
             void insert(Script*); // asserts that the passed-in script isn't already stored
 
             constexpr const QVector<Script*>& list() const noexcept { return this->scripts; }
-            constexpr size_t size() const noexcept { return list().size(); }
+            inline size_t size() const noexcept { return list().size(); }
 
             void take(Script&); // asserts that the passed-in script is already stored
       };

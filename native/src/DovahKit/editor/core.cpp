@@ -33,6 +33,7 @@
 #include "subsystems/options/core.h"
 
 #include "form_stub_meta_type.h"
+#include "ui/types/quest_alias.h"
 
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
@@ -86,6 +87,7 @@ namespace {
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
    qRegisterMetaType<dovah::form_stub*>();
+   qRegisterMetaType<ui::types::quest_alias>();
    QMetaType::registerConverter<dovah::form_stub*, QString>(&_qmetatype_converters::form_stub);
    //
    this->load_order = new dovah::file_load_order;

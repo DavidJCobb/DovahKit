@@ -10,6 +10,9 @@
 #include "helpers/type_traits/is_std_vector.h"
 #include "../widget-models/DKFormVMADModel.h"
 
+#include "editor/form_stub_meta_type.h"
+#include "ui/types/quest_alias.h"
+
 namespace {
    constexpr const bool allow_incomplete_polishing = true;
 }
@@ -32,7 +35,7 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
       if (scriptModelIndex.isValid()) {
          prop_view->setModel((QAbstractItemModel*)scriptModelIndex.model());
          prop_view->setRootIndex(scriptModelIndex);
-         assert(dynamic_cast<DKFormVMADModel*>(scriptModelIndex.model()) != nullptr);
+         assert(dynamic_cast<const DKFormVMADModel*>(scriptModelIndex.model()) != nullptr);
       }
       if (auto* header = prop_view->horizontalHeader()) {
          header->setStretchLastSection(true);
@@ -58,7 +61,7 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
          vh->setVisible(false);
       }
       QObject::connect(widget, &QTableWidget::currentCellChanged, this, [this](int currentRow, int currentColumn, int previousRow, int previousColumn) {
-         auto  prop_qmi   = this->_selectedPropertyQMI();
+         auto  prop_qmi = this->_selectedPropertyQMI();
          auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
          if (!vmad_model || !prop_qmi.isValid()) {
             return;
@@ -71,17 +74,8 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
 
          auto* widget = this->ui.arrayTable;
 
-         switch (prop_info.typeinfo.underlying.value()) {
-            using enum DKFormVMADModel::property_type;
-            case array_of_boolean:
-            case array_of_float32:
-            case array_of_integer:
-            case array_of_object:
-            case array_of_string:
-               break;
-            default:
-               return;
-         }
+         if (!prop_info.typeinfo.underlying.value().is_array)
+            return;
 
          auto value = vmad_model->getPropertyWorkingValue(prop_qmi);
 
@@ -95,33 +89,41 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
             QSignalBlocker(this->ui.valueWidget_ref),
          };
 
-         switch (prop_info.typeinfo.underlying.value()) {
-            using enum DKFormVMADModel::property_type;
-            case array_of_boolean:
+         switch (prop_info.typeinfo.underlying.value().base) {
+            using enum ui::types::papyrus::single_value_type;
+            case boolean:
                this->ui.valueWidget_bool->setChecked(std::get<std::vector<bool>>(value)[currentRow]);
                break;
-            case array_of_float32:
+            case float32:
                this->ui.valueWidget_float->setValue(std::get<std::vector<float>>(value)[currentRow]);
                break;
-            case array_of_integer:
+            case integer:
                this->ui.valueWidget_int->setValue(std::get<std::vector<int32_t>>(value)[currentRow]);
                break;
-            case array_of_object:
-               if (prop_info.underlying_form_typeinfo.is_alias_type) {
+            case string:
+               this->ui.valueWidget_string->setPlainText(std::get<std::vector<QString>>(value)[currentRow]);
+               break;
+
+            case alias:
+               {
                   auto& item = std::get<std::vector<DKFormVMADModel::object_property_value>>(value)[currentRow];
 
                   auto* quest    = item.form;
                   auto  alias_id = item.alias_id;
 
-                  static_assert(false, "TODO: we don't have any UI for alias-type properties!!!!!");
-               } else {
+                  this->ui.valueWidget_alias->setQuestAlias({
+                     .quest    = quest,
+                     .alias_id = alias_id,
+                  });
+               }
+               break;
+
+            case form:
+               {
                   dovah::form_stub* stub = std::get<std::vector<DKFormVMADModel::object_property_value>>(value)[currentRow].form;
                   this->ui.valueWidget_form->setFormStub(stub);
                   this->ui.valueWidget_ref->setRef(stub);
                }
-               break;
-            case array_of_string:
-               this->ui.valueWidget_string->setPlainText(std::get<std::vector<QString>>(value)[currentRow]);
                break;
          }
       });
@@ -138,8 +140,8 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
    QObject::connect(this->ui.valueWidget_int, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
       this->_setCurrentlyFocusedValue(QVariant::fromValue(value));
    });
-   QObject::connect(this->ui.valueWidget_string, &QPlainTextEdit::textChanged, this, [this](QString text) {
-      this->_setCurrentlyFocusedValue(QVariant::fromValue(text));
+   QObject::connect(this->ui.valueWidget_string, &QPlainTextEdit::textChanged, this, [this]() {
+      this->_setCurrentlyFocusedValue(QVariant::fromValue(this->ui.valueWidget_string->toPlainText()));
    });
    //
    QObject::connect(this->ui.valueWidget_form, &FormPicker::formChanged, this, [this](dovah::form_stub* value) {
@@ -148,7 +150,9 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
    QObject::connect(this->ui.valueWidget_ref, &DKObjectReferencePicker::refChanged, this, [this](dovah::form_stub* ref) {
       this->_setCurrentlyFocusedValue(QVariant::fromValue(ref));
    });
-   static_assert(false, "TODO: we don't have any UI for alias-type properties!!!!!");
+   QObject::connect(this->ui.valueWidget_alias, &DKQuestAliasPicker::aliasChanged, this, [this](const ui::types::quest_alias& alias) {
+      this->_setCurrentlyFocusedValue(QVariant::fromValue(alias));
+   });
    #pragma endregion
 
    this->_showSelectedProperty();
@@ -180,87 +184,96 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
    auto row = this->ui.arrayTable->currentRow();
 
    auto underlying = prop_info.typeinfo.underlying.value();
-   switch (underlying) {
-      using enum DKFormVMADModel::property_type;
+   switch (underlying.base) {
+      using enum ui::types::papyrus::single_value_type;
 
       case boolean:
-         vmad_model->setPropertyWorkingValue(prop_qmi, v.toBool());
-         break;
-      case array_of_boolean:
-         {
+         if (underlying.is_array) {
+            vmad_model->setPropertyWorkingValue(prop_qmi, v.toBool());
+         } else {
             using value_type = std::vector<bool>;
 
-            auto prior = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(prior));
-            std::get<value_type>(prior)[row] = v.toBool();
+            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+            assert(std::holds_alternative<value_type>(data));
+            std::get<value_type>(data)[row] = v.toBool();
+            vmad_model->setPropertyWorkingValue(prop_qmi, data);
          }
          break;
 
       case float32:
-         vmad_model->setPropertyWorkingValue(prop_qmi, v.toFloat());
-         break;
-      case array_of_float32:
-         {
+         if (underlying.is_array) {
+            vmad_model->setPropertyWorkingValue(prop_qmi, v.toFloat());
+         } else {
             using value_type = std::vector<float>;
 
-            auto prior = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(prior));
-            std::get<value_type>(prior)[row] = v.toFloat();
+            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+            assert(std::holds_alternative<value_type>(data));
+            std::get<value_type>(data)[row] = v.toFloat();
+            vmad_model->setPropertyWorkingValue(prop_qmi, data);
          }
          break;
 
       case integer:
-         vmad_model->setPropertyWorkingValue(prop_qmi, v.toInt());
-         break;
-      case array_of_integer:
-         {
+         if (underlying.is_array) {
+            vmad_model->setPropertyWorkingValue(prop_qmi, v.toInt());
+         } else {
             using value_type = std::vector<int32_t>;
 
-            auto prior = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(prior));
-            std::get<value_type>(prior)[row] = v.toInt();
+            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+            assert(std::holds_alternative<value_type>(data));
+            std::get<value_type>(data)[row] = v.toInt();
+            vmad_model->setPropertyWorkingValue(prop_qmi, data);
          }
          break;
 
       case string:
-         vmad_model->setPropertyWorkingValue(prop_qmi, v.toString());
-         break;
-      case array_of_string:
-         {
+         if (underlying.is_array) {
+            vmad_model->setPropertyWorkingValue(prop_qmi, v.toString());
+         } else {
             using value_type = std::vector<QString>;
 
-            auto prior = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(prior));
-            std::get<value_type>(prior)[row] = v.toString();
-         }
-         break;
-
-      case object:
-         {
-            DKFormVMADModel::object_property_value data;
-            if (v.canConvert<dovah::form_stub*>()) {
-               data.form = v.value<dovah::form_stub*>();
-            } else {
-               static_assert(false, "TODO: we need a way to handle aliases. ideally we should define a common type and QMetaType for them");
-            }
+            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+            assert(std::holds_alternative<value_type>(data));
+            std::get<value_type>(data)[row] = v.toString();
             vmad_model->setPropertyWorkingValue(prop_qmi, data);
          }
          break;
-      case array_of_object:
-         {
-            DKFormVMADModel::object_property_value data;
-            if (v.canConvert<dovah::form_stub*>()) {
-               data.form = v.value<dovah::form_stub*>();
-            } else {
-               static_assert(false, "TODO: we need a way to handle aliases. ideally we should define a common type and QMetaType for them");
-            }
 
-            {
+      case alias:
+         {
+            auto d = v.value<ui::types::quest_alias>();
+
+            DKFormVMADModel::object_property_value val;
+            val.form     = d.quest;
+            val.alias_id = d.alias_id;
+
+            if (underlying.is_array) {
+               vmad_model->setPropertyWorkingValue(prop_qmi, val);
+            } else {
                using value_type = std::vector<DKFormVMADModel::object_property_value>;
 
-               auto prior = vmad_model->getPropertyWorkingValue(prop_qmi);
-               assert(std::holds_alternative<value_type>(prior));
-               std::get<value_type>(prior)[row] = data;
+               auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+               assert(std::holds_alternative<value_type>(data));
+               std::get<value_type>(data)[row] = val;
+               vmad_model->setPropertyWorkingValue(prop_qmi, data);
+            }
+         }
+         break;
+
+      case form:
+         {
+            DKFormVMADModel::object_property_value val;
+            val.form = v.value<dovah::form_stub*>();
+
+            if (underlying.is_array) {
+               vmad_model->setPropertyWorkingValue(prop_qmi, val);
+            } else {
+               using value_type = std::vector<DKFormVMADModel::object_property_value>;
+
+               auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
+               assert(std::holds_alternative<value_type>(data));
+               std::get<value_type>(data)[row] = val;
+               vmad_model->setPropertyWorkingValue(prop_qmi, data);
             }
          }
          break;

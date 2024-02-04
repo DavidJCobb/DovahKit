@@ -269,12 +269,11 @@ namespace dovah {
       assert(this->mapping);
       if (file_info.corrupt)
          return nullptr;
-      auto size = file_info.size();
-      if (!size)
+      if (!file_info.size())
          return nullptr;
       
       uint64_t offset = file_info.offset;
-      assert(offset + size <= this->mapping.size());
+      assert(offset + file_info.size() <= this->mapping.size());
       if (this->header.flags & bsa::archive_header::flag::embed_filenames) {
          uint8_t length;
          this->_read_at(length, offset);
@@ -285,7 +284,7 @@ namespace dovah {
 
       if (!this->packed_file_is_compressed(file_info)) {
          out->shared.data = this->mapping.data_at(offset);
-         out->shared.size = size;
+         out->shared.size = file_info.size();
          return out.release();
       }
 

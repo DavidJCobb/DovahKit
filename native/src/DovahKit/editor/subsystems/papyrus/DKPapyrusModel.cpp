@@ -10,6 +10,11 @@
 #include "editor/subsystems/assets.h"
 #include "editor/core.h"
 
+namespace {
+   // Set to `true` once we start working on watching for real-time changes to loose files.
+   constexpr const bool require_file_change_listener = false;
+}
+
 /*
 
    The design of the model is as follows:
@@ -227,7 +232,7 @@ namespace {
       if (!bsa_order)
          return;
 
-      const auto folder_hash = dovah::bs_hash(path, nullptr);
+      const auto folder_hash = dovah::bs_hash(path.c_str(), nullptr);
 
       auto& bsa_list = bsa_order->get_archive_list(); // TODO: this is intended to give us const access to the BSAs, but since it's a vector of pointers, we have non-const access too
       for (auto it = bsa_list.rbegin(); it != bsa_list.rend(); ++it) {
@@ -254,7 +259,7 @@ namespace {
          if (!folder_info)
             continue;
 
-         for (const auto& file_info : folder_info.files) {
+         for (const auto& file_info : folder_info->files) {
             const auto& file_name = file_info.name;
             if (file_name.empty())
                continue;
@@ -266,7 +271,7 @@ namespace {
             if (!cobb::strieq_ascii(std::string_view(file_info.name.c_str() + name_len - 3, 3), desired_ext))
                continue;
 
-            auto* archived_file = bsa.read_contents_of(file_info);
+            auto* archived_file = bsa->read_contents_of(file_info);
             if (!archived_file)
                continue;
             //
@@ -553,6 +558,8 @@ DKPapyrusModel::DKPapyrusModel(QObject* parent) {
       //       (This to-do item will become relevant once we start tracking that in the first place...)
       //
    });
+
+   static_assert(!require_file_change_listener, "TODO: Win32 directory change listener (maybe abstracted into a helper class)");
 }
 DKPapyrusModel::~DKPapyrusModel() {
    this->_data.clear();
@@ -605,8 +612,10 @@ void DKPapyrusModel::_update_superclass_of(Script& subject) {
    }(subject);
 }
 
-static_assert(false, "TODO: Use Win32 to watch the compiled script folder: https://learn.microsoft.com/en-us/windows/win32/fileio/obtaining-directory-change-notifications"
-                     "      but bear in mind that we have to do that on a worker thread with thread sync, because that API waits/blocks until a change is detected.");
+static_assert(!require_file_change_listener,
+   "TODO: Use Win32 to watch the compiled script folder: https://learn.microsoft.com/en-us/windows/win32/fileio/obtaining-directory-change-notifications"
+   "      but bear in mind that we have to do that on a worker thread with thread sync, because that API waits/blocks until a change is detected."
+);
 void DKPapyrusModel::_on_loose_file_created(QString scriptname) {
    QString path;
    {
@@ -629,7 +638,9 @@ void DKPapyrusModel::_on_loose_file_created(QString scriptname) {
 
    _update_superclass_of(*loaded);
 }
-void DKPapyrusModel::_on_loose_file_edited(QString scriptname);
+void DKPapyrusModel::_on_loose_file_edited(QString scriptname) {
+   static_assert(!require_file_change_listener, "TODO: IMPLEMENT ME");
+}
 void DKPapyrusModel::_on_loose_file_deleted(QString scriptname) {
    auto index = this->_data.index_of(scriptname);
    if (index == script_collection::index_of_none)
@@ -703,8 +714,6 @@ DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const 
          break;
    }
 
-   Script* dst_script = nullptr;
-
    QString name       = QString::fromStdString(src_script->name);
    Script* dst_script = dst.lookup(name);
    if (is_loose) {
@@ -761,7 +770,7 @@ void DKPapyrusModel::populate_initial() {
       _for_loose_files_with_ext(
          QString::fromStdWString(game_folder.c_str()) + "\\Data\\scripts\\",
          "pex",
-         [this](const std::string& filename_sans_ext, QFile file) {
+         [this](const std::string& filename_sans_ext, QFile& file) {
             auto data = file.readAll();
             _scan_pex(this->_data, filename_sans_ext, data.constData(), data.size(), true);
          }

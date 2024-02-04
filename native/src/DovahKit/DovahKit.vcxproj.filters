@@ -2163,6 +2163,12 @@
     <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKQuestAliasPicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\papyrus\property_value.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5357,6 +5363,18 @@
     <ClInclude Include="dovah\files\bsa\packed_file_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\quest_alias.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\papyrus\value_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\papyrus\property_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\vectors\map_to_new_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -5898,6 +5916,9 @@
     <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKQuestAliasPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6244,6 +6265,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\files\bsa\packed_folder_info.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\_docs\papyrus script bindings.md" />
+    <None Include="ui\types\papyrus\property_value.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -9,6 +9,9 @@
 #include "dovah/forms/components/papyrus/property_type.h"
 #include "dovah/forms/components/papyrus/script_status.h"
 #include "dovah/core.h"
+#include "ui/types/papyrus/property_value.h"
+#include "ui/types/papyrus/value_type.h"
+#include "ui/types/quest_alias.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -84,16 +87,15 @@ class DKFormVMADModel : public QAbstractItemModel {
       struct PropertyMetadata {
          std::optional<property_status> status;
          struct {
-            std::optional<property_type> underlying;
+            std::optional<ui::types::papyrus::value_type> underlying;
             QString scriptname; // if available via underlying PEX
             QString display_typename;
          } typeinfo;
          struct {
             dovah::form_type_t type = dovah::form_type::none;
             //
-            bool not_a_form    = false;
-            bool unidentified  = true; // e.g. a PEX failed to load or had cyclical inheritance
-            bool is_alias_type = false;
+            bool not_a_form   = false;
+            bool unidentified = true; // e.g. a PEX failed to load or had cyclical inheritance
          } underlying_form_typeinfo;
 
          constexpr bool has_underlying_form_type() const {
@@ -121,13 +123,17 @@ class DKFormVMADModel : public QAbstractItemModel {
       using property_value = std::variant<
          std::monostate, // only for clearing an inherited property value REFR-side
          //
-         object_property_value,
+         object_property_value, // TODO: REMOVE once we have machinery in place to properly identify a script's base class
+         //dovah::form_stub*,
+         //ui::types::quest_alias,
          QString,
          int32_t,
          float,
          bool,
          //
-         std::vector<object_property_value>,
+         std::vector<object_property_value>, // TODO: REMOVE once we have machinery in place to properly identify a script's base class
+         //std::vector<dovah::form_stub*>,
+         //std::vector<ui::types::quest_alias>,
          std::vector<QString>,
          std::vector<int32_t>,
          std::vector<float>,
