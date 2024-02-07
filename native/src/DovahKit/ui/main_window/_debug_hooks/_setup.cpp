@@ -28,6 +28,7 @@
 #include "worldinput2_control_scheme_ui.h"
 #include "worldinput2_control_scheme_rebuild.h"
 #include "ui_ref_picker.h"
+#include "papyrus_subsystem.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -56,7 +57,8 @@ namespace DovahKitDebug {
       features::worldinput2_input_seq_ui,
       features::worldinput2_control_scheme_ui,
       features::worldinput2_control_scheme_rebuild,
-      features::ui_ref_picker//,
+      features::ui_ref_picker,
+      features::papyrus_subsystem//,
    >;
 
    template<typename T> struct _add_functor {

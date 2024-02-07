@@ -96,11 +96,13 @@ class DKPapyrusModel : public QAbstractItemModel {
             constexpr const QVector<Script*>& list() const noexcept { return this->scripts; }
             inline size_t size() const noexcept { return list().size(); }
 
+            inline void reserve(size_t s) { this->scripts.reserve(s); }
+
             void take(Script&); // asserts that the passed-in script is already stored
       };
 
    public:
-      DKPapyrusModel(QObject* parent);
+      DKPapyrusModel(QObject* parent = nullptr);
       ~DKPapyrusModel();
 
    protected:

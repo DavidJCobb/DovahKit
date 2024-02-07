@@ -2169,6 +2169,9 @@
     <ClCompile Include="ui\types\papyrus\property_value.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5373,6 +5376,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\vectors\map_to_new_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

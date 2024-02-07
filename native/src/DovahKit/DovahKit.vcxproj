@@ -680,6 +680,7 @@
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
@@ -1365,6 +1366,7 @@
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h" />
     <QtMoc Include="ui\form_windows\activator.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />

@@ -15,13 +15,13 @@ namespace dovah {
       {"idiv", 3, false},
       {"fdiv", 3, false},
       {"imod", 3, false},
-      {"not",  2, false},
+      {"not",  2, false}, // 0x0A
       {"ineg", 2, false},
       {"fneg", 2, false},
       {"set",  2, false},
       {"cast", 2, false},
       {"cmp_eq",  3, false},
-      {"cmp_lt",  3, false},
+      {"cmp_lt",  3, false}, // 0x10
       {"cmp_lte", 3, false},
       {"cmp_gt",  3, false},
       {"cmp_gte", 3, false},
@@ -31,7 +31,7 @@ namespace dovah {
       {"call_method", 3, true},
       {"call_super",  2, true},
       {"call_static", 3, true},
-      {"retn", 1, false},
+      {"retn", 1, false}, // 0x1A
       {"strcat",   3, false},
       {"prop_get", 3, false},
       {"prop_set", 3, false},
@@ -134,10 +134,6 @@ namespace dovah {
          this->_read(c);
          if (c.underlying_type != raw_type::integer)
             throw varargs_count_type_exception(pos, (uint8_t)c.underlying_type);
-         #if _DEBUG
-            if (c.i > 10)
-               __debugbreak(); // suspicious vararg count
-         #endif
          //
          auto size = definition.fixed_arg_count + c.i;
          data.operands.resize(size);

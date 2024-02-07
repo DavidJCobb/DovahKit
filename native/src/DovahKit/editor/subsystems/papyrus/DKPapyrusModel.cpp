@@ -275,7 +275,13 @@ namespace {
             if (!archived_file)
                continue;
             //
-            functor(file_name, std::as_const(*archived_file));
+            std::string filename_sans_ext = file_name;
+            {
+               auto i = filename_sans_ext.find_last_of('.');
+               if (i != std::string::npos)
+                  filename_sans_ext = filename_sans_ext.substr(0, i);
+            }
+            functor(filename_sans_ext, std::as_const(*archived_file));
             //
             delete archived_file;
          }
@@ -691,6 +697,15 @@ void DKPapyrusModel::_on_loose_file_deleted(QString scriptname) {
 }
 
 DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const std::string& filename, const void* src_data, const size_t src_size, bool is_loose) {
+   for (const auto& entry : all_form_type_scriptnames) {
+      if (_compare_name(entry.scriptname, QString::fromStdString(filename)) == 0)
+         //
+         // There are PEX files for built-in classnames, but we actually want to ignore those, 
+         // preferring hardcoded handling for them.
+         //
+         return nullptr;
+   }
+
    dovah::compiled_papyrus_script pex;
    try {
       pex.read_file(src_data, src_size);
@@ -698,7 +713,7 @@ DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const 
       return nullptr;
    }
 
-   auto* src_script = pex.lookup_object(filename);
+   const auto* src_script = pex.lookup_object(filename);
    if (!src_script)
       return nullptr;
 
@@ -725,6 +740,10 @@ DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const 
    } else {
       if (dst_script)
          return dst_script;
+
+      dst_script = new Script;
+      dst_script->name = name;
+      dst.insert(dst_script);
    }
 
    auto& info = (is_loose ? dst_script->info.loose : dst_script->info.packed).emplace();
@@ -754,6 +773,7 @@ void DKPapyrusModel::populate_initial() {
    this->beginResetModel();
 
    this->_data.clear();
+   this->_data.reserve(10000);
 
    std::filesystem::path game_folder;
    core.get_game_path(game_folder, current_game);

@@ -35,7 +35,10 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 ## Compiled Papyrus scripts
 
 * We should bounds-check all count values, i.e. if a script claims to have 6969 properties we should probably double-check that against the remaining filesize to see if that's at all plausible before we just `std::vector::resize` based on it.
-  * We *do* already bounds-check reads of simple primitives and throw an exception if we're going to pass EOF, but that won't save us if the program blows up because someone tricks it into pre-allocating tons of memory *before* those reads.
+  * We *do* already bounds-check reads of simple primitives and throw an exception if we're going to pass EOF, but that won't save us if the program blows up because someone tricks it into pre-allocating tons of memory *before* those reads
+* `instruction::opcode` shouldn't be a raw `uint8_t`, but rather some `enum dovah::pex::opcode`, for easier debugging.
+* Use `std::optional` instead of a presence bool for debug info in `object`.
+* Consider using `std::optional` for the `getter` and `setter` members on `property`.
 
 ## Miscellaneous
 
@@ -44,6 +47,9 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 * `dovah::form_type_info` could be made smaller by using a smaller underlying type for its flags-mask and moving the `formType` constant next to it, i.e. we can cut out three bytes of padding per instance.
 
 ## Form data
+
+### General
+* Review all form types and form component types written prior to 2/4/2024 and look for places where `std::optional` can be used. Offhand I know `Worldspace::max_height_data_t` has an embedded presence bool and that could be replaced with using `optional`.
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.
@@ -59,9 +65,9 @@ Also refer to comments in `main.cpp`, though many were written years ago...
   * This isn't as much of a concern as it seems like. The only time conditions have owning packages (and therefore the only time they can refer to package data) is when they exist inside of a `PACK` form. As long as the UI for editing `PACK` forms is carefully implemented to update conditions everywhere in the package when package data are added, removed, or reordered, we should be fine.
 
 ### Worldspace (WRLD)
-* Per xEdit Discord, `MHDT` subrecord (Max Height Data) might be coalesced across all overrides, preferring the highest vertex at any given point. It'd make sense: it'd be the only way to allow MHDT to work reliably given any situation where one mod adds a ref high in the air (such that dragons must fly above it) but the winning WRLD record doesn't "know about" that ref.
+* Per xEdit Discord, `MHDT` subrecord (Max Height Data) might be coalesced across files in some cases; specifically, the game'd use the last-seen WRLD/MHDT even if it didn't specifically come from the winning WRLD. This would be true if `TESWorldSpace`'s "clear data" function doesn't wipe MHDT.
   
-  We should verify this by RE-ing the loader in LE, and again in SSE if we don't see this behavior in LE.
+  We should verify this by RE-ing that in LE, and again in SSE if we see it wiped in LE.
 
 
 
