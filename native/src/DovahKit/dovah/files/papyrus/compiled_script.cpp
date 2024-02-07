@@ -2,6 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 #include "../../data/papyrus/helpers/name_equals.h"
+#include "../pex/opcode_info.h"
 
 namespace dovah {
    std::array<papyrus_assembly_opcode, 36> papyrus_assembly_opcode::list = {{
@@ -76,7 +77,7 @@ namespace dovah {
    void compiled_papyrus_script::_read(debug_function& data) {
       this->_read_string_index(data.object);
       this->_read_string_index(data.state);
-      this->_read_string_index(data.name);
+      this->_read_string_index(data.function_name);
       this->_read(data.type);
       //
       uint16_t count;
@@ -94,20 +95,20 @@ namespace dovah {
       this->_read_string_index(data.type);
    }
    void compiled_papyrus_script::_read(value& data) {
-      this->_read(data.underlying_type);
-      switch (data.underlying_type) {
+      this->_read(data.type);
+      switch (data.type) {
          case raw_type::object:
          case raw_type::string:
-            this->_read_string_index(data.s);
+            this->_read_string_index(data.content.emplace<dovah::pex::tabled_string>());
             break;
          case raw_type::integer:
-            this->_read(data.i);
+            this->_read(data.content.emplace<int32_t>());
             break;
          case raw_type::float32:
-            this->_read(data.f);
+            this->_read(data.content.emplace<float>());
             break;
          case raw_type::boolean:
-            this->_read(data.b);
+            this->_read(data.content.emplace<bool>());
             break;
       }
    }
@@ -115,29 +116,30 @@ namespace dovah {
       this->_read_string_index(data.name);
       this->_read_string_index(data.type);
       this->_read(data.flags);
-      this->_read(data.value);
+      this->_read(data.initial_value);
    }
    void compiled_papyrus_script::_read(instruction& data) {
       auto pos = this->file._pos;
-      this->_read(data.opcode);
-      if (data.opcode >= papyrus_assembly_opcode::list.size())
-         throw invalid_opcode_exception(pos, data.opcode);
-      auto& definition = papyrus_assembly_opcode::list[data.opcode];
+      this->_read(data.type);
+
+      auto* this_opcode_info = pex::info_for_opcode(data.type);
+      if (!this_opcode_info)
+         throw invalid_opcode_exception(pos, (uint8_t)data.type);
       //
-      data.operands.resize(definition.fixed_arg_count);
+      data.operands.resize(this_opcode_info->arg_count);
       for (auto& o : data.operands)
          this->_read(o);
       //
-      if (definition.varargs) {
+      if (this_opcode_info->varargs) {
          pos = this->file._pos;
          value c;
          this->_read(c);
-         if (c.underlying_type != raw_type::integer)
-            throw varargs_count_type_exception(pos, (uint8_t)c.underlying_type);
+         if (!c.is_of_type(pex::underlying_value_type::integer))
+            throw varargs_count_type_exception(pos, (uint8_t)c.type);
          //
-         auto size = definition.fixed_arg_count + c.i;
+         auto size = this_opcode_info->arg_count + std::get<int32_t>(c.content);
          data.operands.resize(size);
-         for (uint8_t i = definition.fixed_arg_count; i < size; ++i)
+         for (uint8_t i = this_opcode_info->arg_count; i < size; ++i)
             this->_read(data.operands[i]);
       }
    }
@@ -160,8 +162,8 @@ namespace dovah {
          this->_read(e);
       //
       this->_read(count);
-      data.instructions.resize(count);
-      for (auto& e : data.instructions)
+      data.opcodes.resize(count);
+      for (auto& e : data.opcodes)
          this->_read(e);
    }
    void compiled_papyrus_script::_read(named_function& data) {

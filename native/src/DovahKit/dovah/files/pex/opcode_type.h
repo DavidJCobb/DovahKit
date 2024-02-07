@@ -1,0 +1,43 @@
+#pragma once
+#include <cstdint>
+
+namespace dovah::pex {
+   enum class opcode_type : uint8_t {
+      nop         = 0x00,
+      i_add,
+      f_add,
+      i_sub,
+      f_sub,
+      i_mul        = 0x05,
+      f_mul,
+      i_div,
+      f_div,
+      i_mod,
+      b_not        = 0x0A,
+      i_neg,
+      f_neg,
+      set,
+      cast,
+      cmp_eq,
+      cmp_lt       = 0x10,
+      cmp_lte,
+      cmp_gt,
+      cmp_gte,
+      jmp,
+      jmp_t,
+      jmp_f,
+      call_method,
+      call_super,
+      call_static,
+      ret          = 0x1A,
+      strcat,
+      prop_get,
+      prop_set,
+      array_create,
+      array_length,
+      array_get    = 0x20,
+      array_set,
+      array_find,
+      array_rfind,
+   };
+}

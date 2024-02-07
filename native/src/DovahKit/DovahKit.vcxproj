@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
@@ -873,6 +874,30 @@
     <ClInclude Include="dovah\files\bsa\archive_header.h" />
     <ClInclude Include="dovah\files\bsa\packed_file_info.h" />
     <ClInclude Include="dovah\files\bsa\packed_folder_info.h" />
+    <ClInclude Include="dovah\files\pex\compiled_function.h" />
+    <ClInclude Include="dovah\files\pex\file_header.h" />
+    <ClInclude Include="dovah\files\pex\function_debug_info.h" />
+    <ClInclude Include="dovah\files\pex\game_id.h" />
+    <ClInclude Include="dovah\files\pex\global_variable_declaration.h" />
+    <ClInclude Include="dovah\files\pex\opcode_info.h" />
+    <ClInclude Include="dovah\files\pex\opcode_type.h" />
+    <ClInclude Include="dovah\files\pex\compiled_opcode.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_header_sentinel.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_id.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_varargs_count.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_string_id.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\base_read_exception.h" />
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\unexpected_eof.h" />
+    <ClInclude Include="dovah\files\pex\parsers\full.h" />
+    <ClInclude Include="dovah\files\pex\parsers\_util.h" />
+    <ClInclude Include="dovah\files\pex\property_declaration.h" />
+    <ClInclude Include="dovah\files\pex\script_object.h" />
+    <ClInclude Include="dovah\files\pex\state.h" />
+    <ClInclude Include="dovah\files\pex\tabled_string.h" />
+    <ClInclude Include="dovah\files\pex\underlying_value_type.h" />
+    <ClInclude Include="dovah\files\pex\user_flag_definition.h" />
+    <ClInclude Include="dovah\files\pex\value.h" />
+    <ClInclude Include="dovah\files\pex\variable_declaration.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attached_script.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attachment_data.h" />
     <ClInclude Include="dovah\forms\components\papyrus\attachment_header.h" />
@@ -2201,6 +2226,18 @@
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />
     <None Include="dovah\files\bsa\README.md" />
+    <None Include="dovah\files\pex\compiled_function.inl" />
+    <None Include="dovah\files\pex\compiled_opcode.inl" />
+    <None Include="dovah\files\pex\file_header.inl" />
+    <None Include="dovah\files\pex\function_debug_info.inl" />
+    <None Include="dovah\files\pex\global_variable_declaration.inl" />
+    <None Include="dovah\files\pex\parsers\full.inl" />
+    <None Include="dovah\files\pex\property_declaration.inl" />
+    <None Include="dovah\files\pex\script_object.inl" />
+    <None Include="dovah\files\pex\state.inl" />
+    <None Include="dovah\files\pex\user_flag_definition.inl" />
+    <None Include="dovah\files\pex\value.inl" />
+    <None Include="dovah\files\pex\variable_declaration.inl" />
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />

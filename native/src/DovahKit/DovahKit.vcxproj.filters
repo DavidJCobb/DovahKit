@@ -2172,6 +2172,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\pex\parsers\full.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5381,6 +5384,78 @@
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\pex\opcode_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\opcode_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\underlying_value_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\game_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\function_debug_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\variable_declaration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\user_flag_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\global_variable_declaration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\compiled_opcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\compiled_function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\property_declaration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\full.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\script_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\tabled_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\file_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\base_read_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_varargs_count.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_header_sentinel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\unexpected_eof.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_string_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6275,6 +6350,42 @@
     </None>
     <None Include="dovah\_docs\papyrus script bindings.md" />
     <None Include="ui\types\papyrus\property_value.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\value.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\script_object.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\file_header.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\compiled_opcode.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\function_debug_info.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\global_variable_declaration.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\variable_declaration.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\compiled_function.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\user_flag_definition.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\property_declaration.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\state.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\parsers\full.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -7,6 +7,8 @@
 #include "../../../dovah/files/papyrus/compiled_script.h"
 #include "../../../editor/subsystems/assets.h"
 
+#include "dovah/files/pex/parsers/full.h"
+
 namespace DovahKitDebug::features {
    /*static*/ void compiled_papyrus_script_tests::execute(QWidget* window) {
       auto path = QInputDialog::getText(window, QObject::tr("Path of PEX file to test? Do not specify a Data prefix.", "debug"), QObject::tr("Path:", "debug"));
@@ -92,10 +94,17 @@ namespace DovahKitDebug::features {
          QObject::tr("Functions:\n\n%1\n\nProperties:\n\n%2", "debug").arg(functions).arg(properties),
          QMessageBox::Ok
       );
-   }
-}
 
-namespace DovahKitDebug {
-   void compiled_papyrus_script_tests(QWidget* window) {
+      {
+         dovah::pex::parsers::full parser;
+         auto* file = assets.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
+         try {
+            parser.read_file((const uint8_t*)file->data(), file->size());
+            __debugbreak();
+         } catch (dovah::pex::exceptions::base_read_exception& e) {
+            __debugbreak();
+         }
+         delete file;
+      }
    }
 }
