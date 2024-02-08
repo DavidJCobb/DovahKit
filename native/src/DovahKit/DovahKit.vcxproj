@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
+    <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
@@ -539,6 +540,7 @@
     <ClCompile Include="helpers\ini\file.cpp" />
     <ClCompile Include="helpers\ini\file_line_parser.tests.cpp" />
     <ClCompile Include="helpers\ini\value_serialization.inl" />
+    <ClCompile Include="helpers\interned_string_table.tests.cpp" />
     <ClCompile Include="helpers\keyboard\key.cpp" />
     <ClCompile Include="helpers\math\geometry\ray_cone_intersection.cpp" />
     <ClCompile Include="helpers\math\matrix.cpp" />
@@ -882,6 +884,8 @@
     <ClInclude Include="dovah\files\pex\opcode_info.h" />
     <ClInclude Include="dovah\files\pex\opcode_type.h" />
     <ClInclude Include="dovah\files\pex\compiled_opcode.h" />
+    <ClInclude Include="dovah\files\pex\parsers\base.h" />
+    <ClInclude Include="dovah\files\pex\parsers\class_info_collector.h" />
     <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_header_sentinel.h" />
     <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_id.h" />
     <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_opcode_varargs_count.h" />
@@ -1152,6 +1156,7 @@
     <ClInclude Include="helpers\ini\types.h" />
     <ClInclude Include="helpers\ini\value_constraint_info.h" />
     <ClInclude Include="helpers\ini\value_serialization.h" />
+    <ClInclude Include="helpers\interned_string_table.h" />
     <ClInclude Include="helpers\keyboard\key.h" />
     <ClInclude Include="helpers\keyboard\qt_to_vk.h" />
     <ClInclude Include="helpers\keyboard\virtual_key.h" />
@@ -2231,6 +2236,8 @@
     <None Include="dovah\files\pex\file_header.inl" />
     <None Include="dovah\files\pex\function_debug_info.inl" />
     <None Include="dovah\files\pex\global_variable_declaration.inl" />
+    <None Include="dovah\files\pex\parsers\base.inl" />
+    <None Include="dovah\files\pex\parsers\class_info_collector.inl" />
     <None Include="dovah\files\pex\parsers\full.inl" />
     <None Include="dovah\files\pex\property_declaration.inl" />
     <None Include="dovah\files\pex\script_object.inl" />

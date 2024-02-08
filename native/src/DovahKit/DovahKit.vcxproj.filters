@@ -2175,6 +2175,12 @@
     <ClCompile Include="dovah\files\pex\parsers\full.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\interned_string_table.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5456,6 +5462,15 @@
     <ClInclude Include="dovah\files\pex\parsers\exceptions\bad_string_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\interned_string_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\class_info_collector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6386,6 +6401,12 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\files\pex\parsers\full.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\parsers\base.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\files\pex\parsers\class_info_collector.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

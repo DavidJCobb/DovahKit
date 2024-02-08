@@ -27,6 +27,6 @@ namespace dovah::pex::parsers::util {
       { stream.template skip_length_prefixed_vector<1, int>() };
 
       // string-table lookup support
-      { stream.get_tabled_string(1) } -> std::same_as<const std::string&>;
+      { stream.get_tabled_string(1) } -> std::same_as<const std::string_view>;
    };
 }

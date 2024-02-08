@@ -8,6 +8,7 @@
 #include "../../../editor/subsystems/assets.h"
 
 #include "dovah/files/pex/parsers/full.h"
+#include "dovah/files/pex/parsers/class_info_collector.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void compiled_papyrus_script_tests::execute(QWidget* window) {
@@ -100,6 +101,34 @@ namespace DovahKitDebug::features {
          auto* file = assets.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
          try {
             parser.read_file((const uint8_t*)file->data(), file->size());
+            __debugbreak();
+         } catch (dovah::pex::exceptions::base_read_exception& e) {
+            __debugbreak();
+         }
+         delete file;
+      }
+      {
+         using parser_type = dovah::pex::parsers::class_info_collector;
+
+         parser_type::shared_string_table_type all_strings;
+         parser_type parser(all_strings);
+         auto* file = assets.lookup_game_asset(std::filesystem::path((const char8_t*)path.toUtf8().constData()));
+         try {
+            auto scriptname = path;
+            {
+               auto i = scriptname.lastIndexOf('/');
+               auto j = scriptname.lastIndexOf('\\');
+               if (j > i)
+                  i = j;
+               if (i > 0)
+                  scriptname = scriptname.mid(i + 1);
+
+               auto k = scriptname.lastIndexOf('.');
+               if (k > 0)
+                  scriptname = scriptname.left(k);
+            }
+            parser.desired_classname = scriptname.toStdString();
+            parser.read_file((const char*)file->data(), file->size());
             __debugbreak();
          } catch (dovah::pex::exceptions::base_read_exception& e) {
             __debugbreak();
