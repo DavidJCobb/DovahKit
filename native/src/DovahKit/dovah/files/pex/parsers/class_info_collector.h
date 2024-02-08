@@ -53,6 +53,12 @@ namespace dovah::pex::parsers {
             read(index);
             dst = get_tabled_string(index);
          }
+         constexpr void _consume_and_share_indexed_string(std::string_view& dst) {
+            uint16_t index;
+            read(index);
+            dst = get_tabled_string(index);
+            dst = _shared_strings.get_or_insert(dst);
+         }
 
       public:
          constexpr class_info_collector(shared_string_table_type& ss) : _shared_strings(ss) {}

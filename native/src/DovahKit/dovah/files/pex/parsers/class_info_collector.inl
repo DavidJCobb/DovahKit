@@ -107,10 +107,10 @@ namespace dovah::pex::parsers {
             this->results = {};
          }
          is_not_first_match = false;
-         this->results.name = name;
+         this->results.name = _shared_strings.get_or_insert(name);
          skip_bytes(4); // size
-         _consume_indexed_string(this->results.superclass);
-         _consume_indexed_string(this->results.docstring);
+         _consume_and_share_indexed_string(this->results.superclass);
+         _consume_and_share_indexed_string(this->results.docstring);
          
          uint32_t user_flags = 0;
          read(user_flags);
@@ -127,6 +127,21 @@ namespace dovah::pex::parsers {
    }
 
    constexpr const std::string_view class_info_collector::get_tabled_string(uint16_t index) const {
+      //
+      // Every time we want to extract a string index and get the referenced string, we 
+      // loop through the whole string table. This would be suboptimal in 90% of cases, 
+      // but for our intended use case, it should be optimal:
+      // 
+      //  - No heap allocation for storing the string table (i.e. no vector; no strings)
+      // 
+      //  - No heap allocation for pulling from the string table
+      // 
+      //  = Ergo: better performance for multi-threading (no hitting the heap lock)
+      // 
+      //  - PEXs compiled with the official tools will typically have the scriptname as 
+      //    the first string in the file's string table, with the superclass, docstring, 
+      //    and user-flag names fairly early in the table as well
+      //
       const auto& src = this->_file_string_table;
 
       size_t size = src.size();
