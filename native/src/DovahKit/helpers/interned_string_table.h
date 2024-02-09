@@ -52,6 +52,9 @@ namespace cobb {
    // Add strings to the table by calling `get_or_insert`, which will return a string_view to 
    // the copy of the string that the table owns. You can optionally enable case-folding and 
    // other options by changing the template parameter.
+   // 
+   // Class is set up so that if you're not folding on store, then we only heap-allocate when 
+   // adding strings to the list; string_views are used for as many operations as possible.
    //
    template<interned_string_tables::valid_parameters Parameters = interned_string_tables::default_parameters>
    class interned_string_table {

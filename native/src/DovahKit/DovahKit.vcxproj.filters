@@ -2181,6 +2181,9 @@
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5471,6 +5474,12 @@
     <ClInclude Include="dovah\files\pex\parsers\base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\papyrus\known_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6407,6 +6416,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\files\pex\parsers\class_info_collector.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
+    <None Include="editor\subsystems\papyrus\known_script.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

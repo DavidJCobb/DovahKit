@@ -684,6 +684,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
@@ -928,6 +929,7 @@
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
     <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h" />
+    <ClInclude Include="editor\subsystems\papyrus\known_script.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
@@ -1397,6 +1399,7 @@
     <QtMoc Include="ui\form_windows\activator.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
@@ -2254,6 +2257,8 @@
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />
+    <None Include="editor\subsystems\papyrus\known_script.inl" />
+    <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />

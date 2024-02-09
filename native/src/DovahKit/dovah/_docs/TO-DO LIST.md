@@ -36,9 +36,9 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 * We should bounds-check all count values, i.e. if a script claims to have 6969 properties we should probably double-check that against the remaining filesize to see if that's at all plausible before we just `std::vector::resize` based on it.
   * We *do* already bounds-check reads of simple primitives and throw an exception if we're going to pass EOF, but that won't save us if the program blows up because someone tricks it into pre-allocating tons of memory *before* those reads
-* `instruction::opcode` shouldn't be a raw `uint8_t`, but rather some `enum dovah::pex::opcode`, for easier debugging.
-* Use `std::optional` instead of a presence bool for debug info in `object`.
-* Consider using `std::optional` for the `getter` and `setter` members on `property`.
+  * [2/8/2024] The new parsing logic may take care of this; double-check it
+* Replace all uses of `dovah::compiled_papyrus_script` with `dovah::pex::parsers::full`.
+* Consider using `std::optional` for the `autovar_name`, `getter`, and `setter` members on `property_declaration`; or alternatively, a `std::variant<`*autovar*`, `*pair-of-optionals*`>`, to encode into the type system that autovars are mutually exclusive with getters and setters, and that getters and setters are each optional when autovars are not used.
 
 ## Miscellaneous
 
