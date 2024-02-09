@@ -7,6 +7,7 @@
 #include "dovah/files/bsa/bsa_archive.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/files/bsa/bsa_load_order.h"
+#include "dovah/files/pex/parsers/class_info_collector.h"
 #include "editor/subsystems/assets.h"
 #include "editor/core.h"
 
@@ -706,30 +707,21 @@ DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const 
          return nullptr;
    }
 
-   dovah::compiled_papyrus_script pex;
+   using parser_type         = dovah::pex::parsers::class_info_collector;
+   using shared_string_table = parser_type::shared_string_table_type; // TODO: may not even need this; investigate ditching it
+
+   shared_string_table shared_strings;
+   parser_type parser(shared_strings);
+   parser.desired_classname = filename;
    try {
-      pex.read_file(src_data, src_size);
+      parser.read_file((const char*)src_data, src_size);
    } catch (const dovah::compiled_papyrus_script::read_exception&) {
       return nullptr;
    }
-
-   const auto* src_script = pex.lookup_object(filename);
-   if (!src_script)
+   if (parser.results.name.empty())
       return nullptr;
 
-   uint32_t flag_conditional = 0;
-   uint32_t flag_hidden      = 0;
-   for (const auto& flag_dfn : pex.user_flags) {
-      if (cobb::strieq_ascii(flag_dfn.name, "hidden")) {
-         flag_hidden = 1 << flag_dfn.bit_index;
-      } else if (cobb::strieq_ascii(flag_dfn.name, "conditional")) {
-         flag_conditional = 1 << flag_dfn.bit_index;
-      }
-      if (flag_hidden && flag_conditional)
-         break;
-   }
-
-   QString name       = QString::fromStdString(src_script->name);
+   QString name       = QString(QByteArray(parser.results.name.data(), parser.results.name.size()));
    Script* dst_script = dst.lookup(name);
    if (is_loose) {
       if (!dst_script) {
@@ -747,12 +739,12 @@ DKPapyrusModel::Script* DKPapyrusModel::_scan_pex(script_collection& dst, const 
    }
 
    auto& info = (is_loose ? dst_script->info.loose : dst_script->info.packed).emplace();
-   info.docstring      = QString::fromStdString(src_script->docstring);
-   info.extends.name   = QString::fromStdString(src_script->superclass);
+   info.docstring      = QString(QByteArray(parser.results.docstring.data(), parser.results.docstring.size()));
+   info.extends.name   = QString(QByteArray(parser.results.superclass.data(), parser.results.superclass.size()));
    info.extends.target = nullptr;
    //
-   info.flags.conditional = (flag_conditional && (src_script->user_flags & flag_conditional));
-   info.flags.hidden      = (flag_hidden      && (src_script->user_flags & flag_hidden));
+   info.flags.conditional = parser.results.flags.conditional;
+   info.flags.hidden      = parser.results.flags.hidden;
    return dst_script;
 }
 
