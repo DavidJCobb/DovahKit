@@ -76,8 +76,7 @@ class DKPapyrusModel : public QAbstractItemModel {
             static constexpr const size_t index_of_none = (size_t)-1;
 
          protected:
-            QVector<Script*>       scripts;
-            std::array<size_t, 27> counts = {}; // number of scripts whose names start with the given alphabetical character. offset #0 is "before alphabetical"
+            std::array<QList<Script*>, 28> scripts; // one for underscores; one for each alphabetic letter; and one for any random garbage
 
          protected:
             static size_t _which_count(QString name);
@@ -93,10 +92,19 @@ class DKPapyrusModel : public QAbstractItemModel {
             Script* lookup(QString name);
             void insert(Script*); // asserts that the passed-in script isn't already stored
 
-            constexpr const QVector<Script*>& list() const noexcept { return this->scripts; }
-            inline size_t size() const noexcept { return list().size(); }
+            template<typename Functor>
+            constexpr void for_each(Functor&& functor) {
+               for (auto& sublist : scripts)
+                  for (auto* script : sublist)
+                     functor(script);
+            }
 
-            inline void reserve(size_t s) { this->scripts.reserve(s); }
+            inline size_t size() const noexcept {
+               size_t size = 0;
+               for (auto& sublist : scripts)
+                  size += sublist.size();
+               return size;
+            }
 
             void take(Script&); // asserts that the passed-in script is already stored
       };

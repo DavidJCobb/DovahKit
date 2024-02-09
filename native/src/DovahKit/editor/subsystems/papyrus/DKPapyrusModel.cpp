@@ -450,76 +450,78 @@ void DKPapyrusModel::Script::_update_descendants_root_class() {
    if (leading == '_')
       return 0;
    else if (leading >= 'a' && leading <= 'z')
-      return ('a' - 1);
+      return leading - 'a' + 1;
 
-   return std::tuple_size_v<decltype(counts)>;
+   return std::tuple_size_v<decltype(scripts)> - 1;
 }
 
 const DKPapyrusModel::Script* DKPapyrusModel::script_collection::at(size_t i) const {
-   if (i >= this->scripts.size())
-      return nullptr;
-   return this->scripts[i];
+   size_t pos = 0;
+   for (const auto& list : this->scripts) {
+      if (i - pos < list.size())
+         return list[i - pos];
+      pos += list.size();
+   }
+   return nullptr;
 }
 DKPapyrusModel::Script* DKPapyrusModel::script_collection::at(size_t i) {
-   if (i >= this->scripts.size())
-      return nullptr;
-   return this->scripts[i];
+   return const_cast<Script*>(std::as_const(*this).at(i));
 }
 
 void DKPapyrusModel::script_collection::clear() {
-   for (auto* script : this->scripts)
-      delete script;
-   this->scripts.clear();
-   this->counts = {};
+   for (auto& list : this->scripts) {
+      for (auto* script : list)
+         delete script;
+      list.clear();
+   }
 }
 
 size_t DKPapyrusModel::script_collection::index_of(QString name) const {
    if (name.isEmpty())
       return index_of_none;
 
-   size_t skip = 0;
-   {
-      auto leading = _which_count(name);
-      if (leading < this->counts.size())
-         for (size_t i = 0; i < leading; ++i)
-            skip += this->counts[i];
-   }
-   for (size_t i = skip; i < this->scripts.size(); ++i) {
-      auto* script = this->scripts[i];
+   size_t which = _which_count(name);
+   size_t prior = 0;
+   for (size_t i = 0; i < which; ++i)
+      prior += this->scripts[i].size();
+   for (size_t i = 0; i < this->scripts[which].size(); ++i) {
+      auto* script = this->scripts[which][i];
       assert(script != nullptr);
 
       auto cmp = script->compare_name(name);
       if (cmp == 0)
-         return i;
+         return prior + i;
       if (cmp > 0)
          break;
    }
    return index_of_none;
 }
 void DKPapyrusModel::script_collection::insert(Script* script) {
-   size_t start_at    = 0;
-   size_t which_count = _which_count(script->name);
-   if (which_count < this->counts.size())
-      for (size_t i = 0; i < which_count; ++i)
-         start_at += this->counts[i];
+   size_t which   = _which_count(script->name);
+   auto&  sublist = this->scripts[which];
 
-   size_t insert_at = this->scripts.size();
-   for (size_t i = start_at; i < this->scripts.size(); ++i) {
-      auto cmp = this->scripts[i]->compare_name(script->name);
+   size_t insert_at = sublist.size();
+   for (size_t i = 0; i < sublist.size(); ++i) {
+      auto cmp = sublist[i]->compare_name(script->name);
       assert(cmp != 0);
       if (cmp > 0) {
          insert_at = i;
          break;
       }
    }
-   this->scripts.insert(insert_at, script);
-   if (which_count < this->counts.size())
-      this->counts[which_count]++;
+   sublist.insert(insert_at, script);
 }
 const DKPapyrusModel::Script* DKPapyrusModel::script_collection::lookup(QString name) const {
-   size_t i = this->index_of(name);
-   if (i != index_of_none)
-      return this->scripts[i];
+   size_t which   = _which_count(name);
+   auto&  sublist = this->scripts[which];
+   for (auto* script : sublist) {
+      assert(script != nullptr);
+      auto cmp = script->compare_name(name);
+      if (cmp == 0)
+         return script;
+      if (cmp > 0)
+         break;
+   }
    return nullptr;
 }
 DKPapyrusModel::Script* DKPapyrusModel::script_collection::lookup(QString name) {
@@ -527,14 +529,9 @@ DKPapyrusModel::Script* DKPapyrusModel::script_collection::lookup(QString name) 
 }
 
 void DKPapyrusModel::script_collection::take(Script& n) {
-   size_t i = this->index_of(n.name);
-   assert(i != index_of_none);
-   assert(this->scripts[i] == &n);
-   this->scripts.remove(i);
-
-   auto wc = _which_count(n.name);
-   if (wc < this->counts.size())
-      this->counts[wc]--;
+   size_t which   = _which_count(n.name);
+   auto&  sublist = this->scripts[which];
+   sublist.removeOne(&n);
 }
 #pragma endregion
 
@@ -765,7 +762,6 @@ void DKPapyrusModel::populate_initial() {
    this->beginResetModel();
 
    this->_data.clear();
-   this->_data.reserve(10000);
 
    std::filesystem::path game_folder;
    core.get_game_path(game_folder, current_game);
@@ -794,9 +790,9 @@ void DKPapyrusModel::populate_initial() {
    //
    QVector<Script*> phantoms; // See comments in lambda below.
    //
-   for (auto* script : this->_data.list()) {
+   this->_data.for_each([this, &phantoms](auto* script) {
       if (!script->exists())
-         continue;
+         return;
 
       auto _process_info = [this, script, &phantoms](std::optional<Script::Info>& info_opt) -> void {
          if (!info_opt.has_value())
@@ -841,7 +837,7 @@ void DKPapyrusModel::populate_initial() {
 
       _process_info(script->info.packed);
       _process_info(script->info.loose);
-   }
+   });
    for (auto* phantom : phantoms) {
       this->_data.insert(phantom);
    }
@@ -851,9 +847,9 @@ void DKPapyrusModel::populate_initial() {
    // hierarchy. This will allow us to more quickly query what native class (i.e. form or alias 
    // type), if any, a given script derives from.
    //
-   for (auto* script : this->_data.list()) {
+   this->_data.for_each([](auto* script) {
       script->_compute_root_class();
-   }
+   });
 
    this->endResetModel();
 }
