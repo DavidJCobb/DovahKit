@@ -164,7 +164,7 @@ namespace dovah {
    struct form_type_info {
       struct flag {
          flag() = delete;
-         enum type : uint32_t {
+         enum type : uint8_t {
             none = 0,
             no_editor_id      = 0x01, // Forms of this type cannot have editor IDs.
             no_connections    = 0x02, // Forms of this type cannot refer to or be referred to by other forms.
@@ -175,14 +175,12 @@ namespace dovah {
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
-
-      constexpr form_type_info() {}
-      constexpr form_type_info(uint32_t s, uint8_t f, const char* n, flags_t l = 0) : signature(s), formType(f), name(n), flags(l) {}
       
-      uint32_t    signature = 0;
-      uint8_t     formType  = dovah::form_type::none;
-      const char* name      = "<unknown>";
-      flags_t     flags     = flag::none;
+      const char* name        = "<unknown>";
+      uint32_t    signature   = 0;
+      form_type_t form_type   = dovah::form_type::none;
+      form_type_t parent_type = dovah::form_type::none;
+      flags_t     flags       = flag::none;
       
       static constexpr const form_type_info& lookup(form_type_t) noexcept;
       static constexpr form_type_t signature_to_form_type(uint32_t signature) noexcept;
@@ -194,152 +192,736 @@ namespace dovah {
       static constexpr bool form_type_is_base_form(form_type_t ft) noexcept;
       static constexpr bool signature_is_base_form(uint32_t signature) noexcept;
 
-      inline constexpr bool is_reference() const noexcept { return form_type_is_reference(this->formType); }
+      inline constexpr bool is_reference() const noexcept { return form_type_is_reference(this->form_type); }
    };
 
    constexpr std::array<form_type_info, 138> form_types = {{
-      { 'NONE', form_type::none, "None/Unknown", form_type_info::flag::no_editor_id }, // form types not in this list are effectively 'NONE'
-      { 'TES4', form_type::file_header, "File Header", form_type_info::flag::no_connections },
-      { 'GRUP', form_type::file_record_group, "File Record Group", form_type_info::flag::no_connections },
-      { 'GMST', form_type::setting, "GameSetting", form_type_info::flag::no_connections }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
-      { 'KYWD', form_type::keyword, "Keyword" },
-      { 'LCRT', form_type::location_ref_type, "LocRefType" },
-      { 'AACT', form_type::action, "Action" },
-      { 'TXST', form_type::texture_set, "TextureSet" },
-      { 'MICN', form_type::menu_icon, "Menu Icon" }, // BGSMenuIcon
-      { 'GLOB', form_type::global,   "Global" },
-      { 'CLAS', form_type::combat_class,    "Class" },
-      { 'FACT', form_type::faction,  "Faction" },
-      { 'HDPT', form_type::head_part, "HeadPart" },
+      {  // form types not in this list are effectively 'NONE'
+         .name        = "None/Unknown",
+         .signature   = 'NONE',
+         .form_type   = form_type::none,
+         .flags       = form_type_info::flag::no_editor_id
+      },
+      {
+         .name        = "File Header",
+         .signature   = 'TES4',
+         .form_type   = form_type::file_header,
+         .flags       = form_type_info::flag::no_connections,
+      },
+      {
+         .name        = "File Record Group",
+         .signature   = 'GRUP',
+         .form_type   = form_type::file_record_group,
+         .flags       = form_type_info::flag::no_connections,
+      },
+      {
+         .name        = "GameSetting",
+         .signature   = 'GMST',
+         .form_type   = form_type::setting,
+         .flags       = form_type_info::flag::no_connections,
+      },
+      {
+         .name        = "Keyword",
+         .signature   = 'KYWD',
+         .form_type   = form_type::keyword,
+      },
+      {
+         .name        = "LocRefType",
+         .signature   = 'LCRT',
+         .form_type   = form_type::location_ref_type,
+         .parent_type = form_type::keyword,
+      },
+      {
+         .name        = "Action",
+         .signature   = 'AACT',
+         .form_type   = form_type::action,
+      },
+      {
+         .name        = "TextureSet",
+         .signature   = 'TXST',
+         .form_type   = form_type::texture_set,
+      },
+      {
+         .name        = "Menu Icon",
+         .signature   = 'MICN',
+         .form_type   = form_type::menu_icon,
+      },
+      {
+         .name        = "Global",
+         .signature   = 'GLOB',
+         .form_type   = form_type::global,
+      },
+      {
+         .name        = "Class",
+         .signature   = 'CLAS',
+         .form_type   = form_type::combat_class,
+      },
+      {
+         .name        = "Faction",
+         .signature   = 'FACT',
+         .form_type   = form_type::faction,
+      },
+      {
+         .name        = "HeadPart",
+         .signature   = 'HDPT',
+         .form_type   = form_type::head_part,
+      },
+      //
       // HAIR - TESHair - removed in patch 1.2
-      { 'EYES', form_type::eyes,     "Eyes" },
-      { 'RACE', form_type::race,     "Race" },
-      { 'SOUN', form_type::sound,    "Sound" },
-      { 'ASPC', form_type::acoustic_space, "AcousticSpace" },
-      { 'SKIL', form_type::skill,       "Skill" },
-      { 'MGEF', form_type::magic_effect, "MagicEffect" },
-      { 'SCPT', form_type::script,      "Script (TES4)" },
-      { 'LTEX', form_type::land_texture, "LandTexture" },
-      { 'ENCH', form_type::enchantment, "Enchantment" },
-      { 'SPEL', form_type::spell,       "Spell" },
-      { 'SCRL', form_type::scroll,      "Scroll" }, // as in, magic scrolls
-      { 'ACTI', form_type::activator,   "Activator" },
-      { 'TACT', form_type::talking_activator, "Talking Activator" },
-      { 'ARMO', form_type::armor,       "Armor" },
-      { 'BOOK', form_type::book,        "Book" },
-      { 'CONT', form_type::container,   "Container" },
-      { 'DOOR', form_type::door,        "Door" },
-      { 'INGR', form_type::ingredient,  "Ingredient" },
-      { 'LIGH', form_type::light,       "Light" },
-      { 'MISC', form_type::misc_item,    "Misc. Item" },
-      { 'APPA', form_type::apparatus,   "Apparatus" },
-      { 'STAT', form_type::statik,      "Static" },
-      { 'SCOL', form_type::static_collection, "Static Collection" },
-      { 'MSTT', form_type::movable_static, "MovableStatic" },
-      { 'GRAS', form_type::grass, "Grass" },
-      { 'TREE', form_type::tree, "Tree" },
+      //
+      {
+         .name        = "Eyes",
+         .signature   = 'EYES',
+         .form_type   = form_type::eyes,
+      },
+      {
+         .name        = "Race",
+         .signature   = 'RACE',
+         .form_type   = form_type::race,
+      },
+      {
+         .name        = "Sound",
+         .signature   = 'SOUN',
+         .form_type   = form_type::sound,
+      },
+      {
+         .name        = "AcousticSpace",
+         .signature   = 'ASPC',
+         .form_type   = form_type::acoustic_space,
+      },
+      {
+         .name        = "Skill",
+         .signature   = 'SKIL',
+         .form_type   = form_type::skill,
+      },
+      {
+         .name        = "MagicEffect",
+         .signature   = 'MGEF',
+         .form_type   = form_type::magic_effect,
+      },
+      {
+         .name        = "Script (TES4)",
+         .signature   = 'SCPT',
+         .form_type   = form_type::script,
+      },
+      {
+         .name        = "LandTexture",
+         .signature   = 'LTEX',
+         .form_type   = form_type::land_texture,
+      },
+      {
+         .name        = "Enchantment",
+         .signature   = 'ENCH',
+         .form_type   = form_type::enchantment,
+      },
+      {
+         .name        = "Spell",
+         .signature   = 'SPEL',
+         .form_type   = form_type::spell,
+      },
+      {
+         .name        = "Scroll",
+         .signature   = 'SCRL',
+         .form_type   = form_type::scroll,
+      },
+      {
+         .name        = "Activator",
+         .signature   = 'ACTI',
+         .form_type   = form_type::activator,
+      },
+      {
+         .name        = "Talking Activator",
+         .signature   = 'TACT',
+         .form_type   = form_type::talking_activator,
+         .parent_type = form_type::activator,
+      },
+      {
+         .name        = "Armor",
+         .signature   = 'ARMO',
+         .form_type   = form_type::armor,
+      },
+      {
+         .name        = "Book",
+         .signature   = 'BOOK',
+         .form_type   = form_type::book,
+      },
+      {
+         .name        = "Container",
+         .signature   = 'CONT',
+         .form_type   = form_type::container,
+      },
+      {
+         .name        = "Door",
+         .signature   = 'DOOR',
+         .form_type   = form_type::door,
+      },
+      {
+         .name        = "Ingredient",
+         .signature   = 'INGR',
+         .form_type   = form_type::ingredient,
+      },
+      {
+         .name        = "Light",
+         .signature   = 'LIGH',
+         .form_type   = form_type::light,
+      },
+      {
+         .name        = "Misc. Item",
+         .signature   = 'MISC',
+         .form_type   = form_type::misc_item,
+      },
+      {
+         .name        = "Apparatus",
+         .signature   = 'APPA',
+         .form_type   = form_type::apparatus,
+         .parent_type = form_type::misc_item,
+      },
+      {
+         .name        = "Static",
+         .signature   = 'STAT',
+         .form_type   = form_type::statik,
+      },
+      {
+         .name        = "Static Collection",
+         .signature   = 'SCOL',
+         .form_type   = form_type::static_collection,
+      },
+      {
+         .name        = "MovableStatic",
+         .signature   = 'MSTT',
+         .form_type   = form_type::movable_static,
+      },
+      {
+         .name        = "Grass",
+         .signature   = 'GRAS',
+         .form_type   = form_type::grass,
+      },
+      {
+         .name        = "Tree",
+         .signature   = 'TREE',
+         .form_type   = form_type::tree,
+      },
+      //
       // CLDC - BGSCloudCluster - removed in patch 1.2
-      { 'FLOR', form_type::flora, "Flora" },
-      { 'FURN', form_type::furniture, "Furniture" },
-      { 'WEAP', form_type::weapon, "Weapon" },
-      { 'AMMO', form_type::ammo, "Ammo" },
-      { 'NPC_', form_type::actor_base, "ActorBase" },
-      { 'LVLN', form_type::leveled_character, "Leveled Actor" },
-      { 'KEYM', form_type::key, "Key" },
-      { 'ALCH', form_type::potion, "Potion" },
-      { 'IDLM', form_type::idle_marker, "Idle Marker" },
-      { 'NOTE', form_type::note, "Note" },
-      { 'COBJ', form_type::constructible_object, "Constructible Object" },
-      { 'PROJ', form_type::projectile, "Projectile" },
-      { 'HAZD', form_type::hazard, "Hazard" },
-      { 'SLGM', form_type::soul_gem, "Soul Gem" },
-      { 'LVLI', form_type::leveled_item, "Leveled Item" },
-      { 'WTHR', form_type::weather, "Weather" },
-      { 'CLMT', form_type::climate, "Climate" },
-      { 'SPGD', form_type::shader_particle_geometry_data, "Shader Particle Geometry" },
-      { 'RFCT', form_type::reference_effect, "VisualEffect" }, // "ReferenceEffect," internally
-      { 'REGN', form_type::region, "Region" },
-      { 'NAVI', form_type::navmesh_info_map,  "Navmesh Info Map", form_type_info::flag::is_singleton },
-      { 'CELL', form_type::cell,  "Cell", form_type_info::flag::can_have_children },
-      { 'REFR', form_type::reference, "ObjectReference" },
-      { 'ACHR', form_type::actor, "Actor" },
-      { 'PMIS', form_type::missile, "Placed Missile Projectile" },
-      { 'PARW', form_type::arrow,   "Placed Arrow Projectile" },
-      { 'PGRE', form_type::grenade, "Placed Grenade Projectile" },
-      { 'PBEA', form_type::beam,    "Placed Beam Projectile" },
-      { 'PFLA', form_type::flame,   "Placed Flame Projectile" },
-      { 'PCON', form_type::barrier, "Placed Barrier Projectile" },
-      { 'PBAR', form_type::cone,    "Placed Cone Projectile" },
-      { 'PHZD', form_type::placed_hazard,            "Placed Hazard" },
-      { 'WRLD', form_type::worldspace, "Worldspace", form_type_info::flag::can_have_children },
-      { 'LAND', form_type::land, "Landscape", form_type_info::flag::no_editor_id },
-      { 'NAVM', form_type::navmesh, "Navmesh" },
-      { 'TLOD', form_type::tlod, "Unknown (TLOD)" },
-      { 'DIAL', form_type::topic, "Dialogue Topic", form_type_info::flag::can_have_children },
-      { 'INFO', form_type::topic_info, "Dialogue Topic Info", form_type_info::flag::empty_if_deleted },
-      { 'QUST', form_type::quest, "Quest", form_type_info::flag::empty_if_deleted },
-      { 'IDLE', form_type::idle, "Idle" },
-      { 'PACK', form_type::package, "Package" },
-      { 'CSTY', form_type::combat_style, "Combat Style" },
-      { 'LSCR', form_type::loading_screen, "Loading Screen" },
-      { 'LVSP', form_type::leveled_spell, "Leveled Spell" },
-      { 'ANIO', form_type::animation_prop, "Animation Prop" }, // a.k.a. AnimObject
-      { 'WATR', form_type::water_type, "Water Type" },
-      { 'EFSH', form_type::effect_shader, "EffectShader" },
-      { 'TOFT', form_type::toft, "Unknown (TOFT)" },
-      { 'EXPL', form_type::explosion, "Explosion" },
-      { 'DEBR', form_type::debris, "Debris" },
-      { 'IMGS', form_type::imagespace, "ImageSpace" },
-      { 'IMAD', form_type::imagespace_modifier, "ImageSpace Modifier" },
-      { 'FLST', form_type::formlist, "FormList" },
-      { 'PERK', form_type::perk, "Perk" },
-      { 'BPTD', form_type::body_part_data, "Body Part Data" },
-      { 'ADDN', form_type::addon_node, "Add-on Node" },
-      { 'AVIF', form_type::actor_value_info, "ActorValue Info" },
-      { 'CAMS', form_type::camera_shot, "Camera Shot" },
-      { 'CPTH', form_type::camera_path, "Camera Path" },
-      { 'VTYP', form_type::voicetype, "Voicetype" },
-      { 'MATT', form_type::material_type, "Material Type" },
-      { 'IPCT', form_type::impact_data, "Impact Data" },
-      { 'IPDS', form_type::impact_data_set, "Impact Data Set" },
-      { 'ARMA', form_type::armor_addon, "Armor Addon" },
-      { 'ECZN', form_type::encounter_zone, "Encounter Zone" },
-      { 'LCTN', form_type::location, "Location" },
-      { 'MESG', form_type::message, "Message" },
-      { 'RGDL', form_type::ragdoll, "Ragdoll" }, // BGSRagdoll
-      { 'DOBJ', form_type::default_object_manager, "Default Objects", form_type_info::flag::is_singleton }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
-      { 'LGTM', form_type::lighting_template, "Lighting Template" },
-      { 'MUSC', form_type::music_type, "MusicType" },
-      { 'FSTP', form_type::footstep, "Footstep" },
-      { 'FSTS', form_type::footstep_set, "Footstep Set" },
-      { 'SMBN', form_type::story_branch_node, "Story Manager Branch Node" },
-      { 'SMQN', form_type::story_quest_node, "Story Manager Quest Node" },
-      { 'SMEN', form_type::story_event_node, "Story Manager Event Node" },
-      { 'DLBR', form_type::dialogue_branch, "Dialogue Branch", form_type_info::flag::empty_if_deleted },
-      { 'MUST', form_type::music_track, "Music Track" },
-      { 'DLVW', form_type::dialogue_view, "Dialogue View" }, // CK only; not loaded by the game (the form factory table has a null entry for this form type).
-      { 'WOOP', form_type::word_of_power, "Word Of Power" },
-      { 'SHOU', form_type::shout, "Shout" },
-      { 'EQUP', form_type::equip_slot, "Equip Slot" },
-      { 'RELA', form_type::relationship, "Relationship" },
-      { 'SCEN', form_type::scene, "Scene" },
-      { 'ASTP', form_type::association_type, "Association Type" },
-      { 'OTFT', form_type::outfit, "Outfit" },
-      { 'ARTO', form_type::art_object, "Art Object" },
-      { 'MATO', form_type::material_object, "Material Object" },
-      { 'MOVT', form_type::movement_type, "Movement Type" },
-      { 'SNDR', form_type::sound_descriptor, "Sound Descriptor" },
-      { 'DUAL', form_type::dual_cast_data, "Dual-Cast Data" },
-      { 'SNCT', form_type::sound_category, "Sound Category" },
-      { 'SOPM', form_type::sound_output_model, "Sound Output Model" },
-      { 'COLL', form_type::collision_layer, "Collision Layer" }, // BGSCollisionLayer
-      { 'CLFM', form_type::color, "Color" },
-      { 'REVB', form_type::reverb_parameters, "Reverb Parameters" },
+      //
+      {
+         .name        = "Flora",
+         .signature   = 'FLOR',
+         .form_type   = form_type::flora,
+         .parent_type = form_type::activator,
+      },
+      {
+         .name        = "Furniture",
+         .signature   = 'FURN',
+         .form_type   = form_type::furniture,
+         .parent_type = form_type::activator,
+      },
+      {
+         .name        = "Weapon",
+         .signature   = 'WEAP',
+         .form_type   = form_type::weapon,
+      },
+      {
+         .name        = "Ammo",
+         .signature   = 'AMMO',
+         .form_type   = form_type::ammo,
+      },
+      {
+         .name        = "ActorBase",
+         .signature   = 'NPC_',
+         .form_type   = form_type::actor_base,
+      },
+      {
+         .name        = "Leveled Actor",
+         .signature   = 'LVLN',
+         .form_type   = form_type::leveled_character,
+      },
+      {
+         .name        = "Key",
+         .signature   = 'KEYM',
+         .form_type   = form_type::key,
+         .parent_type = form_type::misc_item,
+      },
+      {
+         .name        = "Potion",
+         .signature   = 'ALCH',
+         .form_type   = form_type::potion,
+      },
+      {
+         .name        = "Idle Marker",
+         .signature   = 'IDLM',
+         .form_type   = form_type::idle_marker,
+      },
+      {
+         .name        = "Note",
+         .signature   = 'NOTE',
+         .form_type   = form_type::note,
+      },
+      {
+         .name        = "Constructible Object",
+         .signature   = 'COBJ',
+         .form_type   = form_type::constructible_object,
+         .parent_type = form_type::misc_item,
+      },
+      {
+         .name        = "Projectile",
+         .signature   = 'PROJ',
+         .form_type   = form_type::projectile,
+      },
+      {
+         .name        = "Hazard",
+         .signature   = 'HAZD',
+         .form_type   = form_type::hazard,
+      },
+      {
+         .name        = "Soul Gem",
+         .signature   = 'SLGM',
+         .form_type   = form_type::soul_gem,
+         .parent_type = form_type::misc_item,
+      },
+      {
+         .name        = "Leveled Item",
+         .signature   = 'LVLI',
+         .form_type   = form_type::leveled_item,
+      },
+      {
+         .name        = "Weather",
+         .signature   = 'WTHR',
+         .form_type   = form_type::weather,
+      },
+      {
+         .name        = "Climate",
+         .signature   = 'CLMT',
+         .form_type   = form_type::climate,
+      },
+      {
+         .name        = "Shader Particle Geometry",
+         .signature   = 'SPGD',
+         .form_type   = form_type::shader_particle_geometry_data,
+      },
+      {
+         .name        = "VisualEffect",
+         .signature   = 'RFCT',
+         .form_type   = form_type::reference_effect,
+      },
+      {
+         .name        = "Region",
+         .signature   = 'REGN',
+         .form_type   = form_type::region,
+      },
+      {
+         .name        = "Navmesh Info Map",
+         .signature   = 'NAVI',
+         .form_type   = form_type::navmesh_info_map,
+         .flags       = form_type_info::flag::is_singleton,
+      },
+      {
+         .name        = "Cell",
+         .signature   = 'CELL',
+         .form_type   = form_type::cell,
+         .flags       = form_type_info::flag::can_have_children,
+      },
+      {
+         .name        = "ObjectReference",
+         .signature   = 'REFR',
+         .form_type   = form_type::reference,
+      },
+      {
+         .name        = "Actor",
+         .signature   = 'ACHR',
+         .form_type   = form_type::actor,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Missile Projectile",
+         .signature   = 'PMIS',
+         .form_type   = form_type::missile,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Arrow Projectile",
+         .signature   = 'PARW',
+         .form_type   = form_type::arrow,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Grenade Projectile",
+         .signature   = 'PGRE',
+         .form_type   = form_type::grenade,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Beam Projectile",
+         .signature   = 'PBEA',
+         .form_type   = form_type::beam,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Flame Projectile",
+         .signature   = 'PFLA',
+         .form_type   = form_type::flame,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Barrier Projectile",
+         .signature   = 'PCON',
+         .form_type   = form_type::barrier,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Cone Projectile",
+         .signature   = 'PBAR',
+         .form_type   = form_type::cone,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Placed Hazard",
+         .signature   = 'PHZD',
+         .form_type   = form_type::placed_hazard,
+         .parent_type = form_type::reference,
+      },
+      {
+         .name        = "Worldspace",
+         .signature   = 'WRLD',
+         .form_type   = form_type::worldspace,
+         .flags       = form_type_info::flag::can_have_children,
+      },
+      {
+         .name        = "Landscape",
+         .signature   = 'LAND',
+         .form_type   = form_type::land,
+         .flags       = form_type_info::flag::no_editor_id,
+      },
+      {
+         .name        = "Navmesh",
+         .signature   = 'NAVM',
+         .form_type   = form_type::navmesh,
+      },
+      {
+         .name        = "Unknown (TLOD)",
+         .signature   = 'TLOD',
+         .form_type   = form_type::tlod,
+      },
+      {
+         .name        = "Dialogue Topic",
+         .signature   = 'DIAL',
+         .form_type   = form_type::topic,
+         .flags       = form_type_info::flag::can_have_children,
+      },
+      {
+         .name        = "Dialogue Topic Info",
+         .signature   = 'INFO',
+         .form_type   = form_type::topic_info,
+         .flags       = form_type_info::flag::empty_if_deleted,
+      },
+      {
+         .name        = "Quest",
+         .signature   = 'QUST',
+         .form_type   = form_type::quest,
+         .flags       = form_type_info::flag::empty_if_deleted,
+      },
+      {
+         .name        = "Idle",
+         .signature   = 'IDLE',
+         .form_type   = form_type::idle,
+      },
+      {
+         .name        = "Package",
+         .signature   = 'PACK',
+         .form_type   = form_type::package,
+      },
+      {
+         .name        = "Combat Style",
+         .signature   = 'CSTY',
+         .form_type   = form_type::combat_style,
+      },
+      {
+         .name        = "Loading Screen",
+         .signature   = 'LSCR',
+         .form_type   = form_type::loading_screen,
+      },
+      {
+         .name        = "Leveled Spell",
+         .signature   = 'LVSP',
+         .form_type   = form_type::leveled_spell,
+      },
+      {
+         .name        = "Animation Prop",
+         .signature   = 'ANIO',
+         .form_type   = form_type::animation_prop,
+      },
+      {
+         .name        = "Water Type",
+         .signature   = 'WATR',
+         .form_type   = form_type::water_type,
+      },
+      {
+         .name        = "EffectShader",
+         .signature   = 'EFSH',
+         .form_type   = form_type::effect_shader,
+      },
+      {
+         .name        = "Unknown (TOFT)",
+         .signature   = 'TOFT',
+         .form_type   = form_type::toft,
+      },
+      {
+         .name        = "Explosion",
+         .signature   = 'EXPL',
+         .form_type   = form_type::explosion,
+      },
+      {
+         .name        = "Debris",
+         .signature   = 'DEBR',
+         .form_type   = form_type::debris,
+      },
+      {
+         .name        = "ImageSpace",
+         .signature   = 'IMGS',
+         .form_type   = form_type::imagespace,
+      },
+      {
+         .name        = "ImageSpace Modifier",
+         .signature   = 'IMAD',
+         .form_type   = form_type::imagespace_modifier,
+      },
+      {
+         .name        = "FormList",
+         .signature   = 'FLST',
+         .form_type   = form_type::formlist,
+      },
+      {
+         .name        = "Perk",
+         .signature   = 'PERK',
+         .form_type   = form_type::perk,
+      },
+      {
+         .name        = "Body Part Data",
+         .signature   = 'BPTD',
+         .form_type   = form_type::body_part_data,
+      },
+      {
+         .name        = "Add-on Node",
+         .signature   = 'ADDN',
+         .form_type   = form_type::addon_node,
+      },
+      {
+         .name        = "ActorValue Info",
+         .signature   = 'AVIF',
+         .form_type   = form_type::actor_value_info,
+      },
+      {
+         .name        = "Camera Shot",
+         .signature   = 'CAMS',
+         .form_type   = form_type::camera_shot,
+      },
+      {
+         .name        = "Camera Path",
+         .signature   = 'CPTH',
+         .form_type   = form_type::camera_path,
+      },
+      {
+         .name        = "Voicetype",
+         .signature   = 'VTYP',
+         .form_type   = form_type::voicetype,
+      },
+      {
+         .name        = "Material Type",
+         .signature   = 'MATT',
+         .form_type   = form_type::material_type,
+      },
+      {
+         .name        = "Impact Data",
+         .signature   = 'IPCT',
+         .form_type   = form_type::impact_data,
+      },
+      {
+         .name        = "Impact Data Set",
+         .signature   = 'IPDS',
+         .form_type   = form_type::impact_data_set,
+      },
+      {
+         .name        = "Armor Addon",
+         .signature   = 'ARMA',
+         .form_type   = form_type::armor_addon,
+      },
+      {
+         .name        = "Encounter Zone",
+         .signature   = 'ECZN',
+         .form_type   = form_type::encounter_zone,
+      },
+      {
+         .name        = "Location",
+         .signature   = 'LCTN',
+         .form_type   = form_type::location,
+      },
+      {
+         .name        = "Message",
+         .signature   = 'MESG',
+         .form_type   = form_type::message,
+      },
+      {
+         .name        = "Ragdoll",
+         .signature   = 'RGDL',
+         .form_type   = form_type::ragdoll,
+      },
+      {
+         .name        = "Default Objects",
+         .signature   = 'DOBJ',
+         .form_type   = form_type::default_object_manager,
+         .flags       = form_type_info::flag::is_singleton,
+      },
+      {
+         .name        = "Lighting Template",
+         .signature   = 'LGTM',
+         .form_type   = form_type::lighting_template,
+      },
+      {
+         .name        = "MusicType",
+         .signature   = 'MUSC',
+         .form_type   = form_type::music_type,
+      },
+      {
+         .name        = "Footstep",
+         .signature   = 'FSTP',
+         .form_type   = form_type::footstep,
+      },
+      {
+         .name        = "Footstep Set",
+         .signature   = 'FSTS',
+         .form_type   = form_type::footstep_set,
+      },
+      {
+         .name        = "Story Manager Branch Node",
+         .signature   = 'SMBN',
+         .form_type   = form_type::story_branch_node,
+      },
+      {
+         .name        = "Story Manager Quest Node",
+         .signature   = 'SMQN',
+         .form_type   = form_type::story_quest_node,
+      },
+      {
+         .name        = "Story Manager Event Node",
+         .signature   = 'SMEN',
+         .form_type   = form_type::story_event_node,
+      },
+      {
+         .name        = "Dialogue Branch",
+         .signature   = 'DLBR',
+         .form_type   = form_type::dialogue_branch,
+         .flags       = form_type_info::flag::empty_if_deleted,
+      },
+      {
+         .name        = "Music Track",
+         .signature   = 'MUST',
+         .form_type   = form_type::music_track,
+      },
+      {
+         .name        = "Dialogue View",
+         .signature   = 'DLVW',
+         .form_type   = form_type::dialogue_view,
+      },
+      {
+         .name        = "Word Of Power",
+         .signature   = 'WOOP',
+         .form_type   = form_type::word_of_power,
+      },
+      {
+         .name        = "Shout",
+         .signature   = 'SHOU',
+         .form_type   = form_type::shout,
+      },
+      {
+         .name        = "Equip Slot",
+         .signature   = 'EQUP',
+         .form_type   = form_type::equip_slot,
+      },
+      {
+         .name        = "Relationship",
+         .signature   = 'RELA',
+         .form_type   = form_type::relationship,
+      },
+      {
+         .name        = "Scene",
+         .signature   = 'SCEN',
+         .form_type   = form_type::scene,
+      },
+      {
+         .name        = "Association Type",
+         .signature   = 'ASTP',
+         .form_type   = form_type::association_type,
+      },
+      {
+         .name        = "Outfit",
+         .signature   = 'OTFT',
+         .form_type   = form_type::outfit,
+      },
+      {
+         .name        = "Art Object",
+         .signature   = 'ARTO',
+         .form_type   = form_type::art_object,
+      },
+      {
+         .name        = "Material Object",
+         .signature   = 'MATO',
+         .form_type   = form_type::material_object,
+      },
+      {
+         .name        = "Movement Type",
+         .signature   = 'MOVT',
+         .form_type   = form_type::movement_type,
+      },
+      {
+         .name        = "Sound Descriptor",
+         .signature   = 'SNDR',
+         .form_type   = form_type::sound_descriptor,
+      },
+      {
+         .name        = "Dual-Cast Data",
+         .signature   = 'DUAL',
+         .form_type   = form_type::dual_cast_data,
+      },
+      {
+         .name        = "Sound Category",
+         .signature   = 'SNCT',
+         .form_type   = form_type::sound_category,
+      },
+      {
+         .name        = "Sound Output Model",
+         .signature   = 'SOPM',
+         .form_type   = form_type::sound_output_model,
+      },
+      {
+         .name        = "Collision Layer",
+         .signature   = 'COLL',
+         .form_type   = form_type::collision_layer,
+      },
+      {
+         .name        = "Color",
+         .signature   = 'CLFM',
+         .form_type   = form_type::color,
+      },
+      {
+         .name        = "Reverb Parameters",
+         .signature   = 'REVB',
+         .form_type   = form_type::reverb_parameters,
+      },
       //
       // New to Skyrim Special:
       //
-      { 'LENS', form_type::lens_flare, "Lens Flare", form_type_info::flag::is_skyrim_special },
-      { 'VOLI', form_type::volumetric_lighting, "Volumetric Lighting Information", form_type_info::flag::is_skyrim_special },
+      {
+         .name        = "Lens Flare",
+         .signature   = 'LENS',
+         .form_type   = form_type::lens_flare,
+         .flags       = form_type_info::flag::is_skyrim_special,
+      },
+      {
+         .name        = "Volumetric Lighting Information",
+         .signature   = 'VOLI',
+         .form_type   = form_type::volumetric_lighting,
+         .flags       = form_type_info::flag::is_skyrim_special,
+      },
    }};
    constexpr std::array<uint32_t, 120> group_sequence_list = {{
       'GMST',
@@ -466,20 +1048,16 @@ namespace dovah {
 
    #pragma region form_type_info constexpr member implementations
    /*static*/ constexpr const form_type_info& form_type_info::lookup(form_type_t ft) noexcept {
-      for (uint8_t i = 0; i < form_types.size(); i++) {
-         const auto& info = form_types[i];
-         if (info.formType == ft)
+      for (const auto& info : form_types)
+         if (info.form_type == ft)
             return info;
-      }
-      return form_types[form_type::none];
+      return form_types[0];
    }
    /*static*/ constexpr form_type_t form_type_info::signature_to_form_type(uint32_t signature) noexcept {
-      for (uint8_t i = 0; i < form_types.size(); i++) {
-         const auto& info = form_types[i];
+      for (const auto& info : form_types)
          if (info.signature == signature)
-            return info.formType;
-      }
-      return 0;
+            return info.form_type;
+      return form_type::none;
    }
    /*static*/ constexpr bool form_type_info::signature_is_suspicious(uint32_t signature) noexcept {
       for (int i = 0; i < 4; ++i) {

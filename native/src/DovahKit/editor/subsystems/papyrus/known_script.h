@@ -1,7 +1,8 @@
 #pragma once
 #include <optional>
-#include <QString>
-#include <QVector>
+#include <string>
+#include <string_view>
+#include <vector>
 #include "helpers/passkey.h"
 #include "dovah/form_types.h"
 
@@ -11,9 +12,9 @@ namespace dovahkit::subsystems::papyrus {
    class known_script {
       public:
          struct per_file_info {
-            QString docstring;
+            std::string docstring;
             struct {
-               QString name;
+               std::string name;
                known_script* target = nullptr; // NOTE: We do not create `known_script` instances for hardcoded or SKSE types.
 
                // REMINDER: The value `dovah::form_type::none` represents the base Form class.
@@ -29,7 +30,7 @@ namespace dovahkit::subsystems::papyrus {
          using subsystem_passkey = cobb::passkey<core, known_script>;
 
       public:
-         QString name;
+      std::string name;
          struct {
             std::optional<per_file_info> packed;
             std::optional<per_file_info> loose;
@@ -39,27 +40,43 @@ namespace dovahkit::subsystems::papyrus {
 
             known_script* root_class = nullptr;
             struct {
-               QVector<known_script*> loose;
-               QVector<known_script*> packed;
+               std::vector<known_script*> loose;
+               std::vector<known_script*> packed;
             } potential_subclasses;
          } inheritance;
+      protected:
+         size_t refcount = 0; // TODO: use refcounted pointers when mapping form-stubs to known scripts
 
+      public:
          constexpr bool exists() const noexcept {
             return info.packed.has_value() || info.loose.has_value();
          }
 
-         int compare_name(QString) const;
-         bool name_matches(QString) const;
+         constexpr bool name_matches(std::string_view) const;
          constexpr const known_script* superclass() const;
          constexpr known_script* superclass();
 
-         bool is_of_type(dovah::form_type_t) const;
-         bool is_of_type(QString desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
          constexpr std::optional<dovah::form_type_t> underlying_type() const;
+         constexpr bool is_attachable_to(dovah::form_type_t) const;
+         constexpr bool is_of_type(std::string_view desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
 
-         bool is_unreferenced() const;
+         constexpr bool is_unreferenced() const;
 
-         void receive_subclass(subsystem_passkey, known_script& subclass, bool loose);
+         template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
+         constexpr void for_each_child_class(Functor&&) const;
+         //
+         template<typename Functor> requires (std::is_invocable_v<Functor, known_script&>)
+         constexpr void for_each_child_class(Functor&&);
+
+         template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
+         constexpr void for_each_descendant_class(Functor&&) const;
+         //
+         template<typename Functor> requires (std::is_invocable_v<Functor, known_script&>)
+         constexpr void for_each_descendant_class(Functor&&);
+
+         void receive_archived_subclass(subsystem_passkey, known_script& subclass);
+         //
+         void receive_loose_subclass(subsystem_passkey, known_script& subclass);
          void abandon_loose_subclass(subsystem_passkey, known_script& subclass);
 
          // Non-recursive; used when initially loading all scripts.

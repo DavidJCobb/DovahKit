@@ -48,7 +48,7 @@ namespace dovah {
    /*static*/ detailed_notice detailed_notice::warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference) {
       for (auto& info : form_types)
          if (info.is_reference())
-            if (reference.form_type_matches(info.formType))
+            if (reference.form_type_matches(info.form_type))
                return detailed_notice();
       detailed_notice warning;
       warning.type    = notice_type::warning;

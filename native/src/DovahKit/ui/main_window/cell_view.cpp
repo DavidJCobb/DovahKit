@@ -45,7 +45,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    //
    this->ui.filterFormType->setAllowUnfiltered(true);
    for (auto& info : dovah::form_types) {
-      if (dovah::form_type_info::form_type_is_base_form(info.formType))
+      if (dovah::form_type_info::form_type_is_base_form(info.form_type))
          this->ui.filterFormType->whitelistSignature(info.signature);
    }
    //

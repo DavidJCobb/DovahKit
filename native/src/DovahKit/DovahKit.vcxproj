@@ -148,6 +148,8 @@
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp" />
+    <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
+    <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
@@ -874,6 +876,7 @@
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="dovah\data\papyrus\helpers\name_equals.h" />
+    <ClInclude Include="dovah\data\papyrus\native_classes.h" />
     <ClInclude Include="dovah\files\bsa\archive_header.h" />
     <ClInclude Include="dovah\files\bsa\packed_file_info.h" />
     <ClInclude Include="dovah\files\bsa\packed_folder_info.h" />
@@ -929,6 +932,8 @@
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
     <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h" />
+    <QtMoc Include="editor\subsystems\papyrus\papyrus_subsystem.h" />
+    <ClInclude Include="editor\subsystems\papyrus\core.h" />
     <ClInclude Include="editor\subsystems\papyrus\known_script.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
@@ -2449,6 +2454,7 @@
   <ItemGroup>
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />

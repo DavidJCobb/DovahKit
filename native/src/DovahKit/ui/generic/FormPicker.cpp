@@ -290,12 +290,12 @@ void FormPicker::_updateTypePicker() {
    c_type->clear();
    if (this->_formTypes.isEmpty()) {
       for (const auto& type : dovah::form_types) {
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.formType);
+         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
       }
    } else {
       for (auto ft : this->_formTypes) {
          auto& type = dovah::form_type_info::lookup(ft);
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.formType);
+         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
       }
    }
    c_type->model()->sort(0);

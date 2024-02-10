@@ -1635,7 +1635,7 @@ namespace dovah {
       for (auto& info : form_types) {
          if (!(info.flags & form_type_info::flag::is_skyrim_special))
             continue;
-         if (this->for_each_active_file_form_of_type(info.formType, functor))
+         if (this->for_each_active_file_form_of_type(info.form_type, functor))
             return true;
       }
       return false;

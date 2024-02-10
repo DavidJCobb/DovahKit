@@ -18,7 +18,7 @@ namespace {
       constexpr const size_t count = []() {
          size_t n = 0;
          for (const auto& item : dovah::form_types)
-            if (dovah::form_type_info::form_type_is_reference(item.formType))
+            if (dovah::form_type_info::form_type_is_reference(item.form_type))
                ++n;
          return n;
       }();
@@ -26,8 +26,8 @@ namespace {
       std::array<dovah::form_type_t, count> out = {};
       size_t n = 0;
       for (const auto& item : dovah::form_types)
-         if (dovah::form_type_info::form_type_is_reference(item.formType))
-            out[n++] = item.formType;
+         if (dovah::form_type_info::form_type_is_reference(item.form_type))
+            out[n++] = item.form_type;
       return out;
    }();
 }
@@ -150,7 +150,7 @@ namespace dovah::tes_file_writing {
          bool opened = false;
          for (auto& typeinfo : form_types) {
             bool is_cell_child = false;
-            switch (typeinfo.formType) {
+            switch (typeinfo.form_type) {
                case form_type::land:
                case form_type::navmesh:
                   is_cell_child = true;
@@ -162,7 +162,7 @@ namespace dovah::tes_file_writing {
                   continue;
             }
             //
-            this->owner.for_each_active_file_override_of_type(typeinfo.formType, [&opened, &record](const form_stub* stub) {
+            this->owner.for_each_active_file_override_of_type(typeinfo.form_type, [&opened, &record](const form_stub* stub) {
                if (!opened) {
                   record.open_next_subrecord('ONAM');
                   opened = true;

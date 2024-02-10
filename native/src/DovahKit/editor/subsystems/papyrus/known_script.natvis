@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovahkit::subsystems::papyrus::known_script">
+      <Intrinsic Name="_has_loose" Expression="info.loose._Has_value" />
+      <Intrinsic Name="_has_bsa"   Expression="info.packed._Has_value" />
+      
+      <Intrinsic Name="_has_pex" Expression="_has_loose() || _has_bsa()" />
+      
+      <Intrinsic Name="_has_local_underlying_type"
+         Expression="_has_pex() &amp;&amp; (_has_loose() ? info.loose : info.packed)._Value.extends.underlying_type._Has_value"
+      />
+      <Intrinsic Name="_local_underlying_type"
+         Expression="(_has_loose() ? info.loose : info.packed)._Value.extends.underlying_type._Value"
+      />
+      
+      <Intrinsic Name="_has_underlying_type"
+         Expression="_has_local_underlying_type() || (inheritance.root_class &amp;&amp; inheritance.root_class-&gt;_has_local_underlying_type())"
+      />
+      <Intrinsic Name="_underlying_type"
+         Expression="_has_local_underlying_type() ? _local_underlying_type() : inheritance.root_class-&gt;_local_underlying_type()"
+      />
+      
+      <Intrinsic Name="_has_superclass"
+         Expression="_has_loose() ? (info.loose._Value.extends.target != nullptr) : (_has_bsa() ? info.packed._Value.extends.target != nullptr : false)"
+      />
+      
+      <DisplayString Condition="_has_loose() &amp;&amp; info.loose._Value.extends.target">{name,sb} extends {info.loose._Value.extends.target-&gt;name,sb}</DisplayString>
+      <DisplayString Condition="_has_bsa() &amp;&amp; info.packed._Value.extends.target">{name,sb} extends {info.packed._Value.extends.target-&gt;name,sb}</DisplayString>
+      <DisplayString>{name,sb}</DisplayString>
+      <Expand>
+         <Item Name="[name]">name,sb</Item>
+         <Item Name="[docstring]" Condition="_has_pex()">(_has_loose() ? info.loose : info.packed)._Value.docstring,sb</Item>
+         <Synthetic Name="[flags]" Condition="_has_pex()">
+            <Expand>
+               <Item Name="[conditional]">(_has_loose() ? info.loose : info.packed)._Value.flags.conditional</Item>
+               <Item Name="[hidden]">(_has_loose() ? info.loose : info.packed)._Value.flags.hidden</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[inheritance]">
+            <DisplayString Condition="inheritance.cyclical">ERROR: A cyclical reference was detected when resolving inheritance.</DisplayString>
+            <DisplayString Condition="_has_underlying_type() &amp;&amp; _underlying_type() == dovah::form_type::none">Derives, ultimately, from native type Form.</DisplayString>
+            <DisplayString Condition="_has_underlying_type()">Derives, ultimately, from native type {(dovah::form_type::type)_underlying_type(),e}.</DisplayString>
+            <DisplayString Condition="!_has_underlying_type()">Does not derive, directly or indirectly, from a native type.</DisplayString>
+            <Expand>
+               <Item Name="[superclass]" Condition="_has_superclass()">(_has_loose() ? info.loose : info.packed)._Value.extends.target,na</Item>
+               <Item Name="[non-native base class]" Condition="inheritance.root_class">inheritance.root_class,na</Item>
+               <Item Name="[native type]" Condition="_has_underlying_type()">(dovah::form_type::type)_underlying_type(),e</Item>
+               <Synthetic Name="[potential subclasses]">
+                  <Expand>
+                     <Item Name="[via packed PEXs]">inheritance.potential_subclasses.packed</Item>
+                     <Item Name="[via loose PEXs]">inheritance.potential_subclasses.loose</Item>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Item Name="[PEX info, packed]" Condition="_has_bsa()">info.packed._Value</Item>
+         <Item Name="[PEX info, loose]" Condition="_has_loose()">info.loose._Value</Item>
+         <Item Name="refcount">refcount</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

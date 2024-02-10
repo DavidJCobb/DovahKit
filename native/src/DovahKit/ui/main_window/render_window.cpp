@@ -156,8 +156,8 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          {
             QVector<dovah::form_type_t> types;
             for (auto& ft : dovah::form_types) {
-               if (dovah::form_type_info::form_type_is_base_form(ft.formType))
-                  types.push_back(ft.formType);
+               if (dovah::form_type_info::form_type_is_base_form(ft.form_type))
+                  types.push_back(ft.form_type);
             }
             picker->setAllowedFormTypes(types);
          }

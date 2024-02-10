@@ -3,6 +3,7 @@
 #include <concepts>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <stdlib.h>
 #include <type_traits>
 

@@ -33,7 +33,7 @@ void FormSignatureCombobox::_rebuild() {
    for (auto& info : dovah::form_types) {
       if (whitelisting && !this->_whitelist.contains(info.signature))
          continue;
-      switch (info.formType) {
+      switch (info.form_type) {
          case dovah::form_type::none:
          case dovah::form_type::file_header:
          case dovah::form_type::file_record_group:
@@ -41,7 +41,7 @@ void FormSignatureCombobox::_rebuild() {
             continue;
       }
       auto* item = new QStandardItem(cobb::qt::four_cc_to_string(info.signature));
-      item->setData(info.formType, Qt::UserRole);
+      item->setData(info.form_type, Qt::UserRole);
       model->appendRow(item);
    }
    if (this->_allowUnfiltered) {

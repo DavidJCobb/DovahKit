@@ -2184,6 +2184,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\papyrus\known_script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5480,6 +5486,12 @@
     <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\papyrus\native_classes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\papyrus\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6024,6 +6036,9 @@
     <QtMoc Include="widgets\DKQuestAliasPicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\papyrus\papyrus_subsystem.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6484,5 +6499,6 @@
     <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
     <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
     <Natvis Include="helpers\tree\node.natvis" />
+    <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
   </ItemGroup>
 </Project>

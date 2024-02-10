@@ -1,7 +1,9 @@
 
 # Known scripts
 
-A <dfn>known script</dfn> is a Papyrus script (i.e. class) that we know either exists or should exist, either because we found PEX files which define the script, or because any form's VMAD contains a BoundScript using the script's name. A script ceases to be "known" when all PEX files defining it are deleted and when no forms have it attached.
+A <dfn>known script</dfn> is a Papyrus script (i.e. class) that we know either exists or should exist, either because we found PEX files which define the script, because we found PEX files which specify the script's name as a superclass, or because any form's VMAD contains a BoundScript using the script's name.
+
+A script ceases to be "known" when all PEX files defining it are deleted, when no other known scripts potentially (see below) subclass it, and when no forms have it attached.
 
 We try to keep track of every known script's inheritance hierarchy, and we try to update the set of known scripts (and data about each known script) as loose PEX files change out from under us. To those ends:
 
@@ -9,7 +11,7 @@ We try to keep track of every known script's inheritance hierarchy, and we try t
 
 * For each known script, we track class information as loaded from up to two PEX files: a winning archived PEX, and a loose PEX. If the loose PEX is deleted, we can quickly revert the class hierarchy back to that established by the archived PEX.
 
-This implies that a known script's inheritance hierarchy can change, as a result of modifications to a loose PEX defining the script itself or any of its ancestor classes.
+This implies that a known script's inheritance hierarchy can change, as a result of modifications to a loose PEX defining the script itself or any of its ancestor classes. It also implies that for each known script *X*, we track up to two potential superclasses: one from the archived PEX file for *X*, if any; and one from the loose PEX file for *X*, if any.
 
 We support and optimize for the following use cases:
 

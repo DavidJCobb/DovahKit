@@ -168,7 +168,7 @@ namespace {
          for (const auto& ft : dovah::form_types) {
             bool found = false;
             //
-            switch (ft.formType) {
+            switch (ft.form_type) {
                //
                // We shouldn't have to include names for form types that correspond 
                // to niche file format details rather than "real" forms.
@@ -185,13 +185,13 @@ namespace {
                continue;
             //
             for (const auto& item : _name_bases) {
-               if (item.value == ft.formType) {
+               if (item.value == ft.form_type) {
                   found = true;
                   break;
                }
             }
             if (!found)
-               return (dovah::form_type::type)ft.formType;
+               return (dovah::form_type::type)ft.form_type;
          }
          return dovah::form_type::none;
       }();

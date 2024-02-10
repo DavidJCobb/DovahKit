@@ -119,24 +119,24 @@ namespace FormPickerImpl {
       //
       size_t count = 0;
       for (const auto& info : dovah::form_types) {
-         if (_should_exclude_form_type(info.formType))
+         if (_should_exclude_form_type(info.form_type))
             continue;
-         if (_form_type_has_exclusions(info.formType)) {
-            editor.for_each_form_of_type(info.formType, [&count](dovah::form_stub* stub) {
+         if (_form_type_has_exclusions(info.form_type)) {
+            editor.for_each_form_of_type(info.form_type, [&count](dovah::form_stub* stub) {
                if (!_should_exclude_form(stub))
                   ++count;
                return false;
             });
          } else {
-            count += editor.count_forms_of_type(info.formType);
+            count += editor.count_forms_of_type(info.form_type);
          }
       }
       this->forms.reserve(count);
       //
       for (const auto& info : dovah::form_types) {
-         if (_should_exclude_form_type(info.formType))
+         if (_should_exclude_form_type(info.form_type))
             continue;
-         editor.for_each_form_of_type(info.formType, [this](dovah::form_stub* stub) {
+         editor.for_each_form_of_type(info.form_type, [this](dovah::form_stub* stub) {
             if (_should_exclude_form(stub))
                return false;
             auto i = new item;
