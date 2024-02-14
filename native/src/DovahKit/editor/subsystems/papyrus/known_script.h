@@ -72,6 +72,7 @@ namespace dovahkit::subsystems::papyrus {
          constexpr bool is_of_type(std::string_view desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
 
          constexpr bool is_unreferenced() const;
+         constexpr bool is_unreferenced_except_by_loose() const;
 
          template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
          constexpr void for_each_child_class(Functor&&) const;

@@ -59,6 +59,7 @@ namespace dovahkit::subsystems::papyrus {
          void _begin_watching_loose_pexs();
          void _stop_watching_loose_pexs();
          void _check_for_loose_pex_updates();
+         void _on_all_loose_pexs_deleted();
 
       signals:
          void pexIndexingComplete();

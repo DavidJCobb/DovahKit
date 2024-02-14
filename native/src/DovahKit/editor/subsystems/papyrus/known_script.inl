@@ -91,17 +91,20 @@ namespace dovahkit::subsystems::papyrus {
    //
 
    constexpr bool known_script::is_unreferenced() const {
+      if (!this->is_unreferenced_except_by_loose())
+         return false;
+
+      if (!this->inheritance.potential_subclasses.loose.empty())
+         return false;
+
+      return true;
+   }
+   constexpr bool known_script::is_unreferenced_except_by_loose() const {
       if (this->refcount > 0)
          return false;
 
-      // Any potential subclasses?
-      {
-         auto& list_set = this->inheritance.potential_subclasses;
-         if (!list_set.loose.empty())
-            return false;
-         if (!list_set.packed.empty())
-            return false;
-      }
+      if (!this->inheritance.potential_subclasses.packed.empty())
+         return false;
 
       return true;
    }

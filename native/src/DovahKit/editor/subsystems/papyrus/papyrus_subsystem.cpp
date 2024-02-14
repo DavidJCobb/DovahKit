@@ -148,7 +148,8 @@ namespace dovahkit::subsystems::papyrus {
                   //
                   // We've been notified about the watched directory being deleted.
                   //
-                  this->_begin_watching_loose_pexs();
+                  this->_on_all_loose_pexs_deleted();
+                  this->_loose_pex.folder_exists = false;
                   return;
                }
             }
@@ -348,10 +349,7 @@ namespace dovahkit::subsystems::papyrus {
    }
    
    void core::_update_superclass_of(known_script& subject) {
-      auto* prior_root = subject.inheritance.root_class;
       subject._compute_root_class({});
-      if (subject.inheritance.root_class == prior_root)
-         return;
       emit knownScriptChanged(subject);
 
       auto* root = subject.inheritance.root_class;
@@ -726,19 +724,93 @@ namespace dovahkit::subsystems::papyrus {
          this->_update_superclass_of(*script);
       }
 
+      //
+      // Dealing with scripts that have lost their PEX file is a two-stage process. We want to 
+      // only forget such a script if it's no longer attached to a form, has no archived PEX, 
+      // and isn't a potential subclass to another form?
+      // 
+      // That last one is key. What if Scripts A and B both lose their PEX files, and B was a 
+      // subclass of A? If we only do a single pass over the scripts, then we'll think that A 
+      // should remain known by virtue of B, even though B is going to be forgotten. Thus, we 
+      // need a two-pass approach. In the first pass, we ditch each unseen script's loose PEX 
+      // info, severing its connection as a "potential subclass of [whatever] by virtue of a 
+      // loose PEX." In the second pass, with that connection severed, we can reliably test 
+      // whether each unseen script is indeed due to be forgotten.
+      //
+      for (auto& pair : unseen_looses) {
+         auto* script = pair.second;
+         assert(script != nullptr);
+
+         auto* loose_super = script->info.loose.value().extends.target;
+         script->info.loose.reset();
+         if (loose_super) {
+            loose_super->abandon_loose_subclass({}, *script);
+         }
+      }
       for (auto& pair : unseen_looses) {
          auto* script = pair.second;
 
+         bool  retain = script->info.packed.has_value();
+         if (!retain)
+            retain = !script->is_unreferenced();
+
+         if (retain) {
+            //
+            // Script will remain known. Fix up the inheritance hierarchy (e.g. root script 
+            // pointers, etc.) for it and its descendants, and emit script-changed signals 
+            // for each of them.
+            //
+            this->_update_superclass_of(*script);
+         } else {
+            emit knownScriptAboutToBeForgotten(*script);
+            this->_known_scripts_by_name.erase(pair.first);
+            delete script;
+            emit knownScriptForgotten(pair.first);
+         }
+      }
+   }
+   void core::_on_all_loose_pexs_deleted() {
+      //
+      // This should all be essentially the same logic as `unseen_looses` in the general 
+      // handler for loose PEX changes. We could almost copy and paste the code, except 
+      // that we still need to put together a list of scripts to loop over for the second 
+      // pass, and we may as well do that during the first pass.
+      //
+      std::unordered_map<std::string, known_script*> altered_looses;
+      for (auto& pair : this->_known_scripts_by_name) {
+         auto* script = pair.second;
          assert(script != nullptr);
-         if (!script->is_unreferenced())
-            continue;
 
-         auto scriptname = script->name;
+         if (script->info.loose.has_value()) {
+            auto* loose_superclass = script->info.loose.value().extends.target;
+            script->info.loose.reset();
+            if (loose_superclass) {
+               loose_superclass->abandon_loose_subclass({}, *script);
+            }
 
-         emit knownScriptAboutToBeForgotten(*script);
-         this->_known_scripts_by_name.erase(_normalize_scriptname(scriptname));
-         delete script;
-         emit knownScriptForgotten(std::move(scriptname));
+            altered_looses[pair.first] = pair.second;
+         }
+      }
+      for (auto& pair : altered_looses) {
+         auto* script = pair.second;
+
+         bool  retain = script->info.packed.has_value();
+         if (!retain)
+            retain = !script->is_unreferenced();
+
+         if (retain) {
+            //
+            // Script will remain known. Fix up the inheritance hierarchy (e.g. root script 
+            // pointers, etc.) for it and its descendants, and emit script-changed signals 
+            // for each of them.
+            //
+            this->_update_superclass_of(*script);
+         } else {
+            emit knownScriptAboutToBeForgotten(*script);
+            this->_known_scripts_by_name.erase(pair.first);
+            delete script;
+            emit knownScriptForgotten(pair.first);
+         }
       }
    }
 }
