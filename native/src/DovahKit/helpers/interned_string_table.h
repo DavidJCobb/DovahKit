@@ -114,7 +114,7 @@ namespace cobb {
             try {
                return _storage.emplace_back(content, size);
             } catch (...) {
-               delete content; // avoid leaks on vector realloc failure
+               delete[] content; // avoid leaks on vector realloc failure
                throw; // re-throw caught exception
             }
          }

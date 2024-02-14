@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <QDateTime>
 #include "helpers/passkey.h"
 #include "dovah/form_types.h"
 
@@ -27,13 +28,23 @@ namespace dovahkit::subsystems::papyrus {
             } flags;
          };
 
+         struct loose_file_metadata {
+            QDateTime lastmod;
+            size_t    size = 0;
+
+            bool operator==(const loose_file_metadata&) const = default;
+         };
+         struct loose_file_info : public per_file_info {
+            loose_file_metadata file_metadata;
+         };
+
          using subsystem_passkey = cobb::passkey<core, known_script>;
 
       public:
-      std::string name;
+         std::string name;
          struct {
-            std::optional<per_file_info> packed;
-            std::optional<per_file_info> loose;
+            std::optional<per_file_info>   packed;
+            std::optional<loose_file_info> loose;
          } info;
          struct {
             bool cyclical = false;

@@ -2190,6 +2190,9 @@
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\win32\directory_change_listener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5490,6 +5493,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\papyrus\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\win32\forward_declare_handles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\win32\directory_change_listener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

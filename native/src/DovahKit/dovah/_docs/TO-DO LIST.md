@@ -44,8 +44,6 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 * `dovah/data/actor_values.h`: this should be a `constexpr` list of PODs. Current way we define it is super old and scuffed (singleton, with a constructor wherein a local C array of definitions that gets `memcpy`'d into a `malloc`'d list).
 
-* `dovah::form_type_info` could be made smaller by using a smaller underlying type for its flags-mask and moving the `formType` constant next to it, i.e. we can cut out three bytes of padding per instance.
-
 ## Form data
 
 ### General
@@ -114,6 +112,16 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
   * When this functionality in the Creation Kit is activated, most UI interaction is blocked: the Render Window is forced to the top, and you cannot drag it around or focus other Creation Kit (sub)windows. You can cancel the operation by right-clicking anywhere (which won't focus any windows that aren't already focused, but will open the Render Window context menu if you right-click there) or by focusing a different program. The Esc key doesn't cancel the operation.
 
+### Deadzone handling for single-axis controls
+
+We enforce deadzones within our XInput handling. However, say you have an action bound to Left Stick Up/Down and another action bound to Left Stick Left/Right. If you move the joystick almost straight up, but slightly to the right, then both actions will trigger: the joystick's horizontal magnitude wouldn't clear the deadzone, but the joystick's *overall* magnitude does.
+
+This is especially problematic for things like mapping different axes of a joystick to rotating an object along different 3D axes, because it makes it impossible to reliably rotate the object along just *one* axis: you get a slight rotation along the other axis because we're not processing the dead zones individually per function.
+
+In essence, we need to manually apply the deadzones a second time within Worldinput, whenever something is bound to just one axis of a joystick.
+
+(Or did we already fix this? I can't remember. It's been so long...)
+
 ### QOL
 * Additional program-wide options (i.e. not scoped to any single control scheme) for scaling various editing operations' speeds (e.g. translate selection, rotate selection, etc.) when in the Precision or Boost camera modes. The scalars should be configurable.
 
@@ -161,6 +169,8 @@ Currently, you can block an outer node from activating by shadowing it with a du
 * Don't abuse Qt's internal object hierarchy for canvas layer ordering. Track canvas layers separately.
 
   * Audit the `CanvasLayer` widget and its associated classes, and see whether there's any reason for layers and layer groups to be QObject subclasses aside from our abuse of Qt's internal object hierarchy/ownership system. If not, then don't make them be QObjects anymore.
+
+    * Do not forget to account for Dovahscript's behavior (i.e. how it tracks lifetimes for canvas entities) when doing this audit.
 
 ### FormPicker
 

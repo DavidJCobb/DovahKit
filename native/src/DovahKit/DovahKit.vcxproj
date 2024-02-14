@@ -1291,6 +1291,7 @@
     <ClInclude Include="helpers\variadic_select_by_type.h" />
     <ClInclude Include="helpers\vectors\map_to_new_type.h" />
     <ClInclude Include="helpers\widen_u16_to_u32.h" />
+    <ClInclude Include="helpers\win32\forward_declare_handles.h" />
     <ClInclude Include="nif\block.h" />
     <ClInclude Include="nif\blocks\bhkBoxShape.h" />
     <ClInclude Include="nif\blocks\bhkBvTreeShape.h" />

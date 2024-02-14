@@ -146,6 +146,12 @@ namespace cobb {
          constexpr bool empty() const noexcept { return _size == 0; }
          constexpr size_type size() const noexcept { return _size; }
 
+         constexpr const value_type* data() const noexcept requires contiguous {
+            if (_size > local_capacity)
+               return _data.heap;
+            return _data.local.list.data();
+         }
+
          constexpr void resize(size_type s) requires (_default_insertable) {
             _resize_impl(s, dummy{});
          }

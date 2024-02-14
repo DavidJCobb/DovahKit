@@ -140,15 +140,58 @@ namespace {
 
 namespace dovahkit::subsystems::papyrus {
    core::core() {
+      QObject::connect(&this->_loose_pex.watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString& path) {
+         if (path == this->_loose_pex.folder_path) {
+            {
+               auto dir = QDir(path);
+               if (!dir.exists()) {
+                  //
+                  // We've been notified about the watched directory being deleted.
+                  //
+                  this->_begin_watching_loose_pexs();
+                  return;
+               }
+            }
+            //
+            // Something in the scripts folder has changed.
+            //
+            this->_check_for_loose_pex_updates();
+         } else {
+            if (this->_loose_pex.folder_exists) {
+               return;
+            }
+            //
+            // The scripts folder did not previously exist. Check to see if it exists now, 
+            // and if so, update our monitoring.
+            //
+            this->_begin_watching_loose_pexs();
+            if (this->_loose_pex.folder_exists) {
+               //
+               // Folder created; treat every PEX therein as newly created.
+               //
+               this->_check_for_loose_pex_updates();
+            }
+         }
+      });
+
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
-         // TODO
+         this->index_all_pex_files();
+         this->_begin_watching_loose_pexs();
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
-         // TODO
+         this->_stop_watching_loose_pexs();
+      });
+      QObject::connect(&editor, &DovahKitCore::dataAbandonComplete, this, [this]() {
+         this->_teardown();
       });
    }
    core::~core() {
+      this->_teardown();
+   }
+
+   void core::_teardown() {
+      emit this->pexTeardownImminent();
       {
          auto& knowns = this->_known_scripts_by_name;
          for (auto& pair : knowns) {
@@ -157,6 +200,7 @@ namespace dovahkit::subsystems::papyrus {
          }
          knowns.clear();
       }
+      emit this->pexTeardownComplete();
    }
 
    /*static*/ std::string core::_normalize_scriptname(std::string_view name) {
@@ -221,6 +265,87 @@ namespace dovahkit::subsystems::papyrus {
       info.flags.hidden      = parser.results.flags.hidden;
       return dst_script;
    }
+
+   known_script* core::_scan_changed_pex(
+      known_script&  dst_script,
+      const uint8_t* src_data,
+      const size_t   src_size,
+      bool& out_basic_info_changed,
+      bool& out_hierarchy_changed
+   ) {
+      out_basic_info_changed = false;
+      out_hierarchy_changed  = false;
+
+      using parser_type         = dovah::pex::parsers::class_info_collector;
+      using shared_string_table = parser_type::shared_string_table_type; // TODO: may not even need this; investigate ditching it
+
+      shared_string_table shared_strings;
+      parser_type parser(shared_strings);
+      parser.desired_classname = _normalize_scriptname(dst_script.name);
+      try {
+         parser.read_file((const char*)src_data, src_size);
+      } catch (const dovah::compiled_papyrus_script::read_exception&) {
+         return nullptr;
+      }
+      if (parser.results.name.empty())
+         return nullptr;
+
+      if (dst_script.name != parser.results.name) { // if letter case changed
+         out_basic_info_changed = true;
+         dst_script.name = parser.results.name;
+      }
+
+      auto& info_opt = dst_script.info.loose;
+      if (!info_opt.has_value()) {
+         auto& info = info_opt.emplace();
+         info.docstring      = parser.results.docstring;
+         info.extends.name   = parser.results.superclass;
+         info.extends.target = nullptr;
+         //
+         info.flags.conditional = parser.results.flags.conditional;
+         info.flags.hidden      = parser.results.flags.hidden;
+
+         if (dst_script.info.packed.has_value()) {
+            auto& p_info = dst_script.info.packed.value();
+            if (p_info.docstring != parser.results.docstring)
+               out_basic_info_changed = true;
+            if (_normalize_scriptname(p_info.extends.name) != _normalize_scriptname(parser.results.superclass))
+               out_hierarchy_changed = true;
+            if (p_info.flags.conditional != parser.results.flags.conditional)
+               out_basic_info_changed = true;
+            if (p_info.flags.hidden != parser.results.flags.hidden)
+               out_basic_info_changed = true;
+         } else {
+            out_basic_info_changed = true;
+            out_hierarchy_changed  = true;
+         }
+      } else {
+         out_basic_info_changed = false;
+         out_hierarchy_changed  = false;
+
+         auto& info = info_opt.value();
+         if (info.docstring != parser.results.docstring) {
+            out_basic_info_changed = true;
+            info.docstring = parser.results.docstring;
+         }
+         if (_normalize_scriptname(info.extends.name) != _normalize_scriptname(parser.results.superclass)) {
+            out_hierarchy_changed = true;
+            info.extends.name = parser.results.superclass;
+            //
+            // Do not modify `info.extends.target`; it's our caller's responsibility to keep that up to date.
+            //
+         }
+         if (info.flags.conditional != parser.results.flags.conditional) {
+            out_basic_info_changed = true;
+            info.flags.conditional = parser.results.flags.conditional;
+         }
+         if (info.flags.hidden != parser.results.flags.hidden) {
+            out_basic_info_changed = true;
+            info.flags.hidden = parser.results.flags.hidden;
+         }
+      }
+      return &dst_script;
+   }
    
    void core::_update_superclass_of(known_script& subject) {
       auto* prior_root = subject.inheritance.root_class;
@@ -277,8 +402,16 @@ namespace dovahkit::subsystems::papyrus {
             QString::fromStdWString(game_folder.c_str()) + "\\Data\\scripts\\",
             "pex",
             [this](const std::string& filename_sans_ext, QFile& file) {
-               auto data = file.readAll();
-               _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true);
+               auto  data    = file.readAll();
+               auto* scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true);
+               if (scanned) {
+                  assert(scanned->info.loose.has_value());
+                  auto info = QFileInfo(file);
+                  scanned->info.loose.value().file_metadata = {
+                     .lastmod = info.lastModified(),
+                     .size    = (size_t)info.size(),
+                  };
+               }
             }
          );
       }
@@ -293,7 +426,7 @@ namespace dovahkit::subsystems::papyrus {
             return;
 
          auto _process_info = [this, script, &phantoms](bool is_loose) -> void {
-            auto& info_opt = is_loose ? script->info.loose : script->info.packed;
+            auto& info_opt = is_loose ? (std::optional<known_script::per_file_info>&)script->info.loose : script->info.packed;
             if (!info_opt.has_value())
                return;
             auto&       info = info_opt.value();
@@ -365,5 +498,247 @@ namespace dovahkit::subsystems::papyrus {
       };
       
       emit pexIndexingComplete();
+   }
+
+   void core::_begin_watching_loose_pexs() {
+      QString data_folder_path;
+
+      auto& watcher = this->_loose_pex.watcher;
+
+      {
+         auto& core = DovahKitCore::get();
+         auto& assets = dovahkit::subsystems::assets::get();
+
+         const auto* bsa_order = assets.get_bsa_load_order();
+         const auto  current_game = core.get_current_game();
+
+         std::filesystem::path game_folder;
+         core.get_game_path(game_folder, current_game);
+         data_folder_path = QString::fromStdWString(game_folder.c_str()) + "\\Data\\";
+         this->_loose_pex.folder_path = data_folder_path + "scripts\\";
+      }
+      this->_loose_pex.folder_exists = watcher.addPath(this->_loose_pex.folder_path);
+
+      if (this->_loose_pex.folder_exists) {
+         //
+         // If we were previously watching the Data folder, then we can stop now; the scripts folder 
+         // exists.
+         //
+         watcher.removePath(data_folder_path);
+      } else {
+         //
+         // The scripts folder doesn't exist yet. Watch the Data folder, so that if the scripts folder 
+         // is created, we can start trying to monitor it.
+         //
+         watcher.addPath(data_folder_path);
+      }
+   }
+   void core::_stop_watching_loose_pexs() {
+      auto& watcher = this->_loose_pex.watcher;
+      watcher.removePaths(watcher.directories());
+
+      this->_loose_pex.folder_exists = false;
+      this->_loose_pex.folder_path.clear();
+   }
+   void core::_check_for_loose_pex_updates() {
+      std::unordered_map<std::string, known_script*> unseen_looses;
+      for (auto& pair : this->_known_scripts_by_name) {
+         assert(pair.second != nullptr);
+         if (pair.second->info.loose.has_value())
+            unseen_looses[pair.first] = pair.second;
+      }
+
+      std::vector<known_script*> new_scripts;
+      std::vector<known_script*> basic_info_changes; // name capitalization, docstring, flags, but only if no hierarchy changes
+      std::vector<known_script*> hierarchy_changes;  // base class changes
+
+      _for_loose_files_with_ext(
+         this->_loose_pex.folder_path,
+         "pex",
+         [this, &unseen_looses, &new_scripts, &basic_info_changes, &hierarchy_changes](const std::string& filename_sans_ext, QFile& file) {
+            auto info = QFileInfo(file);
+            auto meta = known_script::loose_file_metadata{
+               .lastmod = info.lastModified(),
+               .size    = (size_t)info.size(),
+            };
+
+            auto* existing = this->_lookup_known_script(filename_sans_ext);
+            if (existing) {
+               if (existing->info.loose.has_value()) {
+                  unseen_looses.erase(_normalize_scriptname(existing->name)); // Mark this script as "seen."
+                  if (meta == existing->info.loose.value().file_metadata) {
+                     //
+                     // File doesn't appear to have been changed. Ignore it.
+                     //
+                     return;
+                  }
+               }
+            }
+
+            bool hierarchy_changed  = false;
+            bool basic_info_changed = false;
+
+            known_script* scanned = nullptr;
+            {
+               auto data = file.readAll();
+               if (existing) {
+                  scanned = _scan_changed_pex(*existing, (const uint8_t*)data.constData(), data.size(), basic_info_changed, hierarchy_changed);
+               } else {
+                  scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true);
+               }
+            }
+            if (existing) {
+               if (hierarchy_changed) {
+                  hierarchy_changes.push_back(existing);
+               } else if (basic_info_changed) {
+                  basic_info_changes.push_back(existing);
+               }
+            } else {
+               if (scanned) {
+                  new_scripts.push_back(scanned);
+               }
+            }
+            if (scanned) {
+               assert(scanned->info.loose.has_value());
+               scanned->info.loose.value().file_metadata = meta;
+               new_scripts.push_back(scanned);
+            }
+         }
+      );
+
+      //
+      // Now, as before, we need to hook up class hierarchies for new scripts, and find phantoms 
+      // referenced in them as well.
+      //
+      std::vector<known_script*> phantoms;
+      //
+      for (auto* script : new_scripts) {
+         assert(script != nullptr);
+         assert(script->info.loose.has_value());
+         auto&       info = script->info.loose.value();
+         const auto& name = info.extends.name;
+         if (name.empty())
+            continue;
+
+         auto* superclass = info.extends.target = this->_lookup_known_script(name);
+         if (superclass) {
+            superclass->receive_loose_subclass({}, *script);
+            continue;
+         }
+         //
+         // We don't create `known_script`s for native classes. The superclass `name` in question 
+         // didn't refer to another known script, so check if it refers to a native class. If so, 
+         // then set the new known script's underlying type.
+         //
+         for (const auto& native : dovah::papyrus::native_classes) {
+            if (dovah::papyrus::helpers::name_equals(name, native.name)) {
+               info.extends.underlying_type = native.form_type;
+               continue;
+            }
+         }
+
+         //
+         // If we got here, then the script specified a superclass that doesn't actually exist. 
+         // We're gonna wanna instantiate dummies for those, so that if the user creates a loose 
+         // file for one of them post-load, we can more easily fix up the inheritance hierarchies 
+         // on everything that inherits from it.
+         //
+         for (auto* phantom : phantoms) {
+            if (phantom->name_matches(name)) {
+               superclass = phantom;
+               break;
+            }
+         }
+         if (!superclass) {
+            superclass = new known_script;
+            superclass->name = name;
+            phantoms.push_back(superclass);
+         }
+         superclass->receive_loose_subclass({}, *script);
+      }
+
+      //
+      // We also need to check whether any existing scripts with hierarchy changes have been 
+      // changed to inherit from a phantom.
+      //
+      std::vector<known_script*> indirect_hierarchy_changes;
+      //
+      for (auto* script : hierarchy_changes) {
+         assert(script != nullptr);
+         assert(script->info.loose.has_value());
+         auto&       info = script->info.loose.value();
+         const auto& name = info.extends.name;
+
+         auto* former_superclass = info.extends.target;
+         if (former_superclass)
+            former_superclass->abandon_loose_subclass({}, *script);
+
+         if (name.empty()) {
+            //
+            // Script was edited to have no superclass.
+            //
+            continue;
+         }
+         //
+         // Check for native base classes.
+         //
+         for (const auto& native : dovah::papyrus::native_classes) {
+            if (dovah::papyrus::helpers::name_equals(name, native.name)) {
+               info.extends.underlying_type = native.form_type;
+               continue;
+            }
+         }
+
+         //
+         // Check for phantoms.
+         //
+         known_script* superclass = nullptr;
+         for (auto* phantom : phantoms) {
+            if (phantom->name_matches(name)) {
+               superclass = phantom;
+               break;
+            }
+         }
+         if (!superclass) {
+            superclass = new known_script;
+            superclass->name = name;
+            phantoms.push_back(superclass);
+         }
+         superclass->receive_loose_subclass({}, *script);
+      }
+
+      //
+      // Now, we need to send appropriate signals for everything, including forgetting scripts.
+      //
+
+      for (auto* script : new_scripts) {
+         emit knownScriptDiscovered(*script);
+      }
+
+      for (auto* script : basic_info_changes) {
+         emit knownScriptChanged(*script);
+      }
+      for (auto* script : hierarchy_changes) {
+         //
+         // Recompute class hierarchies for the descendant classes of `script`, and emit `knownScriptChanged` 
+         // on `script` and any altered descendants.
+         //
+         this->_update_superclass_of(*script);
+      }
+
+      for (auto& pair : unseen_looses) {
+         auto* script = pair.second;
+
+         assert(script != nullptr);
+         if (!script->is_unreferenced())
+            continue;
+
+         auto scriptname = script->name;
+
+         emit knownScriptAboutToBeForgotten(*script);
+         this->_known_scripts_by_name.erase(_normalize_scriptname(scriptname));
+         delete script;
+         emit knownScriptForgotten(std::move(scriptname));
+      }
    }
 }
