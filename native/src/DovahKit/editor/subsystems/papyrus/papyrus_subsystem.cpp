@@ -780,10 +780,9 @@ namespace dovahkit::subsystems::papyrus {
             this->_update_superclass_of(*script);
          } else {
             emit knownScriptAboutToBeForgotten(*script);
-            auto name = pair.first;
-            this->_known_scripts_by_name.erase(name);
+            this->_known_scripts_by_name.erase(pair.first);
             delete script;
-            emit knownScriptForgotten(name);
+            emit knownScriptForgotten(pair.first);
          }
       }
    }
@@ -825,10 +824,9 @@ namespace dovahkit::subsystems::papyrus {
             this->_update_superclass_of(*script);
          } else {
             emit knownScriptAboutToBeForgotten(*script);
-            auto name = pair.first;
-            this->_known_scripts_by_name.erase(name);
+            this->_known_scripts_by_name.erase(pair.first);
             delete script;
-            emit knownScriptForgotten(name);
+            emit knownScriptForgotten(pair.first);
          }
       }
    }
