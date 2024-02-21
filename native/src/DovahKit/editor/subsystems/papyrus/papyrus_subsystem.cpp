@@ -616,7 +616,6 @@ namespace dovahkit::subsystems::papyrus {
             if (scanned) {
                assert(scanned->info.loose.has_value());
                scanned->info.loose.value().file_metadata = meta;
-               new_scripts.push_back(scanned);
             }
          }
       );
@@ -627,7 +626,7 @@ namespace dovahkit::subsystems::papyrus {
       //
       std::vector<known_script*> phantoms;
       //
-      for (auto* script : new_scripts) {
+      for(auto* script : new_scripts) {
          assert(script != nullptr);
          assert(script->info.loose.has_value());
          auto&       info = script->info.loose.value();
@@ -645,18 +644,25 @@ namespace dovahkit::subsystems::papyrus {
          // didn't refer to another known script, so check if it refers to a native class. If so, 
          // then set the new known script's underlying type.
          //
+         assert(!info.extends.underlying_type.has_value()); // should be a brand new script; this data should not be present yet
          for (const auto& native : dovah::papyrus::native_classes) {
             if (dovah::papyrus::helpers::name_equals(name, native.name)) {
                info.extends.underlying_type = native.form_type;
                continue;
             }
          }
+         if (info.extends.underlying_type.has_value())
+            continue;
 
          //
          // If we got here, then the script specified a superclass that doesn't actually exist. 
          // We're gonna wanna instantiate dummies for those, so that if the user creates a loose 
          // file for one of them post-load, we can more easily fix up the inheritance hierarchies 
          // on everything that inherits from it.
+         // 
+         // (NOTE: New scripts are added to our internal map of known scripts as we parse them, 
+         // so we don't have to worry about cases where one new script subclasses another; the 
+         // lookups above will still handle that and we won't fall through to here.)
          //
          for (auto* phantom : phantoms) {
             if (phantom->name_matches(name)) {
@@ -687,6 +693,9 @@ namespace dovahkit::subsystems::papyrus {
          auto* former_superclass = info.extends.target;
          if (former_superclass)
             former_superclass->abandon_loose_subclass({}, *script);
+         //
+         info.extends.target = nullptr;
+         info.extends.underlying_type.reset();
 
          if (name.empty()) {
             //
@@ -700,14 +709,26 @@ namespace dovahkit::subsystems::papyrus {
          for (const auto& native : dovah::papyrus::native_classes) {
             if (dovah::papyrus::helpers::name_equals(name, native.name)) {
                info.extends.underlying_type = native.form_type;
-               continue;
+               break;
             }
+         }
+         if (info.extends.underlying_type.has_value())
+            continue;
+
+         known_script* superclass = this->_lookup_known_script(name);
+
+         //
+         // Check for changed non-native base classes.
+         //
+         if (superclass) {
+            info.extends.target = superclass;
+            superclass->receive_loose_subclass({}, * script);
+            continue;
          }
 
          //
          // Check for phantoms.
          //
-         known_script* superclass = nullptr;
          for (auto* phantom : phantoms) {
             if (phantom->name_matches(name)) {
                superclass = phantom;
