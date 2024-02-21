@@ -96,6 +96,39 @@ namespace dovahkit::subsystems::papyrus {
 
          // Recursive: used when the class hierarchy has changed (e.g. because a loose file was added/edited/deleted).
          void _update_descendants_root_class(subsystem_passkey);
+
+         // You can't do something like `auto& a = (info.loose.has_value() ? info.loose : info.packed)` 
+         // because the loose and packed infos have different types (one is a subclass of the other). 
+         // You can use a static cast to allow the ternary itself to compile, but that isn't wise, and 
+         // worse: the compiler may make incredibly egregious mistakes afterward. For example, calls 
+         // like `auto& b = (/*ternary here*/).emplace()` *should* cause object slicing, which isn't 
+         // great; but what they *actually cause* is MSVC constructing the value ON THE STACK, OUTSIDE 
+         // OF EITHER OPTIONAL, and not telling you.
+         // 
+         // (I'm baffled as to how that particular problem even happened, but it probably has something 
+         // to do with reference initialization incorrectly extending the lifetime of [something that 
+         // shouldn't have been] a temporary.)
+         //
+         // Anyway, use these accessors instead.
+         //
+         #pragma region Accessors to prevent compiler insanity
+         constexpr per_file_info* _access_file_info(subsystem_passkey, bool loose) {
+            if (loose) {
+               if (auto& o = this->info.loose; o.has_value())
+                  return &o.value();
+               return nullptr;
+            }
+            if (auto& o = this->info.packed; o.has_value())
+               return &o.value();
+            return nullptr;
+         }
+         constexpr per_file_info& _emplace_file_info(subsystem_passkey, bool loose) {
+            if (loose)
+               return this->info.loose.emplace();
+            else
+               return this->info.packed.emplace();
+         }
+         #pragma endregion
    };
 }
 

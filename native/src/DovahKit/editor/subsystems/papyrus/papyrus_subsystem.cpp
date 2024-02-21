@@ -141,23 +141,31 @@ namespace {
 namespace dovahkit::subsystems::papyrus {
    core::core() {
       QObject::connect(&this->_loose_pex.watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString& path) {
-         if (path == this->_loose_pex.folder_path) {
-            {
-               auto dir = QDir(path);
-               if (!dir.exists()) {
-                  //
-                  // We've been notified about the watched directory being deleted.
-                  //
-                  this->_on_all_loose_pexs_deleted();
-                  this->_loose_pex.folder_exists = false;
-                  return;
-               }
+         auto seen_path = QDir(path);
+         auto file_path = QDir(this->_loose_pex.folder_path);
+         if (seen_path == file_path) {
+            if (!file_path.exists()) {
+               return;
             }
             //
             // Something in the scripts folder has changed.
             //
             this->_check_for_loose_pex_updates();
          } else {
+            if (!file_path.exists()) {
+               //
+               // This may be a notification for deletion/renaming of the scripts folder.
+               //
+               if (this->_loose_pex.folder_exists) {
+                  //
+                  // Yep, either it's that notification, or that notification'll be coming 
+                  // up shortly.
+                  //
+                  this->_on_all_loose_pexs_deleted();
+                  this->_loose_pex.folder_exists = false;
+               }
+               return;
+            }
             if (this->_loose_pex.folder_exists) {
                return;
             }
@@ -181,6 +189,12 @@ namespace dovahkit::subsystems::papyrus {
          this->_begin_watching_loose_pexs();
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+         //
+         // Don't monitor the scripts folder while no data is loaded, as there'll be no 
+         // loose scripts to update anyway. (Plus, different games will have the folders 
+         // in different places, so once no data is loaded, we can't know what folder to 
+         // even monitor.)
+         //
          this->_stop_watching_loose_pexs();
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonComplete, this, [this]() {
@@ -215,7 +229,7 @@ namespace dovahkit::subsystems::papyrus {
       return _normalize_scriptname(name.toStdString());
    }
 
-   known_script* core::_scan_pex(const std::string& filename_sans_ext, const uint8_t* src_data, const size_t src_size, bool is_loose) {
+   known_script* core::_scan_pex(const std::string& filename_sans_ext, const uint8_t* src_data, const size_t src_size, bool is_loose, bool is_loose_file_creation) {
       for (const auto& entry : dovah::papyrus::native_classes) {
          if (dovah::papyrus::helpers::name_equals(entry.name, filename_sans_ext))
             //
@@ -243,21 +257,18 @@ namespace dovahkit::subsystems::papyrus {
       std::string name_normalized = _normalize_scriptname(name);
 
       known_script* dst_script = nullptr;
-      {
+      if (!is_loose_file_creation) {
          auto prior_it = this->_known_scripts_by_name.find(name_normalized);
          if (prior_it != this->_known_scripts_by_name.end())
             dst_script = prior_it->second;
       }
-      if (dst_script) {
-         if (is_loose)
-            return dst_script;
-      } else {
+      if (!dst_script) {
          dst_script = new known_script;
          dst_script->name = name;
          this->_known_scripts_by_name[name_normalized] = dst_script;
       }
 
-      auto& info = (is_loose ? dst_script->info.loose : dst_script->info.packed).emplace();
+      auto& info = dst_script->_emplace_file_info({}, is_loose);
       info.docstring      = parser.results.docstring;
       info.extends.name   = parser.results.superclass;
       info.extends.target = nullptr;
@@ -393,7 +404,7 @@ namespace dovahkit::subsystems::papyrus {
             "scripts",
             "pex",
             [this](const std::string& filename_sans_ext, const dovah::bsa_archived_file& archived_file) {
-               _scan_pex(filename_sans_ext, (const uint8_t*)archived_file.data(), archived_file.size(), false);
+               _scan_pex(filename_sans_ext, (const uint8_t*)archived_file.data(), archived_file.size(), false, false);
             }
          );
          _for_loose_files_with_ext(
@@ -401,7 +412,7 @@ namespace dovahkit::subsystems::papyrus {
             "pex",
             [this](const std::string& filename_sans_ext, QFile& file) {
                auto  data    = file.readAll();
-               auto* scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true);
+               auto* scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true, false);
                if (scanned) {
                   assert(scanned->info.loose.has_value());
                   auto info = QFileInfo(file);
@@ -424,10 +435,10 @@ namespace dovahkit::subsystems::papyrus {
             return;
 
          auto _process_info = [this, script, &phantoms](bool is_loose) -> void {
-            auto& info_opt = is_loose ? (std::optional<known_script::per_file_info>&)script->info.loose : script->info.packed;
-            if (!info_opt.has_value())
+            auto* info_ptr = script->_access_file_info({}, is_loose);
+            if (!info_ptr)
                return;
-            auto&       info = info_opt.value();
+            auto&       info = *info_ptr;
             const auto& name = info.extends.name;
             if (name.empty())
                return;
@@ -522,7 +533,13 @@ namespace dovahkit::subsystems::papyrus {
          // If we were previously watching the Data folder, then we can stop now; the scripts folder 
          // exists.
          //
-         watcher.removePath(data_folder_path);
+         //watcher.removePath(data_folder_path);
+         //
+         // ...JUST KIDDING! Qt's documentation says you'll be notified about ANY change to a folder 
+         // you're watching, including that folder's deletion, but testing has determined that that 
+         // is not, in fact, true. If we want to be able to react to renaming or deletion of the 
+         // scripts folder, then we have to watch the Data directory in perpetuity.
+         //
       } else {
          //
          // The scripts folder doesn't exist yet. Watch the Data folder, so that if the scripts folder 
@@ -582,7 +599,7 @@ namespace dovahkit::subsystems::papyrus {
                if (existing) {
                   scanned = _scan_changed_pex(*existing, (const uint8_t*)data.constData(), data.size(), basic_info_changed, hierarchy_changed);
                } else {
-                  scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true);
+                  scanned = _scan_pex(filename_sans_ext, (const uint8_t*)data.constData(), data.size(), true, true);
                }
             }
             if (existing) {
@@ -763,9 +780,10 @@ namespace dovahkit::subsystems::papyrus {
             this->_update_superclass_of(*script);
          } else {
             emit knownScriptAboutToBeForgotten(*script);
-            this->_known_scripts_by_name.erase(pair.first);
+            auto name = pair.first;
+            this->_known_scripts_by_name.erase(name);
             delete script;
-            emit knownScriptForgotten(pair.first);
+            emit knownScriptForgotten(name);
          }
       }
    }
@@ -807,9 +825,10 @@ namespace dovahkit::subsystems::papyrus {
             this->_update_superclass_of(*script);
          } else {
             emit knownScriptAboutToBeForgotten(*script);
-            this->_known_scripts_by_name.erase(pair.first);
+            auto name = pair.first;
+            this->_known_scripts_by_name.erase(name);
             delete script;
-            emit knownScriptForgotten(pair.first);
+            emit knownScriptForgotten(name);
          }
       }
    }

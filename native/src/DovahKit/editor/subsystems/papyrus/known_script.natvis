@@ -6,11 +6,32 @@
       
       <Intrinsic Name="_has_pex" Expression="_has_loose() || _has_bsa()" />
       
+      <!-- these require _has_pex() == true -->
+      <!-- these fail if called from other intrinsics, but usable in typical Natvis fields -->
+      <Intrinsic Name="_primary_pex_extension_info"
+         Expression="_has_loose() ? info.loose._Value.extends : info.packed._Value.extends"
+      />
+      <Intrinsic Name="_primary_pex_flags"
+         Expression="_has_loose() ? info.loose._Value.flags : info.packed._Value.flags"
+      />
+      
       <Intrinsic Name="_has_local_underlying_type"
-         Expression="_has_pex() &amp;&amp; (_has_loose() ? info.loose : info.packed)._Value.extends.underlying_type._Has_value"
+         Expression="
+            _has_pex() &amp;&amp;
+            (_has_loose() ?
+               info.loose._Value.extends.underlying_type._Has_value
+            :
+               info.packed._Value.extends.underlying_type._Has_value
+            )
+         "
       />
       <Intrinsic Name="_local_underlying_type"
-         Expression="(_has_loose() ? info.loose : info.packed)._Value.extends.underlying_type._Value"
+         Expression="
+         _has_loose() ?
+            info.loose._Value.extends.underlying_type._Value
+         :
+            info.packed._Value.extends.underlying_type._Value
+         "
       />
       
       <Intrinsic Name="_has_underlying_type"
@@ -29,11 +50,11 @@
       <DisplayString>{name,sb}</DisplayString>
       <Expand>
          <Item Name="[name]">name,sb</Item>
-         <Item Name="[docstring]" Condition="_has_pex()">(_has_loose() ? info.loose : info.packed)._Value.docstring,sb</Item>
+         <Item Name="[docstring]" Condition="_has_pex()">(_has_loose() ? info.loose._Value.docstring : info.packed._Value.docstring),sb</Item>
          <Synthetic Name="[flags]" Condition="_has_pex()">
             <Expand>
-               <Item Name="[conditional]">(_has_loose() ? info.loose : info.packed)._Value.flags.conditional</Item>
-               <Item Name="[hidden]">(_has_loose() ? info.loose : info.packed)._Value.flags.hidden</Item>
+               <Item Name="[conditional]">_primary_pex_flags().conditional</Item>
+               <Item Name="[hidden]">_primary_pex_flags().hidden</Item>
             </Expand>
          </Synthetic>
          <Synthetic Name="[inheritance]">
@@ -42,7 +63,7 @@
             <DisplayString Condition="_has_underlying_type()">Derives, ultimately, from native type {(dovah::form_type::type)_underlying_type(),e}.</DisplayString>
             <DisplayString Condition="!_has_underlying_type()">Does not derive, directly or indirectly, from a native type.</DisplayString>
             <Expand>
-               <Item Name="[superclass]" Condition="_has_superclass()">(_has_loose() ? info.loose : info.packed)._Value.extends.target,na</Item>
+               <Item Name="[superclass]" Condition="_has_superclass()">_primary_pex_extension_info().target,na</Item>
                <Item Name="[non-native base class]" Condition="inheritance.root_class">inheritance.root_class,na</Item>
                <Item Name="[native type]" Condition="_has_underlying_type()">(dovah::form_type::type)_underlying_type(),e</Item>
                <Synthetic Name="[potential subclasses]">
@@ -55,6 +76,9 @@
          </Synthetic>
          <Item Name="[PEX info, packed]" Condition="_has_bsa()">info.packed._Value</Item>
          <Item Name="[PEX info, loose]" Condition="_has_loose()">info.loose._Value</Item>
+         <Synthetic Name="[PEX info]" Condition="!_has_pex()">
+            <DisplayString>&lt;no PEX files&gt;</DisplayString>
+         </Synthetic>
          <Item Name="refcount">refcount</Item>
       </Expand>
    </Type>

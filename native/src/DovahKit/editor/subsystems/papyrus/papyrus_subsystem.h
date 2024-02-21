@@ -30,8 +30,11 @@ namespace dovahkit::subsystems::papyrus {
          static std::string _normalize_scriptname(std::string_view);
          static std::string _normalize_scriptname(QString);
 
-         known_script* _scan_pex(const std::string& filename_sans_ext, const uint8_t* data, const size_t size, bool is_loose);
+         // Scan a PEX when we don't know if we've already seen the script, or when we know for certain that 
+         // it's a newly-created PEX file for a script we've never seen before.
+         known_script* _scan_pex(const std::string& filename_sans_ext, const uint8_t* data, const size_t size, bool is_loose, bool is_loose_file_creation);
 
+         // Scan a PEX when we know for certain that we've seen the script before.
          known_script* _scan_changed_pex(
             known_script&  target,
             const uint8_t* data,
