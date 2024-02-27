@@ -913,7 +913,14 @@ int main(int argc, char* argv[]) {
    // then when the Papyrus subsystem is destroyed and it deletes its known scripts, it will 
    // fail assertions as to their refcounts being zero. We could give the form-info-cache a 
    // destructor that severs those pointers, but guaranteeing that the subsystems are both 
-   // destroyed in the right order is... It feels very "action at a distance"-y.
+   // destroyed in the right order is... It feels very "action at a distance"-y. It mirrors 
+   // construction order, so we could have the Papyrus subsystem be what initially constructs 
+   // the form-info-cache subsystem, or change the order in which DovahKitCore constructs 
+   // both of them; but it feels easier to just forcibly abandon game data and rely on signals 
+   // and slots so we don't have to worry about it.
+   // 
+   // If this results in exit being too slow, we could look into writing quick-exit handlers 
+   // for subsystems as needed and then doing std::quick_exit here.
    //
    DovahKitCore::get().abandon_data();
    //
