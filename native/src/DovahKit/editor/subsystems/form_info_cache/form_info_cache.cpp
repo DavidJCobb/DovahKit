@@ -279,6 +279,7 @@ namespace dovahkit::subsystems::form_info_cache {
    }
 
    void core::clear() {
+      qDebug("[dovahkit::subsystems::form_info_cache::core::clear] Clearing all cached form info...");
       this->_cache.clear();
       emit this->cachedDataCleared();
    }

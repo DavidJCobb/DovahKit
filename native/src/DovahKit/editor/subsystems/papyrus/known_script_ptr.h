@@ -20,6 +20,11 @@ namespace dovahkit::subsystems::papyrus {
 
       public:
          constexpr known_script_ptr() {}
+         ~known_script_ptr() {
+            auto* prior = this->target;
+            this->target = nullptr;
+            this->_dec_ref_of(prior);
+         }
 
          known_script_ptr(const known_script_ptr& o) {
             this->target = o.target;
@@ -47,12 +52,6 @@ namespace dovahkit::subsystems::papyrus {
             this->_dec_ref_of(prior);
             this->_inc_ref();
             return *this;
-         }
-
-         ~known_script_ptr() {
-            auto* prior = this->target;
-            this->target = nullptr;
-            this->_dec_ref_of(prior);
          }
 
          constexpr operator bool() const noexcept { return this->target != nullptr; };

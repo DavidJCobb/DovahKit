@@ -212,6 +212,7 @@ namespace dovahkit::subsystems::papyrus {
    }
 
    void core::_teardown() {
+      qDebug("[dovahkit::subsystems::papyrus::core::_teardown] Teardown starting...");
       this->_teardown_in_progress = true;
       emit this->pexTeardownImminent();
       {
@@ -222,8 +223,9 @@ namespace dovahkit::subsystems::papyrus {
          }
          knowns.clear();
       }
-      emit this->pexTeardownComplete();
+      qDebug("[dovahkit::subsystems::papyrus::core::_teardown] Teardown complete. Emitting signals...");
       this->_teardown_in_progress = false;
+      emit this->pexTeardownComplete();
    }
 
    /*static*/ std::string core::_normalize_scriptname(std::string_view name) {
