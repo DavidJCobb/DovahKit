@@ -147,9 +147,9 @@
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
-    <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
@@ -506,8 +506,6 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
-    <ClCompile Include="editor\form_data_cache.cpp" />
-    <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
     <ClCompile Include="editor\get_condition_description.cpp" />
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
@@ -942,10 +940,10 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\core.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\threaded_builder.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
-    <QtMoc Include="editor\subsystems\papyrus\DKPapyrusModel.h" />
     <QtMoc Include="editor\subsystems\papyrus\papyrus_subsystem.h" />
     <ClInclude Include="editor\subsystems\papyrus\core.h" />
     <ClInclude Include="editor\subsystems\papyrus\known_script.h" />
@@ -1962,8 +1960,6 @@
     <QtMoc Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.h" />
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
     <ClInclude Include="dovah\utils\loose_enum.h" />
-    <QtMoc Include="editor\form_data_cache.h" />
-    <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h" />
     <ClInclude Include="editor\form_stub_meta_type.h" />
     <ClInclude Include="editor\get_condition_description.h" />
     <ClInclude Include="editor\get_default_object_info.h" />

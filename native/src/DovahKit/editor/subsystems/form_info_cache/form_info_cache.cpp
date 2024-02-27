@@ -6,18 +6,18 @@
 #include "editor/core.h" // DovahKitCore
 
 #include "dovah/form_stub.h"
+
 #include "dovah/forms/components/papyrus.h"
+#include "dovah/forms/_all.h" // dovah::all_loaded_form_types + access to relevant loaded-form classes
 
 #include "editor/subsystems/papyrus/core.h"
-
-#include "dovah/forms/_all.h"
-
-#include "editor/form_data_cache_internals/threaded_builder.h"
 
 #include "./cacheable_traits/attached_scripts.h"
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
 #include "./cacheable_trait.h"
+
+#include "./threaded_builder.h"
 
 // for benchmarks:
 #include "helpers/performance.h"
@@ -224,7 +224,7 @@ namespace dovahkit::subsystems::form_info_cache {
    }
 
    void core::buildAllData() {
-      std::array<DovahKitEditorInternals::form_data_cache_builder, 8> builders;
+      std::array<threaded_builder, 8> builders;
       uint32_t count = 0;
       
       auto& editor = DovahKitCore::get();
@@ -294,19 +294,19 @@ namespace dovahkit::subsystems::form_info_cache {
       return this->_cache.quest_filters.value(&stub);
    }
 
-   bool core::form_has_script_attached(const dovah::form_stub& stub, std::string_view scriptname) const {
+   script_attach_state core::form_script_attachment(const dovah::form_stub& stub, std::string_view scriptname) const {
       auto it = this->_cache.attached_scripts.find(&stub);
       if (it == this->_cache.attached_scripts.end())
-         return false;
+         return script_attach_state::not_present;
 
       for (auto& known : it->deleted)
          if (known->name_matches(scriptname))
-            return false;
+            return script_attach_state::removed;
 
       for (auto& known : it->attached)
          if (known->name_matches(scriptname))
-            return true;
+            return script_attach_state::attached;
 
-      return false;
+      return script_attach_state::not_present;
    }
 }

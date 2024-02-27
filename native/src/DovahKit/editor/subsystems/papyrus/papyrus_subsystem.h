@@ -64,6 +64,15 @@ namespace dovahkit::subsystems::papyrus {
          const known_script* lookup_known_script(std::string_view scriptname) const;
          const known_script* lookup_known_script(QString scriptname) const;
 
+         // If a form has a script attached, then we know about that script by virtue of that attachment. 
+         // As such, these member functions look up the script, and create it if it isn't known.
+         // 
+         // The `form_info_cache` subsystem is responsible for scanning all forms on load, skimming their 
+         // VMAD subrecords, and building a map of form stubs to lists of known scripts. It will maintain 
+         // that map as the user makes edits to forms. That subsystem should call these functions when it 
+         // sees that a form has a script attached: that subsystem should affirmatively choose to "know" 
+         // the script whose name it sees.
+         //
          known_script_ptr know_script(std::string_view scriptname);
          known_script_ptr know_script_via_vmad_scan(std::string_view scriptname);
 

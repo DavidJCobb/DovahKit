@@ -20,6 +20,12 @@ namespace dovah {
 }
 
 namespace dovahkit::subsystems::form_info_cache {
+   enum class script_attach_state {
+      not_present,
+      attached,
+      removed,
+   };
+
    class core;
    class core : public QObject, public cobb::singleton_ex<core> {
       Q_OBJECT;
@@ -54,7 +60,7 @@ namespace dovahkit::subsystems::form_info_cache {
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
 
-         bool form_has_script_attached(const dovah::form_stub&, std::string_view scriptname) const;
+         script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
 
          template<typename Functor> requires std::is_invocable_v<Functor, dovah::form_stub&, QString>
          void for_all_form_model_paths(Functor&& functor) {

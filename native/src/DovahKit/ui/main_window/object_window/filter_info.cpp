@@ -3,10 +3,6 @@
 #include "editor/subsystems/form_info_cache/cacheable_traits/model_path.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
-// for now, just so we can compile
-#include "editor/form_data_cache.h"
-#include <QVariant>
-
 namespace {
    using form_info_cache = dovahkit::subsystems::form_info_cache::core;
 }

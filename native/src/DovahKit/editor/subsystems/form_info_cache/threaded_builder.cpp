@@ -1,8 +1,8 @@
-#include "threaded_builder.h"
-#include "../../dovah/form_stub.h"
+#include "./threaded_builder.h"
+#include "dovah/form_stub.h"
 
-namespace DovahKitEditorInternals {
-   void form_data_cache_builder::_execute() {
+namespace dovahkit::subsystems::form_info_cache {
+   void threaded_builder::_execute() {
       auto& list = this->queue;
       //
       this->progress.maximum = 0;
@@ -18,7 +18,7 @@ namespace DovahKitEditorInternals {
       }
    }
    //
-   void form_data_cache_builder::add_to_queue(handler_t handler, dovah::form_stub* stub) noexcept {
+   void threaded_builder::add_to_queue(handler_t handler, dovah::form_stub* stub) noexcept {
       for (auto& item : this->queue) {
          if (item.handler == handler) {
             item.stubs.push_back(stub);
@@ -29,14 +29,14 @@ namespace DovahKitEditorInternals {
       item.handler = handler;
       item.stubs.push_back(stub);
    }
-   void form_data_cache_builder::start() noexcept {
+   void threaded_builder::start() noexcept {
       this->thread = std::thread(_thread_handler, this);
    }
-   void form_data_cache_builder::wait_for() noexcept {
+   void threaded_builder::wait_for() noexcept {
       if (this->is_active())
          this->thread.join();
    }
-   float form_data_cache_builder::assess_load_progress() const noexcept {
+   float threaded_builder::assess_load_progress() const noexcept {
       if (!this->progress.maximum)
          return 0.0F;
       return (float)this->progress.current / (float)this->progress.maximum;
