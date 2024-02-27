@@ -18,14 +18,13 @@ namespace dovahkit::subsystems::form_info_cache {
 
       vmad::attachment_data::skim_vmad_for_scriptnames(subrecord, attached_scripts, deleted_scripts);
 
-      cached_vmad_info info;
       for (auto& name : attached_scripts) {
-         info.attached.push_back(
+         this->attached.push_back(
             papyrus.know_script_via_vmad_scan(name)
          );
       }
       for (auto& name : deleted_scripts) {
-         info.deleted.push_back(
+         this->deleted.push_back(
             papyrus.know_script_via_vmad_scan(name)
          );
       }

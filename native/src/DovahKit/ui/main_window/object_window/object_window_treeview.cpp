@@ -1,7 +1,8 @@
-#include "object_window_treeview.h"
-#include "../../../dovah/form_stub_addenda.h"
-#include "../../../editor/core.h"
-#include "../../../editor/form_data_cache.h"
+#include "./object_window_treeview.h"
+#include "dovah/form_stub_addenda.h"
+#include "editor/core.h"
+#include "editor/subsystems/form_info_cache/cacheable_traits/model_path.h"
+#include "editor/subsystems/form_info_cache/core.h"
 
 #pragma region ObjectWindowTreeItem
 ObjectWindowTreeItem::~ObjectWindowTreeItem() {
@@ -104,102 +105,6 @@ void ObjectWindowTreeItem::sort() {
    qSort(list.begin(), list.end(), [](const ObjectWindowTreeItem* a, const ObjectWindowTreeItem* b) {
       return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
    });
-}
-#pragma endregion
-
-#pragma region ObjectWindowFilterInfo
-bool ObjectWindowFilterInfo::empty() const noexcept {
-   if (!this->form_types.empty())
-      return false;
-   if (!this->filters.quests.empty())
-      return false;
-   if (!this->filters.statics.empty())
-      return false;
-   return true;
-}
-
-bool ObjectWindowFilterInfo::operator==(const ObjectWindowFilterInfo& other) const noexcept {
-   if (this->filters.quests.size() != other.filters.quests.size())
-      return false;
-   if (this->filters.statics.size() != other.filters.statics.size())
-      return false;
-   if (this->form_types.size() != other.form_types.size())
-      return false;
-   for (auto ft : this->form_types)
-      if (!other.form_types.contains(ft))
-         return false;
-   for (const auto& a : this->filters.quests)
-      for (const auto& b : other.filters.quests)
-         if (a.compare(b, Qt::CaseInsensitive) != 0)
-            return false;
-   for (const auto& a : this->filters.statics)
-      for (const auto& b : other.filters.statics)
-         if (a.compare(b, Qt::CaseInsensitive) != 0)
-            return false;
-   return true;
-}
-
-/*static*/ uint32_t ObjectWindowFilterInfo::cacheCodeFor(dovah::form_type_t ft) noexcept {
-   switch (ft) {
-      case dovah::form_type::quest:
-         return 'FLTR';
-      case dovah::form_type::statik:
-         return 'MODL';
-   }
-   return 0;
-}
-/*static*/ QString ObjectWindowFilterInfo::normalize(const QString& filter) noexcept {
-   auto size = filter.size();
-   //
-   QString out;
-   out.reserve(size);
-   //
-   QChar prev = '\0';
-   for (decltype(size) i = 0; i < size; ++i) {
-      QChar c = filter[i];
-      if (c == '/' || c == '\\') {
-         if (prev == '/' || prev == '\0') // simplify doubled slashes, and strip leading slashes
-            continue;
-         c = '/';
-      }
-      out += c;
-      prev = c;
-   }
-   if (out.back() == '/') // strip trailing slashes
-      out.resize(out.size() - 1);
-   //
-   return out;
-}
-
-ObjectWindowFilterInfo::filter_list_t* ObjectWindowFilterInfo::filterListFor(dovah::form_type_t ft) noexcept {
-   switch (ft) {
-      case dovah::form_type::quest:
-         return &this->filters.quests;
-      case dovah::form_type::statik:
-         return &this->filters.statics;
-   }
-   return nullptr;
-}
-const ObjectWindowFilterInfo::filter_list_t* ObjectWindowFilterInfo::filterListFor(dovah::form_type_t ft) const noexcept {
-   return const_cast<ObjectWindowFilterInfo*>(this)->filterListFor(ft);
-}
-bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) const noexcept {
-   auto* list = this->filterListFor(stub->formType);
-   if (!list)
-      return true;
-   if (list->isEmpty())
-      return true;
-   //
-   // The list is not empty, so apply the filters therein. Treat it as an "OR" match.
-   //
-   auto data = DovahKitFormDataCache::get().dataFor(stub, cacheCodeFor(stub->formType));
-   if (!data.isValid())
-      return false;
-   auto filter = normalize(data.toString());
-   for (const auto& match : *list)
-      if (filter.startsWith(match, Qt::CaseInsensitive))
-         return true;
-   return false;
 }
 #pragma endregion
 
@@ -346,43 +251,37 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       #pragma endregion
       this->endResetModel();
       //
-      auto& cache = DovahKitFormDataCache::get();
-      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataBuilt,   this, [this]() {
+      auto& cache = dovahkit::subsystems::form_info_cache::core::get_or_create();
+      QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedDataBuilt,   this, [this]() {
          if (auto* qust = this->_nodes.quests) {
             this->_buildFilters(qust, dovah::form_type::quest, 'FLTR', true);
          }
-         this->_buildFilters(nullptr, dovah::form_type::statik, 'MODL', false);
-      });
-      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataChanged, this, [this](dovah::form_stub* stub, uint32_t code, const QVariant& prior, const QVariant& after) {
-         if (stub->formType == dovah::form_type::quest && code == 'FLTR') {
-            auto* root = this->_nodes.quests;
-            if (prior.isValid())
-               this->_removeFilter(root, prior.toString());
-            this->_addFilter(root, after.toString(), true);
-         }
-         if (stub->formType == dovah::form_type::statik && code == 'MODL') {
-            auto* root = this->_findFormTypeItem(stub->formType);
-            if (root) {
-               if (prior.isValid())
-                  this->_removeFilter(root, prior.toString());
-               this->_addFilter(root, after.toString(), false);
-            }
+         for (auto ft : dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_types_of_interest) {
+            this->_buildFilters(nullptr, ft, 'MODL', false);
          }
       });
-      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataCleared, this, [this]() {
+      QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedQuestFilterChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {
+         if (stub.formType != dovah::form_type::quest)
+            return;
+         auto* root = this->_nodes.quests;
+         if (!prior.isEmpty())
+            this->_removeFilter(root, prior);
+         if (after.isEmpty())
+            this->_addFilter(root, after, true);
+      });
+      QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedModelPathChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {
+         auto* root = this->_findFormTypeItem(stub.formType);
+         if (root) {
+            if (!prior.isEmpty())
+               this->_removeFilter(root, prior);
+            if (after.isEmpty())
+               this->_addFilter(root, after, true);
+         }
+      });
+      QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedDataCleared, this, [this]() {
          this->_clearFilters(this->_nodes.quests);
          if (auto* node = this->_findFormTypeItem(dovah::form_type::statik))
             this->_clearFilters(node);
-      });
-      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataRemoved, this, [this](dovah::form_stub* stub, uint32_t code, const QVariant& data) {
-         if (stub->formType == dovah::form_type::quest && code == 'FLTR') {
-            this->_removeFilter(this->_nodes.quests, data.toString());
-         }
-         if (stub->formType == dovah::form_type::statik && code == 'MODL') {
-            auto* root = this->_findFormTypeItem(stub->formType);
-            if (root)
-               this->_removeFilter(root, data.toString());
-         }
       });
    }
    ObjectWindowTreeModel::~ObjectWindowTreeModel() {
@@ -546,8 +445,8 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
             child->gatherFormTypes(out);
       return out;
    }
-   ObjectWindowFilterInfo ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
-      ObjectWindowFilterInfo out;
+   ui::object_window::filter_info ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
+      ui::object_window::filter_info out;
       if (qmil.contains(this->_indexOfItem(this->_nodes.all))) {
          //
          // The "All" item is selected.
@@ -565,24 +464,19 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
          //
          // Filters:
          //
-         if (item->type != item_type::type_t::filter)
-            continue;
-         const auto& full = item->full_filter;
-         if (full.isEmpty())
-            continue;
-         auto* gather_to = out.filterListFor(item->containingFormType());
-         if (!gather_to)
-            continue;
-         bool found = false;
-         for (auto& existing : *gather_to) {
-            if (existing.startsWith(full, Qt::CaseInsensitive)) {
-               existing = full;
-               found    = true;
-               break;
+         if (item->type == item_type::type_t::filter) {
+            auto ft = item->containingFormType();
+            if (ft == dovah::form_type::quest) {
+               out.filters.quest_filter_prefix = item->full_filter;
+            } else if (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_type_is_of_interest(ft)) {
+               out.filters.model_path_prefix = item->full_filter;
+            } else {
+               //
+               // No applicable filter.
+               //
+               continue;
             }
          }
-         if (!found)
-            gather_to->push_back(full);
       }
       return out;
    }
@@ -608,48 +502,47 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       // root, and then proceed as planned.
       //
       auto* surrogate_parent = new item_type;
-      DovahKitFormDataCache::get().forAllDataOfType(ft, code, [root, surrogate_parent, include_trailing](const QVariant& data) {
-         if (!data.isValid())
-            return false;
-         auto filter = data.toString();
-         if (filter.isEmpty())
-            return false; // continue
-         //
-         // Increment refcounts and create nodes as appropriate:
-         //
+
+      auto _pathlike_string_to_nodes = [root, surrogate_parent, include_trailing](QString path) {
+         if (path.isEmpty())
+            return;
+
          QString fragment;
          auto*   node = root;
-         for (int i = 0; i < filter.size(); ++i) {
-            QChar c = filter[i];
-            if (c == '/' || c == '\\') {
-               if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
-                  continue;
-               //
-               auto* parent = (node == root) ? surrogate_parent : node;
-               int   index  = parent->indexOf(fragment);
-               if (index < 0) {
-                  //
-                  // This fragment doesn't exist, so create it.
-                  //
-                  auto* child = &item_type::make_filter(fragment);
-                  if (node == root) {
-                     child->full_filter = fragment;
-                  } else {
-                     child->full_filter = node->full_filter + '/' + fragment;
-                  }
-                  parent->appendChild(*child);
-                  node = child;
-               } else {
-                  //
-                  // The fragment already exists. Let's just bump up its refcount.
-                  //
-                  node = parent->child(index);
-               }
-               ++node->refcount;
-               fragment.clear();
+
+         for (auto c : path) {
+            if (c != '/' && c != '\\') {
+               fragment += c;
                continue;
             }
-            fragment += c;
+            //
+            // Handle path separators.
+            //
+            if (fragment.isEmpty()) { // Treat "Foo//Bar" the same as "Foo/Bar"
+               continue;
+            }
+            auto* parent = (node == root) ? surrogate_parent : node;
+            int   index  = parent->indexOf(fragment);
+            if (index < 0) {
+               //
+               // This fragment doesn't exist, so create it.
+               //
+               auto* child = &item_type::make_filter(fragment);
+               if (node == root) {
+                  child->full_filter = fragment;
+               } else {
+                  child->full_filter = node->full_filter + '/' + fragment;
+               }
+               parent->appendChild(*child);
+               node = child;
+            } else {
+               //
+               // The fragment already exists. Let's just bump up its refcount.
+               //
+               node = parent->child(index);
+            }
+            ++node->refcount;
+            fragment.clear();
          }
          if (include_trailing && !fragment.isEmpty()) {
             auto* parent = (node == root) ? surrogate_parent : node;
@@ -674,9 +567,22 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
             }
             ++node->refcount;
          }
-         return false; // continue
-      });
+      };
       //
+      auto& fic = dovahkit::subsystems::form_info_cache::core::get();
+      if (ft == dovah::form_type::quest) {
+         fic.for_all_quest_filters(_pathlike_string_to_nodes);
+      } else {
+         //
+         // TODO: This is not optimal: we'll be combing all model paths once per desired form type.
+         //
+         fic.for_all_form_model_paths([ft, &_pathlike_string_to_nodes](const dovah::form_stub& stub, QString path) {
+            if (stub.formType != ft)
+               return;
+            _pathlike_string_to_nodes(path);
+         });
+      }
+
       if (!surrogate_parent->children.isEmpty()) {
          this->beginInsertRows(qmi, 0, surrogate_parent->children.size() - 1);
          std::swap(list, surrogate_parent->children);
@@ -803,11 +709,11 @@ QVector<dovah::form_type_t> ObjectWindowTree::allPrimaryFormTypes() const noexce
    auto* model = (model_type*) this->model();
    return model->formTypesFor({ model->indexOfAllCategory() });
 }
-ObjectWindowFilterInfo ObjectWindowTree::filterInfo() const noexcept {
+ui::object_window::filter_info ObjectWindowTree::filterInfo() const noexcept {
    auto* sm    = this->selectionModel();
    auto* model = (model_type*) this->model();
    if (!sm || !model)
-      return ObjectWindowFilterInfo();
+      return {};
    return model->getFilterInfoFor(sm->selectedRows());
 }
 #pragma endregion

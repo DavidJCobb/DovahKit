@@ -6,49 +6,65 @@
 
 namespace dovahkit::subsystems::form_info_cache {
    template<typename ValueType>
-   class cache_map : public QHash<dovah::bare_form_id_t, ValueType> {
+   class cache_map : public QHash<const dovah::form_stub*, ValueType> {
       private:
          std::mutex lock;
 
       public:
          void threadedInsert(const dovah::form_stub& stub, const ValueType& value) {
             auto guard = std::unique_lock(this->lock);
-            this->insert(stub.formID, value);
+            this->insert(&stub, value);
          }
          void threadedInsert(const dovah::form_stub& stub, ValueType&& value) {
             auto guard = std::unique_lock(this->lock);
-            this->insert(stub.formID, std::move(value));
+            this->insert(&stub, std::move(value));
          }
 
+         // Returns `true` if there was an element to erase.
          bool eraseAndReport(const dovah::form_stub& stub) {
-            auto it = this->find(stub.formID);
+            auto it = this->find(&stub);
             if (it != this->end()) {
                this->erase(it);
                return true;
             }
             return false;
          }
+
+         // Returns the removed element, if one was present.
+         std::optional<ValueType> takeAndReport(const dovah::form_stub& stub) {
+            auto it = this->find(&stub);
+            if (it != this->end()) {
+               auto result = *it;
+               this->erase(it);
+               return result;
+            }
+            return {};
+         }
+
          bool replaceAndReport(const dovah::form_stub& stub, const ValueType& value) {
-            auto it = this->find(stub.formID);
+            auto it = this->find(&stub);
             if (it != this->end()) {
                if (*it == value) {
                   return false;
                }
                *it = value;
             } else {
-               this->insert(stub.formID, value);
+               this->insert(&stub, value);
             }
             return true;
          }
-         bool replaceAndReport(const dovah::form_stub& stub, ValueType&& value) {
-            auto it = this->find(stub.formID);
+
+         bool replaceTakeAndReport(const dovah::form_stub& stub, const ValueType& value, ValueType& out_prior_if_replaced) {
+            auto it = this->find(&stub);
             if (it != this->end()) {
                if (*it == value) {
                   return false;
                }
-               *it = std::move(value);
+               out_prior_if_replaced = *it;
+               *it = value;
             } else {
-               this->insert(stub.formID, std::move(value));
+               out_prior_if_replaced = ValueType{};
+               this->insert(&stub, value);
             }
             return true;
          }

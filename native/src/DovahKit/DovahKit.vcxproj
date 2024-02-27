@@ -685,6 +685,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
+    <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
@@ -933,9 +934,14 @@
     <ClInclude Include="dovah\utils\refs_need_persistence_checker.h" />
     <ClInclude Include="editor\ini\main.h" />
     <QtMoc Include="editor\subsystems\form_info_cache\form_info_cache.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_trait.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\attached_scripts.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\model_path.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\quest_filter.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_vmad_info.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\core.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
@@ -1412,6 +1418,7 @@
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h" />
     <QtMoc Include="ui\form_windows\activator.h" />
+    <ClInclude Include="ui\main_window\object_window\filter_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\form_info_cache.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />

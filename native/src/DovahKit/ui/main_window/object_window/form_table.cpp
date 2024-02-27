@@ -387,7 +387,7 @@ const FormTableModel::item_type* FormTableModel::dataAtRow(int row) const noexce
 #pragma endregion
 
 #pragma region FormTableModelProxy
-void FormTableModelProxy::setFilterInfo(const ObjectWindowFilterInfo& fi) {
+void FormTableModelProxy::setFilterInfo(const ui::object_window::filter_info& fi) {
    auto& prior = this->form_filter_info;
    if (prior == fi)
       return;
@@ -398,12 +398,7 @@ void FormTableModelProxy::setFilterInfo(const ObjectWindowFilterInfo& fi) {
 bool FormTableModelProxy::filterAcceptsStub(const dovah::form_stub* stub) const noexcept {
    if (!stub)
       return false;
-   auto ft = stub->formType;
-   if (!this->form_filter_info.form_types.empty() && !this->form_filter_info.form_types.contains(ft))
-      return false;
-   if (stub->formType == dovah::form_type::none)
-      return stub->is_none_stub();
-   return this->form_filter_info.testFormStubFilter(stub);
+   return this->form_filter_info.form_matches_filters(*stub);
 }
 bool FormTableModelProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
    if (!this->form_filter_info.empty()) {

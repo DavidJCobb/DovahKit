@@ -7,6 +7,8 @@
 #include "../../../dovah/core.h"
 #include "../../generic/QLinedTreeView.h"
 
+#include "./filter_info.h"
+
 class ObjectWindowTreeModel;
 
 class ObjectWindowTreeItem {
@@ -62,28 +64,6 @@ class ObjectWindowTreeItem {
       void sort();
 };
 
-class ObjectWindowFilterInfo {
-   public:
-      using filter_list_t = QVector<QString>;
-   public:
-      QVector<dovah::form_type_t> form_types;
-      struct {
-         filter_list_t statics;
-         filter_list_t quests;
-      } filters;
-
-      bool empty() const noexcept;
-   
-      bool operator==(const ObjectWindowFilterInfo& other) const noexcept;
-
-      static uint32_t cacheCodeFor(dovah::form_type_t) noexcept;
-      static QString normalize(const QString& filter) noexcept;
-
-      filter_list_t* filterListFor(dovah::form_type_t) noexcept;
-      const filter_list_t* filterListFor(dovah::form_type_t) const noexcept;
-      bool testFormStubFilter(const dovah::form_stub*) const noexcept;
-};
-
 class ObjectWindowTreeModel : public QAbstractItemModel {
    Q_OBJECT
    public:
@@ -130,7 +110,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       QModelIndex indexOfAllCategory() const noexcept;
       QVector<dovah::form_type_t> formTypesFor(const QModelIndexList&) const noexcept;
 
-      ObjectWindowFilterInfo getFilterInfoFor(const QModelIndexList&) const noexcept;
+      ui::object_window::filter_info getFilterInfoFor(const QModelIndexList&) const noexcept;
 };
 
 class ObjectWindowTree : public QLinedTreeView {
@@ -140,5 +120,5 @@ class ObjectWindowTree : public QLinedTreeView {
       using model_type = ObjectWindowTreeModel;
       //
       QVector<dovah::form_type_t> allPrimaryFormTypes() const noexcept;
-      ObjectWindowFilterInfo filterInfo() const noexcept;
+      ui::object_window::filter_info filterInfo() const noexcept;
 };

@@ -46,8 +46,8 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataBuilt(); // emitted when all data is built
          void cachedDataCleared(); // emitted when all data is cleared
 
-         void cachedModelPathChanged(dovah::form_stub&, QString new_value);
-         void cachedQuestFilterChanged(dovah::form_stub&, QString new_value);
+         void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
+         void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedScriptsChanged(dovah::form_stub&);
 
       public:
@@ -55,5 +55,18 @@ namespace dovahkit::subsystems::form_info_cache {
          QString get_quest_filter(const dovah::form_stub&) const;
 
          bool form_has_script_attached(const dovah::form_stub&, std::string_view scriptname) const;
+
+         template<typename Functor> requires std::is_invocable_v<Functor, dovah::form_stub&, QString>
+         void for_all_form_model_paths(Functor&& functor) {
+            auto& list = this->_cache.model_paths;
+            for (auto it = list.constKeyValueBegin(); it != list.constKeyValueEnd(); ++it)
+               functor(*(it->first), it->second);
+         }
+         
+         template<typename Functor> requires std::is_invocable_v<Functor, QString>
+         void for_all_quest_filters(Functor&& functor) {
+            for (auto path : this->_cache.quest_filters)
+               functor(path);
+         }
    };
 }

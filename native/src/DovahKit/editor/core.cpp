@@ -30,6 +30,7 @@
 #include <QDebug>
 #include "subsystems/game_inis.h"
 #include "asset_manager/asset_manager.h"
+#include "subsystems/form_info_cache/core.h"
 #include "subsystems/options/core.h"
 #include "subsystems/papyrus/core.h"
 
@@ -133,6 +134,7 @@ DovahKitCore::DovahKitCore() {
    //
    QTimer::singleShot(0, []() {
       DovahKitAssetManager::get();
+      dovahkit::subsystems::form_info_cache::core::get_or_create();
       dovahkit::subsystems::options::core::get_or_create();
       dovahkit::subsystems::papyrus::core::get_or_create();
    });

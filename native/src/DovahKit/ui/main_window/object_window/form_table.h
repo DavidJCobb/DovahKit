@@ -6,10 +6,15 @@
 #include <QTableView>
 #include <QTimer>
 #include "../../../dovah/core.h"
-#include "object_window_treeview.h"
+#include "./object_window_treeview.h"
+#include "./filter_info.h"
 
 namespace dovah {
    class form_stub;
+}
+
+namespace ui::object_window {
+   struct filter_info;
 }
 
 class FormTableModel;
@@ -96,11 +101,11 @@ class FormTableModelProxy : public QSortFilterProxyModel {
          this->setSortRole(Qt::UserRole);
       }
 
-      inline const ObjectWindowFilterInfo& filterInfo() const noexcept { return this->form_filter_info; }
-      void setFilterInfo(const ObjectWindowFilterInfo&);
+      constexpr const ui::object_window::filter_info& filterInfo() const noexcept { return this->form_filter_info; }
+      void setFilterInfo(const ui::object_window::filter_info&);
 
    protected:
-      ObjectWindowFilterInfo form_filter_info;
+      ui::object_window::filter_info form_filter_info;
 
       bool filterAcceptsStub(const dovah::form_stub* stub) const noexcept;
       virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;

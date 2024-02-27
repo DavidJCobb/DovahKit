@@ -14,6 +14,11 @@
 
 #include "editor/form_data_cache_internals/threaded_builder.h"
 
+#include "./cacheable_traits/attached_scripts.h"
+#include "./cacheable_traits/model_path.h"
+#include "./cacheable_traits/quest_filter.h"
+#include "./cacheable_trait.h"
+
 // for benchmarks:
 #include "helpers/performance.h"
 
@@ -26,57 +31,15 @@ namespace {
 }
 
 namespace {
-   constexpr const auto cache_model_paths_for_form_types = std::array{
-      dovah::form_type::activator,
-      dovah::form_type::container,
-      dovah::form_type::door,
-      dovah::form_type::flora,
-      dovah::form_type::furniture,
-      dovah::form_type::light,
-      dovah::form_type::movable_static,
-      dovah::form_type::statik,
-      dovah::form_type::tree,
-   };
-
-   template<dovah::form_type_t FormType>
-   constexpr const bool interested_in_model_path = []() -> bool {
-      for (auto ft : cache_model_paths_for_form_types)
-         if (ft == (dovah::form_type::type)FormType)
-            return true;
-      return false;
-   }();
-
-   template<typename LoadedForm>
-   concept form_data_has_papyrus = requires (LoadedForm& f) {
-      { f.script_data } -> std::same_as<dovah::loaded_forms::components::papyrus_attachment_data&>;
-   };
-
-   template<dovah::form_type::type FormType>
-   constexpr const bool form_type_has_papyrus = []() -> bool {
-      bool result = false;
-      dovah::all_loaded_form_types::for_each_until_true([&result]<typename Current>() -> bool {
-         if constexpr (Current::form_type == FormType) {
-            result = true;
-            return true;
-         }
-         return false;
-      });
-      return result;
-   }();
-
-
-
-
    using all_form_classes_of_interest = dovah::all_loaded_form_types::filter_types<[]<typename Current>() -> bool {
-      if constexpr (Current::form_type == dovah::form_type::quest) { // quest filter
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
          return true;
       }
-      if constexpr (form_data_has_papyrus<Current>) {
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_class_is_of_interest<Current>) {
          return true;
       }
-      for (auto ft : cache_model_paths_for_form_types) {
-         if ((dovah::form_type::type)Current::form_type == ft)
-            return true;
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::quest_filter::form_class_is_of_interest<Current>) {
+         return true;
       }
       return false;
    }>;
@@ -91,50 +54,46 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
-      enum class trait {
-         attached_scripts,
-         model_path,
-         quest_filter,
-      };
-      using seen_trait_mask = cobb::enum_flags<trait, 3>;
-      //
+      using seen_trait_mask = cobb::enum_flags<cacheable_trait, cacheable_trait_count>;
       seen_trait_mask seen;
 
-      if constexpr (!form_type_has_papyrus<FormType>) {
-         seen |= trait::attached_scripts;
+      if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
+         seen |= cacheable_trait::attached_scripts;
       }
-      if constexpr (!interested_in_model_path<FormType>) {
-         seen |= trait::model_path;
+      if constexpr (!cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
+         seen |= cacheable_trait::model_path;
       }
-      if constexpr (FormType != dovah::form_type::quest) {
-         seen |= trait::quest_filter;
+      if constexpr (!cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
+         seen |= cacheable_trait::quest_filter;
       }
 
       while (auto& subrecord = record.next_subrecord()) {
-         if constexpr (!form_type_has_papyrus<FormType>) {
+         if constexpr (cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
             if (subrecord.signature() == 'VMAD') {
                cached_vmad_info info(subrecord);
-               cache.attached_scripts.threadedInsert(stub, std::move(info));
+               if (!info.empty()) {
+                  cache.attached_scripts.threadedInsert(stub, std::move(info));
+               }
                //
-               seen |= trait::attached_scripts;
+               seen |= cacheable_trait::attached_scripts;
             }
          }
-         if constexpr (interested_in_model_path<FormType>) {
+         if constexpr (cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
             if (subrecord.signature() == 'MODL') {
                std::string raw;
                subrecord.read(raw);
                cache.model_paths.threadedInsert(stub, QString::fromStdString(raw));
                //
-               seen |= trait::model_path;
+               seen |= cacheable_trait::model_path;
             }
          }
-         if constexpr (FormType == dovah::form_type::quest) {
+         if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
             if (subrecord.signature() == 'FLTR') {
                std::string raw;
                subrecord.read(raw);
                cache.quest_filters.threadedInsert(stub, QString::fromStdString(raw));
                //
-               seen |= trait::quest_filter;
+               seen |= cacheable_trait::quest_filter;
             }
          }
 
@@ -153,37 +112,45 @@ namespace {
 
       auto& stub = loaded.stub;
 
-      if constexpr (LoadedForm::form_type == dovah::form_type::quest) {
+      if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(LoadedForm::form_type)) {
          auto& dst = cache.quest_filters;
 
          auto value = QString::fromStdString(loaded.filter);
 
-         bool changed;
+         QString prior;
+         bool    changed;
          if (value.isEmpty()) {
-            changed = dst.eraseAndReport(stub);
+            auto result = dst.takeAndReport(stub);
+            changed = result.has_value();
+            if (changed)
+               prior = result.value();
          } else {
-            changed = dst.replaceAndReport(stub, value);
+            changed = dst.replaceTakeAndReport(stub, value, prior);
          }
          if (changed)
-            emit core.cachedQuestFilterChanged(stub, value);
+            emit core.cachedQuestFilterChanged(stub, prior, value);
       }
 
-      if constexpr (interested_in_model_path<LoadedForm::form_type>) {
+      if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
          auto& dst = cache.model_paths;
 
          auto path = QString::fromStdString(loaded.model.model_path);
 
-         bool changed;
+         QString prior;
+         bool    changed;
          if (path.isEmpty()) {
-            changed = dst.eraseAndReport(stub);
+            auto result = dst.takeAndReport(stub);
+            changed = result.has_value();
+            if (changed)
+               prior = result.value();
          } else {
-            changed = dst.replaceAndReport(stub, path);
+            changed = dst.replaceTakeAndReport(stub, path, prior);
          }
          if (changed)
-            emit core.cachedModelPathChanged(stub, path);
+            emit core.cachedModelPathChanged(stub, prior, path);
       }
 
-      if constexpr (form_data_has_papyrus<LoadedForm>) {
+      if constexpr (cacheable_traits::attached_scripts::form_class_is_of_interest<LoadedForm>) {
          auto& dst = cache.attached_scripts;
          auto& src = loaded.script_data;
 
@@ -220,21 +187,23 @@ namespace dovahkit::subsystems::form_info_cache {
       });
 
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
-         if (stub->formType == dovah::form_type::quest) {
-            if (this->_cache.quest_filters.eraseAndReport(*stub)) {
-               emit this->cachedQuestFilterChanged(*stub, {});
-            }
-         }
          all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
             if (stub->formType != Current::form_type)
                return false;
 
-            if constexpr (interested_in_model_path<Current::form_type>) {
-               if (this->_cache.model_paths.eraseAndReport(*stub)) {
-                  emit this->cachedModelPathChanged(*stub, {});
+            if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(Current::form_type)) {
+               auto result = this->_cache.quest_filters.takeAndReport(*stub);
+               if (result.has_value()) {
+                  emit this->cachedQuestFilterChanged(*stub, result.value(), {});
                }
             }
-            if constexpr (form_data_has_papyrus<Current>) {
+            if constexpr (cacheable_traits::model_path::form_type_is_of_interest(Current::form_type)) {
+               auto result = this->_cache.model_paths.takeAndReport(*stub);
+               if (result.has_value()) {
+                  emit this->cachedModelPathChanged(*stub, result.value(), {});
+               }
+            }
+            if constexpr (cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
                if (this->_cache.attached_scripts.eraseAndReport(*stub)) {
                   emit this->cachedScriptsChanged(*stub);
                }
@@ -283,10 +252,10 @@ namespace dovahkit::subsystems::form_info_cache {
                stub
             );
             ++counts.all;
-            if constexpr (interested_in_model_path<form_type>) {
+            if constexpr (cacheable_traits::model_path::form_type_is_of_interest(form_type)) {
                ++counts.models;
             }
-            if constexpr (form_type == dovah::form_type::quest) {
+            if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(form_type)) {
                ++counts.quests;
             }
             return false;
@@ -317,16 +286,16 @@ namespace dovahkit::subsystems::form_info_cache {
    //
 
    QString core::get_form_model_path(const dovah::form_stub& stub) const {
-      return this->_cache.model_paths.value(stub.formID);
+      return this->_cache.model_paths.value(&stub);
    }
    QString core::get_quest_filter(const dovah::form_stub& stub) const {
       if (stub.formType != dovah::form_type::quest)
          return {};
-      return this->_cache.quest_filters.value(stub.formID);
+      return this->_cache.quest_filters.value(&stub);
    }
 
    bool core::form_has_script_attached(const dovah::form_stub& stub, std::string_view scriptname) const {
-      auto it = this->_cache.attached_scripts.find(stub.formID);
+      auto it = this->_cache.attached_scripts.find(&stub);
       if (it == this->_cache.attached_scripts.end())
          return false;
 
