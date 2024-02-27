@@ -90,24 +90,6 @@ namespace dovahkit::subsystems::papyrus {
 
    //
 
-   constexpr bool known_script::is_unreferenced() const {
-      if (!this->is_unreferenced_except_by_loose())
-         return false;
-
-      if (!this->inheritance.potential_subclasses.loose.empty())
-         return false;
-
-      return true;
-   }
-   constexpr bool known_script::is_unreferenced_except_by_loose() const {
-      if (this->refcount > 0)
-         return false;
-
-      if (!this->inheritance.potential_subclasses.packed.empty())
-         return false;
-
-      return true;
-   }
    
    template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
    constexpr void known_script::for_each_child_class(Functor&& functor) const {

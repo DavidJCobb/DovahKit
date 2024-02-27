@@ -2190,6 +2190,18 @@
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5495,6 +5507,21 @@
     <ClInclude Include="helpers\win32\forward_declare_handles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\papyrus\known_script_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_vmad_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\form_info_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6042,6 +6069,9 @@
     <QtMoc Include="editor\subsystems\papyrus\papyrus_subsystem.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\form_info_cache\form_info_cache.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6438,6 +6468,10 @@
     </None>
     <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
     <None Include="editor\subsystems\papyrus\known_script.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />
+    <None Include="editor\subsystems\form_info_cache\cached_vmad_info.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -28,6 +28,8 @@ namespace dovah::loaded_forms::components::papyrus {
          bool save(tes_subrecord_writer&, load_order_interfaces::form_save&);
          static attachment_header generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
          static void skip_use_info(tes_subrecord_reader&);
+
+         static void skim_vmad_for_scriptnames(tes_subrecord_reader&, std::vector<std::string>& out_attached, std::vector<std::string>& out_deleted);
          
          bool save(tes_record_writer&, load_order_interfaces::form_save&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
          void clone_from(const attachment_data& source, loaded_forms::Form& owner_of_clone) noexcept;

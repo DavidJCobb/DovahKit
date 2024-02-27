@@ -1,11 +1,14 @@
 #pragma once
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <QFileSystemWatcher>
 #include <QObject>
 #include <QString>
+#include "helpers/passkey.h"
 #include "helpers/singleton_ex.h"
+#include "./known_script_ptr.h"
 
 namespace dovahkit::subsystems::papyrus {
    class known_script;
@@ -13,17 +16,22 @@ namespace dovahkit::subsystems::papyrus {
    class core;
    class core : public QObject, public cobb::singleton_ex<core> {
       Q_OBJECT;
-      public:
+      protected:
          core();
          ~core();
 
+      private:
+         struct _self_passkey {};
+
       protected:
+         std::mutex _vmad_scanning_mutex;
          std::unordered_map<std::string, known_script*> _known_scripts_by_name; // keys are forced to ASCII-lowercase
          struct {
             bool    folder_exists = false;
             QString folder_path;
             QFileSystemWatcher watcher;
          } _loose_pex;
+         bool _teardown_in_progress = false;
 
          void _teardown();
 
@@ -56,6 +64,11 @@ namespace dovahkit::subsystems::papyrus {
          const known_script* lookup_known_script(std::string_view scriptname) const;
          const known_script* lookup_known_script(QString scriptname) const;
 
+         known_script_ptr know_script(std::string_view scriptname);
+         known_script_ptr know_script_via_vmad_scan(std::string_view scriptname);
+
+         void _on_script_unreferenced(cobb::passkey<known_script, core>, known_script&);
+
          void index_all_pex_files();
 
       protected:
@@ -75,5 +88,7 @@ namespace dovahkit::subsystems::papyrus {
 
          void pexTeardownImminent(); // emitted before deleting all known scripts; you MUST sever any refcounting pointers to them upon receipt of this signal
          void pexTeardownComplete();
+
+         void _scriptUnreferencedDeferToMainThread(_self_passkey, known_script&); // see: _on_script_unreferenced
    };
 }

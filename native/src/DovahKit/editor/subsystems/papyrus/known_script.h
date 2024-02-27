@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -9,6 +10,7 @@
 
 namespace dovahkit::subsystems::papyrus {
    class core;
+   class known_script_ptr;
 
    class known_script {
       public:
@@ -38,6 +40,7 @@ namespace dovahkit::subsystems::papyrus {
             loose_file_metadata file_metadata;
          };
 
+         using refcount_passkey  = cobb::passkey<known_script_ptr, known_script>;
          using subsystem_passkey = cobb::passkey<core, known_script>;
 
       public:
@@ -56,9 +59,11 @@ namespace dovahkit::subsystems::papyrus {
             } potential_subclasses;
          } inheritance;
       protected:
-         size_t refcount = 0; // TODO: use refcounted pointers when mapping form-stubs to known scripts
+         std::atomic<size_t> refcount = 0; // TODO: use refcounted pointers when mapping form-stubs to known scripts
 
       public:
+         ~known_script();
+
          constexpr bool exists() const noexcept {
             return info.packed.has_value() || info.loose.has_value();
          }
@@ -71,8 +76,8 @@ namespace dovahkit::subsystems::papyrus {
          constexpr bool is_attachable_to(dovah::form_type_t) const;
          constexpr bool is_of_type(std::string_view desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
 
-         constexpr bool is_unreferenced() const;
-         constexpr bool is_unreferenced_except_by_loose() const;
+         bool is_unreferenced() const;
+         bool is_unreferenced_except_by_loose() const;
 
          template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
          constexpr void for_each_child_class(Functor&&) const;
@@ -86,6 +91,7 @@ namespace dovahkit::subsystems::papyrus {
          template<typename Functor> requires (std::is_invocable_v<Functor, known_script&>)
          constexpr void for_each_descendant_class(Functor&&);
 
+         #pragma region Passkeyed accessors for the Papyrus subsystem
          void receive_archived_subclass(subsystem_passkey, known_script& subclass);
          //
          void receive_loose_subclass(subsystem_passkey, known_script& subclass);
@@ -96,6 +102,12 @@ namespace dovahkit::subsystems::papyrus {
 
          // Recursive: used when the class hierarchy has changed (e.g. because a loose file was added/edited/deleted).
          void _update_descendants_root_class(subsystem_passkey);
+         #pragma endregion
+
+         #pragma region Passkeyed accessors for refcounting pointers
+         void _on_reference_gained(refcount_passkey);
+         void _on_reference_lost(refcount_passkey);
+         #pragma endregion
 
          // You can't do something like `auto& a = (info.loose.has_value() ? info.loose : info.packed)` 
          // because the loose and packed infos have different types (one is a subclass of the other). 

@@ -2,6 +2,7 @@
 #include <array>
 #include <string_view>
 #include <type_traits>
+#include <QThread>
 #include "helpers/string/strieq_ascii.h"
 
 #include "dovah/data/papyrus/helpers/name_equals.h"
@@ -10,6 +11,7 @@
 
 #include "editor/core.h"
 #include "./known_script.h"
+#include "./known_script_ptr.h"
 
 // For loading PEXs:
 #include <QDirIterator>
@@ -140,6 +142,10 @@ namespace {
 
 namespace dovahkit::subsystems::papyrus {
    core::core() {
+      QObject::connect(this, &core::_scriptUnreferencedDeferToMainThread, this, [this](auto passkey, known_script& script) {
+         this->_on_script_unreferenced({}, script);
+      });
+
       QObject::connect(&this->_loose_pex.watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString& path) {
          auto seen_path = QDir(path);
          auto file_path = QDir(this->_loose_pex.folder_path);
@@ -206,6 +212,7 @@ namespace dovahkit::subsystems::papyrus {
    }
 
    void core::_teardown() {
+      this->_teardown_in_progress = true;
       emit this->pexTeardownImminent();
       {
          auto& knowns = this->_known_scripts_by_name;
@@ -216,6 +223,7 @@ namespace dovahkit::subsystems::papyrus {
          knowns.clear();
       }
       emit this->pexTeardownComplete();
+      this->_teardown_in_progress = false;
    }
 
    /*static*/ std::string core::_normalize_scriptname(std::string_view name) {
@@ -302,10 +310,24 @@ namespace dovahkit::subsystems::papyrus {
       if (parser.results.name.empty())
          return nullptr;
 
+      /*//
+      //
+      // TODO: MINOR: The CK uses case-insensitive string interning (much like the game) for Papyrus, 
+      //              and it seems like the Papyrus compiler may do so as well. It seems like script 
+      //              filenames get interned (since filename = scriptname), and filenames are always 
+      //              lowercase within BSAs... so the lowercase scriptname gets interned, and then if 
+      //              you recompile the script in the CK, the resulting PEX uses a lowercase name even 
+      //              if the original PEX, the script source code, and the source code filename did 
+      //              not.
+      //
+      //              If we want to update letter-casing, it should be to the PEX filename, which 
+      //              isn't passed to this function right now.
+      //
       if (dst_script.name != parser.results.name) { // if letter case changed
          out_basic_info_changed = true;
          dst_script.name = parser.results.name;
       }
+      //*/
 
       auto& info_opt = dst_script.info.loose;
       if (!info_opt.has_value()) {
@@ -386,6 +408,41 @@ namespace dovahkit::subsystems::papyrus {
       if (it == this->_known_scripts_by_name.end())
          return nullptr;
       return it->second;
+   }
+
+   void core::_on_script_unreferenced(cobb::passkey<known_script, core>, known_script& script) {
+      if (this->_teardown_in_progress)
+         //
+         // We're going to be deleting all known scripts anyway as part of teardown, so 
+         // it's not safe to do it here, and there's also no point in running the various 
+         // checks we'd run here.
+         //
+         return;
+
+      if (QThread::currentThread() != this->thread()) {
+         //
+         // This operation is not thread-safe; defer it to the main thread.
+         //
+         emit _scriptUnreferencedDeferToMainThread({}, script);
+         return;
+      }
+
+      if (script.info.packed.has_value())
+         return;
+      if (script.info.loose.has_value())
+         return;
+
+      if (!script.is_unreferenced())
+         return;
+
+      auto name = _normalize_scriptname(script.name);
+      auto it   = this->_known_scripts_by_name.find(name);
+      assert(it != this->_known_scripts_by_name.end());
+      //
+      emit knownScriptAboutToBeForgotten(script);
+      this->_known_scripts_by_name.erase(it);
+      delete &script;
+      emit knownScriptForgotten(name);
    }
 
    void core::index_all_pex_files() {
@@ -509,6 +566,22 @@ namespace dovahkit::subsystems::papyrus {
       emit pexIndexingComplete();
    }
 
+   known_script_ptr core::know_script(std::string_view scriptname) {
+      auto* script = this->_lookup_known_script(scriptname);
+      if (script)
+         return known_script_ptr(script);
+
+      script = new known_script;
+      script->name = scriptname;
+
+      this->_known_scripts_by_name[_normalize_scriptname(scriptname)] = script;
+      return known_script_ptr(script);
+   }
+   known_script_ptr core::know_script_via_vmad_scan(std::string_view scriptname) {
+      auto lock = std::unique_lock(this->_vmad_scanning_mutex);
+      return this->know_script(scriptname);
+   }
+
    void core::_begin_watching_loose_pexs() {
       QString data_folder_path;
 
@@ -562,7 +635,7 @@ namespace dovahkit::subsystems::papyrus {
          if (pair.second->info.loose.has_value())
             unseen_looses[pair.first] = pair.second;
       }
-
+      
       std::vector<known_script*> new_scripts;
       std::vector<known_script*> basic_info_changes; // name capitalization, docstring, flags, but only if no hierarchy changes
       std::vector<known_script*> hierarchy_changes;  // base class changes

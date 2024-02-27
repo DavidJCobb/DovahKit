@@ -1,7 +1,35 @@
 #include "./known_script.h"
+#include "./papyrus_subsystem.h"
 #include "dovah/data/papyrus/helpers/name_equals.h"
 
 namespace dovahkit::subsystems::papyrus {
+   known_script::~known_script() {
+      assert(this->refcount == 0 && "Known scripts should not be deleted while a known_script_ptr is keeping them known.");
+   }
+
+   //
+   
+   bool known_script::is_unreferenced() const {
+      if (!this->is_unreferenced_except_by_loose())
+         return false;
+
+      if (!this->inheritance.potential_subclasses.loose.empty())
+         return false;
+
+      return true;
+   }
+   bool known_script::is_unreferenced_except_by_loose() const {
+      if (this->refcount > 0)
+         return false;
+
+      if (!this->inheritance.potential_subclasses.packed.empty())
+         return false;
+
+      return true;
+   }
+
+   //
+
    void known_script::receive_archived_subclass(subsystem_passkey, known_script& subclass) {
       auto& list = this->inheritance.potential_subclasses.packed;
       auto  it   = std::find(list.begin(), list.end(), &subclass);
@@ -72,5 +100,14 @@ namespace dovahkit::subsystems::papyrus {
       for_each_descendant_class([this](known_script& child) {
          child.inheritance.root_class = this->inheritance.root_class;
       });
+   }
+
+   void known_script::_on_reference_gained(refcount_passkey) {
+      ++this->refcount;
+   }
+   void known_script::_on_reference_lost(refcount_passkey) {
+      if (--this->refcount != 0)
+         return;
+      core::get()._on_script_unreferenced({}, *this);
    }
 }

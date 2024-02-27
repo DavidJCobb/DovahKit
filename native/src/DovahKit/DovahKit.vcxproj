@@ -145,10 +145,13 @@
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\DKPapyrusModel.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
+    <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
@@ -683,6 +686,7 @@
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
@@ -928,6 +932,10 @@
     <ClInclude Include="dovah\utils\file_prefix.h" />
     <ClInclude Include="dovah\utils\refs_need_persistence_checker.h" />
     <ClInclude Include="editor\ini\main.h" />
+    <QtMoc Include="editor\subsystems\form_info_cache\form_info_cache.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_vmad_info.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
     <ClInclude Include="editor\subsystems\options\core.h" />
@@ -935,6 +943,7 @@
     <QtMoc Include="editor\subsystems\papyrus\papyrus_subsystem.h" />
     <ClInclude Include="editor\subsystems\papyrus\core.h" />
     <ClInclude Include="editor\subsystems\papyrus\known_script.h" />
+    <ClInclude Include="editor\subsystems\papyrus\known_script_ptr.h" />
     <ClInclude Include="editor\subsystems\worldedit\core.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\axis3D.h" />
     <ClInclude Include="editor\subsystems\worldedit\enums\bool_operation.h" />
@@ -1403,6 +1412,7 @@
     <ClInclude Include="shaders\includes\calc_specular_strength.glsl" />
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h" />
     <QtMoc Include="ui\form_windows\activator.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\form_info_cache.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h" />
@@ -2263,8 +2273,10 @@
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />
+    <None Include="editor\subsystems\form_info_cache\cached_vmad_info.inl" />
     <None Include="editor\subsystems\papyrus\known_script.inl" />
     <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
+    <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />
