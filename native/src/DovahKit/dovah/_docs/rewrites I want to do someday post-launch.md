@@ -379,3 +379,9 @@ By January 2023, Worldinput's first incarnation proved fatally flawed:
 * It was around this time that I also discovered that some Creation Kit functions (e.g. editing depth bias, scale, etc., by mouse dragging with certain keys held) could be swapped between, seamlessly, by pressing and releasing individual non-modifier keys. That rendered the original node tree concept entirely unsalvageable: these Creation Kit binds would've been utterly impossible to replicate in this system.
 
 These cases helped motivate a redesign of Worldinput (named `worldinput2` until its completion; now the complete and "canonical" "Worldinput") beginning circa early February 2023. Planning began in earnest (in the form of writing a spec) from 2/28/2023 to 5/10/2023 for the bulk of the latest design, with additional work occurring every week or two in September through October 2023. Does not include time spent on previous, failed, designs for handling input in the Render Window.
+
+## UI
+
+### Object Window
+
+* The code for this is pretty messy just in general. Tempted to do a full rebuild but it's not worth the devtime right now.

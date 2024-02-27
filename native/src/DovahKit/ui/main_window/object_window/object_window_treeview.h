@@ -85,7 +85,8 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       void _sortChildrenOf(item_type*);
       void _sortDescendantsOf(item_type*);
       //
-      void _buildFilters(item_type* root, dovah::form_type_t, uint32_t, bool include_trailing = true);
+      void _buildQuestFilters();
+      void _buildAllModelPathFilters();
       void _clearFilters(item_type* root);
       void _removeFilter(item_type* root, const QString& full);
       void _addFilter(item_type* root, const QString& full, bool include_trailing = true);

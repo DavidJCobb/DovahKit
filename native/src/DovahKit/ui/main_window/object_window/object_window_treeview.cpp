@@ -253,12 +253,8 @@ void ObjectWindowTreeItem::sort() {
       //
       auto& cache = dovahkit::subsystems::form_info_cache::core::get_or_create();
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedDataBuilt,   this, [this]() {
-         if (auto* qust = this->_nodes.quests) {
-            this->_buildFilters(qust, dovah::form_type::quest, 'FLTR', true);
-         }
-         for (auto ft : dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_types_of_interest) {
-            this->_buildFilters(nullptr, ft, 'MODL', false);
-         }
+         this->_buildQuestFilters();
+         this->_buildAllModelPathFilters();
       });
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedQuestFilterChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {
          if (stub.formType != dovah::form_type::quest)
@@ -481,12 +477,8 @@ void ObjectWindowTreeItem::sort() {
       return out;
    }
 
-   void ObjectWindowTreeModel::_buildFilters(item_type* root, dovah::form_type_t ft, uint32_t code, bool include_trailing) {
-      if (!root) {
-         root = this->_findFormTypeItem(ft);
-         assert(root);
-      }
-      //
+   void ObjectWindowTreeModel::_buildQuestFilters() {
+      auto* root = this->_nodes.quests;
       auto& list = root->children;
       auto  qmi  = this->_indexOfItem(root);
       if (!list.isEmpty()) {
@@ -503,7 +495,9 @@ void ObjectWindowTreeItem::sort() {
       //
       auto* surrogate_parent = new item_type;
 
-      auto _pathlike_string_to_nodes = [root, surrogate_parent, include_trailing](QString path) {
+      auto _pathlike_string_to_nodes = [root, surrogate_parent](QString path) {
+         constexpr const bool include_trailing = false;
+
          if (path.isEmpty())
             return;
 
@@ -570,18 +564,7 @@ void ObjectWindowTreeItem::sort() {
       };
       //
       auto& fic = dovahkit::subsystems::form_info_cache::core::get();
-      if (ft == dovah::form_type::quest) {
-         fic.for_all_quest_filters(_pathlike_string_to_nodes);
-      } else {
-         //
-         // TODO: This is not optimal: we'll be combing all model paths once per desired form type.
-         //
-         fic.for_all_form_model_paths([ft, &_pathlike_string_to_nodes](const dovah::form_stub& stub, QString path) {
-            if (stub.formType != ft)
-               return;
-            _pathlike_string_to_nodes(path);
-         });
-      }
+      fic.for_all_quest_filters(_pathlike_string_to_nodes);
 
       if (!surrogate_parent->children.isEmpty()) {
          this->beginInsertRows(qmi, 0, surrogate_parent->children.size() - 1);
@@ -591,6 +574,123 @@ void ObjectWindowTreeItem::sort() {
             child->parent = root; // fix up parent/child relationships
          root->recursiveSort();
          this->endInsertRows();
+      }
+   }
+   void ObjectWindowTreeModel::_buildAllModelPathFilters() {
+      auto _pathlike_string_to_nodes = [](item_type* root, item_type* surrogate_parent, QString path) {
+         constexpr const bool include_trailing = false;
+
+         if (path.isEmpty())
+            return;
+
+         QString fragment;
+         auto*   node = root;
+
+         for (auto c : path) {
+            if (c != '/' && c != '\\') {
+               fragment += c;
+               continue;
+            }
+            //
+            // Handle path separators.
+            //
+            if (fragment.isEmpty()) { // Treat "Foo//Bar" the same as "Foo/Bar"
+               continue;
+            }
+            auto* parent = (node == root) ? surrogate_parent : node;
+            int   index  = parent->indexOf(fragment);
+            if (index < 0) {
+               //
+               // This fragment doesn't exist, so create it.
+               //
+               auto* child = &item_type::make_filter(fragment);
+               if (node == root) {
+                  child->full_filter = fragment;
+               } else {
+                  child->full_filter = node->full_filter + '/' + fragment;
+               }
+               parent->appendChild(*child);
+               node = child;
+            } else {
+               //
+               // The fragment already exists. Let's just bump up its refcount.
+               //
+               node = parent->child(index);
+            }
+            ++node->refcount;
+            fragment.clear();
+         }
+         if (include_trailing && !fragment.isEmpty()) {
+            auto* parent = (node == root) ? surrogate_parent : node;
+            int   index  = parent->indexOf(fragment);
+            if (index < 0) {
+               //
+               // This fragment doesn't exist, so create it.
+               //
+               auto* child = &item_type::make_filter(fragment);
+               if (node == root) {
+                  child->full_filter = fragment;
+               } else {
+                  child->full_filter = node->full_filter + '/' + fragment;
+               }
+               parent->appendChild(*child);
+               node = child;
+            } else {
+               //
+               // The fragment already exists. Let's just bump up its refcount.
+               //
+               node = parent->child(index);
+            }
+            ++node->refcount;
+         }
+      };
+
+      constexpr const auto& form_types_of_interest = dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_types_of_interest;
+
+      constexpr const size_t form_type_count = form_types_of_interest.size();
+      std::array<item_type*, form_type_count> roots = {};
+      std::array<item_type*, form_type_count> surrogate_parents = {};
+      for (size_t i = 0; i < form_type_count; ++i) {
+         roots[i] = this->_findFormTypeItem(form_types_of_interest[i]);
+         assert(roots[i]);
+      }
+      for (auto& ptr : surrogate_parents)
+         ptr = new item_type;
+
+      auto& fic = dovahkit::subsystems::form_info_cache::core::get();
+      fic.for_all_form_model_paths([&roots, &surrogate_parents, &_pathlike_string_to_nodes](const dovah::form_stub& stub, QString path) {
+         size_t i = 0;
+         for (; i < form_types_of_interest.size(); ++i)
+            if (stub.formType == form_types_of_interest[i])
+               break;
+         if (i >= form_types_of_interest.size())
+            return;
+
+         _pathlike_string_to_nodes(roots[i], surrogate_parents[i], path);
+      });
+
+      for (size_t i = 0; i < form_type_count; ++i) {
+         auto* root      = roots[i];
+         auto* surrogate = surrogate_parents[i];
+
+         auto& dst = root->children;
+         auto  qmi = this->_indexOfItem(root);
+         {
+            if (!dst.isEmpty()) {
+               this->beginRemoveRows(qmi, 0, dst.size() - 1);
+               root->clear();
+               this->endRemoveRows();
+            }
+         }
+         if (!surrogate->children.isEmpty()) {
+            this->beginInsertRows(qmi, 0, surrogate->children.size() - 1);
+            std::swap(dst, surrogate->children);
+            delete surrogate;
+            for (auto* child : dst)
+               child->parent = root; // fix up parent/child relationships
+            root->recursiveSort();
+            this->endInsertRows();
+         }
       }
    }
    void ObjectWindowTreeModel::_clearFilters(item_type* root) {
