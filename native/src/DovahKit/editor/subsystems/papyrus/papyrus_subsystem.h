@@ -87,6 +87,11 @@ namespace dovahkit::subsystems::papyrus {
 
          bool form_has_script_attached(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_script_attached_to_any_alias(const dovah::form_stub& quest, std::string_view scriptname) const;
+         //
+         // You may notice that there's no API for querying whether a script is attached to a specific 
+         // alias. That's because to even know that a given alias exists, you have to have already loaded 
+         // the quest, and at that point you have the alias's full data on hand and can just pull the 
+         // script list from there.
 
       protected:
          void _begin_watching_loose_pexs();
