@@ -32,6 +32,7 @@
 #include "pex_parsing_benchmarks.h"
 #include "form_info_cache.h"
 #include "script_attachment_query_from_cache.h"
+#include "filter_object_selection_by_scriptname.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -64,7 +65,8 @@ namespace DovahKitDebug {
       features::papyrus_subsystem,
       features::pex_parsing_benchmarks,
       features::form_info_cache,
-      features::script_attachment_query_from_cache//,
+      features::script_attachment_query_from_cache,
+      features::filter_object_selection_by_scriptname//,
    >;
 
    template<typename T> struct _add_functor {

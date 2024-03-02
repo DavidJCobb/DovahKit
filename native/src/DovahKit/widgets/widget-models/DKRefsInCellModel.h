@@ -40,6 +40,7 @@ class DKRefsInCellModel : public QAbstractListModel {
       QVector<Item*> filtered_out; // not kept sorted
       dovah::form_stub* parent_cell = nullptr;
       QString filter_string;
+      std::string required_scriptname;
 
       bool _item_matches_filter(const Item&) const;
       bool _stub_allowed_in_model(const dovah::form_stub&) const;
@@ -71,6 +72,10 @@ class DKRefsInCellModel : public QAbstractListModel {
 
       QString filterString() const;
       void setFilterString(QString);
+
+      constexpr const std::string& requiredScriptname() const { return this->required_scriptname; }
+      void setRequiredScriptname(QString);
+      void setRequiredScriptname(std::string_view);
 
       dovah::form_stub* ref(QModelIndex) const;
       

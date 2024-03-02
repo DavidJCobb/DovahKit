@@ -5,6 +5,7 @@
 #include "dovah/form_stub_helpers.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/subsystems/papyrus/core.h"
 
 #define TEST_FILTERING_INVARIANTS _DEBUG
 
@@ -69,11 +70,17 @@ DKRefsInCellModel::~DKRefsInCellModel() {
 }
 
 bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
-   if (this->filter_string.isEmpty())
-      return true;
    if (item.is_prepended) // never filter force-prepended items out
       return true;
-   return item.cached_text.contains(this->filter_string, Qt::CaseInsensitive);
+   if (!this->filter_string.isEmpty())
+      if (!item.cached_text.contains(this->filter_string, Qt::CaseInsensitive))
+         return false;
+   if (!this->required_scriptname.empty()) {
+      const auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+      if (!papyrus.form_has_script_attached(*item.stub, this->required_scriptname))
+         return false;
+   }
+   return true;;
 }
 bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
    if (!dovah::form_type_info::form_type_is_reference(stub.formType))
@@ -281,6 +288,9 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
                continue;
             ++count_revealed;
 
+            //
+            // Now we need to figure out where to put `item` in the list.
+            //
             bool found = false;
             for (size_t j = 0; j < mixed_indices.size(); ++j) {
                Item* element;
@@ -291,7 +301,7 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
                   element = this->children[index];
                }
 
-               if (!item->sortAbove(*element)) {
+               if (item->sortAbove(*element)) {
                   mixed_indices.insert(mixed_indices.begin() + j, i | is_source_list_index);
                   found = true;
                   break;
@@ -310,8 +320,14 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
       if (count_revealed) {
          size_t i = 0;
          do {
-            if (!(mixed_indices[i] & is_source_list_index))
+            //
+            // Start by finding the next contiguous range of items to move.
+            //
+            if (!(mixed_indices[i] & is_source_list_index)) {
+               ++i;
                continue;
+            }
+            // mixed_indices[i] is the start of the range.
 
             size_t count = 1;
             for (size_t j = i + 1; j < mixed_indices.size(); ++j) {
@@ -319,6 +335,7 @@ void DKRefsInCellModel::_handle_newly_revealed_by_filter() {
                   break;
                ++count;
             }
+            // count is the size of the range.
 
             this->beginInsertRows({}, i, i + count - 1);
             for (size_t n = 0; n < count; ++n) {
@@ -362,7 +379,7 @@ void DKRefsInCellModel::_filter(bool filter_made_more_specific) {
    constexpr const bool batch_insertions = true;
 
    if (this->filtered_out.empty()) {
-      if (this->filter_string.isEmpty())
+      if (this->filter_string.isEmpty() && this->required_scriptname.empty())
          return;
       if (this->children.empty())
          return;
@@ -643,6 +660,17 @@ void DKRefsInCellModel::setFilterString(QString s) {
    bool more_specific = s.contains(this->filter_string);
    this->filter_string = s;
    this->_filter(more_specific);
+}
+
+void DKRefsInCellModel::setRequiredScriptname(QString s) {
+   std::string desired = s.toUtf8().toStdString();
+   this->setRequiredScriptname(std::string_view(desired));
+}
+void DKRefsInCellModel::setRequiredScriptname(std::string_view desired) {
+   if (dovah::papyrus::helpers::name_equals(desired, this->required_scriptname))
+      return;
+   this->required_scriptname = desired;
+   this->_filter();
 }
 
 dovah::form_stub* DKRefsInCellModel::ref(QModelIndex qmi) const {

@@ -9,7 +9,7 @@ namespace DovahKitDebug::features {
       cobb::benchmark bench;
       bench.begin();
       //
-      subsys.index_all_pex_files();
+      //subsys.index_all_pex_files(); // lol this is a protected member function now
       //
       bench.end();
       auto microseconds = bench.microseconds();

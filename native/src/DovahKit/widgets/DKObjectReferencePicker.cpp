@@ -5,6 +5,7 @@
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/forms/factories/hardcoded.h" // for PlayerRef form ID
    #include "dovah/form_stub.h"
+   #include "editor/subsystems/papyrus/core.h"
    #include "editor/subsystems/worldedit/core.h"
    #include "editor/core.h"
 #endif
@@ -34,6 +35,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       #if !defined(QT_DESIGNER_LIB)
          QObject::connect(widget, &QPushButton::clicked, this, [this]() {
             static_assert(!require_render_window_pick_hook, "TODO: click handler: coordinate with Worldedit/Worldinput to pick the ref");
+            static_assert(!require_render_window_pick_hook, "TODO: enforce required scriptname here too!");
          });
       #endif
    }
@@ -211,6 +213,41 @@ void DKObjectReferencePicker::_rebuildLayout() {
 
    this->setUpdatesEnabled(true);
 }
+void DKObjectReferencePicker::_updatePrependedRefs() {
+   #if !defined(QT_DESIGNER_LIB)
+      auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+
+      const auto& required_scriptname = model->requiredScriptname();
+
+      bool show_none = this->state.allow_none_ref;
+      if (!show_none)
+         show_none = !required_scriptname.empty();
+
+      if (show_none)
+         model->addPrependedRef(nullptr);
+      else
+         model->removePrependedRef(nullptr);
+
+      if (auto* player_ref = DovahKitCore::get().get_form(dovah::hardcoded_form_ids::PlayerRef)) {
+         //
+         // By default, we should prepend PlayerRef: they're not placed in any one cell, 
+         // so there's no way to select them otherwise. However, if we're requiring a 
+         // specific scriptname, then we should only prepend PlayerRef if they actually 
+         // have that script attached.
+         //
+         bool show_player = true;
+         if (!required_scriptname.empty()) {
+            auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+            if (!papyrus.form_has_script_attached(*player_ref, required_scriptname))
+               show_player = false;
+         }
+         if (show_player)
+            model->addPrependedRef(player_ref);
+         else
+            model->removePrependedRef(player_ref);
+      }
+   #endif
+}
 
 #if !defined(QT_DESIGNER_LIB)
    dovah::form_stub* DKObjectReferencePicker::cell() const {
@@ -253,19 +290,28 @@ void DKObjectReferencePicker::setRefFilterString(QString filter) {
    #endif
 }
 
+#if !defined(QT_DESIGNER_LIB)
+   const std::string& DKObjectReferencePicker::requiredScriptname() const {
+      return ((DKRefsInCellModel*)this->subwidgets.refr->model())->requiredScriptname();
+   }
+   void DKObjectReferencePicker::setRequiredScriptname(QString desired) {
+      auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+      model->setRequiredScriptname(desired);
+      this->_updatePrependedRefs();
+   }
+   void DKObjectReferencePicker::setRequiredScriptname(std::string_view desired) {
+      auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
+      model->setRequiredScriptname(desired);
+      this->_updatePrependedRefs();
+   }
+#endif
+
 void DKObjectReferencePicker::setAllowNone(bool v) {
    auto& value = this->state.allow_none_ref;
    if (value == v)
       return;
    value = v;
-
-   #if !defined(QT_DESIGNER_LIB)
-      auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
-      if (v)
-         model->addPrependedRef(nullptr);
-      else
-         model->removePrependedRef(nullptr);
-   #endif
+   this->_updatePrependedRefs();
 }
 void DKObjectReferencePicker::setShowRefListFilter(bool v) {
    auto& value = this->state.show_ref_list_filter;
