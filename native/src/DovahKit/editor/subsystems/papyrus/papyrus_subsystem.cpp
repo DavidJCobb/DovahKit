@@ -23,6 +23,10 @@
 #include "dovah/files/pex/parsers/class_info_collector.h"
 #include "editor/subsystems/assets.h"
 
+// For testing whether a form has a given script attached, without having to load the form:
+#include "dovah/form_stub_helpers.h"
+#include "editor/subsystems/form_info_cache/core.h"
+
 namespace {
    constexpr const auto all_form_type_inheritance = []() {
       constexpr size_t count = []() {
@@ -566,6 +570,66 @@ namespace dovahkit::subsystems::papyrus {
       };
       
       emit pexIndexingComplete();
+   }
+
+   bool core::form_has_script_attached(const dovah::form_stub& stub, std::string_view scriptname) const {
+      auto* known = this->lookup_known_script(scriptname);
+      if (!known)
+         return false;
+
+      auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
+      auto  list = fic.get_scripts_attached_to_form(stub);
+      for (const auto* script : list) {
+         if (script == known || script->is_descendant_of(*known))
+            return true;
+      }
+
+      if (dovah::form_type_info::form_type_is_reference(stub.formType)) {
+         //
+         // Need to check against the base form, too.
+         //
+         const auto* base = dovah::form_stub_helpers::get_base_form(&stub);
+         if (base) {
+            const known_script* script_on_base = nullptr;
+            
+            list = fic.get_scripts_attached_to_form(*base);
+            for (const auto* script : list) {
+               if (script == known || script->is_descendant_of(*known)) {
+                  script_on_base = script;
+                  break;
+               }
+            }
+            if (script_on_base) {
+               //
+               // Ensure that this script isn't explicitly removed via a REFR-side BoundScript.
+               //
+               auto attach_state = fic.form_script_attachment(stub, script_on_base->name);
+               if (attach_state == dovahkit::subsystems::form_info_cache::script_attach_state::removed)
+                  return false;
+               return true;
+            }
+         }
+      }
+
+      return false;
+   }
+   bool core::quest_has_script_attached_to_any_alias(const dovah::form_stub& quest, std::string_view scriptname) const {
+      assert(quest.formType == dovah::form_type::quest);
+
+      auto* known = this->lookup_known_script(scriptname);
+      if (!known)
+         return false;
+
+      auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
+      auto  list = fic.get_scripts_attached_to_quest_aliases(quest);
+      for (const auto* script : list) {
+         if (script == known)
+            return true;
+         if (script->is_descendant_of(*known))
+            return true;
+      }
+
+      return false;
    }
 
    known_script_ptr core::know_script(std::string_view scriptname) {

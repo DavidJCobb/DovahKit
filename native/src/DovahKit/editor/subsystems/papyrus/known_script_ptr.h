@@ -58,6 +58,8 @@ namespace dovahkit::subsystems::papyrus {
          constexpr operator const raw_pointer_type() const noexcept { return this->target; };
          constexpr const raw_pointer_type operator->() const noexcept { return this->target; };
 
+         constexpr const raw_pointer_type get() const noexcept { return this->target; }
+
          constexpr bool operator==(const known_script_ptr& o) const noexcept {
             return this->target == o.target;
          }

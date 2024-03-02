@@ -18,9 +18,10 @@ namespace dovahkit::subsystems::form_info_cache {
 
       std::vector<papyrus::known_script_ptr> attached;
       std::vector<papyrus::known_script_ptr> deleted; // for REFRs choosing not to inherit a base-form script
+      std::vector<papyrus::known_script_ptr> aliases; // scripts attached to quest aliases
 
       constexpr bool empty() const noexcept {
-         return this->attached.empty() && this->deleted.empty();
+         return this->attached.empty() && this->deleted.empty() && this->aliases.empty();
       }
 
       constexpr bool operator==(const cached_vmad_info&) const;

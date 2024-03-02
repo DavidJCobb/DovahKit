@@ -76,6 +76,8 @@ namespace dovahkit::subsystems::papyrus {
          constexpr bool is_attachable_to(dovah::form_type_t) const;
          constexpr bool is_of_type(std::string_view desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
 
+         constexpr bool is_descendant_of(const known_script&) const;
+
          bool is_unreferenced() const;
          bool is_unreferenced_except_by_loose() const;
 

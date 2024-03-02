@@ -88,6 +88,15 @@ namespace dovahkit::subsystems::papyrus {
       return false;
    }
 
+   constexpr bool known_script::is_descendant_of(const known_script& desired) const {
+      if (this->inheritance.root_class != desired.inheritance.root_class)
+         return false;
+      for (auto* super = this->superclass(); super; super = super->superclass())
+         if (super == &desired)
+            return true;
+      return false;
+   }
+
    //
 
    

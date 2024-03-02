@@ -16,7 +16,8 @@ namespace dovahkit::subsystems::form_info_cache {
       std::vector<std::string> attached_scripts;
       std::vector<std::string> deleted_scripts;
 
-      vmad::attachment_data::skim_vmad_for_scriptnames(subrecord, attached_scripts, deleted_scripts);
+      vmad::attachment_header header;
+      vmad::attachment_data::skim_vmad_for_scriptnames(subrecord, header, attached_scripts, deleted_scripts);
 
       for (auto& name : attached_scripts) {
          this->attached.push_back(

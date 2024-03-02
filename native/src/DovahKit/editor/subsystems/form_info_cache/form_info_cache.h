@@ -18,6 +18,9 @@ namespace dovah {
    }
    class form_stub;
 }
+namespace dovahkit::subsystems::papyrus {
+   class known_script;
+}
 
 namespace dovahkit::subsystems::form_info_cache {
    enum class script_attach_state {
@@ -61,6 +64,10 @@ namespace dovahkit::subsystems::form_info_cache {
          QString get_quest_filter(const dovah::form_stub&) const;
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
+         bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;
+
+         std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_form(const dovah::form_stub&) const;
+         std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_quest_aliases(const dovah::form_stub& quest) const;
 
          template<typename Functor> requires std::is_invocable_v<Functor, dovah::form_stub&, QString>
          void for_all_form_model_paths(Functor&& functor) {

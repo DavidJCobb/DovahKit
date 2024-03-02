@@ -10,29 +10,30 @@ namespace dovahkit::subsystems::form_info_cache {
          return false;
       if (this->deleted.size() != o.deleted.size())
          return false;
+      if (this->aliases.size() != o.aliases.size())
+         return false;
 
-      for (auto& a : this->attached) {
-         bool found = false;
-         for (auto& b : o.attached) {
-            if (a == b) {
-               found = true;
-               break;
+      auto _unordered_eq = [](const auto& list_a, const auto& list_b) -> bool {
+         for (auto& a : list_a) {
+            bool found = false;
+            for (auto& b : list_b) {
+               if (a == b) {
+                  found = true;
+                  break;
+               }
             }
+            if (!found)
+               return false;
          }
-         if (!found)
-            return false;
-      }
-      for (auto& a : this->deleted) {
-         bool found = false;
-         for (auto& b : o.deleted) {
-            if (a == b) {
-               found = true;
-               break;
-            }
-         }
-         if (!found)
-            return false;
-      }
+         return true;
+      };
+
+      if (!_unordered_eq(this->attached, o.attached))
+         return false;
+      if (!_unordered_eq(this->deleted, o.deleted))
+         return false;
+      if (!_unordered_eq(this->aliases, o.aliases))
+         return false;
 
       return true;
    }

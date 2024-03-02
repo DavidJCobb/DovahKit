@@ -9,6 +9,7 @@
 
 #include "dovah/forms/components/papyrus.h"
 #include "dovah/forms/_all.h" // dovah::all_loaded_form_types + access to relevant loaded-form classes
+#include "dovah/forms/Quest.h" // quest alias update logic
 
 #include "editor/subsystems/papyrus/core.h"
 
@@ -16,6 +17,7 @@
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
 #include "./cacheable_trait.h"
+#include "./quest_vmad_skimmer.h"
 
 #include "./threaded_builder.h"
 
@@ -32,6 +34,14 @@ namespace {
 
 namespace {
    using all_form_classes_of_interest = dovah::all_loaded_form_types::filter_types<[]<typename Current>() -> bool {
+      //
+      // TODO: We could look into ways to go harder into metaprogramming here. For example, I 
+      // chose to use structs for each trait rather than namespaces so that they could be put 
+      // in a cobb::class_array and iterated over. Would still have to figure out what approach 
+      // to take for the actual "skim," "update," etc., functions, as well as for accessors.
+      // 
+      // For now, handwritten branches work just fine.
+      //
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
          return true;
       }
@@ -54,51 +64,95 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
+      constexpr const bool must_read_all_subrecords = (FormType == dovah::form_type::quest);
+
       using seen_trait_mask = cobb::enum_flags<cacheable_trait, cacheable_trait_count>;
       seen_trait_mask seen;
 
-      if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
-         seen |= cacheable_trait::attached_scripts;
-      }
-      if constexpr (!cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
-         seen |= cacheable_trait::model_path;
-      }
-      if constexpr (!cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
-         seen |= cacheable_trait::quest_filter;
+      if constexpr (!must_read_all_subrecords) {
+         if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::attached_scripts;
+         }
+         if constexpr (!cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::model_path;
+         }
+         if constexpr (!cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::quest_filter;
+         }
       }
 
+      // Quests require special handling, for their aliases' attached scripts.
+      std::conditional_t<
+         (FormType == dovah::form_type::quest),
+         quest_vmad_skimmer,
+         uint8_t // dummy type
+      > quest_skimmer;
+
       while (auto& subrecord = record.next_subrecord()) {
+
+         // There's no way to do an if/else tree where individual if/else branches get knocked out 
+         // based on if-constexpr tests. As a result, we have to do individual if-statements within 
+         // each if-constexpr statement; we can't join them with `else`. Hopefully we can at least 
+         // make it as obvious to the compiler/optimizer as possible that each of these ifs are 
+         // mutually exclusive, e.g. by using a shared variable instead of repeated calls to the 
+         // signature getter (the compiler might not realize they'd return the same result).
+         //
+         // We wouldn't need this if we could just `continue` at the end of each branch, but in the 
+         // case of `!must_read_all_subrecords` there's code we want to run at the end of each branch, 
+         // and that code might conditionally break out of this loop so we can't just lambda it.
+         const auto signature = subrecord.signature();
+
          if constexpr (cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
-            if (subrecord.signature() == 'VMAD') {
-               cached_vmad_info info(subrecord);
-               if (!info.empty()) {
-                  cache.attached_scripts.threadedInsert(stub, std::move(info));
-               }
+            if constexpr (FormType == dovah::form_type::quest) {
                //
-               seen |= cacheable_trait::attached_scripts;
+               // Quests require special handling, for their aliases' attached scripts.
+               //
+               bool consumed = quest_skimmer.skim_subrecord(stub, subrecord);
+               if (consumed) {
+                  continue;
+               }
+            } else {
+               if (signature == 'VMAD') {
+                  cached_vmad_info info(subrecord);
+                  if (!info.empty()) {
+                     cache.attached_scripts.threadedInsert(stub, std::move(info));
+                  }
+                  //
+                  if constexpr (!must_read_all_subrecords)
+                     seen |= cacheable_trait::attached_scripts;
+               }
             }
          }
          if constexpr (cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
-            if (subrecord.signature() == 'MODL') {
+            if (signature == 'MODL') {
                std::string raw;
                subrecord.read(raw);
                cache.model_paths.threadedInsert(stub, QString::fromStdString(raw));
                //
-               seen |= cacheable_trait::model_path;
+               if constexpr (!must_read_all_subrecords)
+                  seen |= cacheable_trait::model_path;
             }
          }
          if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
-            if (subrecord.signature() == 'FLTR') {
+            if (signature == 'FLTR') {
                std::string raw;
                subrecord.read(raw);
                cache.quest_filters.threadedInsert(stub, QString::fromStdString(raw));
                //
-               seen |= cacheable_trait::quest_filter;
+               if constexpr (!must_read_all_subrecords)
+                  seen |= cacheable_trait::quest_filter;
             }
          }
 
-         if (seen == seen_trait_mask::with_all_set())
-            break;
+         if constexpr (!must_read_all_subrecords) {
+            if (seen == seen_trait_mask::with_all_set())
+               break;
+         }
+      }
+
+      if constexpr (FormType == dovah::form_type::quest) {
+         if (!quest_skimmer.empty())
+            cache.attached_scripts.threadedInsert(stub, quest_skimmer.bake());
       }
    }
 
@@ -155,6 +209,42 @@ namespace {
          auto& src = loaded.script_data;
 
          cached_vmad_info new_info(src);
+         if constexpr (std::is_same_v<LoadedForm, dovah::loaded_forms::Quest>) {
+            //
+            // Quest aliases require special handling.
+            //
+            auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+            //
+            for (auto* alias : loaded.aliases) {
+               if (!alias)
+                  continue;
+
+               std::vector<std::string_view> attached;
+               std::vector<std::string_view> removed;
+               for (auto& script : alias->script_data.scripts) {
+                  if (script.status == dovah::loaded_forms::components::papyrus::script_status::removed) {
+                     removed.push_back(script.name);
+                  } else {
+                     attached.push_back(script.name);
+                  }
+               }
+               for (auto& name : attached) {
+                  bool retained = true;
+                  for (auto& rmv : removed) {
+                     if (dovah::papyrus::helpers::name_equals(name, rmv)) {
+                        retained = false;
+                        break;
+                     }
+                  }
+                  if (!retained)
+                     continue;
+
+                  new_info.aliases.push_back(
+                     papyrus.know_script_via_vmad_scan(name)
+                  );
+               }
+            }
+         }
          
          bool changed;
          if (new_info.empty()) {
@@ -309,5 +399,48 @@ namespace dovahkit::subsystems::form_info_cache {
             return script_attach_state::attached;
 
       return script_attach_state::not_present;
+   }
+   bool core::quest_has_alias_with_script(const dovah::form_stub& stub, std::string_view scriptname) const {
+      auto it = this->_cache.attached_scripts.find(&stub);
+      if (it == this->_cache.attached_scripts.end())
+         return false;
+
+      for (auto& known : it->aliases)
+         if (known->name_matches(scriptname))
+            return true;
+
+      return false;
+   }
+
+   std::vector<const subsystems::papyrus::known_script*> core::get_scripts_attached_to_form(const dovah::form_stub& stub) const {
+      auto it = this->_cache.attached_scripts.find(&stub);
+      if (it == this->_cache.attached_scripts.end())
+         return {};
+      
+      std::vector<const subsystems::papyrus::known_script*> out;
+      for (auto& known : it->attached) {
+         bool is_removed = false;
+         for (auto& removed : it->deleted) {
+            if (known == removed) {
+               is_removed = true;
+               break;
+            }
+         }
+         if (is_removed)
+            continue;
+         out.push_back(known.get());
+      }
+      return out;
+   }
+   std::vector<const subsystems::papyrus::known_script*> core::get_scripts_attached_to_quest_aliases(const dovah::form_stub& quest) const {
+      auto it = this->_cache.attached_scripts.find(&quest);
+      if (it == this->_cache.attached_scripts.end())
+         return {};
+      
+      std::vector<const subsystems::papyrus::known_script*> out;
+      for (auto& known : it->aliases) {
+         out.push_back(known.get());
+      }
+      return out;
    }
 }

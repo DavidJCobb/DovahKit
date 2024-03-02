@@ -173,17 +173,21 @@ namespace dovah::loaded_forms::components::papyrus {
          attached_script::skip_use_info(subrecord, false);
    }
 
-   /*static*/ void attachment_data::skim_vmad_for_scriptnames(tes_subrecord_reader& subrecord, std::vector<std::string>& out_attached, std::vector<std::string>& out_deleted) {
+   /*static*/ bool attachment_data::skim_vmad_for_scriptnames(
+      tes_subrecord_reader&     subrecord,
+      attachment_header&        out_header,
+      std::vector<std::string>& out_attached,
+      std::vector<std::string>& out_deleted
+   ) {
       out_attached.clear();
       out_deleted.clear();
 
-      attachment_header header;
-      if (!header.load(subrecord))
-         return;
+      if (!out_header.load(subrecord))
+         return false;
 
       uint16_t count;
       if (!subrecord.read(count))
-         return;
+         return false;
       for (uint16_t i = 0; i < count; ++i) {
          std::string scriptname;
          subrecord.read_length_prefixed_string<2>(scriptname);
@@ -201,6 +205,8 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.seek(pos);
          attached_script::skip_use_info(subrecord, true);
       }
+
+      return true;
    }
 
    //

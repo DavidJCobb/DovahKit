@@ -58,6 +58,11 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 * NAMA (Face Parts) is not serialized by the CK if the values are unset/default. However, I don't know what the unset/default values are.
 * Investigate omitting fields that would be disabled/suppressed by template actor flags; alternatively, have the frontend do that. Main concern with doing it at save time is use info (i.e. unused form uses still *are* form uses and need to be severed bidirectionally).
 
+### Location (LCTN)
+* Since I last worked on it, I learned that some of its lists of forms are in fact of REFRs, and are coalesced in some way across all files.
+  * Do these lists need to be updated as REFRs are moved in and out of a LCTN's bounds? We don't currently do that.
+  * Are some of the subrecords used as a "remove from list" function? We need to look into that. If so, then we'll need code and infra to get a LCTN's "computed lists." We can load the "computed list" for all files prior to the active file, and then maintain separate lists of additions and removals pertaining to the active file, to ensure reliable editing, saving, and serialization.
+
 ### Package (PACK)
 * Conditions can refer to a piece of package data on the condition's owning package; they refer to that data by index. If the package is edited and its data is rearranged, how do we find and update all referencing conditions?
   * This isn't as much of a concern as it seems like. The only time conditions have owning packages (and therefore the only time they can refer to package data) is when they exist inside of a `PACK` form. As long as the UI for editing `PACK` forms is carefully implemented to update conditions everywhere in the package when package data are added, removed, or reordered, we should be fine.

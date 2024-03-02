@@ -940,6 +940,7 @@ namespace dovah::loaded_forms {
                         warning.extra_integers[0] = owner.alias_id;
                         intfc.log_load_warning(warning);
                         //
+                        components::papyrus::attachment_data::skip_use_info(subrecord);
                         continue;
                      }
                      //
