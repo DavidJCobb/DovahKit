@@ -194,6 +194,7 @@ namespace dovahkit::subsystems::papyrus {
       });
 
       auto& editor = DovahKitCore::get();
+      auto& fic    = subsystems::form_info_cache::core::get_or_create();
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
          this->index_all_pex_files();
          this->_begin_watching_loose_pexs();
@@ -206,6 +207,10 @@ namespace dovahkit::subsystems::papyrus {
          // even monitor.)
          //
          this->_stop_watching_loose_pexs();
+      });
+      QObject::connect(&fic, &subsystems::form_info_cache::core::cachedDataBuilt, this, [this]() {
+         this->_initial_discovery_complete = true;
+         emit this->initialKnownScriptDiscoveryComplete();
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonComplete, this, [this]() {
          this->_teardown();
@@ -228,7 +233,8 @@ namespace dovahkit::subsystems::papyrus {
          knowns.clear();
       }
       qDebug("[dovahkit::subsystems::papyrus::core::_teardown] Teardown complete. Emitting signals...");
-      this->_teardown_in_progress = false;
+      this->_teardown_in_progress       = false;
+      this->_initial_discovery_complete = false;
       emit this->pexTeardownComplete();
    }
 

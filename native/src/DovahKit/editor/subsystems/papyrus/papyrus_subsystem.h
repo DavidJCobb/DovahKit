@@ -36,7 +36,8 @@ namespace dovahkit::subsystems::papyrus {
             QString folder_path;
             QFileSystemWatcher watcher;
          } _loose_pex;
-         bool _teardown_in_progress = false;
+         bool _initial_discovery_complete = false;
+         bool _teardown_in_progress       = false;
 
          void _teardown();
 
@@ -68,6 +69,16 @@ namespace dovahkit::subsystems::papyrus {
          //       must clear those on DovahKitCore::dataAbandonImminent.
          const known_script* lookup_known_script(std::string_view scriptname) const;
          const known_script* lookup_known_script(QString scriptname) const;
+
+         template<typename Functor> requires (std::is_invocable_v<Functor, const known_script&>)
+         void for_each_known_script(Functor&& functor) const {
+            for (auto& pair : this->_known_scripts_by_name)
+               functor(*(const known_script*)pair.second);
+         }
+
+         constexpr bool is_initial_script_discovery_complete() const noexcept {
+            return this->_initial_discovery_complete;
+         }
 
          // If a form has a script attached, then we know about that script by virtue of that attachment. 
          // As such, these member functions look up the script, and create it if it isn't known.
@@ -101,6 +112,7 @@ namespace dovahkit::subsystems::papyrus {
 
       signals:
          void pexIndexingComplete();
+         void initialKnownScriptDiscoveryComplete(); // PEXs indexed and VMADs scanned
 
          // Signals emitted after initial PEX indexing is complete:
          void knownScriptDiscovered(const known_script&);

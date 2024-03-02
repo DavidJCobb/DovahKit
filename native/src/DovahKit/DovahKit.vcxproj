@@ -147,6 +147,7 @@
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
@@ -692,6 +693,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -709,6 +711,8 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp" />
+    <ClCompile Include="ui\models\papyrus\DKAllPapyrusScriptsModel.cpp" />
     <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp" />
     <ClCompile Include="ui\models\worldinput\DKWorldinputDeviceSchemesModel.cpp" />
@@ -940,6 +944,7 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\core.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\threaded_builder.h" />
     <ClInclude Include="editor\subsystems\gui_adjust\core.h" />
     <QtMoc Include="editor\subsystems\options\dovahkit_options.h" />
@@ -1422,6 +1427,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h" />
@@ -1445,6 +1451,8 @@
     <QtMoc Include="ui\options_window\edit_gizmo_colors\edit_gizmo_color_editor.h" />
     <QtMoc Include="ui\models\worldedit\EditGizmoColorSchemeModel.h" />
     <QtMoc Include="ui\options_window\OptionsStorageLocationWidget.h" />
+    <QtMoc Include="ui\models\papyrus\DKAllPapyrusScriptsModel.h" />
+    <QtMoc Include="ui\models\papyrus\DKAddPapyrusScriptModel.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\all_tool_options_widgets.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\get_worldedit_tool_info.h" />
     <ClInclude Include="ui\options_window\worldedit_tools\options\move_selection.h" />

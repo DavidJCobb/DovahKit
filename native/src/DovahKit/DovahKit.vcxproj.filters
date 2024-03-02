@@ -2199,6 +2199,18 @@
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\models\papyrus\DKAllPapyrusScriptsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5537,6 +5549,12 @@
     <ClInclude Include="editor\subsystems\form_info_cache\threaded_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6079,6 +6097,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\form_info_cache\form_info_cache.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\models\papyrus\DKAllPapyrusScriptsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\models\papyrus\DKAddPapyrusScriptModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
