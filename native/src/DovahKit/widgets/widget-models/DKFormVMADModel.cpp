@@ -1765,4 +1765,12 @@ DKFormVMADModel::PropertyMetadata DKFormVMADModel::getPropertyWorkingMetadata(QM
 
    return out;
 }
+
+std::vector<std::string> DKFormVMADModel::getAllBoundScripts() const {
+   std::vector<std::string> names;
+   for (const auto* script : this->scripts) {
+      names.push_back(script->name.toUtf8().toStdString());
+   }
+   return names;
+}
 #pragma endregion

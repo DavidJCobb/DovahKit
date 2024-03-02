@@ -15,12 +15,17 @@ class DKAllPapyrusScriptsModel : public QAbstractItemModel, public cobb::singlet
       using known_script     = dovahkit::subsystems::papyrus::known_script;
       using known_script_ptr = const known_script*;
 
+   public:
+      static constexpr const auto IsHiddenRole      = (Qt::ItemDataRole)(Qt::UserRole);
+      static constexpr const auto IsConditionalRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
+
    protected:
       DKAllPapyrusScriptsModel();
 
    protected:
       struct Script {
          QString          name;
+         QString          docstring;
          known_script_ptr info = nullptr;
       };
 

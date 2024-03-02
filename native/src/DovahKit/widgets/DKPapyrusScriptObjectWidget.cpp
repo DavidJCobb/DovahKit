@@ -7,6 +7,7 @@
 #include "dovah/forms/Form.h"
 #include "dovah/forms/ObjectReference.h"
 #if !defined(QT_DESIGNER_LIB)
+   #include "./widget-dialogs/DKAddPapyrusScriptDialog.h"
    #include "./widget-dialogs/DKScriptObjectDialog.h"
 #endif
 
@@ -121,33 +122,24 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       });
 
       QObject::connect(this->subwidgets.buttons.add, &QPushButton::clicked, this, [this]() {
-         static_assert(!require_complete_implementation, "Pop a dialog listing all scripts.");
+         QString scriptname;
+         {
+            auto* dialog = new DKAddPapyrusScriptDialog(this);
+            dialog->setAlreadyAttachedScripts(this->model->getAllBoundScripts());
+            dialog->setTargetType(this->vmad.form->stub.formType);
+            dialog->exec();
+            if (dialog->result() == QDialog::Accepted) {
+               scriptname = QString::fromStdString(dialog->resultScriptname());
+            } else {
+               return;
+            }
+         }
 
-         //
-         // TODO: Replace this use of QInputDialog with a custom dialog that lists all Papyrus scripts 
-         //       known to DovahKit, with us passing a list of already-attached scripts on this form 
-         //       (and its base form, where relevant). Those scripts should be greyed out in the dialog 
-         //       and listed as already-attached, and the user should not be allowed to select any of 
-         //       them.
-         //
-         bool ok;
-         auto scriptname = QInputDialog::getText(
-            this,
-            "Add script",
-            "Scriptname: ",
-            QLineEdit::EchoMode::Normal,
-            "",
-            &ok
-         );
-         if (!ok)
-            return;
-
-         // TODO: Once we've replaced QInputDialog as described above, it will be tempting to replace 
-         //       the below checks with debug-only assertions. However, if the custom dialog for 
-         //       choosing a script isn't application-modal, then the user could modify the base form 
-         //       out from under us (e.g. via the UI or via Lua) and that could result in them being 
-         //       able to choose a script that is already attached. We, uh, should not handle that 
-         //       with an assertion failure, lol.
+         // It may be tempting to replace the below checks with debug-only assertions. However, if 
+         // the custom dialog for choosing a script isn't application-modal, then the user could 
+         // modify the base form out from under us (e.g. via the UI or via Lua) and that could 
+         // result in them being able to choose a script that is already attached. We, uh, should 
+         // not handle that with an assertion failure, lol.
          //
          if (this->model->scriptIndex(scriptname).isValid()) {
             if (this->vmad.parent)
@@ -158,7 +150,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          }
 
          auto qmi = this->model->addScript(scriptname);
-         assert(qmi.isValid()); // if the operation above can fail, it should throw a detailed exception and we should catch that here
+         assert(qmi.isValid()); // TODO: if the operation above can fail, it should throw a detailed exception and we should catch that here
          this->subwidgets.view->selectionModel()->select(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect);
       });
       QObject::connect(this->subwidgets.buttons.properties,    &QPushButton::clicked, this, [this]() { this->_editSelected(); });

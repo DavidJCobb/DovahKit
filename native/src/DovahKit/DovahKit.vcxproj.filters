@@ -2211,6 +2211,9 @@
     <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6103,6 +6106,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\models\papyrus\DKAddPapyrusScriptModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

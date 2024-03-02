@@ -25,6 +25,17 @@ DKAllPapyrusScriptsModel::DKAllPapyrusScriptsModel() {
    QObject::connect(&papyrus, &papyrus_subsystem::knownScriptDiscovered, this, [this](const known_script& subject) {
       auto item = std::make_unique<Script>();
       item->name = QString::fromStdString(subject.name);
+      {
+         std::string_view docstring;
+         if (subject.info.loose.has_value()) {
+            docstring = subject.info.loose.value().docstring;
+         } else if (subject.info.packed.has_value()) {
+            docstring = subject.info.packed.value().docstring;
+         }
+         if (!docstring.empty()) {
+            item->docstring = QString::fromUtf8(docstring.data(), docstring.size());
+         }
+      }
       item->info = &subject;
       //
       auto& list = this->_scripts;
@@ -102,6 +113,17 @@ void DKAllPapyrusScriptsModel::_gatherScriptnamesOnLoadingDone() {
    papyrus.for_each_known_script([this](const known_script& script) {
       auto item = std::make_unique<Script>();
       item->name = QString::fromStdString(script.name);
+      {
+         std::string_view docstring;
+         if (script.info.loose.has_value()) {
+            docstring = script.info.loose.value().docstring;
+         } else if (script.info.packed.has_value()) {
+            docstring = script.info.packed.value().docstring;
+         }
+         if (!docstring.empty()) {
+            item->docstring = QString::fromUtf8(docstring.data(), docstring.size());
+         }
+      }
       item->info = &script;
       this->_scripts.push_back(item.get());
       item.release();
@@ -149,8 +171,14 @@ bool DKAllPapyrusScriptsModel::scriptIsAttachableTo(const QModelIndex& qmi, dova
 
          switch (role) {
             case Qt::DisplayRole:
-            case Qt::ToolTipRole:
                return this->_scripts[row]->name;
+            case Qt::ToolTipRole:
+               {
+                  auto text = this->_scripts[row]->docstring;
+                  if (!text.isEmpty())
+                     return text;
+               }
+               break;
          }
 
          return {};

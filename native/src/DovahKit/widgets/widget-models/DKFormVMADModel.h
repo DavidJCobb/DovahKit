@@ -278,6 +278,8 @@ class DKFormVMADModel : public QAbstractItemModel {
       QString getPropertyWorkingValueStringified(QModelIndex, size_t array_index = 0);
 
       PropertyMetadata getPropertyWorkingMetadata(QModelIndex qmi);
+
+      std::vector<std::string> getAllBoundScripts() const;
 };
 
 #include "./DKFormVMADModel.inl"

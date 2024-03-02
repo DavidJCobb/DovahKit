@@ -861,6 +861,7 @@
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
@@ -872,6 +873,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
