@@ -196,7 +196,7 @@ namespace dovahkit::subsystems::papyrus {
       auto& editor = DovahKitCore::get();
       auto& fic    = subsystems::form_info_cache::core::get_or_create();
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
-         this->index_all_pex_files();
+         this->_index_all_pex_files();
          this->_begin_watching_loose_pexs();
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
@@ -457,7 +457,7 @@ namespace dovahkit::subsystems::papyrus {
       emit knownScriptForgotten(name);
    }
 
-   void core::index_all_pex_files() {
+   void core::_index_all_pex_files() {
       auto& core   = DovahKitCore::get();
       auto& assets = dovahkit::subsystems::assets::get();
 

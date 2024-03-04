@@ -94,8 +94,10 @@ namespace dovahkit::subsystems::papyrus {
 
          void _on_script_unreferenced(cobb::passkey<known_script, core>, known_script&);
 
-         void index_all_pex_files();
+      protected:
+         void _index_all_pex_files();
 
+      public:
          bool form_has_script_attached(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_script_attached_to_any_alias(const dovah::form_stub& quest, std::string_view scriptname) const;
          //

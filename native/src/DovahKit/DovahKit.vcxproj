@@ -686,6 +686,7 @@
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
@@ -851,6 +852,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
+    <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
@@ -867,12 +869,14 @@
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormVMADModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
@@ -1424,6 +1428,7 @@
     <QtMoc Include="ui\generic\QItemSelectionModelEx.h" />
     <QtMoc Include="ui\form_windows\activator.h" />
     <ClInclude Include="ui\main_window\object_window\filter_info.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\form_info_cache.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\load_nif.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\papyrus_subsystem.h" />
@@ -1586,6 +1591,7 @@
     <ClInclude Include="vulkan\_memory.h" />
     <ClInclude Include="vulkan\_util.h" />
     <ClInclude Include="vulkan\_vulkan.h" />
+    <QtMoc Include="widgets\DKFormPicker.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\widget-models\DKFormListPaneModel.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />

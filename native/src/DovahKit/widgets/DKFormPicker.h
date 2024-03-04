@@ -1,0 +1,91 @@
+#pragma once
+#include <map>
+#include <QList>
+#include <QWidget>
+#if !defined(QT_DESIGNER_LIB)
+   #include "dovah/core.h"
+   #include "dovah/form_types.h"
+#endif
+
+namespace dovah {
+   class form_stub;
+}
+namespace ui::impl::DKFormPicker {
+   class Model;
+}
+class QComboBox;
+
+class DKFormPicker : public QWidget {
+   Q_OBJECT
+   Q_PROPERTY(bool allowedFormTypes   READ allowedFormTypesList WRITE setAllowedFormTypes   DESIGNABLE true USER true);
+   Q_PROPERTY(bool allowNone          READ allowNone            WRITE setAllowNone          DESIGNABLE true);
+   Q_PROPERTY(bool splitTypesWhenMany READ splitTypesWhenMany   WRITE setSplitTypesWhenMany DESIGNABLE true);
+   public:
+      DKFormPicker(QWidget* parent = nullptr);
+      
+      constexpr const QVector<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_properties.allowed_form_types; }
+      QList<dovah::form_type_t> allowedFormTypesList() const;
+      void setAllowedFormTypes(QList<dovah::form_type_t>) noexcept;
+      //
+      void addAllowedFormType(dovah::form_type_t);
+      inline void allowAllFormTypes() noexcept { this->setAllowedFormTypes({}); }
+      inline void setAllowedFormType(dovah::form_type_t ft) noexcept { this->setAllowedFormTypes({ ft }); }
+      //
+      inline bool allowsFormType(dovah::form_type_t ft) const noexcept {
+         return this->_properties.allowed_form_types.contains(ft);
+      }
+
+      constexpr bool allowNone() const noexcept { return this->_properties.allow_none; }
+      void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
+
+      constexpr bool splitTypesWhenMany() const noexcept { return this->_properties.split_types_when_many; }
+      void setSplitTypesWhenMany(bool) noexcept;
+
+      #if !defined(QT_DESIGNER_LIB)
+         constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
+         void setFormStub(dovah::form_stub*) noexcept;
+
+         constexpr dovah::form_stub* defaultForm() const noexcept { return this->_default; }
+         void setDefaultForm(dovah::form_stub*) noexcept;
+
+         constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
+      #endif
+
+   protected:
+      #if !defined(QT_DESIGNER_LIB)
+         dovah::form_stub* _value   = nullptr;
+         dovah::form_stub* _default = nullptr;
+      #endif
+      struct {
+         bool allow_none = true;
+         QVector<dovah::form_type_t> allowed_form_types;
+         bool split_types_when_many = true;
+      } _properties;
+      struct {
+         bool is_splitting_types = false;
+      } _state;
+      struct {
+         QComboBox* form = nullptr;
+         QComboBox* type = nullptr;
+      } _subwidgets;
+      #if !defined(QT_DESIGNER_LIB)
+         std::map<dovah::form_type_t, dovah::form_stub*> _prior_selections;
+      #endif
+
+      #if !defined(QT_DESIGNER_LIB)
+         ui::impl::DKFormPicker::Model* _rawModel() const noexcept;
+      #endif
+
+      void _setIsSplittingTypes(bool) noexcept;
+      void _setSubwidgetEnableState(bool);
+      bool _shouldSplitTypes() const noexcept;
+      void _updateForms();
+      void _updateTypePicker();
+      
+   signals:
+      void formChanged(dovah::form_stub* selected);
+      void populated();
+
+   public slots:
+      void clear();
+};

@@ -2214,6 +2214,15 @@
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFormPicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5558,6 +5567,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6109,6 +6121,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKFormPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
