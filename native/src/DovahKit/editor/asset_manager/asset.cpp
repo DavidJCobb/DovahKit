@@ -37,7 +37,7 @@ DovahKitAsset::DovahKitAsset(QString p, Type t, QObject* parent) : QObject(paren
 DovahKitAsset::DovahKitAsset(dovah::form_stub* s, QObject* parent) : QObject(parent), _type(Type::Form), _stub(s) {
    this->_initialize();
    if (s) {
-      switch (s->formType) {
+      switch (s->form_type) {
          case dovah::form_type::texture_set:
             this->data = new DovahKitAssetDataTextureSet(*this);
             break;
@@ -103,7 +103,7 @@ const DovahKitAssetDataDDS* DovahKitAsset::asDDS() const noexcept {
 const DovahKitAssetDataTextureSet* DovahKitAsset::asTextureSet() const noexcept {
    if (this->type() != Type::Form)
       return nullptr;
-   if (!this->_stub || this->_stub->formType != dovah::form_type::texture_set)
+   if (!this->_stub || this->_stub->form_type != dovah::form_type::texture_set)
       return nullptr;
    return (DovahKitAssetDataTextureSet*)this->data;
 }

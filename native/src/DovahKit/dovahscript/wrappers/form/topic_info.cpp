@@ -37,7 +37,7 @@ namespace {
          if (!self.stub)
             return 0;
          auto* p = self.stub->get_parent_form();
-         if (p->formType != dovah::form_type::topic)
+         if (p->form_type != dovah::form_type::topic)
             p = nullptr;
          return push_native_object(p);
       }
@@ -47,9 +47,9 @@ namespace {
             return 0;
          dovah::form_stub* parent = self.stub->get_parent_form();
          dovah::form_stub* quest  = nullptr;
-         if (parent->formType == dovah::form_type::topic) {
+         if (parent && parent->form_type == dovah::form_type::topic) {
             quest = parent->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
-            if (quest->formType != dovah::form_type::quest)
+            if (quest->form_type != dovah::form_type::quest)
                quest = nullptr;
          }
          return push_native_object(quest);

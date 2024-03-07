@@ -19,23 +19,23 @@ class FormPicker : public QWidget {
    public:
       FormPicker(QWidget* parent = nullptr);
       
-      inline const QVector<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_formTypes; }
+      inline const QVector<dovah::form_type>& allowedFormTypes() const noexcept { return this->_formTypes; }
       inline bool allowNone() const noexcept { return this->_allowNone; }
       inline dovah::form_stub* defaultForm() const noexcept { return this->_default; }
       inline bool isSplittingTypes() const noexcept { return this->_isSplittingTypes; }
       inline bool splitTypesWhenMany() const noexcept { return this->_splitTypesWhenMany; }
 
-      inline bool allowsFormType(dovah::form_type_t ft) const noexcept {
+      inline bool allowsFormType(dovah::form_type ft) const noexcept {
          return this->_formTypes.contains(ft);
       }
 
       dovah::bare_form_id_t formID() const noexcept;
       inline dovah::form_stub* formStub() const noexcept { return this->_value; }
 
-      void addFormType(dovah::form_type_t);
+      void addFormType(dovah::form_type);
       inline void allowAllFormTypes() noexcept { this->setAllowedFormTypes({}); }
-      inline void setAllowedFormType(dovah::form_type_t ft) noexcept { this->setAllowedFormTypes({ ft }); }
-      void setAllowedFormTypes(QVector<dovah::form_type_t>) noexcept;
+      inline void setAllowedFormType(dovah::form_type ft) noexcept { this->setAllowedFormTypes({ ft }); }
+      void setAllowedFormTypes(QVector<dovah::form_type>) noexcept;
       void setSplitTypesWhenMany(bool) noexcept;
       
       void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
@@ -48,7 +48,7 @@ class FormPicker : public QWidget {
    protected:
       dovah::form_stub* _value   = nullptr;
       dovah::form_stub* _default = nullptr;
-      QVector<dovah::form_type_t> _formTypes;
+      QVector<dovah::form_type> _formTypes;
       bool _allowNone          = true;
       bool _isSplittingTypes   = false;
       bool _splitTypesWhenMany = true;
@@ -56,7 +56,7 @@ class FormPicker : public QWidget {
          QComboBox* form = nullptr;
          QComboBox* type = nullptr;
       } subwidgets;
-      std::map<dovah::form_type_t, dovah::form_stub*> _prior_selections;
+      std::map<dovah::form_type, dovah::form_stub*> _prior_selections;
 
       FormPickerImpl::FormPickerIterativeModel* _rawModel() const noexcept;
 

@@ -53,7 +53,7 @@ void FormShoutWordEditor::save() {
 }
 void FormShoutWordEditor::linkToForm(int which_word, dovah::form_stub* stub) {
    this->which_word = which_word;
-   if (stub->formType == dovah::form_type::shout) {
+   if (stub->form_type == dovah::form_type::shout) {
       this->form = stub->load().ptr_cast<dovah::loaded_forms::Shout>();
       this->stub = stub;
    } else {

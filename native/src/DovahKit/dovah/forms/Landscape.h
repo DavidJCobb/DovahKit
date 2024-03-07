@@ -34,7 +34,7 @@ namespace dovah::loaded_forms {
    //
    class Landscape : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::land;
+         static constexpr const enum form_type form_type = form_type::land;
          Landscape(const constructor_params& c) : Form(form_type, c) {};
 
          static constexpr int vertices_per_side  = 33;

@@ -25,11 +25,11 @@ class CellRefListModelItem {
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
       using form_stub      = dovah::form_stub;
-      using form_type_t    = dovah::form_type_t;
+      using form_type      = dovah::form_type;
       
       const form_stub* stub     = nullptr;
       const form_stub* base     = nullptr;
-      form_type_t      baseType = dovah::form_type::none;
+      form_type        baseType = dovah::form_type::none;
       bare_form_id_t   formID   = 0;
       QString          editorID;
       //
@@ -39,7 +39,7 @@ class CellRefListModelItem {
       CellRefListModelItem() {}
       CellRefListModelItem(const form_stub*);
       
-      form_type_t formType() const noexcept;
+      form_type formType() const noexcept;
       void update();
 };
 
@@ -117,11 +117,11 @@ class CellRefListModelProxy : public QSortFilterProxyModel {
       
       virtual bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
       
-      inline dovah::form_type_t formType() const noexcept { return this->_formType; };
-      void setFormType(dovah::form_type_t);
+      inline dovah::form_type formType() const noexcept { return this->_formType; };
+      void setFormType(dovah::form_type);
       
    protected:
-      dovah::form_type_t _formType = dovah::form_type::none;
+      dovah::form_type _formType = dovah::form_type::none;
 };
 
 class CellRefList : public QTableView {
@@ -143,7 +143,7 @@ class CellRefList : public QTableView {
       inline const CellList* cellPicker() const noexcept { return this->_cellSelector; }
       void setCellPicker(const CellList*);
       void setTextFilter(QLineEdit*);
-      void setFormTypeFilter(dovah::form_type_t);
+      void setFormTypeFilter(dovah::form_type);
       
       dovah::bare_form_id_t formID() const noexcept;
       dovah::form_stub* formStub() const noexcept;

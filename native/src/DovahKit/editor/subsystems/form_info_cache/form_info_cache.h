@@ -36,10 +36,10 @@ namespace dovahkit::subsystems::form_info_cache {
          core();
 
       private:
-         template<dovah::form_type::type FormType>
+         template<dovah::form_type FormType>
          void _skim_record(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
          
-         template<dovah::form_type::type FormType>
+         template<dovah::form_type FormType>
          static void _static_skim_record(dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
             core::get()._skim_record<FormType>(stub, record, intfc);
          }

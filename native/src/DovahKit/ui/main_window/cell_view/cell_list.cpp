@@ -70,7 +70,7 @@ void CellListModel::cellRenderWindowLoadedStateChanged(const dovah::form_stub& c
    }
 }
 void CellListModel::formCreated(const dovah::form_stub* stub) {
-   if (stub->formType != dovah::form_type::cell)
+   if (stub->form_type != dovah::form_type::cell)
       return;
    auto* parent = stub->get_parent_form();
    if (this->worldspace) {
@@ -83,7 +83,7 @@ void CellListModel::formCreated(const dovah::form_stub* stub) {
    this->insertItem(stub, false);
 }
 void CellListModel::formModified(const dovah::form_stub* stub) {
-   if (stub->formType != dovah::form_type::cell)
+   if (stub->form_type != dovah::form_type::cell)
       return;
    auto& list = this->children;
    auto  size = list.size();
@@ -97,7 +97,7 @@ void CellListModel::formModified(const dovah::form_stub* stub) {
    }
 }
 void CellListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
-   if (stub->formType != dovah::form_type::cell)
+   if (stub->form_type != dovah::form_type::cell)
       return;
    auto& list = this->children;
    auto  size = list.size();
@@ -475,7 +475,7 @@ void CellList::rebuildModel() {
       if (formID) {
          auto& editor = DovahKitCore::get();
          stub = editor.get_form(formID);
-         if (stub->formType != dovah::form_type::worldspace)
+         if (stub->form_type != dovah::form_type::worldspace)
             stub = nullptr;
       }
    }

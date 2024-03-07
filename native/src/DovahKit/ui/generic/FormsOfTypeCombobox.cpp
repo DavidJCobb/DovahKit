@@ -22,7 +22,7 @@
 
 namespace {
    bool _should_exclude_form(const dovah::form_stub* stub) {
-      if (stub->formType == dovah::form_type::cell)
+      if (stub->form_type == dovah::form_type::cell)
          return stub->is_exterior_cell();
       return false;
    }
@@ -54,7 +54,7 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
       const auto blocker = QSignalBlocker(this);
       if (!this->count()) // only auto-update for new forms after we've been populated at our owner's discretion
          return;
-      if (!this->allowsFormType(stub->formType))
+      if (!this->allowsFormType(stub->form_type))
          return;
       if (_should_exclude_form(stub))
          return;
@@ -88,13 +88,13 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    });
 };
 
-void FormsOfTypeCombobox::addFormType(dovah::form_type_t ft) {
+void FormsOfTypeCombobox::addFormType(dovah::form_type ft) {
    this->_formTypes.push_back(ft);
 }
 void FormsOfTypeCombobox::allowAllFormTypes() {
    this->_formTypes.clear();
 }
-bool FormsOfTypeCombobox::allowsFormType(dovah::form_type_t ft) const noexcept {
+bool FormsOfTypeCombobox::allowsFormType(dovah::form_type ft) const noexcept {
    if (this->_formTypes.isEmpty())
       return true;
    return this->_formTypes.indexOf(ft) >= 0;
@@ -174,11 +174,11 @@ void FormsOfTypeCombobox::populate() {
    //
    emit populated();
 }
-void FormsOfTypeCombobox::setAllowedFormType(dovah::form_type_t ft) {
+void FormsOfTypeCombobox::setAllowedFormType(dovah::form_type ft) {
    this->_formTypes.clear();
    this->addFormType(ft);
 }
-void FormsOfTypeCombobox::setAllowedFormTypes(QVector<dovah::form_type_t> ft) {
+void FormsOfTypeCombobox::setAllowedFormTypes(QVector<dovah::form_type> ft) {
    this->_formTypes = ft;
 }
 

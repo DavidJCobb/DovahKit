@@ -7,5 +7,5 @@ namespace dovah {
 }
 
 namespace dovahscript {
-   [[nodiscard]] extern dovah::form_stub* pull_form_stub_argument(lua_State*, int arg, dovah::form_type_t ft = dovah::form_type::none);
+   [[nodiscard]] extern dovah::form_stub* pull_form_stub_argument(lua_State*, int arg, dovah::form_type ft = dovah::form_type::none);
 }

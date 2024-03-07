@@ -35,7 +35,7 @@ namespace dovah::tes_file_reading {
             if (!(entry.flags & use_info_entry::flag::parent_child))
                continue;
             auto* cell = entry.other;
-            if (!cell || cell->formType != form_type::cell)
+            if (!cell || cell->form_type != form_type::cell)
                continue;
             assert((cell->get_parent_form() == &world) && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
             if (cell == p_cell)
@@ -236,7 +236,7 @@ namespace dovah::tes_file_reading {
                auto& entry = pair.second;
                if (entry.flags & use_info_entry::flag::parent_child) {
                   auto* child = entry.other;
-                  if (child && form_type_info::form_type_is_reference(child->formType)) {
+                  if (child && form_type_is_reference(child->form_type)) {
                      this->refs.emplace_back(*child);
                      if (--entry.refcount == 0)
                         continue;

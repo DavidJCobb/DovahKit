@@ -28,11 +28,11 @@ class DefaultObjectListModelItem {
       QString  name;
       QString  description;
       const dovah::form_stub* form      = nullptr;
-      dovah::form_type_t      form_type = dovah::form_type::none;
+      dovah::form_type        form_type = dovah::form_type::none;
       bool is_edited = false;
       //
       DefaultObjectListModelItem() {}
-      DefaultObjectListModelItem(uint32_t signature, dovah::form_type_t ft);
+      DefaultObjectListModelItem(uint32_t signature, dovah::form_type ft);
       //
       QString valueAsString() const noexcept;
 };
@@ -102,7 +102,7 @@ class DefaultObjectList : public QTableView {
          return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
       }
       void setTextFilter(QLineEdit*);
-      void setFormTypeFilter(dovah::form_type_t);
+      void setFormTypeFilter(dovah::form_type);
       //
    public slots:
       void build();

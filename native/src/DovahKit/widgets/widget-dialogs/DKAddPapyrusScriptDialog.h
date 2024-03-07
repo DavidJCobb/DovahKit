@@ -12,8 +12,8 @@ class DKAddPapyrusScriptDialog : public QDialog {
    public:
       DKAddPapyrusScriptDialog(QWidget* parent = nullptr);
       
-      dovah::form_type_t targetType() const noexcept;
-      void setTargetType(dovah::form_type_t);
+      dovah::form_type targetType() const noexcept;
+      void setTargetType(dovah::form_type);
 
       void setAlreadyAttachedScripts(const std::vector<std::string>&);
 

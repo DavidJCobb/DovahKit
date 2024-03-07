@@ -45,7 +45,7 @@ class FormTableModel : public QAbstractTableModel {
    public:
       using item_type = FormTableModelItem;
       using form_stub = dovah::form_stub;
-      using form_type_set = QVector<dovah::form_type_t>;
+      using form_type_set = QVector<dovah::form_type>;
       //
    protected:
       form_type_set       form_types; // list of all form types that the Object Window should be capable of displaying under any circumstance

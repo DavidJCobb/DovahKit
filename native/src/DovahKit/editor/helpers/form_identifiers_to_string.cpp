@@ -9,7 +9,7 @@ namespace editor_helpers {
    extern QString form_signature_to_string(const dovah::form_stub* stub) {
       if (!stub)
          return "NONE";
-      return cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature);
+      return cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature);
    }
 
    extern QString form_identifiers_to_string(const dovah::form_stub* stub) {

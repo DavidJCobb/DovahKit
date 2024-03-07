@@ -57,12 +57,12 @@ namespace dovah {
          uint16_t    signature;
          const char* bethesda_name;
          const char* name;
-         std::vector<form_type_t> allowed_form_types; // if this list contains only (form_type::none), then treat it as "any form type usable by the GetIsID condition." a non-empty list implies that the member is a form.
+         std::vector<form_type> allowed_form_types; // if this list contains only (form_type::none), then treat it as "any form type usable by the GetIsID condition." a non-empty list implies that the member is a form.
          //
-         inline bool is_form() const noexcept { return !this->allowed_form_types.empty(); }
-         inline bool can_only_be_reference() const noexcept {
+         constexpr bool is_form() const noexcept { return !this->allowed_form_types.empty(); }
+         constexpr bool can_only_be_reference() const noexcept {
             auto& list = this->allowed_form_types;
-            if (list.size() == 1 && form_type_info::form_type_is_reference(list[0]))
+            if (list.size() == 1 && form_type_is_reference(list[0]))
                return true;
             return false;
          }

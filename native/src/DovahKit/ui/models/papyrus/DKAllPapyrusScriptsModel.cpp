@@ -139,7 +139,7 @@ void DKAllPapyrusScriptsModel::_gatherScriptnamesOnLoadingDone() {
 
 //
 
-bool DKAllPapyrusScriptsModel::scriptIsAttachableTo(const QModelIndex& qmi, dovah::form_type_t ft) const {
+bool DKAllPapyrusScriptsModel::scriptIsAttachableTo(const QModelIndex& qmi, dovah::form_type ft) const {
    if (!qmi.isValid())
       return false;
    return this->_scripts[qmi.row()]->info->is_attachable_to(ft);

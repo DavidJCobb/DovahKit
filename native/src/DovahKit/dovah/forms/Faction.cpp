@@ -229,7 +229,7 @@ namespace dovah::loaded_forms {
       vendor_location.commit_to(uib);
    }
    bool Faction::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (Faction*)out;
       //

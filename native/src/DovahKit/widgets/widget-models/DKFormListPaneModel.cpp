@@ -15,10 +15,10 @@ void DKFormListPaneModel::Item::updateFromStub() {
    if (stub) {
       this->editorID  = stub->get_editor_id();
       this->signature = editor_helpers::form_signature_to_string(stub);
-      is_reference = dovah::form_type_info::form_type_is_reference(stub->formType);
+      is_reference = dovah::form_type_is_reference(stub->form_type);
    } else {
       this->editorID.clear();
-      this->signature = cobb::qt::four_cc_to_string(dovah::form_types[dovah::form_type::none].signature);
+      this->signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(dovah::form_type::none).signature);
       is_reference = false;
    }
    //
@@ -28,11 +28,11 @@ void DKFormListPaneModel::Item::updateFromStub() {
       const dovah::form_stub* world = nullptr;
       //
       if (auto* parent = stub->get_parent_form()) {
-         if (parent->formType == dovah::form_type::cell) {
+         if (parent->form_type == dovah::form_type::cell) {
             cell = parent;
             //
             parent = cell->get_parent_form();
-            if (parent->formType == dovah::form_type::worldspace)
+            if (parent->form_type == dovah::form_type::worldspace)
                world = parent;
          }
       }
@@ -81,7 +81,7 @@ void DKFormListPaneModel::_addStub(dovah::form_stub* stub, bool queued) {
    if (!stub && !this->allow_gaps)
       return;
    if (stub && !this->allowed_form_types.isEmpty()) {
-      if (!this->allowed_form_types.contains(stub->formType))
+      if (!this->allowed_form_types.contains(stub->form_type))
          return;
    }
    auto item = new Item(stub);
@@ -366,7 +366,7 @@ bool DKFormListPaneModel::dropMimeData(const QMimeData* data, Qt::DropAction act
       auto* stub = editor.get_form(id);
       if (stub) {
          if (!this->allowed_form_types.isEmpty()) {
-            if (!this->allowed_form_types.contains(stub->formType))
+            if (!this->allowed_form_types.contains(stub->form_type))
                continue;
          }
          queued.push_back(new Item(stub));
@@ -465,14 +465,14 @@ void DKFormListPaneModel::removeStubs(QModelIndexList l) {
 }
 
 #pragma region Property setters
-void DKFormListPaneModel::setAllowedFormTypes(QVector<form_type_t> l) {
+void DKFormListPaneModel::setAllowedFormTypes(QVector<form_type> l) {
    this->allowed_form_types = l;
    if (l.isEmpty())
       return;
    this->_pruneItems([this](const Item& item) {
       if (!item.stub)
          return !this->allow_gaps;
-      return !this->allowed_form_types.contains(item.stub->formType);
+      return !this->allowed_form_types.contains(item.stub->form_type);
    });
 }
 void DKFormListPaneModel::setAllowGaps(bool g) {

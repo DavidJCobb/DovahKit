@@ -14,14 +14,14 @@ class DKAddPapyrusScriptModel : public QSortFilterProxyModel {
       using QSortFilterProxyModel::setSourceModel;
 
       std::vector<QString> _already_attached;
-      dovah::form_type_t   _target_type = dovah::form_type::none;
+      dovah::form_type     _target_type = dovah::form_type::none;
 
       bool    _show_hidden = false;
       QString _search;
 
    public:
-      constexpr dovah::form_type_t targetType() const noexcept { return this->_target_type; }
-      void setTargetType(dovah::form_type_t);
+      constexpr dovah::form_type targetType() const noexcept { return this->_target_type; }
+      void setTargetType(dovah::form_type);
 
       QString searchText() const noexcept { return this->_search; }
       void setSearchText(QString);

@@ -385,3 +385,13 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 ### Object Window
 
 * The code for this is pretty messy just in general. Tempted to do a full rebuild but it's not worth the devtime right now.
+
+## Dovahscript
+
+### Form accessors and boilerplate
+
+* To the fullest extent possible, accessors to form properties should rely on templates to reduce copy-and-paste boilerplate.
+
+* Getters and setters for a form's parent should rely on templates to reduce boilerplate. Currently, each form capable of having parents (`cell`, `objectreference`, `topic_info`) has to define its own `parent` getters and setters.
+
+  * A complication with this is that the accessors have different names: `cell.parent_world`; `objectreference.parent_cell`; and `topic_info.parent`. (There's also `topic_info.parent_quest`, but that just accesses the parent DIAL form and invokes a getter on that.) Plus, setters aren't always available e.g. I don't think you can set `cell.parent_world`.

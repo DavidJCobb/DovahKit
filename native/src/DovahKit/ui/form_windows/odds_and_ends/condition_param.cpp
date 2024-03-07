@@ -342,7 +342,7 @@ void ConditionParameterEditor::rebuild() {
          } else {
             bool references = false;
             for (auto ft : type->allowed_form_types) {
-               if (dovah::form_type_info::form_type_is_reference(ft)) {
+               if (dovah::form_type_is_reference(ft)) {
                   references = true;
                   break;
                }
@@ -359,7 +359,7 @@ void ConditionParameterEditor::rebuild() {
                const auto blocker = QSignalBlocker(w);
                this->_setCurrentWidget(w);
                //
-               QVector<uint8_t> al;
+               QVector<dovah::form_type> al;
                if (auto s = type->allowed_form_types.size()) {
                   al.reserve(s);
                   for (auto i : type->allowed_form_types)
@@ -398,7 +398,7 @@ void ConditionParameterEditor::rebuild() {
       case dovah::condition_parameter_underlying_type::quest_stage:
          if (this->parameter_index > 0) {
             auto& prev = this->_get_previous_parameter();
-            if (prev.underlying == dovah::condition_parameter_underlying_type::formID && prev.form && prev.form->formType == dovah::form_type::quest) {
+            if (prev.underlying == dovah::condition_parameter_underlying_type::formID && prev.form && prev.form->form_type == dovah::form_type::quest) {
                using loaded_form_t = dovah::loaded_forms::Quest;
                //
                dovah::loaded_form_ptr<loaded_form_t> keep_alive;
@@ -493,7 +493,7 @@ void ConditionParameterEditor::_rebuildForEvents() {
          break;
       case 2: // event form
          {
-            QVector<dovah::form_type_t> allowed;
+            QVector<dovah::form_type> allowed;
             switch (this->working.event_parameters.function) {
                case dovah::condition_event_function::GetIsID:
                   {
@@ -510,7 +510,7 @@ void ConditionParameterEditor::_rebuildForEvents() {
                                     use_default = true;
                                  } else {
                                     for (auto ft : list) {
-                                       if (!dovah::form_type_info::form_type_is_reference(ft))
+                                       if (!dovah::form_type_is_reference(ft))
                                           allowed.push_back(ft);
                                     }
                                  }

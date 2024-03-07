@@ -8,7 +8,7 @@
 namespace dovah::loaded_forms {
    class DefaultObjectManager : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::default_object_manager;
+         static constexpr const enum form_type form_type = form_type::default_object_manager;
          DefaultObjectManager(const constructor_params& c) : Form(form_type, c) {};
 
          using signature_t = uint32_t;

@@ -56,7 +56,7 @@ namespace {
 }
 
 namespace {
-   template<dovah::form_type::type FormType>
+   template<dovah::form_type FormType>
    void _skim_record(
       dovahkit::subsystems::form_info_cache::cache_map_collection& cache,
       dovah::form_stub& stub,
@@ -266,7 +266,7 @@ namespace dovahkit::subsystems::form_info_cache {
 
       QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
          all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
-            if (stub->formType == Current::form_type) {
+            if (stub->form_type == Current::form_type) {
                auto loaded = stub->load().ptr_cast<Current>();
                assert(loaded);
                _update_form<Current>(*this, this->_cache, *loaded);
@@ -278,7 +278,7 @@ namespace dovahkit::subsystems::form_info_cache {
 
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
-            if (stub->formType != Current::form_type)
+            if (stub->form_type != Current::form_type)
                return false;
 
             if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(Current::form_type)) {
@@ -305,7 +305,7 @@ namespace dovahkit::subsystems::form_info_cache {
    }
    
 
-   template<dovah::form_type::type FormType>
+   template<dovah::form_type FormType>
    void core::_skim_record(dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record)
          return;
@@ -334,7 +334,7 @@ namespace dovahkit::subsystems::form_info_cache {
       bench_prep.begin();
 
       all_form_classes_of_interest::for_each([&builders, &editor, &counts]<typename Current>() {
-         static constexpr const auto form_type = (dovah::form_type::type)Current::form_type;
+         static constexpr const auto form_type = Current::form_type;
 
          editor.for_each_form_of_type(form_type, [&builders, &counts](dovah::form_stub* stub) {
             builders[counts.all % builders.size()].add_to_queue(
@@ -380,7 +380,7 @@ namespace dovahkit::subsystems::form_info_cache {
       return this->_cache.model_paths.value(&stub);
    }
    QString core::get_quest_filter(const dovah::form_stub& stub) const {
-      if (stub.formType != dovah::form_type::quest)
+      if (stub.form_type != dovah::form_type::quest)
          return {};
       return this->_cache.quest_filters.value(&stub);
    }

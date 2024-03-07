@@ -13,7 +13,7 @@
 namespace dovah::loaded_forms {
    class MiscItem : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::misc_item;
+         static constexpr const enum form_type form_type = form_type::misc_item;
          MiscItem(const constructor_params& c) : Form(form_type, c) {};
 
          enum note_type : uint8_t {

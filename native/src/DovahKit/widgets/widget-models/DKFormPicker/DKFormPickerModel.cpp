@@ -5,20 +5,20 @@
 #include "editor/form_stub_meta_type.h"
 
 namespace {
-   bool _should_exclude_form_type(dovah::form_type_t ft) {
-      if (dovah::form_type_info::form_type_is_reference(ft))
+   bool _should_exclude_form_type(dovah::form_type ft) {
+      if (dovah::form_type_is_reference(ft))
          return true;
       if (dovah::form_type_info::lookup(ft).flags & dovah::form_type_info::flag::no_connections)
          return true;
       return false;
    }
-   bool _form_type_has_exclusions(dovah::form_type_t ft) {
+   bool _form_type_has_exclusions(dovah::form_type ft) {
       if (ft == dovah::form_type::cell)
          return true;
       return false;
    }
    bool _should_exclude_form(const dovah::form_stub* stub) {
-      if (stub->formType == dovah::form_type::cell)
+      if (stub->form_type == dovah::form_type::cell)
          return stub->is_exterior_cell();
       return false;
    }
@@ -63,7 +63,7 @@ namespace ui::impl::DKFormPicker {
          size_t i    = this->_forms.size();
          auto   item = std::make_unique<item_type>();
          item->stub     = stub;
-         item->type     = stub->formType;
+         item->type     = stub->form_type;
          item->editorID = stub->get_editor_id();
          this->_forms.push_back(item.get());
          item.release();
@@ -119,7 +119,7 @@ namespace ui::impl::DKFormPicker {
                return false;
             auto item = std::make_unique<item_type>();
             item->stub     = stub;
-            item->type     = stub->formType;
+            item->type     = stub->form_type;
             item->editorID = stub->get_editor_id();
             this->_forms.push_back(item.get());
             item.release();

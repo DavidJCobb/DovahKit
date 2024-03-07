@@ -11,7 +11,7 @@
 namespace dovah::loaded_forms {
    class LandTexture : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::land_texture;
+         static constexpr const enum form_type form_type = form_type::land_texture;
          LandTexture(const constructor_params& c) : Form(form_type, c) {};
 
          struct remaster_flag {

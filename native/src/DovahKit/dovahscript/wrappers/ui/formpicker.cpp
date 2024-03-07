@@ -17,7 +17,7 @@
 namespace {
    // Default form types to limit new FormPicker widgets to. These are the types 
    // allowed by the normal GetIsID condition function.
-   constexpr std::initializer_list<uint8_t> default_form_type_filter = {
+   constexpr std::initializer_list<dovah::form_type> default_form_type_filter = {
       dovah::form_type::acoustic_space,
       dovah::form_type::activator,
       dovah::form_type::actor_base,
@@ -102,7 +102,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QVector<dovah::form_type_t> result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::allowedFormTypes);
+         QVector<dovah::form_type> result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::allowedFormTypes);
          int size = result.size();
          lua_createtable(L, size, 0);
          for(int i = 0; i < size; ++i) {
@@ -152,7 +152,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          lua_settop(L, 2);
          //
-         QVector<dovah::form_type_t> value;
+         QVector<dovah::form_type> value;
          bool valid;
          auto ft = lua_libraries::form_types::pull(L, 2, valid);
          if (valid) {

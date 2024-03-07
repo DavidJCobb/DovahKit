@@ -126,7 +126,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          {
             auto* dialog = new DKAddPapyrusScriptDialog(this);
             dialog->setAlreadyAttachedScripts(this->model->getAllBoundScripts());
-            dialog->setTargetType(this->vmad.form->stub.formType);
+            dialog->setTargetType(this->vmad.form->stub.form_type);
             dialog->exec();
             if (dialog->result() == QDialog::Accepted) {
                scriptname = QString::fromStdString(dialog->resultScriptname());
@@ -248,7 +248,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
 
       bool loaded_parent = false;
       //
-      if (dovah::form_type_info::form_type_is_reference(target_form->stub.formType)) {
+      if (dovah::form_type_is_reference(target_form->stub.form_type)) {
          dovah::form_stub* base = ((dovah::loaded_forms::ObjectReference*)target_form)->base_form.get_form_stub();
          if (base) {
             this->vmad.base_form = base->load();

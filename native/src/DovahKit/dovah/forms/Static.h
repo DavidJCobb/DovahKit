@@ -10,7 +10,7 @@
 namespace dovah::loaded_forms {
    class Static : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::statik;
+         static constexpr const enum form_type form_type = form_type::statik;
          Static(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {

@@ -18,7 +18,7 @@ namespace dovah::loaded_forms {
          // it as its own class, at least for now. Fields that are technically inherited by FLOR yet not 
          // used in-game or in the CK will be omitted here.
          //
-         static constexpr form_type_t form_type = form_type::flora;
+         static constexpr const enum form_type form_type = form_type::flora;
          Flora(const constructor_params& c) : Form(form_type, c) {};
       public:
          using activator_flag    = Activator::activator_flag;

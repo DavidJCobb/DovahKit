@@ -125,7 +125,7 @@ namespace dovahscript {
          if (!this->stub)
             return false;
          auto* stub = this->stub;
-         if (stub->formType == dovah::form_type::setting)
+         if (stub->form_type == dovah::form_type::setting)
             return false;
          if (stub->is_none_stub())
             return false;
@@ -221,11 +221,11 @@ namespace dovahscript {
       delete task;
    }
 
-   void wrapper::error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type_t ft, bool loose) {
+   void wrapper::error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type ft, bool loose) {
       luaL_argcheck(L, this->type == wrapper_type::form, arg_index, "form expected");
       luaL_argcheck(L, this->depth == 0, arg_index, "form expected");
       if (this->stub)
-         luaL_argcheck(L, this->stub->formType == ft, arg_index, "incorrect form type");
+         luaL_argcheck(L, this->stub->form_type == ft, arg_index, "incorrect form type");
    }
 
    int8_t wrapper::depth_of(const cobb::eight_cc& code) const noexcept {

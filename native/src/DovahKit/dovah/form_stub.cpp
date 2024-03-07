@@ -64,7 +64,7 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // already loaded
       if (!this->has_source_files())
          return loaded_form_ptr<loaded_forms::Form>(this); // no files to load from
-      if (this->formType == form_type::setting || this->formType == form_type::none)
+      if (this->form_type == form_type::setting || this->form_type == form_type::none)
          return loaded_form_ptr<loaded_forms::Form>(this); // skip GMSTs (because they aren't actually forms) and none-stubs
       //
       auto& lo = this->_get_load_order();
@@ -84,10 +84,10 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // no source files (this should never occur; it is only possible while the stub is being built)
       //
       auto  intfc  = load_order_interfaces::form_load(lo, *this);
-      auto* loader = get_form_loader_function(this->formType);
+      auto* loader = get_form_loader_function(this->form_type);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
-      bool can_be_parent = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
+      bool can_be_parent = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
       if (auto* file = arr[0].pointer) {
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             //
@@ -109,7 +109,7 @@ namespace dovah {
             intfc.is_partial_record = false;
             if (file->load_record_at(arr[0].offset)) {
                auto& record = file->get_current_record();
-               this->form = create_blank_loaded_form_by_type(this->formType, fcp);
+               this->form = create_blank_loaded_form_by_type(this->form_type, fcp);
                if (this->form)
                   (loader)(this->form, record, intfc);
             }
@@ -151,7 +151,7 @@ namespace dovah {
          return; // no source files (this should never occur; it is only possible while the stub is being built)
       //
       auto     intfc             = load_order_interfaces::form_load(lo, *this);
-      bool     can_be_parent     = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
+      bool     can_be_parent     = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
       uint32_t last_record_flags = 0;
       for (uint16_t i = 0; i < size; ++i) {
          auto* file   = arr[i].pointer;
@@ -513,7 +513,7 @@ namespace dovah {
       this->_get_source_file_list(arr, size);
       //
       form_stub_use_info_builder use_interface(*this);
-      bool can_be_parent = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
+      bool can_be_parent = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
       auto& lo = this->_get_load_order();
       //
       for (uint16_t i = 0; i < size; ++i) {
@@ -532,7 +532,7 @@ namespace dovah {
                use_interface.is_partial_record = (i > 0) && can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
                //
                auto& record  = reader.get_current_record();
-               auto  builder = get_outbound_uses_builder_by_type(this->formType);
+               auto  builder = get_outbound_uses_builder_by_type(this->form_type);
                if (builder) {
                   builder(record, use_interface);
                   use_interface.commit();
@@ -718,14 +718,14 @@ namespace dovah {
       return true;
    }
    size_t form_stub::child_info_count() const noexcept {
-      if (this->formType != form_type::topic)
+      if (this->form_type != form_type::topic)
          return 0;
       if (!this->addenda)
          return 0;
       return this->addenda->ordered_children.size();
    }
    size_t form_stub::index_of_child_info(form_stub& info) const noexcept {
-      if (this->formType != form_type::topic || info.formType != form_type::topic_info)
+      if (this->form_type != form_type::topic || info.form_type != form_type::topic_info)
          return std::string::npos;
       if (!this->addenda)
          return std::string::npos;
@@ -737,9 +737,9 @@ namespace dovah {
       return std::string::npos;
    }
    void form_stub::insert_child_topic_info(form_stub& info, size_t at) {
-      if (this->formType != form_type::topic)
+      if (this->form_type != form_type::topic)
          return;
-      if (info.formType != form_type::topic_info)
+      if (info.form_type != form_type::topic_info)
          return;
       if (info.get_parent_form() != this) {
          info.set_parent_form(this);
@@ -760,9 +760,9 @@ namespace dovah {
          std::move(it, it + 1, list.begin() + at);
    }
    void form_stub::remove_child_topic_info(form_stub& info) {
-      if (this->formType != form_type::topic)
+      if (this->form_type != form_type::topic)
          return;
-      if (info.formType != form_type::topic_info)
+      if (info.form_type != form_type::topic_info)
          return;
       if (info.get_parent_form() != this)
          return;
@@ -811,7 +811,7 @@ namespace dovah {
       if (!parent)
          return;
       this->revoke_outbound_reference(parent, use_info_entry::flag::parent_child);
-      if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
+      if (this->form_type == form_type::topic_info && parent->form_type == form_type::topic)
          parent->_remove_child_topic_info({}, *this, false);
    }
    void form_stub::set_parent_form(form_stub* target) noexcept {
@@ -822,13 +822,13 @@ namespace dovah {
       if (!target)
          return;
       this->replace_outbound_reference(0, target, use_info_entry::flag::parent_child);
-      if (target->formType == form_type::topic && this->formType == form_type::topic_info)
+      if (target->form_type == form_type::topic && this->form_type == form_type::topic_info)
          target->_insert_child_topic_info({}, *this);
    }
    #pragma endregion
 
    [[nodiscard]] bool form_stub::is_any_descendant_form_edited() const noexcept {
-      if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
+      if (!(form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children)) {
          return false;
       }
       for (auto& pair : this->inbound) {
@@ -842,7 +842,7 @@ namespace dovah {
       return false;
    }
    [[nodiscard]] bool form_stub::does_descendant_form_need_save() const noexcept {
-      if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
+      if (!(form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children)) {
          return false;
       }
       auto& owner = this->_get_load_order();
@@ -868,7 +868,7 @@ namespace dovah {
    }
 
    [[nodiscard]] bool form_stub::is_exterior_cell() const noexcept {
-      if (this->formType != form_type::cell)
+      if (this->form_type != form_type::cell)
          return false;
       return this->get_parent_form() != nullptr;
    }
@@ -882,7 +882,7 @@ namespace dovah {
       };
    }
    [[nodiscard]] uint32_t form_stub::get_cell_block() const noexcept {
-      if (this->formType != form_type::cell)
+      if (this->form_type != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
          if (!this->addenda)
@@ -896,7 +896,7 @@ namespace dovah {
       return (this->formID % 10);
    }
    [[nodiscard]] uint32_t form_stub::get_cell_sub_block() const noexcept {
-      if (this->formType != form_type::cell)
+      if (this->form_type != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
          if (!this->addenda)
@@ -1022,7 +1022,7 @@ namespace dovah {
       fcp.stub = this;
       fcp.is_working_copy = true;
       //
-      auto* instance = create_blank_loaded_form_by_type(this->formType, fcp);
+      auto* instance = create_blank_loaded_form_by_type(this->form_type, fcp);
       if (instance) {
          auto source = this->load();
          if (!source || !source->_clone_impl(instance)) {

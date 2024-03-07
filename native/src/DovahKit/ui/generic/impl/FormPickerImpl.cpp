@@ -13,20 +13,20 @@
 */
 
 namespace {
-   bool _should_exclude_form_type(dovah::form_type_t ft) {
-      if (dovah::form_type_info::form_type_is_reference(ft))
+   bool _should_exclude_form_type(dovah::form_type ft) {
+      if (dovah::form_type_is_reference(ft))
          return true;
       if (dovah::form_type_info::lookup(ft).flags & dovah::form_type_info::flag::no_connections)
          return true;
       return false;
    }
-   bool _form_type_has_exclusions(dovah::form_type_t ft) {
+   bool _form_type_has_exclusions(dovah::form_type ft) {
       if (ft == dovah::form_type::cell)
          return true;
       return false;
    }
    bool _should_exclude_form(const dovah::form_stub* stub) {
-      if (stub->formType == dovah::form_type::cell)
+      if (stub->form_type == dovah::form_type::cell)
          return stub->is_exterior_cell();
       return false;
    }
@@ -76,7 +76,7 @@ namespace FormPickerImpl {
          this->beginInsertRows(QModelIndex(), i, i);
          auto n = new item;
          n->stub     = stub;
-         n->type     = stub->formType;
+         n->type     = stub->form_type;
          n->editorID = stub->get_editor_id();
          this->forms.append(n);
          this->endInsertRows();
@@ -141,7 +141,7 @@ namespace FormPickerImpl {
                return false;
             auto i = new item;
             i->stub     = stub;
-            i->type     = stub->formType;
+            i->type     = stub->form_type;
             i->editorID = stub->get_editor_id();
             this->forms.append(i);
             return false;
@@ -419,7 +419,7 @@ namespace FormPickerImpl {
       return this->ongoing_fill.filling;
    }
 
-   void FormPickerIterativeModel::refill(bool allow_none, const QVector<dovah::form_type_t>& form_types) {
+   void FormPickerIterativeModel::refill(bool allow_none, const QVector<dovah::form_type>& form_types) {
       this->ongoing_fill.filling = true;
       this->stubs.clear();
       this->ongoing_fill.allow_none = allow_none;
@@ -447,7 +447,7 @@ namespace FormPickerImpl {
       //
       this->ongoing_fill.timer.start();
    }
-   void FormPickerIterativeModel::updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types) {
+   void FormPickerIterativeModel::updateParameters(bool allow_none, const QVector<dovah::form_type>& form_types) {
       this->refill(allow_none, form_types);
    }
    

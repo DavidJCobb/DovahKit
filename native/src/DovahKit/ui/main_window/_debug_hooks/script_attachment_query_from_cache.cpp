@@ -33,7 +33,7 @@ namespace DovahKitDebug::features {
 
       bool attached_to_form  = papyrus.form_has_script_attached(*stub, scriptname);
       bool attached_to_alias = false;
-      if (stub->formType == dovah::form_type::quest) {
+      if (stub->form_type == dovah::form_type::quest) {
          attached_to_alias = papyrus.quest_has_script_attached_to_any_alias(*stub, scriptname);
       }
       __debugbreak();

@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
    notice_code_t DefaultObjectManager::set_entry(signature_t signature, form_stub* stub) {
       auto* definition = get_default_object_definition(signature);
       if (definition) {
-         if (stub && stub->formType != definition->type)
+         if (stub && stub->form_type != definition->type)
             return notice_code::default_object_rejected_for_bad_type;
       }
       auto& entry = this->entries[signature];
@@ -95,7 +95,7 @@ namespace dovah::loaded_forms {
       }
    }
    bool DefaultObjectManager::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (DefaultObjectManager*)out;
       //

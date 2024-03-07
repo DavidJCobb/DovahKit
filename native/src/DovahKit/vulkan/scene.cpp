@@ -357,7 +357,17 @@ namespace vulkanDK {
       });
    }
    void scene::teardown(surface_renderer&sr) {
-      this->clear(sr);
+      //
+      // If the scene is being torn down outright, we may not have time to sync with the GPU and 
+      // update scene entities manually (e.g. if the program is closing). Just abandon everything.
+      //
+      scene_entities::all_types::for_each([&sr, this]<typename Entity>() {
+         auto& list = this->entities_of_type<Entity>();
+         for (auto& item : list) {
+            item.lifetime.life_state = scene_entities::life_state::empty;
+         }
+         list.clear();
+      });
    }
 
    void scene::update() {

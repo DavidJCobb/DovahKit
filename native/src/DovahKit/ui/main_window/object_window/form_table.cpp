@@ -52,7 +52,7 @@ FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
 }
 
 void FormTableModel::formCreated(dovah::form_stub* stub) {
-   if (!this->form_types.contains(stub->formType))
+   if (!this->form_types.contains(stub->form_type))
       return;
    this->insertItem(stub, false);
 }

@@ -325,7 +325,7 @@ namespace dovah::tes_file_reading {
                // so multi-threading within a single topic isn't useful).
                //
                auto& record = this->get_current_record();
-               form_type_t formType = form_type_info::signature_to_form_type(record.signature());
+               form_type formType = form_type_info::signature_to_form_type(record.signature());
                auto* stub = this->make_stub_for_record();
                switch (group.header.type) {
                   case group::type::world_children:
@@ -344,7 +344,7 @@ namespace dovah::tes_file_reading {
                if (&group == &this->_groups[0]) { // is this a top-level group?
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
                   if (record.signature() != group_signature) { // misplaced record?
-                     form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                     form_type group_type = form_type_info::signature_to_form_type(group_signature);
                      //
                      detailed_notice warning;
                      warning.code = notice_code::record_found_in_wrong_top_level_group;

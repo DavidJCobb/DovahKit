@@ -116,7 +116,7 @@ namespace dovah::loaded_forms::components {
                                  detailed_notice::warn_if_wrong_type(subrecord.signature(), arg_type->allowed_form_types[0], intfc.target_stub, value_form)
                               );
                            } else if (auto* stub = value_form.get_form_stub()) {
-                              if (!arg_type->allows_form_type(stub->formType)) {
+                              if (!arg_type->allows_form_type(stub->form_type)) {
                                  intfc.log_load_warning(
                                     detailed_notice::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
                                  );
@@ -560,35 +560,38 @@ namespace dovah::loaded_forms::components {
 
    #pragma region condition_context
    condition_context::condition_context(form_stub& owner, bool prefer_working_copy) : owner(&owner), prefer_working_copy(prefer_working_copy) {
-      if (owner.formType == form_type::quest) {
+      if (owner.form_type == form_type::quest) {
          this->quest = &owner;
-      } else if (owner.formType == form_type::package) {
+      } else if (owner.form_type == form_type::package) {
          this->package = &owner;
          //
          // TODO: get owning quest
          //
-      } else if (owner.formType == form_type::scene) {
+      } else if (owner.form_type == form_type::scene) {
          //
          // TODO: get owning quest
          //
-      } else if (owner.formType == form_type::topic) {
-         //
-         // TODO: get owning quest
-         //
-      } else if (owner.formType == form_type::topic_info) {
-         //
-         // TODO: get owning quest
-         //
+      } else if (owner.form_type == form_type::topic) {
+         auto* quest = owner.get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+         if (quest->form_type == dovah::form_type::quest)
+            this->quest = quest;
+      } else if (owner.form_type == form_type::topic_info) {
+         auto* parent = owner.get_parent_form();
+         if (parent && parent->form_type == dovah::form_type::topic) {
+            auto* quest = parent->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+            if (quest->form_type == dovah::form_type::quest)
+               this->quest = quest;
+         }
       }
       //
       if (auto* s = this->package) {
-         if (s->formType != form_type::package)
+         if (s->form_type != form_type::package)
             this->package = nullptr;
          else
             this->loaded.package = s->load().ptr_cast<loaded_forms::Package>();
       }
       if (auto* s = this->quest) {
-         if (s->formType != form_type::quest)
+         if (s->form_type != form_type::quest)
             this->quest = nullptr;
          else
             this->loaded.quest = s->load().ptr_cast<loaded_forms::Quest>();

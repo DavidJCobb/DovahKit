@@ -62,7 +62,7 @@ class DKFormListPane : public QWidget {
       #endif
 
       #if !defined(QT_DESIGNER_LIB)
-         void setAllowedFormTypes(QVector<dovah::form_type_t>);
+         void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
       void setShowFormTypes(bool);
       void setShowIndices(bool);

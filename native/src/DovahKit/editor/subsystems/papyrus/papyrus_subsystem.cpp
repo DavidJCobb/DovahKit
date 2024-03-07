@@ -39,7 +39,7 @@ namespace {
          return c;
       }();
 
-      std::array<std::pair<dovah::form_type_t, dovah::form_type_t>, count> out = {};
+      std::array<std::pair<dovah::form_type, dovah::form_type>, count> out = {};
       size_t i = 0;
 
       out[i++] = { dovah::form_type::location_alias,  dovah::form_type::alias };
@@ -52,7 +52,7 @@ namespace {
       return out;
    }();
 
-   constexpr dovah::form_type_t _superclass_of(dovah::form_type_t ft) {
+   constexpr dovah::form_type _superclass_of(dovah::form_type ft) {
       for (const auto& item : all_form_type_inheritance)
          if (item.first == ft)
             return item.second;
@@ -590,7 +590,7 @@ namespace dovahkit::subsystems::papyrus {
             return true;
       }
 
-      if (dovah::form_type_info::form_type_is_reference(stub.formType)) {
+      if (dovah::form_type_is_reference(stub.form_type)) {
          //
          // Need to check against the base form, too.
          //
@@ -620,7 +620,7 @@ namespace dovahkit::subsystems::papyrus {
       return false;
    }
    bool core::quest_has_script_attached_to_any_alias(const dovah::form_stub& quest, std::string_view scriptname) const {
-      assert(quest.formType == dovah::form_type::quest);
+      assert(quest.form_type == dovah::form_type::quest);
 
       auto* known = this->lookup_known_script(scriptname);
       if (!known)

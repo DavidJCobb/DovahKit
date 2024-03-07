@@ -40,7 +40,7 @@ namespace {
          lua_createtable(L, 0, 0);
          int i = 1;
          dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
-            if (!child || !dovah::form_type_info::form_type_is_reference(child->formType))
+            if (!child || !dovah::form_type_is_reference(child->form_type))
                return false;
             if (!child->test_record_flags(dovah::tes_file_record_header::flag::persistent))
                return false;
@@ -60,7 +60,7 @@ namespace {
          lua_createtable(L, stub->inbound.size() / 2, 0);
          int i = 1;
          dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
-            if (!child || !dovah::form_type_info::form_type_is_reference(child->formType))
+            if (!child || !dovah::form_type_is_reference(child->form_type))
                return false;
             int argcount = push_native_object(child);
             while (argcount--)
@@ -123,7 +123,7 @@ namespace {
          if (!stub)
             return 0;
          auto* parent = stub->get_parent_form();
-         if (parent && parent->formType == dovah::form_type::worldspace)
+         if (parent && parent->form_type == dovah::form_type::worldspace)
             return push_native_object(parent);
          return 0;
       }

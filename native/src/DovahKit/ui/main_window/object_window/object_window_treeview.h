@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include <QAbstractItemModel>
 #include <QString>
@@ -14,7 +15,6 @@ class ObjectWindowTreeModel;
 class ObjectWindowTreeItem {
    friend class ObjectWindowTreeModel;
    protected:
-      static constexpr int no_form_type_filter = -1;
       enum class type_t {
          root,
          top_level,
@@ -26,13 +26,13 @@ class ObjectWindowTreeItem {
       ~ObjectWindowTreeItem();
 
       static ObjectWindowTreeItem& make_top_level(const QString&);
-      static ObjectWindowTreeItem& make_form_type(const QString&, int);
+      static ObjectWindowTreeItem& make_form_type(const QString&, dovah::form_type);
       static ObjectWindowTreeItem& make_filter(const QString&);
 
       QString name;
       QString full_filter;
       type_t  type      = type_t::form_type;
-      int     form_type = no_form_type_filter;
+      std::optional<dovah::form_type> form_type;
       int     refcount  = 0;
       ObjectWindowTreeItem* parent = nullptr;
       QVector<ObjectWindowTreeItem*> children;
@@ -48,11 +48,11 @@ class ObjectWindowTreeItem {
       [[nodiscard]] inline int indexOf(ObjectWindowTreeItem* child) const noexcept { return this->children.indexOf(child); }
       [[nodiscard]] int indexOf(const QString& name) const noexcept;
 
-      ObjectWindowTreeItem* findChildByFormType(int) const noexcept;
+      ObjectWindowTreeItem* findChildByFormType(dovah::form_type) const noexcept;
 
       void clear();
-      dovah::form_type_t containingFormType() const noexcept; // for filters
-      void gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept;
+      dovah::form_type containingFormType() const noexcept; // for filters
+      void gatherFormTypes(QVector<dovah::form_type>& out) const noexcept;
 
       //
       // There's only one circumstance where these should be used: you've called beginResetModel or 
@@ -77,7 +77,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       } _nodes;
       //
       static item_type* _itemFromIndex(const QModelIndex&) noexcept;
-      item_type* _findFormTypeItem(int form_type) const noexcept;
+      item_type* _findFormTypeItem(dovah::form_type form_type) const noexcept;
       QModelIndex _indexOfItem(item_type*) const noexcept;
       QModelIndex _indexOfQuests() const noexcept;
       QModelIndex _indexOfAll() const noexcept;
@@ -109,7 +109,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       #pragma endregion
 
       QModelIndex indexOfAllCategory() const noexcept;
-      QVector<dovah::form_type_t> formTypesFor(const QModelIndexList&) const noexcept;
+      QVector<dovah::form_type> formTypesFor(const QModelIndexList&) const noexcept;
 
       ui::object_window::filter_info getFilterInfoFor(const QModelIndexList&) const noexcept;
 };
@@ -120,6 +120,6 @@ class ObjectWindowTree : public QLinedTreeView {
       ObjectWindowTree(QWidget* parent);
       using model_type = ObjectWindowTreeModel;
       //
-      QVector<dovah::form_type_t> allPrimaryFormTypes() const noexcept;
+      QVector<dovah::form_type> allPrimaryFormTypes() const noexcept;
       ui::object_window::filter_info filterInfo() const noexcept;
 };

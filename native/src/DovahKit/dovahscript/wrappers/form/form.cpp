@@ -217,7 +217,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         lua_libraries::form_types::push(L, self.stub->formType);
+         lua_libraries::form_types::push(L, self.stub->form_type);
          return 1;
       }
       /*//

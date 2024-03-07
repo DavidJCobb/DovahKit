@@ -95,7 +95,7 @@ namespace dovah {
             return true;
       }
 
-      switch (base_stub->formType) {
+      switch (base_stub->form_type) {
          case dovah::form_type::activator:
             for (const auto& item : base_stub->outbound) {
                if (item.second.flags & use_info_entry::flag::water_acti_type)
@@ -108,7 +108,7 @@ namespace dovah {
                   for (const auto& item : base_stub->inbound) {
                      auto* referrer = item.second.other;
                      assert(referrer);
-                     if (referrer->formType == form_type::quest)
+                     if (referrer->form_type == form_type::quest)
                         if (_quest_targets_unique_actor(*referrer, *base_stub))
                            return true;
                   }

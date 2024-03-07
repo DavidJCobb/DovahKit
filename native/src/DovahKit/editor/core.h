@@ -38,7 +38,6 @@ class DovahKitCore : public QObject {
    friend void open_use_info_dialog_for_form(dovah::form_stub*, QWidget* parent);
    friend void open_edit_dialog_for_form(dovah::form_stub*, QWidget* parent);
    public:
-      using form_type_t    = dovah::form_type_t;
       using bare_form_id_t = dovah::bare_form_id_t;
       struct file_load_stats {
          uint8_t  file_count   = 0;
@@ -146,19 +145,19 @@ class DovahKitCore : public QObject {
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       bool load_order_has_file(const std::filesystem::path& filename, bool ignore_if_active_file = false) const noexcept;
 
-      uint32_t count_forms_of_type(form_type_t) const noexcept;
+      uint32_t count_forms_of_type(dovah::form_type) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
-      dovah::form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
-      dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
-      dovah::form_stub* get_singleton_form(form_type_t, bool create_if_missing = false) const noexcept; // (create_if_missing) can fail if there are no available form IDs
+      dovah::form_stub* get_form(dovah::form_type, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
+      dovah::form_stub* get_form_of_probable_type(dovah::form_type, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
+      dovah::form_stub* get_singleton_form(dovah::form_type, bool create_if_missing = false) const noexcept; // (create_if_missing) can fail if there are no available form IDs
       bool for_each_form(std::function<bool(dovah::form_stub*)>);
-      bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
+      bool for_each_form_of_type(dovah::form_type formType, std::function<bool(dovah::form_stub*)>);
       bool for_each_impossible_to_save_form(dovah::game, std::function<bool(dovah::form_stub*)>);
 
       bool is_form_defined_in_active_file(dovah::form_stub*) const noexcept;
 
-      dovah::form_stub* create_form_of_type(form_type_t);
-      dovah::form_creation_request request_form_creation(form_type_t) noexcept;
+      dovah::form_stub* create_form_of_type(dovah::form_type);
+      dovah::form_creation_request request_form_creation(dovah::form_type) noexcept;
       dovah::form_duplication_request request_form_duplication() noexcept;
       dovah::form_renumber_request request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) noexcept;
 

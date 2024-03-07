@@ -92,7 +92,7 @@ class DKFormVMADModel : public QAbstractItemModel {
             QString display_typename;
          } typeinfo;
          struct {
-            dovah::form_type_t type = dovah::form_type::none;
+            dovah::form_type type = dovah::form_type::none;
             //
             bool not_a_form   = false;
             bool unidentified = true; // e.g. a PEX failed to load or had cyclical inheritance
@@ -101,7 +101,7 @@ class DKFormVMADModel : public QAbstractItemModel {
          constexpr bool has_underlying_form_type() const {
             return !underlying_form_typeinfo.not_a_form && !underlying_form_typeinfo.unidentified;
          }
-         constexpr dovah::form_type_t underlying_form_type() const {
+         constexpr dovah::form_type underlying_form_type() const {
             return underlying_form_typeinfo.type;
          }
       };

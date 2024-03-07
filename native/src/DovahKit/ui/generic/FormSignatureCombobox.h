@@ -1,6 +1,7 @@
 #pragma once
 #include <QComboBox>
 #include "../../dovah/core.h"
+#include "../../dovah/form_types.h"
 
 class FormSignatureCombobox : public QComboBox {
    Q_OBJECT
@@ -15,7 +16,7 @@ class FormSignatureCombobox : public QComboBox {
       void setAllowUnfiltered(bool) noexcept;
       void setUnfilteredLabel(const QString&) noexcept;
       //
-      inline dovah::form_type_t formType() const noexcept { return this->currentData().toInt(); }
+      inline dovah::form_type formType() const noexcept { return (dovah::form_type)this->currentData().toInt(); }
       //
    protected:
       QVector<uint32_t> _whitelist;

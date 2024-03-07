@@ -39,7 +39,7 @@ class AbstractFormEditDialog : public QDialog {
       AbstractFormEditDialog(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR) : QDialog(parent) {}
          
    public:
-      virtual dovah::form_type_t formType() const = 0;
+      virtual dovah::form_type formType() const = 0;
    protected:
       virtual void _load_impl() = 0; // pull data from a loaded form into the UI
       virtual void _save_impl() = 0; // save data from the UI into a loaded form
@@ -89,7 +89,7 @@ class FormEditDialogBase : public AbstractFormEditDialog {
    template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>; \
    public: \
       using loaded_form_type = LOADED_FORM_CLASS; \
-      virtual dovah::form_type_t formType() const override { return loaded_form_type::form_type; } \
+      virtual dovah::form_type formType() const override { return loaded_form_type::form_type; } \
    protected: \
       dovah::loaded_form_ptr<loaded_form_type> form;
 ;
@@ -116,16 +116,16 @@ class FormEditDialogBase : public AbstractFormEditDialog {
 class FormWorkingCopyEditDialogBase : public AbstractFormEditDialog {
    Q_OBJECT
    private:
-      using form_type_t = dovah::form_type_t;
-      using loaded_t    = dovah::loaded_forms::Form;
+      using form_type = dovah::form_type;
+      using loaded_t  = dovah::loaded_forms::Form;
    public:
-      FormWorkingCopyEditDialogBase(dovah::form_type_t, dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      FormWorkingCopyEditDialogBase(dovah::form_type, dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       ~FormWorkingCopyEditDialogBase();
       
       void load();
       void save();
 
-      virtual dovah::form_type_t formType() const override { return this->_allowed_form_type; };
+      virtual dovah::form_type formType() const override { return this->_allowed_form_type; };
 
       // When implementing _save_impl, write code to handle only the things that a working copy 
       // wouldn't include, like form flags and the editor ID.
@@ -137,7 +137,7 @@ class FormWorkingCopyEditDialogBase : public AbstractFormEditDialog {
    private slots:
       
    private:
-      const dovah::form_type_t _allowed_form_type;
+      const dovah::form_type _allowed_form_type;
    protected:
       dovah::loaded_form_ptr<loaded_t> form;
       loaded_t* clone = nullptr; // not safe to access from _save_impl; write to the loaded form directly

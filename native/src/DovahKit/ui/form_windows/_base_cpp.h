@@ -7,12 +7,12 @@
 namespace form_dialog_helpers {
    template<class Dialog> void initialize(Dialog& dialog, dovah::form_stub* stub) requires std::is_base_of_v<AbstractFormEditDialog, Dialog> {
       using loaded_form_type = Dialog::loaded_form_type;
-      constexpr const dovah::form_type_t form_type = loaded_form_type::form_type;
+      constexpr const dovah::form_type form_type = loaded_form_type::form_type;
 
       dialog.ui.setupUi(&dialog);
       
       if constexpr (std::is_base_of_v<FormEditDialogBase, Dialog>) {
-         if (stub->formType == form_type) {
+         if (stub->form_type == form_type) {
             dialog.stub = stub;
             dialog.form = stub->load().ptr_cast<loaded_form_type>();
          }

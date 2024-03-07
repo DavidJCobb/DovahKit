@@ -144,7 +144,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         if (stub->formID == dovah::hardcoded_form_ids::PlayerRef)
                            return tr("Player", "condition list - run on form - player");
                         return tr("[%1:%2]%3", "condition list - run on form")
-                           .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+                           .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature))
                            .arg(stub->formID, 8, 16, QChar('0'))
                            .arg(stub->get_editor_id());
                      }
@@ -256,7 +256,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      return tr("NONE", "condition list - compare to global (missing)");
                   auto* stub = comparison.operand.global.get_form_stub();
                   return tr("[%1:%2]%3", "condition list - compare to global")
-                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature))
                      .arg(stub->formID, 8, 16, QChar('0'))
                      .arg(stub->get_editor_id());
                } else {

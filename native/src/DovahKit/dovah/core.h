@@ -54,7 +54,7 @@ namespace dovah {
          void clear_if(loaded_forms::Form& owner, form_stub& clear_if);
          void set(loaded_forms::Form& owner, form_stub* set_to);
          void set(loaded_forms::Form& owner, const form_reference_t& set_to);
-         bool form_type_matches(form_type_t) const noexcept; // always returns (true) if (this->stub == nullptr)
+         bool form_type_matches(form_type) const noexcept; // always returns (true) if (this->stub == nullptr)
          //
          constexpr operator bool() const noexcept { return this->stub != nullptr; }
          constexpr bool operator==(const form_reference_t& other) const noexcept { return this->stub == other.stub; };

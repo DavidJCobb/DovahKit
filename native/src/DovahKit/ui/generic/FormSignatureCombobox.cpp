@@ -12,7 +12,7 @@ void FormSignatureCombobox::whitelistAllSignatures() {
    this->_rebuild();
 }
 void FormSignatureCombobox::whitelistSignature(uint32_t signature) {
-   if (signature == dovah::form_types[dovah::form_type::none].signature)
+   if (signature == dovah::form_type_info::lookup(dovah::form_type::none).signature)
       return;
    if (this->_whitelist.contains(signature))
       return;
@@ -41,7 +41,7 @@ void FormSignatureCombobox::_rebuild() {
             continue;
       }
       auto* item = new QStandardItem(cobb::qt::four_cc_to_string(info.signature));
-      item->setData(info.form_type, Qt::UserRole);
+      item->setData((int)info.form_type, Qt::UserRole);
       model->appendRow(item);
    }
    if (this->_allowUnfiltered) {
@@ -49,7 +49,7 @@ void FormSignatureCombobox::_rebuild() {
       if (text.isEmpty())
          text = tr("Any");
       auto* item = new QStandardItem(text);
-      item->setData(dovah::form_type::none, Qt::UserRole);
+      item->setData((int)dovah::form_type::none, Qt::UserRole);
       model->appendRow(item);
    }
    //
@@ -65,7 +65,7 @@ void FormSignatureCombobox::_rebuild() {
    else {
       index = -1;
       if (this->_allowUnfiltered)
-         index = this->findData(dovah::form_type::none, Qt::UserRole);
+         index = this->findData((int)dovah::form_type::none, Qt::UserRole);
       this->setCurrentIndex(index);
    }
 }

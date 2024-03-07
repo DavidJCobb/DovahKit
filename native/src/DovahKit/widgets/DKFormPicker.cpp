@@ -51,7 +51,7 @@ namespace {
    // forms in Skyrim.esm. All form types have a minimum weighting of 1, so these values 
    // are added to that, i.e. a 3% count should be listed as 2 here.
    //
-   static const QMap<dovah::form_type_t, int> _form_type_split_weighting = {
+   static const QMap<dovah::form_type, int> _form_type_split_weighting = {
       { dovah::form_type::activator,         1 }, //  1.84% of common forms
       { dovah::form_type::actor_base,        4 }, //  5.05% of common forms
       { dovah::form_type::armor,             2 }, //  2.72% of common forms
@@ -100,7 +100,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(this->_subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
          if (auto* stub = this->formStub())
-            this->_prior_selections[stub->formType] = stub;
+            this->_prior_selections[stub->form_type] = stub;
          //
          this->_updateForms();
       });
@@ -134,8 +134,8 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
             if (this->isSplittingTypes()) {
                auto data = this->_subwidgets.type->currentData();
                if (data.isValid()) {
-                  auto ft = (dovah::form_type_t) data.toInt();
-                  if (!stub || stub->formType != ft) {
+                  auto ft = (dovah::form_type) data.toInt();
+                  if (!stub || stub->form_type != ft) {
                      auto it = this->_prior_selections.find(ft);
                      if (it != this->_prior_selections.end()) {
                         stub = it->second;
@@ -174,7 +174,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    #endif
 }
 
-void DKFormPicker::addAllowedFormType(dovah::form_type_t ft) {
+void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
    if (this->allowsFormType(ft))
       return;
    this->_properties.allowed_form_types.push_back(ft);
@@ -182,7 +182,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type_t ft) {
       #if !defined(QT_DESIGNER_LIB)
          this->_prior_selections.clear();
 
-         if (this->_value && this->_value->formType != ft)
+         if (this->_value && this->_value->form_type != ft)
             this->_value = nullptr;
       #endif
    }
@@ -192,7 +192,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type_t ft) {
    this->_setIsSplittingTypes(this->_shouldSplitTypes());
    this->_updateForms();
 }
-void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type_t> t) noexcept {
+void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
    this->_properties.allowed_form_types = t;
    #if !defined(QT_DESIGNER_LIB)
       this->_prior_selections.clear();
@@ -253,7 +253,7 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
          return;
       }
    } else {
-      if (!this->_properties.allowed_form_types.contains(stub->formType))
+      if (!this->_properties.allowed_form_types.contains(stub->form_type))
          return;
    }
    this->_value = stub;
@@ -342,7 +342,7 @@ void DKFormPicker::_updateForms() {
             c_type->setCurrentIndex(0);
             ftd = c_type->currentData();
          }
-         params.form_types = { (dovah::form_type_t)ftd.toInt() };
+         params.form_types = { (dovah::form_type)ftd.toInt() };
       } else {
          params.form_types = QList(this->_properties.allowed_form_types.begin(), this->_properties.allowed_form_types.end());
       }
@@ -366,33 +366,37 @@ void DKFormPicker::_updateTypePicker() {
    //
    auto* c_type = this->_subwidgets.type;
    auto  prior  = c_type->currentData().toInt();
-   auto* stub   = this->formStub();
+   #if !defined(QT_DESIGNER_LIB)
+      auto* stub = this->formStub();
+   #endif
    //
    c_type->clear();
    if (this->_properties.allowed_form_types.isEmpty()) {
       for (const auto& type : dovah::form_types) {
          if (!_allow_form_type(type))
             continue;
-         c_type->addItem(_four_cc_to_string(type.signature), type.form_type);
+         c_type->addItem(_four_cc_to_string(type.signature), (int)type.form_type);
       }
    } else {
       for (auto ft : this->_properties.allowed_form_types) {
          auto& type = dovah::form_type_info::lookup(ft);
          if (!_allow_form_type(type))
             continue;
-         c_type->addItem(_four_cc_to_string(type.signature), type.form_type);
+         c_type->addItem(_four_cc_to_string(type.signature), (int)type.form_type);
       }
    }
    c_type->model()->sort(0);
    //
-   int index;
-   if (stub)
-      index = c_type->findData(stub->formType);
-   else
-      index = c_type->findData(prior);
-   if (index < 0)
-      index = 0;
-   c_type->setCurrentIndex(index);
+   #if !defined(QT_DESIGNER_LIB)
+      int index;
+      if (stub)
+         index = c_type->findData((int)stub->form_type);
+      else
+         index = c_type->findData(prior);
+      if (index < 0)
+         index = 0;
+      c_type->setCurrentIndex(index);
+   #endif
 }
 
 void DKFormPicker::clear() {

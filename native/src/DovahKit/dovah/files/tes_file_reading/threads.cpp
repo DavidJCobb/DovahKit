@@ -24,7 +24,7 @@ namespace dovah::tes_file_reading::threads {
          object_type ot;
          uint32_t    lastGroupLabel = 0; // for debug logging
          uint32_t    lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
-         form_type_t lastFormType   = 0;
+         form_type   lastFormType   = dovah::form_type::none;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             {
                //
@@ -56,12 +56,12 @@ namespace dovah::tes_file_reading::threads {
                   lastSignature = record.signature();
                   lastFormType  = form_type_info::signature_to_form_type(lastSignature);
                }
-               form_type_t formType = lastFormType;
-               if (!formType) // probably shouldn't happen; invalid signatures should cause errors
+               form_type formType = lastFormType;
+               if (formType == dovah::form_type::none) // probably shouldn't happen; invalid signatures should cause errors
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (stub->formType == form_type::topic_info) {
+               if (stub->form_type == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   lo.local_formID_to_global_formID(this->loader, topicID);
                   if (!this->set_stub_parent(stub, topicID))
@@ -77,7 +77,7 @@ namespace dovah::tes_file_reading::threads {
                if (&group == &this->_groups[0]) { // is this a top-level group?
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
                   if (record.signature() != group_signature) { // misplaced record?
-                     form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                     form_type group_type = form_type_info::signature_to_form_type(group_signature);
                      //
                      detailed_notice warning;
                      warning.code       = notice_code::record_found_in_wrong_top_level_group;
@@ -122,7 +122,7 @@ namespace dovah::tes_file_reading::threads {
          object_type ot;
          uint32_t    lastGroupLabel = 0; // for debug logging
          uint32_t    lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
-         form_type_t lastFormType   = 0;
+         form_type   lastFormType   = dovah::form_type::none;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             {
                //
@@ -144,12 +144,12 @@ namespace dovah::tes_file_reading::threads {
                   lastSignature = record.signature();
                   lastFormType  = form_type_info::signature_to_form_type(lastSignature);
                }
-               form_type_t formType = lastFormType;
-               if (!formType) // probably shouldn't happen; invalid signatures should cause errors
+               form_type formType = lastFormType;
+               if (formType == dovah::form_type::none) // probably shouldn't happen; invalid signatures should cause errors
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (stub->formType == form_type::topic_info) {
+               if (stub->form_type == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   lo.local_formID_to_global_formID(this->loader, topicID);
                   if (!this->set_stub_parent(stub, topicID))
@@ -165,7 +165,7 @@ namespace dovah::tes_file_reading::threads {
                if (&group == &this->_groups[0]) { // is this a top-level group?
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
                   if (record.signature() != group_signature) { // misplaced record?
-                     form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                     form_type group_type = form_type_info::signature_to_form_type(group_signature);
                      //
                      detailed_notice warning;
                      warning.code = notice_code::record_found_in_wrong_top_level_group;
@@ -207,9 +207,9 @@ namespace dovah::tes_file_reading::threads {
          this->reset_parse_state();
          assert(this->next_record_or_group() == object_type::group);
          object_type ot;
-         uint32_t   lastBlockNumber = 0; // for debug logging
-         uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
-         form_type_t lastFormType  = 0;
+         uint32_t    lastBlockNumber = 0; // for debug logging
+         uint32_t    lastSignature   = 0; // shortcut to reduce the number of form type lookups we need
+         form_type   lastFormType    = dovah::form_type::none;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             {
                //
@@ -230,12 +230,12 @@ namespace dovah::tes_file_reading::threads {
                   lastSignature = record.signature();
                   lastFormType  = form_type_info::signature_to_form_type(lastSignature);
                }
-               form_type_t formType = lastFormType;
-               if (!formType)
+               form_type formType = lastFormType;
+               if (formType == dovah::form_type::none)
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (form_type_info::form_type_is_reference(stub->formType)) {
+               if (form_type_is_reference(stub->form_type)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
                   if (!this->set_stub_parent(stub, cellID))
@@ -277,8 +277,8 @@ namespace dovah::tes_file_reading::threads {
          this->reset_parse_state();
          assert(this->next_record_or_group() == object_type::group);
          object_type ot;
-         uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
-         form_type_t lastFormType = 0;
+         uint32_t    lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+         form_type   lastFormType  = dovah::form_type::none;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             {
                //
@@ -297,8 +297,8 @@ namespace dovah::tes_file_reading::threads {
                   lastSignature = record.signature();
                   lastFormType  = form_type_info::signature_to_form_type(lastSignature);
                }
-               form_type_t formType = lastFormType;
-               if (!formType)
+               form_type formType = lastFormType;
+               if (formType == dovah::form_type::none)
                   continue;
                //
                auto* stub = this->make_stub_for_record();
@@ -354,8 +354,8 @@ namespace dovah::tes_file_reading::threads {
          this->reset_parse_state();
          assert(this->next_record_or_group() == object_type::group);
          object_type ot;
-         uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
-         form_type_t lastFormType = 0;
+         uint32_t    lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+         form_type   lastFormType  = dovah::form_type::none;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             {
                //
@@ -374,12 +374,12 @@ namespace dovah::tes_file_reading::threads {
                   lastSignature = record.signature();
                   lastFormType  = form_type_info::signature_to_form_type(lastSignature);
                }
-               form_type_t formType = lastFormType;
-               if (!formType)
+               form_type formType = lastFormType;
+               if (formType == dovah::form_type::none)
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (form_type_info::form_type_is_reference(stub->formType)) {
+               if (form_type_is_reference(stub->form_type)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
                   if (!this->set_stub_parent(stub, cellID))

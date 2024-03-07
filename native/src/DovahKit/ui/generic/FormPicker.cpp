@@ -14,7 +14,7 @@ namespace {
    static constexpr Qt::ItemDataRole FormStubRole  = FormPickerImpl::FormPickerSharedUnderlyingModel::FormStubRole;
 
    bool _should_exclude_form(const dovah::form_stub* stub) {
-      if (stub->formType == dovah::form_type::cell)
+      if (stub->form_type == dovah::form_type::cell)
          return stub->is_exterior_cell();
       return false;
    }
@@ -36,7 +36,7 @@ namespace {
    // forms in Skyrim.esm. All form types have a minimum weighting of 1, so these values 
    // are added to that, i.e. a 3% count should be listed as 2 here.
    //
-   static const QMap<dovah::form_type_t, int> _form_type_split_weighting = {
+   static const QMap<dovah::form_type, int> _form_type_split_weighting = {
       { dovah::form_type::activator,         1 }, //  1.84% of common forms
       { dovah::form_type::actor_base,        4 }, //  5.05% of common forms
       { dovah::form_type::armor,             2 }, //  2.72% of common forms
@@ -83,7 +83,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
 
    QObject::connect(this->subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       if (auto* stub = this->formStub())
-         this->_prior_selections[stub->formType] = stub;
+         this->_prior_selections[stub->form_type] = stub;
       //
       this->_updateForms();
    });
@@ -113,8 +113,8 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
          if (this->isSplittingTypes()) {
             auto data = this->subwidgets.type->currentData();
             if (data.isValid()) {
-               auto ft = (dovah::form_type_t) data.toInt();
-               if (!stub || stub->formType != ft) {
+               auto ft = (dovah::form_type) data.toInt();
+               if (!stub || stub->form_type != ft) {
                   auto it = this->_prior_selections.find(ft);
                   if (it != this->_prior_selections.end()) {
                      stub = it->second;
@@ -156,13 +156,13 @@ dovah::bare_form_id_t FormPicker::formID() const noexcept {
    return 0;
 }
 
-void FormPicker::addFormType(dovah::form_type_t ft) {
+void FormPicker::addFormType(dovah::form_type ft) {
    if (this->_formTypes.contains(ft))
       return;
    this->_formTypes.push_back(ft);
    if (this->_formTypes.empty()) {
       this->_prior_selections.clear();
-      if (this->_value && this->_value->formType != ft)
+      if (this->_value && this->_value->form_type != ft)
          this->_value = nullptr;
    }
    //
@@ -171,7 +171,7 @@ void FormPicker::addFormType(dovah::form_type_t ft) {
    this->_setIsSplittingTypes(this->_shouldSplitTypes());
    this->_updateForms();
 }
-void FormPicker::setAllowedFormTypes(QVector<dovah::form_type_t> t) noexcept {
+void FormPicker::setAllowedFormTypes(QVector<dovah::form_type> t) noexcept {
    this->_formTypes = t;
    this->_prior_selections.clear();
    //
@@ -206,7 +206,7 @@ void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
          return;
       }
    } else {
-      if (!this->_formTypes.contains(stub->formType))
+      if (!this->_formTypes.contains(stub->form_type))
          return;
    }
    this->_value = stub;
@@ -274,7 +274,7 @@ void FormPicker::_updateForms() {
          c_type->setCurrentIndex(0);
          ftd = c_type->currentData();
       }
-      this->_rawModel()->updateParameters(this->_allowNone, { (dovah::form_type_t)ftd.toInt() });
+      this->_rawModel()->updateParameters(this->_allowNone, { (dovah::form_type)ftd.toInt() });
    } else {
       this->_rawModel()->updateParameters(this->_allowNone, this->_formTypes);
    }
@@ -290,19 +290,19 @@ void FormPicker::_updateTypePicker() {
    c_type->clear();
    if (this->_formTypes.isEmpty()) {
       for (const auto& type : dovah::form_types) {
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
+         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), (int)type.form_type);
       }
    } else {
       for (auto ft : this->_formTypes) {
          auto& type = dovah::form_type_info::lookup(ft);
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
+         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), (int)type.form_type);
       }
    }
    c_type->model()->sort(0);
    //
    int index;
    if (stub)
-      index = c_type->findData(stub->formType);
+      index = c_type->findData((int)stub->form_type);
    else
       index = c_type->findData(prior);
    if (index < 0)

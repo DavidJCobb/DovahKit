@@ -12,7 +12,7 @@
 namespace dovah::loaded_forms {
    class Worldspace : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::worldspace;
+         static constexpr const enum form_type form_type = form_type::worldspace;
          Worldspace(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {

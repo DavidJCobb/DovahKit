@@ -22,7 +22,7 @@ namespace dovahkit::subsystems::papyrus {
 
                // REMINDER: The value `dovah::form_type::none` represents the base Form class.
                // REMINDER: This enumeration also has values for aliases.
-               std::optional<dovah::form_type_t> underlying_type;
+               std::optional<dovah::form_type> underlying_type;
             } extends;
             struct {
                bool conditional = false;
@@ -72,8 +72,8 @@ namespace dovahkit::subsystems::papyrus {
          constexpr const known_script* superclass() const;
          constexpr known_script* superclass();
 
-         constexpr std::optional<dovah::form_type_t> underlying_type() const;
-         constexpr bool is_attachable_to(dovah::form_type_t) const;
+         constexpr std::optional<dovah::form_type> underlying_type() const;
+         constexpr bool is_attachable_to(dovah::form_type) const;
          constexpr bool is_of_type(std::string_view desired) const; // DOES NOT handle hardcoded scriptnames representing form/alias types.
 
          constexpr bool is_descendant_of(const known_script&) const;

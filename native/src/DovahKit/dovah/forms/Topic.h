@@ -11,7 +11,7 @@
 namespace dovah::loaded_forms {
    class Topic : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::topic;
+         static constexpr const enum form_type form_type = form_type::topic;
          Topic(const constructor_params& c) : Form(form_type, c) {};
 
          struct dialogue_flag {

@@ -152,7 +152,7 @@ dovah::form_stub* DKQuestAliasPicker::quest() const {
 void DKQuestAliasPicker::setQuest(dovah::form_stub* quest) {
    if (quest == this->quest())
       return;
-   if (quest->formType != dovah::form_type::quest)
+   if (quest->form_type != dovah::form_type::quest)
       return;
    this->_state.quest = quest;
    if (quest) {

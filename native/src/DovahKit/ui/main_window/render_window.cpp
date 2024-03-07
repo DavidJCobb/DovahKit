@@ -154,9 +154,9 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          //picker->setAllowNone(false);
          picker->setMinimumWidth(400);
          {
-            QVector<dovah::form_type_t> types;
+            QVector<dovah::form_type> types;
             for (auto& ft : dovah::form_types) {
-               if (dovah::form_type_info::form_type_is_base_form(ft.form_type))
+               if (dovah::form_type_is_base_form(ft.form_type))
                   types.push_back(ft.form_type);
             }
             picker->setAllowedFormTypes(types);

@@ -21,7 +21,7 @@ namespace DovahKitDebug::features {
       auto* ref_picker   = new DKObjectReferencePicker(dialog);
       auto* form_picker  = new DKFormPicker(dialog);
       {
-         QList<dovah::form_type_t> types;
+         QList<dovah::form_type> types;
          for (const auto& info : dovah::form_types) {
             if (info.is_reference())
                continue;

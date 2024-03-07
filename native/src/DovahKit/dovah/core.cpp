@@ -31,10 +31,10 @@ namespace dovah {
    void form_reference_t::set(loaded_forms::Form& owner, const form_reference_t& set_to) {
       this->set(owner, set_to.stub);
    }
-   bool form_reference_t::form_type_matches(form_type_t ft) const noexcept {
+   bool form_reference_t::form_type_matches(form_type ft) const noexcept {
       if (!this->stub)
          return true;
-      return this->stub->formType == ft;
+      return this->stub->form_type == ft;
    }
    void form_reference_t::unmanaged_set(form_stub* set_to) {
       this->stub = set_to;

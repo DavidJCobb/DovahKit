@@ -260,7 +260,7 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
 
    void DKObjectReferencePicker::setCell(dovah::form_stub* stub) {
       if (stub) {
-         if (stub->formType != dovah::form_type::cell)
+         if (stub->form_type != dovah::form_type::cell)
             return;
          this->subwidgets.cell->setFormStub(stub);
       } else {
@@ -269,10 +269,10 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
    }
    void DKObjectReferencePicker::setRef(dovah::form_stub* stub) {
       if (stub) {
-         if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+         if (!dovah::form_type_is_reference(stub->form_type))
             return;
          auto* cell = stub->get_parent_form();
-         if (cell && cell->formType == dovah::form_type::cell) {
+         if (cell && cell->form_type == dovah::form_type::cell) {
             this->setCell(cell);
          }
       }

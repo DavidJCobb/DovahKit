@@ -5,8 +5,8 @@
 
 namespace dovah::papyrus {
    struct native_class {
-      dovah::form_type_t form_type;
-      std::string_view   name;
+      form_type        form_type;
+      std::string_view name;
    };
 
    constexpr const std::array<native_class, 71> native_classes = {{

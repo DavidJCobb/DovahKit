@@ -413,7 +413,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(response_idle_for_speaker);
    }
    /*virtual*/ bool TopicInfo::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (TopicInfo*)out;
       //

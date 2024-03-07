@@ -14,7 +14,7 @@ DovahKitAssetDataTextureSet::DovahKitAssetDataTextureSet(DovahKitAsset& o) : Dov
 }
 
 bool DovahKitAssetDataTextureSet::load(dovah::form_stub& stub) {
-   if (stub.formType != dovah::form_type::texture_set)
+   if (stub.form_type != dovah::form_type::texture_set)
       return false;
    this->loaded = stub.load().ptr_cast<dovah::loaded_forms::TextureSet>();
    //

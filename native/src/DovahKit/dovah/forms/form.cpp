@@ -12,7 +12,7 @@
 #include "./components/papyrus/property.h"
 
 namespace dovah::loaded_forms {
-   Form::Form(form_type_t ft, const constructor_params& c) : formType(ft), is_working_copy(c.is_working_copy), stub(*c.stub) {
+   Form::Form(enum form_type ft, const constructor_params& c) : type(ft), is_working_copy(c.is_working_copy), stub(*c.stub) {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
    }
 
@@ -40,7 +40,7 @@ namespace dovah::loaded_forms {
       constructor_params fcp;
       fcp.stub = &receiving_stub;
       //
-      auto instance = create_blank_loaded_form_by_type(this->formType, fcp);
+      auto instance = create_blank_loaded_form_by_type(this->form_type, fcp);
       if (instance) {
          receiving_stub.form = instance;
          receiving_stub.set_edited(true);
@@ -62,7 +62,7 @@ namespace dovah::loaded_forms {
          // Specific form types don't appear to save ANY data -- not even editor IDs -- if they 
          // are flagged as deleted.
          //
-         auto& info = form_type_info::lookup(this->formType);
+         auto& info = form_type_info::lookup(this->form_type);
          if (info.flags & form_type_info::flag::empty_if_deleted)
             return true;
       }

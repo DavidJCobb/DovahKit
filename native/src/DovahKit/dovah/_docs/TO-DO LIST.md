@@ -44,10 +44,13 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 * `dovah/data/actor_values.h`: this should be a `constexpr` list of PODs. Current way we define it is super old and scuffed (singleton, with a constructor wherein a local C array of definitions that gets `memcpy`'d into a `malloc`'d list).
 
+* Ditch `editor/papyrus_dictionary.h`.
+
 ## Form data
 
 ### General
 * Review all form types and form component types written prior to 2/4/2024 and look for places where `std::optional` can be used. Offhand I know `Worldspace::max_height_data_t` has an embedded presence bool and that could be replaced with using `optional`.
+* `dovah/forms/components/conditions.cpp`: `condition_context::condition_context`: ensure that the if/else tree for getting condition-relevant-parent forms is complete.
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.

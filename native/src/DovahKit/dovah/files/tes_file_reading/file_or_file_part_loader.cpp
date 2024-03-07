@@ -49,8 +49,8 @@ namespace dovah::tes_file_reading {
       auto& record = this->get_current_record();
       auto  stub   = new form_stub();
       stub->_add_file(this->get_file_loader(), record.header_pos(), record.flags());
-      stub->formID   = record.formID();
-      stub->formType = form_type_info::signature_to_form_type(record.signature());
+      stub->formID    = record.formID();
+      stub->form_type = form_type_info::signature_to_form_type(record.signature());
       return stub;
    }
    bool file_or_file_part_loader::set_stub_parent(form_stub* stub, bare_form_id_t parentID) {
@@ -66,7 +66,7 @@ namespace dovah::tes_file_reading {
          error.set_file_offset(this->get_position());
          error.cause_form.fixedID = 0;
          error.cause_form.localID = stub->formID;
-         error.cause_form.type    = stub->formType;
+         error.cause_form.type    = stub->form_type;
          error.set_flag(detailed_notice::flag::has_cause_form);
          this->log_load_error(error);
          //
@@ -93,7 +93,7 @@ namespace dovah::tes_file_reading {
                error.set_file_offset(this->get_position());
                error.cause_form.fixedID = 0;
                error.cause_form.localID = stub->formID;
-               error.cause_form.type    = stub->formType;
+               error.cause_form.type    = stub->form_type;
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
                //
@@ -109,7 +109,7 @@ namespace dovah::tes_file_reading {
                error.set_file_offset(this->get_position());
                error.cause_form.fixedID = 0;
                error.cause_form.localID = stub->formID;
-               error.cause_form.type    = stub->formType;
+               error.cause_form.type    = stub->form_type;
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
                //
@@ -175,9 +175,9 @@ namespace dovah::tes_file_reading {
       #pragma region INFO pre-handling
       size_t     insert_info_at = 0;
       form_stub* parent_topic = nullptr;
-      if (stub.formType == form_type::topic_info) {
+      if (stub.form_type == form_type::topic_info) {
          parent_topic = stub.get_parent_form();
-         if (parent_topic && parent_topic->formType != form_type::topic)
+         if (parent_topic && parent_topic->form_type != form_type::topic)
             parent_topic = nullptr;
       }
       #pragma endregion
@@ -185,13 +185,13 @@ namespace dovah::tes_file_reading {
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
-               if (!(form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)) {
+               if (!(form_type_info::lookup(stub.form_type).flags & form_type_info::flag::no_editor_id)) {
                   subrecord.read(stub.editorID);
                }
                break;
             case 'PNAM':
                if (parent_topic) {
-                  assert(stub.formType == form_type::topic_info);
+                  assert(stub.form_type == form_type::topic_info);
                   //
                   form_reference_t formID;
                   subrecord.read(formID);

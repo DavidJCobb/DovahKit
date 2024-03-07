@@ -34,8 +34,8 @@ namespace dovah::loaded_forms {
    notice_code_t ObjectReference::set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell) {
       if (this->is_working_copy)
          return notice_code::operation_not_allowed_on_form_working_copy;
-      assert(world_or_cell.formType == form_type::cell || world_or_cell.formType == form_type::worldspace);
-      if (world_or_cell.formType == dovah::form_type::worldspace) {
+      assert(world_or_cell.form_type == form_type::cell || world_or_cell.form_type == form_type::worldspace);
+      if (world_or_cell.form_type == dovah::form_type::worldspace) {
          return this->set_position_and_world(position, world_or_cell);
       }
       if (world_or_cell.is_exterior_cell()) {
@@ -52,7 +52,7 @@ namespace dovah::loaded_forms {
          return notice_code::cannot_reparent_hardcoded_reference;
       auto* world = parent_cell.get_parent_form();
       if (world) {
-         assert(world->formType == form_type::worldspace && "How is a cell a child of a non-worldspace form?");
+         assert(world->form_type == form_type::worldspace && "How is a cell a child of a non-worldspace form?");
          assert(parent_cell.is_exterior_cell() && "How is an interior cell a child of a worldspace?");
          int32_t cx;
          int32_t cy;
@@ -72,7 +72,7 @@ namespace dovah::loaded_forms {
          return notice_code::operation_not_allowed_on_form_working_copy;
       if (this->stub.is_hardcoded())
          return notice_code::cannot_reparent_hardcoded_reference;
-      assert(world.formType == form_type::worldspace);
+      assert(world.form_type == form_type::worldspace);
       int32_t gx = position.x / 4096;
       int32_t gy = position.y / 4096;
       auto* move_to_cell = form_stub_helpers::get_worldspace_cell_by_grid(&world, gx, gy);
@@ -214,7 +214,7 @@ namespace dovah::loaded_forms {
       eduis.commit_to(uib);
    }
    bool ObjectReference::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (ObjectReference*)out;
       //

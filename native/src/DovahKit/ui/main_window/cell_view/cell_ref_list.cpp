@@ -15,13 +15,13 @@ CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
    this->stub = stub;
    this->update();
 }
-dovah::form_type_t CellRefListModelItem::formType() const noexcept {
+dovah::form_type CellRefListModelItem::formType() const noexcept {
    return this->baseType;
 }
 void CellRefListModelItem::update() {
    auto stub = this->stub;
    this->base = dovah::form_stub_helpers::get_base_form(stub);
-   this->baseType = this->base ? this->base->formType : dovah::form_type::none;
+   this->baseType = this->base ? this->base->form_type : dovah::form_type::none;
    //
    this->editorID = QString::fromUtf8(stub->get_editor_id());
    if (this->editorID.isEmpty() && this->base)
@@ -48,7 +48,7 @@ void CellRefListModel::formCreated(const dovah::form_stub* stub) {
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
    this->_insertItem(stub, false);
 }
@@ -57,7 +57,7 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
    auto& list = this->children;
    auto  size = list.size();
@@ -85,7 +85,7 @@ void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub, bool i
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
    auto& list = this->children;
    auto  size = list.size();
@@ -251,7 +251,7 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
    //
    this->last_used_cell = cell;
    dovah::form_stub_helpers::for_each_child_form(cell, [this](dovah::form_stub* stub) {
-      if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+      if (!dovah::form_type_is_reference(stub->form_type))
          return false;
       this->_insertItem(stub, true);
       return false;
@@ -306,7 +306,7 @@ bool CellRefListModelProxy::filterAcceptsRow(int sourceRow, const QModelIndex& s
    }
    return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
-void CellRefListModelProxy::setFormType(dovah::form_type_t ft) {
+void CellRefListModelProxy::setFormType(dovah::form_type ft) {
    this->_formType = ft;
    this->invalidateFilter();
 }
@@ -483,7 +483,7 @@ void CellRefList::setTextFilter(QLineEdit* field) {
    QObject::connect(field, &QLineEdit::textEdited,      this, &CellRefList::textFilterChanged);
    QObject::connect(field, &QLineEdit::editingFinished, this, &CellRefList::textFilterFinished);
 }
-void CellRefList::setFormTypeFilter(dovah::form_type_t ft) {
+void CellRefList::setFormTypeFilter(dovah::form_type ft) {
    auto* proxy = (proxy_type*)this->model();
    if (!proxy)
       return;
@@ -541,7 +541,7 @@ void CellRefList::rebuildModel() {
    const dovah::form_stub* stub = nullptr;
    if (this->_cellSelector) {
       stub = this->_cellSelector->formStub();
-      if (stub && stub->formType != dovah::form_type::cell)
+      if (stub && stub->form_type != dovah::form_type::cell)
          stub = nullptr;
    }
    m->rebuild(stub);

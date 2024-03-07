@@ -115,7 +115,7 @@ namespace dovah {
       add_hardcoded_forms_to_load_order(*this);
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
-      auto& type = this->forms_by_type[stub->formType];
+      auto& type = this->forms_by_type[stub->form_type];
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
@@ -151,8 +151,8 @@ namespace dovah {
          return;
       for (auto id : formIDs) {
          auto* stub = new form_stub;
-         stub->formID   = id;
-         stub->formType = form_type::none;
+         stub->formID    = id;
+         stub->form_type = form_type::none;
          stub->_add_file(*this->none_stubs_file, 0);
          //
          this->forms_by_type[form_type::none].forms[id] = stub;
@@ -231,7 +231,7 @@ namespace dovah {
       this->_build_none_stubs();
       for (auto& pair : this->forms.forms) {
          auto* stub = pair.second;
-         if (!stub || stub->formType == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never have outbound references, so we can skip them
+         if (!stub || stub->form_type == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never have outbound references, so we can skip them
             continue;
          stub->send_inbound_refs({});
       }
@@ -493,8 +493,8 @@ namespace dovah {
       //
       auto* new_parent = stub->get_parent_form();
       if (form_stub* target = this->forms.forms[formID]) { // is this an override?
-         form_type_t type_a = target->formType;
-         form_type_t type_b = stub->formType;
+         auto type_a = target->form_type;
+         auto type_b = stub->form_type;
          if (type_a != type_b) {
             //
             // We're loading an override, but its form type doesn't match that of the overridden form. 
@@ -540,7 +540,7 @@ namespace dovah {
          // Delete the new stub, and overwrite the pointer (in this function and in our caller(s)) with 
          // the existing stub.
          //
-         if (stub->formType == form_type::topic_info) {
+         if (stub->form_type == form_type::topic_info) {
             //
             // If the stub is a topic info and it's being re-parented by an override, then we need to 
             // update the form stub addenda for its old parent.
@@ -560,7 +560,7 @@ namespace dovah {
                   warning.context = detailed_notice::notice_context::file_load;
                   warning.cause_form.localID = stub->formID;
                   warning.cause_form.fixedID = formID;
-                  warning.cause_form.type    = stub->formType;
+                  warning.cause_form.type    = stub->form_type;
                   warning.set_flag(detailed_notice::flag::has_cause_form);
                   assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
                   warning.set_cause_file(stub->file.pointer->get_filename());
@@ -577,7 +577,7 @@ namespace dovah {
                }
             }
          }
-         if (stub->formType == form_type::cell) {
+         if (stub->form_type == form_type::cell) {
             if (stub->test_record_flags(tes_file_record_header::flag::persistent)) {
                auto* old_parent = target->get_parent_form();
                if (old_parent && old_parent != new_parent) { // Re-parenting cells isn't supported and isn't a sane operation, but no harm in covering it here
@@ -596,12 +596,12 @@ namespace dovah {
          //
          // This is not an override.
          //
-         if (stub->formType == form_type::actor_value_info) {
+         if (stub->form_type == form_type::actor_value_info) {
             detailed_notice warning;
             warning.code = notice_code::the_game_doesnt_load_new_actor_value_infos;
             warning.cause_form.localID = stub->formID;
             warning.cause_form.fixedID = formID;
-            warning.cause_form.type    = stub->formType;
+            warning.cause_form.type    = stub->form_type;
             warning.set_flag(detailed_notice::flag::has_cause_form);
             if (auto* file = stub->get_file_at_index(-1)) {
                warning.cause_file = file->get_filename();
@@ -619,7 +619,7 @@ namespace dovah {
                   warning.code = notice_code::form_initial_record_is_partial_and_injected;
                warning.cause_form.localID = stub->formID;
                warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = stub->formType;
+               warning.cause_form.type    = stub->form_type;
                warning.set_flag(detailed_notice::flag::has_cause_form);
                if (auto* file = stub->get_file_at_index(-1)) {
                   warning.cause_file = file->get_filename();
@@ -648,7 +648,7 @@ namespace dovah {
          //
          stub->formID = formID;
          //
-         auto& type = this->forms_by_type[stub->formType];
+         auto& type = this->forms_by_type[stub->form_type];
          // DO NOT lock the all-forms map; we already locked it at the start of the function!!
          std::lock_guard<std::mutex> guard_for_form_type(type.lock);
          this->forms.forms[formID] = stub;
@@ -659,7 +659,7 @@ namespace dovah {
       // of the branches above, we may have deleted the input stub and switched it out for the existing stub 
       // which it overrides, so from this point forward we can't delete the stub.
       // 
-      if (stub->formType == form_type::cell) {
+      if (stub->form_type == form_type::cell) {
          //
          // Manage the persistent cell for this cell's parent world:
          //
@@ -667,17 +667,17 @@ namespace dovah {
             //
             // Ensure that worldspaces are aware of their persistent cells.
             //
-            if (new_parent && new_parent->formType == form_type::worldspace) {
+            if (new_parent && new_parent->form_type == form_type::worldspace) {
                auto& addenda = new_parent->get_or_create_addenda();
                if (!addenda.persistent_cell) // Only the first persistent-flagged cell loaded by a worldspace will be THE persistent cell.
                   addenda.persistent_cell = stub;
             }
          }
-      } else if (stub->formType == form_type::land) {
+      } else if (stub->form_type == form_type::land) {
          //
          // Manage the canonical landscape for this landscape's parent cell:
          //
-         if (new_parent && new_parent->formType == form_type::cell) {
+         if (new_parent && new_parent->form_type == form_type::cell) {
             new_parent->get_or_create_addenda().canonical_landscape = stub;
          }
       }
@@ -693,14 +693,14 @@ namespace dovah {
          }
          if (store) {
             this->active_file_forms.forms[formID] = stub;
-            auto& at = this->active_file_forms_by_type[stub->formType];
+            auto& at = this->active_file_forms_by_type[stub->form_type];
             at.forms[formID] = stub;
          }
       }
       //
       // Special-case behaviors.
       //
-      if (form_type_info::lookup(stub->formType).flags & form_type_info::flag::is_singleton) {
+      if (form_type_info::lookup(stub->form_type).flags & form_type_info::flag::is_singleton) {
          //
          // There are a limited number of form types in Bethesda RPGs that are handled specially: the 
          // game will only ever create one instance of the form in question, and all subsequent records 
@@ -713,7 +713,7 @@ namespace dovah {
          // the new form stub. (Why only the last inserted DOBJ stub? Because it, in turn, will have the 
          // information from its own predecessor, and so on.)
          //
-         auto* prior = this->get_canonical_instance_of_singleton_form(stub->formType);
+         auto* prior = this->get_canonical_instance_of_singleton_form(stub->form_type);
          if (prior && prior != stub) {
             std::vector<form_stub::file_data> stub_files;
             if (prior) {
@@ -735,7 +735,7 @@ namespace dovah {
                   warning.code               = notice_code::singleton_form_is_redundantly_defined;
                   warning.cause_form.localID = stub->formID;
                   warning.cause_form.fixedID = formID;
-                  warning.cause_form.type    = stub->formType;
+                  warning.cause_form.type    = stub->form_type;
                   warning.set_flag(detailed_notice::flag::has_cause_form);
                   warning.cause_file = sf->pointer->get_filename();
                   warning.set_flag(detailed_notice::flag::has_cause_file);
@@ -743,7 +743,7 @@ namespace dovah {
                   auto& relevant = warning.relevant_forms.emplace_back();
                   relevant.localID = 0;
                   relevant.fixedID = prior->formID;
-                  relevant.type    = prior->formType;
+                  relevant.type    = prior->form_type;
                   //
                   this->_log_load_warning(warning);
                }
@@ -805,14 +805,14 @@ namespace dovah {
          //
          form_stub*& prior = this->forms.forms[formID];
          if (prior) {
-            if (prior->formType == form_type::setting) {
+            if (prior->form_type == form_type::setting) {
                prior->_add_file(*const_cast<loaded_file*>(file), 0);
             } else {
                detailed_notice warning;
                warning.code               = notice_code::form_override_has_type_mismatch;
                warning.cause_form.localID = localID;
                warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = prior->formType;
+               warning.cause_form.type    = prior->form_type;
                warning.set_flag(detailed_notice::flag::has_cause_form);
                if (auto* prior_file = prior->get_file_at_index(0)) {
                   warning.cause_file = prior_file->get_filename();
@@ -838,7 +838,7 @@ namespace dovah {
             prior = new form_stub;
             prior->_add_file(*const_cast<loaded_file*>(file), 0);
             prior->formID   = formID;
-            prior->formType = form_type::setting;
+            prior->form_type = form_type::setting;
          }
          this->forms_by_type[form_type::setting].forms[formID] = prior;
          //
@@ -986,9 +986,9 @@ namespace dovah {
       //
       bare_form_id_t formID = stub.formID;
       this->forms.forms.erase(formID);
-      this->forms_by_type[stub.formType].forms.erase(formID);
+      this->forms_by_type[stub.form_type].forms.erase(formID);
       this->active_file_forms.forms.erase(formID);
-      this->active_file_forms_by_type[stub.formType].forms.erase(formID);
+      this->active_file_forms_by_type[stub.form_type].forms.erase(formID);
       //
       delete &stub;
       return default_notice_code;
@@ -1072,7 +1072,7 @@ namespace dovah {
          node.key() = new_id;
          map.forms.insert(std::move(node));
       };
-      auto form_type = stub.formType;
+      auto form_type = stub.form_type;
       _extract(this->forms);
       _extract(this->forms_by_type[form_type]);
       _extract(this->active_file_forms);
@@ -1158,7 +1158,7 @@ namespace dovah {
          //
          stub = new form_stub;
          stub->formID   = new_id;
-         stub->formType = form_type::setting;
+         stub->form_type = form_type::setting;
          this->forms.forms[new_id] = stub;
          this->forms_by_type[form_type::setting].forms[new_id] = stub;
          this->active_file_forms.forms[new_id] = stub;
@@ -1450,8 +1450,8 @@ namespace dovah {
       return result;
    }
 
-   uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
-      if (ft < this->forms_by_type.size()) {
+   uint32_t file_load_order::count_forms_of_type(form_type ft) const noexcept {
+      if (decltype(this->forms_by_type)::supports_form_type(ft)) {
          auto& list = this->forms_by_type[ft].forms;
          return list.size();
       }
@@ -1462,7 +1462,7 @@ namespace dovah {
          return false;
       return this->get_form(formID) != nullptr;
    }
-   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft) const noexcept {
+   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type ft) const noexcept {
       if (!(form_type_info::lookup(ft).flags & form_type_info::flag::is_singleton))
          return nullptr;
       uint16_t   length  = 0;
@@ -1480,7 +1480,7 @@ namespace dovah {
       }
       return longest;
    }
-   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft, bool create_if_missing) noexcept {
+   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type ft, bool create_if_missing) noexcept {
       const auto* self = this; // needed to disambiguate between the const and non-const overload
       auto* stub = self->get_canonical_instance_of_singleton_form(ft);
       if (!stub && create_if_missing)
@@ -1500,10 +1500,10 @@ namespace dovah {
       }
       return nullptr;
    }
-   form_stub* file_load_order::get_form(form_type_t formType, bare_form_id_t formID) const noexcept {
+   form_stub* file_load_order::get_form(form_type formType, bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return nullptr;
-      if (formType < this->forms_by_type.size()) {
+      if (decltype(this->forms_by_type)::supports_form_type(formType)) {
          auto& list = this->forms_by_type[formType].forms;
          auto  it   = list.find(formID);
          if (it != list.end())
@@ -1511,10 +1511,10 @@ namespace dovah {
       }
       return nullptr;
    }
-   form_stub* file_load_order::get_form_of_probable_type(form_type_t formType, bare_form_id_t formID, bool ignore_none_stubs) const noexcept {
+   form_stub* file_load_order::get_form_of_probable_type(form_type formType, bare_form_id_t formID, bool ignore_none_stubs) const noexcept {
       if (formID == 0)
          return nullptr;
-      if (formType < this->forms_by_type.size()) {
+      if (decltype(this->forms_by_type)::supports_form_type(formType)) {
          auto& list = this->forms_by_type[formType].forms;
          auto  it   = list.find(formID);
          if (it != list.end())
@@ -1522,8 +1522,8 @@ namespace dovah {
       }
       return this->get_form(formID, ignore_none_stubs);
    }
-   bool file_load_order::for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor) {
-      if (formType < this->forms_by_type.size()) {
+   bool file_load_order::for_each_form_of_type(form_type formType, std::function<bool(form_stub*)> functor) {
+      if (decltype(this->forms_by_type)::supports_form_type(formType)) {
          auto& list = this->forms_by_type[formType].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
@@ -1549,8 +1549,8 @@ namespace dovah {
          total += map.forms.size();
       return total;
    }
-   bool file_load_order::active_file_has_forms_of_type(form_type_t form_type) const noexcept {
-      if (form_type < this->active_file_forms_by_type.size()) {
+   bool file_load_order::active_file_has_forms_of_type(enum form_type form_type) const noexcept {
+      if (decltype(this->forms_by_type)::supports_form_type(form_type)) {
          auto& list = this->active_file_forms_by_type[form_type].forms;
          return !list.empty();
       }
@@ -1593,8 +1593,8 @@ namespace dovah {
       }
       return false;
    }
-   bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
-      if (form_type < this->active_file_forms_by_type.size()) {
+   bool file_load_order::for_each_active_file_form_of_type(form_type form_type, std::function<bool(form_stub*)> functor) {
+      if (decltype(this->forms_by_type)::supports_form_type(form_type)) {
          auto& list = this->active_file_forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
@@ -1606,8 +1606,8 @@ namespace dovah {
       }
       return false;
    }
-   bool file_load_order::for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
-      if (form_type >= this->active_file_forms_by_type.size())
+   bool file_load_order::for_each_active_file_override_of_type(form_type form_type, std::function<bool(form_stub*)> functor) {
+      if (!decltype(this->forms_by_type)::supports_form_type(form_type))
          return false;
       //
       auto active_prefix = this->active_file_prefix();
@@ -1640,8 +1640,8 @@ namespace dovah {
       }
       return false;
    }
-   bool file_load_order::for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor) {
-      if (form_type >= this->forms_by_type.size())
+   bool file_load_order::for_each_top_level_form_needing_save(enum form_type form_type, std::function<bool(form_stub*)> functor) {
+      if (!decltype(this->forms_by_type)::supports_form_type(form_type))
          return false;
       //
       // A form needs to be saved if it has been edited during the current session, 
@@ -1653,7 +1653,7 @@ namespace dovah {
       // the criteria, whereas for form types that cannot have child forms, we only 
       // need to loop over active file forms.
       //
-      if (form_types[form_type].flags & form_type_info::flag::can_have_children) {
+      if (form_type_info::lookup(form_type).flags & form_type_info::flag::can_have_children) {
          auto& list = this->forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
@@ -1747,17 +1747,17 @@ namespace dovah {
    }
 
    #pragma region Load order code for various form modification requests
-   form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
+   form_stub* file_load_order::create_form_of_type(form_type ft) noexcept {
       auto request = this->request_form_creation(ft);
       if (!request.is_valid())
          return nullptr;
       return this->commit_form_creation_request(request);
    }
-   form_creation_request file_load_order::request_form_creation(form_type_t ft) noexcept {
+   form_creation_request file_load_order::request_form_creation(form_type ft) noexcept {
       form_creation_request result(*this);
       result.form_type = ft;
       //
-      if (ft >= form_types.size()) {
+      if (!is_valid_form_type(ft)) {
          result.error = notice_code::unknown_form_type;
          return result;
       }
@@ -1812,11 +1812,11 @@ namespace dovah {
       }
       //
       if (request.child_of) {
-         auto parent_type = request.child_of->formType;
+         auto parent_type = request.child_of->form_type;
          auto child_type  = request.form_type;
          bool error       = false;
          //
-         if (form_type_info::form_type_is_reference(child_type)) { // validate parent/child relationships
+         if (form_type_is_reference(child_type)) { // validate parent/child relationships
             error = parent_type != form_type::cell;
          } else if (child_type == form_type::cell) {
             error = parent_type != form_type::worldspace;
@@ -1839,7 +1839,7 @@ namespace dovah {
             }
          }
       } else {
-         if (form_type_info::form_type_is_reference(request.form_type)) {
+         if (form_type_is_reference(request.form_type)) {
             request.error = notice_code::cannot_create_reference_with_no_parent_cell;
             return nullptr;
          }
@@ -1862,7 +1862,7 @@ namespace dovah {
       uint32_t record_flags = 0;
       //
       auto* stub = new form_stub;
-      stub->formType = request.form_type;
+      stub->form_type = request.form_type;
       if (!request.clone_of) {
          loaded_forms::Form::constructor_params fcp;
          fcp.stub = stub;
@@ -1892,9 +1892,9 @@ namespace dovah {
       {
          auto guard = std::lock_guard(this->forms.lock);
          this->forms.forms[formID] = stub;
-         this->forms_by_type[stub->formType].forms[formID] = stub;
+         this->forms_by_type[stub->form_type].forms[formID] = stub;
          this->active_file_forms.forms[formID] = stub;
-         this->active_file_forms_by_type[stub->formType].forms[formID] = stub;
+         this->active_file_forms_by_type[stub->form_type].forms[formID] = stub;
       }
       //
       if (request.child_of)
@@ -2164,7 +2164,7 @@ namespace dovah {
          if (cobb::unordered_map_contains(this->forms.forms, desired)) {
             auto* stub = this->forms.forms[desired];
             if (stub) {
-               if (stub->formType != form_type::setting) {
+               if (stub->form_type != form_type::setting) {
                   request.code = notice_code::form_id_is_already_in_use;
                   return;
                }
@@ -2241,7 +2241,7 @@ namespace dovah {
       if (cobb::unordered_map_contains(this->forms.forms, desired)) {
          auto* stub = this->forms.forms[desired];
          if (stub) {
-            if (stub->formType != form_type::setting) {
+            if (stub->form_type != form_type::setting) {
                request.code = notice_code::form_id_is_already_in_use;
                return;
             }
@@ -2299,7 +2299,7 @@ namespace dovah {
 
    void file_load_order::stub_flagged_as_edited(form_stub* stub) noexcept {
       this->active_file_forms.forms[stub->formID] = stub;
-      auto& at = this->active_file_forms_by_type[stub->formType];
+      auto& at = this->active_file_forms_by_type[stub->form_type];
       at.forms[stub->formID] = stub;
       //
       // NOTE: Merely flagging a form stub as edited SHOULD NOT result in the active file being 
@@ -2632,7 +2632,7 @@ namespace dovah {
                // We need to add this form to the active file form list.
                //
                this->active_file_forms.forms[stub->formID] = stub;
-               this->active_file_forms_by_type[stub->formType].forms[stub->formID] = stub;
+               this->active_file_forms_by_type[stub->form_type].forms[stub->formID] = stub;
             }
             stub->set_edited(false);
             //
@@ -2717,7 +2717,7 @@ namespace dovah {
          // Okay, now we have a list of all the stubs to discard, so let's get to it!
          //
          for (auto* stub : stubs_to_remove) {
-            auto type = stub->formType;
+            auto type = stub->form_type;
             if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
                continue;
             if (form_type_info::lookup(type).flags & form_type_info::flag::is_singleton) {
@@ -2791,7 +2791,7 @@ namespace dovah {
       if (this->clone_of == original)
          return;
       if (original) {
-         if (original->formType != this->form_type)
+         if (original->form_type != this->form_type)
             return;
       }
       this->clone_of = original;
@@ -2839,19 +2839,19 @@ namespace dovah {
       if (!original)
          return;
       //
-      this->main_request = new form_creation_request(this->owner.request_form_creation(original->formType));
+      this->main_request = new form_creation_request(this->owner.request_form_creation(original->form_type));
       this->main_request->set_parent_form(this->parent);
       this->main_request->queue_clone(original);
       //
       form_stub_helpers::for_each_child_form(original, [this](form_stub* child) {
-         auto* request = new form_creation_request(this->owner.request_form_creation(child->formType));
+         auto* request = new form_creation_request(this->owner.request_form_creation(child->form_type));
          request->queue_clone(child);
          this->child_requests.push_back(request);
          return false;
       });
-      if (original->formType == form_type::quest) {
+      if (original->form_type == form_type::quest) {
          form_stub_helpers::for_each_quest_topic(original, [this](form_stub* child) {
-            auto* request = new form_creation_request(this->owner.request_form_creation(child->formType));
+            auto* request = new form_creation_request(this->owner.request_form_creation(child->form_type));
             request->queue_clone(child);
             this->child_requests.push_back(request);
             return false;
@@ -3067,9 +3067,9 @@ namespace dovah {
          if (formID < lowestID)
             lowestID = formID;
          this->owner.forms.forms.erase(formID);
-         this->owner.forms_by_type[stub->formType].forms.erase(formID);
+         this->owner.forms_by_type[stub->form_type].forms.erase(formID);
          this->owner.active_file_forms.forms.erase(formID);
-         this->owner.active_file_forms_by_type[stub->formType].forms.erase(formID);
+         this->owner.active_file_forms_by_type[stub->form_type].forms.erase(formID);
          //
          delete stub;
       }

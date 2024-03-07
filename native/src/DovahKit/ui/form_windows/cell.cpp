@@ -56,7 +56,7 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormEd
    });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
       if (stub == this->working_ownership.form) {
-         if (stub->formType == dovah::form_type::faction)
+         if (stub->form_type == dovah::form_type::faction)
             this->_update_rank_picker();
       }
    });
@@ -138,7 +138,7 @@ void FormDialogCell::_update_ownership_widgets() {
    this->ui.ownerFaction->setFormStub(this->working_ownership.form); // the control will filter for us
    this->ui.ownerNPC->setFormStub(this->working_ownership.form); // the control will filter for us
    if (auto* stub = this->working_ownership.form) {
-      if (stub->formType == dovah::form_type::faction)
+      if (stub->form_type == dovah::form_type::faction)
          faction_stub = stub;
    }
    //
@@ -422,7 +422,7 @@ void FormDialogCell::_save_impl() {
             auto* data = extra.get_or_create<extra::ownership>(extra_data_type::ownership);
             if (data) {
                this->save_form_id(data->form, stub);
-               if (stub->formType == dovah::form_type::faction) {
+               if (stub->form_type == dovah::form_type::faction) {
                   auto* data = extra.get_or_create<extra::rank>(extra_data_type::rank);
                   data->value = this->working_ownership.rank;
                }

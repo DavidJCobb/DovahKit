@@ -18,15 +18,15 @@ namespace {
       constexpr const size_t count = []() {
          size_t n = 0;
          for (const auto& item : dovah::form_types)
-            if (dovah::form_type_info::form_type_is_reference(item.form_type))
+            if (dovah::form_type_is_reference(item.form_type))
                ++n;
          return n;
       }();
 
-      std::array<dovah::form_type_t, count> out = {};
+      std::array<dovah::form_type, count> out = {};
       size_t n = 0;
       for (const auto& item : dovah::form_types)
-         if (dovah::form_type_info::form_type_is_reference(item.form_type))
+         if (dovah::form_type_is_reference(item.form_type))
             out[n++] = item.form_type;
       return out;
    }();
@@ -84,7 +84,7 @@ namespace dovah::tes_file_writing {
             //
             if (!stub)
                return false;
-            switch (stub->formType) {
+            switch (stub->form_type) {
                case form_type::actor_base:
                   return true;
                case form_type::navmesh:
@@ -200,8 +200,8 @@ namespace dovah::tes_file_writing {
    bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
       auto loaded = stub->load_even_if_unsafe({});
       if (loaded) {
-         assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
-         auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
+         assert(is_valid_form_type(stub->form_type) && "Stub form type is out of bounds.");
+         auto& record = this->_open_next_record(form_type_info::lookup(stub->form_type).signature, stub->formID);
          record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
          if (stub->is_edited())
             record.header.flags &= ~tes_file_record_header::flag::partial; // if the stub was previously a partial record in the active file but is now edited, clear the "partial" flag
@@ -226,7 +226,7 @@ namespace dovah::tes_file_writing {
             if (this->_should_compress_current_record(stub))
                record.header.flags |= tes_file_record_header::flag::compressed;
             //
-            if (stub->formType == form_type::cell) {
+            if (stub->form_type == form_type::cell) {
                this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
             }
             //
@@ -271,7 +271,7 @@ namespace dovah::tes_file_writing {
          //
          // Now, we need to write child groups and forms as appropriate:
          //
-         switch (stub->formType) {
+         switch (stub->form_type) {
             case form_type::cell:
                this->_write_child_forms_for_cell(stub);
                break;
@@ -283,7 +283,7 @@ namespace dovah::tes_file_writing {
                break;
          }
       }
-      if (stub->formType == form_type::cell) {
+      if (stub->form_type == form_type::cell) {
          this->compress_state.containing_cell_is_compressed = false;
       }
       return true;
@@ -334,12 +334,12 @@ namespace dovah::tes_file_writing {
 
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
       assert(stub);
-      assert(stub->formType == dovah::form_type::cell);
+      assert(stub->form_type == dovah::form_type::cell);
       //
       form_stub* worldspace      = stub->get_parent_form();
       form_stub* persistent_cell = nullptr;
       if (worldspace) {
-         if (worldspace->formType == dovah::form_type::worldspace) {
+         if (worldspace->form_type == dovah::form_type::worldspace) {
             persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(worldspace);
          } else {
             worldspace = nullptr;
@@ -418,7 +418,7 @@ namespace dovah::tes_file_writing {
       int index = -1;
       for (auto* child : list) {
          ++index;
-         if (child->formType != form_type::topic_info)
+         if (child->form_type != form_type::topic_info)
             continue;
          if (!child->needs_save())
             continue;
@@ -466,7 +466,7 @@ namespace dovah::tes_file_writing {
       //
       std::map<uint32_t, _cell_block> blocks;
       form_stub_helpers::for_each_child_form(stub, [&blocks, &open_group_if_needed](form_stub* child) {
-         if (child->formType != form_type::cell)
+         if (child->form_type != form_type::cell)
             return false;
          if (!child->needs_save())
             return false;
@@ -543,7 +543,7 @@ namespace dovah::tes_file_writing {
             this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong('GMST'), 0);
          }
          //
-         auto& record = this->_open_next_record(form_types[form_type::setting].signature, setting.formID);
+         auto& record = this->_open_next_record(form_type_info::lookup(form_type::setting).signature, setting.formID);
          record.write_string_subrecord('EDID', name);
          //
          switch (setting.get_type()) {
@@ -596,7 +596,7 @@ namespace dovah::tes_file_writing {
       if (stub->is_none_stub())
          return false;
       if (this->config.output_game != game::skyrim_special) {
-         auto& info = form_type_info::lookup(stub->formType);
+         auto& info = form_type_info::lookup(stub->form_type);
          if (info.flags & form_type_info::flag::is_skyrim_special)
             return false;
       }

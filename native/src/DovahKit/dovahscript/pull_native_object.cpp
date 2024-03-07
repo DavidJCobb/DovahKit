@@ -5,7 +5,7 @@
 #include "wrappers/form/form.h"
 
 namespace dovahscript {
-   [[nodiscard]] extern dovah::form_stub* pull_form_stub_argument(lua_State* L, int arg, dovah::form_type_t ft) {
+   [[nodiscard]] extern dovah::form_stub* pull_form_stub_argument(lua_State* L, int arg, dovah::form_type ft) {
       if (lua_isnoneornil(L, arg))
          return nullptr;
       auto* other = wrapper_from_stack<wrappers::form>(L, 2);

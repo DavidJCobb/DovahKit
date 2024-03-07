@@ -4,10 +4,10 @@
 
 namespace dovah {
    struct default_object {
-      uint32_t    signature = 0;
-      form_type_t type      = form_type::none;
+      uint32_t  signature = 0;
+      form_type type      = form_type::none;
 
-      default_object(uint32_t s, form_type_t f) : signature(s), type(f) {}
+      default_object(uint32_t s, form_type f) : signature(s), type(f) {}
    };
    extern const std::array<default_object, 0x15A> default_objects;
 

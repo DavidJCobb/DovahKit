@@ -332,7 +332,7 @@ void DKScriptObjectDialog::_showSelectedProperty() {
             } else if constexpr (std::is_same_v<ValueType, QString>) {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_string);
             } else if constexpr (std::is_same_v<ValueType, DKFormVMADModel::object_property_value>) {
-               if (dovah::form_type_info::form_type_is_reference(prop_info.underlying_form_type())) {
+               if (dovah::form_type_is_reference(prop_info.underlying_form_type())) {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_ref);
                } else {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_object);

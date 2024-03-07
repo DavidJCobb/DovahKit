@@ -12,7 +12,7 @@
 namespace dovah::loaded_forms {
    class Light : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::light;
+         static constexpr const enum form_type form_type = form_type::light;
          Light(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {

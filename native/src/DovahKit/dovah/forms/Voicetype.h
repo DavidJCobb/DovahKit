@@ -18,7 +18,7 @@ namespace dovah::loaded_forms {
          using voicetype_flags_t = std::underlying_type_t<voicetype_flag::type>;
          //
       public:
-         static constexpr form_type_t form_type = form_type::voicetype;
+         static constexpr const enum form_type form_type = form_type::voicetype;
          Voicetype(const constructor_params& c) : Form(form_type, c) {};
 
          voicetype_flags_t voicetype_flags = 0;

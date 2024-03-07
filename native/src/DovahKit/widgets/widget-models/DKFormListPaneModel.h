@@ -25,8 +25,8 @@ class DKFormListPaneModel : public QAbstractTableModel {
             void updateFromStub(); // update the form's identifying information, e.g. its editor ID
       };
 
-      using form_stub   = dovah::form_stub;
-      using form_type_t = dovah::form_type_t;
+      using form_stub = dovah::form_stub;
+      using form_type = dovah::form_type;
       
       static constexpr int ColumnType   = 0;
       static constexpr int ColumnName   = 1;
@@ -35,7 +35,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
    protected:
       QVector<Item*> children;
       QVector<Item*> queued_additions;
-      QVector<form_type_t> allowed_form_types; // if empty, then no limit
+      QVector<form_type> allowed_form_types; // if empty, then no limit
       bool allow_gaps   = true;
       bool show_indices = true;
       
@@ -59,10 +59,10 @@ class DKFormListPaneModel : public QAbstractTableModel {
 
       #pragma region Property getters
          inline bool allowGaps() const noexcept { return this->allow_gaps; }
-         inline QVector<form_type_t> allowedFormTypes() const noexcept { return this->allowed_form_types; }
+         inline QVector<form_type> allowedFormTypes() const noexcept { return this->allowed_form_types; }
          inline bool showIndices() const noexcept { return this->show_indices; }
 
-         inline const QVector<form_type_t>& constAllowedFormTypes() const noexcept { return this->allowed_form_types; }
+         inline const QVector<form_type>& constAllowedFormTypes() const noexcept { return this->allowed_form_types; }
       #pragma endregion
       
       #pragma region QAbstractItemModel overrides
@@ -96,7 +96,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
       inline void reserve(int i) { this->children.reserve(i); }
 
       #pragma region Property setters
-         void setAllowedFormTypes(QVector<form_type_t>);
+         void setAllowedFormTypes(QVector<form_type>);
          void setAllowGaps(bool);
          void setShowIndices(bool);
       #pragma endregion

@@ -10,11 +10,11 @@
 namespace dovah::loaded_forms {
    class ObjectReference : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::reference;
+         static constexpr const enum form_type form_type = form_type::reference;
          ObjectReference(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {
-            enum : uint32_t {
+            enum type : uint32_t {
                //
                // Some flags' meanings differ depending on the base form's type. If a line comment after a 
                // value consists of a list of signatures, then it indicates the form types for which that 
@@ -64,7 +64,7 @@ namespace dovah::loaded_forms {
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:
-         ObjectReference(form_type_t ft, const constructor_params& c) : Form(ft, c) {}; // for subclasses
+         ObjectReference(enum form_type ft, const constructor_params& c) : Form(ft, c) {}; // for subclasses
          //
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;

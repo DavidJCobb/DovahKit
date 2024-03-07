@@ -16,8 +16,8 @@ namespace ui::impl::DKFormPicker {
 class QComboBox;
 
 class DKFormPicker : public QWidget {
-   Q_OBJECT
-   Q_PROPERTY(QList<dovah::form_type_t> allowedFormTypes        READ allowedFormTypes        WRITE setAllowedFormTypes        DESIGNABLE true USER true);
+   Q_OBJECT;
+   Q_PROPERTY(QList<dovah::form_type> allowedFormTypes        READ allowedFormTypes        WRITE setAllowedFormTypes        DESIGNABLE true USER true);
    Q_PROPERTY(bool    allowNone               READ allowNone               WRITE setAllowNone               DESIGNABLE true);
    Q_PROPERTY(QString requiredScriptname      READ requiredScriptname      WRITE setRequiredScriptname      DESIGNABLE true);
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
@@ -25,14 +25,14 @@ class DKFormPicker : public QWidget {
    public:
       DKFormPicker(QWidget* parent = nullptr);
       
-      constexpr const QList<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_properties.allowed_form_types; }
-      void setAllowedFormTypes(QList<dovah::form_type_t>) noexcept;
+      constexpr const QList<dovah::form_type>& allowedFormTypes() const noexcept { return this->_properties.allowed_form_types; }
+      void setAllowedFormTypes(QList<dovah::form_type>) noexcept;
       //
-      void addAllowedFormType(dovah::form_type_t);
+      void addAllowedFormType(dovah::form_type);
       inline void allowAllFormTypes() noexcept { this->setAllowedFormTypes({}); }
-      inline void setAllowedFormType(dovah::form_type_t ft) noexcept { this->setAllowedFormTypes({ ft }); }
+      inline void setAllowedFormType(dovah::form_type ft) noexcept { this->setAllowedFormTypes({ ft }); }
       //
-      inline bool allowsFormType(dovah::form_type_t ft) const noexcept {
+      inline bool allowsFormType(dovah::form_type ft) const noexcept {
          return this->_properties.allowed_form_types.contains(ft);
       }
 
@@ -58,9 +58,9 @@ class DKFormPicker : public QWidget {
 
          constexpr dovah::form_stub* defaultForm() const noexcept { return this->_default; }
          void setDefaultForm(dovah::form_stub*) noexcept;
-
-         constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
       #endif
+
+      constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
 
    protected:
       #if !defined(QT_DESIGNER_LIB)
@@ -69,7 +69,7 @@ class DKFormPicker : public QWidget {
       #endif
       struct {
          bool allow_none = true;
-         QList<dovah::form_type_t> allowed_form_types;
+         QList<dovah::form_type> allowed_form_types;
          bool split_types_when_many = true;
 
          QString scriptname_on_alias;
@@ -90,7 +90,7 @@ class DKFormPicker : public QWidget {
          // form type, so that if they change the form type combobox back and forth, they 
          // don't lose their selected form.
          //
-         std::map<dovah::form_type_t, dovah::form_stub*> _prior_selections;
+         std::map<dovah::form_type, dovah::form_stub*> _prior_selections;
       #endif
 
       #if !defined(QT_DESIGNER_LIB)

@@ -337,7 +337,7 @@ void MainWindow::updateFormEditWindowList() {
       if (!stub)
          return false;
       //
-      auto& fi = dovah::form_type_info::lookup(stub->formType);
+      auto& fi = dovah::form_type_info::lookup(stub->form_type);
       QString label = tr("[%1:%2]%3")
          .arg(cobb::qt::four_cc_to_string(fi.signature))
          .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
@@ -372,7 +372,7 @@ void MainWindow::updateFormUsesWindowList() {
       if (!stub)
          return false;
       //
-      auto& fi = dovah::form_type_info::lookup(stub->formType);
+      auto& fi = dovah::form_type_info::lookup(stub->form_type);
       QString label = tr("[%1:%2]%3")
          .arg(cobb::qt::four_cc_to_string(fi.signature))
          .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())

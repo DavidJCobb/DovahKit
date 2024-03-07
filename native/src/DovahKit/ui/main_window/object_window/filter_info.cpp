@@ -69,13 +69,13 @@ namespace ui::object_window {
    }
 
    bool filter_info::form_matches_filters(const dovah::form_stub& stub) const noexcept {
-      if (!this->form_types.contains(stub.formType))
+      if (!this->form_types.contains(stub.form_type))
          return false;
 
-      if (stub.formType == dovah::form_type::none)
+      if (stub.form_type == dovah::form_type::none)
          return stub.is_none_stub();
 
-      if (stub.formType == dovah::form_type::quest) {
+      if (stub.form_type == dovah::form_type::quest) {
          auto& filter = this->filters.quest_filter_prefix;
          if (filter.isEmpty())
             return true;
@@ -83,7 +83,7 @@ namespace ui::object_window {
          return data.startsWith(filter);
       }
 
-      if (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_type_is_of_interest(stub.formType)) {
+      if (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_type_is_of_interest(stub.form_type)) {
          auto& filter = this->filters.model_path_prefix;
          if (filter.isEmpty())
             return true;

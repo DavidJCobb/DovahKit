@@ -2,13 +2,10 @@
 #include "../forms/components/conditions.h"
 
 namespace dovah {
-   bool condition_parameter_type::allows_form_type(form_type_t ft) const noexcept {
+   bool condition_parameter_type::allows_form_type(form_type ft) const noexcept {
       if (this->underlying == underlying_t::formID) {
-         auto& list = this->allowed_form_types;
-         if (!list.size())
-            return true;
-         for (auto it = list.begin(); it != list.end(); ++it)
-            if (*it == ft)
+         for (auto item : this->allowed_form_types)
+            if (item == ft)
                return true;
       }
       return false;

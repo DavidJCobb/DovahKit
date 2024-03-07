@@ -15,8 +15,8 @@ namespace ui::impl::DKFormPicker {
       Q_OBJECT;
       public:
          struct item_type {
-            dovah::form_stub*  stub = nullptr;
-            dovah::form_type_t type = dovah::form_type::none;
+            dovah::form_stub* stub = nullptr;
+            dovah::form_type  type = dovah::form_type::none;
             QString editorID;
          };
 
@@ -63,7 +63,7 @@ namespace ui::impl::DKFormPicker {
       public:
          struct filter_parameters {
             bool                      allow_none = true;
-            QList<dovah::form_type_t> form_types;
+            QList<dovah::form_type> form_types;
             std::string               scriptname;
             std::string               scriptname_on_aliases;
 

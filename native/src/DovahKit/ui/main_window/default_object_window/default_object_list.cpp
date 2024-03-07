@@ -8,7 +8,7 @@
 #include "../../../editor/get_default_object_info.h"
 
 #pragma region DefaultObjectListModel
-DefaultObjectListModelItem::DefaultObjectListModelItem(uint32_t signature, dovah::form_type_t ft) {
+DefaultObjectListModelItem::DefaultObjectListModelItem(uint32_t signature, dovah::form_type ft) {
    this->signature   = signature;
    this->form_type   = ft;
    this->name        = get_default_object_name(signature);

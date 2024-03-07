@@ -9,7 +9,7 @@
 
 namespace {
    QString _format_cell(dovah::form_stub* cell) {
-      assert(cell->formType == dovah::form_type::cell);
+      assert(cell->form_type == dovah::form_type::cell);
       //
       auto name = cell->get_editor_id();
       QString cell_text = editor_helpers::form_identifiers_to_string(cell);
@@ -18,7 +18,7 @@ namespace {
       }
       auto world = cell->get_parent_form();
       if (world) {
-         assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
+         assert(world->form_type == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
          QString s = editor_helpers::form_identifiers_to_string(world);
          int32_t x;
          int32_t y;
@@ -55,22 +55,22 @@ void FormUseInfoListModelItem::updateFromStub() {
    auto stub = this->otherStub;
    //
    this->otherID   = stub->formID;
-   this->otherType = stub->formType;
+   this->otherType = stub->form_type;
    this->editorID  = stub->get_editor_id();
    this->signature = editor_helpers::form_signature_to_string(stub);
    //
    if (is_reference) {
       auto parent = stub->get_parent_form();
       if (parent) { // can be nullptr for PlayerRef
-         assert(parent->formType == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
+         assert(parent->form_type == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
          this->parentCell = _format_cell(parent);
       }
    } else {
       dovah::form_stub* cell = nullptr;
-      if (stub->formType == dovah::form_type::land) {
+      if (stub->form_type == dovah::form_type::land) {
          cell = stub->get_parent_form();
       }
-      if (cell && cell->formType == dovah::form_type::cell) {
+      if (cell && cell->form_type == dovah::form_type::cell) {
          this->parentCell = _format_cell(cell);
       }
    }
@@ -418,7 +418,7 @@ bool FormUseInfoListModelProxy::filterAcceptsRow(int sourceRow, const QModelInde
    }
    return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
-void FormUseInfoListModelProxy::setFormType(dovah::form_type_t ft) {
+void FormUseInfoListModelProxy::setFormType(dovah::form_type ft) {
    this->_formType = ft;
    this->invalidateFilter();
 }
@@ -455,7 +455,7 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
       if (data) {
          auto* stub = data->otherStub;
          if (stub) {
-            if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
+            if (dovah::form_type_is_reference(stub->form_type)) {
                dovahkit::subsystems::worldedit::core::get_or_create().center_on_refr(*stub);
             } else {
                open_edit_dialog_for_form(data->otherStub, this);
@@ -521,7 +521,7 @@ void FormUseInfoList::setTextFilter(QLineEdit* field) {
    QObject::connect(field, &QLineEdit::textEdited, this, &FormUseInfoList::textFilterChanged);
    QObject::connect(field, &QLineEdit::editingFinished, this, &FormUseInfoList::textFilterFinished);
 }
-void FormUseInfoList::setFormTypeFilter(dovah::form_type_t ft) {
+void FormUseInfoList::setFormTypeFilter(dovah::form_type ft) {
    auto* proxy = (FormUseInfoListModelProxy*)this->model();
    if (!proxy)
       return;

@@ -17,7 +17,7 @@ namespace dovahkit::subsystems::papyrus {
       return const_cast<known_script*>(std::as_const(*this).superclass());
    }
 
-   constexpr std::optional<dovah::form_type_t> known_script::underlying_type() const {
+   constexpr std::optional<dovah::form_type> known_script::underlying_type() const {
       if (this->inheritance.root_class)
          return this->inheritance.root_class->underlying_type();
 
@@ -28,7 +28,7 @@ namespace dovahkit::subsystems::papyrus {
 
       return {};
    }
-   constexpr bool known_script::is_attachable_to(dovah::form_type_t desired) const {
+   constexpr bool known_script::is_attachable_to(dovah::form_type desired) const {
       auto under_opt = this->underlying_type();
       if (!under_opt.has_value())
          return false;
@@ -55,7 +55,7 @@ namespace dovahkit::subsystems::papyrus {
 
       // ObjectReference scripts are the only ones that can be meaningfully attached to base forms.
       // Trying to attach a script that subclasses some base form type X, to an X, will fail in-game.
-      if (dovah::form_type_info::form_type_is_base_form(desired)) {
+      if (dovah::form_type_is_base_form(desired)) {
          if (desired == dovah::form_type::actor_base && underlying == dovah::form_type::actor) {
             return true;
          }
@@ -68,7 +68,7 @@ namespace dovahkit::subsystems::papyrus {
       // Check if `desired` is an ancestor class of the one we attach to .
       // (e.g. if we extend Furniture and `desired` is Activator)
       auto* info = &dovah::form_type_info::lookup(underlying);
-      while (info && info->parent_type) {
+      while (info && info->parent_type != dovah::form_type::none) {
          if (desired == info->parent_type)
             return true;
          info = &dovah::form_type_info::lookup(info->parent_type);

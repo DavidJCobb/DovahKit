@@ -46,7 +46,7 @@ namespace dovah {
       struct relevant_form {
          bare_form_id_t localID = 0; // file-local form ID, when available; zero otherwise
          bare_form_id_t fixedID = 0; // load-order-relative form ID, when available; zero otherwise
-         form_type_t    type    = form_type::none;
+         form_type      type    = form_type::none;
          //
          inline bool operator==(const relevant_form& other) const noexcept {
             return (this->localID == other.localID) && (this->fixedID == other.fixedID) && (this->type == other.type);
@@ -65,7 +65,7 @@ namespace dovah {
       relevant_form  cause_form; // the form in which the error occurred
       std::string    cause_file;
       std::string    cause_editor_id;
-      form_type_t    cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
+      form_type      cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
       uint32_t       cause_signature = 0;
       uint32_t       cause_size      = 0;
       errno_t        errno_value     = 0;
@@ -78,8 +78,8 @@ namespace dovah {
       void add_relevant_form(const form_stub&);
 
       static detailed_notice warn_about_unrecognized_subrecord(uint32_t subrecord, const form_stub& referrer);
-      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, form_type_t desired, const form_stub& referrer, const form_reference_t& reference);
-      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type_t> desired, const form_stub& referrer, const form_reference_t& reference);
+      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, form_type desired, const form_stub& referrer, const form_reference_t& reference);
+      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type> desired, const form_stub& referrer, const form_reference_t& reference);
       static detailed_notice warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference);
 
       // Chainable setters:
@@ -96,7 +96,7 @@ namespace dovah {
       }
       detailed_notice& set_cause_file(const std::string& filename);
       detailed_notice& set_cause_form(const form_stub&);
-      detailed_notice& set_cause_form_type(form_type_t);
+      detailed_notice& set_cause_form_type(form_type);
       detailed_notice& set_cause_subrecord(uint32_t signature);
       detailed_notice& set_cause_editor_id(const std::string&);
       detailed_notice& set_cause_form_index(int) noexcept;

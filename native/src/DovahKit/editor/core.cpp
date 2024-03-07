@@ -79,7 +79,7 @@ namespace {
          if (!stub)
             return "[NONE:00000000]";
          return QString("[%1:%2]%3")
-            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature))
             .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
             .arg(stub->get_editor_id());
       }
@@ -360,31 +360,30 @@ bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename, bo
    return this->load_order->has_file(filename);
 }
 
-uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {
+uint32_t DovahKitCore::count_forms_of_type(dovah::form_type ft) const noexcept {
    return this->load_order->count_forms_of_type(ft);
 }
 dovah::form_stub* DovahKitCore::get_form(bare_form_id_t formID) const noexcept {
    return this->load_order->get_form(formID);
 }
-dovah::form_stub* DovahKitCore::get_form(form_type_t ft, bare_form_id_t formID) const noexcept {
+dovah::form_stub* DovahKitCore::get_form(dovah::form_type ft, bare_form_id_t formID) const noexcept {
    return this->load_order->get_form(ft, formID);
 }
-dovah::form_stub* DovahKitCore::get_form_of_probable_type(form_type_t ft, bare_form_id_t formID) const noexcept {
+dovah::form_stub* DovahKitCore::get_form_of_probable_type(dovah::form_type ft, bare_form_id_t formID) const noexcept {
    return this->load_order->get_form_of_probable_type(ft, formID);
 }
-dovah::form_stub* DovahKitCore::get_singleton_form(form_type_t ft, bool create_if_missing) const noexcept {
+dovah::form_stub* DovahKitCore::get_singleton_form(dovah::form_type ft, bool create_if_missing) const noexcept {
    if (this->load_order)
       return this->load_order->get_canonical_instance_of_singleton_form(ft, create_if_missing);
    return nullptr;
 }
 bool DovahKitCore::for_each_form(std::function<bool(dovah::form_stub*)> functor) {
-   for (uint8_t i = 0; i < dovah::form_types.size(); ++i) {
-      if (this->load_order->for_each_form_of_type(i, functor))
+   for(auto& info : dovah::form_types)
+      if (this->load_order->for_each_form_of_type(info.form_type, functor))
          return true;
-   }
    return false;
 }
-bool DovahKitCore::for_each_form_of_type(form_type_t ft, std::function<bool(dovah::form_stub*)> functor) {
+bool DovahKitCore::for_each_form_of_type(dovah::form_type ft, std::function<bool(dovah::form_stub*)> functor) {
    return this->load_order->for_each_form_of_type(ft, functor);
 }
 bool DovahKitCore::for_each_impossible_to_save_form(dovah::game g, std::function<bool(dovah::form_stub*)> functor) {
@@ -397,13 +396,13 @@ bool DovahKitCore::is_form_defined_in_active_file(dovah::form_stub* stub) const 
    return this->load_order->is_defined_in_active_file(*stub);
 }
 
-dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
+dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type ft) {
    if (!this->loaded)
       return nullptr;
    auto* stub = this->load_order->create_form_of_type(ft);
    return stub;
 }
-dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_type_t ft) noexcept {
+dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_type ft) noexcept {
    return this->load_order->request_form_creation(ft);
 }
 dovah::form_duplication_request DovahKitCore::request_form_duplication() noexcept {
@@ -500,7 +499,7 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
       return nullptr;
    }
    //
-   if (!dovah::form_type_info::form_type_is_reference(original.formType)) { // shouldn't ever happen for the Object Window, but eh
+   if (!dovah::form_type_is_reference(original.form_type)) { // shouldn't ever happen for the Object Window, but eh
       QString suggestion = editor_helpers::make_editor_id_for_duplicate(original.get_editor_id());
       bool    ok         = false;
       QString editor_id  = QInputDialog::getText(dialog_parent, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, suggestion, &ok);

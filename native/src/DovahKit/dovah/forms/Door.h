@@ -11,7 +11,7 @@
 namespace dovah::loaded_forms {
    class Door : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::door;
+         static constexpr const enum form_type form_type = form_type::door;
          Door(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {

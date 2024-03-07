@@ -10,7 +10,7 @@ namespace {
    static constexpr const char* registry_key_for_list = "dovahscript.internal.form_type_singletons";
    
    int _test_form_type_from_upvalue(lua_State* L) {
-      auto  ft = (dovah::form_type_t) lua_tointeger(L, lua_upvalueindex(1));
+      auto  ft = (dovah::form_type) lua_tointeger(L, lua_upvalueindex(1));
       auto* ud = (dovahscript::wrapper*) dovahscript::classes::cast_to_class(L, 1, dovahscript::wrappers::form::metatable_key);
       if (!ud) {
          lua_pushboolean(L, false);
@@ -26,19 +26,19 @@ namespace {
          return 1;
       }
       if (ft == dovah::form_type::reference) {
-         lua_pushboolean(L, dovah::form_type_info::form_type_is_reference(stub->formType));
+         lua_pushboolean(L, dovah::form_type_is_reference(stub->form_type));
          return 1;
       }
-      lua_pushboolean(L, stub->formType == ft);
+      lua_pushboolean(L, stub->form_type == ft);
       return 1;
    }
 
-   void _offer_single_form_type(lua_State* L, int stack_pos, const char* name, ::dovah::form_type_t ft) {
+   void _offer_single_form_type(lua_State* L, int stack_pos, const char* name, ::dovah::form_type ft) {
       auto& info = dovah::form_type_info::lookup(ft);
       //
       lua_newuserdatauv(L, 0, 1);  // create form-type singleton
       int ui = lua_gettop(L);
-      lua_pushinteger(L, ft);      //
+      lua_pushinteger(L, (lua_Integer)ft);      //
       lua_setiuservalue(L, ui, 1); // embed form type enum value
       //
       lua_createtable(L, 0, 2);    // create metatable
@@ -58,7 +58,7 @@ namespace {
          lua_pushstring(L, signature);
          lua_setfield(L, ii, "signature");
       }
-      lua_pushinteger(L, ft);
+      lua_pushinteger(L, (lua_Integer)ft);
       lua_pushcclosure(L, &_test_form_type_from_upvalue, 1);
       lua_setfield(L, ii, "is");
       lua_pushstring(L, name);
@@ -256,7 +256,7 @@ namespace dovahscript::lua_libraries::form_types {
    //
    #undef __dovah_define
    
-   extern dovah::form_type_t pull(lua_State* L, int stack_pos, bool& valid) {
+   extern dovah::form_type pull(lua_State* L, int stack_pos, bool& valid) {
       valid = false;
       if (lua_type(L, stack_pos) != LUA_TUSERDATA) {
          return dovah::form_type::none;
@@ -282,11 +282,11 @@ namespace dovahscript::lua_libraries::form_types {
          valid = false;
          return dovah::form_type::none;
       }
-      return (dovah::form_type_t) result;
+      return (dovah::form_type) result;
    }
-   extern void push(lua_State* L, dovah::form_type_t ft) {
+   extern void push(lua_State* L, dovah::form_type ft) {
       lua_getfield(L, LUA_REGISTRYINDEX, registry_key_for_list);
-      lua_rawgeti(L, -1, ft);
+      lua_rawgeti(L, -1, (lua_Integer)ft);
       lua_remove(L, -2);
    }
 }

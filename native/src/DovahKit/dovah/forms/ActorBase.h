@@ -16,7 +16,7 @@
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::actor_base;
+         static constexpr const enum form_type form_type = form_type::actor_base;
          ActorBase(const constructor_params& c) : Form(form_type, c) {};
 
          struct actor_flag {

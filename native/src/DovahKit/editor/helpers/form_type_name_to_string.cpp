@@ -5,17 +5,17 @@ namespace {
    constexpr const char* const translation_key = "form type names";
 
    struct _name_base {
-      dovah::form_type_t value;
+      dovah::form_type value;
       const char* name;
       //
-      constexpr _name_base(dovah::form_type_t ft, const char* n) : value(ft), name(n) {}
+      constexpr _name_base(dovah::form_type ft, const char* n) : value(ft), name(n) {}
    };
    struct _name {
-      dovah::form_type_t value = dovah::form_type::none;
+      dovah::form_type value = dovah::form_type::none;
       QString name;
       //
       _name() {}
-      _name(dovah::form_type_t ft, const char* n) : value(ft), name(QObject::tr(n, translation_key)) {}
+      _name(dovah::form_type ft, const char* n) : value(ft), name(QObject::tr(n, translation_key)) {}
       _name(const _name_base& base) : value(base.value), name(QObject::tr(base.name, translation_key)) {}
    };
 
@@ -164,7 +164,7 @@ namespace {
       // We use a constexpr variable here so that you can hover over its value in 
       // Visual Studio and quickly see the first form type that's missing a name.
       //
-      constexpr auto _missing_form_type = []() -> dovah::form_type::type {
+      constexpr auto _missing_form_type = []() -> dovah::form_type {
          for (const auto& ft : dovah::form_types) {
             bool found = false;
             //
@@ -191,7 +191,7 @@ namespace {
                }
             }
             if (!found)
-               return (dovah::form_type::type)ft.form_type;
+               return ft.form_type;
          }
          return dovah::form_type::none;
       }();
@@ -210,7 +210,7 @@ namespace {
 }
 
 namespace editor_helpers {
-   extern QString form_type_name_to_string(dovah::form_type_t ft) {
+   extern QString form_type_name_to_string(dovah::form_type ft) {
       for (auto& entry : _names)
          if (entry.value == ft)
             return entry.name;

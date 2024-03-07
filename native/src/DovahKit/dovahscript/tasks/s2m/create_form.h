@@ -10,7 +10,7 @@ namespace dovah {
 namespace dovahscript::tasks::s2m {
    class create_form : public _base {
       public:
-         dovah::form_type_t form_type = dovah::form_type::none;
+         dovah::form_type   form_type = dovah::form_type::none;
          dovah::form_stub*  parent    = nullptr;
          dovah::form_stub*  result    = nullptr;
          std::string editorID;

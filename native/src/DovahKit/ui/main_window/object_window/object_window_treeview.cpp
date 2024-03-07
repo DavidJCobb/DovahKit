@@ -21,7 +21,7 @@ ObjectWindowTreeItem::~ObjectWindowTreeItem() {
    item->type = type_t::top_level;
    return *item;
 }
-/*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_form_type(const QString& name, int ft) {
+/*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_form_type(const QString& name, dovah::form_type ft) {
    auto* item = new ObjectWindowTreeItem;
    item->name = name;
    item->type = type_t::top_level;
@@ -53,7 +53,7 @@ void ObjectWindowTreeItem::takeChild(ObjectWindowTreeItem& child) {
    return -1;
 }
 
-ObjectWindowTreeItem* ObjectWindowTreeItem::findChildByFormType(int ft) const noexcept {
+ObjectWindowTreeItem* ObjectWindowTreeItem::findChildByFormType(dovah::form_type ft) const noexcept {
    for (auto* child : this->children) {
       if (child->form_type == ft)
          return child;
@@ -71,25 +71,25 @@ void ObjectWindowTreeItem::clear() {
       delete child;
    this->children.clear();
 }
-dovah::form_type_t ObjectWindowTreeItem::containingFormType() const noexcept {
+dovah::form_type ObjectWindowTreeItem::containingFormType() const noexcept {
    auto* node = this;
    do {
       auto ft = node->form_type;
-      if (ft != dovah::form_type::none && ft != no_form_type_filter)
-         return ft;
+      if (ft != dovah::form_type::none && ft.has_value())
+         return ft.value();
    } while (node = node->parent);
    return dovah::form_type::none;
 }
-void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept {
+void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type>& out) const noexcept {
    if (this->type == type_t::filter) {
       auto ft = this->containingFormType();
       if (!out.contains(ft))
          out.push_back(ft);
       return;
    }
-   if (this->form_type != no_form_type_filter) {
-      if (!out.contains(this->form_type))
-         out.push_back(this->form_type);
+   if (this->form_type.has_value()) {
+      if (!out.contains(this->form_type.value()))
+         out.push_back(this->form_type.value());
       return;
    }
    for (auto* child : this->children)
@@ -118,7 +118,7 @@ void ObjectWindowTreeItem::sort() {
       constexpr const char* disambig = "object window";
       //
       #pragma region Build notable nodes
-         this->_nodes.all    = &item_type::make_form_type(tr("All", disambig), item_type::no_form_type_filter);
+         this->_nodes.all    = &item_type::make_top_level(tr("All", disambig));
          this->_nodes.quests = &item_type::make_form_type(tr("Quest", disambig), dovah::form_type::quest);
       #pragma endregion
       //
@@ -257,7 +257,7 @@ void ObjectWindowTreeItem::sort() {
          this->_buildAllModelPathFilters();
       });
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedQuestFilterChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {
-         if (stub.formType != dovah::form_type::quest)
+         if (stub.form_type != dovah::form_type::quest)
             return;
          auto* root = this->_nodes.quests;
          if (!prior.isEmpty())
@@ -266,7 +266,7 @@ void ObjectWindowTreeItem::sort() {
             this->_addFilter(root, after, true);
       });
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedModelPathChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {
-         auto* root = this->_findFormTypeItem(stub.formType);
+         auto* root = this->_findFormTypeItem(stub.form_type);
          if (root) {
             if (!prior.isEmpty())
                this->_removeFilter(root, prior);
@@ -276,8 +276,14 @@ void ObjectWindowTreeItem::sort() {
       });
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedDataCleared, this, [this]() {
          this->_clearFilters(this->_nodes.quests);
-         if (auto* node = this->_findFormTypeItem(dovah::form_type::statik))
-            this->_clearFilters(node);
+         {
+            constexpr const auto& form_types_of_interest = dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_types_of_interest;
+            for (auto ft : form_types_of_interest) {
+               auto* node = this->_findFormTypeItem(ft);
+               if (node)
+                  this->_clearFilters(node);
+            }
+         }
       });
    }
    ObjectWindowTreeModel::~ObjectWindowTreeModel() {
@@ -292,7 +298,7 @@ void ObjectWindowTreeItem::sort() {
          return nullptr;
       return (item_type*) index.internalPointer();
    }
-   ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_findFormTypeItem(int form_type) const noexcept {
+   ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_findFormTypeItem(dovah::form_type form_type) const noexcept {
       return this->_nodes.root->findChildByFormType(form_type);
    }
    QModelIndex ObjectWindowTreeModel::_indexOfItem(item_type* item) const noexcept {
@@ -434,8 +440,8 @@ void ObjectWindowTreeItem::sort() {
    QModelIndex ObjectWindowTreeModel::indexOfAllCategory() const noexcept {
       return this->_indexOfItem(this->_nodes.all);
    }
-   QVector<dovah::form_type_t> ObjectWindowTreeModel::formTypesFor(const QModelIndexList& qmil) const noexcept {
-      QVector<dovah::form_type_t> out;
+   QVector<dovah::form_type> ObjectWindowTreeModel::formTypesFor(const QModelIndexList& qmil) const noexcept {
+      QVector<dovah::form_type> out;
       for (auto* child : this->_nodes.root->children)
          if (child->form_type != dovah::form_type::none)
             child->gatherFormTypes(out);
@@ -661,7 +667,7 @@ void ObjectWindowTreeItem::sort() {
       fic.for_all_form_model_paths([&roots, &surrogate_parents, &_pathlike_string_to_nodes](const dovah::form_stub& stub, QString path) {
          size_t i = 0;
          for (; i < form_types_of_interest.size(); ++i)
-            if (stub.formType == form_types_of_interest[i])
+            if (stub.form_type == form_types_of_interest[i])
                break;
          if (i >= form_types_of_interest.size())
             return;
@@ -805,7 +811,7 @@ ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
    }
    this->expandAll();
 }
-QVector<dovah::form_type_t> ObjectWindowTree::allPrimaryFormTypes() const noexcept {
+QVector<dovah::form_type> ObjectWindowTree::allPrimaryFormTypes() const noexcept {
    auto* model = (model_type*) this->model();
    return model->formTypesFor({ model->indexOfAllCategory() });
 }

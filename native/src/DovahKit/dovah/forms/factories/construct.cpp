@@ -27,7 +27,7 @@ namespace {
    constexpr auto function_table = ([]() {
       function_table_t out = {};
       all_loaded_form_types::for_each([&out]<typename T>() {
-         auto& row = out[T::form_type];
+         auto& row = out[(size_t)T::form_type];
          if constexpr (can_construct<T>) {
             row.load      = _load<T>;
             row.construct = _construct<T>;
@@ -37,13 +37,13 @@ namespace {
    })();
 }
 namespace dovah {
-   form_loader_function_t get_form_loader_function(form_type_t ft) noexcept {
-      if (auto* f = function_table[ft].load)
+   form_loader_function_t get_form_loader_function(form_type ft) noexcept {
+      if (auto* f = function_table[(size_t)ft].load)
          return f;
       return nullptr;
    }
-   loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t ft, const loaded_forms::Form::constructor_params& c) noexcept {
-      if (auto* f = function_table[ft].construct)
+   loaded_forms::Form* create_blank_loaded_form_by_type(form_type ft, const loaded_forms::Form::constructor_params& c) noexcept {
+      if (auto* f = function_table[(size_t)ft].construct)
          return (f)(c);
       return nullptr;
    }

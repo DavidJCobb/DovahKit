@@ -8,7 +8,7 @@
 namespace dovah::loaded_forms {
    class WordOfPower : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::word_of_power;
+         static constexpr const enum form_type form_type = form_type::word_of_power;
          WordOfPower(const constructor_params& c) : Form(form_type, c) {};
 
          localized_string dragon_name;

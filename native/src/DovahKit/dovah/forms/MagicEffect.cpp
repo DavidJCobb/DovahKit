@@ -1,6 +1,9 @@
 #include "MagicEffect.h"
 #include "_common_cpp.h"
 
+#include "../../../incomplete_code_warnings.h"
+static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for MagicEffect is incomplete (missing everything except the loader).");
+
 namespace dovah::loaded_forms {
    /*static*/ void MagicEffect::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())

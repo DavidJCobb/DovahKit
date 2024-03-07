@@ -28,16 +28,16 @@ namespace dovahkit::subsystems::form_info_cache::cacheable_traits {
             return out;
          }();
 
-         std::array<dovah::form_type::type, size> types = {};
+         std::array<dovah::form_type, size> types = {};
          size_t i = 0;
          dovah::all_loaded_form_types::for_each([&types, &i]<typename Current>() {
             if constexpr (form_class_is_of_interest<Current>)
-               types[i++] = (dovah::form_type::type)Current::form_type;
+               types[i++] = Current::form_type;
          });
          return types;
       }();
 
-      static constexpr const bool form_type_is_of_interest(dovah::form_type_t ft) {
+      static constexpr const bool form_type_is_of_interest(dovah::form_type ft) {
          for (auto v : form_types_of_interest)
             if (v == ft)
                return true;

@@ -14,12 +14,12 @@ void DeleteFormDialogListModelItem::updateFromStub() {
    this->formID   = stub.formID;
    this->editorID = QString::fromStdString(stub.editorID);
    //
-   uint32_t signature = dovah::form_type_info::lookup(stub.formType).signature;
+   uint32_t signature = dovah::form_type_info::lookup(stub.form_type).signature;
    this->signature = cobb::qt::four_cc_to_string(signature);
    //
-   if (dovah::form_type_info::form_type_is_reference(stub.formType)) {
+   if (dovah::form_type_is_reference(stub.form_type)) {
       auto parent = stub.get_parent_form();
-      assert(parent->formType == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
+      assert(parent->form_type == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
       if (parent) {
          auto name = parent->get_editor_id();
          auto id   = editor_helpers::form_id_to_string(parent->formID);
@@ -28,7 +28,7 @@ void DeleteFormDialogListModelItem::updateFromStub() {
             this->parentCell += name;
          } else {
             auto world = parent->get_parent_form();
-            assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
+            assert(world->form_type == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
             if (world) {
                auto    id   = editor_helpers::form_id_to_string(world->formID);
                QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());

@@ -60,8 +60,8 @@ DefaultObjectWindow::DefaultObjectWindow(QWidget* parent) : QDialog(parent) {
       //
       const auto* item = _get_selected_item(this->ui.list);
       if (item) {
-         dovah::form_type_t allowed_type = item->form_type;
-         if (allowed_type) {
+         dovah::form_type allowed_type = item->form_type;
+         if (allowed_type != dovah::form_type::none) {
             if (!this->ui.form->allowsFormType(allowed_type)) {
                this->ui.form->setAllowedFormType(allowed_type);
                this->ui.form->populate();

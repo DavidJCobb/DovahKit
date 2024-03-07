@@ -15,7 +15,7 @@
 namespace dovah::loaded_forms {
    class Cell : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::cell;
+         static constexpr const enum form_type form_type = form_type::cell;
          Cell(const constructor_params& c) : Form(form_type, c) {};
 
          static constexpr int side_length = dovah::core_constants::exterior_cell_side_length; // Cells are squares. How long, in world units, is one edge?

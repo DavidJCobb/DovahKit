@@ -75,13 +75,13 @@ namespace dovah {
    namespace impl {
       template<typename T> concept valid_loaded_form_class = requires {
          requires (std::is_same_v<T, loaded_forms::Form> || std::is_base_of_v<loaded_forms::Form, T>);
-         { T::form_type } -> std::common_with<form_type_t>;
+         { T::form_type } -> std::common_with<form_type>;
       };
       constexpr size_t first_invalid_form_class = all_loaded_form_types::index_of_matching_type<[]<typename T>() { return !valid_loaded_form_class<T>; }>;
    }
    static_assert(
       impl::first_invalid_form_class == (size_t)-1,
-      "All loaded-form classes must have a static \"form_type\" member of type form_type_t."
+      "All loaded-form classes must have a static `form_type` member of type `enum form_type`."
    );
 
    static_assert(

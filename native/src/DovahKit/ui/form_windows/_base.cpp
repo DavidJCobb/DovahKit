@@ -63,8 +63,8 @@ void FormEditDialogBase::save_extra_form(dovah::form_stub* stub, extra_data_list
 #pragma endregion
 
 #pragma region FormWorkingCopyEditDialogBase
-FormWorkingCopyEditDialogBase::FormWorkingCopyEditDialogBase(dovah::form_type_t ft, dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent), _allowed_form_type(ft) {
-   if (stub->formType == ft) {
+FormWorkingCopyEditDialogBase::FormWorkingCopyEditDialogBase(dovah::form_type ft, dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent), _allowed_form_type(ft) {
+   if (stub->form_type == ft) {
       this->stub = stub;
       this->form = this->stub->load();
    }

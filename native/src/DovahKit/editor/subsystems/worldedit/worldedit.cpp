@@ -125,36 +125,36 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&core, &DovahKitCore::dataAcquireComplete, this, &core::_update_default_land_textures);
       QObject::connect(&core, &DovahKitCore::dataAbandonImminent, this, &core::unloadAll);
       QObject::connect(&core, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* form, bool just_flagging) {
-         if (form->formType == dovah::form_type::cell) {
+         if (form->form_type == dovah::form_type::cell) {
             this->_unload_cell(form);
             static_assert(!require_complete_implementation, "TODO: Interior cells: if the current cell is unloaded, reset lighting/fog params for the renderer.");
             return;
          }
-         if (dovah::form_type_info::form_type_is_reference(form->formType)) {
+         if (dovah::form_type_is_reference(form->form_type)) {
             this->_unload_refr(*form);
             return;
          }
-         if (dovah::form_type_info::form_type_is_base_form(form->formType)) {
+         if (dovah::form_type_is_base_form(form->form_type)) {
             static_assert(!require_complete_implementation, "TODO: Find all loaded refs using this base form, and update them (show error NIF).");
             return;
          }
       });
       QObject::connect(&core, &DovahKitCore::formModified, this, [this](dovah::form_stub* form) {
-         if (form->formType == dovah::form_type::cell) {
+         if (form->form_type == dovah::form_type::cell) {
             if (!this->is_cell_loaded(form))
                return;
             static_assert(!require_complete_implementation, "TODO: Interior cells: check for changes to lighting params, and update Vulkan state.");
             static_assert(!require_complete_implementation, "TODO: Exterior cells: check for changes to region, water height, etc., and update as needed.");
             return;
          }
-         if (dovah::form_type_info::form_type_is_reference(form->formType)) {
+         if (dovah::form_type_is_reference(form->form_type)) {
             static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: Check for changes to render-relevant REFR fields, and update as needed.");
             static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and an unselected REFR is moved out of the loaded area, unload the REFR.");
             static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and a selected REFR is moved to another world or an interior, unload the REFR.");
             static_assert(!require_complete_implementation, "TODO: If the REFR is NOT loaded: If we're in an exterior and the REFR is moved into the loaded area, load it.");
             return;
          }
-         if (dovah::form_type_info::form_type_is_base_form(form->formType)) {
+         if (dovah::form_type_is_base_form(form->form_type)) {
             static_assert(!require_complete_implementation, "TODO: Check if render-relevant properties (i.e. model; light data) have changed. If so, find all loaded refs using this base form, and update them.");
             return;
          }
@@ -409,7 +409,7 @@ namespace dovahkit::subsystems::worldedit {
          return false;
       //
       auto* sr = this->target_view->surfaceRenderer();
-      if (base->formType == dovah::form_type::light) {
+      if (base->form_type == dovah::form_type::light) {
          auto loaded = stub.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
          if (!loaded)
             return false;
@@ -462,7 +462,7 @@ namespace dovahkit::subsystems::worldedit {
    void core::_load_cell(dovah::form_stub* cell, loaded_cell_grid_coord gx, loaded_cell_grid_coord gy) {
       if (!this->target_view)
          return;
-      assert(cell && cell->formType == dovah::form_type::cell);
+      assert(cell && cell->form_type == dovah::form_type::cell);
       assert(this->loaded_cells.contains_coordinate(gx, gy));
       auto& loaded = this->loaded_cells.at(gx, gy);
       assert(!loaded.stub && "Why is a cell already in this spot?");
@@ -513,7 +513,7 @@ namespace dovahkit::subsystems::worldedit {
       }
 
       dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &refr_count, any_refs_already_loaded](dovah::form_stub* stub) {
-         if (stub->formType != dovah::form_type::reference)
+         if (!dovah::form_type_is_reference(stub->form_type))
             return false;
 
          if (any_refs_already_loaded) {
@@ -728,15 +728,15 @@ namespace dovahkit::subsystems::worldedit {
       dovah::form_stub* cell  = nullptr;
       dovah::form_stub* world = nullptr;
       if (cell_or_world) {
-         if (cell_or_world->formType == dovah::form_type::cell) {
+         if (cell_or_world->form_type == dovah::form_type::cell) {
             cell = cell_or_world;
             if (this->target_area.cell == cell)
                return;
             //
             world = cell->get_parent_form();
-            if (world && world->formType != dovah::form_type::worldspace)
+            if (world && world->form_type != dovah::form_type::worldspace)
                world = nullptr;
-         } else if (cell_or_world->formType == dovah::form_type::worldspace) {
+         } else if (cell_or_world->form_type == dovah::form_type::worldspace) {
             world = cell_or_world;
          } else {
             assert(false && "Worldedit was asked to load an area, but the provided form is not a cell or worldspace.");
@@ -857,7 +857,7 @@ namespace dovahkit::subsystems::worldedit {
          this->target_area.world = nullptr;
          //
          if (cell) {
-            assert(cell->formType == dovah::form_type::cell && "Worldedit was asked to load a cell, but the provided form is not a cell.");
+            assert(cell->form_type == dovah::form_type::cell && "Worldedit was asked to load a cell, but the provided form is not a cell.");
             this->_load_cell(cell, 0, 0);
             if constexpr (debug_log_area_load_unload) {
                qDebug("[Worldedit] Loading interior cell...");
@@ -1018,7 +1018,7 @@ namespace dovahkit::subsystems::worldedit {
 
    void core::center_on_refr(dovah::form_stub& ref) {
       auto* cell = ref.get_parent_form();
-      if (!cell || cell->formType != dovah::form_type::cell)
+      if (!cell || cell->form_type != dovah::form_type::cell)
          return;
       if (!this->is_cell_loaded(cell)) {
          this->set_current_area(cell);
@@ -1042,7 +1042,7 @@ namespace dovahkit::subsystems::worldedit {
       this->_set_current_area_impl(cell_or_world);
    }
    void core::set_current_area(dovah::form_stub* world, int32_t grid_x, int32_t grid_y) {
-      if (world && world->formType != dovah::form_type::worldspace) {
+      if (world && world->form_type != dovah::form_type::worldspace) {
          #if _DEBUG
             __debugbreak(); // invalid argument
          #endif
@@ -1860,7 +1860,7 @@ namespace dovahkit::subsystems::worldedit {
 
    #pragma region Passkeyed functions for tools
    void core::_debug_dump_landscape_raycast(cobb::passkey<core, tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position) {
-      if (landscape.formType != dovah::form_type::land) {
+      if (landscape.form_type != dovah::form_type::land) {
          qDebug("The hit form is not a landscape.");
          return;
       }
@@ -1923,7 +1923,7 @@ namespace dovahkit::subsystems::worldedit {
       this->_finalize_refr_scaling(stub);
 
       if (auto* parent_cell = stub.get_parent_form()) {
-         assert(parent_cell->formType == dovah::form_type::cell);
+         assert(parent_cell->form_type == dovah::form_type::cell);
          if (!this->is_cell_loaded(parent_cell)) {
             //
             // The user can have a selected ref that exists in an unloaded cell, if they've 

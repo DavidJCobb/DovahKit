@@ -750,7 +750,7 @@ bool DKFormVMADModel::indexIsProperty(const QModelIndex qmi) const {
 dovah::form_stub* DKFormVMADModel::_getBaseForm() const {
    if (!this->vmads.parent)
       return nullptr;
-   if (!dovah::form_type_info::form_type_is_reference(this->attached_to->stub.formType))
+   if (!dovah::form_type_is_reference(this->attached_to->stub.form_type))
       return nullptr;
    auto* base = ((dovah::loaded_forms::ObjectReference*)this->attached_to)->base_form.get_form_stub();
    return base;

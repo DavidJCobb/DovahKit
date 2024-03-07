@@ -44,94 +44,83 @@ namespace {
    namespace _helpers {
       using ft = dovah::form_type;
 
-      template<typename T> concept IsFormTypeValue = std::is_same_v<T, dovah::form_type::type> || std::is_same_v<T, dovah::form_type_t>;
-
-      //
-      // Constexpr-friendly list of form types, initializable from std::array.
-      //
-      struct form_type_list {
-         public:
-            using value_type = dovah::form_type_t;
-            static constexpr size_t value_count = 25;
-
-            using list_type = std::array<value_type, value_count>;
-            using iterator       = list_type::iterator;
-            using const_iterator = list_type::const_iterator;
-
-         private:
-            list_type list  = {};
-            size_t    count = 0;
-         public:
-            constexpr form_type_list() {}
-            constexpr form_type_list(std::initializer_list<value_type> values) {
-               for (auto v : values)
-                  this->list[this->count++] = v;
-            }
-            template<size_t S> constexpr form_type_list(const std::array<value_type, S> arr) {
-               static_assert(S < value_count, "The form_type_list::list member needs to be larger in order to hold all possible lists.");
-               for (auto v : arr)
-                  this->list[this->count++] = v;
-            }
-
-            constexpr bool empty() const noexcept { return this->count != 0; }
-            constexpr size_t size() const noexcept { return this->count; }
-
-            constexpr value_type& operator[](size_t i) noexcept { return this->list[i]; }
-            constexpr const value_type& operator[](size_t i) const noexcept { return this->list[i]; }
-
-            iterator begin() noexcept { return this->list.begin(); }
-            iterator end() noexcept { return this->list.begin(); }
-            const_iterator begin() const noexcept { return this->list.cbegin(); }
-            const_iterator end() const noexcept { return this->list.cbegin(); }
-            const_iterator cbegin() const noexcept { return this->list.cbegin() + this->count; }
-            const_iterator cend() const noexcept { return this->list.cbegin() + this->count; }
-
-            inline constexpr bool contains(value_type t) const noexcept {
-               for (auto v : list)
-                  if (v == t)
-                     return true;
-               return false;
-            }
-      };
-
-      template<dovah::form_type_t... Types> static constexpr auto form_types = std::array{ Types... };
-
-      template<typename Ta, typename Tb, size_t Sa, size_t Sb> requires IsFormTypeValue<Ta> && IsFormTypeValue<Tb>
-      static constexpr const std::array<dovah::form_type_t, Sa + Sb> concatenate_form_type_lists(const std::array<Ta, Sa> a, const std::array<Tb, Sb> b) {
-         std::array<dovah::form_type_t, Sa + Sb> out = {};
+      template<size_t Sa, size_t Sb>
+      static constexpr const std::array<dovah::form_type, Sa + Sb> concatenate_form_type_lists(const std::array<dovah::form_type, Sa>& a, const std::array<dovah::form_type, Sb>& b) {
+         std::array<dovah::form_type, Sa + Sb> out = {};
          size_t i = 0;
          for (auto v : a)
-            out[i++] = (dovah::form_type_t)v;
+            out[i++] = v;
          for (auto v : b)
-            out[i++] = (dovah::form_type_t)v;
+            out[i++] = v;
          return out;
       }
 
-      static constexpr auto all_item_types = form_types<ft::ammo, ft::apparatus, ft::armor, ft::book, ft::ingredient, ft::key, ft::leveled_item, ft::light, ft::misc_item, ft::note, ft::potion, ft::scroll, ft::soul_gem, ft::weapon>;
+      static constexpr auto all_item_types = std::array{
+         dovah::form_type::ammo,
+         dovah::form_type::apparatus,
+         dovah::form_type::armor,
+         dovah::form_type::book,
+         dovah::form_type::ingredient,
+         dovah::form_type::key,
+         dovah::form_type::leveled_item,
+         dovah::form_type::light,
+         dovah::form_type::misc_item,
+         dovah::form_type::note,
+         dovah::form_type::potion,
+         dovah::form_type::scroll,
+         dovah::form_type::soul_gem,
+         dovah::form_type::weapon
+      };
 
       struct _flag_definition {
+         constexpr _flag_definition() {}
+         constexpr _flag_definition(const char* name, wrapped_type::form_flag::type flag) : name(name), value(flag) {}
+
+         template<size_t Size>
+         constexpr _flag_definition(const char* name, wrapped_type::form_flag::type flag, const std::array<dovah::form_type, Size>& list) {
+            this->name  = name;
+            this->value = flag;
+            for (size_t i = 0; i < Size; ++i)
+               this->base_form_types[i] = list[i];
+         }
+
          const char*    name  = nullptr;
          uint32_t       value = 0;
-         form_type_list base_form_types; // empty = matches all base form types
+         std::array<dovah::form_type, 25> base_form_types = {}; // empty = matches all base form types
+
+         constexpr bool is_type_specific() const noexcept {
+            return this->base_form_types[0] != dovah::form_type::none;
+         }
+         constexpr bool is_available_on(dovah::form_type ft) const noexcept {
+            if (!this->is_type_specific())
+               return true;
+            for (auto item : this->base_form_types) {
+               if (item == ft)
+                  return true;
+               if (item == dovah::form_type::none)
+                  break;
+            }
+            return false;
+         }
       };
 
       // Master list of all REFR flags. Not used by code; rather, used to generate 
       // sub-lists at compile-time.
-      constexpr std::array refr_flags = {
+      constexpr const auto refr_flags = std::array{
          _flag_definition{ "persistent",              wrapped_type::form_flag::persistent },
          _flag_definition{ "disabled",                wrapped_type::form_flag::disabled },
-         _flag_definition{ "hide_from_local_map",     wrapped_type::form_flag::hide_from_local_map_a,    { ft::door } },
-         _flag_definition{ "doesnt_light_water",      wrapped_type::form_flag::doesnt_light_water,       { ft::light } },
-         _flag_definition{ "is_inaccessible",         wrapped_type::form_flag::inaccessible,             { ft::door } },
-         _flag_definition{ "hide_from_local_map",     wrapped_type::form_flag::hide_from_local_map_b,    { ft::activator, ft::statik, ft::tree } },
-         _flag_definition{ "has_motion_blur",         wrapped_type::form_flag::motion_blur,              { ft::movable_static } },
-         _flag_definition{ "starts_dead",             wrapped_type::form_flag::starts_dead,              { ft::actor } },
-         _flag_definition{ "has_motion_blur",         wrapped_type::form_flag::motion_blur,              { ft::movable_static } },
-         _flag_definition{ "visible_when_distant",    wrapped_type::form_flag::visible_when_distant,     { ft::activator, ft::statik, ft::tree } },
-         _flag_definition{ "starts_dead",             wrapped_type::form_flag::starts_dead,              { ft::actor } },
+         _flag_definition{ "hide_from_local_map",     wrapped_type::form_flag::hide_from_local_map_a,    std::array{ ft::door } },
+         _flag_definition{ "doesnt_light_water",      wrapped_type::form_flag::doesnt_light_water,       std::array{ ft::light } },
+         _flag_definition{ "is_inaccessible",         wrapped_type::form_flag::inaccessible,             std::array{ ft::door } },
+         _flag_definition{ "hide_from_local_map",     wrapped_type::form_flag::hide_from_local_map_b,    std::array{ ft::activator, ft::statik, ft::tree } },
+         _flag_definition{ "has_motion_blur",         wrapped_type::form_flag::motion_blur,              std::array{ ft::movable_static } },
+         _flag_definition{ "starts_dead",             wrapped_type::form_flag::starts_dead,              std::array{ ft::actor } },
+         _flag_definition{ "has_motion_blur",         wrapped_type::form_flag::motion_blur,              std::array{ ft::movable_static } },
+         _flag_definition{ "visible_when_distant",    wrapped_type::form_flag::visible_when_distant,     std::array{ ft::activator, ft::statik, ft::tree } },
+         _flag_definition{ "starts_dead",             wrapped_type::form_flag::starts_dead,              std::array{ ft::actor } },
          _flag_definition{ "is_full_lod",             wrapped_type::form_flag::is_full_lod },
-         _flag_definition{ "never_fades",             wrapped_type::form_flag::never_fades,              { ft::light } },
-         _flag_definition{ "doesnt_light_landscape",  wrapped_type::form_flag::doesnt_light_landscape,   { ft::light } },
+         _flag_definition{ "never_fades",             wrapped_type::form_flag::never_fades,              std::array{ ft::light } },
+         _flag_definition{ "doesnt_light_landscape",  wrapped_type::form_flag::doesnt_light_landscape,   std::array{ ft::light } },
          _flag_definition{ "no_ai_acquire",           wrapped_type::form_flag::no_ai_acquire,            concatenate_form_type_lists(all_item_types, std::array{ ft::actor, ft::container }) },
          //_flag_definition{ "filter",                 wrapped_type::form_flag::filter },       // expose this only once we're sure what it even friggin' does
          //_flag_definition{ "bounding_box",           wrapped_type::form_flag::bounding_box }, // expose this only once we're sure what it even friggin' does
@@ -144,7 +133,7 @@ namespace {
       static constexpr size_t type_specific_flag_count = ([]() {
          size_t i = 0;
          for (auto& e : refr_flags)
-            if (!e.base_form_types.empty())
+            if (e.is_type_specific())
                ++i;
          return i;
       })();
@@ -156,7 +145,7 @@ namespace {
          //
          size_t j = 0;
          for (size_t i = 0; i < size; ++i) {
-            if (refr_flags[i].base_form_types.empty()) {
+            if (!refr_flags[i].is_type_specific()) {
                out[j] = refr_flags[i];
                ++j;
             }
@@ -170,7 +159,7 @@ namespace {
          //
          size_t j = 0;
          for (size_t i = 0; i < size; ++i) {
-            if (!refr_flags[i].base_form_types.empty()) {
+            if (refr_flags[i].is_type_specific()) {
                out[j] = refr_flags[i];
                ++j;
             }
@@ -192,11 +181,11 @@ namespace {
       bool flag_is_valid_for_form(uint32_t flag, const dovah::form_stub* refr) noexcept {
          if (_helpers::all_type_specific_flags & flag) {
             auto* base = dovah::form_stub_helpers::get_base_form(refr);
-            auto  type = base->formType;
+            auto  type = base->form_type;
             for (auto& def : _helpers::type_specific_flags) {
                if (def.value != flag)
                   continue;
-               if (def.base_form_types.contains(type))
+               if (def.is_available_on(type))
                   return true;
             }
             // Fall through. There is at least one flag, 0x40000000, whose meaning is "no respawn" for lots of dynamic objects but "ground" for everything else
@@ -239,7 +228,7 @@ namespace {
          if (!self.stub)
             return 0;
          auto* base = self.stub->get_parent_form();
-         if (!base || base->formType != dovah::form_type::cell)
+         if (!base || base->form_type != dovah::form_type::cell)
             return 0;
          return push_native_object(base);
       }
@@ -290,7 +279,7 @@ namespace {
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2);
          cobb::lua::argcheck(L, value != nullptr, 2, "form expected");
-         if (!dovah::form_type_info::form_type_is_base_form(value->formType)) {
+         if (!dovah::form_type_is_base_form(value->form_type)) {
             cobb::lua::argerror(L, 2, "the provided form is not a base form");
          }
          if (!form)

@@ -55,7 +55,7 @@ namespace ui::types::papyrus {
    // will non-object values.  When no native type is specified, object values  will be converted to 
    // none.
    // 
-   property_value vmad_property_value_to_ui(const dovah::loaded_forms::components::papyrus::property_value&, std::optional<dovah::form_type_t> underlying_native_type);
+   property_value vmad_property_value_to_ui(const dovah::loaded_forms::components::papyrus::property_value&, std::optional<dovah::form_type> underlying_native_type);
 
    //
    // Convert a Papyrus property value, as stored in the UI-side representation, to form data.

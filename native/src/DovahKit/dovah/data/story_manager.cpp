@@ -1,9 +1,5 @@
 #include "story_manager.h"
 
-namespace {
-   constexpr std::initializer_list<dovah::form_type_t> reference_types = {};
-}
-
 namespace dovah {
 
    //

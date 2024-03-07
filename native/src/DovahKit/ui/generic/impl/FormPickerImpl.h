@@ -15,8 +15,8 @@ namespace FormPickerImpl {
          static constexpr Qt::ItemDataRole FormStubRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
 
          struct item {
-            dovah::form_stub*  stub = nullptr;
-            dovah::form_type_t type = dovah::form_type::none;
+            dovah::form_stub* stub = nullptr;
+            dovah::form_type  type = dovah::form_type::none;
             QString editorID;
          };
 
@@ -62,7 +62,7 @@ namespace FormPickerImpl {
             int  progress   = 0;
             bool allow_none = false;
             bool post_fill  = false; // this exists so that we can delay the public (isFilling) until after signals are emitted, yet also have canFetchMore behave properly
-            QVector<dovah::form_type_t> form_types;
+            QVector<dovah::form_type> form_types;
             item_list unsorted;
             QTimer timer;
             QElapsedTimer ticker;
@@ -92,8 +92,8 @@ namespace FormPickerImpl {
          virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
          virtual QVariant data(const QModelIndex& index, int role) const override;
 
-         void refill(bool allow_none, const QVector<dovah::form_type_t>& form_types);
-         void updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types);
+         void refill(bool allow_none, const QVector<dovah::form_type>& form_types);
+         void updateParameters(bool allow_none, const QVector<dovah::form_type>& form_types);
 
          int indexOf(const dovah::form_stub*) const noexcept;
          int indexOfFormID(dovah::bare_form_id_t) const noexcept;

@@ -15,7 +15,7 @@ namespace ui::object_window {
    };
 
    struct filter_info {
-      QVector<dovah::form_type_t> form_types;
+      QVector<dovah::form_type> form_types;
       struct {
          QString model_path_prefix;
          QString quest_filter_prefix;

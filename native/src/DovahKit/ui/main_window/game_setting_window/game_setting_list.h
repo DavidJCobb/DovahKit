@@ -106,7 +106,6 @@ class GameSettingList : public QTableView {
          return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
       }
       void setTextFilter(QLineEdit*);
-      void setFormTypeFilter(dovah::form_type_t);
       //
    public slots:
       void build();

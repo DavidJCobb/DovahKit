@@ -19,11 +19,11 @@ class FormUseInfoListModelItem {
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
       using form_stub      = dovah::form_stub;
-      using form_type_t    = dovah::form_type_t;
+      using form_type      = dovah::form_type;
       using data_t         = dovah::use_info_entry;
       //
       data_t::flags_t flags       = 0;
-      form_type_t     otherType   = 0;
+      form_type       otherType   = dovah::form_type::none;
       uint32_t        countUsed   = 0;
       uint32_t        countPlaced = 0;
       bare_form_id_t  otherID     = 0;
@@ -102,11 +102,11 @@ class FormUseInfoListModelProxy : public QSortFilterProxyModel {
       //
       bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
       //
-      inline dovah::form_type_t formType() const noexcept { return this->_formType; };
-      void setFormType(dovah::form_type_t);
+      constexpr dovah::form_type formType() const noexcept { return this->_formType; };
+      void setFormType(dovah::form_type);
       //
    protected:
-      dovah::form_type_t _formType = dovah::form_type::none;
+      dovah::form_type _formType = dovah::form_type::none;
 };
 
 class FormUseInfoList : public QTableView {
@@ -125,7 +125,7 @@ class FormUseInfoList : public QTableView {
       void setRelationshipMode(relationship_mode) noexcept; // rebuilds the model
       void setTarget(const dovah::form_stub*);
       void setTextFilter(QLineEdit*);
-      void setFormTypeFilter(dovah::form_type_t);
+      void setFormTypeFilter(dovah::form_type);
       //
    public slots:
       void build();

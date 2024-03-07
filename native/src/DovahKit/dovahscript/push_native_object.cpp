@@ -101,7 +101,7 @@ namespace dovahscript {
       }
       const char* metatable = wrappers::form::metatable_key;
       for (auto& pair : form_classes) {
-         if (pair.first == stub->formType) {
+         if (pair.first == stub->form_type) {
             metatable = pair.second;
             break;
          }

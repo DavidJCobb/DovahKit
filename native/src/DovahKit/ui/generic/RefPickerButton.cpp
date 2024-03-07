@@ -41,17 +41,17 @@ void RefPickerButton::_updateText() {
       QString text = stub->get_editor_id();
       if (text.isEmpty()) {
          text = tr("[%1:%2] in %3")
-            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature))
             .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper());
          //
          QString cell_text;
          auto& editor = DovahKitCore::get();
          auto* cell   = stub->get_parent_form();
-         if (cell && cell->formType == dovah::form_type::cell) {
+         if (cell && cell->form_type == dovah::form_type::cell) {
             cell_text = cell->get_editor_id();
             if (cell_text.isEmpty()) {
                auto* world = cell->get_parent_form();
-               if (world && world->formType == dovah::form_type::worldspace) {
+               if (world && world->form_type == dovah::form_type::worldspace) {
                   int32_t x;
                   int32_t y;
                   cell_text = tr("(%1, %2) in %3");

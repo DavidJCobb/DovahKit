@@ -8,8 +8,9 @@
 #include <type_traits>
 #include <vector>
 #include "helpers/multiheap.h"
-#include "core.h"
-#include "files/common.h"
+#include "./core.h"
+#include "./form_types.h"
+#include "./files/common.h"
 
 #include "./form_stubs/passkeys/build_use_info_during_load.h"
 #include "./form_stubs/passkeys/force_form_load.h"
@@ -208,9 +209,9 @@ namespace dovah {
 
       public:
          form_stub_addenda* addenda = nullptr;
-         bare_form_id_t formID   = 0; // form ID (file-local)
-         uint8_t        formType = 0;
-         flags_t        flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
+         bare_form_id_t formID    = 0; // form ID (file-local)
+         enum form_type form_type = form_type::none;
+         flags_t        flags     = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here
          std::string    editorID;
          loaded_forms::Form* form         = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
@@ -343,7 +344,7 @@ namespace dovah {
          //
          template<class C = loaded_forms::Form> C* get_working_copy() const noexcept {
             if constexpr (!std::is_same_v<C, loaded_forms::Form>) {
-               if (this->formType != C::form_type)
+               if (this->form_type != C::form_type)
                   return nullptr;
             }
             return (C*)this->working_copy;
@@ -404,7 +405,7 @@ namespace dovah {
          inline static form_stub* _type_check(form_stub* s) noexcept {
             if constexpr (std::is_same_v<loaded_form_t, loaded_forms::Form>)
                return s;
-            if (s && s->formType == loaded_form_t::form_type)
+            if (s && s->form_type == loaded_form_t::form_type)
                return s;
             return nullptr;
          }

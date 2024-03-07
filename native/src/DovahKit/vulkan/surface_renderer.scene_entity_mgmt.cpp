@@ -330,7 +330,7 @@ namespace vulkanDK {
    #pragma region rendered_light
    rendered_light_handle surface_renderer::add_light(dovah::loaded_forms::ObjectReference& refr) {
       auto* base = refr.base_form.get_form_stub();
-      if (!base || base->formType != dovah::form_type::light)
+      if (!base || base->form_type != dovah::form_type::light)
          return {};
       auto loaded_base = base->load().ptr_cast<dovah::loaded_forms::Light>();
       if (!loaded_base)

@@ -7,7 +7,7 @@ namespace dovah::loaded_forms {
       // Intentionally minimal for now.
       //
       public:
-         static constexpr form_type_t form_type = form_type::actor;
+         static constexpr const enum form_type form_type = form_type::actor;
          Actor(const constructor_params& c) : ObjectReference(form_type, c) {};
    };
 }

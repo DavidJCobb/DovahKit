@@ -28,7 +28,7 @@ namespace dovahkit::subsystems::gui_adjust {
       }
    }
 
-   void core::_commit_list_view_prefs(dovah::form_type_t ft, const list_view_prefs& prefs) {
+   void core::_commit_list_view_prefs(dovah::form_type ft, const list_view_prefs& prefs) {
       auto& item = this->form_edit_dialogs[ft];
       item.form_type = ft;
 

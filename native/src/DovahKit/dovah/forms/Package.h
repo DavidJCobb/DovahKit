@@ -10,7 +10,7 @@ namespace dovah::loaded_forms {
       // Intentionally minimal for now.
       //
       public:
-         static constexpr form_type_t form_type = form_type::package;
+         static constexpr const enum form_type form_type = form_type::package;
          Package(const constructor_params& c) : Form(form_type, c) {};
    };
 }

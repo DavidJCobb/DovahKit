@@ -34,14 +34,14 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
       this->reject();
    });
    QObject::connect(&editor, &DovahKitCore::formCreated, this, [this](dovah::form_stub* stub) {
-      if (stub->formType == dovah::form_type::cell) {
+      if (stub->form_type == dovah::form_type::cell) {
          this->ui.cell->addItem(stub->get_editor_id(), QVariant::fromValue<void*>(stub));
          //
          // TODO: re-sort the combobox
          //
          return;
       }
-      if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
+      if (dovah::form_type_is_reference(stub->form_type)) {
          if (this->_cell && this->_cell->is_parent_form_of(*stub)) {
             QString text;
             this->_stringifyRef(*stub, text);
@@ -54,7 +54,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
       }
    });
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
-      if (stub->formType == dovah::form_type::cell) {
+      if (stub->form_type == dovah::form_type::cell) {
          auto* widget = this->ui.cell;
          const auto blocker = QSignalBlocker(widget);
          //
@@ -69,7 +69,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
          }
          return;
       }
-      if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
+      if (dovah::form_type_is_reference(stub->form_type)) {
          if (!this->_cell)
             return;
          if (this->_cell->is_parent_form_of(*stub)) {
@@ -203,7 +203,7 @@ void RefPickerWindow::_stringifyRef(const dovah::form_stub& stub, QString& text)
       }
       //
       text = tr("[%1:%2][%3]")
-         .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub.formType).signature))
+         .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub.form_type).signature))
          .arg(QString("%1").arg(stub.formID, 8, 16, QChar('0')).toUpper())
          .arg(base ? base->get_editor_id() : tr("NONE", "ref picker - no base form"));
    }

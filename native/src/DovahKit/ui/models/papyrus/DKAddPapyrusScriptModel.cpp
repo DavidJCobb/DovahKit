@@ -10,7 +10,7 @@ DKAddPapyrusScriptModel::DKAddPapyrusScriptModel(QObject* parent) : QSortFilterP
    this->sort(0);
 }
 
-void DKAddPapyrusScriptModel::setTargetType(dovah::form_type_t type) {
+void DKAddPapyrusScriptModel::setTargetType(dovah::form_type type) {
    if (this->targetType() == type)
       return;
    this->_target_type = type;

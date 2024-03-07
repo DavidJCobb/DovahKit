@@ -5,6 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -95,7 +96,48 @@ namespace dovah {
             mutable std::mutex lock;
             map_of_forms forms;
          };
-         using _form_map_by_type = std::array<_form_map, form_types.size()>;
+         class _form_map_by_type : public std::array<_form_map, form_types.size()> {
+            protected:
+               static constexpr const size_t form_types_are_contiguous_up_to = []() -> size_t {
+                  for (size_t i = 0; i < form_types.size(); ++i)
+                     if ((size_t)form_types[i].form_type != i)
+                        return i;
+                  return form_types.size();
+               }();
+               static constexpr const bool all_form_types_are_contiguous = form_types_are_contiguous_up_to == form_types.size();
+
+            public:
+               using array::operator[];
+
+               constexpr _form_map& operator[](form_type ft) {
+                  return const_cast<_form_map&>(std::as_const(*this).operator[](ft));
+               }
+               constexpr const _form_map& operator[](form_type ft) const {
+                  if constexpr (all_form_types_are_contiguous) {
+                     return operator[]((size_t)ft);
+                  } else {
+                     if ((size_t)ft < form_types_are_contiguous_up_to)
+                        return operator[]((size_t)ft);
+                     for (size_t i = form_types_are_contiguous_up_to; i < form_types.size(); ++i)
+                        if (form_types[i].form_type == ft)
+                           return operator[](i);
+                     throw std::out_of_range("no form map exists for this form type");
+                  }
+               }
+
+               static constexpr bool supports_form_type(form_type ft) {
+                  if constexpr (all_form_types_are_contiguous) {
+                     return (size_t)ft < form_types_are_contiguous_up_to;
+                  } else {
+                     if ((size_t)ft < form_types_are_contiguous_up_to)
+                        return true;
+                     for (size_t i = form_types_are_contiguous_up_to; i < form_types.size(); ++i)
+                        if (form_types[i].form_type == ft)
+                           return true;
+                     return false;
+                  }
+               }
+         };
          
          file_load_order_normalizer normalizer;
          //
@@ -280,25 +322,25 @@ namespace dovah {
          #pragma region Content related to already-loaded data
          std::vector<const loaded_file*> get_loaded_files() const noexcept;
 
-         uint32_t count_forms_of_type(form_type_t) const noexcept;
+         uint32_t count_forms_of_type(form_type) const noexcept;
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;
-         form_stub* get_canonical_instance_of_singleton_form(form_type_t) const noexcept;
-         form_stub* get_canonical_instance_of_singleton_form(form_type_t, bool create_if_missing = false) noexcept; // (create_if_missing) can fail if no available form IDs
+         form_stub* get_canonical_instance_of_singleton_form(form_type) const noexcept;
+         form_stub* get_canonical_instance_of_singleton_form(form_type, bool create_if_missing = false) noexcept; // (create_if_missing) can fail if no available form IDs
          form_stub* get_form(bare_form_id_t formID, bool ignore_none_stubs = true) const noexcept;
-         form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
-         form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID, bool ignore_none_stubs = true) const noexcept; // searches (formType) first, then the other types
-         bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
+         form_stub* get_form(form_type, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
+         form_stub* get_form_of_probable_type(form_type, bare_form_id_t formID, bool ignore_none_stubs = true) const noexcept; // searches (formType) first, then the other types
+         bool for_each_form_of_type(form_type formType, std::function<bool(form_stub*)> functor); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
          //
          bool active_file_has_name() const noexcept;
          uint32_t active_file_form_count() const noexcept;
-         bool active_file_has_forms_of_type(form_type_t) const noexcept;
+         bool active_file_has_forms_of_type(form_type) const noexcept;
          bare_form_id_t find_first_free_form_id_in_active_file(bare_form_id_t start_from = 0) const noexcept; // returns 0 if no free IDs
          bool for_each_active_file_form(std::function<bool(form_stub*)> functor);
-         bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
-         bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         bool for_each_active_file_form_of_type(form_type form_type, std::function<bool(form_stub*)> functor);
+         bool for_each_active_file_override_of_type(form_type form_type, std::function<bool(form_stub*)> functor);
          bool for_each_impossible_to_save_form(game, std::function<bool(form_stub*)> functor);
-         bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         bool for_each_top_level_form_needing_save(form_type form_type, std::function<bool(form_stub*)> functor);
          void get_active_file_name(std::filesystem::path& out) const noexcept;
          bool has_active_file() const noexcept;
          bool is_defined_in_active_file(const form_stub& stub) const noexcept;
@@ -310,8 +352,8 @@ namespace dovah {
          bool get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept;
          bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
          
-         form_stub* create_form_of_type(form_type_t) noexcept;
-         form_creation_request request_form_creation(form_type_t) noexcept;
+         form_stub* create_form_of_type(form_type) noexcept;
+         form_creation_request request_form_creation(form_type) noexcept;
          form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
          form_duplication_request request_form_duplication() noexcept;
          form_deletion_request request_form_deletion(form_stub&) noexcept;
@@ -381,7 +423,7 @@ namespace dovah {
       //
       protected:
          file_load_order& owner;
-         form_type_t      form_type = form_type::none;
+         enum form_type   form_type = form_type::none;
          bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
          form_stub*       child_of  = nullptr; // what form should serve as the new form's parent?
          form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?

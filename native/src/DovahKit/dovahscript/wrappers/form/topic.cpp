@@ -51,7 +51,7 @@ namespace {
          if (!self.stub)
             return 0;
          auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_branch);
-         if (parent->formType != dovah::form_type::dialogue_branch)
+         if (parent->form_type != dovah::form_type::dialogue_branch)
             return 0;
          return push_native_object(parent);
       }
@@ -60,7 +60,7 @@ namespace {
          if (!self.stub)
             return 0;
          auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
-         if (parent->formType != dovah::form_type::quest)
+         if (parent->form_type != dovah::form_type::quest)
             return 0;
          return push_native_object(parent);
       }

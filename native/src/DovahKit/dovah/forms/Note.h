@@ -11,7 +11,7 @@
 namespace dovah::loaded_forms {
    class Note : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::note;
+         static constexpr const enum form_type form_type = form_type::note;
          Note(const constructor_params& c) : Form(form_type, c) {};
 
          enum note_type : uint8_t {

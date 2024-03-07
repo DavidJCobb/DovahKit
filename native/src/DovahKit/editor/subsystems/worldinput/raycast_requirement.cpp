@@ -17,12 +17,12 @@ namespace dovahkit::subsystems::worldinput {
          return true;
       }
       if (res.target_info.form) {
-         auto ft = res.target_info.form->formType;
+         auto ft = res.target_info.form->form_type;
 
          if (ft == dovah::form_type::land) {
             return this->targets.landscapes;
          }
-         if (dovah::form_type_info::form_type_is_reference(ft)) {
+         if (dovah::form_type_is_reference(ft)) {
             switch (this->target_options.selected) {
                using enum optional_yn;
                case unspecified:

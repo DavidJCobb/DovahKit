@@ -16,7 +16,7 @@ class DeleteFormDialogListModelItem {
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
       using form_stub      = dovah::form_stub;
-      using form_type_t    = dovah::form_type_t;
+      using form_type      = dovah::form_type;
       //
       const form_stub& stub;
       bare_form_id_t   formID = 0;

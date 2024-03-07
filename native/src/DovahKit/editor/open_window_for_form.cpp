@@ -51,11 +51,11 @@ namespace {
       []() -> bool {
          constexpr auto size = factory.size();
          for (size_t i = 0; i < size; ++i) {
-            bool is_ref = dovah::form_type_info::form_type_is_reference(factory[i].first); // make an exception for refs, because REFR subclasses will generally share the same UI as REFR
+            bool is_ref = dovah::form_type_is_reference(factory[i].first); // make an exception for refs, because REFR subclasses will generally share the same UI as REFR
             auto func   = factory[i].second;
             for (size_t j = 0; j < i; ++j) {
                if (factory[j].second == func) {
-                  bool also_ref = dovah::form_type_info::form_type_is_reference(factory[j].first);
+                  bool also_ref = dovah::form_type_is_reference(factory[j].first);
                   if (!(is_ref && also_ref))
                      return false;
                }
@@ -123,7 +123,7 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    //
    QDialog* opened = nullptr;
    for (auto& pair : factory) {
-      if (pair.first == stub->formType) {
+      if (pair.first == stub->form_type) {
          opened = (pair.second)(stub, parent);
          break;
       }
@@ -144,7 +144,7 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
       return;
    }
    //
-   auto& info = dovah::form_type_info::lookup(stub->formType);
+   auto& info = dovah::form_type_info::lookup(stub->form_type);
    QString title = QObject::tr("Error: cannot edit %1");
    if (&info == &dovah::form_types[0])
       title = title.arg("unknown type");

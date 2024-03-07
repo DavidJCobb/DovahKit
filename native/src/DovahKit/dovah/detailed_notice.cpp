@@ -5,7 +5,7 @@
 namespace dovah {
    void detailed_notice::add_relevant_form(const form_stub& stub) {
       auto& entry = this->relevant_forms.emplace_back();
-      entry.type    = stub.formType;
+      entry.type    = stub.form_type;
       entry.fixedID = stub.formID;
       entry.localID = 0;
    }
@@ -19,7 +19,7 @@ namespace dovah {
       warning.set_cause_subrecord(subrecord);
       return warning;
    }
-   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, form_type_t desired, const form_stub& referrer, const form_reference_t& reference) {
+   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, form_type desired, const form_stub& referrer, const form_reference_t& reference) {
       if (reference.form_type_matches(desired))
          return detailed_notice();
       detailed_notice warning;
@@ -32,7 +32,7 @@ namespace dovah {
       warning.add_relevant_form(*reference.get_form_stub());
       return warning;
    }
-   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type_t> desired, const form_stub& referrer, const form_reference_t& reference) {
+   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type> desired, const form_stub& referrer, const form_reference_t& reference) {
       for (auto ft : desired)
          if (reference.form_type_matches(ft))
             return detailed_notice();
@@ -102,13 +102,13 @@ namespace dovah {
       return *this;
    }
    detailed_notice& detailed_notice::set_cause_form(const form_stub& stub) {
-      this->cause_form.type    = stub.formType;
+      this->cause_form.type    = stub.form_type;
       this->cause_form.fixedID = stub.formID;
       this->cause_form.localID = 0;
       this->set_flag(flag::has_cause_form);
       return *this;
    }
-   detailed_notice& detailed_notice::set_cause_form_type(form_type_t ft) {
+   detailed_notice& detailed_notice::set_cause_form_type(form_type ft) {
       this->cause_form_type = ft;
       this->set_flag(flag::has_cause_form_type);
       return *this;

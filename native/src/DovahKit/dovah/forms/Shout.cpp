@@ -149,7 +149,7 @@ namespace dovah::loaded_forms {
    void Shout::setup(const file_load_order& load_order) noexcept {
    }
    bool Shout::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (Shout*)out;
       //

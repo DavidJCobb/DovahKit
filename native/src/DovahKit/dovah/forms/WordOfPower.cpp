@@ -29,7 +29,7 @@ namespace dovah::loaded_forms {
       return; // this form type does not have any subrecords that contain form IDs
    }
    bool WordOfPower::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (WordOfPower*)out;
       //

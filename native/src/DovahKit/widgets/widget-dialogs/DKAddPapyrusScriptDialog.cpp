@@ -96,10 +96,10 @@ DKAddPapyrusScriptDialog::DKAddPapyrusScriptDialog(QWidget* parent) : QDialog(pa
    });
 }
 
-dovah::form_type_t DKAddPapyrusScriptDialog::targetType() const noexcept {
+dovah::form_type DKAddPapyrusScriptDialog::targetType() const noexcept {
    return this->_model->targetType();
 }
-void DKAddPapyrusScriptDialog::setTargetType(dovah::form_type_t ft) {
+void DKAddPapyrusScriptDialog::setTargetType(dovah::form_type ft) {
    this->_model->setTargetType(ft);
 }
 

@@ -379,7 +379,7 @@ namespace dovah::loaded_forms {
       this->water_type_lod.set(*this, default_water);
    }
    bool Worldspace::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (Worldspace*)out;
       //

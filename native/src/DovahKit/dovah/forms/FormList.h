@@ -9,7 +9,7 @@
 namespace dovah::loaded_forms {
    class FormList : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::formlist;
+         static constexpr const enum form_type form_type = form_type::formlist;
          FormList(const constructor_params& c) : Form(form_type, c) {};
 
          components::papyrus_attachment_data script_data;

@@ -143,7 +143,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(water_type, use_info_entry::flag::water_acti_type);
    }
    bool Activator::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto copy = (Activator*)out;
       //

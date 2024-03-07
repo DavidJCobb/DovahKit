@@ -210,7 +210,7 @@ namespace {
          if (!stub)
             return 0;
          auto* parent = stub->get_parent_form();
-         if (parent && parent->formType == dovah::form_type::cell)
+         if (parent && parent->form_type == dovah::form_type::cell)
             return push_native_object(parent);
          return 0;
       }

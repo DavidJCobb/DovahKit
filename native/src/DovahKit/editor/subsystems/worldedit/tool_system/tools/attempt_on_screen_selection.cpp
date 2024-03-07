@@ -44,7 +44,7 @@ namespace dovahkit::subsystems::worldedit::tools {
             static_assert(false, "TODO: Only modify an entity's selection state on the first frame the cursor sweeps over it.");
          #endif
       }
-      if (auto* stub = params.target; stub && dovah::form_type_info::form_type_is_reference(stub->formType)) {
+      if (auto* stub = params.target; stub && dovah::form_type_is_reference(stub->form_type)) {
          switch (params.operation) {
             case selection_operation::no_op:
                break;

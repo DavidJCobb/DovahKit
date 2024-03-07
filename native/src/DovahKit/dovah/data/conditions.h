@@ -52,13 +52,13 @@ namespace dovah {
             condition_parameter_type* type = nullptr;
             union_decider_function_t  func = nullptr;
          } union_decider;
-         std::vector<enum_entry>  enum_values;
-         std::vector<form_type_t> allowed_form_types;
+         std::vector<enum_entry> enum_values;
+         std::vector<form_type>  allowed_form_types;
          
          condition_parameter_type(const char* n, underlying_t u) : name(n), underlying(u) {}
          condition_parameter_type(const char* n, underlying_t u, std::initializer_list<enum_entry> ev) : name(n), underlying(u), is_enum(true), enum_values(ev) {}
          
-         bool allows_form_type(form_type_t ft) const noexcept;
+         bool allows_form_type(form_type ft) const noexcept;
 
          // If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
          condition_parameter_type* resolve_union(condition_parameter_type* previous_type, const condition_parameter& previous_value) const noexcept;
@@ -83,7 +83,7 @@ namespace dovah {
                t.enum_values.push_back(v);
             return t;
          }
-         static condition_parameter_type make_form_type(const char* n, std::initializer_list<form_type_t> ft, bool allow_overrides = false) {
+         static condition_parameter_type make_form_type(const char* n, std::initializer_list<form_type> ft, bool allow_overrides = false) {
             condition_parameter_type t(n, underlying_t::formID);
             t.allow_overrides = allow_overrides;
             t.allowed_form_types.reserve(ft.size());

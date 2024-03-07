@@ -396,7 +396,7 @@ namespace dovah::loaded_forms {
          uib.add_outbound_reference(id);
    }
    bool Landscape::_clone_impl(Form* out) const noexcept {
-      if (out->formType != form_type)
+      if (out->type != form_type)
          return false;
       auto* copy = (Landscape*)out;
       //

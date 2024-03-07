@@ -292,7 +292,7 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       text = QString("Unable to save the file. %1<br/>Form ID: %2<br/>Form type: %3<br/>File offset: %4")
          .arg(message)
          .arg(error.cause_form.fixedID, 8, 16, QChar('0'))
-         .arg(error.cause_form.type)
+         .arg((int)error.cause_form.type)
          .arg(error.offset);
    } else {
       if (error.flags & notice_flag::has_file_offset)

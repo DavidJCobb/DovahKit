@@ -55,7 +55,7 @@ namespace editor_helpers {
                   return "";
                if (auto* stub = params.form.get_form_stub()) {
                   if (!stub->is_none_stub()) {
-                     auto tn = form_type_name_to_string(stub->formType);
+                     auto tn = form_type_name_to_string(stub->form_type);
                      auto id = stub->get_editor_id();
                      if (!tn.isEmpty())
                         return QObject::tr("%1: '%2'", "condition argument (form)").arg(tn).arg(id);
@@ -111,7 +111,7 @@ namespace editor_helpers {
          case dovah::condition_parameter_underlying_type::formID:
             if (auto* stub = value.form) {
                if (!stub->is_none_stub()) {
-                  auto tn = form_type_name_to_string(stub->formType);
+                  auto tn = form_type_name_to_string(stub->form_type);
                   auto id = stub->get_editor_id();
                   if (!tn.isEmpty())
                      return QObject::tr("%1: '%2'", "condition argument (form)").arg(tn).arg(id);

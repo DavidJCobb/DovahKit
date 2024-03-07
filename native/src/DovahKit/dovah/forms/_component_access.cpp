@@ -45,7 +45,7 @@ namespace dovah::loaded_forms {
       _entry::list_t entries = ([]() {
          _entry::list_t out;
          all_loaded_form_types::for_each([&out]<typename Form>() {
-            out[Form::form_type] = _entry{
+            out[(size_t)Form::form_type] = _entry{
                .model         = &get_model<Form>,
                .object_bounds = &get_object_bounds<Form>,
                .papyrus       = &get_papyrus<Form>,
@@ -57,13 +57,13 @@ namespace dovah::loaded_forms {
 
    namespace component_access {
       extern components::model* get_model(Form* form) {
-         return (entries[form->formType].model)(form);
+         return (entries[(size_t)form->type].model)(form);
       }
       extern components::object_bounds* get_object_bounds(Form* form) {
-         return (entries[form->formType].object_bounds)(form);
+         return (entries[(size_t)form->type].object_bounds)(form);
       }
       extern components::papyrus_attachment_data* get_papyrus_data(Form* form) {
-         return (entries[form->formType].papyrus)(form);
+         return (entries[(size_t)form->type].papyrus)(form);
       }
    }
 }

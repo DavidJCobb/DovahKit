@@ -36,7 +36,7 @@ class DKAllPapyrusScriptsModel : public QAbstractItemModel, public cobb::singlet
       void _gatherScriptnamesOnLoadingDone();
 
    public:
-      bool scriptIsAttachableTo(const QModelIndex&, dovah::form_type_t) const;
+      bool scriptIsAttachableTo(const QModelIndex&, dovah::form_type) const;
 
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy

@@ -20,9 +20,9 @@ namespace dovahkit::subsystems::form_info_cache::cacheable_traits {
          dovah::form_type::tree,
       };
 
-      static constexpr const bool form_type_is_of_interest(dovah::form_type_t ft) {
+      static constexpr const bool form_type_is_of_interest(dovah::form_type ft) {
          for (auto v : form_types_of_interest)
-            if (v == (dovah::form_type::type)ft)
+            if (v == ft)
                return true;
          return false;
       }

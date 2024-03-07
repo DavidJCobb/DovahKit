@@ -46,17 +46,17 @@ namespace dovahkit::subsystems::gui_adjust {
 
          struct dialog_prefs {
             union {
-               dovah::form_type_t form_type;
-               cobb::eight_cc     uid = 0; // for dialogs other than form-editing dialogs
+               dovah::form_type form_type;
+               cobb::eight_cc   uid = 0; // for dialogs other than form-editing dialogs
             };
             cobb::small_vector<list_view_prefs, 2> listviews;
          };
 
-         std::map<dovah::form_type_t, dialog_prefs> form_edit_dialogs;
+         std::map<dovah::form_type, dialog_prefs> form_edit_dialogs;
 
-         void _commit_list_view_prefs(dovah::form_type_t, const list_view_prefs&);
+         void _commit_list_view_prefs(dovah::form_type, const list_view_prefs&);
 
-         void _onDialogClosed(dovah::form_type_t, cobb::eight_cc widget_id, DKHeaderView&);
+         void _onDialogClosed(dovah::form_type, cobb::eight_cc widget_id, DKHeaderView&);
 
       public:
          struct RegistrationRequest {

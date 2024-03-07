@@ -45,7 +45,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    //
    this->ui.filterFormType->setAllowUnfiltered(true);
    for (auto& info : dovah::form_types) {
-      if (dovah::form_type_info::form_type_is_base_form(info.form_type))
+      if (dovah::form_type_is_base_form(info.form_type))
          this->ui.filterFormType->whitelistSignature(info.signature);
    }
    //
@@ -53,7 +53,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    this->ui.referenceList->setCellPicker(this->ui.cellList);
    this->ui.referenceList->setTextFilter(this->ui.filterText);
    QObject::connect(this->ui.filterFormType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
-      dovah::form_type_t ft = this->ui.filterFormType->formType();
+      dovah::form_type ft = this->ui.filterFormType->formType();
       this->ui.referenceList->setFormTypeFilter(ft);
    });
    QObject::connect(this->ui.cellList, &CellList::currentCellChanged, this, [this](const dovah::form_stub* cell) {

@@ -13,7 +13,7 @@
 namespace dovah::loaded_forms {
    class TextureSet : public Form {
       public:
-         static constexpr form_type_t form_type = form_type::texture_set;
+         static constexpr const enum form_type form_type = form_type::texture_set;
          TextureSet(const constructor_params& c) : Form(form_type, c) {};
          ~TextureSet();
 

@@ -12,15 +12,15 @@ class FormsOfTypeCombobox : public QComboBox {
    public:
       FormsOfTypeCombobox(QWidget* parent = nullptr);
       //
-      void addFormType(dovah::form_type_t);
+      void addFormType(dovah::form_type);
       void allowAllFormTypes();
       inline bool allowNone() const noexcept { return this->_allowNone; }
-      bool allowsFormType(dovah::form_type_t) const noexcept;
+      bool allowsFormType(dovah::form_type) const noexcept;
       dovah::bare_form_id_t formID() const noexcept;
       dovah::form_stub* formStub() const noexcept;
       void populate();
-      void setAllowedFormType(dovah::form_type_t);
-      void setAllowedFormTypes(QVector<dovah::form_type_t>);
+      void setAllowedFormType(dovah::form_type);
+      void setAllowedFormTypes(QVector<dovah::form_type>);
       //
       void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
       void setNoneLabel(const QString&) noexcept;
@@ -39,7 +39,7 @@ class FormsOfTypeCombobox : public QComboBox {
       QString _noneLabel;
       bool    _allowUndefined = false;
       QString _undefinedLabel;
-      QVector<dovah::form_type_t> _formTypes;
+      QVector<dovah::form_type> _formTypes;
       dovah::bare_form_id_t _defaultFormID = 0;
       //
    signals:

@@ -24,7 +24,7 @@ namespace dovah::loaded_forms::components {
             intfc.log_load_warning(
                detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.ownership.owner)
             );
-            if (ownerStub && ownerStub->formType == form_type::actor_base) {
+            if (ownerStub && ownerStub->form_type == form_type::actor_base) {
                subrecord.unchecked_read(entry.ownership.global);
                intfc.log_load_warning(
                   detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.ownership.global)
@@ -32,7 +32,7 @@ namespace dovah::loaded_forms::components {
             } else {
                subrecord.unchecked_read(entry.ownership.faction_rank);
                //
-               if (ownerStub && ownerStub->formType != form_type::faction) {
+               if (ownerStub && ownerStub->form_type != form_type::faction) {
                   detailed_notice warning;
                   warning.code = notice_code::container_item_has_bad_owner_form_type;
                   warning.set_cause_form(intfc.target_stub);
@@ -73,7 +73,7 @@ namespace dovah::loaded_forms::components {
             auto& COED = record.open_next_subrecord('COED');
             COED.write(entry.ownership.owner);
             if (auto* stub = entry.ownership.owner.get_form_stub()) {
-               if (stub->formType == form_type::actor_base) {
+               if (stub->form_type == form_type::actor_base) {
                   COED.write(entry.ownership.global);
                } else {
                   COED.write(entry.ownership.faction_rank);
@@ -106,7 +106,7 @@ namespace dovah::loaded_forms::components {
             //
             if (formID) {
                const auto* ownerStub = subrecord.lookup_form_by_id(formID);
-               if (ownerStub && ownerStub->formType == form_type::actor_base) {
+               if (ownerStub && ownerStub->form_type == form_type::actor_base) {
                   if (subrecord.read(formID)) // owner GLOB
                      uib.add_outbound_reference(formID);
                }

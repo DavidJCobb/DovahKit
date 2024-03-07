@@ -8,7 +8,7 @@ namespace {
 }
 
 namespace ui::types::papyrus {
-   property_value vmad_property_value_to_ui(const dovah::loaded_forms::components::papyrus::property_value& src, std::optional<dovah::form_type_t> underlying_native_type) {
+   property_value vmad_property_value_to_ui(const dovah::loaded_forms::components::papyrus::property_value& src, std::optional<dovah::form_type> underlying_native_type) {
       if (underlying_native_type.has_value()) {
 
          //
@@ -29,7 +29,7 @@ namespace ui::types::papyrus {
                const auto& src_v = std::get<vmad_object_value>(src);
 
                auto* quest = src_v.form.get_form_stub();
-               if (!quest || quest->formType != dovah::form_type::quest) {
+               if (!quest || quest->form_type != dovah::form_type::quest) {
                   dst = ui::types::quest_alias{};
                } else {
                   dst = ui::types::quest_alias{
@@ -47,7 +47,7 @@ namespace ui::types::papyrus {
                dst_v.resize(size);
                for (size_t i = 0; i < size; ++i) {
                   auto* quest = src_v[i].form.get_form_stub();
-                  if (!quest || quest->formType != dovah::form_type::quest) {
+                  if (!quest || quest->form_type != dovah::form_type::quest) {
                      dst = ui::types::quest_alias{};
                   } else {
                      dst = ui::types::quest_alias{

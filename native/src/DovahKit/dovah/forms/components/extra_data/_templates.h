@@ -118,7 +118,7 @@ namespace dovah::loaded_forms::components {
             return clone;
          }
    };
-   template<uint32_t signature, extra_data_type et, form_type_t desired_form_type = form_type::none> class formID_extra_data : public basic_extra_data {
+   template<uint32_t signature, extra_data_type et, form_type desired_form_type = form_type::none> class formID_extra_data : public basic_extra_data {
       public:
          static constexpr uint32_t signature = signature;
          //

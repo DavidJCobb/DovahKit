@@ -13,8 +13,8 @@ class _FormSignatureComboboxProxy : public QSortFilterProxyModel {
          auto source    = this->sourceModel();
          auto sort_role = this->sortRole();
          //
-         auto a = source->data(left,  Qt::UserRole).toInt();
-         auto b = source->data(right, Qt::UserRole).toInt();
+         auto a = (dovah::form_type)source->data(left,  Qt::UserRole).toInt();
+         auto b = (dovah::form_type)source->data(right, Qt::UserRole).toInt();
          if (a != b) {
             if (a == dovah::form_type::none)
                return true;

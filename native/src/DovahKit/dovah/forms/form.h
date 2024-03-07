@@ -36,9 +36,9 @@ namespace dovah {
       class Form {
          friend class form_stub;
          public:
-            static constexpr form_type_t form_type = form_type::none;
+            static constexpr const form_type form_type = form_type::none;
             //
-            const form_type_t formType;
+            const enum form_type type;
             const bool is_working_copy;
             form_stub& stub;
             
@@ -54,7 +54,7 @@ namespace dovah {
                form_stub* stub            = nullptr; // MUST not be nullptr, but made a pointer to allow flexibility in when to set it
             };
             //
-            Form(form_type_t ft, const constructor_params&);
+            Form(enum form_type ft, const constructor_params&);
             
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);

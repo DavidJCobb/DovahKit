@@ -13,16 +13,16 @@ namespace {
       function_table_t out = {};
       all_loaded_form_types::for_each([&out]<typename T>() {
          if constexpr (can_generate_use_info<T>) {
-            out[T::form_type] = T::generate_use_info;
+            out[(size_t)T::form_type] = T::generate_use_info;
          } else {
-            out[T::form_type] = nullptr;
+            out[(size_t)T::form_type] = nullptr;
          }
       });
       return out;
    })();
 }
 namespace dovah {
-   outbound_uses_builder_t get_outbound_uses_builder_by_type(form_type_t ft) noexcept {
-      return function_table[ft];
+   outbound_uses_builder_t get_outbound_uses_builder_by_type(form_type ft) noexcept {
+      return function_table[(size_t)ft];
    }
 }

@@ -13,7 +13,7 @@ namespace dovah::loaded_forms {
       // Intentionally minimal for now.
       //
       public:
-         static constexpr form_type_t form_type = form_type::magic_effect;
+         static constexpr const enum form_type form_type = form_type::magic_effect;
          MagicEffect(const constructor_params& c) : Form(form_type, c) {};
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME

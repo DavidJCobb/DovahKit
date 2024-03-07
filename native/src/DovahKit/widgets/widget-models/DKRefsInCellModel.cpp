@@ -83,7 +83,7 @@ bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
    return true;;
 }
 bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
-   if (!dovah::form_type_info::form_type_is_reference(stub.formType))
+   if (!dovah::form_type_is_reference(stub.form_type))
       return false;
    /*//
    if (stub.editorID.empty())
@@ -685,7 +685,7 @@ dovah::form_stub* DKRefsInCellModel::ref(QModelIndex qmi) const {
 void DKRefsInCellModel::formCreated(dovah::form_stub* stub) {
    if (!stub) // this signal should've used a ref...
       return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
    if (!this->parent_cell)
       return;
@@ -701,7 +701,7 @@ void DKRefsInCellModel::formDeletionImminent(const dovah::form_stub* stub, bool 
       return;
    }
 
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
    for (size_t i = 0; i < this->children.size(); ++i) {
       auto* item = this->children[i];
@@ -717,7 +717,7 @@ void DKRefsInCellModel::formDeletionImminent(const dovah::form_stub* stub, bool 
 void DKRefsInCellModel::formModified(dovah::form_stub* stub) {
    if (!stub) // this signal should've used a ref...
       return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+   if (!dovah::form_type_is_reference(stub->form_type))
       return;
 
    bool in_our_cell = this->parent_cell && stub->get_parent_form() == this->parent_cell;

@@ -196,7 +196,7 @@ namespace dovah::loaded_forms {
          class Stage;
          class Objective;
       public:
-         static constexpr form_type_t form_type = form_type::quest;
+         static constexpr const enum form_type form_type = form_type::quest;
          Quest(const constructor_params& c) : Form(form_type, c) {};
          ~Quest();
          
