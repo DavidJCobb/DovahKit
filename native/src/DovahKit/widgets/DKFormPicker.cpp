@@ -1,20 +1,42 @@
 #include "./DKFormPicker.h"
+#include <cstdint>
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QEvent>
 #include <QListView>
+#include <QMap>
 #include <QStandardItemModel>
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/form_stub.h"
    #include "editor/core.h"
    #include "editor/form_stub_meta_type.h"
-   #include "helpers/qt/strings.h"
 
    #include "./widget-models/DKFormPicker/DKFormPickerModel.h"
 #endif
 
+#if !defined(QT_DESIGNER_LIB)
+   namespace {
+      using model_type = ui::impl::DKFormPicker::Model;
+   }
+#endif
+
 namespace {
-   using model_type = ui::impl::DKFormPicker::Model;
+   QString _four_cc_to_string(uint32_t signature) {
+      return QString("%1%2%3%4")
+         .arg(QChar(signature >> 0x18))
+         .arg(QChar((signature >> 0x10) & 0xFF))
+         .arg(QChar((signature >> 0x08) & 0xFF))
+         .arg(QChar(signature & 0xFF));
+   }
+
+   bool _allow_form_type(const dovah::form_type_info& info) {
+      using flag = dovah::form_type_info::flag;
+      if (info.flags & (flag::no_editor_id | flag::no_connections))
+         return false;
+      if (info.form_type == dovah::form_type::none)
+         return false;
+      return true;
+   }
 }
 
 namespace {
@@ -92,15 +114,15 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
 
    {  // Set up form-combobox models
       auto* widget = this->_subwidgets.form;
-      auto* model  = new model_type(widget);
-      widget->setModel(model);
-      QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
-         this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
-      });
-      QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
-         this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
-      });
       #if !defined(QT_DESIGNER_LIB)
+         auto* model  = new model_type(widget);
+         widget->setModel(model);
+         QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
+            this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
+         });
+         QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
+            this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
+         });
          QObject::connect(model, &model_type::filled, this, [this]() {
             auto* model = this->_rawModel();
             auto* prior = this->_value;
@@ -125,7 +147,8 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
             if (i >= 0)
                this->_subwidgets.form->setCurrentIndex(i);
             this->_value = this->_subwidgets.form->currentData(model_type::FormStubRole).value<dovah::form_stub*>();
-            this->_setSubwidgetEnableState(model->rowCount({}) != 0);
+            this->_subwidgets.form->setEnabled(model->rowCount({}) != 0);
+            this->_subwidgets.type->setEnabled(true);
             //
             if (this->_value != prior) {
                emit formChanged(this->_value);
@@ -151,9 +174,6 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    #endif
 }
 
-QList<dovah::form_type_t> DKFormPicker::allowedFormTypesList() const {
-   return QList(this->_properties.allowed_form_types.begin(), this->_properties.allowed_form_types.end());
-}
 void DKFormPicker::addAllowedFormType(dovah::form_type_t ft) {
    if (this->allowsFormType(ft))
       return;
@@ -173,12 +193,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type_t ft) {
    this->_updateForms();
 }
 void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type_t> t) noexcept {
-   {
-      this->_properties.allowed_form_types.clear();
-      this->_properties.allowed_form_types.resize(t.size());
-      for (size_t i = 0; i < t.size(); ++i)
-         this->_properties.allowed_form_types[i] = t[i];
-   }
+   this->_properties.allowed_form_types = t;
    #if !defined(QT_DESIGNER_LIB)
       this->_prior_selections.clear();
    #endif
@@ -201,6 +216,32 @@ void DKFormPicker::setAllowNone(bool b) noexcept {
       return;
    this->_properties.allow_none = b;
    this->_updateForms();
+}
+
+QString DKFormPicker::requiredScriptname() const {
+   return this->_properties.scriptname_on_form;
+}
+void DKFormPicker::setRequiredScriptname(QString s) {
+   if (s == this->requiredScriptname())
+      return;
+   this->_properties.scriptname_on_form = s;
+   this->_updateForms();
+}
+void DKFormPicker::setRequiredScriptname(std::string_view s) {
+   this->setRequiredScriptname(QString::fromUtf8(s.data(), s.size()));
+}
+
+QString DKFormPicker::requiredAliasScriptname() const {
+   return this->_properties.scriptname_on_alias;
+}
+void DKFormPicker::setRequiredAliasScriptname(QString s) {
+   if (s == this->requiredAliasScriptname())
+      return;
+   this->_properties.scriptname_on_alias = s;
+   this->_updateForms();
+}
+void DKFormPicker::setRequiredAliasScriptname(std::string_view s) {
+   this->setRequiredAliasScriptname(QString::fromUtf8(s.data(), s.size()));
 }
 
 #if !defined(QT_DESIGNER_LIB)
@@ -234,6 +275,21 @@ model_type* DKFormPicker::_rawModel() const noexcept {
    assert(proxy);
    return proxy;
 }
+
+/*virtual*/ void DKFormPicker::changeEvent(QEvent* event) /*override*/ {
+   //
+   // If the widget is attached to the UI without ever having parameters configured 
+   // on it (i.e. the stock defaults), then we need to populate the widget at that 
+   // time.
+   //
+   if (!this->_state.needs_initial_fill)
+      return;
+   if (event->type() != QEvent::ParentChange)
+      return;
+   this->_state.needs_initial_fill = false;
+   this->_updateTypePicker();
+   this->_updateForms();
+}
 #endif
 
 void DKFormPicker::_setIsSplittingTypes(bool s) noexcept {
@@ -265,15 +321,19 @@ bool DKFormPicker::_shouldSplitTypes() const noexcept {
    return false;
 }
 void DKFormPicker::_updateForms() {
-   auto* c_form = this->_subwidgets.form;
-   auto* stub   = this->formStub();
-   auto* model  = this->_rawModel();
-   
-   const auto blocker = QSignalBlocker(c_form);
+   this->_state.needs_initial_fill = false;
 
    #if !defined(QT_DESIGNER_LIB)
+      auto* c_form = this->_subwidgets.form;
+      auto* stub   = this->formStub();
+      auto* model  = this->_rawModel();
+   
+      const auto blocker = QSignalBlocker(c_form);
+
       model_type::filter_parameters params;
-      params.allow_none = this->allowNone();
+      params.allow_none            = this->allowNone();
+      params.scriptname            = this->requiredScriptname().toStdString();
+      params.scriptname_on_aliases = this->requiredAliasScriptname().toStdString();
       if (this->isSplittingTypes()) {
          auto ftd = this->_subwidgets.type->currentData();
          if (!ftd.isValid()) {
@@ -287,6 +347,17 @@ void DKFormPicker::_updateForms() {
          params.form_types = QList(this->_properties.allowed_form_types.begin(), this->_properties.allowed_form_types.end());
       }
       this->_rawModel()->updateParameters(params);
+   #else
+      auto* c_form = this->_subwidgets.form;
+
+      const auto blocker = QSignalBlocker(c_form);
+
+      c_form->clear();
+
+      if (this->allowNone()) {
+         c_form->addItem("NONE");
+      }
+      c_form->addItem("ExampleForm01");
    #endif
 }
 void DKFormPicker::_updateTypePicker() {
@@ -300,12 +371,16 @@ void DKFormPicker::_updateTypePicker() {
    c_type->clear();
    if (this->_properties.allowed_form_types.isEmpty()) {
       for (const auto& type : dovah::form_types) {
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
+         if (!_allow_form_type(type))
+            continue;
+         c_type->addItem(_four_cc_to_string(type.signature), type.form_type);
       }
    } else {
       for (auto ft : this->_properties.allowed_form_types) {
          auto& type = dovah::form_type_info::lookup(ft);
-         c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.form_type);
+         if (!_allow_form_type(type))
+            continue;
+         c_type->addItem(_four_cc_to_string(type.signature), type.form_type);
       }
    }
    c_type->model()->sort(0);

@@ -1,5 +1,6 @@
 #include "./DKFormPickerModel.h"
 #include "dovah/form_stub.h"
+#include "editor/subsystems/papyrus/core.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 
@@ -279,7 +280,7 @@ namespace ui::impl::DKFormPicker {
          #pragma region Fetching
             /*virtual*/ void Model::fetchMore(const QModelIndex& parent) /*override*/ {
                auto& of = this->_ongoing_fill;
-               if (of.stage == _fill_stage::in_progress)
+               if (of.stage != _fill_stage::in_progress)
                   return;
                of.ticker.restart();
                if (!of.sorting) {
@@ -302,7 +303,13 @@ namespace ui::impl::DKFormPicker {
                   }
                   emit beforeFilled();
                   emit filled();
-                  QTimer::singleShot(0, [this]() { this->_ongoing_fill.stage = _fill_stage::inactive; });
+                  QTimer::singleShot(
+                     0,
+                     [this]() {
+                        if (this->_ongoing_fill.stage == _fill_stage::concluding)
+                           this->_ongoing_fill.stage = _fill_stage::inactive;
+                     }
+                  );
                }
             }
             /*virtual*/ bool Model::canFetchMore(const QModelIndex& parent) const /*override*/ {
@@ -359,6 +366,30 @@ namespace ui::impl::DKFormPicker {
          #pragma endregion
       #pragma endregion
 
+      bool Model::_entry_matches_params(const item_type& entry) const {
+         auto& params = this->_ongoing_fill.params;
+         if (!params.form_types.isEmpty()) {
+            if (!params.form_types.contains(entry.type))
+               return false;
+         }
+         {
+            bool check_form_script  = !params.scriptname.empty();
+            bool check_alias_script = (entry.type == dovah::form_type::quest && !params.scriptname_on_aliases.empty());
+            if (check_form_script || check_alias_script) {
+               auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+               if (check_form_script) {
+                  if (!papyrus.form_has_script_attached(*entry.stub, params.scriptname))
+                     return false;
+               }
+               if (check_alias_script) {
+                  if (!papyrus.quest_has_script_attached_to_any_alias(*entry.stub, params.scriptname_on_aliases))
+                     return false;
+               }
+            }
+         }
+         return true;
+      }
+
       void Model::_refill(const filter_parameters& params) {
          auto& of = this->_ongoing_fill;
          of.stage = _fill_stage::in_progress;
@@ -397,11 +428,15 @@ namespace ui::impl::DKFormPicker {
          if (do_fill_diagnostics) {
             ++this->_fill_diagnostics.ticks_to_grab;
          }
+
          auto& unsorted = of.unsorted;
          auto& source   = shared_datastore::get();
          auto  start    = of.progress;
          auto  max      = source.size();
          unsorted.reserve(unsorted.size() + 500);
+
+         bool allow_none = of.params.allow_none || of.params.always_allow_none();
+
          for (int i = start; i < max; ++i) {
             if (of.ticker.elapsed() > max_fill_tick_duration)
                break;
@@ -411,10 +446,10 @@ namespace ui::impl::DKFormPicker {
                continue;
             auto* stub = entry->stub;
             if (stub) {
-               if (!of.params.form_types.isEmpty() && !of.params.form_types.contains(entry->type))
+               if (!this->_entry_matches_params(*entry))
                   continue;
             } else {
-               if (!of.params.allow_none)
+               if (allow_none)
                   continue;
             }
             unsorted.push_back(entry);

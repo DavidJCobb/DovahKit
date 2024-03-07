@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 #include <QAbstractItemModel>
 #include <QElapsedTimer>
@@ -61,10 +62,14 @@ namespace ui::impl::DKFormPicker {
 
       public:
          struct filter_parameters {
-            bool                      allow_none = false;
+            bool                      allow_none = true;
             QList<dovah::form_type_t> form_types;
-            QString                   scriptname;
-            QString                   scriptname_on_aliases;
+            std::string               scriptname;
+            std::string               scriptname_on_aliases;
+
+            inline bool always_allow_none() const {
+               return !scriptname.empty() || !scriptname_on_aliases.empty();
+            }
          };
 
          static constexpr const auto FormStubRole = (Qt::ItemDataRole)(Qt::UserRole);
@@ -110,6 +115,8 @@ namespace ui::impl::DKFormPicker {
          #pragma endregion
 
       protected:
+         bool _entry_matches_params(const item_type&) const;
+
          void _refill(const filter_parameters&);
          bool _fillGrabMore(); // returns true if done
          bool _fillSortMore(); // returns true if done
