@@ -219,6 +219,24 @@ void DKFormPicker::setAllowNone(bool b) noexcept {
    this->_updateForms();
 }
 
+QString DKFormPicker::overrideTextForNone() const {
+   #if defined(QT_DESIGNER_LIB)
+      return this->_properties.override_text_for_none;
+   #else
+      return this->_rawModel()->overrideTextForNone();
+   #endif
+}
+void DKFormPicker::setOverrideTextForNone(QString s) {
+   #if defined(QT_DESIGNER_LIB)
+      if (this->overrideTextForNone() == s)
+         return;
+      this->_properties.override_text_for_none = s;
+      this->_updateForms();
+   #else
+      this->_rawModel()->setOverrideTextForNone(s);
+   #endif
+}
+
 QString DKFormPicker::requiredScriptname() const {
    return this->_properties.scriptname_on_form;
 }
@@ -356,7 +374,10 @@ void DKFormPicker::_updateForms() {
       c_form->clear();
 
       if (this->allowNone()) {
-         c_form->addItem("NONE");
+         QString none = this->_properties.override_text_for_none;
+         if (none.isEmpty())
+            none = tr("NONE");
+         c_form->addItem(none);
       }
       c_form->addItem("ExampleForm01");
    #endif

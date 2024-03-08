@@ -283,8 +283,6 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       this->vmad = {};
       this->vmad.form = quest_working_copy;
 
-      auto* target_vmad = quest_working_copy->get_raw_papyrus_data();
-      assert(target_vmad != nullptr);
       this->model->setWorkingVMAD(*quest_working_copy, target);
       this->subwidgets.buttons.wrapper->setEnabled(true);
    }

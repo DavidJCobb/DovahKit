@@ -9,15 +9,11 @@
    #include "../dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
+#include "./DKFormPicker.h"
 
 namespace dovah {
    class form_stub;
 }
-#if !defined(QT_DESIGNER_LIB)
-   #include "ui/generic/FormPicker.h"
-#else
-   class FormPicker;
-#endif
 
 class DKObjectReferencePicker : public QWidget {
    Q_OBJECT;
@@ -74,11 +70,8 @@ class DKObjectReferencePicker : public QWidget {
          QPushButton* render_window_focus = nullptr;
          QLineEdit*   ref_filter_string   = nullptr;
 
-         FormPicker*  cell = nullptr;
-         QComboBox*   refr = nullptr;
-         #if defined(QT_DESIGNER_LIB)
-            QComboBox* fake_formpicker = nullptr; // temporary, for compat
-         #endif
+         DKFormPicker* cell = nullptr;
+         QComboBox*    refr = nullptr;
       } subwidgets;
       struct {
          bool allow_none_ref       = true;

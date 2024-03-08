@@ -40,17 +40,15 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       #endif
    }
    {
+      auto* widget = this->subwidgets.cell = new DKFormPicker(this);
+      widget->setOverrideTextForNone(tr("(any)"));
+      widget->setAllowedFormType(dovah::form_type::cell);
+      widget->setAllowNone(true);
       #if !defined(QT_DESIGNER_LIB)
-         auto* widget = this->subwidgets.cell = new FormPicker(this);
-         widget->setAllowedFormType(dovah::form_type::cell);
-         widget->setAllowNone(true); // TODO: Allow overriding the "none" text with the string "(any)"
-         QObject::connect(widget, &FormPicker::formChanged, this, [this](dovah::form_stub* cell) {
+         QObject::connect(widget, &DKFormPicker::formChanged, this, [this](dovah::form_stub* cell) {
             emit this->cellChanged(cell);
             ((DKRefsInCellModel*)this->subwidgets.refr->model())->setParentCell(cell);
          });
-      #else
-         auto* widget = this->subwidgets.fake_formpicker = new QComboBox(this);
-         widget->addItem(tr("(any)"));
       #endif
    }
    {

@@ -76,6 +76,7 @@ namespace ui::impl::DKFormPicker {
 
       protected:
          std::vector<const item_type*> _items;
+         filter_parameters _last_completed_fill_params;
          struct {
             filter_parameters params;
 
@@ -93,6 +94,7 @@ namespace ui::impl::DKFormPicker {
             int  ticks_to_sort = 0;
             bool ticks_overlap = false;
          } _fill_diagnostics;
+         QString _override_text_for_none;
 
       public:
          Model(QObject* parent);
@@ -123,6 +125,9 @@ namespace ui::impl::DKFormPicker {
 
       public:
          void updateParameters(const filter_parameters&);
+
+         QString overrideTextForNone() const;
+         void setOverrideTextForNone(QString);
 
          int indexOf(const dovah::form_stub*) const noexcept;
 

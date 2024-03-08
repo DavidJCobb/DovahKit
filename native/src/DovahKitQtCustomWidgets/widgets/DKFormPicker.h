@@ -19,6 +19,7 @@ class DKFormPicker : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(QList<dovah::form_type> allowedFormTypes        READ allowedFormTypes        WRITE setAllowedFormTypes        DESIGNABLE true USER true);
    Q_PROPERTY(bool    allowNone               READ allowNone               WRITE setAllowNone               DESIGNABLE true);
+   Q_PROPERTY(QString overrideTextForNone     READ overrideTextForNone     WRITE setOverrideTextForNone     DESIGNABLE true);
    Q_PROPERTY(QString requiredScriptname      READ requiredScriptname      WRITE setRequiredScriptname      DESIGNABLE true);
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
    Q_PROPERTY(bool    splitTypesWhenMany      READ splitTypesWhenMany      WRITE setSplitTypesWhenMany      DESIGNABLE true);
@@ -38,6 +39,9 @@ class DKFormPicker : public QWidget {
 
       constexpr bool allowNone() const noexcept { return this->_properties.allow_none; }
       void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
+
+      QString overrideTextForNone() const;
+      void setOverrideTextForNone(QString);
 
       QString requiredScriptname() const;
       void setRequiredScriptname(QString);
@@ -74,6 +78,10 @@ class DKFormPicker : public QWidget {
 
          QString scriptname_on_alias;
          QString scriptname_on_form;
+
+         #if defined(QT_DESIGNER_LIB)
+            QString override_text_for_none;
+         #endif
       } _properties;
       struct {
          bool is_splitting_types = false;

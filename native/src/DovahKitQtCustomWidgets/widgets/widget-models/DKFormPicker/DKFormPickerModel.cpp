@@ -301,6 +301,7 @@ namespace ui::impl::DKFormPicker {
                      this->beginResetModel();
                      this->endResetModel();
                   }
+                  this->_last_completed_fill_params = of.params;
                   emit beforeFilled();
                   emit filled();
                   QTimer::singleShot(
@@ -352,8 +353,11 @@ namespace ui::impl::DKFormPicker {
                      return QVariant::fromValue(entry->stub);
                   case Qt::DisplayRole:
                   case Qt::ToolTipRole:
-                     if (!entry->stub)
+                     if (!entry->stub) {
+                        if (!this->_override_text_for_none.isEmpty())
+                           return this->_override_text_for_none;
                         return tr("NONE");
+                     }
                      return entry->editorID;
                }
                return {};
@@ -496,6 +500,32 @@ namespace ui::impl::DKFormPicker {
 
       void Model::updateParameters(const filter_parameters& params) {
          this->_refill(params);
+      }
+
+      QString Model::overrideTextForNone() const {
+         return this->_override_text_for_none;
+      }
+      void Model::setOverrideTextForNone(QString s) {
+         if (s == this->_override_text_for_none)
+            return;
+         this->_override_text_for_none = s;
+
+         if (this->_ongoing_fill.stage != _fill_stage::inactive)
+            return;
+         {
+            auto& lcfp = this->_last_completed_fill_params;
+            if (!lcfp.allow_none && !lcfp.always_allow_none())
+               //
+               // There's no "NONE" option to update.
+               //
+               return;
+         }
+
+         auto i = this->indexOf(nullptr);
+         if (i < 0)
+            return;
+         auto qmi = this->index(i, 0, {});
+         emit dataChanged(qmi, qmi, { Qt::DisplayRole, Qt::ToolTipRole });
       }
 
       int Model::indexOf(const dovah::form_stub* stub) const noexcept {
