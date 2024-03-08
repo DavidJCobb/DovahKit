@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -45,6 +46,14 @@ class DKObjectReferencePicker : public QWidget {
 
       void setRefFilterString(QString);
 
+      #if !defined(QT_DESIGNER_LIB)
+         // NOTE: This forces "allow none" when used. This is required in order to allow for the 
+         //       edge-case of a cell having refs, but none with the desired scriptname.
+         const std::string& requiredScriptname() const;
+         void setRequiredScriptname(QString);
+         void setRequiredScriptname(std::string_view);
+      #endif
+
       void setAllowNone(bool);
       void setShowRefListFilter(bool);
       void setShowViewRefButton(bool);
@@ -80,4 +89,5 @@ class DKObjectReferencePicker : public QWidget {
       } state;
 
       void _rebuildLayout();
+      void _updatePrependedRefs();
 };

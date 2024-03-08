@@ -1,8 +1,8 @@
-#include "condition_param.h"
+#include "./condition_param.h"
 #include <QGridLayout>
 #include <QVariant>
-#include "../../../dovah/data/story_manager.h"
-#include "../../../dovah/forms/Quest.h"
+#include "dovah/data/story_manager.h"
+#include "dovah/forms/Quest.h"
 
 namespace {
    using _char_value_t = uint8_t;
@@ -73,7 +73,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
    lambda(this->subwidgets.combobox = new QComboBox);
    lambda(this->subwidgets.textbox  = new QLineEdit);
    lambda(this->subwidgets.spinbox  = new QDoubleSpinBox);
-   lambda(this->subwidgets.form     = new FormPicker);
+   lambda(this->subwidgets.form     = new DKFormPicker);
    lambda(this->subwidgets.ref      = new RefPickerButton);
    //
    this->subwidgets.spinbox->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
@@ -152,7 +152,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       }
       emit this->valueChanged();
    });
-   QObject::connect(this->subwidgets.form, &FormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+   QObject::connect(this->subwidgets.form, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
       if (this->_is_event_parameter()) {
          if (this->parameter_index == 2) {
             this->working.event_parameters.form = stub;
@@ -359,7 +359,7 @@ void ConditionParameterEditor::rebuild() {
                const auto blocker = QSignalBlocker(w);
                this->_setCurrentWidget(w);
                //
-               QVector<dovah::form_type> al;
+               QList<dovah::form_type> al;
                if (auto s = type->allowed_form_types.size()) {
                   al.reserve(s);
                   for (auto i : type->allowed_form_types)
@@ -367,11 +367,7 @@ void ConditionParameterEditor::rebuild() {
                }
                w->setAllowedFormTypes(al);
                w->setAllowNone(true);
-               //
-               dovah::bare_form_id_t id = 0;
-               if (auto* stub = param.form)
-                  id = stub->formID;
-               w->setFormByID(id);
+               w->setFormStub(param.form);
             }
          }
          break;
@@ -573,12 +569,10 @@ void ConditionParameterEditor::_rebuildForEvents() {
             } else {
                this->_setCurrentWidget(this->subwidgets.form);
                auto* w = this->subwidgets.form;
-               w->setAllowedFormTypes(allowed);
+               w->setAllowedFormTypes(allowed.toList());
                //
-               dovah::bare_form_id_t id = 0;
-               if (auto* stub = this->working.event_parameters.form)
-                  id = stub->formID;
-               w->setFormByID(id);
+               auto* stub = this->working.event_parameters.form;
+               w->setFormStub(stub);
             }
          }
          break;

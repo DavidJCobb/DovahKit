@@ -2,6 +2,7 @@
 #include <QMimeData>
 #include "../../helpers/qt/strings.h"
 #include "../../editor/core.h"
+#include "../../editor/helpers/form_identifiers_to_string.h"
 
 #pragma region Item
 DKFormListPaneModel::Item::Item(dovah::form_stub* stub) {
@@ -12,14 +13,12 @@ void DKFormListPaneModel::Item::updateFromStub() {
    bool is_reference;
    auto stub = this->stub;
    if (stub) {
-      this->editorID = stub->get_editor_id();
-      //
-      uint32_t signature = dovah::form_type_info::lookup(stub->formType).signature;
-      this->signature = cobb::qt::four_cc_to_string(signature);
-      is_reference = dovah::form_type_info::form_type_is_reference(stub->formType);
+      this->editorID  = stub->get_editor_id();
+      this->signature = editor_helpers::form_signature_to_string(stub);
+      is_reference = dovah::form_type_is_reference(stub->form_type);
    } else {
       this->editorID.clear();
-      this->signature = cobb::qt::four_cc_to_string(dovah::form_types[dovah::form_type::none].signature);
+      this->signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(dovah::form_type::none).signature);
       is_reference = false;
    }
    //
@@ -29,11 +28,11 @@ void DKFormListPaneModel::Item::updateFromStub() {
       const dovah::form_stub* world = nullptr;
       //
       if (auto* parent = stub->get_parent_form()) {
-         if (parent->formType == dovah::form_type::cell) {
+         if (parent->form_type == dovah::form_type::cell) {
             cell = parent;
             //
             parent = cell->get_parent_form();
-            if (parent->formType == dovah::form_type::worldspace)
+            if (parent->form_type == dovah::form_type::worldspace)
                world = parent;
          }
       }
@@ -42,12 +41,12 @@ void DKFormListPaneModel::Item::updateFromStub() {
          const char* name = cell->get_editor_id();
          if (world) {
             if (name && name[0]) {
-               this->editorID = QString("[REFR:%1] in [CELL:%2]%3 in [WRLD:%4]%5")
-                  .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
-                  .arg(QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper())
-                  .arg(name);
+               this->editorID = QString("%1 in %2 in %3")
+                  .arg(editor_helpers::form_identifiers_to_string(stub))
+                  .arg(editor_helpers::form_identifiers_to_string(cell))
+                  .arg(editor_helpers::form_identifiers_to_string(world));
             } else {
-               this->editorID = QString("[REFR:%1] in cell (%2, %3) in [WRLD:%4]%5");
+               this->editorID = QString("%1 in cell (%2, %3) in %4").arg(editor_helpers::form_identifiers_to_string(stub));
                //
                int32_t x;
                int32_t y;
@@ -59,13 +58,11 @@ void DKFormListPaneModel::Item::updateFromStub() {
                this->editorID = this->editorID.arg(cell->formID);
             }
             this->editorID = this->editorID
-               .arg(QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper())
-               .arg(world->get_editor_id());
+               .arg(editor_helpers::form_identifiers_to_string(world));
          } else {
-            this->editorID = QString("[REFR:%1] in [CELL:%2]%3")
-               .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
-               .arg(QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper())
-               .arg(name ? name : "");
+            this->editorID = QString("%1 in %2")
+               .arg(editor_helpers::form_identifiers_to_string(stub))
+               .arg(editor_helpers::form_identifiers_to_string(cell));
          }
       }
    }
@@ -84,7 +81,7 @@ void DKFormListPaneModel::_addStub(dovah::form_stub* stub, bool queued) {
    if (!stub && !this->allow_gaps)
       return;
    if (stub && !this->allowed_form_types.isEmpty()) {
-      if (!this->allowed_form_types.contains(stub->formType))
+      if (!this->allowed_form_types.contains(stub->form_type))
          return;
    }
    auto item = new Item(stub);
@@ -369,7 +366,7 @@ bool DKFormListPaneModel::dropMimeData(const QMimeData* data, Qt::DropAction act
       auto* stub = editor.get_form(id);
       if (stub) {
          if (!this->allowed_form_types.isEmpty()) {
-            if (!this->allowed_form_types.contains(stub->formType))
+            if (!this->allowed_form_types.contains(stub->form_type))
                continue;
          }
          queued.push_back(new Item(stub));
@@ -468,14 +465,14 @@ void DKFormListPaneModel::removeStubs(QModelIndexList l) {
 }
 
 #pragma region Property setters
-void DKFormListPaneModel::setAllowedFormTypes(QVector<form_type_t> l) {
+void DKFormListPaneModel::setAllowedFormTypes(QVector<form_type> l) {
    this->allowed_form_types = l;
    if (l.isEmpty())
       return;
    this->_pruneItems([this](const Item& item) {
       if (!item.stub)
          return !this->allow_gaps;
-      return !this->allowed_form_types.contains(item.stub->formType);
+      return !this->allowed_form_types.contains(item.stub->form_type);
    });
 }
 void DKFormListPaneModel::setAllowGaps(bool g) {

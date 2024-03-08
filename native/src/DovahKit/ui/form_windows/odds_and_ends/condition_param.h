@@ -5,11 +5,10 @@
 #include <QLineEdit>
 #include <QStackedWidget>
 #include <QWidget>
-#include "../../generic/FormPicker.h"
-#include "../../generic/FormsOfTypeCombobox.h"
+#include "dovah/data/conditions.h"
+#include "dovah/forms/components/conditions.h"
 #include "../../generic/RefPickerButton.h"
-#include "../../../dovah/data/conditions.h"
-#include "../../../dovah/forms/components/conditions.h"
+#include "widgets/DKFormPicker.h"
 
 class ConditionParameterEditor : public QWidget {
    Q_OBJECT
@@ -46,7 +45,7 @@ class ConditionParameterEditor : public QWidget {
          QComboBox*           combobox = nullptr;
          QLineEdit*           textbox  = nullptr;
          QDoubleSpinBox*      spinbox  = nullptr;
-         FormPicker*          form     = nullptr;
+         DKFormPicker*        form     = nullptr;
          RefPickerButton*     ref      = nullptr;
       } subwidgets;
 

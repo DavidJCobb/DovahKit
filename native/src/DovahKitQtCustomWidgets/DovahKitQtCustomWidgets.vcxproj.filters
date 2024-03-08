@@ -52,9 +52,6 @@
     <QtMoc Include="interfaces\DKFormListPaneInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKFormListPane.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -62,9 +59,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKColorPickerButton.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\DKGameFilePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
@@ -76,13 +70,25 @@
     <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKObjectReferencePicker.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widgets\DKHeaderView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKQuestAliasPickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKFormPickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKFormListPane.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKFormPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKGameFilePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKObjectReferencePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKQuestAliasPicker.h">
@@ -105,9 +111,6 @@
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKFormListPane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="widgets\DKHeaderView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -120,9 +123,6 @@
     <ClCompile Include="widgets\DKColorPickerButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKGameFilePicker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -132,13 +132,25 @@
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKObjectReferencePicker.cpp">
+    <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKFormPickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFormListPane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKGameFilePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp">
+    <ClCompile Include="widgets\DKObjectReferencePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFormPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -153,5 +165,10 @@
     <QtRcc Include="widgets\widget-assets.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dovah\form_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

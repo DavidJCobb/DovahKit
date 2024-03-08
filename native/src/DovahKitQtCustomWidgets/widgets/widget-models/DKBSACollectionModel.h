@@ -105,7 +105,7 @@ class DKBSACollectionModelBackend : public QObject {
 // This class is lightweight, storing no data other than its own configuration and 
 // a pointer to its backend: it pulls all data from DKBSACollectionModelBackend. You 
 // can set a single DKBSACollectionModelBackend to serve as the "default instance," 
-// used for all DKBSACollectionModels created in the future, and then you cna create 
+// used for all DKBSACollectionModels created in the future, and then you can create 
 // a single model for each widget (file picker, file browser, etc.) that needs one.
 //
 class DKBSACollectionModel : public QAbstractItemModel {

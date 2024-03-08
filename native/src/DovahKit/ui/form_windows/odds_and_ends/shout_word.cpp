@@ -18,16 +18,12 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
       }
    });
    //
+   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(this->ui.word);
 }
 void FormShoutWordEditor::initialize() {
-   this->ui.word->addFormType(dovah::form_type::word_of_power);
-   this->ui.word->setAllowNone(true);
-   this->ui.spell->addFormType(dovah::form_type::spell);
-   this->ui.spell->setAllowNone(true);
-   //
-   this->ui.word->setFormByID(0);
-   this->ui.spell->setFormByID(0);
+   this->ui.word->setAllowedFormType(dovah::form_type::word_of_power);
+   this->ui.spell->setAllowedFormType(dovah::form_type::spell);
 }
 void FormShoutWordEditor::load() {
    if (!this->form)
@@ -36,8 +32,8 @@ void FormShoutWordEditor::load() {
    if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
-   this->ui.word->setFormByID(word.word_of_power.formID());
-   this->ui.spell->setFormByID(word.spell.formID());
+   this->ui.word->setFormStub(word.word_of_power.get_form_stub());
+   this->ui.spell->setFormStub(word.spell.get_form_stub());
    this->ui.recoveryTime->setValue(word.recoveryTime);
 }
 void FormShoutWordEditor::save() {

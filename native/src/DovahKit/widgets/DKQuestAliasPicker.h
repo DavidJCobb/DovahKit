@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <string_view>
 #include <QComboBox>
 #include <QFlags>
 #include <QWidget>
@@ -6,7 +8,6 @@
    #include "dovah/forms/Quest.h"
    #include "dovah/form_stub.h"
    #include "ui/types/quest_alias.h"
-   #include "ui/generic/FormPicker.h"
 #else
    namespace dovah {
       namespace loaded_forms {
@@ -18,10 +19,12 @@
       struct quest_alias;
    }
 #endif
+#include "./DKFormPicker.h"
 
 class DKQuestAliasPicker : public QWidget {
    Q_OBJECT;
-   Q_PROPERTY(AliasTypes allowedTypes READ allowedTypes WRITE setAllowedTypes DESIGNABLE true);
+   Q_PROPERTY(AliasTypes allowedTypes       READ allowedTypes       WRITE setAllowedTypes       DESIGNABLE true);
+   Q_PROPERTY(QString    requiredScriptname READ requiredScriptname WRITE setRequiredScriptname DESIGNABLE true);
    public:
       enum class AliasType {
          // Values must be flags-masks, not bit indices/etc., for QFlags to work.
@@ -37,6 +40,10 @@ class DKQuestAliasPicker : public QWidget {
 
       AliasTypes allowedTypes() const;
       void setAllowedTypes(AliasTypes);
+
+      QString requiredScriptname() const;
+      void setRequiredScriptname(QString);
+      void setRequiredScriptname(std::string_view);
 
       #if !defined(QT_DESIGNER_LIB)
       ui::types::quest_alias questAlias() const;
@@ -55,7 +62,8 @@ class DKQuestAliasPicker : public QWidget {
 
    protected:
       struct {
-         AliasTypes allowed_types = AliasType::Any;
+         AliasTypes  allowed_types = AliasType::Any;
+         std::string required_scriptname;
          //
          #if !defined(QT_DESIGNER_LIB)
             dovah::form_stub* quest = nullptr;
@@ -63,12 +71,8 @@ class DKQuestAliasPicker : public QWidget {
          #endif
       } _state;
       struct {
-         #if !defined(QT_DESIGNER_LIB)
-         FormPicker* quest = nullptr;
-         #else
-         QComboBox* fake_formpicker = nullptr;
-         #endif
-         QComboBox*  alias = nullptr;
+         DKFormPicker* quest = nullptr;
+         QComboBox*    alias = nullptr;
       } _subwidgets;
 };
 

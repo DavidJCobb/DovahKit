@@ -31,9 +31,9 @@ namespace {
 
    template<class ec, extra_data_type et, class widget_t> void _load_extra_formID(widget_t* widget, dovah::loaded_forms::components::extra_data_list& extra) {
       if (auto* data = extra.lookup<ec>(et)) {
-         widget->setFormByID(data->form.formID());
+         widget->setFormStub(data->form.get_form_stub());
       } else {
-         widget->setFormByID(0);
+         widget->setFormStub(nullptr);
       }
    }
 
@@ -81,39 +81,39 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormEd
    //
    this->ui.tabs->setCurrentIndex(0);
    //
-   this->ui.location->addFormType(dovah::form_type::location);
-   this->ui.acousticSpace->addFormType(dovah::form_type::acoustic_space);
-   this->ui.imagespace->addFormType(dovah::form_type::imagespace);
-   this->ui.musicType->addFormType(dovah::form_type::music_type);
-   this->ui.waterType->addFormType(dovah::form_type::water_type);
+   this->ui.location->setAllowedFormType(dovah::form_type::location);
+   this->ui.acousticSpace->setAllowedFormType(dovah::form_type::acoustic_space);
+   this->ui.imagespace->setAllowedFormType(dovah::form_type::imagespace);
+   this->ui.musicType->setAllowedFormType(dovah::form_type::music_type);
+   this->ui.waterType->setAllowedFormType(dovah::form_type::water_type);
    this->ui.location->setAllowNone(true);
    this->ui.acousticSpace->setAllowNone(true);
    this->ui.imagespace->setAllowNone(true);
    //this->ui.imagespace->setNoneLabel(tr("DEFAULT", "cell imagespace"));
    this->ui.musicType->setAllowNone(true);
    //this->ui.musicType->setNoneLabel(tr("DEFAULT", "cell music"));
-   this->ui.waterType->setDefaultFormID(dovah::hardcoded_form_ids::DefaultWater);
+   this->ui.waterType->setDefaultForm(editor.get_form(dovah::hardcoded_form_ids::DefaultWater));
    //
-   this->ui.lightingTemplate->addFormType(dovah::form_type::lighting_template);
+   this->ui.lightingTemplate->setAllowedFormType(dovah::form_type::lighting_template);
    this->ui.lightingTemplate->setAllowNone(true);
    this->ui.skyRegion->addFormType(dovah::form_type::region);
    this->ui.skyRegion->setAllowNone(true);
    //
-   this->ui.encounterZone->addFormType(dovah::form_type::encounter_zone);
-   this->ui.ownerNPC->addFormType(dovah::form_type::actor_base);
-   this->ui.ownerFaction->addFormType(dovah::form_type::faction);
-   this->ui.interiorLockList->addFormType(dovah::form_type::actor_base);
-   this->ui.interiorLockList->addFormType(dovah::form_type::formlist);
+   this->ui.encounterZone->setAllowedFormType(dovah::form_type::encounter_zone);
+   this->ui.ownerNPC->setAllowedFormType(dovah::form_type::actor_base);
+   this->ui.ownerFaction->setAllowedFormType(dovah::form_type::faction);
+   this->ui.interiorLockList->setAllowedFormType(dovah::form_type::actor_base);
+   this->ui.interiorLockList->setAllowedFormType(dovah::form_type::formlist);
    this->ui.encounterZone->setAllowNone(true);
    this->ui.ownerNPC->setAllowNone(true);
    this->ui.ownerFaction->setAllowNone(true);
    this->ui.interiorLockList->setAllowNone(true);
-   QObject::connect(this->ui.ownerFaction, &FormPicker::formChanged, this, [this]() {
+   QObject::connect(this->ui.ownerFaction, &DKFormPicker::formChanged, this, [this]() {
       auto& editor = DovahKitCore::get();
       this->working_ownership.form = this->ui.ownerFaction->formStub();
       this->_update_ownership_widgets();
    });
-   QObject::connect(this->ui.ownerNPC, &FormPicker::formChanged, this, [this]() {
+   QObject::connect(this->ui.ownerNPC, &DKFormPicker::formChanged, this, [this]() {
       auto& editor = DovahKitCore::get();
       this->working_ownership.form = this->ui.ownerNPC->formStub();
       this->_update_ownership_widgets();
@@ -156,11 +156,11 @@ void FormDialogCell::_update_ownership_widgets() {
       }
    }
    //
-   if (this->ui.ownerFaction->formID()) {
+   if (this->ui.ownerFaction->formStub()) {
       this->ui.ownerNPC->setEnabled(false);
    } else {
       this->ui.ownerFactionRequiredRank->setEnabled(false);
-      if (this->ui.ownerNPC->formID())
+      if (this->ui.ownerNPC->formStub())
          this->ui.ownerFaction->setEnabled(false);
    }
 }
@@ -205,9 +205,9 @@ void FormDialogCell::_load_impl() {
       _load_extra_formID<extra::cell_acoustic_space, extra_data_type::cell_acoustic_space>(this->ui.acousticSpace, extra);
       _load_extra_formID<extra::cell_imagespace,     extra_data_type::cell_imagespace>    (this->ui.imagespace, extra);
       if (auto* data = extra.lookup<extra::cell_music_override>(extra_data_type::cell_music_override)) {
-         this->ui.musicType->setFormByID(data->form.formID());
+         this->ui.musicType->setFormStub(data->form.get_form_stub());
       } else {
-         this->ui.musicType->setFormByID(0);
+         this->ui.musicType->setFormStub(nullptr);
       }
       if (!is_exterior) {
          this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);
@@ -245,7 +245,7 @@ void FormDialogCell::_load_impl() {
    #pragma endregion
    if (!is_exterior) {
       #pragma region Lighting
-         this->ui.lightingTemplate->setFormByID(this->form->interior.lighting_template);
+         this->ui.lightingTemplate->setFormStub(this->form->interior.lighting_template.get_form_stub());
          //
          this->ui.inheritAmbient->setChecked(lighting.inherit_flags & inherit_flag::ambient);
          this->ui.inheritDirectionalColor->setChecked(lighting.inherit_flags & inherit_flag::directional);

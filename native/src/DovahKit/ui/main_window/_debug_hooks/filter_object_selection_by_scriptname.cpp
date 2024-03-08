@@ -44,6 +44,7 @@ namespace DovahKitDebug::features {
 
          QObject::connect(name, &QLineEdit::textEdited, dialog, [alias_picker, form_picker, ref_picker](const QString& text) {
             auto scriptname = text.toUtf8().toStdString();
+            alias_picker->setRequiredScriptname(scriptname);
             form_picker->setRequiredScriptname(scriptname);
             ref_picker->setRequiredScriptname(scriptname);
          });

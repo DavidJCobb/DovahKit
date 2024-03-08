@@ -5,6 +5,7 @@
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/forms/Quest.h"
    #include "dovah/form_stub.h"
+   #include "editor/core.h"
 #endif
 
 namespace {
@@ -32,17 +33,12 @@ DKQuestAliasPicker::DKQuestAliasPicker(QWidget* parent) : QWidget(parent) {
    int row = 0;
    {
       auto* label  = new QLabel(tr("Pick Quest:"), this);
-      #if !defined(QT_DESIGNER_LIB)
-      auto* widget = new FormPicker(this);
+      auto* widget = new DKFormPicker(this);
       widget->setAllowNone(true);
       widget->setAllowedFormType(dovah::form_type::quest);
+      label->setBuddy(widget);
       //
       this->_subwidgets.quest = widget;
-      #else
-      auto* widget = new QComboBox(this);
-      this->_subwidgets.fake_formpicker = widget;
-      #endif
-      label->setBuddy(widget);
 
       layout->addWidget(label,  row, 0);
       layout->addWidget(widget, row, 1);
@@ -63,25 +59,28 @@ DKQuestAliasPicker::DKQuestAliasPicker(QWidget* parent) : QWidget(parent) {
 
    #pragma region Tab order
    {
-      auto* quest_picker =
-         #if !defined(QT_DESIGNER_LIB)
-            this->_subwidgets.quest
-         #else
-            this->_subwidgets.fake_formpicker
-         #endif
-      ;
       this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
-      this->setFocusProxy(quest_picker);
-      this->setTabOrder(quest_picker, this->_subwidgets.alias);
+      this->setFocusProxy(this->_subwidgets.quest);
+      this->setTabOrder(this->_subwidgets.quest, this->_subwidgets.alias);
    }
    #pragma endregion
 
    #if !defined(QT_DESIGNER_LIB)
-   QObject::connect(this->_subwidgets.quest, &FormPicker::formChanged, this, [this](dovah::form_stub* quest) {
+   QObject::connect(this->_subwidgets.quest, &DKFormPicker::formChanged, this, [this](dovah::form_stub* quest) {
       this->setQuest(quest);
    });
    QObject::connect(this->_subwidgets.alias, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
       emit this->aliasChanged(this->questAlias());
+   });
+
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      if (stub != this->_state.quest)
+         return;
+      this->_updateAliasList();
+   });
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->setQuest(nullptr);
    });
    #endif
 }
@@ -94,6 +93,31 @@ void DKQuestAliasPicker::setAllowedTypes(AliasTypes types) {
       return;
    this->_state.allowed_types = types;
    this->_updateAliasList(true);
+}
+
+QString DKQuestAliasPicker::requiredScriptname() const {
+   return QString::fromUtf8(QByteArray::fromStdString(this->_state.required_scriptname));
+}
+void DKQuestAliasPicker::setRequiredScriptname(QString s) {
+   return this->setRequiredScriptname(s.toUtf8().toStdString());
+}
+void DKQuestAliasPicker::setRequiredScriptname(std::string_view s) {
+   if (this->_state.required_scriptname == s)
+      return;
+   this->_state.required_scriptname = s;
+
+   auto prior = this->questAlias();
+   {
+      const auto blocker = QSignalBlocker(this);
+      this->_subwidgets.quest->setRequiredAliasScriptname(s);
+      this->_updateAliasList();
+   }
+   auto after = this->questAlias();
+   if (prior != after) {
+      if (prior.quest != after.quest)
+         emit this->questChanged(after.quest);
+      emit this->aliasChanged(after);
+   }
 }
 
 #if !defined(QT_DESIGNER_LIB)
@@ -152,7 +176,7 @@ dovah::form_stub* DKQuestAliasPicker::quest() const {
 void DKQuestAliasPicker::setQuest(dovah::form_stub* quest) {
    if (quest == this->quest())
       return;
-   if (quest->formType != dovah::form_type::quest)
+   if (quest && quest->form_type != dovah::form_type::quest)
       return;
    this->_state.quest = quest;
    if (quest) {
@@ -183,12 +207,18 @@ void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
    widget->setUpdatesEnabled(false);
    widget->clear();
 
+   bool empty = true;
    if (this->_state.quest_data) {
       for (auto* alias : this->_state.quest_data->aliases) {
          if (!_test_alias_type(this->_state.allowed_types, alias->type))
             continue;
          if (alias->id == ui::types::quest_alias::no_alias_id || alias->id > 0xFFFF)
             continue;
+         if (!this->_state.required_scriptname.empty()) {
+            if (alias->script_data.lookup_script(this->_state.required_scriptname) == nullptr)
+               continue;
+         }
+         empty = false;
          widget->addItem(QString::fromStdString(alias->name), alias->id);
       }
       widget->model()->sort(0);
@@ -200,6 +230,7 @@ void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
          }
       }
    }
+   widget->setDisabled(empty);
 
    if (allow_signals) {
       if (last_alias_id.has_value() && last_alias_id.value() != ui::types::quest_alias::no_alias_id) {

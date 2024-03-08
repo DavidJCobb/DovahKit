@@ -7,8 +7,7 @@
 #include "../../dovah/files/bsa/bsa_load_order.h"
 
 #ifdef _WIN32
-   #include <windows.h>
-   #include "../../helpers/intrusive_windows_defines.h"
+   #include "helpers/windows.h"
    #include <QtWin>
 #endif
 
@@ -37,7 +36,11 @@ namespace {
       SHFILEINFO info = {};
       for (auto s : sizes) {
          for (size_t i = 0; i < win_states.size(); ++i) {
-            HRESULT hr = SHGetFileInfo(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i] );
+            #ifdef UNICODE
+            HRESULT hr = SHGetFileInfoW(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i]);
+            #else
+            HRESULT hr = SHGetFileInfoA(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i]);
+            #endif
             if (!SUCCEEDED(hr))
                continue;
             if (info.hIcon == NULL)
@@ -596,7 +599,7 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       return 1;
    }
    Qt::ItemFlags DKBSACollectionModel::flags(const QModelIndex& index) const {
-      Qt::ItemFlags flags = 0;
+      Qt::ItemFlags flags = {};
       if (auto* node = this->_nodeFromIndex(index)) {
          flags |= Qt::ItemFlag::ItemIsEnabled;
          flags |= Qt::ItemFlag::ItemIsSelectable;

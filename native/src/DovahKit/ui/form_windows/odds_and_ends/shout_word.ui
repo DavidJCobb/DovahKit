@@ -69,27 +69,18 @@
     <widget class="QDoubleSpinBox" name="recoveryTime"/>
    </item>
    <item row="0" column="1">
-    <widget class="FormPicker" name="word" native="true">
-     <property name="focusPolicy">
-      <enum>Qt::TabFocus</enum>
-     </property>
-    </widget>
+    <widget class="DKFormPicker" name="word"/>
    </item>
    <item row="1" column="1">
-    <widget class="FormPicker" name="spell" native="true">
-     <property name="focusPolicy">
-      <enum>Qt::TabFocus</enum>
-     </property>
-    </widget>
+    <widget class="DKFormPicker" name="spell"/>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FormPicker</class>
+   <class>DKFormPicker</class>
    <extends>QWidget</extends>
-   <header>../../generic/FormPicker.h</header>
-   <container>1</container>
+   <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

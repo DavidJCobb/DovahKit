@@ -230,7 +230,7 @@ void DKFormListPane::_updateOrientation() {
 #endif
 
 #if !defined(QT_DESIGNER_LIB)
-   void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type_t> list) {
+   void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type> list) {
       this->_model()->setAllowedFormTypes(list);
    }
 #endif

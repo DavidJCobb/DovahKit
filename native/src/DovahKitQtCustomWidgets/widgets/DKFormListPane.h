@@ -32,6 +32,9 @@ class DKFormListPane : public QWidget {
       static constexpr int ColumnName   = 1;
       static constexpr int ColumnFormID = 2;
 
+      #if !defined(QT_DESIGNER_LIB)
+         QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
+      #endif
       inline Qt::Orientation orientation() const noexcept { return this->state.orientation; }
       inline bool showFormTypes() const noexcept { return this->state.show_form_types; }
       inline bool showIndices() const noexcept { return this->state.show_indices; }
@@ -59,7 +62,7 @@ class DKFormListPane : public QWidget {
       #endif
 
       #if !defined(QT_DESIGNER_LIB)
-         void setAllowedFormTypes(QVector<dovah::form_type_t>);
+         void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
       void setShowFormTypes(bool);
       void setShowIndices(bool);

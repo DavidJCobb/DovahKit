@@ -6,16 +6,15 @@
 #include "../../../dovah/forms/Shout.h"
 
 class FormShoutWordEditor : public QWidget {
-   Q_OBJECT
-   //
+   Q_OBJECT;
    public:
       FormShoutWordEditor(QWidget* parent = Q_NULLPTR);
       //
       void initialize();
       void load();
       void save();
-      inline FormPicker* spellCombobox() const noexcept { return this->ui.spell; }
-      inline FormPicker* wordCombobox() const noexcept { return this->ui.word; }
+      inline DKFormPicker* spellCombobox() const noexcept { return this->ui.spell; }
+      inline DKFormPicker* wordCombobox() const noexcept { return this->ui.word; }
       //
    private slots:
       //
