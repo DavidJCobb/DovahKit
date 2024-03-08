@@ -144,7 +144,7 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
       this->_setCurrentlyFocusedValue(QVariant::fromValue(this->ui.valueWidget_string->toPlainText()));
    });
    //
-   QObject::connect(this->ui.valueWidget_form, &FormPicker::formChanged, this, [this](dovah::form_stub* value) {
+   QObject::connect(this->ui.valueWidget_form, &DKFormPicker::formChanged, this, [this](dovah::form_stub* value) {
       this->_setCurrentlyFocusedValue(QVariant::fromValue(value));
    });
    QObject::connect(this->ui.valueWidget_ref, &DKObjectReferencePicker::refChanged, this, [this](dovah::form_stub* ref) {

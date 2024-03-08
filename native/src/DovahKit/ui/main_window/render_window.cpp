@@ -33,9 +33,9 @@
 #include "dovah/forms/Form.h"
 #include "dovah/forms/components/model.h"
 #include "editor/helpers/form_identifiers_to_string.h"
-#include "ui/generic/FormPicker.h"
 #include "vulkan/helpers/glm_transform_from_beth.h"
 #include "vulkan/enums/gizmo_mode.h"
+#include "widgets/DKFormPicker.h"
 
 #include "helpers/math/rotation/unit_conversion.h"
 
@@ -147,14 +147,14 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
          }
          auto* dialog = new QDialog(this);
          auto* layout = new QVBoxLayout(dialog);
-         auto* picker = new FormPicker(dialog);
+         auto* picker = new DKFormPicker(dialog);
          auto* button = new QPushButton("Import", dialog);
          layout->addWidget(picker);
          layout->addWidget(button);
          //picker->setAllowNone(false);
          picker->setMinimumWidth(400);
          {
-            QVector<dovah::form_type> types;
+            QList<dovah::form_type> types;
             for (auto& ft : dovah::form_types) {
                if (dovah::form_type_is_base_form(ft.form_type))
                   types.push_back(ft.form_type);

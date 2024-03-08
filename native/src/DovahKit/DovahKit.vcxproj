@@ -794,7 +794,6 @@
     <ClCompile Include="vulkan\vertex.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
-    <ClCompile Include="ui\generic\FormPicker.cpp" />
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -802,7 +801,6 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
-    <ClCompile Include="ui\generic\impl\FormPickerImpl.cpp" />
     <ClCompile Include="ui\generic\ObservableStandardItemModel.cpp" />
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
@@ -2047,8 +2045,6 @@
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
-    <QtMoc Include="ui\generic\FormPicker.h" />
-    <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
     <ClInclude Include="lua.h" />
     <QtMoc Include="ui\generic\CanvasWidget.h" />
     <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />

@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../ui/generic/FormPicker.h"
-#include "widget.h"
+#include "widgets/DKFormPicker.h"
+#include "./widget.h"
 
 namespace dovahscript::wrappers::ui {
    struct formpicker : public widget {
@@ -12,7 +12,7 @@ namespace dovahscript::wrappers::ui {
       static method_list_t metatable_setters;
 
       static constexpr const char* global_name = "formpicker";
-      using wrapped_type = FormPicker;
+      using wrapped_type = DKFormPicker;
 
       // Creates a singleton for this class, and leaves it at the top of the stack.
       static void import_singleton(lua_State*);

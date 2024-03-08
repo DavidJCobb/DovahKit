@@ -44,7 +44,7 @@ namespace {
       std::pair{ &DKColorPickerButton::staticMetaObject,    dovahscript::wrappers::ui::color_button::metatable_key },
       std::pair{ &QComboBox::staticMetaObject,              dovahscript::wrappers::ui::dropdown::metatable_key },
       std::pair{ &DovahscriptSaveButton::staticMetaObject,  dovahscript::wrappers::ui::file_save_button::metatable_key },
-      std::pair{ &FormPicker::staticMetaObject,             dovahscript::wrappers::ui::formpicker::metatable_key },
+      std::pair{ &DKFormPicker::staticMetaObject,           dovahscript::wrappers::ui::formpicker::metatable_key },
       std::pair{ &QGroupBox::staticMetaObject,              dovahscript::wrappers::ui::groupbox::metatable_key },
       std::pair{ &DovahscriptImageWidget::staticMetaObject, dovahscript::wrappers::ui::image_widget::metatable_key },
       std::pair{ &DovahscriptLineWidget::staticMetaObject,  dovahscript::wrappers::ui::line::metatable_key },

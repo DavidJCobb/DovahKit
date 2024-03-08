@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>603</height>
+    <height>613</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -436,6 +436,9 @@
               <property name="text">
                <string>Region</string>
               </property>
+              <property name="buddy">
+               <cstring>skyRegion</cstring>
+              </property>
              </widget>
             </item>
             <item row="0" column="0" colspan="2">
@@ -453,11 +456,7 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="FormPicker" name="skyRegion" native="true">
-              <property name="focusPolicy">
-               <enum>Qt::TabFocus</enum>
-              </property>
-             </widget>
+             <widget class="DKFormPicker" name="skyRegion"/>
             </item>
            </layout>
           </widget>
@@ -1141,12 +1140,6 @@
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
-  </customwidget>
-  <customwidget>
-   <class>FormPicker</class>
-   <extends>QWidget</extends>
-   <header>../generic/FormPicker.h</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>

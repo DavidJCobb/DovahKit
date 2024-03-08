@@ -89,11 +89,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="FormPicker" name="menuDisplayObject" native="true">
-       <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
-       </property>
-      </widget>
+      <widget class="DKFormPicker" name="menuDisplayObject"/>
      </item>
     </layout>
    </item>
@@ -190,15 +186,14 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>FormShoutWordEditor</class>
    <extends>QWidget</extends>
    <header>odds_and_ends/shout_word.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>FormPicker</class>
-   <extends>QWidget</extends>
-   <header>../generic/FormPicker.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

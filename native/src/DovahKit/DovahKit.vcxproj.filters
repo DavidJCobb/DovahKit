@@ -624,12 +624,6 @@
     <ClCompile Include="helpers\lua\qt_variant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\generic\FormPicker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\generic\impl\FormPickerImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -5884,12 +5878,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\FormPicker.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\impl\FormPickerImpl.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h">

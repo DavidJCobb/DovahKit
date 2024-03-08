@@ -382,6 +382,12 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 
 ## UI
 
+* Investigate replacing `FormSignatureCombobox` and `FormsOfTypeCombobox` with `DKFormPicker`. Where are they used? I know offhand they're used in the Cell View window, and I don't remember if that's because they pre-date the old `FormPicker` or because I wanted a non-async control for simplicity's sake.
+
+  Ideally we'd add a "sync/async" option to `DKFormPicker`, with it filling async by default, and then have sync versions on Cell View and friends just so we have fewer changes to test.
+
+* Investigate adding icons for all of the form types. Investigate having these icons show up in the `DKFormPicker`.
+
 ### Object Window
 
 * The code for this is pretty messy just in general. Tempted to do a full rebuild but it's not worth the devtime right now.

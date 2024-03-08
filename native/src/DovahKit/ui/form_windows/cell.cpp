@@ -96,7 +96,7 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormEd
    //
    this->ui.lightingTemplate->setAllowedFormType(dovah::form_type::lighting_template);
    this->ui.lightingTemplate->setAllowNone(true);
-   this->ui.skyRegion->addFormType(dovah::form_type::region);
+   this->ui.skyRegion->setAllowedFormType(dovah::form_type::region);
    this->ui.skyRegion->setAllowNone(true);
    //
    this->ui.encounterZone->setAllowedFormType(dovah::form_type::encounter_zone);

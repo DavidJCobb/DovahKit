@@ -80,7 +80,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::allowNone);
+         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::allowNone);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -88,27 +88,43 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         dovah::form_stub* result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::defaultForm);
+         dovah::form_stub* result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::defaultForm);
          return push_native_object(result);
       }
       int form(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         dovah::form_stub* result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::formStub);
+         dovah::form_stub* result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::formStub);
          return push_native_object(result);
       }
       int form_types(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QVector<dovah::form_type> result = api_helpers::get_widget_property((wrapped_type*)self.widget, &FormPicker::allowedFormTypes);
+         QList<dovah::form_type> result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::allowedFormTypes);
          int size = result.size();
          lua_createtable(L, size, 0);
          for(int i = 0; i < size; ++i) {
             lua_libraries::form_types::push(L, result[i]);
             lua_seti(L, -2, i + 1);
          }
+         return 1;
+      }
+      int required_alias_scriptname(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::requiredAliasScriptname);
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
+      int required_scriptname(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &DKFormPicker::requiredScriptname);
+         lua_pushstring(L, result.toUtf8());
          return 1;
       }
    }
@@ -119,7 +135,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool value = lua_toboolean(L, 2);
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &FormPicker::setAllowNone, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &DKFormPicker::setAllowNone, value);
          return 0;
       }
       int default_form(lua_State* L) {
@@ -132,7 +148,7 @@ namespace {
          }
          if (!self.widget)
             return 0;
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &FormPicker::setDefaultForm, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &DKFormPicker::setDefaultForm, value);
          return 0;
       }
       int form(lua_State* L) {
@@ -145,14 +161,14 @@ namespace {
          }
          if (!self.widget)
             return 0;
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &FormPicker::setFormStub, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &DKFormPicker::setFormStub, value);
          return 0;
       }
       int form_types(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          lua_settop(L, 2);
          //
-         QVector<dovah::form_type> value;
+         QList<dovah::form_type> value;
          bool valid;
          auto ft = lua_libraries::form_types::pull(L, 2, valid);
          if (valid) {
@@ -174,7 +190,25 @@ namespace {
          }
          if (!self.widget)
             return 0;
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &FormPicker::setAllowedFormTypes, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &DKFormPicker::setAllowedFormTypes, value);
+         return 0;
+      }
+      int required_alias_scriptname(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         if (!self.widget)
+            return 0;
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         api_helpers::set_widget_property((wrapped_type*)self.widget, (void(DKFormPicker::*)(QString))&DKFormPicker::setRequiredAliasScriptname, value);
+         return 0;
+      }
+      int required_scriptname(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         if (!self.widget)
+            return 0;
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         api_helpers::set_widget_property((wrapped_type*)self.widget, (void(DKFormPicker::*)(QString))&DKFormPicker::setRequiredScriptname, value);
          return 0;
       }
    }
@@ -213,12 +247,16 @@ namespace dovahscript::wrappers::ui {
       { "default_form", &_getters::default_form },
       { "form",         &_getters::form },
       { "form_types",   &_getters::form_types },
+      { "required_alias_scriptname", &_getters::required_alias_scriptname },
+      { "required_scriptname",       &_getters::required_scriptname },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "allow_none",   &_setters::allow_none },
       { "default_form", &_setters::default_form },
       { "form",         &_setters::form },
       { "form_types",   &_setters::form_types },
+      { "required_alias_scriptname", &_setters::required_alias_scriptname },
+      { "required_scriptname",       &_setters::required_scriptname },
    };
 
    /*static*/ void cls::import_singleton(lua_State* L) {

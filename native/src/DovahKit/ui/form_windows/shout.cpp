@@ -7,7 +7,7 @@ FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : Form
    this->ui.word1->linkToForm(1, stub);
    this->ui.word2->linkToForm(2, stub);
    //
-   this->ui.menuDisplayObject->addFormType(dovah::form_type::statik);
+   this->ui.menuDisplayObject->setAllowedFormType(dovah::form_type::statik);
    this->ui.menuDisplayObject->setAllowNone(true);
    //
    this->load();
@@ -18,7 +18,7 @@ void FormDialogShout::_load_impl() {
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
    this->ui.name->setText(editor.convert_localized_string(this->form->name));
    this->ui.treatAsPower->setChecked(this->form->treat_as_power());
-   this->ui.menuDisplayObject->setFormByID(this->form->menu_display_object.formID());
+   this->ui.menuDisplayObject->setFormStub(this->form->menu_display_object.get_form_stub());
    this->ui.description->setPlainText(this->form->description.c_str());
    this->ui.word0->load();
    this->ui.word1->load();

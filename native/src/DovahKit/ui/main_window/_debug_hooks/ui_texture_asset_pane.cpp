@@ -5,7 +5,7 @@
 #include "widgets/DKTextureAssetPane.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../editor/form_stub_meta_type.h"
-#include "../../generic/FormPicker.h"
+#include "widgets/DKFormPicker.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void ui_texture_asset_pane::execute(QWidget* from) {
@@ -13,7 +13,7 @@ namespace DovahKitDebug::features {
       auto* layout = new QGridLayout(dialog);
       auto* widget = new DKTextureAssetPane(dialog);
       auto* picker = new DKGameFilePicker(dialog);
-      auto* f_list = new FormPicker(dialog);
+      auto* f_list = new DKFormPicker(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       //
       f_list->setAllowNone(true);
@@ -31,7 +31,7 @@ namespace DovahKitDebug::features {
          widget->setAsset(path);
          f_list->setFormStub(nullptr);
       });
-      QObject::connect(f_list, &FormPicker::formChanged, widget, [widget, picker, f_list](dovah::form_stub* stub) {
+      QObject::connect(f_list, &DKFormPicker::formChanged, widget, [widget, picker, f_list](dovah::form_stub* stub) {
          const auto blocker = QSignalBlocker(picker);
          picker->setPath(QString());
          widget->setAsset(stub);

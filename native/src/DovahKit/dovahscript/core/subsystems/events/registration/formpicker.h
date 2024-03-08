@@ -1,11 +1,11 @@
 #pragma once
 #include "../registration.h"
-#include "../../../../../ui/generic/FormPicker.h"
+#include "widgets/DKFormPicker.h"
 
 namespace dovahscript::impl::event_registration {
    class formpicker : public base {
       public:
-         using target_type = FormPicker;
+         using target_type = DKFormPicker;
 
          static result register_event(QObject& object, const char* event_name, const char* listener_name);
 

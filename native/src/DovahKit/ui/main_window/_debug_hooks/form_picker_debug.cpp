@@ -1,5 +1,5 @@
 #include "form_picker_debug.h"
-#include "../../generic/FormPicker.h"
+#include "widgets/DKFormPicker.h"
 #include <QCheckBox>
 #include <QDialog>
 #include <QGridLayout>
@@ -11,7 +11,7 @@ namespace DovahKitDebug::features {
       dialog->setLayout(layout);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       {
-         auto* picker = new FormPicker(dialog);
+         auto* picker = new DKFormPicker(dialog);
          picker->setAllowedFormTypes({ // GetIsID types
             dovah::form_type::acoustic_space,
             dovah::form_type::activator,
@@ -60,7 +60,7 @@ namespace DovahKitDebug::features {
          layout->addWidget(button, 0, 1);
       }
       {
-         auto* picker = new FormPicker(dialog);
+         auto* picker = new DKFormPicker(dialog);
          picker->setAllowedFormTypes({ dovah::form_type::cell });
          picker->setAllowNone(false);
          layout->addWidget(picker, 1, 0, 1, 2);

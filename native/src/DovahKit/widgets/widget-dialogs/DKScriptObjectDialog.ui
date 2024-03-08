@@ -250,16 +250,6 @@
                <property name="text">
                 <string>Pick Object:</string>
                </property>
-               <property name="buddy">
-                <cstring>valueWidget_form</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="FormPicker" name="valueWidget_form" native="true">
-               <property name="focusPolicy">
-                <enum>Qt::TabFocus</enum>
-               </property>
               </widget>
              </item>
              <item row="1" column="0" colspan="2">
@@ -274,6 +264,9 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="1">
+              <widget class="DKFormPicker" name="valueWidget_form"/>
              </item>
             </layout>
            </widget>
@@ -598,10 +591,9 @@
    <header>widgets/DKQuestAliasPicker.h</header>
   </customwidget>
   <customwidget>
-   <class>FormPicker</class>
+   <class>DKFormPicker</class>
    <extends>QWidget</extends>
-   <header>ui/generic/FormPicker.h</header>
-   <container>1</container>
+   <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -614,7 +606,6 @@
   <tabstop>arrayButtonDuplicate</tabstop>
   <tabstop>arrayButtonMoveUp</tabstop>
   <tabstop>arrayButtonMoveDown</tabstop>
-  <tabstop>valueWidget_form</tabstop>
   <tabstop>valueWidget_ref</tabstop>
   <tabstop>valueWidget_bool</tabstop>
   <tabstop>valueWidget_string</tabstop>

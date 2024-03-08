@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>930</width>
-    <height>307</height>
+    <height>334</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,6 +28,9 @@
        <property name="text">
         <string>Water type:</string>
        </property>
+       <property name="buddy">
+        <cstring>waterType</cstring>
+       </property>
       </widget>
      </item>
      <item row="9" column="0" colspan="2">
@@ -42,12 +45,18 @@
        <property name="text">
         <string>Model</string>
        </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
       </widget>
      </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
         <string>Navmesh generation</string>
+       </property>
+       <property name="buddy">
+        <cstring>navmeshGeneration</cstring>
        </property>
       </widget>
      </item>
@@ -58,6 +67,9 @@
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Name</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
        </property>
       </widget>
      </item>
@@ -74,33 +86,31 @@
         <string>Sounds</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>Looping:</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">
           <property name="text">
            <string>Activate:</string>
           </property>
+          <property name="buddy">
+           <cstring>soundActivate</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Looping:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundLooping</cstring>
+          </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="FormPicker" name="soundActivate" native="true">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
-          </property>
-         </widget>
+         <widget class="DKFormPicker" name="soundActivate"/>
         </item>
         <item row="1" column="1">
-         <widget class="FormPicker" name="soundLooping" native="true">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
-          </property>
-         </widget>
+         <widget class="DKFormPicker" name="soundLooping"/>
         </item>
        </layout>
       </widget>
@@ -134,6 +144,9 @@
        <property name="text">
         <string>Editor ID</string>
        </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
       </widget>
      </item>
      <item row="3" column="0" colspan="2">
@@ -151,12 +164,8 @@
        <property name="text">
         <string>Verb override:</string>
        </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="FormPicker" name="waterType" native="true">
-       <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+       <property name="buddy">
+        <cstring>activateTextOverride</cstring>
        </property>
       </widget>
      </item>
@@ -165,6 +174,9 @@
      </item>
      <item row="0" column="1">
       <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="7" column="1">
+      <widget class="DKFormPicker" name="waterType"/>
      </item>
     </layout>
    </item>
@@ -254,6 +266,9 @@
          <property name="text">
           <string>Default primitive color:</string>
          </property>
+         <property name="buddy">
+          <cstring>defaultPrimitiveColor</cstring>
+         </property>
         </widget>
        </item>
        <item row="1" column="0">
@@ -261,10 +276,13 @@
          <property name="text">
           <string>Interaction keyword:</string>
          </property>
+         <property name="buddy">
+          <cstring>defaultInteractKeyword</cstring>
+         </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="FormPicker" name="defaultInteractKeyword" native="true"/>
+        <widget class="DKFormPicker" name="defaultInteractKeyword"/>
        </item>
       </layout>
      </item>
@@ -274,6 +292,9 @@
         <widget class="QLabel" name="label_9">
          <property name="text">
           <string>Keywords</string>
+         </property>
+         <property name="buddy">
+          <cstring>keywords</cstring>
          </property>
         </widget>
        </item>
@@ -334,12 +355,38 @@
    <header>widgets/DKGameFilePicker.h</header>
   </customwidget>
   <customwidget>
-   <class>FormPicker</class>
+   <class>DKFormPicker</class>
    <extends>QWidget</extends>
-   <header>ui/generic/FormPicker.h</header>
-   <container>1</container>
+   <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>buttonDestruction</tabstop>
+  <tabstop>soundActivate</tabstop>
+  <tabstop>soundLooping</tabstop>
+  <tabstop>navmeshGeneration</tabstop>
+  <tabstop>waterType</tabstop>
+  <tabstop>flagNoDisplacement</tabstop>
+  <tabstop>activateTextOverride</tabstop>
+  <tabstop>flagDangerous</tabstop>
+  <tabstop>flagIsMarker</tabstop>
+  <tabstop>flagObstacle</tabstop>
+  <tabstop>flagRandomAnimStart</tabstop>
+  <tabstop>flagOnLocalMap</tabstop>
+  <tabstop>flagChildCanUse</tabstop>
+  <tabstop>flagHasTreeLOD</tabstop>
+  <tabstop>flagMustUpdateAnims</tabstop>
+  <tabstop>flagIgnoreObjectInteraction</tabstop>
+  <tabstop>flagIgnoredBySandbox</tabstop>
+  <tabstop>defaultPrimitiveColor</tabstop>
+  <tabstop>defaultInteractKeyword</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

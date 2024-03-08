@@ -139,7 +139,7 @@
          <number>9</number>
         </property>
         <item>
-         <layout class="QGridLayout" name="gridLayout_2">
+         <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
           <item row="3" column="0">
            <widget class="QCheckBox" name="logEntryFlagFail">
             <property name="text">
@@ -172,14 +172,13 @@
             <property name="text">
              <string>Next quest (unused):</string>
             </property>
+            <property name="buddy">
+             <cstring>logEntryNextQuest</cstring>
+            </property>
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="FormPicker" name="logEntryNextQuest" native="true">
-            <property name="focusPolicy">
-             <enum>Qt::TabFocus</enum>
-            </property>
-           </widget>
+           <widget class="DKFormPicker" name="logEntryNextQuest"/>
           </item>
          </layout>
         </item>
@@ -216,6 +215,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>ConditionList</class>
    <extends>QWidget</extends>
    <header>condition_list.h</header>
@@ -225,12 +229,6 @@
    <class>PapyrusFragmentEditor</class>
    <extends>QWidget</extends>
    <header>../../generic/PapyrusFragmentEditor.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>FormPicker</class>
-   <extends>QWidget</extends>
-   <header>../../generic/FormPicker.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -243,7 +241,6 @@
   <tabstop>logEntryText</tabstop>
   <tabstop>logEntryFlagComplete</tabstop>
   <tabstop>logEntryFlagFail</tabstop>
-  <tabstop>logEntryNextQuest</tabstop>
   <tabstop>logEntryFragment</tabstop>
   <tabstop>logEntryConditions</tabstop>
  </tabstops>

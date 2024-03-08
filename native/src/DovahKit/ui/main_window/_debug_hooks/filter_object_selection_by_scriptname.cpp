@@ -1,5 +1,4 @@
 #include "./filter_object_selection_by_scriptname.h"
-#include "../../generic/FormPicker.h"
 #include <QCheckBox>
 #include <QDialog>
 #include <QFrame>

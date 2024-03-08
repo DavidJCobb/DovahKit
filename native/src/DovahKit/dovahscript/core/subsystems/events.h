@@ -2,10 +2,11 @@
 #include <string>
 #include <unordered_map>
 #include <QObject>
-#include "../../../helpers/passkey.h"
-#include "../../../helpers/singleton.h"
+#include <QVariant>
+#include "helpers/passkey.h"
+#include "helpers/singleton.h"
 #include "../../../lua.h"
-#include "events/script_event_queue.h"
+#include "./events/script_event_queue.h"
 
 struct ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
