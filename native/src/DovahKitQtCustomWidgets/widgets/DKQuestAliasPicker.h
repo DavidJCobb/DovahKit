@@ -60,6 +60,20 @@ class DKQuestAliasPicker : public QWidget {
    protected:
       void _updateAliasList(bool allow_signals = true);
 
+      #if !defined(QT_DESIGNER_LIB)
+      bool _wouldAllowQuest(const dovah::form_stub&) const;
+      bool _wouldAllowQuestAlias(const ui::types::quest_alias&) const;
+      
+      struct _set_quest_options {
+         bool emit_signals        = true;
+         bool update_alias_list   = true;
+         bool update_quest_picker = true;
+         bool verify_quest_first  = false;
+      };
+      // returns true if the selected quest is actually changed:
+      bool _setQuestImpl(dovah::form_stub* quest, _set_quest_options);
+      #endif
+
    protected:
       struct {
          AliasTypes  allowed_types = AliasType::Any;

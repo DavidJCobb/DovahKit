@@ -8,6 +8,7 @@
 #include <QStandardItemModel>
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/form_stub.h"
+   #include "editor/subsystems/papyrus/core.h"
    #include "editor/core.h"
    #include "editor/form_stub_meta_type.h"
 
@@ -265,6 +266,8 @@ void DKFormPicker::setRequiredAliasScriptname(std::string_view s) {
 
 #if !defined(QT_DESIGNER_LIB)
 void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
+   if (this->_value == stub)
+      return;
    if (!stub) {
       if (!this->allowNone()) {
          if (this->_default)
@@ -272,7 +275,7 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
          return;
       }
    } else {
-      if (!this->_properties.allowed_form_types.contains(stub->form_type))
+      if (!this->_wouldAllowFormStub(*stub))
          return;
    }
    this->_value = stub;
@@ -283,6 +286,7 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (index >= 0) {
       const auto blocker = QSignalBlocker(subwidget);
       subwidget->setCurrentIndex(index);
+      emit this->formChanged(stub);
    }
 }
 void DKFormPicker::setDefaultForm(dovah::form_stub* stub) noexcept {
@@ -293,6 +297,23 @@ model_type* DKFormPicker::_rawModel() const noexcept {
    auto* proxy = (model_type*) this->_subwidgets.form->model();
    assert(proxy);
    return proxy;
+}
+
+bool DKFormPicker::_wouldAllowFormStub(const dovah::form_stub& stub) const {
+   if (!this->_properties.allowed_form_types.isEmpty() && !this->_properties.allowed_form_types.contains(stub.form_type))
+      return false;
+
+   bool needs_alias_script = stub.form_type == dovah::form_type::quest && !this->_properties.scriptname_on_alias.isEmpty();
+   bool needs_form_script  = !this->_properties.scriptname_on_form.isEmpty();
+   if (needs_alias_script || needs_form_script) {
+      auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+      if (needs_form_script  && !papyrus.form_has_script_attached(stub, this->_properties.scriptname_on_form.toStdString()))
+         return false;
+      if (needs_alias_script && !papyrus.quest_has_script_attached_to_any_alias(stub, this->_properties.scriptname_on_alias.toStdString()))
+         return false;
+   }
+
+   return true;
 }
 
 /*virtual*/ void DKFormPicker::changeEvent(QEvent* event) /*override*/ {

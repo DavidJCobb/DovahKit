@@ -5,6 +5,7 @@
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/forms/Quest.h"
    #include "dovah/form_stub.h"
+   #include "editor/subsystems/papyrus/core.h"
    #include "editor/core.h"
 #endif
 
@@ -67,7 +68,12 @@ DKQuestAliasPicker::DKQuestAliasPicker(QWidget* parent) : QWidget(parent) {
 
    #if !defined(QT_DESIGNER_LIB)
    QObject::connect(this->_subwidgets.quest, &DKFormPicker::formChanged, this, [this](dovah::form_stub* quest) {
-      this->setQuest(quest);
+      this->_setQuestImpl(
+         quest,
+         {
+            .update_quest_picker = false, // no infinite recursion, please
+         }
+      );
    });
    QObject::connect(this->_subwidgets.alias, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
       emit this->aliasChanged(this->questAlias());
@@ -80,7 +86,7 @@ DKQuestAliasPicker::DKQuestAliasPicker(QWidget* parent) : QWidget(parent) {
       this->_updateAliasList();
    });
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
-      this->setQuest(nullptr);
+      this->_setQuestImpl(nullptr, {});
    });
    #endif
 }
@@ -138,22 +144,28 @@ void DKQuestAliasPicker::setQuestAlias(const ui::types::quest_alias& v) {
    else if (prior == v)
       return;
 
+   if (!this->_wouldAllowQuestAlias(v))
+      return;
+
    if (!v.quest) {
-      this->setQuest(nullptr);
+      this->_setQuestImpl(nullptr, {});
       return;
    }
 
-   const auto blocker = QSignalBlocker(this->_subwidgets.alias);
+   const auto blocker_0 = QSignalBlocker(this->_subwidgets.alias);
+   const auto blocker_1 = QSignalBlocker(this->_subwidgets.quest);
 
    bool quest_changing = v.quest != prior.quest;
    bool alias_changing = quest_changing;
 
    if (quest_changing) {
-      this->_state.quest      = v.quest;
-      this->_state.quest_data = v.quest->load().ptr_cast<dovah::loaded_forms::Quest>();
-
-      this->_subwidgets.alias->clear(); // force a value change
-      this->_updateAliasList(false);
+      this->_setQuestImpl(
+         v.quest,
+         {
+            .emit_signals       = false,
+            .verify_quest_first = false, // already done by _wouldAllowQuestAlias
+         }
+      );
    }
 
    auto i = this->_subwidgets.alias->findData(v.alias_id);
@@ -174,20 +186,7 @@ dovah::form_stub* DKQuestAliasPicker::quest() const {
    return this->_state.quest;
 }
 void DKQuestAliasPicker::setQuest(dovah::form_stub* quest) {
-   if (quest == this->quest())
-      return;
-   if (quest && quest->form_type != dovah::form_type::quest)
-      return;
-   this->_state.quest = quest;
-   if (quest) {
-      this->_state.quest_data = quest->load().ptr_cast<dovah::loaded_forms::Quest>();
-   } else {
-      this->_state.quest_data = {};
-   }
-   this->_subwidgets.alias->clear(); // force a value change
-   this->_updateAliasList(false);
-   emit this->questChanged(quest);
-   emit this->aliasChanged(this->questAlias());
+   this->_setQuestImpl(quest, {});
 }
 #endif
 
@@ -209,13 +208,15 @@ void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
 
    bool empty = true;
    if (this->_state.quest_data) {
+      auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+
       for (auto* alias : this->_state.quest_data->aliases) {
          if (!_test_alias_type(this->_state.allowed_types, alias->type))
             continue;
          if (alias->id == ui::types::quest_alias::no_alias_id || alias->id > 0xFFFF)
             continue;
          if (!this->_state.required_scriptname.empty()) {
-            if (alias->script_data.lookup_script(this->_state.required_scriptname) == nullptr)
+            if (!papyrus.quest_alias_has_script_attached(*alias, this->_state.required_scriptname))
                continue;
          }
          empty = false;
@@ -244,3 +245,67 @@ void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
    widget->setUpdatesEnabled(true);
    #endif
 }
+
+#if !defined(QT_DESIGNER_LIB)
+bool DKQuestAliasPicker::_wouldAllowQuest(const dovah::form_stub& quest) const {
+   if (!this->_state.required_scriptname.empty()) {
+      auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+      if (!papyrus.quest_has_script_attached_to_any_alias(quest, this->_state.required_scriptname))
+         return false;
+   }
+   return true;
+}
+
+bool DKQuestAliasPicker::_wouldAllowQuestAlias(const ui::types::quest_alias& alias) const {
+   if (alias.empty())
+      return true;
+   if (!this->_wouldAllowQuest(*alias.quest))
+      return false;
+   {
+      auto loaded = alias.quest->load().ptr_cast<dovah::loaded_forms::Quest>();
+      if (loaded) {
+         auto* alias_ptr = loaded->lookup_alias_by_id(alias.alias_id);
+         if (!alias_ptr)
+            return false;
+         if (!_test_alias_type(this->_state.allowed_types, alias_ptr->type))
+            return false;
+         if (!this->_state.required_scriptname.empty()) {
+            auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+            if (!papyrus.quest_alias_has_script_attached(*alias_ptr, this->_state.required_scriptname))
+               return false;
+         }
+      }
+   }
+   return true;
+}
+
+bool DKQuestAliasPicker::_setQuestImpl(dovah::form_stub* quest, _set_quest_options options) {
+   if (quest == this->quest())
+      return false;
+   if (quest && options.verify_quest_first) {
+      if (quest->form_type != dovah::form_type::quest)
+         return false;
+      if (!this->_wouldAllowQuest(*quest))
+         return false;
+   }
+   this->_state.quest = quest;
+   if (quest) {
+      this->_state.quest_data = quest->load().ptr_cast<dovah::loaded_forms::Quest>();
+   } else {
+      this->_state.quest_data = {};
+   }
+   if (options.update_quest_picker) {
+      const auto blocker = QSignalBlocker(this->_subwidgets.quest);
+      this->_subwidgets.quest->setFormStub(quest);
+   }
+   if (options.update_alias_list) {
+      this->_subwidgets.alias->clear(); // force a value change
+      this->_updateAliasList(false);
+   }
+   if (options.emit_signals) {
+      emit this->questChanged(quest);
+      emit this->aliasChanged(this->questAlias());
+   }
+   return true;
+}
+#endif
