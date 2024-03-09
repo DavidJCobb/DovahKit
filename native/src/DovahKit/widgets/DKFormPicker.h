@@ -104,6 +104,8 @@ class DKFormPicker : public QWidget {
       #if !defined(QT_DESIGNER_LIB)
          ui::impl::DKFormPicker::Model* _rawModel() const noexcept;
 
+         bool _wouldAllowFormStub(const dovah::form_stub&) const;
+
          virtual void changeEvent(QEvent* event) override;
       #endif
 

@@ -2217,6 +2217,15 @@
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormVMADModel\Script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormVMADModel\property_value.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormVMADModel\Property.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5562,6 +5571,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormVMADModel\Script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormVMADModel\Property.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormVMADModel\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormVMADModel\property_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormVMADModel\name_equals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

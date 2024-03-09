@@ -27,6 +27,9 @@
 #include "dovah/form_stub_helpers.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
+// for testing aliases' scripts
+#include "dovah/forms/Quest.h"
+
 namespace {
    constexpr const auto all_form_type_inheritance = []() {
       constexpr size_t count = []() {
@@ -635,6 +638,22 @@ namespace dovahkit::subsystems::papyrus {
             return true;
       }
 
+      return false;
+   }
+   bool core::quest_alias_has_script_attached(const dovah::loaded_forms::Alias& alias, std::string_view scriptname) const {
+      auto* known = this->lookup_known_script(scriptname);
+      if (!known)
+         return false;
+
+      for (auto& vmad_script : alias.script_data.scripts) {
+         auto* present = this->lookup_known_script(vmad_script.name);
+         if (!present)
+            continue;
+         if (present == known)
+            return true;
+         if (present->is_descendant_of(*known))
+            return true;
+      }
       return false;
    }
 

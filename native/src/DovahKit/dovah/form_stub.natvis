@@ -27,8 +27,16 @@
    </Type>
    
    <Type Name="dovah::form_stub">
+      
+      <!-- NOTE: dovah::form_types[(size_t)form_type] is not strictly correct. There is a point late in the list 
+                 of form-type constants where the ordering of the list desynchronizes from the ordering of the 
+                 constants (since some constants map to game engine values rather than to real form types, and 
+                 so there are gaps in the list). In the program, we use constexpr lookups to properly get form 
+                 type info; don't think that's an option here. It's fine; this is just debugging and for 90% of 
+                 form types it'll work. Note also that this isn't the only place in this Natvis file where we 
+                 take this shortcut. -->
       <Intrinsic Name="_signature_char" Expression="
-         ((const char*)&amp;dovah::form_types[formType].signature + (3 - a)),[1]nasb
+         ((const char*)&amp;dovah::form_types[(size_t)form_type].signature + (3 - a)),[1]nasb
       ">
          <Parameter Name="a" Type="uint32_t" />
       </Intrinsic>
@@ -44,13 +52,13 @@
       || ft == dovah::form_type::placed_hazard
       || ft == dovah::form_type::missile
       ">
-         <Parameter Name="ft" Type="uint8_t" />
+         <Parameter Name="ft" Type="dovah::form_type" />
       </Intrinsic>
 
-      <DisplayString Condition="formType == dovah::form_type::cell &amp;&amp; addenda">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb} at ({addenda-&gt;grid_coords.x,d}, {addenda-&gt;grid_coords.y,d})</DisplayString>
+      <DisplayString Condition="form_type == dovah::form_type::cell &amp;&amp; addenda">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb} at ({addenda-&gt;grid_coords.x,d}, {addenda-&gt;grid_coords.y,d})</DisplayString>
       <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb}</DisplayString>
       <Expand>
-         <Item Name="[form type]">dovah::form_types[formType].name,sb</Item>
+         <Item Name="[form type]">dovah::form_types[(size_t)form_type].name,sb</Item>
          <Item Name="[form ID]">formID,x</Item>
          <Item Name="[editor ID]">editorID,sb</Item>
          <Synthetic Name="[flags]">

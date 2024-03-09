@@ -12,6 +12,9 @@
 #include "ui/types/papyrus/property_value.h"
 #include "ui/types/papyrus/value_type.h"
 #include "ui/types/quest_alias.h"
+#include "./DKFormVMADModel/Property.h"
+#include "./DKFormVMADModel/Script.h"
+#include "./DKFormVMADModel/property_value.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -87,7 +90,7 @@ class DKFormVMADModel : public QAbstractItemModel {
       struct PropertyMetadata {
          std::optional<property_status> status;
          struct {
-            std::optional<ui::types::papyrus::value_type> underlying;
+            ui::types::papyrus::value_type underlying;
             QString scriptname; // if available via underlying PEX
             QString display_typename;
          } typeinfo;
@@ -113,100 +116,11 @@ class DKFormVMADModel : public QAbstractItemModel {
       using vmad_script   = dovah::loaded_forms::components::papyrus::attached_script;
       using vmad_property = dovah::loaded_forms::components::papyrus::property;
 
-      struct object_property_value {
-         static constexpr const uint16_t no_alias = 0xFFFF;
-
-         dovah::form_stub* form     = nullptr;
-         uint16_t          alias_id = no_alias;
-      };
-
-      using property_value = std::variant<
-         std::monostate, // only for clearing an inherited property value REFR-side
-         //
-         object_property_value, // TODO: REMOVE once we have machinery in place to properly identify a script's base class
-         //dovah::form_stub*,
-         //ui::types::quest_alias,
-         QString,
-         int32_t,
-         float,
-         bool,
-         //
-         std::vector<object_property_value>, // TODO: REMOVE once we have machinery in place to properly identify a script's base class
-         //std::vector<dovah::form_stub*>,
-         //std::vector<ui::types::quest_alias>,
-         std::vector<QString>,
-         std::vector<int32_t>,
-         std::vector<float>,
-         std::vector<bool>
-      >;
+      using property_value = DKFormVMADModelObjects::property_value;
 
    protected:
-      class Property {
-         public:
-            struct Typeinfo {
-               property_type underlying_type;
-               QString name; // scriptname, pulled from the compiled PEX, when `underlying_type` is Form or Form[]
-            };
-            struct Binding {
-               property_status status;
-               property_value  value;
-
-               property_type typecode() const;
-            };
-
-         public:
-            QString name;
-            QString docstring;
-            std::optional<Typeinfo> type; // type as dictated by the compiled script; absent if the PEX is not loadable
-            struct {
-               std::optional<Binding> parent; // base form, if the form we're currently editing is a REFR
-               std::optional<Binding> target; // form we're currently editing. NOTE: should have a value if clearing an inherited property value REFR-side!
-
-               std::optional<Binding> edited; // for edits made to a bound script via the GUI, prior to them being committed ("OK") or discarded ("Cancel")
-            } bindings;
-            //
-            QString value_string; // cached; computed from `bindings`
-
-            void clearParentBinding();
-            void clearTargetBinding();
-            void setParentBinding(const vmad_property&);
-            void setTargetBinding(const vmad_property&);
-            void setBindings(const vmad_property& parent, const vmad_property& target);
-
-            bool valueTypeIsOrContainsForm() const;
-            bool isOrContainsForm(const dovah::form_stub&) const;
-            QString typeString() const;
-            void recacheValueString();
-            bool onFormDeletionImminent(const dovah::form_stub&); // returns true if anything about this property has changed
-
-            // Used when the user wants to set this property's value. Should change the "target" binding, forcing the 
-            // status to `defined_locally` and setting the value.
-            void changeValueTo(const property_value&);
-
-            std::optional<property_status> getComputedStatus() const;
-            bool nameMatches(QString) const;
-      };
-      class Script {
-         public:
-            ~Script();
-
-            QString name;
-            struct {
-               std::optional<script_status> parent;
-               std::optional<script_status> target;
-            } statuses;
-            bool properties_set_on_target = false;
-            QVector<Property*> properties;
-
-            void loadPropertiesFromPex();
-            void loadParentPropertyData(const vmad_property&);
-            void loadTargetPropertyData(const vmad_property&);
-
-            Property* lookupProperty(QString name);
-
-            std::optional<script_status> getComputedStatus() const;
-            bool nameMatches(QString) const;
-      };
+      using Property = DKFormVMADModelObjects::Property;
+      using Script   = DKFormVMADModelObjects::Script;
 
    protected:
       working_copy_type* attached_to = nullptr; // form working copy

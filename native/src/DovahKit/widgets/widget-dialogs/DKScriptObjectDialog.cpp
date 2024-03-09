@@ -22,7 +22,13 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
 
    this->setWindowFlag(Qt::WindowContextHelpButtonHint);
 
-   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, [this]() {
+      if (this->scriptQMI.isValid()) {
+         auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
+         vmad_model->discardScriptWorkingProperties(this->scriptQMI);
+      }
+      this->reject();
+   });
    QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
 
    static_assert(allow_incomplete_polishing, "POLISH: Show scriptname and form it's attached to in the window title.");
@@ -47,6 +53,7 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
       QObject::connect(prop_view->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
          this->_showSelectedProperty();
       });
+      prop_view->setIconSize({ 16, 16 });
    }
 
    {
@@ -68,13 +75,10 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
          }
 
          auto prop_info = vmad_model->getPropertyWorkingMetadata(prop_qmi);
-         if (!prop_info.typeinfo.underlying.has_value()) {
-            return;
-         }
 
          auto* widget = this->ui.arrayTable;
 
-         if (!prop_info.typeinfo.underlying.value().is_array)
+         if (!prop_info.typeinfo.underlying.is_array)
             return;
 
          auto value = vmad_model->getPropertyWorkingValue(prop_qmi);
@@ -89,7 +93,7 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
             QSignalBlocker(this->ui.valueWidget_ref),
          };
 
-         switch (prop_info.typeinfo.underlying.value().base) {
+         switch (prop_info.typeinfo.underlying.base) {
             using enum ui::types::papyrus::single_value_type;
             case boolean:
                this->ui.valueWidget_bool->setChecked(std::get<std::vector<bool>>(value)[currentRow]);
@@ -106,21 +110,17 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
 
             case alias:
                {
-                  auto& item = std::get<std::vector<DKFormVMADModel::object_property_value>>(value)[currentRow];
-
-                  auto* quest    = item.form;
-                  auto  alias_id = item.alias_id;
-
+                  auto& item = std::get<std::vector<ui::types::quest_alias>>(value)[currentRow];
                   this->ui.valueWidget_alias->setQuestAlias({
-                     .quest    = quest,
-                     .alias_id = alias_id,
+                     .quest    = item.quest,
+                     .alias_id = item.alias_id,
                   });
                }
                break;
 
             case form:
                {
-                  dovah::form_stub* stub = std::get<std::vector<DKFormVMADModel::object_property_value>>(value)[currentRow].form;
+                  dovah::form_stub* stub = std::get<std::vector<dovah::form_stub*>>(value)[currentRow];
                   this->ui.valueWidget_form->setFormStub(stub);
                   this->ui.valueWidget_ref->setRef(stub);
                }
@@ -178,17 +178,14 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
    }
 
    auto prop_info = vmad_model->getPropertyWorkingMetadata(prop_qmi);
-   if (!prop_info.typeinfo.underlying.has_value()) {
-      return;
-   }
    auto row = this->ui.arrayTable->currentRow();
 
-   auto underlying = prop_info.typeinfo.underlying.value();
+   auto underlying = prop_info.typeinfo.underlying;
    switch (underlying.base) {
       using enum ui::types::papyrus::single_value_type;
 
       case boolean:
-         if (underlying.is_array) {
+         if (!underlying.is_array) {
             vmad_model->setPropertyWorkingValue(prop_qmi, v.toBool());
          } else {
             using value_type = std::vector<bool>;
@@ -201,7 +198,7 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
          break;
 
       case float32:
-         if (underlying.is_array) {
+         if (!underlying.is_array) {
             vmad_model->setPropertyWorkingValue(prop_qmi, v.toFloat());
          } else {
             using value_type = std::vector<float>;
@@ -214,7 +211,7 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
          break;
 
       case integer:
-         if (underlying.is_array) {
+         if (!underlying.is_array) {
             vmad_model->setPropertyWorkingValue(prop_qmi, v.toInt());
          } else {
             using value_type = std::vector<int32_t>;
@@ -227,7 +224,7 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
          break;
 
       case string:
-         if (underlying.is_array) {
+         if (!underlying.is_array) {
             vmad_model->setPropertyWorkingValue(prop_qmi, v.toString());
          } else {
             using value_type = std::vector<QString>;
@@ -241,16 +238,12 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
 
       case alias:
          {
-            auto d = v.value<ui::types::quest_alias>();
+            ui::types::quest_alias val = v.value<ui::types::quest_alias>();
 
-            DKFormVMADModel::object_property_value val;
-            val.form     = d.quest;
-            val.alias_id = d.alias_id;
-
-            if (underlying.is_array) {
+            if (!underlying.is_array) {
                vmad_model->setPropertyWorkingValue(prop_qmi, val);
             } else {
-               using value_type = std::vector<DKFormVMADModel::object_property_value>;
+               using value_type = std::vector<ui::types::quest_alias>;
 
                auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
                assert(std::holds_alternative<value_type>(data));
@@ -262,13 +255,12 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
 
       case form:
          {
-            DKFormVMADModel::object_property_value val;
-            val.form = v.value<dovah::form_stub*>();
+            dovah::form_stub* val = v.value<dovah::form_stub*>();
 
-            if (underlying.is_array) {
+            if (!underlying.is_array) {
                vmad_model->setPropertyWorkingValue(prop_qmi, val);
             } else {
-               using value_type = std::vector<DKFormVMADModel::object_property_value>;
+               using value_type = std::vector<dovah::form_stub*>;
 
                auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
                assert(std::holds_alternative<value_type>(data));
@@ -322,7 +314,7 @@ void DKScriptObjectDialog::_showSelectedProperty() {
       [this, &prop_qmi, vmad_model, &prop_info](const auto& v) {
          using value_type = std::decay_t<decltype(v)>;
 
-         auto _show_widgets = [this, &prop_info]<typename ValueType>() {
+         auto _show_widgets = [this, &prop_info, &v]<typename ValueType>() {
             if constexpr (std::is_same_v<ValueType, bool>) {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_bool);
             } else if constexpr (std::is_same_v<ValueType, float>) {
@@ -331,7 +323,9 @@ void DKScriptObjectDialog::_showSelectedProperty() {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_int);
             } else if constexpr (std::is_same_v<ValueType, QString>) {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_string);
-            } else if constexpr (std::is_same_v<ValueType, DKFormVMADModel::object_property_value>) {
+            } else if constexpr (std::is_same_v<ValueType, ui::types::quest_alias>) {
+               this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_alias);
+            } else if constexpr (std::is_same_v<ValueType, dovah::form_stub*>) {
                if (dovah::form_type_is_reference(prop_info.underlying_form_type())) {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_ref);
                } else {
@@ -369,6 +363,42 @@ void DKScriptObjectDialog::_showSelectedProperty() {
             this->ui.arrayTable->clearContents();
 
             _show_widgets.template operator()<value_type>();
+            
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.valueWidget_bool),
+               QSignalBlocker(this->ui.valueWidget_float),
+               QSignalBlocker(this->ui.valueWidget_int),
+               QSignalBlocker(this->ui.valueWidget_string),
+
+               QSignalBlocker(this->ui.valueWidget_form),
+               QSignalBlocker(this->ui.valueWidget_ref),
+            };
+
+            if constexpr (std::is_same_v<value_type, bool>) {
+               this->ui.valueWidget_bool->setChecked(v);
+            } else if constexpr (std::is_same_v<value_type, float>) {
+               this->ui.valueWidget_float->setValue(v);
+            } else if constexpr (std::is_same_v<value_type, int>) {
+               this->ui.valueWidget_int->setValue(v);
+            } else if constexpr (std::is_same_v<value_type, QString>) {
+               this->ui.valueWidget_string->setPlainText(v);
+            } else if constexpr (std::is_same_v<value_type, ui::types::quest_alias>) {
+               this->ui.valueWidget_alias->setRequiredScriptname(prop_info.typeinfo.scriptname);
+               this->ui.valueWidget_alias->setQuestAlias(v);
+            } else if constexpr (std::is_same_v<value_type, dovah::form_stub*>) {
+               if (dovah::form_type_is_reference(prop_info.underlying_form_type())) {
+                  this->ui.valueWidget_ref->setRequiredScriptname(prop_info.typeinfo.scriptname);
+                  this->ui.valueWidget_ref->setRef(v);
+               } else {
+                  if (prop_info.has_underlying_form_type())
+                     this->ui.valueWidget_form->setAllowedFormType(prop_info.underlying_form_type());
+                  else
+                     this->ui.valueWidget_form->allowAllFormTypes();
+
+                  this->ui.valueWidget_form->setRequiredScriptname(prop_info.typeinfo.scriptname);
+                  this->ui.valueWidget_form->setFormStub(v);
+               }
+            }
          }
       },
       value
