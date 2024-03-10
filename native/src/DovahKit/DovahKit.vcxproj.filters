@@ -2094,9 +2094,6 @@
     <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2127,13 +2124,7 @@
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\form_windows\activator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="widgets\widget-models\DKFormVMADModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp">
@@ -6117,16 +6108,7 @@
     <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectListModel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\form_windows\activator.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\widget-models\DKFormVMADModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h">
@@ -6503,9 +6485,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\forms\components\papyrus\attachment_data.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="widgets\widget-models\DKFormVMADModel.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\compiled script files.md" />

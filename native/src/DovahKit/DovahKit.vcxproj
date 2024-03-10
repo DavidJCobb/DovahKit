@@ -872,12 +872,9 @@
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
-    <ClCompile Include="widgets\widget-models\DKFormVMADModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormVMADModel\Property.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormVMADModel\property_value.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormVMADModel\Script.cpp" />
-    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectListModel.cpp" />
-    <ClCompile Include="widgets\widget-models\DKPapyrusScriptObjectModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -897,9 +894,6 @@
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h" />
-    <QtMoc Include="widgets\widget-models\DKFormVMADModel.h" />
-    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectModel.h" />
-    <QtMoc Include="widgets\widget-models\DKPapyrusScriptObjectListModel.h" />
     <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h" />
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
@@ -2487,7 +2481,6 @@
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
     <None Include="widgets\widget-models\bound-scripts\property.inl" />
     <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
-    <None Include="widgets\widget-models\DKFormVMADModel.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />

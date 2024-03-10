@@ -1,4 +1,7 @@
 #pragma once
+#if defined(QT_DESIGNER_LIB)
+   #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
+#endif
 #include <QAbstractItemModel>
 #include "dovah/forms/components/papyrus/attached_script.h"
 #include "dovah/forms/components/papyrus/attachment_data.h"
