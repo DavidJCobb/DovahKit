@@ -91,7 +91,6 @@ void FormDialogActivator::_load_impl() {
    }
 
    this->subwidgets.papyrus->setFormWorkingCopy(&working);
-   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "TODO: if Papyrus ScriptObjectList model doesn't edit target VMAD in real-time, it should");
 }
 void FormDialogActivator::_save_impl() {
    //
@@ -127,6 +126,8 @@ void FormDialogActivator::_save_impl() {
    static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Primitive color");
    working.interact_keyword.set(working, this->ui.defaultInteractKeyword->formStub());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
+
+   this->subwidgets.papyrus->commit();
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }

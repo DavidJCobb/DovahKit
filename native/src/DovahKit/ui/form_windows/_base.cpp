@@ -130,14 +130,14 @@ void FormWorkingCopyEditDialogBase::load() {
 void FormWorkingCopyEditDialogBase::save() {
    if (!this->stub)
       return;
-   this->clone = nullptr;
    //
    auto& editor = DovahKitCore::get();
    emit editor.formWorkingCopyCommitImminent(this->stub);
    emit editor.formModificationImminent(this->stub);
    this->stub->set_edited(true);
-   this->stub->commit_working_copy();
    this->_save_impl();
+   this->stub->commit_working_copy();
+   this->clone = nullptr;
    emit editor.formWorkingCopyCommitComplete(this->stub);
    emit editor.formModified(this->stub);
 }
