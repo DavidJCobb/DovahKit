@@ -72,7 +72,7 @@ DKBoundScriptModel::DKBoundScriptModel(QString scriptname, QObject* parent) : QA
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &DKBoundScriptModel::formsRenumberedEnMasse);
 
    auto& papyrus = dovahkit::subsystems::papyrus::core::get();
-   QObject::connect(&papyrus, dovahkit::subsystems::papyrus::core::knownScriptAboutToBeForgotten, this, [this](const auto& known_script) {
+   QObject::connect(&papyrus, &dovahkit::subsystems::papyrus::core::knownScriptAboutToBeForgotten, this, [this](const auto& known_script) {
       for (auto* prop : this->_properties) {
          if (prop->typeinfo.object.definition == &known_script) // TODO: maybe use a refcounted known script pointer so we don't have to worry about this case at all?
             prop->typeinfo.object.definition = nullptr;
@@ -450,6 +450,9 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script, const v
       }
    }
 
+   for (auto* prop : this->_properties)
+      prop->recache_value_string();
+
    this->endResetModel();
 }
 void DKBoundScriptModel::initializeFrom(const vmad_script& local_script) {
@@ -475,6 +478,35 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script) {
       if (prop->values.local.has_value())
          this->_cached.any_properties_defined_locally = true;
    }
+
+   for (auto* prop : this->_properties)
+      prop->recache_value_string();
+
+   this->endResetModel();
+}
+void DKBoundScriptModel::initializeFromInheritedOnly(const vmad_script& inherited_script) {
+   this->beginResetModel();
+
+   for (auto* prop : this->_properties) {
+      prop->values = {};
+   }
+   this->_cached.any_properties_defined_locally = false;
+   this->_load_results.some_data_discarded      = false;
+
+   for (auto& src : inherited_script.properties) {
+      property* prop = this->_lookup_property(src.name);
+      if (!prop) {
+         continue;
+      }
+      if (src.status == vmad::property_status::inherited_and_removed) {
+         prop->values.inherited = std::monostate{};
+      } else {
+         prop->values.inherited = this->_load_property_value(src, *prop);
+      }
+   }
+
+   for(auto* prop : this->_properties)
+      prop->recache_value_string();
 
    this->endResetModel();
 }
@@ -544,6 +576,15 @@ void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms
       auto* prop = this->_property(qmi);
       if (!prop)
          return {};
+
+      switch (role) {
+         case IsArrayRole:
+            return vmad::property_type_is_array(prop->typeinfo.raw_type);
+         case NativeTypeRole:
+            if (prop->typeinfo.object.native_type.has_value())
+               return (int)prop->typeinfo.object.native_type.value();
+            return {};
+      }
       
       switch (qmi.column()) {
          case Column::Name:
@@ -798,6 +839,17 @@ void DKBoundScriptModel::autoFillAllProperties() {
    for (size_t i = 0; i < this->_properties.size(); ++i) {
       auto* prop = this->_properties[i];
       assert(prop != nullptr);
+      if (prop->values.local.has_value()) {
+         auto& value = prop->values.local.value();
+         if (!std::holds_alternative<std::monostate>(value)) {
+            //
+            // If you select a specific property and click "Auto-Fill," then the CK will 
+            // clobber its current value. However, "Auto-Fill All" will never clobber any 
+            // values.
+            //
+            continue;
+         }
+      }
       if (prop->autofill()) {
          prop->recache_value_string();
          this->_cached.any_properties_defined_locally = true;
@@ -805,6 +857,37 @@ void DKBoundScriptModel::autoFillAllProperties() {
          emit dataChanged(qmi, qmi.siblingAtColumn(2));
       }
    }
+}
+
+std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptModel::infoForProperty(const QModelIndex& qmi) const {
+   auto* prop = this->_property(qmi);
+   if (!prop)
+      return {};
+   PropertyInfo out;
+
+   out.is_array    = vmad::property_type_is_array(prop->typeinfo.raw_type);
+   out.scriptname  = prop->typeinfo.object.scriptname;
+   out.raw_type    = prop->typeinfo.raw_type;
+   out.native_type = prop->typeinfo.object.native_type;
+   if (prop->typeinfo.object.guessed_type)
+      out.native_type = prop->typeinfo.object.guessed_type;
+
+   out.inherited = prop->is_inherited();
+   {
+      auto status = prop->get_computed_status();
+      if (status.has_value()) {
+         switch (status.value()) {
+            case vmad::property_status::inherited_and_removed:
+               out.cleared = true;
+               break;
+            case vmad::property_status::defined_locally:
+               out.defined_locally = true;
+               break;
+         }
+      }
+   }
+
+   return out;
 }
 
 std::optional<DKBoundScriptModel::PropertyValue> DKBoundScriptModel::getPropertyValue(const QModelIndex& qmi, bool local_only) const {
@@ -831,7 +914,7 @@ std::optional<DKBoundScriptModel::PropertyValue> DKBoundScriptModel::getProperty
    if (!prop)
       return {};
    if (!ui::bound_script_models::vmad::property_type_is_array(prop->typeinfo.raw_type))
-      return;
+      return {};
    
    auto& opt_local     = prop->values.local;
    auto& opt_inherited = prop->values.inherited;

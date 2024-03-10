@@ -865,6 +865,10 @@
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
+    <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
+    <ClCompile Include="widgets\widget-models\bound-scripts\property_value.cpp" />
+    <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKBoundScriptModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
@@ -877,11 +881,16 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
+    <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
+    <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />
+    <QtMoc Include="widgets\widget-models\DKBoundScriptListModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\name_equals.h" />
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\Property.h" />
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\property_value.h" />
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\Script.h" />
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\types.h" />
+    <ClInclude Include="widgets\widget-models\bound-scripts\property.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
@@ -2476,6 +2485,8 @@
     <None Include="vulkan\scene_entities\base.inl" />
     <None Include="vulkan\scene_gizmo_state.inl" />
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
+    <None Include="widgets\widget-models\bound-scripts\property.inl" />
+    <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
     <None Include="widgets\widget-models\DKFormVMADModel.inl" />
   </ItemGroup>
   <ItemGroup>

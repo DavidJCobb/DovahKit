@@ -2226,6 +2226,18 @@
     <ClCompile Include="widgets\widget-models\DKFormVMADModel\Property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-models\bound-scripts\property_value.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKBoundScriptModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5588,6 +5600,15 @@
     <ClInclude Include="widgets\widget-models\DKFormVMADModel\name_equals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="widgets\widget-models\bound-scripts\property.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6141,6 +6162,12 @@
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKBoundScriptListModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -6541,6 +6568,12 @@
     </None>
     <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />
     <None Include="editor\subsystems\form_info_cache\cached_vmad_info.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="widgets\widget-models\bound-scripts\property.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="widgets\widget-models\DKBoundScriptModel.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

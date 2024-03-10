@@ -1,8 +1,9 @@
 #pragma once
 #include "ui_DKScriptObjectDialog.h"
+#include <optional>
 #include <QDialog>
 
-class DKFormVMADModel;
+class DKBoundScriptModel;
 
 class DKScriptObjectDialog : public QDialog {
    Q_OBJECT;
@@ -11,8 +12,10 @@ class DKScriptObjectDialog : public QDialog {
 
    protected:
       Ui::DKScriptObjectDialog ui;
-      QPersistentModelIndex scriptQMI;
+      QPersistentModelIndex    script_qmi;
+      DKBoundScriptModel*      script_model = nullptr;
 
+      std::optional<size_t> _currentArrayElementIndex() const;
       QModelIndex _selectedPropertyQMI() const;
 
       void _showSelectedProperty();

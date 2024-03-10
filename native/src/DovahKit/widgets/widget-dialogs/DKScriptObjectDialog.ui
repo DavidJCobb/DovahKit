@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Properties for script</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
+  <layout class="QGridLayout" name="gridLayout" columnstretch="8,7">
    <item row="0" column="0" rowspan="2">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
@@ -434,7 +434,17 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QSpinBox" name="valueWidget_int"/>
+              <widget class="QSpinBox" name="valueWidget_int">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <number>-2147483647</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0" colspan="2">
               <spacer name="verticalSpacer_7">
@@ -466,7 +476,14 @@
               <number>0</number>
              </property>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="valueWidget_float"/>
+              <widget class="QDoubleSpinBox" name="valueWidget_float">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>3</number>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0" colspan="2">
               <spacer name="verticalSpacer_8">
@@ -500,7 +517,7 @@
        <item>
         <layout class="QVBoxLayout" name="valueButtonsLayout">
          <item>
-          <widget class="QPushButton" name="buttonValueClear">
+          <widget class="QPushButton" name="buttonValueClearOrMakeLocal">
            <property name="text">
             <string>Clear Value</string>
            </property>
@@ -603,7 +620,7 @@
   <tabstop>valueWidget_string</tabstop>
   <tabstop>valueWidget_int</tabstop>
   <tabstop>valueWidget_float</tabstop>
-  <tabstop>buttonValueClear</tabstop>
+  <tabstop>buttonValueClearOrMakeLocal</tabstop>
   <tabstop>buttonValueRevert</tabstop>
   <tabstop>buttonValueAutoFill</tabstop>
   <tabstop>buttonOK</tabstop>

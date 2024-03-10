@@ -21,6 +21,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
       using property = ui::bound_script_models::property;
    public:
       using vmad_attachment_data = ui::bound_script_models::vmad::attachment_data;
+      using vmad_property_type   = ui::bound_script_models::vmad::property_type;
       using vmad_script          = ui::bound_script_models::vmad::attached_script;
 
       using PropertyValue = ui::bound_script_models::property_value;
@@ -34,6 +35,48 @@ class DKBoundScriptModel : public QAbstractItemModel {
          };
       };
       static constexpr const size_t ColumnCount = Column::_Count;
+
+      static constexpr const auto IsArrayRole     = (Qt::ItemDataRole)(Qt::UserRole);
+      static constexpr const auto NativeTypeRole  = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr const auto IsInheritedRole = (Qt::ItemDataRole)(Qt::UserRole + 2);
+
+      struct PropertyInfo {
+         bool cleared         = false;
+         bool defined_locally = false;
+         bool inherited       = false;
+         bool is_array        = false;
+
+         
+         std::optional<dovah::form_type> native_type;
+         vmad_property_type raw_type = vmad_property_type::none;
+         QString scriptname;
+         
+         constexpr bool is_alias() const noexcept {
+            if (!native_type.has_value())
+               return false;
+            switch (native_type.value()) {
+               case dovah::form_type::alias:
+               case dovah::form_type::location_alias:
+               case dovah::form_type::reference_alias:
+                  return true;
+            }
+            return false;
+         }
+         constexpr bool is_form() const noexcept {
+            if (!native_type.has_value())
+               return false;
+            switch (native_type.value()) {
+               case dovah::form_type::alias:
+               case dovah::form_type::location_alias:
+               case dovah::form_type::reference_alias:
+               case dovah::form_type::active_magic_effect:
+                  return false;
+            }
+            return true;
+         }
+
+         constexpr bool is_defined() const noexcept { return defined_locally || inherited; }
+      };
 
    protected:
       using vmad_property       = ui::bound_script_models::vmad::property;
@@ -85,6 +128,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
    public:
       void initializeFrom(const vmad_script& local_script, const vmad_attachment_data& parent_vmad);
       void initializeFrom(const vmad_script& local_script);
+      void initializeFromInheritedOnly(const vmad_script& inherited_script);
       void commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy);
       
       #pragma region QAbstractItemModel overrides
@@ -100,6 +144,9 @@ class DKBoundScriptModel : public QAbstractItemModel {
       constexpr bool anyPropertiesDefinedLocally() const;
       constexpr bool anyPropertiesDiscardedOnLoad() const;
       constexpr bool failedToLoad() const;
+      constexpr void forgetAnyPropertiesWereDiscardedOnLoad() {
+         this->_load_results.some_data_discarded = false;
+      }
 
       void autoFillProperty(const QModelIndex&);
       void clearProperty(const QModelIndex&);
@@ -109,6 +156,8 @@ class DKBoundScriptModel : public QAbstractItemModel {
       void setPropertyLocalValueElement(const QModelIndex&, const PropertyValue&, size_t array_index); // fails (does nothing) on non-array properties
 
       void autoFillAllProperties();
+
+      std::optional<PropertyInfo> infoForProperty(const QModelIndex&) const;
 
       std::optional<PropertyValue> getPropertyValue(const QModelIndex&, bool local_only = false) const;
       std::optional<PropertyValue> getPropertyValueElement(const QModelIndex&, size_t array_index, bool local_only = false) const; // fails (empty result) on non-array properties

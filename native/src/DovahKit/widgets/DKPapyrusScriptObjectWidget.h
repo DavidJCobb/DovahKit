@@ -7,7 +7,7 @@ class DKFormVMADModel;
    #include "dovah/core.h"
    #include "dovah/form_stub.h"
    #include "dovah/forms/components/papyrus.h"
-   #include "./widget-models/DKFormVMADModel.h"
+   #include "./widget-models/DKBoundScriptListModel.h"
 #endif
 
 namespace dovah::loaded_forms {
@@ -33,6 +33,8 @@ class DKPapyrusScriptObjectWidget : public QWidget {
       #if !defined(QT_DESIGNER_LIB)
          void setFormWorkingCopy(working_copy_type* working_copy);
          void setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target);
+
+         void commit();
       #endif
 
    signals:
@@ -58,7 +60,7 @@ class DKPapyrusScriptObjectWidget : public QWidget {
       } vmad;
       #endif
       //
-      DKFormVMADModel* model = nullptr;
+      DKBoundScriptListModel* model = nullptr;
 
       #if !defined(QT_DESIGNER_LIB)
       void _editSelected();

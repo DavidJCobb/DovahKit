@@ -46,6 +46,10 @@ class DKBoundScriptListModel : public QAbstractItemModel {
       };
 
       std::vector<bound_script*> _scripts;
+      struct {
+         vmad_data* inherited = nullptr;
+         vmad_data* local     = nullptr;
+      } _vmad;
 
    protected:
       const bound_script* _script(const QModelIndex&) const;
@@ -68,6 +72,10 @@ class DKBoundScriptListModel : public QAbstractItemModel {
          virtual QVariant data(const QModelIndex& index, int role) const override;
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       #pragma endregion
+
+      QModelIndex index(QString scriptname) const;
+
+      std::optional<vmad_script_status> status(const QModelIndex&) const;
 
       // Creates a script model for the given script. If the given script already has a model, 
       // creates a copy. You can use this to open a dialog to edit the given script's properties: 

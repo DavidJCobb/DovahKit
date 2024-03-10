@@ -39,6 +39,8 @@ void DKBoundScriptListModel::initializeFrom(vmad_data& local) {
    this->beginResetModel();
 
    this->clear();
+   this->_vmad.inherited = nullptr;
+   this->_vmad.local     = &local;
    
    QMap<QString, bound_script*> working;
    for (const auto& src : local.scripts) {
@@ -78,6 +80,8 @@ void DKBoundScriptListModel::initializeFrom(vmad_data& local, vmad_data& inherit
    this->beginResetModel();
 
    this->clear();
+   this->_vmad.inherited = &inherited;
+   this->_vmad.local     = &local;
    
    QMap<QString, bound_script*> working;
    for (const auto& src : inherited.scripts) {
@@ -226,7 +230,6 @@ void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Fo
                      return QIcon(":/icons/papyrus-status-icons/inherited-edited.png");
                   }
                   return QIcon(":/icons/papyrus-status-icons/inherited.png");
-                  return;
                case vmad::script_status::removed:
                   return QIcon(":/icons/papyrus-status-icons/removed.png");
             }
@@ -246,6 +249,19 @@ void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Fo
    }
 #pragma endregion
 
+QModelIndex DKBoundScriptListModel::index(QString scriptname) const {
+   for (size_t i = 0; i < this->_scripts.size(); ++i)
+      if (this->_scripts[i]->name.compare(scriptname, Qt::CaseInsensitive) == 0)
+         return this->index(i, 0, {});
+   return {};
+}
+
+std::optional<vmad::script_status> DKBoundScriptListModel::status(const QModelIndex& qmi) const {
+   if (auto* script = this->_script(qmi))
+      return script->status;
+   return {};
+}
+
 // Creates a script model for the given script. If the given script already has a model, 
 // creates a copy. You can use this to open a dialog to edit the given script's properties: 
 // create the model; if the user clicks OK, use `replaceScriptModelFor` to save it; else, 
@@ -260,6 +276,19 @@ DKBoundScriptModel* DKBoundScriptListModel::createScriptModelFor(const QModelInd
       out = new DKBoundScriptModel(*script->model, this);
    } else {
       out = new DKBoundScriptModel(script->name, this);
+      if (this->_vmad.local) {
+         auto* scr = this->_vmad.local->lookup_script(script->name.toUtf8().toStdString());
+         if (scr) {
+            if (this->_vmad.inherited)
+               out->initializeFrom(*scr, *this->_vmad.inherited);
+            else
+               out->initializeFrom(*scr);
+         }
+      } else if (this->_vmad.inherited) {
+         auto* scr = this->_vmad.inherited->lookup_script(script->name.toUtf8().toStdString());
+         if (scr)
+            out->initializeFromInheritedOnly(*scr);
+      }
    }
    return out;
 }

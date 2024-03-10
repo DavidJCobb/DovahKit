@@ -43,6 +43,10 @@ class DKPapyrusScriptObjectListModel : public QAbstractItemModel {
          return QVariant();
       }
 };
+#else
+namespace vmad {
+   using namespace dovah::loaded_forms::components::papyrus;
+}
 #endif
 
 DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWidget(parent) {
@@ -91,7 +95,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       this->setTabOrder(this->subwidgets.buttons.toggle_delete, this->subwidgets.buttons.properties);
    #pragma endregion
    //
-   this->model = new DKFormVMADModel(this);
+   this->model = new DKBoundScriptListModel(this);
    view->setIconSize(QSize(16, 16));
    view->setModel(this->model);
    #if !defined(QT_DESIGNER_LIB)
@@ -125,7 +129,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          QString scriptname;
          {
             auto* dialog = new DKAddPapyrusScriptDialog(this);
-            dialog->setAlreadyAttachedScripts(this->model->getAllBoundScripts());
+            dialog->setAlreadyAttachedScripts(this->model->getAllBoundScriptNames());
             dialog->setTargetType(this->vmad.form->stub.form_type);
             dialog->exec();
             if (dialog->result() == QDialog::Accepted) {
@@ -141,7 +145,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          // result in them being able to choose a script that is already attached. We, uh, should 
          // not handle that with an assertion failure, lol.
          //
-         if (this->model->scriptIndex(scriptname).isValid()) {
+         if (this->model->index(scriptname).isValid()) {
             if (this->vmad.parent)
                QMessageBox::critical(this, "Error", "Script is already attached to this form or to its base form.");
             else
@@ -166,14 +170,13 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
             script_qmi = rows[0];
          }
 
-         auto raw_info = this->model->getScriptMetadata(script_qmi);
-         if (!raw_info.attached_on_target)
+         auto opt = this->model->status(script_qmi);
+         if (!opt.has_value())
             return;
-         if (!raw_info.inherited_and_removed) {
+         if (opt.value() != vmad::script_status::removed)
             this->model->removeScript(script_qmi);
-         } else {
-            this->model->undeleteInheritedScript(script_qmi);
-         }
+         else
+            this->model->undeleteScript(script_qmi);
       });
    #endif
 }
@@ -218,13 +221,13 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          return;
       }
 
-      auto info = this->model->getScriptMetadata(script_qmi);
-      if (!info.attached_on_target && !info.attached_on_parent) {
+      auto opt = this->model->status(script_qmi);
+      if (!opt.has_value()) {
          this->subwidgets.buttons.wrapper->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
-      if (!info.inherited_and_removed) {
+      if (opt.value() != vmad::script_status::removed) {
          this->subwidgets.buttons.properties->setEnabled(true);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
       } else {
@@ -239,7 +242,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          this->vmad = {};
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->unsetWorkingVMAD();
+         this->model->clear();
          return;
       }
 
@@ -264,9 +267,9 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       if (loaded_parent) {
          auto* parent_vmad = this->vmad.base_form->get_raw_papyrus_data();
          this->vmad.parent = parent_vmad;
-         this->model->setWorkingVMAD(*target_form, *target_vmad, *parent_vmad);
+         this->model->initializeFrom(*target_vmad, *parent_vmad);
       } else {
-         this->model->setWorkingVMAD(*target_form, *target_vmad);
+         this->model->initializeFrom(*target_vmad);
       }
 
       this->subwidgets.buttons.wrapper->setEnabled(true);
@@ -276,14 +279,23 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
          this->vmad = {};
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
-         this->model->unsetWorkingVMAD();
+         this->model->clear();
          return;
       }
 
       this->vmad = {};
-      this->vmad.form = quest_working_copy;
+      this->vmad.form   = quest_working_copy;
+      this->vmad.target = &target;
 
-      this->model->setWorkingVMAD(*quest_working_copy, target);
+      this->model->initializeFrom(target);
       this->subwidgets.buttons.wrapper->setEnabled(true);
+   }
+
+   void DKPapyrusScriptObjectWidget::commit() {
+      if (!this->vmad.target)
+         return;
+      if (!this->vmad.form)
+         return;
+      this->model->commitTo(*this->vmad.target, *this->vmad.form);
    }
 #endif

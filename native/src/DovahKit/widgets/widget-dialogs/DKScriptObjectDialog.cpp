@@ -5,10 +5,12 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QStandardItemModel>
 #include "helpers/type_traits/is_std_vector.h"
-#include "../widget-models/DKFormVMADModel.h"
+#include "../widget-models/DKBoundScriptModel.h"
+#include "../widget-models/DKBoundScriptListModel.h"
 
 #include "editor/form_stub_meta_type.h"
 #include "ui/types/quest_alias.h"
@@ -17,31 +19,41 @@ namespace {
    constexpr const bool allow_incomplete_polishing = true;
 }
 
+namespace vmad {
+   using namespace dovah::loaded_forms::components::papyrus;
+}
+
 DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptModelIndex) : QDialog(&parent) {
    this->ui.setupUi(this);
 
    this->setWindowFlag(Qt::WindowContextHelpButtonHint);
 
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, [this]() {
-      if (this->scriptQMI.isValid()) {
-         auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
-         vmad_model->discardScriptWorkingProperties(this->scriptQMI);
+      if (this->script_model) {
+         delete this->script_model;
+         this->script_model = nullptr;
       }
       this->reject();
    });
-   QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
+      ((DKBoundScriptListModel*)this->script_qmi.model())->replaceScriptModelFor(this->script_qmi, this->script_model);
+      this->accept();
+   });
 
    static_assert(allow_incomplete_polishing, "POLISH: Show scriptname and form it's attached to in the window title.");
 
-   this->scriptQMI = scriptModelIndex;
+   this->script_qmi   = scriptModelIndex;
+   this->script_model = ((DKBoundScriptListModel*)scriptModelIndex.model())->createScriptModelFor(scriptModelIndex);
+
+   this->ui.valueWidget_float->setMinimum(std::numeric_limits<float>::lowest());
+   this->ui.valueWidget_float->setMaximum(std::numeric_limits<float>::max());
+
    {
       auto* prop_view = this->ui.properties;
       prop_view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
       prop_view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       if (scriptModelIndex.isValid()) {
-         prop_view->setModel((QAbstractItemModel*)scriptModelIndex.model());
-         prop_view->setRootIndex(scriptModelIndex);
-         assert(dynamic_cast<const DKFormVMADModel*>(scriptModelIndex.model()) != nullptr);
+         prop_view->setModel(this->script_model);
       }
       if (auto* header = prop_view->horizontalHeader()) {
          header->setStretchLastSection(true);
@@ -68,20 +80,25 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
          vh->setVisible(false);
       }
       QObject::connect(widget, &QTableWidget::currentCellChanged, this, [this](int currentRow, int currentColumn, int previousRow, int previousColumn) {
-         auto  prop_qmi = this->_selectedPropertyQMI();
-         auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
-         if (!vmad_model || !prop_qmi.isValid()) {
+         auto qmi = this->_selectedPropertyQMI();
+         if (!this->script_model || !qmi.isValid()) {
             return;
          }
 
-         auto prop_info = vmad_model->getPropertyWorkingMetadata(prop_qmi);
+         const auto info_opt = this->script_model->infoForProperty(qmi);
+         if (!info_opt.has_value())
+            return;
+         const auto& info = info_opt.value();
 
-         auto* widget = this->ui.arrayTable;
-
-         if (!prop_info.typeinfo.underlying.is_array)
+         if (!info.is_array)
             return;
 
-         auto value = vmad_model->getPropertyWorkingValue(prop_qmi);
+         const auto value_opt = this->script_model->getPropertyValueElement(qmi, currentRow);
+         if (!value_opt.has_value())
+            return;
+         const auto& value = value_opt.value();
+
+         auto* widget = this->ui.arrayTable;
 
          const auto blockers = std::array{
             QSignalBlocker(this->ui.valueWidget_bool),
@@ -93,34 +110,29 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
             QSignalBlocker(this->ui.valueWidget_ref),
          };
 
-         switch (prop_info.typeinfo.underlying.base) {
-            using enum ui::types::papyrus::single_value_type;
+         switch (vmad::scalar_property_type_for(info.raw_type)) {
+            using enum vmad::property_type;
             case boolean:
-               this->ui.valueWidget_bool->setChecked(std::get<std::vector<bool>>(value)[currentRow]);
+               this->ui.valueWidget_bool->setChecked(std::get<bool>(value));
                break;
             case float32:
-               this->ui.valueWidget_float->setValue(std::get<std::vector<float>>(value)[currentRow]);
+               this->ui.valueWidget_float->setValue(std::get<float>(value));
                break;
             case integer:
-               this->ui.valueWidget_int->setValue(std::get<std::vector<int32_t>>(value)[currentRow]);
+               this->ui.valueWidget_int->setValue(std::get<int32_t>(value));
                break;
             case string:
-               this->ui.valueWidget_string->setPlainText(std::get<std::vector<QString>>(value)[currentRow]);
+               this->ui.valueWidget_string->setPlainText(std::get<QString>(value));
                break;
-
-            case alias:
-               {
-                  auto& item = std::get<std::vector<ui::types::quest_alias>>(value)[currentRow];
+            case object:
+               if (info.is_alias()) {
+                  auto& item = std::get<ui::types::quest_alias>(value);
                   this->ui.valueWidget_alias->setQuestAlias({
                      .quest    = item.quest,
                      .alias_id = item.alias_id,
                   });
-               }
-               break;
-
-            case form:
-               {
-                  dovah::form_stub* stub = std::get<std::vector<dovah::form_stub*>>(value)[currentRow];
+               } else if (info.is_form()) {
+                  dovah::form_stub* stub = std::get<dovah::form_stub*>(value);
                   this->ui.valueWidget_form->setFormStub(stub);
                   this->ui.valueWidget_ref->setRef(stub);
                }
@@ -128,6 +140,181 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
          }
       });
    }
+
+   QObject::connect(this->ui.buttonAutoFillAll, &QPushButton::clicked, this, [this]() {
+      if (!this->script_model)
+         return;
+      this->script_model->autoFillAllProperties();
+      this->_showSelectedProperty();
+   });
+   QObject::connect(this->ui.buttonValueAutoFill, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+      this->script_model->autoFillProperty(qmi);
+      this->_showSelectedProperty();
+   });
+   QObject::connect(this->ui.buttonValueClearOrMakeLocal, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+
+      const auto info_opt = this->script_model->infoForProperty(qmi);
+      if (!info_opt.has_value())
+         return;
+      const auto& info = info_opt.value();
+
+      if (info.is_defined()) {
+         this->script_model->clearProperty(qmi);
+      } else {
+         this->script_model->makePropertyLocal(qmi);
+      }
+      this->_showSelectedProperty();
+   });
+   QObject::connect(this->ui.buttonValueRevert, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+      this->script_model->revertProperty(qmi);
+      this->_showSelectedProperty();
+   });
+
+   QObject::connect(this->ui.arrayButtonAdd, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+
+      auto value_opt = this->script_model->getPropertyValue(qmi);
+      if (!value_opt.has_value())
+         return;
+      auto& value   = value_opt.value();
+      bool  changed = false;
+      std::visit(
+         [&changed](auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               v.emplace_back();
+               changed = true;
+            }
+         },
+         value
+      );
+      if (changed)
+         this->script_model->setPropertyLocalValue(qmi, value);
+   });
+   QObject::connect(this->ui.arrayButtonRemove, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+
+      size_t row;
+      if (auto opt = this->_currentArrayElementIndex(); opt.has_value()) {
+         row = opt.value();
+      } else {
+         return;
+      }
+
+      auto value_opt = this->script_model->getPropertyValue(qmi);
+      if (!value_opt.has_value())
+         return;
+      auto& value   = value_opt.value();
+      bool  changed = false;
+      std::visit(
+         [row, &changed](auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               if (row >= v.size())
+                  return;
+               v.erase(v.begin() + row);
+               changed = true;
+            }
+         },
+         value
+      );
+      if (changed)
+         this->script_model->setPropertyLocalValue(qmi, value);
+   });
+   QObject::connect(this->ui.arrayButtonMoveUp, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+
+      size_t row;
+      if (auto opt = this->_currentArrayElementIndex(); opt.has_value()) {
+         row = opt.value();
+      } else {
+         return;
+      }
+
+      if (row == 0) // can't move
+         return;
+
+      auto value_opt = this->script_model->getPropertyValue(qmi);
+      if (!value_opt.has_value())
+         return;
+      auto& value   = value_opt.value();
+      bool  changed = false;
+      std::visit(
+         [row, &changed](auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               if (v.size() <= row)
+                  return;
+               if constexpr (std::is_same_v<value_type, std::vector<bool>>) { // fucking vector-of-bool...
+                  bool a = v[row];
+                  bool b = v[row - 1];
+                  v[row]     = b;
+                  v[row - 1] = a;
+               } else {
+                  std::swap(v[row], v[row - 1]);
+               }
+               changed = true;
+            }
+         },
+         value
+      );
+      if (changed)
+         this->script_model->setPropertyLocalValue(qmi, value);
+   });
+   QObject::connect(this->ui.arrayButtonMoveDown, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selectedPropertyQMI();
+      if (!this->script_model || !qmi.isValid())
+         return;
+
+      size_t row;
+      if (auto opt = this->_currentArrayElementIndex(); opt.has_value()) {
+         row = opt.value();
+      } else {
+         return;
+      }
+
+      auto value_opt = this->script_model->getPropertyValue(qmi);
+      if (!value_opt.has_value())
+         return;
+      auto& value   = value_opt.value();
+      bool  changed = false;
+      std::visit(
+         [row, &changed](auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               if (row + 1 >= v.size())
+                  return;
+               if constexpr (std::is_same_v<value_type, std::vector<bool>>) { // fucking vector-of-bool...
+                  bool a = v[row];
+                  bool b = v[row + 1];
+                  v[row]     = b;
+                  v[row + 1] = a;
+               } else {
+                  std::swap(v[row], v[row + 1]);
+               }
+               changed = true;
+            }
+         },
+         value
+      );
+      if (changed)
+         this->script_model->setPropertyLocalValue(qmi, value);
+   });
 
    #pragma region Value-change handlers
    QObject::connect(this->ui.valueWidget_bool, &QCheckBox::stateChanged, this, [this](int state) {
@@ -156,10 +343,31 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
    #pragma endregion
 
    this->_showSelectedProperty();
+
+   if (this->script_model->anyPropertiesDiscardedOnLoad()) {
+      QMessageBox::warning(
+         this,
+         tr("Some properties have been removed"),
+         tr("Some Papyrus property values were discarded, either because the properties in question don't actually exist on the script (as defined in the relevant PEX files) or because the values were invalid.")
+      );
+      this->script_model->forgetAnyPropertiesWereDiscardedOnLoad(); // so we're only warned once, if we commit our changes
+   }
 }
 
+std::optional<size_t> DKScriptObjectDialog::_currentArrayElementIndex() const {
+   auto* sm = this->ui.arrayTable->selectionModel();
+   if (!sm)
+      return {};
+   auto rows = sm->selectedRows();
+   if (rows.empty())
+      return {};
+   auto row = rows[0].row();
+   if (row < 0)
+      return {};
+   return row;
+}
 QModelIndex DKScriptObjectDialog::_selectedPropertyQMI() const {
-   if (!this->scriptQMI.isValid())
+   if (!this->script_qmi.isValid())
       return {};
    auto* sm = this->ui.properties->selectionModel();
    if (!sm)
@@ -171,101 +379,68 @@ QModelIndex DKScriptObjectDialog::_selectedPropertyQMI() const {
 }
 
 void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
-   auto  prop_qmi   = this->_selectedPropertyQMI();
-   auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
-   if (!vmad_model || !prop_qmi.isValid()) {
+   auto qmi = this->_selectedPropertyQMI();
+   if (!this->script_model || !qmi.isValid()) {
       return;
    }
 
-   auto prop_info = vmad_model->getPropertyWorkingMetadata(prop_qmi);
-   auto row = this->ui.arrayTable->currentRow();
+   const auto info_opt = this->script_model->infoForProperty(qmi);
+   if (!info_opt.has_value())
+      return;
+   const auto& info = info_opt.value();
+   const auto  row  = this->ui.arrayTable->currentRow();
 
-   auto underlying = prop_info.typeinfo.underlying;
-   switch (underlying.base) {
-      using enum ui::types::papyrus::single_value_type;
+   switch (vmad::scalar_property_type_for(info.raw_type)) {
+      using enum vmad::property_type;
 
       case boolean:
-         if (!underlying.is_array) {
-            vmad_model->setPropertyWorkingValue(prop_qmi, v.toBool());
+         if (!info.is_array) {
+            this->script_model->setPropertyLocalValue(qmi, v.toBool());
          } else {
-            using value_type = std::vector<bool>;
-
-            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(data));
-            std::get<value_type>(data)[row] = v.toBool();
-            vmad_model->setPropertyWorkingValue(prop_qmi, data);
+            this->script_model->setPropertyLocalValueElement(qmi, v.toBool(), row);
          }
          break;
 
       case float32:
-         if (!underlying.is_array) {
-            vmad_model->setPropertyWorkingValue(prop_qmi, v.toFloat());
+         if (!info.is_array) {
+            this->script_model->setPropertyLocalValue(qmi, v.toFloat());
          } else {
-            using value_type = std::vector<float>;
-
-            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(data));
-            std::get<value_type>(data)[row] = v.toFloat();
-            vmad_model->setPropertyWorkingValue(prop_qmi, data);
+            this->script_model->setPropertyLocalValueElement(qmi, v.toFloat(), row);
          }
          break;
 
       case integer:
-         if (!underlying.is_array) {
-            vmad_model->setPropertyWorkingValue(prop_qmi, v.toInt());
+         if (!info.is_array) {
+            this->script_model->setPropertyLocalValue(qmi, v.toInt());
          } else {
-            using value_type = std::vector<int32_t>;
-
-            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(data));
-            std::get<value_type>(data)[row] = v.toInt();
-            vmad_model->setPropertyWorkingValue(prop_qmi, data);
+            this->script_model->setPropertyLocalValueElement(qmi, v.toInt(), row);
          }
          break;
 
       case string:
-         if (!underlying.is_array) {
-            vmad_model->setPropertyWorkingValue(prop_qmi, v.toString());
+         if (!info.is_array) {
+            this->script_model->setPropertyLocalValue(qmi, v.toString());
          } else {
-            using value_type = std::vector<QString>;
-
-            auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-            assert(std::holds_alternative<value_type>(data));
-            std::get<value_type>(data)[row] = v.toString();
-            vmad_model->setPropertyWorkingValue(prop_qmi, data);
+            this->script_model->setPropertyLocalValueElement(qmi, v.toString(), row);
          }
          break;
 
-      case alias:
-         {
+      case object:
+         if (info.is_alias()) {
             ui::types::quest_alias val = v.value<ui::types::quest_alias>();
 
-            if (!underlying.is_array) {
-               vmad_model->setPropertyWorkingValue(prop_qmi, val);
+            if (!info.is_array) {
+               this->script_model->setPropertyLocalValue(qmi, val);
             } else {
-               using value_type = std::vector<ui::types::quest_alias>;
-
-               auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-               assert(std::holds_alternative<value_type>(data));
-               std::get<value_type>(data)[row] = val;
-               vmad_model->setPropertyWorkingValue(prop_qmi, data);
+               this->script_model->setPropertyLocalValueElement(qmi, val, row);
             }
-         }
-         break;
-
-      case form:
-         {
+         } else if (info.is_form()) {
             dovah::form_stub* val = v.value<dovah::form_stub*>();
 
-            if (!underlying.is_array) {
-               vmad_model->setPropertyWorkingValue(prop_qmi, val);
+            if (!info.is_array) {
+               this->script_model->setPropertyLocalValue(qmi, val);
             } else {
-               using value_type = std::vector<dovah::form_stub*>;
-
-               auto data = vmad_model->getPropertyWorkingValue(prop_qmi);
-               assert(std::holds_alternative<value_type>(data));
-               std::get<value_type>(data)[row] = val;
-               vmad_model->setPropertyWorkingValue(prop_qmi, data);
+               this->script_model->setPropertyLocalValueElement(qmi, val, row);
             }
          }
          break;
@@ -273,54 +448,64 @@ void DKScriptObjectDialog::_setCurrentlyFocusedValue(QVariant v) {
 }
 
 void DKScriptObjectDialog::_showSelectedProperty() {
-   auto  prop_qmi   = this->_selectedPropertyQMI();
-   auto* vmad_model = (DKFormVMADModel*)this->scriptQMI.model();
-
-   if (!vmad_model || !prop_qmi.isValid()) {
+   auto qmi = this->_selectedPropertyQMI();
+   if (!this->script_model || !qmi.isValid()) {
       this->ui.propertyType->setText(tr("Property type: <nothing selected>"));
       this->ui.arrayEditingLayout->setVisible(false);
+      this->ui.arrayEditingLayout->setEnabled(false);
       this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_defaulted);
       return;
    }
+   const auto info_opt = this->script_model->infoForProperty(qmi);
+   if (!info_opt.has_value()) {
+      this->ui.propertyType->setText(tr("Property type: <nothing selected>"));
+      this->ui.arrayEditingLayout->setVisible(false);
+      this->ui.arrayEditingLayout->setEnabled(false);
+      this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_defaulted);
+      return;
+   }
+   const auto& info = info_opt.value();
 
-   auto prop_info = vmad_model->getPropertyWorkingMetadata(prop_qmi);
-
-   {
-      auto& disp_name = prop_info.typeinfo.display_typename;
-      if (disp_name.isEmpty()) {
-         this->ui.propertyType->setText(tr("Property type: <unknown>"));
-      } else {
-         this->ui.propertyType->setText(tr("Property type: %1").arg(disp_name));
-      }
+   auto type_name = this->script_model->data(qmi.siblingAtColumn(DKBoundScriptModel::Column::Type), Qt::DisplayRole).toString();
+   if (type_name.isEmpty()) {
+      this->ui.propertyType->setText(tr("Property type: <unknown>"));
+   } else {
+      this->ui.propertyType->setText(tr("Property type: %1").arg(type_name));
    }
 
-   this->ui.valuePage_object->setEnabled(prop_info.has_underlying_form_type());
-   this->ui.valuePage_ref->setEnabled(prop_info.has_underlying_form_type());
+   this->ui.valuePage_object->setEnabled(info.is_form());
+   this->ui.valuePage_ref->setEnabled(info.is_form());
 
-   if (prop_info.is_inherited) {
-      this->ui.buttonValueRevert->setEnabled(prop_info.status.has_value());
+   if (info.inherited) {
+      this->ui.buttonValueRevert->setEnabled(info.defined_locally);
    } else {
       this->ui.buttonValueRevert->setEnabled(false);
    }
 
-   if (!prop_info.status.has_value()) {
+   if (info.is_defined()) {
+      this->ui.buttonValueClearOrMakeLocal->setText(tr("Clear Value"));
+   } else {
+      this->ui.buttonValueClearOrMakeLocal->setText(tr("Edit Value"));
+   }
+
+   if (!info.is_defined() || !info.defined_locally) {
       this->ui.arrayEditingLayout->setVisible(false);
+      this->ui.arrayEditingLayout->setEnabled(false);
       this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_defaulted);
       return;
    }
-   switch (prop_info.status.value()) {
-      case DKFormVMADModel::property_status::defined_only_on_base:
-         this->ui.arrayEditingLayout->setVisible(false);
-         this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_defaulted);
-         return;
-   }
 
-   auto value = vmad_model->getPropertyWorkingValue(prop_qmi);
+   this->ui.arrayEditingLayout->setVisible(info.is_array);
+   this->ui.arrayEditingLayout->setEnabled(info.is_array);
+
+   auto value_opt = this->script_model->getPropertyValue(qmi);
+   if (!value_opt.has_value())
+      return;
    std::visit(
-      [this, &prop_qmi, vmad_model, &prop_info](const auto& v) {
+      [this, &info, &qmi](const auto& v) {
          using value_type = std::decay_t<decltype(v)>;
 
-         auto _show_widgets = [this, &prop_info, &v]<typename ValueType>() {
+         auto _show_widgets = [this, &info, &v]<typename ValueType>() {
             if constexpr (std::is_same_v<ValueType, bool>) {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_bool);
             } else if constexpr (std::is_same_v<ValueType, float>) {
@@ -332,7 +517,8 @@ void DKScriptObjectDialog::_showSelectedProperty() {
             } else if constexpr (std::is_same_v<ValueType, ui::types::quest_alias>) {
                this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_alias);
             } else if constexpr (std::is_same_v<ValueType, dovah::form_stub*>) {
-               if (dovah::form_type_is_reference(prop_info.underlying_form_type())) {
+               dovah::form_type type = info.native_type.value_or(dovah::form_type::none);
+               if (dovah::form_type_is_reference(type)) {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_ref);
                } else {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_object);
@@ -360,7 +546,7 @@ void DKScriptObjectDialog::_showSelectedProperty() {
                auto* item = new QTableWidgetItem;
                table->setItem(i, 1, item);
 
-               QString text = vmad_model->getPropertyWorkingValueStringified(prop_qmi, i);
+               QString text = ui::bound_script_models::stringify(v[i]);
                item->setText(text);
                item->setToolTip(text);
             }
@@ -391,24 +577,24 @@ void DKScriptObjectDialog::_showSelectedProperty() {
             } else if constexpr (std::is_same_v<value_type, QString>) {
                this->ui.valueWidget_string->setPlainText(v);
             } else if constexpr (std::is_same_v<value_type, ui::types::quest_alias>) {
-               this->ui.valueWidget_alias->setRequiredScriptname(prop_info.typeinfo.scriptname);
+               this->ui.valueWidget_alias->setRequiredScriptname(info.scriptname);
                this->ui.valueWidget_alias->setQuestAlias(v);
             } else if constexpr (std::is_same_v<value_type, dovah::form_stub*>) {
-               if (dovah::form_type_is_reference(prop_info.underlying_form_type())) {
-                  this->ui.valueWidget_ref->setRequiredScriptname(prop_info.typeinfo.scriptname);
+               if (dovah::form_type_is_reference(info.native_type.value_or(dovah::form_type::none))) {
+                  this->ui.valueWidget_ref->setRequiredScriptname(info.scriptname);
                   this->ui.valueWidget_ref->setRef(v);
                } else {
-                  if (prop_info.has_underlying_form_type())
-                     this->ui.valueWidget_form->setAllowedFormType(prop_info.underlying_form_type());
+                  if (info.native_type.has_value())
+                     this->ui.valueWidget_form->setAllowedFormType(info.native_type.value());
                   else
                      this->ui.valueWidget_form->allowAllFormTypes();
 
-                  this->ui.valueWidget_form->setRequiredScriptname(prop_info.typeinfo.scriptname);
+                  this->ui.valueWidget_form->setRequiredScriptname(info.scriptname);
                   this->ui.valueWidget_form->setFormStub(v);
                }
             }
          }
       },
-      value
+      value_opt.value()
    );
 }
