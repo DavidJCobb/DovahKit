@@ -14,6 +14,7 @@ namespace ui::bound_script_models {
       public:
          QString name;
          QString docstring;
+         bool    hidden = false;
          struct {
             vmad::property_type raw_type = vmad::property_type::none;
             struct {

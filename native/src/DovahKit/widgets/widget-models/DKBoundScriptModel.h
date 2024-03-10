@@ -121,6 +121,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
    protected:
       const QString          _scriptname;
       std::vector<property*> _properties;
+      std::vector<property*> _hidden_properties;
       struct {
          bool any_properties_defined_locally = false;
       } _cached;

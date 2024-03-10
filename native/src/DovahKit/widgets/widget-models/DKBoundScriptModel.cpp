@@ -55,6 +55,15 @@ DKBoundScriptModel::DKBoundScriptModel(QString scriptname, QObject* parent) : QA
    }
    if (this->_load_results.failed)
       return;
+   
+   for (auto*& prop : this->_properties) {
+      if (!prop->hidden)
+         continue;
+      this->_hidden_properties.push_back(prop);
+      prop = nullptr;
+   }
+   if (!this->_hidden_properties.empty())
+      std::erase(this->_properties, nullptr);
 
    std::sort(
       this->_properties.begin(),
@@ -80,13 +89,29 @@ DKBoundScriptModel::DKBoundScriptModel(QString scriptname, QObject* parent) : QA
    });
 }
 DKBoundScriptModel::DKBoundScriptModel(const DKBoundScriptModel& src, QObject* parent) : QAbstractItemModel(parent), _scriptname(src._scriptname) {
-   size_t size = src._properties.size();
-   this->_properties.resize(size);
-   for (size_t i = 0; i < size; ++i) {
-      this->_properties[i] = new property;
-      auto& src_prop = *src._properties[i];
-      auto& dst_prop = *this->_properties[i];
-      dst_prop = src_prop;
+   {
+      auto& src_list = src._properties;
+      auto& dst_list = this->_properties;
+      size_t size = src_list.size();
+      dst_list.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         dst_list[i] = new property;
+         auto& src_prop = *src_list[i];
+         auto& dst_prop = *dst_list[i];
+         dst_prop = src_prop;
+      }
+   }
+   {
+      auto& src_list = src._hidden_properties;
+      auto& dst_list = this->_hidden_properties;
+      size_t size = src_list.size();
+      dst_list.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         dst_list[i] = new property;
+         auto& src_prop = *src_list[i];
+         auto& dst_prop = *dst_list[i];
+         dst_prop = src_prop;
+      }
    }
    this->_load_results = src._load_results;
    this->_status       = src._status;
@@ -174,6 +199,10 @@ void DKBoundScriptModel::_clear() {
    for (auto* prop : this->_properties)
       delete prop;
    this->_properties.clear();
+
+   for (auto* prop : this->_hidden_properties)
+      delete prop;
+   this->_hidden_properties.clear();
 }
 
 void DKBoundScriptModel::_load_property_definitions_from(std::string_view scriptname) {
@@ -201,6 +230,14 @@ void DKBoundScriptModel::_load_property_definitions_from(std::string_view script
 
    auto& papyrus = dovahkit::subsystems::papyrus::core::get();
 
+   uint32_t hidden_flag = 0;
+   for (const auto& flag : data.user_flags) {
+      if (dovah::papyrus::helpers::name_equals(flag.name, "hidden")) {
+         hidden_flag = flag.to_mask();
+         break;
+      }
+   }
+
    for (const auto& object : data.objects) {
       if (!dovah::papyrus::helpers::name_equals(object.name, scriptname))
          continue;
@@ -213,6 +250,9 @@ void DKBoundScriptModel::_load_property_definitions_from(std::string_view script
 
          dst_prop->name      = QString::fromStdString(prop.name);
          dst_prop->docstring = QString::fromStdString(prop.docstring);
+         if (hidden_flag) {
+            dst_prop->hidden = (prop.flags & hidden_flag) != 0;
+         }
 
          auto& dst_typeinfo = dst_prop->typeinfo;
 
@@ -512,17 +552,18 @@ void DKBoundScriptModel::initializeFromInheritedOnly(const vmad_script& inherite
 }
 void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy) {
    local_script.clear_properties(working_copy);
-   for (auto* src : this->_properties) {
+
+   auto _commit_property = [this, &local_script, &working_copy](property* src) {
       auto status_opt = src->get_computed_status();
       if (!status_opt.has_value()) {
-         continue;
+         return;
       }
       switch (status_opt.value()) {
          case vmad::property_status::defined_only_on_base:
-            continue;
+            return;
          case vmad::property_status::inherited_and_removed:
             if (this->_status.inherited == false)
-               continue;
+               return;
             break;
       }
 
@@ -539,6 +580,13 @@ void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms
             }
          }
       }
+   };
+
+   for (auto* src : this->_properties) {
+      _commit_property(src);
+   }
+   for (auto* src : this->_hidden_properties) {
+      _commit_property(src);
    }
    if (this->_status.inherited && !this->_status.cleared && this->_cached.any_properties_defined_locally) {
       if (local_script.status != vmad::script_status::removed)
@@ -680,12 +728,10 @@ void DKBoundScriptModel::_emit_row_changed(const QModelIndex& qmi) {
 }
 DKBoundScriptModel::property* DKBoundScriptModel::_lookup_property(std::string_view desired) {
    size_t size = desired.size();
-   for (auto* prop : this->_properties) {
-      assert(prop != nullptr);
-      auto& name = prop->name;
+
+   auto _compare_name = [desired, size](QString name) {
       if (name.size() != size)
-         continue;
-      bool match = true;
+         return false;
       for (size_t i = 0; i < size; ++i) {
          auto a = desired[i];
          auto b = name[(uint)i].unicode();
@@ -696,11 +742,20 @@ DKBoundScriptModel::property* DKBoundScriptModel::_lookup_property(std::string_v
          if (b >= 'a' && b <= 'z')
             b -= 0x20;
          if (a != b) {
-            match = false;
-            break;
+            return false;
          }
       }
-      if (match)
+      return true;
+   };
+
+   for (auto* prop : this->_properties) {
+      assert(prop != nullptr);
+      if (_compare_name(prop->name))
+         return prop;
+   }
+   for (auto* prop : this->_hidden_properties) {
+      assert(prop != nullptr);
+      if (_compare_name(prop->name))
          return prop;
    }
    return nullptr;
