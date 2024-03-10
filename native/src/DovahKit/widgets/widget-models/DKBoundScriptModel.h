@@ -8,6 +8,7 @@
 #include "dovah/forms/components/papyrus/property.h"
 #include "dovah/forms/components/papyrus/property_type.h"
 #include "dovah/forms/components/papyrus/script_status.h"
+#include "dovah/form_types.h"
 #include "./bound-scripts/_forward_declarations.h"
 #include "./bound-scripts/property.h"
 
@@ -44,12 +45,17 @@ class DKBoundScriptModel : public QAbstractItemModel {
       static constexpr const auto IsInheritedRole = (Qt::ItemDataRole)(Qt::UserRole + 2);
 
       struct PropertyInfo {
-         bool cleared         = false;
-         bool defined_locally = false;
-         bool inherited       = false;
-         bool is_array        = false;
+         enum class LocalStatus {
+            Cleared,
+            DefinedLocally,
+            NotDefined
+         };
 
-         
+         bool        cleared      = false;
+         bool        inherited    = false;
+         bool        is_array     = false;
+         LocalStatus local_status = LocalStatus::NotDefined;
+         //
          std::optional<dovah::form_type> native_type;
          vmad_property_type raw_type = vmad_property_type::none;
          QString scriptname;
@@ -78,7 +84,19 @@ class DKBoundScriptModel : public QAbstractItemModel {
             return true;
          }
 
-         constexpr bool is_defined() const noexcept { return defined_locally || inherited; }
+         constexpr bool is_ref() const {
+            return dovah::form_type_is_reference(native_type.value_or(dovah::form_type::none));
+         }
+
+         constexpr bool is_defined() const noexcept {
+            switch (local_status) {
+               case LocalStatus::Cleared:
+                  return false;
+               case LocalStatus::DefinedLocally:
+                  return true;
+            }
+            return inherited;
+         }
       };
 
    protected:

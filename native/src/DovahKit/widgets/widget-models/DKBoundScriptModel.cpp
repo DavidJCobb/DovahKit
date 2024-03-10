@@ -878,10 +878,10 @@ std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptModel::infoForPrope
       if (status.has_value()) {
          switch (status.value()) {
             case vmad::property_status::inherited_and_removed:
-               out.cleared = true;
+               out.local_status = PropertyInfo::LocalStatus::Cleared;
                break;
             case vmad::property_status::defined_locally:
-               out.defined_locally = true;
+               out.local_status = PropertyInfo::LocalStatus::DefinedLocally;
                break;
          }
       }
