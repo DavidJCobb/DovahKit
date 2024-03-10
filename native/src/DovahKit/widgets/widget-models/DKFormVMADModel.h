@@ -88,6 +88,7 @@ class DKFormVMADModel : public QAbstractItemModel {
       };
 
       struct PropertyMetadata {
+         bool is_inherited = false;
          std::optional<property_status> status;
          struct {
             ui::types::papyrus::value_type underlying;

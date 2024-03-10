@@ -297,6 +297,12 @@ void DKScriptObjectDialog::_showSelectedProperty() {
    this->ui.valuePage_object->setEnabled(prop_info.has_underlying_form_type());
    this->ui.valuePage_ref->setEnabled(prop_info.has_underlying_form_type());
 
+   if (prop_info.is_inherited) {
+      this->ui.buttonValueRevert->setEnabled(prop_info.status.has_value());
+   } else {
+      this->ui.buttonValueRevert->setEnabled(false);
+   }
+
    if (!prop_info.status.has_value()) {
       this->ui.arrayEditingLayout->setVisible(false);
       this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_defaulted);
@@ -332,6 +338,8 @@ void DKScriptObjectDialog::_showSelectedProperty() {
                   this->ui.singleValueWrap->setCurrentWidget(this->ui.valuePage_object);
                }
             }
+
+            this->ui.buttonValueAutoFill->setEnabled(std::is_same_v<ValueType, dovah::form_stub*>);
          };
 
          if constexpr (cobb::is_std_vector<value_type>) {

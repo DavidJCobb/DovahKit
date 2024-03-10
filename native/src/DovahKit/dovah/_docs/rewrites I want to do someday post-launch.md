@@ -1,5 +1,36 @@
 
-# General plans
+# Timeline
+
+* **Phase 1: Rewrite the backend for loaded form data.**  
+  Loaded form data is handled very messily, and the "working copy" system forces ephemeral copies of form data to have all the same boilerplate as the persistent stuff. This makes it harder and jankier to write UI-related code. The refactor plans described further below should make it significantly easier to write UI-related code, should allow a lot of cleanup of existing UI-related code, and should lead to higher-quality code in general.
+
+  This phase is expected to enable, or make it easier to implement, the following features:
+
+  * Flowchart-like editor for dialogue
+
+* **Phase 2: Rewrite the renderer.**  
+  The current renderer design is difficult to maintain and not configurable for different use cases. It's not bad at all for, like, the third time I've ever built a renderer and the first time I've ever meaningfully succeeded, but it's not scalable in the ways I need it to be. It's easily the single worst "God object" I've ever written: this is the only time in my entire life that I've had to have *four separate `.cpp` files* for a single header. We need to figure out how best to divide up the renderer's systems and data, and figure out how to specify things like render pass and shader definitions as `constexpr` PODs in order to separate "data" from "code." We also need to make the renderer configurable: right now, it *always* preallocates enough VRAM resources to run the Render Window (i.e. enough to render a large portion of a worldspace), which is beyond excessive for things like previewing a single form or editing an actor's appearance.
+
+  This phase is expected to enable:
+
+  * "Preview" window for any form with a 3D model
+  * "Preview" pane shown when editing a form's 3D model (including its texture swaps)
+  * Editing ActorBase appearances
+    * This is something we'll have to actually lock down on initial release, since having users "fly blind" when editing appearances is straight-up not viable at all.
+    * A bonus feature we could offer here, once actor editing in general is available, is the ability to let the user draw a separate "custom facepaint" PNG file that we automatically bake (i.e. alpha-blend) onto an NPC's exported tintmask.
+  * Improvements to the renderer's accuracy (e.g. support for water, EffectShaders, etc.)
+  * "Preview" pane for EffectShaders (akin to the unimplemented one in the FO4 CK)
+
+* **Phase 3: Refactor Worldedit.**  
+  Worldedit's "tool" system is close to what we want, but conceptually it's not well-organized; see the section below. We should divide this into a two-tiered hierarchy: "tools" with "compositions." Separately from this, we should investigate things like ordered binds (i.e. a flexible list of actions per frame, allowing multiples of the same tool, rather than coalescing/merging/clobbering on a per-tool basis). Potentially in the future that could even enable things like having multiple tools per bind.
+
+  This phase is expected to enable, or make it easier to implement, the following features:
+
+  * Completion of all binds for editing objects
+  * Navmesh editing
+  * Terrain editing
+
+# General plans for the backend
 
 * Type-safe flags-masks all over the backend. It's trivial to do this with templates now, so the "non-strict enum inside a struct" trick isn't needed anymore.
   * That said, the "non-strict enum inside a struct" trick allows "subclassing enums" when one wrapper struct subclasses another. Never tried doing that with template-based flags masks before...
@@ -26,14 +57,6 @@
   * Replace `template<class E> E* extra_data_list::lookup(extra_data_type et)` with a getter that doesn't take any arguments; use a `constexpr` mapping of extra-data classes to typecodes to know what typecode to look for.
 
 # Specific plans
-
-## Form types
-
-* The `dovah::form_type` enum should be what we use everywhere, not `dovah::form_type_t`. The latter aliases the enum's underlying type and so is not type-safe.
- 
-* The code for checking whether a form type is REFR or a subclass is bulky and boilerplatey: `dovah::form_type_info::form_type_is_reference(v)`. We should offer a more succinct check: even just moving that function into the `dovah` namespace, rather than having it be a static member function on `form_type_info`, would be a huge improvement.
-
-* We should rename `dovah::form_types` to `dovah::all_form_type_info`, and we should `static_assert` that for any given `dovah::form_type v`, the following expression is true: `all_form_type_info[(size_t)v].form_type == v`.
 
 ## Form backend and working copies
 
@@ -328,6 +351,8 @@ In practice, there are some holes in this design, stemming in large part from th
 
   The only way I can think of to remedy this while keeping `form_reference_t` more-or-less as-is would be to create custom container implementations that ensure that Use Info is properly tracked on their elements. Notably, the destructors on these containers *should not* perform those sorts of updates because we want to be able to unload the loaded form data. These custom container implementations should support any `T` provided that `T::clear(*loaded_form)` is callable.
 
+  Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_list` for a "real" form and `std::vector<form_stub*>` for a working copy.
+
 
 # Outside the backend
 
@@ -373,12 +398,12 @@ By January 2023, Worldinput's first incarnation proved fatally flawed:
 
 * In Worldinput's present-day incarnation, control schemes are defined and edited by users as node trees. However, the use of node trees just makes it more convenient to specify button combinations, conditions, and so on. For actual processing, Worldinput flattens all node trees into "bind lists," and processes all of the resulting binds sequentially.
   
-  In Worldinput's original design, control schemes were also designed as node trees, but they were processed very differently. Worldinput would keep track of the "current" node, initially the root; when you pressed the keys for a child of the current node, Worldinput would traverse into that child &mdash; becoming blind to everything outside of that node. This was a naive approach to resolving button conflicts, e.g. between S and Ctrl + S (where by being "inside" a node for Ctrl, the "just S" bind would become invisible to Worldinput) and between Ctrl + S and Alt + Ctrl + S (similar principle). However, this idea greatly complicated attempts at designing handling for clicking and dragging (only single clicks, to select refs, had been implemented by that time, along with a non-interactive edit gizmo); quote:
+  In Worldinput's original design, control schemes were also designed as node trees, but they were processed very differently. Worldinput would keep track of the "current" node, initially the root; when you pressed the keys for a child of the current node, Worldinput would traverse into that child &mdash; becoming blind to everything outside of that node. This was a naive approach to resolving button conflicts, e.g. between S and Ctrl + S (where by being "inside" a node for Ctrl, the "just S" bind would become invisible to Worldinput, being shadowed by any "S" bind inside of the Ctrl node) and between Ctrl + S and Alt + Ctrl + S (similar principle). However, this idea greatly complicated attempts at designing handling for clicking and dragging (only single clicks, to select refs, had been implemented by that time, along with a non-interactive edit gizmo); quote:
   
     "Where all this gets tricky is that if we treat clicking and dragging as a modifier [key/button] and a vector input, then you can't activate any other modifier keys while the operation is in progress. Using Windows Notepad as an example, it'd be as if drag-selecting text prevented you from using the Ctrl + S shortcut."
 * It was around this time that I also discovered that some Creation Kit functions (e.g. editing depth bias, scale, etc., by mouse dragging with certain keys held) could be swapped between, seamlessly, by pressing and releasing individual non-modifier keys. That rendered the original node tree concept entirely unsalvageable: these Creation Kit binds would've been utterly impossible to replicate in this system.
 
-These cases helped motivate a redesign of Worldinput (named `worldinput2` until its completion; now the complete and "canonical" "Worldinput") beginning circa early February 2023. Planning began in earnest (in the form of writing a spec) from 2/28/2023 to 5/10/2023 for the bulk of the latest design, with additional work occurring every week or two in September through October 2023. Does not include time spent on previous, failed, designs for handling input in the Render Window.
+These cases helped motivate a redesign of Worldinput (named `worldinput2` until its completion; now the complete and "canonical" "Worldinput") beginning circa early February 2023. Planning happened in earnest (in the form of writing a spec) from 2/28/2023 to 5/10/2023 for the bulk of the latest design, with additional work occurring every week or two in September through October 2023.
 
 ## UI
 

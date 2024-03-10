@@ -9,11 +9,11 @@ namespace dovah::loaded_forms::components::papyrus {
    bool attachment_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (!this->header.load(subrecord))
          return false;
-      uint16_t count;
+      serialized_script_count_type count;
       if (!subrecord.read(count))
          return false;
       this->scripts.reserve(this->scripts.size() + count);
-      for (uint16_t i = 0; i < count; i++) {
+      for (serialized_script_count_type i = 0; i < count; i++) {
          //
          // If a form contains multiple instances of the same script, the last-loaded one overrides 
          // the others in full; the previously loaded script data is cleared.
@@ -54,7 +54,7 @@ namespace dovah::loaded_forms::components::papyrus {
       this->header.save(subrecord);
       if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
          return false;
-      subrecord.write(uint16_t(this->scripts.size()));
+      subrecord.write(serialized_script_count_type(this->scripts.size()));
       for (auto& script : this->scripts) {
          if (!script.save(this->header, subrecord, intfc))
             return false;

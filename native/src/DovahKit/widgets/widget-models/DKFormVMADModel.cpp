@@ -1066,6 +1066,10 @@ DKFormVMADModel::PropertyMetadata DKFormVMADModel::getPropertyWorkingMetadata(QM
 
    PropertyMetadata out;
 
+   if (prop->bindings.parent.has_value()) {
+      out.is_inherited = true;
+   }
+
    if (prop->bindings.edited.has_value()) {
       out.status = prop->bindings.edited.value().status;
    } else {

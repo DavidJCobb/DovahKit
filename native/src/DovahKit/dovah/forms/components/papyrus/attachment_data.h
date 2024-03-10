@@ -1,5 +1,7 @@
 #pragma once
+#include <cstdint>
 #include <functional>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -19,6 +21,10 @@ namespace dovah {
 
 namespace dovah::loaded_forms::components::papyrus {
    class attachment_data {
+      public:
+         using serialized_script_count_type = uint16_t;
+         static constexpr const size_t max_script_count = std::numeric_limits<serialized_script_count_type>::max();
+
       public:
          attachment_header   header;
          std::vector<attached_script> scripts;

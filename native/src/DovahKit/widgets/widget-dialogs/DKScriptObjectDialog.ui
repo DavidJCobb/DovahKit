@@ -44,13 +44,6 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QPushButton" name="buttonAddProperty">
-         <property name="text">
-          <string>Add Property</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="buttonAutoFillAll">
          <property name="text">
           <string>Auto-Fill All</string>
@@ -598,7 +591,6 @@
  </customwidgets>
  <tabstops>
   <tabstop>properties</tabstop>
-  <tabstop>buttonAddProperty</tabstop>
   <tabstop>buttonAutoFillAll</tabstop>
   <tabstop>arrayTable</tabstop>
   <tabstop>arrayButtonAdd</tabstop>
