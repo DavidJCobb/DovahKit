@@ -306,7 +306,7 @@ bool DKBoundScriptListModel::replaceScriptModelFor(const QModelIndex& qmi, DKBou
    }
    script->model = model;
    if (model) {
-      script->has_local_properties = model->anyPropertiesDefinedLocally();
+      script->has_local_properties = model->anyPropertiesEditedLocally();
    } else {
       script->has_local_properties = false;
    }

@@ -442,10 +442,10 @@ std::optional<DKBoundScriptModel::PropertyValue> DKBoundScriptModel::_load_prope
 }
 
 void DKBoundScriptModel::_update_any_properties_local() {
-   this->_cached.any_properties_defined_locally = false;
+   this->_cached.any_properties_edited_locally = false;
    for (const auto* prop : this->_properties) {
       if (prop->values.local.has_value()) {
-         this->_cached.any_properties_defined_locally = true;
+         this->_cached.any_properties_edited_locally = true;
          break;
       }
    }
@@ -457,8 +457,8 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script, const v
    for (auto* prop : this->_properties) {
       prop->values = {};
    }
-   this->_cached.any_properties_defined_locally = false;
-   this->_load_results.some_data_discarded      = false;
+   this->_cached.any_properties_edited_locally = false;
+   this->_load_results.some_data_discarded     = false;
 
    auto* inheriting_from = parent_vmad.lookup_script(this->_scriptname.toUtf8().toStdString());
 
@@ -474,7 +474,7 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script, const v
          prop->values.local = this->_load_property_value(src, *prop);
       }
       if (prop->values.local.has_value())
-         this->_cached.any_properties_defined_locally = true;
+         this->_cached.any_properties_edited_locally = true;
    }
    if (inheriting_from) {
       for (auto& src : inheriting_from->properties) {
@@ -501,8 +501,8 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script) {
    for (auto* prop : this->_properties) {
       prop->values = {};
    }
-   this->_cached.any_properties_defined_locally = false;
-   this->_load_results.some_data_discarded      = false;
+   this->_cached.any_properties_edited_locally = false;
+   this->_load_results.some_data_discarded     = false;
 
    for (auto& src : local_script.properties) {
       property* prop = this->_lookup_property(src.name);
@@ -516,7 +516,7 @@ void DKBoundScriptModel::initializeFrom(const vmad_script& local_script) {
          prop->values.local = this->_load_property_value(src, *prop);
       }
       if (prop->values.local.has_value())
-         this->_cached.any_properties_defined_locally = true;
+         this->_cached.any_properties_edited_locally = true;
    }
 
    for (auto* prop : this->_properties)
@@ -530,8 +530,8 @@ void DKBoundScriptModel::initializeFromInheritedOnly(const vmad_script& inherite
    for (auto* prop : this->_properties) {
       prop->values = {};
    }
-   this->_cached.any_properties_defined_locally = false;
-   this->_load_results.some_data_discarded      = false;
+   this->_cached.any_properties_edited_locally = false;
+   this->_load_results.some_data_discarded     = false;
 
    for (auto& src : inherited_script.properties) {
       property* prop = this->_lookup_property(src.name);
@@ -588,7 +588,7 @@ void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms
    for (auto* src : this->_hidden_properties) {
       _commit_property(src);
    }
-   if (this->_status.inherited && !this->_status.cleared && this->_cached.any_properties_defined_locally) {
+   if (this->_status.inherited && !this->_status.cleared && this->_cached.any_properties_edited_locally) {
       if (local_script.status != vmad::script_status::removed)
          local_script.status = vmad::script_status::overrides_base;
    }
@@ -780,7 +780,7 @@ void DKBoundScriptModel::autoFillProperty(const QModelIndex& qmi) {
       return;
    if (prop->autofill()) {
       prop->recache_value_string();
-      this->_cached.any_properties_defined_locally = true;
+      this->_cached.any_properties_edited_locally = true;
       _emit_row_changed(qmi);
    }
 }
@@ -802,7 +802,7 @@ void DKBoundScriptModel::makePropertyLocal(const QModelIndex& qmi) {
       return;
    prop->make_local();
    prop->recache_value_string();
-   this->_cached.any_properties_defined_locally = true;
+   this->_cached.any_properties_edited_locally = true;
    _emit_row_changed(qmi);
 }
 void DKBoundScriptModel::revertProperty(const QModelIndex& qmi) {
@@ -828,7 +828,7 @@ void DKBoundScriptModel::setPropertyLocalValue(const QModelIndex& qmi, const Pro
 
    prop->set_local_value(src);
    prop->recache_value_string();
-   this->_cached.any_properties_defined_locally = true;
+   this->_cached.any_properties_edited_locally = true;
    _emit_row_changed(qmi);
 }
 void DKBoundScriptModel::setPropertyLocalValueElement(const QModelIndex& qmi, const PropertyValue& src, size_t array_index) {
@@ -885,7 +885,7 @@ void DKBoundScriptModel::setPropertyLocalValueElement(const QModelIndex& qmi, co
    );
    if (success) {
       prop->recache_value_string();
-      this->_cached.any_properties_defined_locally = true;
+      this->_cached.any_properties_edited_locally = true;
       _emit_row_changed(qmi);
    }
 }
@@ -907,7 +907,7 @@ void DKBoundScriptModel::autoFillAllProperties() {
       }
       if (prop->autofill()) {
          prop->recache_value_string();
-         this->_cached.any_properties_defined_locally = true;
+         this->_cached.any_properties_edited_locally = true;
          auto qmi = this->index(i, 0, {});
          emit dataChanged(qmi, qmi.siblingAtColumn(2));
       }

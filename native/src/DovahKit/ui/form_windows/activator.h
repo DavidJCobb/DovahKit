@@ -3,7 +3,7 @@
 #include "dovah/forms/Activator.h"
 #include "ui_activator.h"
 
-class DKPapyrusScriptObjectWidget;
+class DKPapyrusBoundScriptListPane;
 
 class FormDialogActivator : public FormWorkingCopyEditDialogBase {
    Q_OBJECT
@@ -14,7 +14,7 @@ class FormDialogActivator : public FormWorkingCopyEditDialogBase {
    protected:
       Ui::FormDialogActivator ui;
       struct {
-         DKPapyrusScriptObjectWidget* papyrus = nullptr;
+         DKPapyrusBoundScriptListPane* papyrus = nullptr;
       } subwidgets;
       
       virtual void _load_impl() override;

@@ -855,7 +855,7 @@
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
-    <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp" />
+    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
@@ -863,7 +863,7 @@
     <ClCompile Include="widgets\DKVulkanView.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
-    <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property_value.cpp" />
@@ -893,8 +893,8 @@
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
     <QtMoc Include="widgets\widget-models\DKRefsInCellModel.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
-    <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h" />
-    <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKBoundScriptDialog.h" />
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h" />
     <QtMoc Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.h" />
     <QtMoc Include="editor\subsystems\gui_adjust\gui_adjust.h" />
     <ClInclude Include="dovah\data\papyrus\helpers\name_equals.h" />
@@ -2183,7 +2183,7 @@
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
-    <QtUic Include="widgets\widget-dialogs\DKScriptObjectDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>
   <ItemGroup>

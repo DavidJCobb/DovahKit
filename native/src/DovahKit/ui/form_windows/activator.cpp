@@ -3,7 +3,7 @@
 #include "dovah/core.h"
 #include "dovah/form_stub_addenda.h"
 #include "helpers/qt/basic_bindings.h"
-#include "widgets/DKPapyrusScriptObjectWidget.h"
+#include "widgets/DKPapyrusBoundScriptListPane.h"
 
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Activators is incomplete.");
@@ -24,7 +24,7 @@ FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
 
    // Papyrus
-   this->subwidgets.papyrus = new DKPapyrusScriptObjectWidget(this);
+   this->subwidgets.papyrus = new DKPapyrusBoundScriptListPane(this);
    this->layout()->replaceWidget(this->ui.placeholderPapyrus, this->subwidgets.papyrus);
 
    this->load(); // this creates the working copy.

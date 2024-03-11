@@ -2,7 +2,7 @@
 #include <QPushButton>
 #include <QTableView>
 
-class DKFormVMADModel;
+class DKBoundScriptListModel;
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/core.h"
    #include "dovah/form_stub.h"
@@ -20,14 +20,14 @@ namespace dovah {
    class form_stub;
 }
 
-class DKPapyrusScriptObjectWidget : public QWidget {
+class DKPapyrusBoundScriptListPane : public QWidget {
    Q_OBJECT;
    public:
       using vmad_type         = dovah::loaded_forms::components::papyrus::attachment_data;
       using working_copy_type = dovah::loaded_forms::Form;
 
    public:
-      DKPapyrusScriptObjectWidget(QWidget* parent);
+      DKPapyrusBoundScriptListPane(QWidget* parent);
 
    public slots:
       #if !defined(QT_DESIGNER_LIB)

@@ -123,7 +123,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
       std::vector<property*> _properties;
       std::vector<property*> _hidden_properties;
       struct {
-         bool any_properties_defined_locally = false;
+         bool any_properties_edited_locally = false;
       } _cached;
       struct {
          bool failed              = false; // any PEX files failed to load?
@@ -163,7 +163,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       #pragma endregion
 
-      constexpr bool anyPropertiesDefinedLocally() const;
+      constexpr bool anyPropertiesEditedLocally() const;
       constexpr bool anyPropertiesDiscardedOnLoad() const;
       constexpr bool failedToLoad() const;
       constexpr void forgetAnyPropertiesWereDiscardedOnLoad() {

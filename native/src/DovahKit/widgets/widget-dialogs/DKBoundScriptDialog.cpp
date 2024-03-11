@@ -1,4 +1,4 @@
-#include "./DKScriptObjectDialog.h"
+#include "./DKBoundScriptDialog.h"
 #include <array>
 #include <cassert>
 #include <QComboBox>
@@ -23,7 +23,7 @@ namespace vmad {
    using namespace dovah::loaded_forms::components::papyrus;
 }
 
-DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptModelIndex) : QDialog(&parent) {
+DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptModelIndex) : QDialog(&parent) {
    this->ui.setupUi(this);
 
    this->setWindowFlag(Qt::WindowContextHelpButtonHint);
@@ -263,26 +263,32 @@ DKScriptObjectDialog::DKScriptObjectDialog(QWidget& parent, QModelIndex scriptMo
    }
 }
 
+bool DKBoundScriptDialog::loadFailed() const {
+   if (!this->script_model)
+      return false;
+   return this->script_model->failedToLoad();
+}
+
 //
 // Functions for querying info about the selection:
 //
 
-std::optional<DKBoundScriptModel::PropertyInfo> DKScriptObjectDialog::_property_info(const QModelIndex& qmi) const {
+std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptDialog::_property_info(const QModelIndex& qmi) const {
    if (!this->script_model)
       return {};
    return this->script_model->infoForProperty(qmi);
 }
-std::optional<DKBoundScriptModel::PropertyInfo> DKScriptObjectDialog::_selected_property_info() const {
+std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptDialog::_selected_property_info() const {
    return this->_property_info(this->_selectedPropertyQMI());
 }
-vmad::property_type DKScriptObjectDialog::_selected_property_element_type() const {
+vmad::property_type DKBoundScriptDialog::_selected_property_element_type() const {
    const auto info_opt = this->_selected_property_info();
    if (!info_opt.has_value())
       return vmad::property_type::none;
    return vmad::scalar_property_type_for(info_opt.value().raw_type);
 }
 
-std::optional<size_t> DKScriptObjectDialog::_currentArrayElementIndex() const {
+std::optional<size_t> DKBoundScriptDialog::_currentArrayElementIndex() const {
    auto* sm = this->ui.arrayTable->selectionModel();
    if (!sm)
       return {};
@@ -294,7 +300,7 @@ std::optional<size_t> DKScriptObjectDialog::_currentArrayElementIndex() const {
       return {};
    return row;
 }
-QModelIndex DKScriptObjectDialog::_selectedPropertyQMI() const {
+QModelIndex DKBoundScriptDialog::_selectedPropertyQMI() const {
    if (!this->script_qmi.isValid())
       return {};
    auto* sm = this->ui.properties->selectionModel();
@@ -310,7 +316,7 @@ QModelIndex DKScriptObjectDialog::_selectedPropertyQMI() const {
 // Functions for editing the current value:
 //
 
-void DKScriptObjectDialog::_move_currently_focused_array_element(bool move_down) {
+void DKBoundScriptDialog::_move_currently_focused_array_element(bool move_down) {
    auto qmi = this->_selectedPropertyQMI();
    if (!this->script_model || !qmi.isValid())
       return;
@@ -358,7 +364,7 @@ void DKScriptObjectDialog::_move_currently_focused_array_element(bool move_down)
       this->ui.arrayTable->setCurrentCell(to, 0);
    }
 }
-void DKScriptObjectDialog::_set_currently_focused_value(const ui::bound_script_models::property_value& v) {
+void DKBoundScriptDialog::_set_currently_focused_value(const ui::bound_script_models::property_value& v) {
    auto qmi = this->_selectedPropertyQMI();
    if (!this->script_model || !qmi.isValid()) {
       return;
@@ -381,7 +387,7 @@ void DKScriptObjectDialog::_set_currently_focused_value(const ui::bound_script_m
 // Functions for updating the UI state:
 //
 
-void DKScriptObjectDialog::_showSelectedProperty() {
+void DKBoundScriptDialog::_showSelectedProperty() {
    const auto qmi      = this->_selectedPropertyQMI();
    const auto info_opt = this->_property_info(qmi);
    this->_update_autofill_button(info_opt);
@@ -444,10 +450,10 @@ void DKScriptObjectDialog::_showSelectedProperty() {
    }
 }
 
-void DKScriptObjectDialog::_clear_displayed_typename() {
+void DKBoundScriptDialog::_clear_displayed_typename() {
    this->ui.propertyType->setText(tr("Property type: <nothing selected>"));
 }
-void DKScriptObjectDialog::_update_displayed_typename(QString type_name) {
+void DKBoundScriptDialog::_update_displayed_typename(QString type_name) {
    if (type_name.isEmpty()) {
       this->ui.propertyType->setText(tr("Property type: <unknown>"));
    } else {
@@ -455,7 +461,7 @@ void DKScriptObjectDialog::_update_displayed_typename(QString type_name) {
    }
 }
 
-void DKScriptObjectDialog::_update_autofill_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
+void DKBoundScriptDialog::_update_autofill_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
    auto* widget = this->ui.buttonValueAutoFill;
    if (!info_opt.has_value()) {
       widget->setEnabled(false);
@@ -464,7 +470,7 @@ void DKScriptObjectDialog::_update_autofill_button(const std::optional<DKBoundSc
    auto& info = info_opt.value();
    widget->setEnabled(info.is_form());
 }
-void DKScriptObjectDialog::_update_clear_edit_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
+void DKBoundScriptDialog::_update_clear_edit_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
    auto* widget = this->ui.buttonValueClearOrMakeLocal;
    if (!info_opt.has_value()) {
       widget->setEnabled(false);
@@ -480,7 +486,7 @@ void DKScriptObjectDialog::_update_clear_edit_button(const std::optional<DKBound
       widget->setText(tr("Edit Value"));
    }
 }
-void DKScriptObjectDialog::_update_revert_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
+void DKBoundScriptDialog::_update_revert_button(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
    auto* widget = this->ui.buttonValueRevert;
    if (!info_opt.has_value()) {
       widget->setEnabled(false);
@@ -494,7 +500,7 @@ void DKScriptObjectDialog::_update_revert_button(const std::optional<DKBoundScri
    }
 }
 
-void DKScriptObjectDialog::_populate_array_table(const ui::bound_script_models::property_value& value) {
+void DKBoundScriptDialog::_populate_array_table(const ui::bound_script_models::property_value& value) {
    this->ui.arrayTable->clearContents();
    bool is_array = false;
 
@@ -531,7 +537,7 @@ void DKScriptObjectDialog::_populate_array_table(const ui::bound_script_models::
    this->ui.arrayEditingLayout->setEnabled(is_array);
 }
 
-void DKScriptObjectDialog::_update_edit_widget_constraints(const DKBoundScriptModel::PropertyInfo& info) {
+void DKBoundScriptDialog::_update_edit_widget_constraints(const DKBoundScriptModel::PropertyInfo& info) {
    const auto blockers = std::array{
       QSignalBlocker(this->ui.valueWidget_alias),
       QSignalBlocker(this->ui.valueWidget_form),
@@ -548,7 +554,7 @@ void DKScriptObjectDialog::_update_edit_widget_constraints(const DKBoundScriptMo
       this->ui.valueWidget_form->allowAllFormTypes();
 }
 
-void DKScriptObjectDialog::_populate_edit_widgets(const ui::bound_script_models::property_value& value) {
+void DKBoundScriptDialog::_populate_edit_widgets(const ui::bound_script_models::property_value& value) {
    const auto blockers = std::array{
       QSignalBlocker(this->ui.valueWidget_bool),
       QSignalBlocker(this->ui.valueWidget_float),
@@ -590,7 +596,7 @@ void DKScriptObjectDialog::_populate_edit_widgets(const ui::bound_script_models:
    }
 }
 
-void DKScriptObjectDialog::_show_edit_widgets(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
+void DKBoundScriptDialog::_show_edit_widgets(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {
    auto* array_layout = this->ui.arrayEditingLayout;
    auto* stack        = this->ui.singleValueWrap;
    if (!info_opt.has_value()) {

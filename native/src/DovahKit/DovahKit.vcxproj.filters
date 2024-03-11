@@ -2091,7 +2091,7 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\scale_selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKPapyrusScriptObjectWidget.cpp">
+    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp">
@@ -2127,7 +2127,7 @@
     <ClCompile Include="ui\form_windows\activator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-dialogs\DKScriptObjectDialog.cpp">
+    <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp">
@@ -5758,7 +5758,7 @@
     <QtUic Include="ui\form_windows\activator.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="widgets\widget-dialogs\DKScriptObjectDialog.ui">
+    <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -6105,13 +6105,13 @@
     <QtMoc Include="ui\options_window\OptionsStorageLocationWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKPapyrusScriptObjectWidget.h">
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\activator.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-dialogs\DKScriptObjectDialog.h">
+    <QtMoc Include="widgets\widget-dialogs\DKBoundScriptDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKObjectReferencePicker.h">

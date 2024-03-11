@@ -1,20 +1,23 @@
 #pragma once
-#include "ui_DKScriptObjectDialog.h"
+#include "ui_DKBoundScriptDialog.h"
 #include <optional>
 #include <QDialog>
 #include "dovah/form_types.h"
 #include "../widget-models/bound-scripts/property_value.h"
 #include "../widget-models/DKBoundScriptModel.h"
 
-class DKScriptObjectDialog : public QDialog {
+class DKBoundScriptDialog : public QDialog {
    Q_OBJECT;
    public:
-      DKScriptObjectDialog(QWidget&, QModelIndex scriptModelIndex);
+      DKBoundScriptDialog(QWidget&, QModelIndex scriptModelIndex);
 
    protected:
-      Ui::DKScriptObjectDialog ui;
+      Ui::DKBoundScriptDialog ui;
       QPersistentModelIndex    script_qmi;
       DKBoundScriptModel*      script_model = nullptr;
+
+   public:
+      bool loadFailed() const;
 
    protected:
       std::optional<size_t> _currentArrayElementIndex() const;

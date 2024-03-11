@@ -1,4 +1,4 @@
-#include "DKPapyrusScriptObjectWidget.h"
+#include "DKPapyrusBoundScriptListPane.h"
 #include <QBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -8,7 +8,7 @@
 #include "dovah/forms/ObjectReference.h"
 #if !defined(QT_DESIGNER_LIB)
    #include "./widget-dialogs/DKAddPapyrusScriptDialog.h"
-   #include "./widget-dialogs/DKScriptObjectDialog.h"
+   #include "./widget-dialogs/DKBoundScriptDialog.h"
 #endif
 
 #include <QInputDialog> // placeholder
@@ -49,7 +49,7 @@ namespace vmad {
 }
 #endif
 
-DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWidget(parent) {
+DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QWidget(parent) {
    auto* groupbox = new QGroupBox(this);
    groupbox->setTitle("Scripts");
 
@@ -182,7 +182,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
 }
 
 #if !defined(QT_DESIGNER_LIB)
-   void DKPapyrusScriptObjectWidget::_editSelected() {
+   void DKPapyrusBoundScriptListPane::_editSelected() {
       QModelIndex script_qmi;
       {
          auto* sm = this->subwidgets.view->selectionModel();
@@ -195,17 +195,25 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       if (!script_qmi.isValid())
          return;
 
-      static_assert(!require_complete_implementation, "open properties dialog for selected scriptobject");
-      auto* dialog = new DKScriptObjectDialog(*this, script_qmi);
+      auto* dialog = new DKBoundScriptDialog(*this, script_qmi);
+      if (dialog->loadFailed()) {
+         QMessageBox::critical(
+            this,
+            tr("Error"),
+            tr("Failed to load the script. One of the needed PEX files (i.e. its own, or the files for its ancestor classes) is missing or could not be parsed properly.")
+         );
+         dialog->deleteLater();
+         return;
+      }
       auto  result = dialog->exec();
       if (result == QDialog::Accepted) {
          //
-         // TODO: Commit dialog results (or maybe the dialog itself should do that on accept?).
+         // NOTE: The dialog commits its contents itself, for now.
          //
       }
       dialog->deleteLater();
    }
-   void DKPapyrusScriptObjectWidget::_updateButtons() {
+   void DKPapyrusBoundScriptListPane::_updateButtons() {
       QModelIndex script_qmi;
       {
          auto* sm = this->subwidgets.view->selectionModel();
@@ -237,7 +245,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
    }
 #endif
 #if !defined(QT_DESIGNER_LIB)
-   void DKPapyrusScriptObjectWidget::setFormWorkingCopy(working_copy_type* target_form) {
+   void DKPapyrusBoundScriptListPane::setFormWorkingCopy(working_copy_type* target_form) {
       if (!target_form) {
          this->vmad = {};
 
@@ -274,7 +282,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
 
       this->subwidgets.buttons.wrapper->setEnabled(true);
    }
-   void DKPapyrusScriptObjectWidget::setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target) {
+   void DKPapyrusBoundScriptListPane::setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target) {
       if (!quest_working_copy) {
          this->vmad = {};
 
@@ -291,7 +299,7 @@ DKPapyrusScriptObjectWidget::DKPapyrusScriptObjectWidget(QWidget* parent) : QWid
       this->subwidgets.buttons.wrapper->setEnabled(true);
    }
 
-   void DKPapyrusScriptObjectWidget::commit() {
+   void DKPapyrusBoundScriptListPane::commit() {
       if (!this->vmad.target)
          return;
       if (!this->vmad.form)
