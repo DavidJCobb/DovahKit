@@ -151,7 +151,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
       void initializeFrom(const vmad_script& local_script, const vmad_attachment_data& parent_vmad);
       void initializeFrom(const vmad_script& local_script);
       void initializeFromInheritedOnly(const vmad_script& inherited_script);
-      void commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy);
+      void commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy) const;
       
       #pragma region QAbstractItemModel overrides
          virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override;

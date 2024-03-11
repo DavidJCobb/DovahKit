@@ -550,7 +550,7 @@ void DKBoundScriptModel::initializeFromInheritedOnly(const vmad_script& inherite
 
    this->endResetModel();
 }
-void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy) {
+void DKBoundScriptModel::commitTo(vmad_script& local_script, dovah::loaded_forms::Form& working_copy) const {
    local_script.clear_properties(working_copy);
 
    auto _commit_property = [this, &local_script, &working_copy](property* src) {
