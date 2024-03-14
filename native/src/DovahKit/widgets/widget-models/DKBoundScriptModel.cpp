@@ -216,6 +216,9 @@ void DKBoundScriptModel::_load_property_definitions_from(std::string_view script
       auto* file = assets.lookup_game_asset(path);
       if (!file) {
          this->_load_results.failed = true;
+         #if _DEBUG
+            auto error_info = strerror(errno);
+         #endif
          return;
       }
       try {

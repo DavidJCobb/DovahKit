@@ -24,11 +24,12 @@ namespace dovahkit::subsystems {
       loose_path /= path;
       //
       std::ifstream stream;
-      stream.open(path, std::ios_base::in | std::ios_base::binary);
-      if (!stream.is_open())
+      stream.open(loose_path, std::ios_base::in | std::ios_base::binary);
+      if (!stream.is_open()) {
          return nullptr;
+      }
       std::error_code error;
-      auto size = std::filesystem::file_size(path, error);
+      auto size = std::filesystem::file_size(loose_path, error);
       if ((bool)error)
          return nullptr;
       //

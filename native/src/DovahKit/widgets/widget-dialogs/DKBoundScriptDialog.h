@@ -19,6 +19,8 @@ class DKBoundScriptDialog : public QDialog {
    public:
       bool loadFailed() const;
 
+      virtual void showEvent(QShowEvent* event) override;
+
    protected:
       std::optional<size_t> _currentArrayElementIndex() const;
       QModelIndex _selectedPropertyQMI() const;

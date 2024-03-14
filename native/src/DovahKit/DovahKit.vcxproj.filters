@@ -2229,6 +2229,9 @@
     <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_bound_script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5598,6 +5601,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

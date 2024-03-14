@@ -252,7 +252,16 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
    #pragma endregion
 
    this->_showSelectedProperty();
+}
 
+bool DKBoundScriptDialog::loadFailed() const {
+   if (!this->script_model)
+      return false;
+   return this->script_model->failedToLoad();
+}
+
+
+/*virtual*/ void DKBoundScriptDialog::showEvent(QShowEvent* event) /*override*/ {
    if (this->script_model->anyPropertiesDiscardedOnLoad()) {
       QMessageBox::warning(
          this,
@@ -261,12 +270,6 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
       );
       this->script_model->forgetAnyPropertiesWereDiscardedOnLoad(); // so we're only warned once, if we commit our changes
    }
-}
-
-bool DKBoundScriptDialog::loadFailed() const {
-   if (!this->script_model)
-      return false;
-   return this->script_model->failedToLoad();
 }
 
 //

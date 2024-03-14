@@ -695,6 +695,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_bound_script.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -878,6 +879,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />
