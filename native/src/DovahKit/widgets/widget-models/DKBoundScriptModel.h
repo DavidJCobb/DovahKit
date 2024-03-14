@@ -183,6 +183,7 @@ class DKBoundScriptModel : public QAbstractItemModel {
 
       std::optional<PropertyValue> getPropertyValue(const QModelIndex&, bool local_only = false) const;
       std::optional<PropertyValue> getPropertyValueElement(const QModelIndex&, size_t array_index, bool local_only = false) const; // fails (empty result) on non-array properties
+      std::optional<size_t> getPropertyValueArrayLength(const QModelIndex&, bool local_only = false) const; // fails (empty result) on non-array properties
 };
 
 #include "./DKBoundScriptModel.inl"

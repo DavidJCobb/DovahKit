@@ -2,6 +2,7 @@
 #include <QDialog>
 #include <QGridLayout>
 #include <QKeySequence>
+#include "dovah/forms/Form.h" // needed for loaded_form_ptr, at least for now
 #include "widgets/DKObjectReferencePicker.h"
 #include "widgets/DKPapyrusBoundScriptListPane.h"
 
@@ -18,6 +19,10 @@ namespace DovahKitDebug::features {
             layout->addWidget(list_pane);
 
             QObject::connect(ref_picker, &DKObjectReferencePicker::refChanged, [this, list_pane](dovah::form_stub* stub) {
+               if (!stub) {
+                  this->loaded_form = nullptr;
+                  return;
+               }
                this->loaded_form = stub->load();
                if (!this->loaded_form)
                   return;

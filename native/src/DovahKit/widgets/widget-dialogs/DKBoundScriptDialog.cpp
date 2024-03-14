@@ -63,7 +63,7 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
          vh->setVisible(false);
       }
       QObject::connect(prop_view->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
-         this->_showSelectedProperty();
+         this->_refresh_property_ui();
       });
       prop_view->setIconSize({ 16, 16 });
    }
@@ -73,27 +73,23 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
       widget->setCornerButtonEnabled(false);
       widget->setHorizontalHeaderLabels({ tr("#", "array-value table header: index"), tr("Value", "array-value table header: value")});
       if (auto* header = widget->horizontalHeader()) {
+         auto metrics = QFontMetrics(widget->font());
          header->setStretchLastSection(true);
+         header->resizeSection(0, metrics.boundingRect("199").width() * 1.5F + 4);
       }
       if (auto* vh = widget->verticalHeader()) {
          vh->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for sane row sizing
          vh->setVisible(false);
       }
       QObject::connect(widget, &QTableWidget::currentCellChanged, this, [this](int currentRow, int currentColumn, int previousRow, int previousColumn) {
-         auto qmi = this->_selectedPropertyQMI();
-         if (!this->script_model || !qmi.isValid()) {
-            return;
-         }
+         this->_update_array_element_buttons();
 
-         const auto info_opt = this->script_model->infoForProperty(qmi);
-         if (!info_opt.has_value())
-            return;
-         const auto& info = info_opt.value();
-         if (!info.is_array)
+         auto qmi = this->_selected_property_qmi();
+         if (!this->script_model || !qmi.isValid())
             return;
 
          const auto value_opt = this->script_model->getPropertyValueElement(qmi, currentRow);
-         if (!value_opt.has_value())
+         if (!value_opt.has_value()) // happens if the property is not an array or if `currentRow` is outside of its bounds
             return;
          this->_populate_edit_widgets(value_opt.value());
       });
@@ -103,17 +99,17 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
       if (!this->script_model)
          return;
       this->script_model->autoFillAllProperties();
-      this->_showSelectedProperty();
+      this->_refresh_property_ui();
    });
    QObject::connect(this->ui.buttonValueAutoFill, &QPushButton::clicked, this, [this]() {
-      auto qmi = this->_selectedPropertyQMI();
+      auto qmi = this->_selected_property_qmi();
       if (!this->script_model || !qmi.isValid())
          return;
       this->script_model->autoFillProperty(qmi);
-      this->_showSelectedProperty();
+      this->_refresh_property_ui();
    });
    QObject::connect(this->ui.buttonValueClearOrMakeLocal, &QPushButton::clicked, this, [this]() {
-      auto qmi = this->_selectedPropertyQMI();
+      auto qmi = this->_selected_property_qmi();
       if (!this->script_model || !qmi.isValid())
          return;
 
@@ -127,46 +123,80 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
       } else {
          this->script_model->makePropertyLocal(qmi);
       }
-      this->_showSelectedProperty();
+      this->_refresh_property_ui();
    });
    QObject::connect(this->ui.buttonValueRevert, &QPushButton::clicked, this, [this]() {
-      auto qmi = this->_selectedPropertyQMI();
+      auto qmi = this->_selected_property_qmi();
       if (!this->script_model || !qmi.isValid())
          return;
       this->script_model->revertProperty(qmi);
-      this->_showSelectedProperty();
+      this->_refresh_property_ui();
    });
 
    QObject::connect(this->ui.arrayButtonAdd, &QPushButton::clicked, this, [this]() {
-      auto qmi = this->_selectedPropertyQMI();
+      auto qmi = this->_selected_property_qmi();
       if (!this->script_model || !qmi.isValid())
          return;
 
       auto value_opt = this->script_model->getPropertyValue(qmi);
       if (!value_opt.has_value())
          return;
-      auto& value   = value_opt.value();
-      bool  changed = false;
+      auto&  value      = value_opt.value();
+      bool   changed    = false;
+      size_t size_after = 0;
       std::visit(
-         [&changed](auto& v) {
+         [&changed, &size_after](auto& v) {
             using value_type = std::decay_t<decltype(v)>;
             if constexpr (cobb::is_std_vector<value_type>) {
                v.emplace_back();
+               changed    = true;
+               size_after = v.size();
+            }
+         },
+         value
+      );
+      if (changed) {
+         this->script_model->setPropertyLocalValue(qmi, value);
+         this->_refresh_array_ui(value, size_after - 1);
+      }
+   });
+   QObject::connect(this->ui.arrayButtonDuplicate, &QPushButton::clicked, this, [this]() {
+      auto qmi = this->_selected_property_qmi();
+      if (!this->script_model || !qmi.isValid())
+         return;
+      auto row_opt = this->_selected_array_element_index();
+      if (!row_opt.has_value())
+         return;
+      auto value_opt = this->script_model->getPropertyValue(qmi);
+      if (!value_opt.has_value())
+         return;
+
+      auto& value   = value_opt.value();
+      auto  row     = row_opt.value();
+      bool  changed = false;
+      std::visit(
+         [row, &changed](auto& v) {
+            using value_type = std::decay_t<decltype(v)>;
+            if constexpr (cobb::is_std_vector<value_type>) {
+               auto item = v[row];
+               v.insert(v.begin() + row, item);
                changed = true;
             }
          },
          value
       );
-      if (changed)
+      if (changed) {
          this->script_model->setPropertyLocalValue(qmi, value);
+         this->_refresh_array_ui(value, row + 1);
+      }
    });
    QObject::connect(this->ui.arrayButtonRemove, &QPushButton::clicked, this, [this]() {
-      auto qmi = this->_selectedPropertyQMI();
+      auto qmi = this->_selected_property_qmi();
       if (!this->script_model || !qmi.isValid())
          return;
 
       size_t row;
-      if (auto opt = this->_currentArrayElementIndex(); opt.has_value()) {
+      if (auto opt = this->_selected_array_element_index(); opt.has_value()) {
          row = opt.value();
       } else {
          return;
@@ -175,22 +205,28 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
       auto value_opt = this->script_model->getPropertyValue(qmi);
       if (!value_opt.has_value())
          return;
-      auto& value   = value_opt.value();
-      bool  changed = false;
+      auto&  value      = value_opt.value();
+      bool   changed    = false;
+      size_t size_after = 0;
       std::visit(
-         [row, &changed](auto& v) {
+         [row, &changed, &size_after](auto& v) {
             using value_type = std::decay_t<decltype(v)>;
             if constexpr (cobb::is_std_vector<value_type>) {
                if (row >= v.size())
                   return;
                v.erase(v.begin() + row);
+               size_after = v.size();
                changed = true;
             }
          },
          value
       );
-      if (changed)
+      if (changed) {
+         if (row >= size_after)
+            row = size_after - 1;
          this->script_model->setPropertyLocalValue(qmi, value);
+         this->_refresh_array_ui(value, row);
+      }
    });
    QObject::connect(this->ui.arrayButtonMoveUp, &QPushButton::clicked, this, [this]() {
       this->_move_currently_focused_array_element(false);
@@ -251,7 +287,7 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
    });
    #pragma endregion
 
-   this->_showSelectedProperty();
+   this->_refresh_property_ui();
 }
 
 bool DKBoundScriptDialog::loadFailed() const {
@@ -282,7 +318,7 @@ std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptDialog::_property_i
    return this->script_model->infoForProperty(qmi);
 }
 std::optional<DKBoundScriptModel::PropertyInfo> DKBoundScriptDialog::_selected_property_info() const {
-   return this->_property_info(this->_selectedPropertyQMI());
+   return this->_property_info(this->_selected_property_qmi());
 }
 vmad::property_type DKBoundScriptDialog::_selected_property_element_type() const {
    const auto info_opt = this->_selected_property_info();
@@ -291,7 +327,7 @@ vmad::property_type DKBoundScriptDialog::_selected_property_element_type() const
    return vmad::scalar_property_type_for(info_opt.value().raw_type);
 }
 
-std::optional<size_t> DKBoundScriptDialog::_currentArrayElementIndex() const {
+std::optional<size_t> DKBoundScriptDialog::_selected_array_element_index() const {
    auto* sm = this->ui.arrayTable->selectionModel();
    if (!sm)
       return {};
@@ -303,7 +339,7 @@ std::optional<size_t> DKBoundScriptDialog::_currentArrayElementIndex() const {
       return {};
    return row;
 }
-QModelIndex DKBoundScriptDialog::_selectedPropertyQMI() const {
+QModelIndex DKBoundScriptDialog::_selected_property_qmi() const {
    if (!this->script_qmi.isValid())
       return {};
    auto* sm = this->ui.properties->selectionModel();
@@ -320,12 +356,12 @@ QModelIndex DKBoundScriptDialog::_selectedPropertyQMI() const {
 //
 
 void DKBoundScriptDialog::_move_currently_focused_array_element(bool move_down) {
-   auto qmi = this->_selectedPropertyQMI();
+   auto qmi = this->_selected_property_qmi();
    if (!this->script_model || !qmi.isValid())
       return;
 
    size_t from;
-   if (auto opt = this->_currentArrayElementIndex(); opt.has_value()) {
+   if (auto opt = this->_selected_array_element_index(); opt.has_value()) {
       from = opt.value();
    } else {
       return;
@@ -364,11 +400,11 @@ void DKBoundScriptDialog::_move_currently_focused_array_element(bool move_down) 
       const auto blocker = QSignalBlocker(this->ui.arrayTable);
 
       this->script_model->setPropertyLocalValue(qmi, value);
-      this->ui.arrayTable->setCurrentCell(to, 0);
+      this->_refresh_array_ui(value, to);
    }
 }
 void DKBoundScriptDialog::_set_currently_focused_value(const ui::bound_script_models::property_value& v) {
-   auto qmi = this->_selectedPropertyQMI();
+   auto qmi = this->_selected_property_qmi();
    if (!this->script_model || !qmi.isValid()) {
       return;
    }
@@ -377,21 +413,66 @@ void DKBoundScriptDialog::_set_currently_focused_value(const ui::bound_script_mo
    if (!info_opt.has_value())
       return;
    const auto& info = info_opt.value();
-   const auto  row  = this->ui.arrayTable->currentRow();
+   const auto  row  = this->_selected_array_element_index();
+   if (!row.has_value())
+      return;
 
    if (!info.is_array) {
       this->script_model->setPropertyLocalValue(qmi, v);
    } else {
-      this->script_model->setPropertyLocalValueElement(qmi, v, row);
+      this->script_model->setPropertyLocalValueElement(qmi, v, row.value());
+
+      auto* array_table_item = this->ui.arrayTable->item(row.value(), 1);
+      if (array_table_item) {
+         auto text = ui::bound_script_models::stringify(v);
+         array_table_item->setText(text);
+         array_table_item->setToolTip(text);
+      }
    }
+}
+
+void DKBoundScriptDialog::_set_selected_array_element_index(std::optional<size_t> i) {
+   auto* sm = this->ui.arrayTable->selectionModel();
+   if (!sm)
+      return;
+   if (!i.has_value()) {
+      sm->clearSelection();
+      return;
+   }
+
+   const auto blocker = QSignalBlocker(this->ui.arrayTable);
+   
+   auto* model = this->ui.arrayTable->model();
+   assert(model != nullptr);
+   auto top_left      = model->index(i.value(), 0, {});
+   auto bottom_right  = top_left.siblingAtColumn(1);
+   auto row_selection = QItemSelection(top_left, bottom_right);
+   sm->select(row_selection, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+
+   this->_update_array_element_buttons();
 }
 
 //
 // Functions for updating the UI state:
 //
 
-void DKBoundScriptDialog::_showSelectedProperty() {
-   const auto qmi      = this->_selectedPropertyQMI();
+void DKBoundScriptDialog::_refresh_array_ui(
+   const ui::bound_script_models::property_value& array_value,
+   std::optional<size_t> selected_element_index
+) {
+   size_t i;
+   if (!selected_element_index.has_value())
+      selected_element_index = this->_selected_array_element_index();
+   i = selected_element_index.value_or(0);
+
+   this->_populate_array_table(array_value);
+   this->_set_selected_array_element_index(i);
+   this->_populate_edit_widgets_for_array(array_value);
+   this->_update_array_element_buttons();
+}
+
+void DKBoundScriptDialog::_refresh_property_ui() {
+   const auto qmi      = this->_selected_property_qmi();
    const auto info_opt = this->_property_info(qmi);
    this->_update_autofill_button(info_opt);
    this->_update_clear_edit_button(info_opt);
@@ -399,6 +480,7 @@ void DKBoundScriptDialog::_showSelectedProperty() {
    this->_show_edit_widgets(info_opt);
    if (!info_opt.has_value()) {
       this->_clear_displayed_typename();
+      this->_clear_edit_widget_constraints();
       this->ui.valueButtonsLayout->setEnabled(false);
       return;
    }
@@ -422,31 +504,9 @@ void DKBoundScriptDialog::_showSelectedProperty() {
    if (!value_opt.has_value())
       return;
    this->_populate_array_table(value_opt.value());
+   this->_update_array_element_buttons();
    if (info.is_array) {
-      std::visit(
-         [this](const auto& v) {
-            using value_type = std::decay_t<decltype(v)>;
-            if constexpr (cobb::is_std_vector<value_type>) {
-               if (v.empty()) {
-                  this->ui.singleValueWrap->setEnabled(false);
-               } else {
-                  this->ui.singleValueWrap->setEnabled(true);
-
-                  size_t i = 0;
-                  {
-                     auto opt = this->_currentArrayElementIndex();
-                     if (opt.has_value()) {
-                        i = opt.value();
-                        if (i >= v.size())
-                           i = 0;
-                     }
-                  }
-                  this->_populate_edit_widgets(v[i]);
-               }
-            }
-         },
-         value_opt.value()
-      );
+      this->_populate_edit_widgets_for_array(value_opt.value());
    } else {
       this->ui.singleValueWrap->setEnabled(true);
       this->_populate_edit_widgets(value_opt.value());
@@ -503,6 +563,37 @@ void DKBoundScriptDialog::_update_revert_button(const std::optional<DKBoundScrip
    }
 }
 
+void DKBoundScriptDialog::_update_array_element_buttons() {
+   if (!this->script_model) {
+      this->ui.arrayButtonsLayout->setEnabled(false);
+      return;
+   }
+   const auto idx = this->_selected_array_element_index();
+   if (!idx.has_value()) {
+      this->ui.arrayButtonsLayout->setEnabled(false);
+      return;
+   }
+
+   this->ui.arrayButtonsLayout->setEnabled(true);
+
+   size_t i = idx.value();
+
+   this->ui.arrayButtonAdd->setEnabled(true);
+   this->ui.arrayButtonDuplicate->setEnabled(true);
+   this->ui.arrayButtonRemove->setEnabled(true);
+   //
+   this->ui.arrayButtonMoveUp->setEnabled(i > 0);
+   {
+      auto qmi        = this->_selected_property_qmi();
+      auto length_opt = this->script_model->getPropertyValueArrayLength(qmi);
+      if (length_opt.has_value()) {
+         this->ui.arrayButtonMoveDown->setEnabled(i < length_opt.value());
+      } else {
+         this->ui.arrayButtonMoveDown->setEnabled(true);
+      }
+   }
+}
+
 void DKBoundScriptDialog::_populate_array_table(const ui::bound_script_models::property_value& value) {
    this->ui.arrayTable->clearContents();
    bool is_array = false;
@@ -540,6 +631,19 @@ void DKBoundScriptDialog::_populate_array_table(const ui::bound_script_models::p
    this->ui.arrayEditingLayout->setEnabled(is_array);
 }
 
+void DKBoundScriptDialog::_clear_edit_widget_constraints() {
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.valueWidget_alias),
+      QSignalBlocker(this->ui.valueWidget_form),
+      QSignalBlocker(this->ui.valueWidget_ref),
+   };
+
+   this->ui.valueWidget_alias->setRequiredScriptname(std::string_view{});
+   this->ui.valueWidget_form->setRequiredScriptname(std::string_view{});
+   this->ui.valueWidget_ref->setRequiredScriptname(std::string_view{});
+
+   this->ui.valueWidget_form->allowAllFormTypes();
+}
 void DKBoundScriptDialog::_update_edit_widget_constraints(const DKBoundScriptModel::PropertyInfo& info) {
    const auto blockers = std::array{
       QSignalBlocker(this->ui.valueWidget_alias),
@@ -597,6 +701,33 @@ void DKBoundScriptDialog::_populate_edit_widgets(const ui::bound_script_models::
          }
          break;
    }
+}
+
+void DKBoundScriptDialog::_populate_edit_widgets_for_array(const ui::bound_script_models::property_value& array_value) {
+   std::visit(
+      [this](const auto& v) {
+         using value_type = std::decay_t<decltype(v)>;
+         if constexpr (cobb::is_std_vector<value_type>) {
+            if (v.empty()) {
+               this->ui.singleValueWrap->setEnabled(false);
+            } else {
+               this->ui.singleValueWrap->setEnabled(true);
+
+               size_t i = 0;
+               {
+                  auto opt = this->_selected_array_element_index();
+                  if (opt.has_value()) {
+                     i = opt.value();
+                     if (i >= v.size())
+                        i = 0;
+                  }
+               }
+               this->_populate_edit_widgets(v[i]);
+            }
+         }
+      },
+      array_value
+   );
 }
 
 void DKBoundScriptDialog::_show_edit_widgets(const std::optional<DKBoundScriptModel::PropertyInfo>& info_opt) {

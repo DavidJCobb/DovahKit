@@ -887,7 +887,9 @@ void DKBoundScriptModel::setPropertyLocalValueElement(const QModelIndex& qmi, co
       array
    );
    if (success) {
+      prop->set_local_value(array);
       prop->recache_value_string();
+
       this->_cached.any_properties_edited_locally = true;
       _emit_row_changed(qmi);
    }
@@ -992,6 +994,35 @@ std::optional<DKBoundScriptModel::PropertyValue> DKBoundScriptModel::getProperty
             if (array_index >= src_v.size())
                return;
             out = src_v[array_index];
+         }
+      },
+      value
+   );
+   return out;
+}
+std::optional<size_t> DKBoundScriptModel::getPropertyValueArrayLength(const QModelIndex& qmi, bool local_only) const {
+   auto* prop = _property(qmi);
+   if (!prop)
+      return {};
+   if (!ui::bound_script_models::vmad::property_type_is_array(prop->typeinfo.raw_type))
+      return {};
+   
+   auto& opt_local     = prop->values.local;
+   auto& opt_inherited = prop->values.inherited;
+   if (local_only && !opt_local.has_value())
+      return {};
+   const auto& value_opt = opt_local.has_value() ? opt_local : opt_inherited;
+   if (!value_opt.has_value())
+      return {};
+
+   const auto& value = value_opt.value();
+
+   std::optional<size_t> out;
+   std::visit(
+      [&out](const auto& src_v) {
+         using value_type = std::decay_t<decltype(src_v)>;
+         if constexpr (cobb::is_std_vector<value_type>) {
+            out = src_v.size();
          }
       },
       value
