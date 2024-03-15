@@ -413,13 +413,13 @@ void DKBoundScriptDialog::_set_currently_focused_value(const ui::bound_script_mo
    if (!info_opt.has_value())
       return;
    const auto& info = info_opt.value();
-   const auto  row  = this->_selected_array_element_index();
-   if (!row.has_value())
-      return;
 
    if (!info.is_array) {
       this->script_model->setPropertyLocalValue(qmi, v);
    } else {
+      const auto row = this->_selected_array_element_index();
+      if (!row.has_value())
+         return;
       this->script_model->setPropertyLocalValueElement(qmi, v, row.value());
 
       auto* array_table_item = this->ui.arrayTable->item(row.value(), 1);
@@ -429,6 +429,11 @@ void DKBoundScriptDialog::_set_currently_focused_value(const ui::bound_script_mo
          array_table_item->setToolTip(text);
       }
    }
+   //
+   // Editing an inherited property causes it to be defined locally. Re-fetch the 
+   // property info and update the state of the Revert button, to account for this.
+   //
+   this->_update_revert_button(this->script_model->infoForProperty(qmi));
 }
 
 void DKBoundScriptDialog::_set_selected_array_element_index(std::optional<size_t> i) {
@@ -496,9 +501,11 @@ void DKBoundScriptDialog::_refresh_property_ui() {
 
    this->_update_edit_widget_constraints(info);
 
+   /*//
    if (info.local_status != DKBoundScriptModel::PropertyInfo::LocalStatus::DefinedLocally) {
       return;
    }
+   //*/
 
    auto value_opt = this->script_model->getPropertyValue(qmi);
    if (!value_opt.has_value())
@@ -740,7 +747,7 @@ void DKBoundScriptDialog::_show_edit_widgets(const std::optional<DKBoundScriptMo
       return;
    }
    auto& info = info_opt.value();
-   if (info.local_status != DKBoundScriptModel::PropertyInfo::LocalStatus::DefinedLocally) {
+   if (info.local_status == DKBoundScriptModel::PropertyInfo::LocalStatus::Cleared) {
       array_layout->setEnabled(false);
       array_layout->setVisible(false);
       stack->setCurrentWidget(this->ui.valuePage_defaulted);

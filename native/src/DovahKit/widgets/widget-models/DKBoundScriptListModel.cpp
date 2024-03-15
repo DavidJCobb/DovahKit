@@ -354,8 +354,10 @@ bool DKBoundScriptListModel::removeScript(const QModelIndex& qmi) {
    if (!script)
       return false;
    if (script->inherited) {
-      if (script->model)
+      if (script->model) {
          delete script->model;
+         script->model = nullptr;
+      }
       script->status = vmad::script_status::removed;
       script->has_local_properties = false;
       emit dataChanged(qmi, qmi);

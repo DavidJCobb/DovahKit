@@ -964,7 +964,7 @@ std::optional<DKBoundScriptModel::PropertyValue> DKBoundScriptModel::getProperty
    if (opt_local.has_value()) {
       return opt_local.value();
    } else {
-      if (!local_only)
+      if (local_only)
          return {};
    }
    if (opt_inherited.has_value())
