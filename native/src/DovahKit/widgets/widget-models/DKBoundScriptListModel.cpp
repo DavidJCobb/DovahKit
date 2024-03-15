@@ -277,18 +277,24 @@ DKBoundScriptModel* DKBoundScriptListModel::createScriptModelFor(const QModelInd
       out = new DKBoundScriptModel(*script->model, this);
    } else {
       out = new DKBoundScriptModel(script->name, this);
+
+      auto scriptname = script->name.toUtf8().toStdString();
+
+      vmad::attached_script* local     = nullptr;
+      vmad::attached_script* inherited = nullptr;
       if (this->_vmad.local) {
-         auto* scr = this->_vmad.local->lookup_script(script->name.toUtf8().toStdString());
-         if (scr) {
-            if (this->_vmad.inherited)
-               out->initializeFrom(*scr, *this->_vmad.inherited);
-            else
-               out->initializeFrom(*scr);
-         }
-      } else if (this->_vmad.inherited) {
-         auto* scr = this->_vmad.inherited->lookup_script(script->name.toUtf8().toStdString());
-         if (scr)
-            out->initializeFromInheritedOnly(*scr);
+         local = this->_vmad.local->lookup_script(scriptname);
+      }
+      if (this->_vmad.inherited) {
+         inherited = this->_vmad.inherited->lookup_script(scriptname);
+      }
+      if (local) {
+         if (this->_vmad.inherited)
+            out->initializeFrom(*local, *this->_vmad.inherited);
+         else
+            out->initializeFrom(*local);
+      } else if (inherited) {
+         out->initializeFromInheritedOnly(*inherited);
       }
    }
    return out;

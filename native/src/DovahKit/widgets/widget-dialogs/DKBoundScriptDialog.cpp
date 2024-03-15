@@ -557,7 +557,7 @@ void DKBoundScriptDialog::_update_revert_button(const std::optional<DKBoundScrip
    }
    auto& info = info_opt.value();
    if (info.inherited) {
-      widget->setEnabled(info.local_status == DKBoundScriptModel::PropertyInfo::LocalStatus::DefinedLocally);
+      widget->setEnabled(info.local_status != DKBoundScriptModel::PropertyInfo::LocalStatus::NotDefined);
    } else {
       widget->setEnabled(false);
    }

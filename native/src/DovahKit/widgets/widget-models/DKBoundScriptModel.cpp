@@ -801,7 +801,10 @@ void DKBoundScriptModel::makePropertyLocal(const QModelIndex& qmi) {
    auto* prop = _property(qmi);
    if (!prop)
       return;
-   if (prop->values.local.has_value())
+   if (prop->values.local.has_value() && !std::holds_alternative<std::monostate>(prop->values.local.value()))
+      //
+      // Property already has a value (and that value isn't just the property being cleared).
+      //
       return;
    prop->make_local();
    prop->recache_value_string();
