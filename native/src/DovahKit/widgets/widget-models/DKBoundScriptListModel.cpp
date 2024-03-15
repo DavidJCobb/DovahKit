@@ -96,7 +96,8 @@ void DKBoundScriptListModel::initializeFrom(vmad_data& local, vmad_data& inherit
          ptr = new bound_script;
          ptr->name = name;
       }
-      ptr->status = vmad::script_status::defined_on_base;
+      ptr->inherited = true;
+      ptr->status    = vmad::script_status::defined_on_base;
    }
    for (const auto& src : local.scripts) {
       QString name       = QString::fromStdString(src.name);
@@ -349,7 +350,7 @@ bool DKBoundScriptListModel::removeScript(const QModelIndex& qmi) {
    if (script->inherited) {
       if (script->model)
          delete script->model;
-      script->status = vmad::script_status::defined_on_base;
+      script->status = vmad::script_status::removed;
       script->has_local_properties = false;
       emit dataChanged(qmi, qmi);
       return true;

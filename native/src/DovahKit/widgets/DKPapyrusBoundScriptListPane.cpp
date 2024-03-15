@@ -177,6 +177,7 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
             this->model->removeScript(script_qmi);
          else
             this->model->undeleteScript(script_qmi);
+         this->_updateButtons();
       });
    #endif
 }
