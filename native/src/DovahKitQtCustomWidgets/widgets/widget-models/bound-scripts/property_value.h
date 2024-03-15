@@ -3,8 +3,11 @@
 #include <variant>
 #include <vector>
 #include <QString>
+#include "dovah/forms/components/papyrus/property_type.h"
+#include "dovah/forms/components/papyrus/property_value.h"
 #include "ui/types/quest_alias.h"
-#include "./types.h"
+
+#include "./_forward_declarations.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -13,7 +16,7 @@ namespace dovah {
    class form_stub;
 }
 
-namespace DKFormVMADModelObjects {
+namespace ui::bound_script_models {
    using property_value = std::variant<
       std::monostate, // only for clearing an inherited property value REFR-side
       //

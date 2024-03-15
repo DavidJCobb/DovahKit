@@ -112,6 +112,7 @@ void DKQuestAliasPicker::setRequiredScriptname(std::string_view s) {
       return;
    this->_state.required_scriptname = s;
 
+   #if !defined(QT_DESIGNER_LIB)
    auto prior = this->questAlias();
    {
       const auto blocker = QSignalBlocker(this);
@@ -124,6 +125,7 @@ void DKQuestAliasPicker::setRequiredScriptname(std::string_view s) {
          emit this->questChanged(after.quest);
       emit this->aliasChanged(after);
    }
+   #endif
 }
 
 #if !defined(QT_DESIGNER_LIB)

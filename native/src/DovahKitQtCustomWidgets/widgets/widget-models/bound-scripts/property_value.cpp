@@ -8,7 +8,7 @@
 #include "dovah/forms/Quest.h"
 #include "editor/core.h"
 
-namespace DKFormVMADModelObjects {
+namespace ui::bound_script_models {
    void property_value_to_vmad(const property_value& src, vmad::property_value& dst, dovah::loaded_forms::Form& dst_form) {
       std::visit(
          [&dst, &dst_form](auto& src_v) {

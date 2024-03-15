@@ -9,6 +9,7 @@
 #include "interfaces/DKObjectReferencePickerInterface.h"
 #include "interfaces/DKQuestAliasPickerInterface.h"
 #include "interfaces/DKFormPickerInterface.h"
+#include "interfaces/DKPapyrusBoundScriptListPaneInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKCollapsiblePaneInterface(this));
@@ -19,6 +20,7 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKObjectReferencePickerInterface(this));
    widgets.append(new DKQuestAliasPickerInterface(this));
    widgets.append(new DKFormPickerInterface(this));
+   widgets.append(new DKPapyrusBoundScriptListPaneInterface(this));
 }
 
 QList<QDesignerCustomWidgetInterface*> DovahKitQtCustomWidgetsPlugin::customWidgets() const {

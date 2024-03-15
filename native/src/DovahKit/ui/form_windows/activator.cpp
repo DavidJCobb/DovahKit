@@ -23,10 +23,6 @@ FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent
    this->ui.defaultInteractKeyword->setAllowedFormType(dovah::form_type::keyword);
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
 
-   // Papyrus
-   this->subwidgets.papyrus = new DKPapyrusBoundScriptListPane(this);
-   this->layout()->replaceWidget(this->ui.placeholderPapyrus, this->subwidgets.papyrus);
-
    this->load(); // this creates the working copy.
    //
    QObject::connect(this->ui.defaultPrimitiveColor, &DKColorPickerButton::colorChanged, this, [this](QColor value) {
@@ -90,7 +86,7 @@ void FormDialogActivator::_load_impl() {
       this->ui.keywords->addStub(ref.get_form_stub());
    }
 
-   this->subwidgets.papyrus->setFormWorkingCopy(&working);
+   this->ui.scriptListPane->setFormWorkingCopy(&working);
 }
 void FormDialogActivator::_save_impl() {
    //
@@ -127,7 +123,7 @@ void FormDialogActivator::_save_impl() {
    working.interact_keyword.set(working, this->ui.defaultInteractKeyword->formStub());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 
-   this->subwidgets.papyrus->commit();
+   this->ui.scriptListPane->commit();
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }

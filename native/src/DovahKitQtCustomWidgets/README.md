@@ -74,6 +74,9 @@ top-level Data folder.
 A widget for selecting an ObjectReference form via drop-downs or (eventually) by picking 
 it in the Render Window.
 
+### DKPapyrusBoundScriptListPane
+A panel for editing the scripts bound to a form, or the properties set on those scripts.
+
 ### DKTextureAssetPane
 A frame capable of rendering a game asset &mdash; either a DDS file or a TextureSet 
 form (the diffuse texture is always the one shown). Displays a placeholder icon when 

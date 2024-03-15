@@ -19,12 +19,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="widgets\DKCollapsiblePane.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <ClCompile Include="widgets\DKCollapsiblePane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <QtMoc Include="DovahKitQtCustomWidgetsPlugin.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -58,25 +52,25 @@
     <QtMoc Include="interfaces\DKColorPickerButtonInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKColorPickerButton.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKTextureAssetPane.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\DKHeaderView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKQuestAliasPickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKFormPickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKPapyrusBoundScriptListPaneInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKCollapsiblePane.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKColorPickerButton.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKFormListPane.h">
@@ -86,6 +80,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKGameFilePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKTextureAssetPane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKObjectReferencePicker.h">
@@ -111,22 +111,13 @@
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKHeaderView.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKColorPickerButton.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="widgets\DKTextureAssetPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp">
@@ -138,19 +129,37 @@
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKCollapsiblePane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKColorPickerButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="widgets\DKFormListPane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFormPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKGameFilePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKQuestAliasPicker.cpp">
+    <ClCompile Include="widgets\DKHeaderView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKTextureAssetPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKFormPicker.cpp">
+    <ClCompile Include="widgets\DKQuestAliasPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -162,13 +171,16 @@
     <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />
   </ItemGroup>
   <ItemGroup>
-    <QtRcc Include="widgets\widget-assets.qrc">
-      <Filter>Resource Files</Filter>
-    </QtRcc>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="dovah\form_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="widgets\DKHeaderView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="widgets\widget-assets.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
   </ItemGroup>
 </Project>

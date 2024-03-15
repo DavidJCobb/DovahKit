@@ -89,17 +89,10 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
 
    #pragma region Tab order
    {
-      auto* cell_picker =
-         #if !defined(QT_DESIGNER_LIB)
-            this->subwidgets.cell
-         #else
-            this->subwidgets.fake_formpicker
-         #endif
-      ;
       this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
       this->setFocusProxy(this->subwidgets.render_window_pick);
-      this->setTabOrder(this->subwidgets.render_window_pick, cell_picker);
-      this->setTabOrder(cell_picker,                         this->subwidgets.ref_filter_string);
+      this->setTabOrder(this->subwidgets.render_window_pick, this->subwidgets.cell);
+      this->setTabOrder(this->subwidgets.cell,               this->subwidgets.ref_filter_string);
       this->setTabOrder(this->subwidgets.ref_filter_string,  this->subwidgets.refr);
       this->setTabOrder(this->subwidgets.refr,               this->subwidgets.render_window_focus);
    }
@@ -166,11 +159,7 @@ void DKObjectReferencePicker::_rebuildLayout() {
    layout->removeWidget(this->subwidgets.labels.ref);
 
    layout->removeWidget(this->subwidgets.render_window_pick);
-   #if !defined(QT_DESIGNER_LIB)
-      layout->removeWidget(this->subwidgets.cell);
-   #else
-      layout->removeWidget(this->subwidgets.fake_formpicker);
-   #endif
+   layout->removeWidget(this->subwidgets.cell);
    layout->removeWidget(this->subwidgets.ref_filter_string);
    layout->removeWidget(this->subwidgets.refr);
    layout->removeWidget(this->subwidgets.render_window_focus);
@@ -187,11 +176,7 @@ void DKObjectReferencePicker::_rebuildLayout() {
    }
    {
       layout->addWidget(this->subwidgets.labels.cell, row, 0);
-      #if !defined(QT_DESIGNER_LIB)
-         layout->addWidget(this->subwidgets.cell, row, 1);
-      #else
-         layout->addWidget(this->subwidgets.fake_formpicker, row, 1);
-      #endif
+      layout->addWidget(this->subwidgets.cell,        row, 1);
       ++row;
    }
    if (this->state.show_ref_list_filter) {

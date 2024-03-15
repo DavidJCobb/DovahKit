@@ -112,24 +112,25 @@
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
+    <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
+    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <None Include="cpp.hint" />
     <None Include="README.md" />
-    <QtMoc Include="widgets\DKCollapsiblePane.h" />
     <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />
     <ClCompile Include="extension_factories\DKCollapsiblePaneExtensionFactory.cpp" />
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp" />
     <ClCompile Include="tools\action_editor\ActionEditorWindow.cpp" />
-    <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <QtMoc Include="DovahKitQtCustomWidgetsPlugin.h" />
     <ClCompile Include="DovahKitQtCustomWidgetsPlugin.cpp" />
     <None Include="dovahkitqtcustomwidgetsplugin.json" />
@@ -153,19 +154,13 @@
     <QtMoc Include="extensions\DKCollapsiblePaneTaskMenuExtension.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtRcc Include="widgets\widget-assets.qrc" />
-  </ItemGroup>
-  <ItemGroup>
     <QtMoc Include="interfaces\DKFormListPaneInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h" />
-    <QtMoc Include="widgets\DKTextureAssetPane.h" />
     <QtMoc Include="interfaces\DKGameFilePickerInterface.h" />
     <QtMoc Include="interfaces\DKColorPickerButtonInterface.h" />
-    <QtMoc Include="widgets\DKColorPickerButton.h" />
     <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h" />
-    <QtMoc Include="widgets\DKHeaderView.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="interfaces\DKQuestAliasPickerInterface.h" />
@@ -175,11 +170,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
-    <QtMoc Include="widgets\DKFormListPane.h" />
-    <QtMoc Include="widgets\DKFormPicker.h" />
-    <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
+    <QtMoc Include="widgets\DKTextureAssetPane.h" />
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h" />
+    <QtMoc Include="widgets\DKGameFilePicker.h" />
+    <QtMoc Include="widgets\DKFormPicker.h" />
+    <QtMoc Include="widgets\DKFormListPane.h" />
+    <QtMoc Include="widgets\DKColorPickerButton.h" />
+    <QtMoc Include="widgets\DKCollapsiblePane.h" />
+    <QtMoc Include="interfaces\DKPapyrusBoundScriptListPaneInterface.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="widgets\widget-assets.qrc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
