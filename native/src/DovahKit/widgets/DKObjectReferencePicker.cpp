@@ -320,3 +320,18 @@ void DKObjectReferencePicker::setShowViewRefButton(bool v) {
    value = v;
    this->_rebuildLayout();
 }
+void DKObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
+   if (ft == dovah::form_type::none)
+      ft = dovah::form_type::reference;
+   if (ft == this->requiredFormType())
+      return;
+   #if !defined(QT_DESIGNER_LIB)
+   #if _DEBUG
+      if (!dovah::form_type_is_reference(ft)) {
+         qWarning("DKObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
+      }
+   #endif
+   #endif
+   this->state.required_form_type = ft;
+   ((DKRefsInCellModel*)this->subwidgets.refr->model())->setRequiredFormType(ft);
+}

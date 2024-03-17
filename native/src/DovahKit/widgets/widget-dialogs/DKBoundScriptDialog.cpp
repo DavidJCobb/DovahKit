@@ -662,10 +662,22 @@ void DKBoundScriptDialog::_update_edit_widget_constraints(const DKBoundScriptMod
    this->ui.valueWidget_form->setRequiredScriptname(info.scriptname);
    this->ui.valueWidget_ref->setRequiredScriptname(info.scriptname);
 
-   if (info.native_type.has_value())
+   if (info.native_type.has_value()) {
       this->ui.valueWidget_form->setAllowedFormType(info.native_type.value());
-   else
+   } else {
       this->ui.valueWidget_form->allowAllFormTypes();
+   }
+   if (info.is_ref()) {
+      //
+      // Do this conditionally because DKObjectReferencePicker logs warnings for form 
+      // types that don't make sense for refs.
+      //
+      if (info.native_type.has_value()) {
+         this->ui.valueWidget_ref->setRequiredFormType(info.native_type.value());
+      } else {
+         this->ui.valueWidget_ref->setRequiredFormType(dovah::form_type::none);
+      }
+   }
 }
 
 void DKBoundScriptDialog::_populate_edit_widgets(const ui::bound_script_models::property_value& value) {

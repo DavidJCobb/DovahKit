@@ -86,6 +86,12 @@ class DKFormPicker : public QWidget {
       struct {
          bool is_splitting_types = false;
          bool needs_initial_fill = false;
+
+         // DKFormPickers choose not to list certain forms, e.g. unnamed exterior cells. 
+         // However, there are some cases where we need to be able to programmatically 
+         // set a DKFormPicker's current value to such a form and have that respected, 
+         // so our workaround is to force-prepend such forms when set.
+         dovah::form_stub* last_force_included_form = nullptr;
       } _state;
       struct {
          QComboBox* form = nullptr;
@@ -112,6 +118,7 @@ class DKFormPicker : public QWidget {
       void _setIsSplittingTypes(bool) noexcept;
       void _setSubwidgetEnableState(bool);
       bool _shouldSplitTypes() const noexcept;
+      void _updateForceIncludedForm(dovah::form_stub*);
       void _updateForms();
       void _updateTypePicker();
       

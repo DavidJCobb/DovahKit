@@ -72,6 +72,10 @@ DKRefsInCellModel::~DKRefsInCellModel() {
 bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
    if (item.is_prepended) // never filter force-prepended items out
       return true;
+   if (this->filter_form_type != dovah::form_type::none && this->filter_form_type != dovah::form_type::reference) {
+      if (item.stub->form_type != this->filter_form_type)
+         return false;
+   }
    if (!this->filter_string.isEmpty())
       if (!item.cached_text.contains(this->filter_string, Qt::CaseInsensitive))
          return false;
@@ -670,6 +674,15 @@ void DKRefsInCellModel::setRequiredScriptname(std::string_view desired) {
    if (dovah::papyrus::helpers::name_equals(desired, this->required_scriptname))
       return;
    this->required_scriptname = desired;
+   this->_filter();
+}
+
+void DKRefsInCellModel::setRequiredFormType(dovah::form_type ft) {
+   if (ft == dovah::form_type::reference)
+      ft = dovah::form_type::none;
+   if (ft == this->requiredFormType())
+      return;
+   this->filter_form_type = ft;
    this->_filter();
 }
 

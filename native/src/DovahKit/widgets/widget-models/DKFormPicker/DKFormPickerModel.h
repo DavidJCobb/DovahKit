@@ -2,6 +2,7 @@
 #if defined(QT_DESIGNER_LIB)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
+#include <optional>
 #include <string>
 #include <vector>
 #include <QAbstractItemModel>
@@ -20,7 +21,11 @@ namespace ui::impl::DKFormPicker {
          struct item_type {
             dovah::form_stub* stub = nullptr;
             dovah::form_type  type = dovah::form_type::none;
+            //
+            bool    default_exclude_from_listings = false; // if `true`, the item is excluded from listings by default
             QString editorID;
+
+            bool recheck_default_exclude_from_listings(); // returns true if changed
          };
 
       protected:
@@ -29,6 +34,7 @@ namespace ui::impl::DKFormPicker {
          std::vector<item_type*> _forms; // always includes a "NONE" item
 
       protected slots:
+         void _addForm(dovah::form_stub&); // intended for use after the initial (re)build
          void _rebuild();
 
       public:
@@ -38,11 +44,13 @@ namespace ui::impl::DKFormPicker {
          }
 
          const item_type* item_at_row(int) const noexcept;
+         const item_type* item_for_stub(const dovah::form_stub*) const; //  NOTE: probably a bit slow
          constexpr size_t size() const noexcept { return this->_forms.size(); }
 
       signals:
          void allDataCleared();
          void editorIDChanged(const item_type&, const QString& prior);
+         void itemExclusionStateChanged(const item_type&, bool now_excluded_by_default);
          void rowsAboutToBeRemoved(size_t first, size_t last);
          void rowsInserted(size_t first, size_t last);
    };
@@ -59,18 +67,19 @@ namespace ui::impl::DKFormPicker {
 
          enum class _fill_stage {
             inactive,
-            in_progress,
+            currently_filling,
+            currently_sorting,
             concluding,  // We're emitting signals.
          };
 
       public:
          struct filter_parameters {
-            bool                      allow_none = true;
+            bool                    allow_none = true;
             QList<dovah::form_type> form_types;
-            std::string               scriptname;
-            std::string               scriptname_on_aliases;
+            std::string             scriptname;
+            std::string             scriptname_on_aliases;
 
-            inline bool always_allow_none() const {
+            constexpr bool always_allow_none() const noexcept {
                return !scriptname.empty() || !scriptname_on_aliases.empty();
             }
          };
@@ -78,17 +87,17 @@ namespace ui::impl::DKFormPicker {
          static constexpr const auto FormStubRole = (Qt::ItemDataRole)(Qt::UserRole);
 
       protected:
-         std::vector<const item_type*> _items;
+         std::vector<const item_type*>        _items;
+         std::vector<const dovah::form_stub*> _force_included_forms;
          filter_parameters _last_completed_fill_params;
          struct {
             filter_parameters params;
 
-            _fill_stage stage     = _fill_stage::inactive;
-            bool        sorting   = false;
-            int         progress  = 0;
+            _fill_stage stage    = _fill_stage::inactive;
+            int         progress = 0; // index within the list of shared_datastore items, to continue pulling items from
             //
-            QTimer timer;
-            QElapsedTimer ticker;
+            QTimer        timer;  // queue work to be done each tick
+            QElapsedTimer ticker; // limit how much work can be done in a single tick
 
             std::vector<const item_type*> unsorted;
          } _ongoing_fill;
@@ -120,11 +129,26 @@ namespace ui::impl::DKFormPicker {
          #pragma endregion
 
       protected:
-         bool _entry_matches_params(const item_type&) const;
+         bool _entry_matches_params(const item_type&, const filter_parameters&) const;
+
+         decltype(_items)::iterator _insertion_point_for(const item_type&);
 
          void _refill(const filter_parameters&);
+         void _nextFillStep();
          bool _fillGrabMore(); // returns true if done
          bool _fillSortMore(); // returns true if done
+         void _finalizeFill();
+
+         void _re_sort_item(const item_type&, std::optional<QString> prior_name, bool emit_model_sync_signals = true);
+
+         void _on_item_exclusion_state_changed(const item_type&, bool exclude_now);
+
+         void _force_insert_item(const item_type&, bool emit_model_sync_signals = true);
+         void _force_remove_item(const item_type&, bool emit_model_sync_signals = true);
+
+         constexpr bool _contains_item(const item_type& item) const noexcept {
+            return std::find(this->_items.begin(), this->_items.end(), &item) != this->_items.end();
+         }
 
       public:
          void updateParameters(const filter_parameters&);
@@ -135,6 +159,9 @@ namespace ui::impl::DKFormPicker {
          int indexOf(const dovah::form_stub*) const noexcept;
 
          constexpr bool isFilling() const noexcept { return this->_ongoing_fill.stage != _fill_stage::inactive; }
+
+         bool willNeverDefaultExcludeForm(dovah::form_stub&) const;
+         void setFormNeverDefaultExcluded(dovah::form_stub&, bool force_include);
 
       signals:
          void beforeFilled();

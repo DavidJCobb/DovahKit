@@ -5,8 +5,9 @@
 #include <QLineEdit>
 #include <QPushButton>
 
+#include "dovah/form_types.h"
 #if !defined(QT_DESIGNER_LIB)
-   #include "../dovah/core.h"
+   #include "dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
 #include "./DKFormPicker.h"
@@ -18,6 +19,7 @@ namespace dovah {
 class DKObjectReferencePicker : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(bool allowNone         READ allowNone         WRITE setAllowNone DESIGNABLE true);
+   Q_PROPERTY(dovah::form_type requiredFormType READ requiredFormType WRITE setRequiredFormType DESIGNABLE true);
    Q_PROPERTY(bool showRefListFilter READ showRefListFilter WRITE setShowRefListFilter DESIGNABLE true);
    Q_PROPERTY(bool showViewRefButton READ showViewRefButton WRITE setShowViewRefButton DESIGNABLE true);
    public:
@@ -54,6 +56,9 @@ class DKObjectReferencePicker : public QWidget {
       void setShowRefListFilter(bool);
       void setShowViewRefButton(bool);
 
+      constexpr dovah::form_type requiredFormType() const { return this->state.required_form_type; }
+      void setRequiredFormType(dovah::form_type);
+
    signals:
       void cellChanged(dovah::form_stub*);
       void refChanged(dovah::form_stub*);
@@ -78,7 +83,8 @@ class DKObjectReferencePicker : public QWidget {
          bool show_ref_list_filter = false;
          bool show_view_ref_button = false;
 
-         QString ref_filter_string;
+         QString          ref_filter_string;
+         dovah::form_type required_form_type = dovah::form_type::reference;
       } state;
 
       void _rebuildLayout();

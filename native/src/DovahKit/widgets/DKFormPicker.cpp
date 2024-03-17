@@ -266,8 +266,10 @@ void DKFormPicker::setRequiredAliasScriptname(std::string_view s) {
 
 #if !defined(QT_DESIGNER_LIB)
 void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
-   if (this->_value == stub)
+   if (this->_value == stub) {
+      this->_updateForceIncludedForm(stub);
       return;
+   }
    if (!stub) {
       if (!this->allowNone()) {
          if (this->_default)
@@ -278,13 +280,17 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
       if (!this->_wouldAllowFormStub(*stub))
          return;
    }
+
    this->_value = stub;
    this->_prior_selections.clear();
-   //
-   auto* subwidget = this->_subwidgets.form;
-   int   index     = subwidget->findData(QVariant::fromValue(stub), model_type::FormStubRole);
+
+   auto*      subwidget = this->_subwidgets.form;
+   const auto blocker   = QSignalBlocker(subwidget);
+
+   this->_updateForceIncludedForm(stub);
+   
+   int index = subwidget->findData(QVariant::fromValue(stub), model_type::FormStubRole);
    if (index >= 0) {
-      const auto blocker = QSignalBlocker(subwidget);
       subwidget->setCurrentIndex(index);
       emit this->formChanged(stub);
    }
@@ -360,6 +366,20 @@ bool DKFormPicker::_shouldSplitTypes() const noexcept {
       return true;
    return false;
 }
+void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
+   auto* prior = this->_state.last_force_included_form;
+   if (prior == stub)
+      return;
+
+   auto* model = this->_rawModel();
+   if (prior) {
+      model->setFormNeverDefaultExcluded(*prior, false);
+   }
+   if (stub) {
+      model->setFormNeverDefaultExcluded(*stub, true);
+   }
+   this->_state.last_force_included_form = stub;
+}
 void DKFormPicker::_updateForms() {
    this->_state.needs_initial_fill = false;
 
@@ -369,6 +389,13 @@ void DKFormPicker::_updateForms() {
       auto* model  = this->_rawModel();
    
       const auto blocker = QSignalBlocker(c_form);
+
+      if (stub) {
+         bool retain = this->_wouldAllowFormStub(*stub);
+         this->_updateForceIncludedForm(retain ? stub : nullptr);
+      } else {
+         this->_updateForceIncludedForm(nullptr);
+      }
 
       model_type::filter_parameters params;
       params.allow_none            = this->allowNone();

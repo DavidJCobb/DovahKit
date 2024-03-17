@@ -873,9 +873,6 @@
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
-    <ClCompile Include="widgets\widget-models\DKFormVMADModel\Property.cpp" />
-    <ClCompile Include="widgets\widget-models\DKFormVMADModel\property_value.cpp" />
-    <ClCompile Include="widgets\widget-models\DKFormVMADModel\Script.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -884,11 +881,6 @@
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptListModel.h" />
-    <ClInclude Include="widgets\widget-models\DKFormVMADModel\name_equals.h" />
-    <ClInclude Include="widgets\widget-models\DKFormVMADModel\Property.h" />
-    <ClInclude Include="widgets\widget-models\DKFormVMADModel\property_value.h" />
-    <ClInclude Include="widgets\widget-models\DKFormVMADModel\Script.h" />
-    <ClInclude Include="widgets\widget-models\DKFormVMADModel\types.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.h" />
