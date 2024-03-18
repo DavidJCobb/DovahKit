@@ -2284,6 +2284,7 @@
     <None Include="dovah\files\pex\user_flag_definition.inl" />
     <None Include="dovah\files\pex\value.inl" />
     <None Include="dovah\files\pex\variable_declaration.inl" />
+    <None Include="dovah\forms\components\model.md" />
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />

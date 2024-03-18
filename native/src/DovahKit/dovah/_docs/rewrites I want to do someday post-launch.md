@@ -7,6 +7,8 @@
   This phase is expected to enable, or make it easier to implement, the following features:
 
   * Flowchart-like editor for dialogue
+  * Cleaner code for editing Papyrus bound scripts
+    * Currently, `DKPapyrusBoundScriptListPane` can't auto-commit changes to a script directly to a form-working-copy's VMAD, because `DKBoundScriptListModel` only keeps track of the VMAD itself and not the working-copy form (so it can't use `form_reference_t::set`). This means that form-editing dialogs have to manually commit changes (from the UI to the working-copy VMAD) on save. We *could* have the model track the working-copy form in order to allow auto-committing... *or* once the backend rewrite is done and working copies use bare `form_stub*` fields, it'll then be possible to give `DKPapyrusBoundScriptListPane` the ability to optionally auto-commit directly to a working-copy VMAD.
 
 * **Phase 2: Rewrite the renderer.**  
   The current renderer design is difficult to maintain and not configurable for different use cases. It's not bad at all for, like, the third time I've ever built a renderer and the first time I've ever meaningfully succeeded, but it's not scalable in the ways I need it to be. It's easily the single worst "God object" I've ever written: this is the only time in my entire life that I've had to have *four separate `.cpp` files* for a single header. We need to figure out how best to divide up the renderer's systems and data, and figure out how to specify things like render pass and shader definitions as `constexpr` PODs in order to separate "data" from "code." We also need to make the renderer configurable: right now, it *always* preallocates enough VRAM resources to run the Render Window (i.e. enough to render a large portion of a worldspace), which is beyond excessive for things like previewing a single form or editing an actor's appearance.
@@ -194,7 +196,12 @@ namespace dovah {
    }
 
    namespace forms {
-      using Activator = loaded_form<form_type::activator, form_data::Activator>;
+      class Activator : public loaded_form<form_type::activator, form_data::Activator> {
+         public:
+            //
+            // virtual overrides for serialization funcs here
+            //
+      }
    }
    namespace form_working_copies {
       using Activator = form_working_copy<form_type::activator, form_data::Activator>;

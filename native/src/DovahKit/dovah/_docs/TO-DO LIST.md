@@ -61,6 +61,10 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 * NAMA (Face Parts) is not serialized by the CK if the values are unset/default. However, I don't know what the unset/default values are.
 * Investigate omitting fields that would be disabled/suppressed by template actor flags; alternatively, have the frontend do that. Main concern with doing it at save time is use info (i.e. unused form uses still *are* form uses and need to be severed bidirectionally).
 
+### Add-on Node (ADDN)
+* These forms are similar to Collision Layers in that they have numeric IDs that must be globally unique across the entire load order. We should have the Object Window display their IDs in the tableview whenever you filter to Add-on Nodes specifically. This would require having the form-info-cache subsystem grab those values.
+  * In turn, once the form-info-cache has those values, it becomes very easy for us to rapidly scan for duplicates and log warnings on startup. It also becomes easy for us to prompt the user for confirmation if they accidentally edit an ADDN and pick an ID that's already in use.
+
 ### Location (LCTN)
 * Since I last worked on it, I learned that some of its lists of forms are in fact of REFRs, and are coalesced in some way across all files.
   * Do these lists need to be updated as REFRs are moved in and out of a LCTN's bounds? We don't currently do that.

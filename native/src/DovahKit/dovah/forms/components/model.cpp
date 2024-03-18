@@ -1,6 +1,30 @@
 #include "model.h"
 #include "../_common_cpp.h"
 
+#include <limits>
+namespace {
+   //
+   // For the texture hash and add-on node ID lists on TESModel, the game can safely handle 
+   // any list size, but can only make use of a limited number of list items. This begs the 
+   // question: should we truncate the lists on save? It's okay to do this without even 
+   // bothering to notify the user because:
+   // 
+   //  - These lists don't contain form IDs, so we won't be causing Use Info problems.
+   // 
+   //  - These lists are used entirely under the hood for optimization purposes, so there 
+   //    won't be any loss of user-facing data.
+   // 
+   //  - No sane NIF will have 65536+ different textures nor 256+ different add-on node IDs.
+   // 
+   // The decision I've made is to refrain from truncating the lists, in favor of faithfully 
+   // representing whatever data is inside even if the game can't make full use of it.
+   //
+   constexpr const bool clip_the_precached_lists = false;
+   //
+   constexpr const size_t max_usable_addon_node_ids = std::numeric_limits<uint8_t>::max();
+   constexpr const size_t max_usable_texture_hashes = std::numeric_limits<uint16_t>::max();
+}
+
 namespace dovah::loaded_forms::components {
    bool model::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
@@ -21,22 +45,21 @@ namespace dovah::loaded_forms::components {
                   uint32_t edi = 0;
                   uint32_t ebx = 0;
                   subrecord.read(number_of_counts);
-                  subrecord.read(edi);
-                  subrecord.read(ebx);
-                  if (number_of_counts <= 0)
-                     edi = 0;
-                  if (number_of_counts <= 1)
-                     ebx = 0;
+                  if (number_of_counts > 0) {
+                     subrecord.read(edi);
+                     if (number_of_counts > 1)
+                        subrecord.read(ebx);
+                  }
                   for (uint32_t i = 0; i < edi; ++i) {
-                     auto& entry = this->texture_hash_data.hashes.emplace_back();
-                     subrecord.read(entry.flags);
+                     auto& entry = this->precached_info.texture_hashes.emplace_back();
+                     subrecord.read(entry.file_hash);
                      subrecord.read_signature(entry.extension);
-                     subrecord.read(entry.hash);
+                     subrecord.read(entry.folder_hash);
                   }
                   for (uint32_t i = 0; i < ebx; ++i) {
                      uint32_t value;
                      if (subrecord.read(value))
-                        this->texture_hash_data.addenda.push_back(value);
+                        this->precached_info.addon_node_ids.push_back(value);
                   }
                   return true;
                }
@@ -47,16 +70,17 @@ namespace dovah::loaded_forms::components {
                   // subrecord, stuffing it all into a buffer, and then going over it 0xC bytes at a time.
                   //
                   while (subrecord.is_in_bounds(12)) {
-                     auto& entry = this->texture_hash_data.hashes.emplace_back();
-                     subrecord.read(entry.flags);
+                     auto& entry = this->precached_info.texture_hashes.emplace_back();
+                     subrecord.read(entry.file_hash);
                      subrecord.read_signature(entry.extension);
-                     subrecord.read(entry.hash);
+                     subrecord.read(entry.folder_hash);
                   }
                   return true;
                }
             }
             return true;
          case 'MODD':
+         case 'MOSD':
             subrecord.read(this->facegen_flags);
             return true;
       }
@@ -70,8 +94,8 @@ namespace dovah::loaded_forms::components {
          case 'MO2S':
          case 'DMDS':
             break;
-         case 'MOSD': // bool?
-         case 'MODD': // identical to MOSD?
+         case 'MOSD':
+         case 'MODD':
             return true;
          default:
             return false;
@@ -166,43 +190,72 @@ namespace dovah::loaded_forms::components {
                auto& record = subrecord.get_containing_record();
                if (record.version() < 0x26)
                   break;
-               auto& data = this->texture_hash_data;
+               auto& data = this->precached_info;
                if (record.version() >= 0x28) {
-                  if (data.addenda.empty()) {
-                     if (data.hashes.empty()) {
+                  uint32_t texture_hashes_count = data.texture_hashes.size();
+                  uint32_t addon_node_ids_count = data.addon_node_ids.size();
+                  //
+                  if constexpr (clip_the_precached_lists) {
+                     if (texture_hashes_count > max_usable_texture_hashes) {
+                        texture_hashes_count = max_usable_texture_hashes;
+                     }
+                     if (addon_node_ids_count > max_usable_addon_node_ids) {
+                        addon_node_ids_count = max_usable_addon_node_ids;
+                     }
+                  }
+
+                  if (data.addon_node_ids.empty()) {
+                     //
+                     // NOTE: We're inconsistent with Bethesda here. They seem to always write both 
+                     //       counts even if the lists are empty (i.e. 00000002 00000000 00000000).
+                     //
+                     if (data.texture_hashes.empty()) {
                         subrecord.write(uint32_t(0));
                         break;
                      }
                      subrecord.write(uint32_t(1));
-                     subrecord.write(uint32_t(data.hashes.size()));
+                     subrecord.write(uint32_t(texture_hashes_count));
                   } else {
                      subrecord.write(uint32_t(2));
-                     subrecord.write(uint32_t(data.hashes.size()));
-                     subrecord.write(uint32_t(data.addenda.size()));
+                     subrecord.write(uint32_t(texture_hashes_count));
+                     subrecord.write(uint32_t(addon_node_ids_count));
                   }
-                  for (auto& h : data.hashes) {
-                     subrecord.write(h.flags);
-                     subrecord.write_signature(h.extension);
-                     subrecord.write(h.hash);
+                  for (size_t i = 0; i < texture_hashes_count; ++i) {
+                     const auto& item = data.texture_hashes[i];
+                     subrecord.write(item.file_hash);
+                     subrecord.write_signature(item.extension);
+                     subrecord.write(item.folder_hash);
                   }
-                  for (auto& v : data.addenda)
-                     subrecord.write(v);
+                  for (size_t i = 0; i < addon_node_ids_count; ++i) {
+                     subrecord.write(data.addon_node_ids[i]);
+                  }
                }
                if (record.version() >= 0x26) {
-                  for (auto& h : data.hashes) {
-                     subrecord.write(h.flags);
-                     subrecord.write_signature(h.extension);
-                     subrecord.write(h.hash);
+                  uint32_t texture_hashes_count = data.texture_hashes.size();
+                  //
+                  if constexpr (clip_the_precached_lists) {
+                     if (texture_hashes_count > max_usable_texture_hashes) {
+                        texture_hashes_count = max_usable_texture_hashes;
+                     }
+                  }
+                  
+                  for (size_t i = 0; i < texture_hashes_count; ++i) {
+                     const auto& item = data.texture_hashes[i];
+                     subrecord.write(item.file_hash);
+                     subrecord.write_signature(item.extension);
+                     subrecord.write(item.folder_hash);
                   }
                }
             }
             break;
          case 'MODD':
+         case 'MOSD':
             subrecord.write(this->facegen_flags);
             break;
       }
    }
    void model_ts::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+      model::save(subrecord, intfc);
       switch (subrecord.signature()) {
          case 'MODS':
          case 'MO2S':
@@ -220,7 +273,7 @@ namespace dovah::loaded_forms::components {
    void model::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, uint32_t signature_path, uint32_t signature_hash) {
       if (!this->model_path.empty())
          this->save(record.open_next_subrecord(signature_path), intfc);
-      if (this->has_texture_hashes())
+      if (this->has_precached_info())
          this->save(record.open_next_subrecord(signature_hash), intfc);
    }
    void model_ts::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
@@ -231,8 +284,8 @@ namespace dovah::loaded_forms::components {
 
    void model::clear() {
       this->model_path.clear();
-      this->texture_hash_data.hashes.clear();
-      this->texture_hash_data.addenda.clear();
+      this->precached_info.texture_hashes.clear();
+      this->precached_info.addon_node_ids.clear();
    }
    void model_ts::clear(loaded_forms::Form& my_owner) {
       model::clear();
@@ -241,8 +294,8 @@ namespace dovah::loaded_forms::components {
    }
 
    void model::clone_from(const model& other) noexcept {
-      this->model_path        = other.model_path;
-      this->texture_hash_data = other.texture_hash_data;
+      this->model_path     = other.model_path;
+      this->precached_info = other.precached_info;
    }
    void model_ts::clone_from(const model_ts& other, loaded_forms::Form& my_owner) noexcept {
       model::clone_from(other);
