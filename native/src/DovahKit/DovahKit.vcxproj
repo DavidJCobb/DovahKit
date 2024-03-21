@@ -144,6 +144,7 @@
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
+    <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
@@ -626,6 +627,7 @@
     <ClCompile Include="nif\blocks\BSShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSShaderTextureSet.cpp" />
     <ClCompile Include="nif\blocks\BSTriShape.cpp" />
+    <ClCompile Include="nif\blocks\BSValueNode.cpp" />
     <ClCompile Include="nif\blocks\NiAlphaProperty.cpp" />
     <ClCompile Include="nif\blocks\NiAVObject.cpp" />
     <ClCompile Include="nif\blocks\NiBillboardNode.cpp" />
@@ -664,6 +666,7 @@
     <ClCompile Include="nif\types\NiBound.cpp" />
     <ClCompile Include="nif\types\NiColor.cpp" />
     <ClCompile Include="nif\types\NiTransform.cpp" />
+    <ClCompile Include="nif\utils\precache_nif_info.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
@@ -851,7 +854,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
+    <ClCompile Include="widgets\DKFormModelPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
+    <ClCompile Include="widgets\DKFormPickerDialog.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
@@ -865,6 +870,7 @@
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKFormModelPickerDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property_value.cpp" />
@@ -872,11 +878,21 @@
     <ClCompile Include="widgets\widget-models\DKBoundScriptModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
+    <ClInclude Include="helpers\hashing\crc32.h" />
+    <ClInclude Include="nif\blocks\BSValueNode.h" />
+    <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
+    <QtMoc Include="widgets\DKFormModelPicker.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKFormModelPickerDialog.h" />
+    <QtMoc Include="widgets\DKFormPickerDialog.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />
@@ -2178,6 +2194,7 @@
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
     <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKFormModelPickerDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -2267,6 +2284,7 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovah\bs_hash.inl" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />
     <None Include="dovah\files\bsa\README.md" />
@@ -2288,6 +2306,7 @@
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />
+    <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\papyrus script bindings.md" />

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "../_common.h"
+#include "../structs/precached_nif_info.h"
 
 namespace dovah::loaded_forms::components {
    class model { // MODL
@@ -21,19 +22,10 @@ namespace dovah::loaded_forms::components {
          };
          using facegen_flags_t = std::underlying_type_t<facegen_flag::type>;
 
-         struct texture_hash {
-            uint32_t file_hash   = 0;
-            uint32_t extension   = 'dds\0';
-            uint32_t folder_hash = 0;
-         };
-         
-         const bool  supports_texture_swaps;
-         std::string model_path;
-         struct {
-            std::vector<texture_hash> texture_hashes;
-            std::vector<uint32_t>     addon_node_ids;
-         } precached_info; // MODT (used to be just texture hashes, in past games)
-         facegen_flags_t facegen_flags = 0; // MODD
+         const bool         supports_texture_swaps;
+         std::string        model_path;
+         precached_nif_info precached_info; // MODT (used to be just texture hashes, in past games)
+         facegen_flags_t    facegen_flags = 0; // MODD
          
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);

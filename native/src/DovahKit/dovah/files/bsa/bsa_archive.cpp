@@ -259,8 +259,8 @@ namespace dovah {
          if (bare_name.empty())
             return nullptr; // as of Oblivion, Bethesda's code can't hash empty strings
       }
-      bs_hash folder = bs_hash(folder_name.c_str(), nullptr);
-      bs_hash file   = bs_hash(bare_name.c_str(), extension.empty() ? nullptr : extension.c_str());
+      bs_hash folder = bs_hash(folder_name.c_str(), {});
+      bs_hash file   = bs_hash(bare_name.c_str(),   extension);
 
       return this->lookup_file(folder, file);
    }

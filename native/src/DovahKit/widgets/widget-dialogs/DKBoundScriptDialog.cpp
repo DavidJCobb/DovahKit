@@ -44,6 +44,17 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
 
    this->script_qmi   = scriptModelIndex;
    this->script_model = ((DKBoundScriptListModel*)scriptModelIndex.model())->createScriptModelFor(scriptModelIndex);
+   if (this->script_model) {
+      /*// TODO: We can't "see" the form we're editing from here, and so can't display %2 as "EditorID (FormID)"
+      this->setWindowTitle(
+         tr("Properties for script %1 attached to %2")
+            .arg(this->script_model->scriptname())
+      );
+      //*/
+      this->setWindowTitle(
+         tr("Properties for script %1").arg(this->script_model->scriptname())
+      );
+   }
 
    this->ui.valueWidget_float->setMinimum(std::numeric_limits<float>::lowest());
    this->ui.valueWidget_float->setMaximum(std::numeric_limits<float>::max());

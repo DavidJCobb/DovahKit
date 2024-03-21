@@ -44,11 +44,16 @@ namespace dovah::loaded_forms::components {
                   uint32_t number_of_counts = 0;
                   uint32_t edi = 0;
                   uint32_t ebx = 0;
+                  uint32_t count_materials = 0;
                   subrecord.read(number_of_counts);
                   if (number_of_counts > 0) {
                      subrecord.read(edi);
-                     if (number_of_counts > 1)
+                     if (number_of_counts > 1) {
                         subrecord.read(ebx);
+                        if (subrecord.is_skyrim_special() && number_of_counts > 2) {
+                           subrecord.read(count_materials);
+                        }
+                     }
                   }
                   for (uint32_t i = 0; i < edi; ++i) {
                      auto& entry = this->precached_info.texture_hashes.emplace_back();
@@ -60,6 +65,12 @@ namespace dovah::loaded_forms::components {
                      uint32_t value;
                      if (subrecord.read(value))
                         this->precached_info.addon_node_ids.push_back(value);
+                  }
+                  for (uint32_t i = 0; i < count_materials; ++i) {
+                     auto& entry = this->precached_info.material_hashes.emplace_back();
+                     subrecord.read(entry.file_hash);
+                     subrecord.read_signature(entry.extension);
+                     subrecord.read(entry.folder_hash);
                   }
                   return true;
                }
@@ -204,7 +215,10 @@ namespace dovah::loaded_forms::components {
                      }
                   }
 
-                  if (data.addon_node_ids.empty()) {
+                  bool write_addon_ids = !data.addon_node_ids.empty();
+                  bool write_materials = subrecord.is_skyrim_special() && !data.material_hashes.empty();
+
+                  if (!write_addon_ids && !write_materials) {
                      //
                      // NOTE: We're inconsistent with Bethesda here. They seem to always write both 
                      //       counts even if the lists are empty (i.e. 00000002 00000000 00000000).
@@ -216,9 +230,16 @@ namespace dovah::loaded_forms::components {
                      subrecord.write(uint32_t(1));
                      subrecord.write(uint32_t(texture_hashes_count));
                   } else {
-                     subrecord.write(uint32_t(2));
-                     subrecord.write(uint32_t(texture_hashes_count));
-                     subrecord.write(uint32_t(addon_node_ids_count));
+                     if (!write_materials) {
+                        subrecord.write(uint32_t(2));
+                        subrecord.write(uint32_t(texture_hashes_count));
+                        subrecord.write(uint32_t(addon_node_ids_count));
+                     } else {
+                        subrecord.write(uint32_t(3));
+                        subrecord.write(uint32_t(texture_hashes_count));
+                        subrecord.write(uint32_t(addon_node_ids_count));
+                        subrecord.write(uint32_t(data.material_hashes.size()));
+                     }
                   }
                   for (size_t i = 0; i < texture_hashes_count; ++i) {
                      const auto& item = data.texture_hashes[i];
@@ -226,8 +247,17 @@ namespace dovah::loaded_forms::components {
                      subrecord.write_signature(item.extension);
                      subrecord.write(item.folder_hash);
                   }
-                  for (size_t i = 0; i < addon_node_ids_count; ++i) {
-                     subrecord.write(data.addon_node_ids[i]);
+                  if (write_addon_ids) {
+                     for (size_t i = 0; i < addon_node_ids_count; ++i) {
+                        subrecord.write(data.addon_node_ids[i]);
+                     }
+                  }
+                  if (write_materials) {
+                     for (auto& item : data.material_hashes) {
+                        subrecord.write(item.file_hash);
+                        subrecord.write_signature(item.extension);
+                        subrecord.write(item.folder_hash);
+                     }
                   }
                }
                if (record.version() >= 0x26) {

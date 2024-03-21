@@ -163,6 +163,8 @@ class DKBoundScriptModel : public QAbstractItemModel {
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       #pragma endregion
 
+      inline QString scriptname() const { return this->_scriptname; }
+
       constexpr bool anyPropertiesEditedLocally() const;
       constexpr bool anyPropertiesDiscardedOnLoad() const;
       constexpr bool failedToLoad() const;

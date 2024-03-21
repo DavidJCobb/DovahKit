@@ -90,7 +90,7 @@ namespace {
       if (!bsa_order)
          return;
 
-      const auto folder_hash = dovah::bs_hash(path.c_str(), nullptr);
+      const auto folder_hash = dovah::bs_hash(path.c_str(), {});
 
       auto& bsa_list = bsa_order->get_archive_list(); // TODO: this is intended to give us const access to the BSAs, but since it's a vector of pointers, we have non-const access too
       for (auto it = bsa_list.rbegin(); it != bsa_list.rend(); ++it) {

@@ -64,6 +64,7 @@
                #include "BSRangeNode.h"
                   #include "BSBlastNode.h"
                      #include "BSDamageStage.h"
+               #include "BSValueNode.h"
                #include "NiBillboardNode.h"
                #include "NiSwitchNode.h"
          #include "NiProperty.h"
@@ -133,6 +134,7 @@ namespace nifDK {
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
       block_types::BSTriShape,
+      block_types::BSValueNode,
       block_types::BSXFlags,
       block_types::NiAlphaProperty,
       block_types::NiAVObject,

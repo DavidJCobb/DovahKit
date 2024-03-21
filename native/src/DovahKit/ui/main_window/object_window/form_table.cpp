@@ -4,6 +4,7 @@
 #include <QMimeData>
 #include "../../../editor/core.h"
 #include "../../../editor/helpers/form_identifiers_to_string.h"
+#include "../../../editor/helpers/form_stub_drag_drop.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/files/common.h"
 
@@ -261,9 +262,8 @@ QMimeData* FormTableModel::mimeData(const QModelIndexList& indexes) const {
    //
 
    QMimeData* out = new QMimeData;
-   QByteArray data;
 
-   QDataStream stream(&data, QIODevice::WriteOnly);
+   std::vector<dovah::form_stub*> stubs;
 
    auto& list = this->children;
    auto  size = list.size();
@@ -277,17 +277,20 @@ QMimeData* FormTableModel::mimeData(const QModelIndexList& indexes) const {
          auto* item = this->children[index.row()];
          if (!item->stub)
             continue;
-         char id[5] = "\0\0\0\0";
-         *(uint32_t*)id = item->stub->formID;
-         data.append(id, 5);
+
+         stubs.push_back(item->stub);
       }
    }
 
-   out->setData("application/dovah-kit.form-id-array", data);
+   editor_helpers::add_form_stubs_to_mime_data(*out, stubs);
+
    return out;
 }
 QStringList FormTableModel::mimeTypes() const {
-   return QStringList(QString("application/dovah-kit.form-id-array"));
+   return QStringList({
+      QString(editor_helpers::form_stub_array_mime_type),
+      QString(editor_helpers::single_form_stub_mime_type)
+   });
 }
 
 void FormTableModel::doUseInfoUpdate() {

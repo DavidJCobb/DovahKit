@@ -3,6 +3,7 @@
 #include "../../helpers/qt/strings.h"
 #include "../../editor/core.h"
 #include "../../editor/helpers/form_identifiers_to_string.h"
+#include "../../editor/helpers/form_stub_drag_drop.h"
 
 #pragma region Item
 DKFormListPaneModel::Item::Item(dovah::form_stub* stub) {
@@ -331,7 +332,7 @@ bool DKFormListPaneModel::moveRows(const QModelIndex& from_parent, int first_row
 
 #pragma region Drag-and-drop
 bool DKFormListPaneModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
-   if (!data->hasFormat("application/dovah-kit.form-id-array"))
+   if (!data->hasFormat(editor_helpers::form_stub_array_mime_type))
       return false;
    return true;
 }
@@ -347,30 +348,17 @@ bool DKFormListPaneModel::dropMimeData(const QMimeData* data, Qt::DropAction act
          row = this->children.size();
    }
    //
-   QByteArray  bytes = data->data("application/dovah-kit.form-id-array");
-   QDataStream stream(&bytes, QIODevice::ReadOnly);
-   QVector<uint32_t> formIDs;
-   while (!stream.atEnd()) {
-      uint32_t id;
-      uint8_t  delim;
-      stream.readRawData((char*)&id, 4);
-      stream.readRawData((char*)&delim, 1);
-      assert(!delim);
-      formIDs.push_back(id);
-   }
-   //
-   auto& editor = DovahKitCore::get();
+   auto dropped_stubs = editor_helpers::form_stubs_from_mime_data(*data);
    QVector<Item*> queued;
-   queued.reserve(formIDs.size());
-   for (auto id : formIDs) {
-      auto* stub = editor.get_form(id);
-      if (stub) {
-         if (!this->allowed_form_types.isEmpty()) {
-            if (!this->allowed_form_types.contains(stub->form_type))
-               continue;
-         }
-         queued.push_back(new Item(stub));
+   queued.reserve(dropped_stubs.size());
+   for (auto* stub : dropped_stubs) {
+      if (!stub)
+         continue;
+      if (!this->allowed_form_types.isEmpty()) {
+         if (!this->allowed_form_types.contains(stub->form_type))
+            continue;
       }
+      queued.push_back(new Item(stub));
    }
    auto first_inserted = row;
    auto last_inserted  = first_inserted + queued.size() - 1;
@@ -384,7 +372,7 @@ bool DKFormListPaneModel::dropMimeData(const QMimeData* data, Qt::DropAction act
    return true;
 }
 QStringList DKFormListPaneModel::mimeTypes() const {
-   return QStringList(QString("application/dovah-kit.form-id-array"));
+   return QStringList(QString(editor_helpers::form_stub_array_mime_type));
 }
 Qt::DropActions DKFormListPaneModel::supportedDropActions() const {
    return Qt::CopyAction;
