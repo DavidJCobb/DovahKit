@@ -2229,10 +2229,10 @@
     <ClCompile Include="nif\blocks\BSValueNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKFormModelPicker.cpp">
+    <ClCompile Include="widgets\DKFormNIFPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-dialogs\DKFormModelPickerDialog.cpp">
+    <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp">
@@ -5779,7 +5779,7 @@
     <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="widgets\widget-dialogs\DKFormModelPickerDialog.ui">
+    <QtUic Include="widgets\widget-dialogs\DKFormNIFPickerDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -6171,10 +6171,10 @@
     <QtMoc Include="widgets\DKObjectReferencePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKFormModelPicker.h">
+    <QtMoc Include="widgets\DKFormNIFPicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-dialogs\DKFormModelPickerDialog.h">
+    <QtMoc Include="widgets\widget-dialogs\DKFormNIFPickerDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKFormPickerDialog.h">

@@ -1,4 +1,4 @@
-#include "./DKFormModelPickerDialog.h"
+#include "./DKFormNIFPickerDialog.h"
 #include <QDropEvent>
 #include <QMimeData>
 
@@ -16,7 +16,7 @@
 
 #include "../DKFormPickerDialog.h"
 
-DKFormModelPickerDialog::DKFormModelPickerDialog(QWidget* parent) : QDialog(parent) {
+DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
 
    this->setWindowTitle(tr("Select Form"));
@@ -55,18 +55,18 @@ DKFormModelPickerDialog::DKFormModelPickerDialog(QWidget* parent) : QDialog(pare
    });
 }
 
-QString DKFormModelPickerDialog::modelPath() const {
+QString DKFormNIFPickerDialog::modelPath() const {
    return this->ui.filePicker->path();
 }
-void DKFormModelPickerDialog::setModelPath(QString path) {
+void DKFormNIFPickerDialog::setModelPath(QString path) {
    this->ui.filePicker->setPath(path);
 }
 
-void DKFormModelPickerDialog::setTextureSwaps(const std::vector<TextureSwap>& swaps) {
+void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<TextureSwap>& swaps) {
    this->_state.texture_swaps = swaps;
    this->_refresh_texture_swaps();
 }
-void DKFormModelPickerDialog::setTextureSwapsAllowed(bool allowed) {
+void DKFormNIFPickerDialog::setTextureSwapsAllowed(bool allowed) {
    if (this->_state.supports_texture_swaps == allowed)
       return;
    if (!allowed)
@@ -75,7 +75,7 @@ void DKFormModelPickerDialog::setTextureSwapsAllowed(bool allowed) {
    this->_refresh_texture_swaps();
 }
 
-void DKFormModelPickerDialog::_reload_all_nif_info() {
+void DKFormNIFPickerDialog::_reload_all_nif_info() {
    this->_state.precached_nif_info = {};
    this->_state.texture_swaps      = {};
 
@@ -92,7 +92,7 @@ void DKFormModelPickerDialog::_reload_all_nif_info() {
    }
 }
 
-void DKFormModelPickerDialog::_reload_texture_swap_blocks(const nifDK::file& file) {
+void DKFormNIFPickerDialog::_reload_texture_swap_blocks(const nifDK::file& file) {
    this->_state.texture_swaps.clear();
 
    for (size_t block_index = 0; block_index < file.all_blocks.size(); ++block_index) {
@@ -116,7 +116,7 @@ void DKFormModelPickerDialog::_reload_texture_swap_blocks(const nifDK::file& fil
    }
 }
 
-void DKFormModelPickerDialog::_refresh_texture_swaps() {
+void DKFormNIFPickerDialog::_refresh_texture_swaps() {
    auto* table = this->ui.textureSwaps;
 
    table->setEnabled(this->textureSwapsAllowed());
@@ -157,7 +157,7 @@ void DKFormModelPickerDialog::_refresh_texture_swaps() {
    }
 }
 
-void DKFormModelPickerDialog::_set_texture_set(size_t row, dovah::form_stub* stub) {
+void DKFormNIFPickerDialog::_set_texture_set(size_t row, dovah::form_stub* stub) {
    if (!this->textureSwapsAllowed())
       return;
 
@@ -176,7 +176,7 @@ void DKFormModelPickerDialog::_set_texture_set(size_t row, dovah::form_stub* stu
    }
 }
 
-/*virtual*/ bool DKFormModelPickerDialog::eventFilter(QObject* watched, QEvent* untyped_event) /*override*/ {
+/*virtual*/ bool DKFormNIFPickerDialog::eventFilter(QObject* watched, QEvent* untyped_event) /*override*/ {
    if (untyped_event->type() != QEvent::Type::Drop)
       return false;
    if (watched != this->ui.textureSwaps)

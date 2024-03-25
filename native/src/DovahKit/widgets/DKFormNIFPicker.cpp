@@ -1,12 +1,12 @@
-#include "./DKFormModelPicker.h"
+#include "./DKFormNIFPicker.h"
 #include <QHBoxLayout>
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/core.h"
    #include "dovah/forms/components/model.h"
-   #include "./widget-dialogs/DKFormModelPickerDialog.h"
+   #include "./widget-dialogs/DKFormNIFPickerDialog.h"
 #endif
 
-DKFormModelPicker::DKFormModelPicker(QWidget* parent) : QWidget(parent) {
+DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
    auto* layout = new QHBoxLayout(this);
    this->setLayout(layout);
    layout->setContentsMargins(0, 0, 0, 0);
@@ -21,7 +21,7 @@ DKFormModelPicker::DKFormModelPicker(QWidget* parent) : QWidget(parent) {
 
    #if !defined(QT_DESIGNER_LIB)
    QObject::connect(this->_subwidgets.button, &QPushButton::clicked, this, [this]() {
-      auto* dialog = new DKFormModelPickerDialog(this);
+      auto* dialog = new DKFormNIFPickerDialog(this);
 
       // We want this to block all the way up to the form-editing dialog, but not further.
       dialog->setWindowModality(Qt::WindowModality::WindowModal);
@@ -46,7 +46,7 @@ DKFormModelPicker::DKFormModelPicker(QWidget* parent) : QWidget(parent) {
 }
 
 #if !defined(QT_DESIGNER_LIB)
-   void DKFormModelPicker::initializeFrom(const dovah::loaded_forms::components::model& src) {
+   void DKFormNIFPicker::initializeFrom(const dovah::loaded_forms::components::model& src) {
       this->_state = {};
 
       this->_state.model_path             = src.model_path;
@@ -61,7 +61,7 @@ DKFormModelPicker::DKFormModelPicker(QWidget* parent) : QWidget(parent) {
          }
       }
    }
-   void DKFormModelPicker::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) {
+   void DKFormNIFPicker::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) {
       dst.model_path     = this->_state.model_path;
       dst.precached_info = this->_state.precached_nif_info;
       if (dst.supports_texture_swaps) {

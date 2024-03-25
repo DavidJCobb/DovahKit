@@ -11,6 +11,8 @@ class FormDialogActivator : public FormWorkingCopyEditDialogBase {
       
    protected:
       Ui::FormDialogActivator ui;
+
+      class DKFormNIFPicker* _nif_picker = nullptr; // for testing
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;

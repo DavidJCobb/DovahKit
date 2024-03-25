@@ -1,22 +1,22 @@
 #pragma once
-#include "ui_DKFormModelPickerDialog.h" // generated
+#include "ui_DKFormNIFPickerDialog.h" // generated
 #include <QDialog>
 #include "dovah/forms/structs/precached_nif_info.h"
 
-#include "../DKFormModelPicker.h"
+#include "../DKFormNIFPicker.h"
 
 namespace nifDK {
    class file;
 }
 
-class DKFormModelPickerDialog : public QDialog {
+class DKFormNIFPickerDialog : public QDialog {
    Q_OBJECT;
    protected:
       using PrecachedNIFInfo = dovah::loaded_forms::precached_nif_info;
-      using TextureSwap      = DKFormModelPicker::TextureSwap;
+      using TextureSwap      = DKFormNIFPicker::TextureSwap;
 
    public:
-      DKFormModelPickerDialog(QWidget* parent = nullptr);
+      DKFormNIFPickerDialog(QWidget* parent = nullptr);
 
       QString modelPath() const;
 
@@ -34,7 +34,7 @@ class DKFormModelPickerDialog : public QDialog {
       virtual bool eventFilter(QObject* watched, QEvent*);
 
    protected:
-      Ui::DKFormModelPickerDialog ui;
+      Ui::DKFormNIFPickerDialog ui;
       struct {
          PrecachedNIFInfo precached_nif_info;
          bool supports_texture_swaps = false;

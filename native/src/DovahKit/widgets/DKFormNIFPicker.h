@@ -21,7 +21,7 @@ namespace dovah {
    class form_stub;
 }
 
-class DKFormModelPicker : QWidget {
+class DKFormNIFPicker : public QWidget {
    Q_OBJECT;
    public:
       struct TextureSwap {
@@ -31,7 +31,7 @@ class DKFormModelPicker : QWidget {
       };
 
    public:
-      DKFormModelPicker(QWidget* parent = nullptr);
+      DKFormNIFPicker(QWidget* parent = nullptr);
 
       #if !defined(QT_DESIGNER_LIB)
          void initializeFrom(const dovah::loaded_forms::components::model&);
