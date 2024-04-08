@@ -7,13 +7,26 @@ namespace dovah {
    namespace impl {
       // work around constexpr unions not allowing type punning, and hold some helper functions while we're at it
       struct _bs_hash_constexpr {
+         constexpr _bs_hash_constexpr() {}
+         constexpr _bs_hash_constexpr(const bs_hash& d) : data(d) {}
+         constexpr _bs_hash_constexpr(const std::array<uint8_t, 8>& bytes) {
+            this->set_part<uint8_t, 0>(bytes[0]);
+            this->set_part<uint8_t, 1>(bytes[1]);
+            this->set_part<uint8_t, 2>(bytes[2]);
+            this->set_part<uint8_t, 3>(bytes[3]);
+            this->set_part<uint8_t, 4>(bytes[4]);
+            this->set_part<uint8_t, 5>(bytes[5]);
+            this->set_part<uint8_t, 6>(bytes[6]);
+            this->set_part<uint8_t, 7>(bytes[7]);
+         }
+
          bs_hash data;
 
          static constexpr char to_lower(char c) {
             if (c >= 'A' && c <= 'Z')
                c += 0x20;
-            else if (c == '\\') // not from Skyrim; done for our own convenience
-               c = '/';
+            else if (c == '/') // not from Skyrim; done for our own convenience
+               c = '\\';
             return c;
          }
 
@@ -102,7 +115,11 @@ namespace dovah {
          }
       }
 
-      if (extension.empty()) // NOTE: there's a difference between nullptr and ""; Bethesda seems to use the former as a sentinel, and is what we should be checking for here
+      if (extension.empty())
+         //
+         // Early-out. The steps below should have no effect for an empty extension (the 
+         // hashed extension would be zero, as would values added to specific bytes.)
+         //
          return out.data;
 
       out.add_part<uint32_t, 1>(impl::_bs_hash_constexpr::hash_string(extension));
@@ -135,3 +152,22 @@ namespace dovah {
       return out.data;
    }
 }
+
+static_assert(
+   []() -> bool {
+      constexpr auto desired = dovah::impl::_bs_hash_constexpr(std::array<uint8_t, 8>{ 0x31, 0xB0, 0x11, 0x61, 0x4A, 0x77, 0x37, 0x82 });
+
+      auto hash = dovah::bs_hash("altarofmolagbal01", ".nif");
+      return hash == desired.data;
+   }(),
+   "bs_hash unit test: altarofmolagbal01.nif"
+);
+static_assert(
+   []() -> bool {
+      constexpr auto desired = dovah::impl::_bs_hash_constexpr(std::array<uint8_t, 8>{ 0x6C, 0x61, 0x26, 0x6D, 0x1F, 0xFA, 0x70, 0x87 });
+
+      auto hash = dovah::bs_hash("meshes/clutter/statues/altarofmolagbal", {});
+      return hash == desired.data;
+   }(),
+   "bs_hash unit test: meshes/clutter/statues/altarofmolagbal"
+);

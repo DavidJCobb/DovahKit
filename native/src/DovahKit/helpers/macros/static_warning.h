@@ -21,10 +21,9 @@ namespace cobb::impl {
 //                                                                                                   x
 // This macro could be fixed to not require those if one were to find some 
 // version of <https://stackoverflow.com/a/2124385> that isn't completely 
-// broken in Microsoft's garbage-ass preprocessors. I don't know if it's 
-// only broken in IntelliSense (though that alone would disqualify its 
-// use here) or if it's broken in MSVC proper, but it's broken even when I 
-// use /Zc:preprocessor.
+// broken in Microsoft's preprocessors. I don't know if it's only broken in 
+// IntelliSense (though that alone would disqualify its use here) or if it's 
+// broken in MSVC proper, but it's broken even when I use /Zc:preprocessor.
 // 
 // The general goal would be to create something like
 // 

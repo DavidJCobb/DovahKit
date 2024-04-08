@@ -26,12 +26,15 @@ namespace cobb {
       impl::_dynamic_exact_cast::must_be_polymorphic<Operand>
    )
    constexpr Desired dynamic_exact_cast(Operand& value) {
-      if (typeid(value) == typeid(std::remove_pointer_t<Desired>)) {
-         return static_cast<Desired>(value);
-      }
-      if constexpr (std::is_pointer_v<Desired>) {
+      if constexpr (std::is_pointer_v<Operand>) {
+         if (typeid(*value) == typeid(std::remove_pointer_t<Desired>)) {
+            return static_cast<Desired>(value);
+         }
          return nullptr;
       } else {
+         if (typeid(value) == typeid(std::remove_pointer_t<Desired>)) {
+            return static_cast<Desired>(value);
+         }
          //
          // References cannot be null.
          //

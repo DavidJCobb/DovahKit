@@ -6658,5 +6658,7 @@
     <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
     <Natvis Include="helpers\tree\node.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
+    <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
+    <Natvis Include="dovah\bs_hash.natvis" />
   </ItemGroup>
 </Project>

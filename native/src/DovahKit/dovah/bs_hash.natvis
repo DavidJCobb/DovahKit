@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::bs_hash">
+      <Intrinsic Name="_byte" Expression="
+         (uint8_t)(value >> ((7 - index) * 8))
+      ">
+         <Parameter Name="index" Type="size_t" />
+      </Intrinsic>
+      
+      <DisplayString>{_byte(0),Xb} {_byte(1),Xb} {_byte(2),Xb} {_byte(3),Xb} {_byte(4),Xb} {_byte(5),Xb} {_byte(6),Xb} {_byte(7),Xb}</DisplayString>
+   </Type>
+</AutoVisualizer>

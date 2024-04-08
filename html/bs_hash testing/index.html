@@ -17,21 +17,20 @@ function tolower(c) { // to-lower with default C locale
    c = c.charAt(0);
    if (("ABCDEFGHIJKLMNOPQRSTUVWXYZ").indexOf(c) >= 0)
       c = c.toLowerCase();
+   else if (c == "/")
+      c = "\\";
    return c;
 }
 
 function _hash_string(/*String*/ s, /*Number*/ length) {
-   length = length & 0xFF; // enforce uint8_t
+   //length = length & 0xFF; // enforce uint8_t
    if (length <= 0)
       return 0;
    let result = 0;
    for(let i = 0; i < length; ++i) {
       result *= 0x1003F;
       result |= 0; // cheap hack to coerce from double to 32-bit
-      if (s == "/")
-         result += ("\\").charCodeAt(0);
-      else
-         result += tolower(s[i]).charCodeAt(0);
+      result += tolower(s[i] || "\0").charCodeAt(0);
       result |= 0; // cheap hack to coerce from double to 32-bit
    }
    return result;
@@ -40,6 +39,10 @@ function _hash_string(/*String*/ s, /*Number*/ length) {
 const _extensions = [ "", ".nif", ".kf", ".dds", ".wav" ];
 
 document.getElementById("go").addEventListener("click", function(e) {
+
+   const NEW_IMPL           = true;
+   const NEW_IMPL_TRUNCATES = false;
+
    let name = document.getElementById("name").value;
    let ext  = document.getElementById("ext").value;
    //
@@ -48,20 +51,37 @@ document.getElementById("go").addEventListener("click", function(e) {
    //
    let length   = name.length; // includes null-terminator
    let length_b = length & 0xFF;
-   view.setUint8(2, length_b);
+   view.setUint8(2, length);
    view.setUint8(3, tolower(name[0]).charCodeAt(0));
-   view.setUint8(0, tolower(name[length_b - 1] || "\0").charCodeAt(0));
-   view.setUint8(1, (length_b > 2) ? tolower(name[length_b - 2]).charCodeAt(0) : 0);
-   if (length_b > 3)
-      view.setUint32(4, _hash_string(name.substring(1), length_b - 3), true);
+   if (NEW_IMPL) {
+      if (length > 2) {
+         view.setUint8(0, tolower(name[length - 1]).charCodeAt(0));
+         view.setUint8(1, tolower(name[length - 2]).charCodeAt(0));
+         if (length > 3) {
+            if (NEW_IMPL_TRUNCATES) {
+               name = name.substring(1);
+               view.setUint32(4, _hash_string(name, length_b - 3), true);
+            } else {
+               name = name.substring(1, length - 2);
+               view.setUint32(4, _hash_string(name, name.length), true);
+            }
+         }
+      
+      }
+   } else {
+      view.setUint8(0, tolower(name[length_b - 1] || "\0").charCodeAt(0));
+      view.setUint8(1, (length_b > 2) ? tolower(name[length_b - 2]).charCodeAt(0) : 0);
+      if (length_b > 3)
+         view.setUint32(4, _hash_string(name.substring(1), length_b - 3), true);
+   }
    //
    if (ext) {
       view.setUint32(4, view.getUint32(4, true) + _hash_string(ext, ext.length), true);
       for(let i = 0; i < _extensions.length; ++i) {
          if (_extensions[i] == ext.toLowerCase()) {
-            view.setUint8(3, view.getUint8(3) + (i & 0xFF & ~3) << 5);
-            view.setUint8(0, view.getUint8(3) + (i & 0xFF & ~1) << 6);
-            view.setUint8(1, view.getUint8(3) + (i & 0xFF) << 7);
+            view.setUint8(3, view.getUint8(3) + (((i & 0xFF) & ~3) << 5));
+            view.setUint8(0, view.getUint8(0) + (((i & 0xFF) & ~1) << 6));
+            view.setUint8(1, view.getUint8(1) + (((i & 0xFF)) << 7));
             break;
          }
       }

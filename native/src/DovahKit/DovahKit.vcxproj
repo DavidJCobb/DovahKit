@@ -2506,6 +2506,8 @@
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="dovah\bs_hash.natvis" />
+    <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
