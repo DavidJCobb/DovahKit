@@ -5,6 +5,7 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include "./widget-models/DKFormPicker/DKFormPickerDialogModel.h"
+#include "./DKHeaderView.h"
 #include "editor/form_stub_meta_type.h"
 
 DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
@@ -29,14 +30,39 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
    layout->addWidget(buttonOK);
    
    this->_model = new ui::impl::DKFormPicker::DialogModel(this);
-   this->_model->setUpdatesEnabled(false);
+   if (!this->isVisible()) {
+      this->_model->setUpdatesEnabled(false);
+   }
    this->_subwidgets.table->setCornerButtonEnabled(false);
    this->_subwidgets.table->setWordWrap(false);
-   if (auto* h = this->_subwidgets.table->horizontalHeader()) {
-      h->setStretchLastSection(true);
+   this->_subwidgets.table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+   this->_subwidgets.table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+   this->_subwidgets.table->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
+   {
+      auto* header = new DKHeaderView(Qt::Horizontal, this->_subwidgets.table);
+      header->setFlexResizeEnabled(true);
+      this->_subwidgets.table->setHorizontalHeader(header);
+      //
+      auto metrics = QFontMetrics(this->_subwidgets.table->font());
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+      header->setMinimumSectionSize(2);
+      //this->_updateColumnVisibility();
+         // causes setSectionResizeMode to fail an assertion; Qt doesn't offer enough documentation to know why
+         // it fails to find the visual index of logical index 0, even though hidden sections still have valid 
+         // visual indices.
+      {
+         auto metrics = QFontMetrics(this->_subwidgets.table->font());
+         header->setMinimumSectionSize(2);
+         header->setColumnFlex(0, 1, 0);
+         header->setColumnFlex(1, 0, 0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
+         header->setColumnFlex(2, 0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4); // sets minimum size
+      }
+      header->modSectionSizeTo(2, 4); // mimics a user resize and shrinks the column
+      header->setStretchLastSection(false);
    }
    if (auto* h = this->_subwidgets.table->verticalHeader()) {
       h->setVisible(false);
+      h->setSectionResizeMode(QHeaderView::ResizeToContents);
    }
    this->_subwidgets.table->setModel(this->_model);
    //
@@ -59,6 +85,7 @@ void DKFormPickerDialog::setAllowedFormTypes(QList<dovah::form_type> ft) noexcep
       return;
    this->_properties.allowed_form_types = ft;
    this->_model->setAllowedFormTypes(this->_properties.allowed_form_types);
+   this->_updateColumnVisibility();
 }
 
 void DKFormPickerDialog::addAllowedFormType(dovah::form_type ft) {
@@ -66,6 +93,7 @@ void DKFormPickerDialog::addAllowedFormType(dovah::form_type ft) {
       return;
    this->_properties.allowed_form_types.append(ft);
    this->_model->setAllowedFormTypes(this->_properties.allowed_form_types);
+   this->_updateColumnVisibility();
 }
 
 void DKFormPickerDialog::setFormStub(dovah::form_stub* stub) noexcept {
@@ -86,12 +114,53 @@ void DKFormPickerDialog::setFormStub(dovah::form_stub* stub) noexcept {
    this->_value = stub;
 }
 
-/*virtual*/ void DKFormPickerDialog::changeEvent(QEvent* event) /*override*/ {
-   if (event->type() != QEvent::ParentChange)
+void DKFormPickerDialog::_updateColumnVisibility() {
+   if (!this->isVisible())
       return;
-   if (this->parentWidget()) {
-      this->_model->setUpdatesEnabled(true);
-   } else {
-      this->_model->setUpdatesEnabled(false);
+   auto* header = this->_subwidgets.table->horizontalHeader();
+   if (!header)
+      return;
+   header->setSectionHidden(1, this->allowedFormTypes().size() == 1);
+
+   for (size_t i = 0; i < 3; ++i) {
+      auto vi = header->visualIndex(i);
+      if (vi == -1) {
+         //
+         // This logical section doesn't have a valid visual index. If we call setSectionResizeMode 
+         // with it, Qt will fail an assertion.
+         // 
+         // It's not clear to me *why* these logical sections lack valid visual indices. Among other 
+         // things, the sections (i.e. columns) always exist even when the table is empty. In tests, 
+         // this happens when the dialog is opened, even when we haven't hidden any sections, and it 
+         // hits logical section 0.
+         //
+         continue;
+      }
+      header->setSectionResizeMode(i, QHeaderView::Interactive);
    }
+   
+   if (auto* casted = dynamic_cast<DKHeaderView*>(this->_subwidgets.table->horizontalHeader())) {
+      //
+      // Edge-case: we want to default the initial width of the form ID column to 4px (i.e. collapsed). 
+      // However, if we do that before the type column is hidden, then when the type column is hidden, 
+      // the form ID column may expand to fill the remaining space.
+      // 
+      // This is because we're not specifically saying, "Make the form ID column become 4px wide." 
+      // Rather, we're saying, "Compute a modifier that will reduce the form ID column's width to 4px." 
+      // When more space becomes available, the form ID column fills it, minus that now-outdated modifier.
+      // 
+      // Forcing the column width every time we update column visibility DOES mean that if the list of 
+      // allowed form types changes while the user is able to interact with the list view (i.e. after 
+      // it's displayed), then user changes to the form ID column size will be clobbered.
+      // 
+      // TODO: Need to queue this to run on the next tick; it queries the current size so we need to wait 
+      //       for that to recompute
+      //
+      casted->modSectionSizeTo(2, 4);
+   }
+}
+
+/*virtual*/ void DKFormPickerDialog::showEvent(QShowEvent* event) /*override*/ {
+   this->_updateColumnVisibility();
+   this->_model->setUpdatesEnabled(true);
 }

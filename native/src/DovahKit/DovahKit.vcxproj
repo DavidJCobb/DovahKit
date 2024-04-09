@@ -666,6 +666,7 @@
     <ClCompile Include="nif\types\NiBound.cpp" />
     <ClCompile Include="nif\types\NiColor.cpp" />
     <ClCompile Include="nif\types\NiTransform.cpp" />
+    <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
@@ -887,6 +888,7 @@
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
+    <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />

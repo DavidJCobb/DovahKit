@@ -26,8 +26,8 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
       // We want this to block all the way up to the form-editing dialog, but not further.
       dialog->setWindowModality(Qt::WindowModality::WindowModal);
 
-      dialog->setModelPath(QString::fromStdString(this->_state.model_path));
       dialog->setTextureSwapsAllowed(this->_state.supports_texture_swaps);
+      dialog->setModelPath(QString::fromStdString(this->_state.model_path));
       dialog->setTextureSwaps(this->_state.texture_swaps);
 
       QObject::connect(dialog, &QDialog::accepted, this, [this, dialog]() {
@@ -35,6 +35,8 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
          if (this->_state.supports_texture_swaps)
             this->_state.texture_swaps = dialog->textureSwaps();
          this->_state.precached_nif_info = dialog->precachedNIFInfo();
+
+         this->_subwidgets.path->setText(dialog->modelPath());
       });
       QObject::connect(dialog, &QDialog::finished, dialog, [dialog]() {
          dialog->deleteLater();
@@ -60,6 +62,8 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
             dst.texture_set = item.texture_set.get_form_stub();
          }
       }
+
+      this->_subwidgets.path->setText(QString::fromStdString(this->_state.model_path));
    }
    void DKFormNIFPicker::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) {
       dst.model_path     = this->_state.model_path;

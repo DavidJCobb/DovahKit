@@ -2244,6 +2244,9 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5616,6 +5619,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\utils\find_all_retexturable_blocks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -51,5 +51,7 @@ class DKFormPickerDialog : public QDialog {
          QTableView* table  = nullptr;
       } _subwidgets;
 
-      virtual void changeEvent(QEvent* event) override;
+      void _updateColumnVisibility();
+
+      virtual void showEvent(QShowEvent* event) override;
 };

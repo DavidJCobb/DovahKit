@@ -19,14 +19,17 @@
 DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
 
-   this->setWindowTitle(tr("Select Form"));
-
    this->ui.textureSwaps->installEventFilter(this);
+   if (auto* h = this->ui.textureSwaps->verticalHeader()) {
+      h->setVisible(false);
+      h->setSectionResizeMode(QHeaderView::ResizeToContents);
+   }
 
    this->ui.filePicker->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Meshes);
+   this->ui.filePicker->setPathFormat(DKGameFilePicker::PathFormat::OmitPathStem);
    QObject::connect(this->ui.filePicker, &DKGameFilePicker::pathChanged, this, [this]() {
-      this->ui.textureSwaps = {};
       this->_reload_all_nif_info();
+      this->_refresh_texture_swaps();
    });
 
    QObject::connect(this->ui.textureSwaps, &QTableWidget::cellDoubleClicked, this, [this](int row, int column) {
@@ -63,7 +66,49 @@ void DKFormNIFPickerDialog::setModelPath(QString path) {
 }
 
 void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<TextureSwap>& swaps) {
+   /*
    this->_state.texture_swaps = swaps;
+   */
+
+   //
+   // We need to coalesce these sets. The general flow is that you set the model path, causing us 
+   // to look up the NIF and precache its remappable-texture geometry blocks; and then you set any 
+   // pre-existing texture swaps, so we want to integrate those into the list of blocks we found 
+   // rather than bulldozing them. (If you haven't swapped any textures *yet*, then operator= would 
+   // cause us to lose all the blocks!)
+   //
+   for (auto& dst : this->_state.texture_swaps) {
+      dst.texture_set = nullptr;
+   }
+   for (const auto& src : swaps) {
+      bool found = false;
+      bool maybe = false;
+      for (auto& dst : this->_state.texture_swaps) {
+         bool index = dst.block_index == src.block_index;
+         bool name  = dst.block_name  == src.block_name;
+         if (index || name) {
+            maybe = true;
+            if (index && name) {
+               dst.texture_set = src.texture_set;
+               found = true;
+               break;
+            }
+         }
+      }
+      if (!found && !maybe) {
+         //
+         // Current handling is, if the form has a texture swap defined that isn't present on the 
+         // current model, then we should append it to the list. We define "not being present" as 
+         // a texture swap whose index AND name don't match anything on the current model.
+         // 
+         // TODO: How does the game itself map texture swaps to an in-memory NIF? Does it rely on 
+         //       both the block index and block name, or does it only bother with the index?  We 
+         //       should mimic that behavior here.
+         //
+         this->_state.texture_swaps.push_back(src);
+      }
+   }
+
    this->_refresh_texture_swaps();
 }
 void DKFormNIFPickerDialog::setTextureSwapsAllowed(bool allowed) {
@@ -79,7 +124,7 @@ void DKFormNIFPickerDialog::_reload_all_nif_info() {
    this->_state.precached_nif_info = {};
    this->_state.texture_swaps      = {};
 
-   auto  path   = this->modelPath().toStdString();
+   auto  path   = std::string("meshes/") + this->modelPath().toStdString();
    auto& assets = dovahkit::subsystems::assets::get_or_create();
    auto* loaded = assets.lookup_game_asset(path, true);
    if (loaded) {
