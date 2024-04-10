@@ -27,6 +27,8 @@ class DKHeaderView : public QHeaderView {
       void reapplyColumnFlex();
       void resizeSection(int logicalIndex, int size); // changes the basis
       void modSectionSizeTo(int logicalIndex, int size); // applies a modifier, as if the user resized the section
+
+      int nextVisibleLogicalSection(int afterLogicalIndex) const;
       
    protected:
       void _reapplyColumnFlex(int length);

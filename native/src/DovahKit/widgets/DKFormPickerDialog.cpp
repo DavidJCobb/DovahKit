@@ -33,6 +33,7 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
    if (!this->isVisible()) {
       this->_model->setUpdatesEnabled(false);
    }
+   this->_subwidgets.table->setModel(this->_model);
    this->_subwidgets.table->setCornerButtonEnabled(false);
    this->_subwidgets.table->setWordWrap(false);
    this->_subwidgets.table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
@@ -46,10 +47,7 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
       auto metrics = QFontMetrics(this->_subwidgets.table->font());
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
-      //this->_updateColumnVisibility();
-         // causes setSectionResizeMode to fail an assertion; Qt doesn't offer enough documentation to know why
-         // it fails to find the visual index of logical index 0, even though hidden sections still have valid 
-         // visual indices.
+      this->_updateColumnVisibility();
       {
          auto metrics = QFontMetrics(this->_subwidgets.table->font());
          header->setMinimumSectionSize(2);
@@ -64,7 +62,6 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
       h->setVisible(false);
       h->setSectionResizeMode(QHeaderView::ResizeToContents);
    }
-   this->_subwidgets.table->setModel(this->_model);
    //
    QObject::connect(this->_subwidgets.table->selectionModel(), &QItemSelectionModel::currentRowChanged, this, [this](const QModelIndex& qmi, const QModelIndex& prev_qmi) {
       auto data = this->_model->data(qmi, ui::impl::DKFormPicker::DialogModel::FormStubRole);
@@ -122,22 +119,8 @@ void DKFormPickerDialog::_updateColumnVisibility() {
       return;
    header->setSectionHidden(1, this->allowedFormTypes().size() == 1);
 
-   for (size_t i = 0; i < 3; ++i) {
-      auto vi = header->visualIndex(i);
-      if (vi == -1) {
-         //
-         // This logical section doesn't have a valid visual index. If we call setSectionResizeMode 
-         // with it, Qt will fail an assertion.
-         // 
-         // It's not clear to me *why* these logical sections lack valid visual indices. Among other 
-         // things, the sections (i.e. columns) always exist even when the table is empty. In tests, 
-         // this happens when the dialog is opened, even when we haven't hidden any sections, and it 
-         // hits logical section 0.
-         //
-         continue;
-      }
+   for (size_t i = 0; i < 3; ++i)
       header->setSectionResizeMode(i, QHeaderView::Interactive);
-   }
    
    if (auto* casted = dynamic_cast<DKHeaderView*>(this->_subwidgets.table->horizontalHeader())) {
       //
@@ -153,9 +136,6 @@ void DKFormPickerDialog::_updateColumnVisibility() {
       // allowed form types changes while the user is able to interact with the list view (i.e. after 
       // it's displayed), then user changes to the form ID column size will be clobbered.
       // 
-      // TODO: Need to queue this to run on the next tick; it queries the current size so we need to wait 
-      //       for that to recompute
-      //
       casted->modSectionSizeTo(2, 4);
    }
 }

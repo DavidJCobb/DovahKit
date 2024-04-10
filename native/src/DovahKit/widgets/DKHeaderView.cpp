@@ -43,7 +43,9 @@ DKHeaderView::DKHeaderView(Qt::Orientation o, QWidget* parent) : QHeaderView(o, 
       list[index].hide = false;
       //
       int mod = after - list[index].render;
-      if (index + 1 < list.size()) {
+
+      int index_of_next = this->nextVisibleLogicalSection(index);
+      if (index_of_next >= 0) {
          //
          // The user resized this section; that is, they clicked on the right edge of this 
          // section and dragged it... but the right edge of this section is the left edge 
@@ -52,7 +54,7 @@ DKHeaderView::DKHeaderView(Qt::Orientation o, QWidget* parent) : QHeaderView(o, 
          // If we choose to modify the next section, then we need to apply (-mod) to it.
          //
          auto& self = list[index];
-         auto& next = list[index + 1];
+         auto& next = list[index_of_next];
          if (self.grow > 0 && next.grow == 0) {
             //
             // If the current section stretches but the next section doesn't, then the user's 
@@ -360,8 +362,31 @@ void DKHeaderView::modSectionSizeTo(int logicalIndex, int size) {
    if (list.size() < count)
       list.resize(count);
    auto prior = this->sectionSize(logicalIndex);
-   list[logicalIndex].mod = size - prior;
+   list[logicalIndex].mod += size - prior; // += because we should already be applying a `mod`
    this->reapplyColumnFlex();
+}
+
+int DKHeaderView::nextVisibleLogicalSection(int afterLogicalIndex) const {
+   if (afterLogicalIndex < 0)
+      return -1;
+
+   auto count = this->count();
+   if (afterLogicalIndex >= count)
+      return -1;
+
+   int subject_vis = this->visualIndex(afterLogicalIndex);
+   if (subject_vis == -1)
+      return -1;
+
+   for (int i = subject_vis + 1; i < count; ++i) {
+      auto logical = this->logicalIndex(i);
+      if (logical == -1)
+         continue;
+      if (this->isSectionHidden(logical))
+         continue;
+      return logical;
+   }
+   return -1;
 }
 
 void DKHeaderView::resizeEvent(QResizeEvent* event) {

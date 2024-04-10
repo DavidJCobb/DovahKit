@@ -15,6 +15,7 @@
 #include "nif/file.h"
 
 #include "../DKFormPickerDialog.h"
+#include "../DKHeaderView.h"
 
 DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -23,6 +24,16 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
    if (auto* h = this->ui.textureSwaps->verticalHeader()) {
       h->setVisible(false);
       h->setSectionResizeMode(QHeaderView::ResizeToContents);
+   }
+   {
+      auto* header = new DKHeaderView(Qt::Horizontal, this->ui.textureSwaps);
+      header->setFlexResizeEnabled(true);
+      this->ui.textureSwaps->setHorizontalHeader(header);
+      //
+      auto metrics = QFontMetrics(this->ui.textureSwaps->font());
+      header->setMinimumSectionSize(2);
+      header->setColumnFlex(0, 1, 0);
+      header->setColumnFlex(1, 0, 0, metrics.boundingRect("000").width() * 1.5F + 4); // size of NIF block index column
    }
 
    this->ui.filePicker->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Meshes);
