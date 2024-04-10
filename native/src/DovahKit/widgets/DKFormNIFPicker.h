@@ -4,6 +4,7 @@
 #include <QWidget>
 #if !defined(QT_DESIGNER_LIB)
    #include "dovah/forms/structs/precached_nif_info.h"
+   #include "ui/types/nif_texture_swap.h"
 #endif
 
 #if !defined(QT_DESIGNER_LIB)
@@ -24,13 +25,6 @@ namespace dovah {
 class DKFormNIFPicker : public QWidget {
    Q_OBJECT;
    public:
-      struct TextureSwap {
-         std::string block_name;
-         size_t      block_index = 0;
-         dovah::form_stub* texture_set = nullptr;
-      };
-
-   public:
       DKFormNIFPicker(QWidget* parent = nullptr);
 
       #if !defined(QT_DESIGNER_LIB)
@@ -46,10 +40,12 @@ class DKFormNIFPicker : public QWidget {
          QLineEdit*   path   = nullptr;
          QPushButton* button = nullptr;
       } _subwidgets;
-      struct {
-         std::string model_path;
-         dovah::loaded_forms::precached_nif_info precached_nif_info;
-         bool supports_texture_swaps = false;
-         std::vector<TextureSwap> texture_swaps;
-      } _state;
+      #if !defined(QT_DESIGNER_LIB)
+         struct {
+            std::string model_path;
+            dovah::loaded_forms::precached_nif_info precached_nif_info;
+            bool supports_texture_swaps = false;
+            std::vector<ui::types::nif_texture_swap> texture_swaps;
+         } _state;
+      #endif
 };

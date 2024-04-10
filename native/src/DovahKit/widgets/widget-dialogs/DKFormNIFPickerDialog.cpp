@@ -20,7 +20,6 @@
 DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
 
-   this->ui.textureSwaps->installEventFilter(this);
    if (auto* h = this->ui.textureSwaps->verticalHeader()) {
       h->setVisible(false);
       h->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -76,7 +75,7 @@ void DKFormNIFPickerDialog::setModelPath(QString path) {
    this->ui.filePicker->setPath(path);
 }
 
-void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<TextureSwap>& swaps) {
+void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_texture_swap>& swaps) {
    /*
    this->_state.texture_swaps = swaps;
    */
@@ -165,7 +164,7 @@ void DKFormNIFPickerDialog::_reload_texture_swap_blocks(const nifDK::file& file)
          continue;
       if (!(shader->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::remappable_textures))
          continue;
-      this->_state.texture_swaps.emplace_back(TextureSwap{
+      this->_state.texture_swaps.push_back({
          .block_name  = geometry->name,
          .block_index = block_index,
       });
@@ -230,44 +229,4 @@ void DKFormNIFPickerDialog::_set_texture_set(size_t row, dovah::form_stub* stub)
       cell->setText("");
       cell->setData(Qt::UserRole, data);
    }
-}
-
-/*virtual*/ bool DKFormNIFPickerDialog::eventFilter(QObject* watched, QEvent* untyped_event) /*override*/ {
-   if (untyped_event->type() != QEvent::Type::Drop)
-      return false;
-   if (watched != this->ui.textureSwaps)
-      return false;
-
-   auto* event = (QDropEvent*)untyped_event;
-   if (event->source() != watched)
-      return false;
-   if (event->dropAction() != Qt::DropAction::CopyAction)
-      return false;
-   if (event->isAccepted()) // data already moved?
-      return false;
-
-   const auto* mime_data = event->mimeData();
-   if (!mime_data->hasFormat(editor_helpers::single_form_stub_mime_type))
-      return false;
-
-   dovah::form_stub* dropped_form = editor_helpers::single_form_stub_from_mime_data(*mime_data);
-   if (!dropped_form)
-      return false;
-   if (dropped_form->form_type != dovah::form_type::texture_set) {
-      event->setDropAction(Qt::DropAction::IgnoreAction);
-      event->accept();
-      return true;
-   }
-
-   auto* widget = this->ui.textureSwaps;
-
-   auto viewpoint_pos = widget->viewport()->mapFromGlobal(event->pos());
-   auto qmi = widget->indexAt(viewpoint_pos);
-   if (!qmi.isValid())
-      return false;
-
-   this->_set_texture_set(qmi.row(), dropped_form);
-   event->acceptProposedAction();
-   event->accept();
-   return true;
 }

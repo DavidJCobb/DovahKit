@@ -23,7 +23,6 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->_subwidgets.button, &QPushButton::clicked, this, [this]() {
       auto* dialog = new DKFormNIFPickerDialog(this);
 
-      // We want this to block all the way up to the form-editing dialog, but not further.
       dialog->setWindowModality(Qt::WindowModality::WindowModal);
 
       dialog->setTextureSwapsAllowed(this->_state.supports_texture_swaps);

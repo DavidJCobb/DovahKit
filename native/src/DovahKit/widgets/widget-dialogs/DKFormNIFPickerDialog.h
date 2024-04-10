@@ -2,6 +2,7 @@
 #include "ui_DKFormNIFPickerDialog.h" // generated
 #include <QDialog>
 #include "dovah/forms/structs/precached_nif_info.h"
+#include "ui/types/nif_texture_swap.h"
 
 #include "../DKFormNIFPicker.h"
 
@@ -13,7 +14,6 @@ class DKFormNIFPickerDialog : public QDialog {
    Q_OBJECT;
    protected:
       using PrecachedNIFInfo = dovah::loaded_forms::precached_nif_info;
-      using TextureSwap      = DKFormNIFPicker::TextureSwap;
 
    public:
       DKFormNIFPickerDialog(QWidget* parent = nullptr);
@@ -22,23 +22,21 @@ class DKFormNIFPickerDialog : public QDialog {
 
       constexpr bool textureSwapsAllowed() const noexcept { return this->_state.supports_texture_swaps; }
 
-      constexpr const std::vector<TextureSwap>& textureSwaps() const { return this->_state.texture_swaps; }
+      constexpr const std::vector<ui::types::nif_texture_swap>& textureSwaps() const { return this->_state.texture_swaps; }
 
       constexpr const PrecachedNIFInfo& precachedNIFInfo() const { return this->_state.precached_nif_info; }
 
    public slots:
       void setModelPath(QString);
-      void setTextureSwaps(const std::vector<TextureSwap>&);
+      void setTextureSwaps(const std::vector<ui::types::nif_texture_swap>&);
       void setTextureSwapsAllowed(bool);
-
-      virtual bool eventFilter(QObject* watched, QEvent*);
 
    protected:
       Ui::DKFormNIFPickerDialog ui;
       struct {
          PrecachedNIFInfo precached_nif_info;
          bool supports_texture_swaps = false;
-         std::vector<TextureSwap> texture_swaps;
+         std::vector<ui::types::nif_texture_swap> texture_swaps;
       } _state;
 
       void _reload_all_nif_info();
