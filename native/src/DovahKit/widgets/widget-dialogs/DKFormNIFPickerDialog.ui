@@ -59,7 +59,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QTableWidget" name="textureSwaps">
+      <widget class="QTableView" name="textureSwaps">
        <property name="selectionMode">
         <enum>QAbstractItemView::SingleSelection</enum>
        </property>
@@ -75,27 +75,9 @@
        <property name="cornerButtonEnabled">
         <bool>false</bool>
        </property>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
        <attribute name="verticalHeaderVisible">
         <bool>false</bool>
        </attribute>
-       <column>
-        <property name="text">
-         <string>3D Name</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>3D Index</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>New Texture</string>
-        </property>
-       </column>
       </widget>
      </item>
     </layout>

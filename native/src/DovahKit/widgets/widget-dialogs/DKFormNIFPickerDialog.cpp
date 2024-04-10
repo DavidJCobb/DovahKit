@@ -17,22 +17,147 @@
 #include "../DKFormPickerDialog.h"
 #include "../DKHeaderView.h"
 
+#pragma region DKFormNIFPickerDialogTextureSwapModel
+#include "ui/models/DKGenericListModel.h"
+
+class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNIFPickerDialogTextureSwapModel, ui::types::nif_texture_swap> {
+   public:
+      struct Column {
+         Column() = delete;
+         enum : size_t {
+            BlockName,
+            BlockIndex,
+            TextureSet,
+         };
+      };
+      static constexpr const size_t column_count = 3; // override
+
+   public:
+      DKFormNIFPickerDialogTextureSwapModel(QObject* parent) : DKGenericListModel(parent) {}
+
+      using DKGenericListModel::clear;
+
+      #pragma region Overrides
+         QVariant data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
+            switch (role) {
+               case Qt::UserRole:
+                  return QVariant::fromValue(node.texture_set);
+
+               case Qt::TextAlignmentRole:
+                  if (column == Column::BlockIndex) {
+                     return (int)(Qt::AlignRight | Qt::AlignBaseline);
+                  }
+                  return {};
+
+               case Qt::DisplayRole:
+               case Qt::ToolTipRole:
+                  switch (column) {
+                     case Column::BlockName:
+                        return QString::fromStdString(node.block_name);
+                     case Column::BlockIndex:
+                        return node.block_index;
+                     case Column::TextureSet:
+                        if (node.texture_set == nullptr)
+                           return {};
+                        return QString::fromStdString(node.texture_set->editorID);
+                  }
+                  return {};
+            }
+            return {};
+         }
+         Qt::ItemFlags flags_of(const node_type&, size_t column) const {
+            return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemNeverHasChildren;
+         }
+
+         virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
+            if (role != Qt::DisplayRole)
+               return {};
+            if (orientation != Qt::Orientation::Horizontal)
+               return {};
+            switch (section) {
+               case Column::BlockName:
+                  return tr("3D Name");
+               case Column::BlockIndex:
+                  return tr("3D Index");
+               case Column::TextureSet:
+                  return tr("New Texture");
+            }
+            return {};
+         }
+      #pragma endregion
+
+      void replaceItems(const std::vector<node_type>& items) {
+         this->beginResetModel();
+
+         this->_nodes.clear();
+         for (auto& item : items) {
+            auto* node = new node_type{item};
+            this->_nodes.push_back(node);
+         }
+
+         this->endResetModel();
+      }
+
+      void setTextureSet(int row, dovah::form_stub* form) {
+         if (row < 0 || row >= this->_nodes.size())
+            return;
+         auto* node = this->_nodes[row];
+         if (!node)
+            return;
+         if (node->texture_set == form)
+            return;
+
+         node->texture_set = form;
+         this->emitNodeChanged(*node, Column::TextureSet);
+      }
+};
+#pragma endregion
+
 DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
 
-   if (auto* h = this->ui.textureSwaps->verticalHeader()) {
-      h->setVisible(false);
-      h->setSectionResizeMode(QHeaderView::ResizeToContents);
-   }
    {
-      auto* header = new DKHeaderView(Qt::Horizontal, this->ui.textureSwaps);
-      header->setFlexResizeEnabled(true);
-      this->ui.textureSwaps->setHorizontalHeader(header);
-      //
-      auto metrics = QFontMetrics(this->ui.textureSwaps->font());
-      header->setMinimumSectionSize(2);
-      header->setColumnFlex(0, 1, 0);
-      header->setColumnFlex(1, 0, 0, metrics.boundingRect("000").width() * 1.5F + 4); // size of NIF block index column
+      auto* view = this->ui.textureSwaps;
+
+      this->_model = new DKFormNIFPickerDialogTextureSwapModel(this);
+      view->setModel(this->_model);
+
+      if (auto* h = view->verticalHeader()) {
+         h->setVisible(false);
+         h->setSectionResizeMode(QHeaderView::ResizeToContents);
+      }
+      {
+         auto* header = new DKHeaderView(Qt::Horizontal, view);
+         header->setFlexResizeEnabled(true);
+         view->setHorizontalHeader(header);
+         //
+         auto metrics = QFontMetrics(view->font());
+         header->setMinimumSectionSize(2);
+         header->setColumnFlex(0, 1, 0);
+         header->setColumnFlex(1, 0, 0, metrics.boundingRect("000").width() * 1.5F + 4); // size of NIF block index column
+      }
+
+      QObject::connect(view, &QTableView::doubleClicked, this, [this](const QModelIndex& index) {
+         auto row = index.row();
+         if (row < 0)
+            return;
+
+         auto* dialog = new DKFormPickerDialog(this);
+         dialog->setAllowedFormType(dovah::form_type::texture_set);
+
+         // We want this to block all the way up to the form-editing dialog, but not further.
+         dialog->setWindowModality(Qt::WindowModal);
+
+         QObject::connect(dialog, &QDialog::accepted, this, [this, dialog, row]() {
+            auto* stub = dialog->formStub();
+            this->_set_texture_set(row, stub);
+         });
+         QObject::connect(dialog, &QDialog::finished, dialog, [dialog]() {
+            dialog->deleteLater();
+         });
+
+         dialog->show();
+      });
    }
 
    this->ui.filePicker->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Meshes);
@@ -40,24 +165,6 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
    QObject::connect(this->ui.filePicker, &DKGameFilePicker::pathChanged, this, [this]() {
       this->_reload_all_nif_info();
       this->_refresh_texture_swaps();
-   });
-
-   QObject::connect(this->ui.textureSwaps, &QTableWidget::cellDoubleClicked, this, [this](int row, int column) {
-      auto* dialog = new DKFormPickerDialog(this);
-      dialog->setAllowedFormType(dovah::form_type::texture_set);
-
-      // We want this to block all the way up to the form-editing dialog, but not further.
-      dialog->setWindowModality(Qt::WindowModal);
-
-      QObject::connect(dialog, &QDialog::accepted, this, [this, dialog, row]() {
-         auto* stub = dialog->formStub();
-         this->_set_texture_set(row, stub);
-      });
-      QObject::connect(dialog, &QDialog::finished, dialog, [dialog]() {
-         dialog->deleteLater();
-      });
-
-      dialog->show();
    });
 
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
@@ -175,58 +282,20 @@ void DKFormNIFPickerDialog::_refresh_texture_swaps() {
    auto* table = this->ui.textureSwaps;
 
    table->setEnabled(this->textureSwapsAllowed());
-   table->setRowCount(0);
-   
    if (this->textureSwapsAllowed()) {
-      const auto& src = this->_state.texture_swaps;
-      table->setRowCount(src.size());
-
-      for (size_t i = 0; i < src.size(); ++i) {
-         auto& src_item = src[i];
-
-         QTableWidgetItem* cell = nullptr;
-
-         cell = table->item(i, 0);
-         if (!cell) {
-            cell = new QTableWidgetItem;
-            table->setItem(i, 0, cell);
-         }
-         cell->setText(QString::fromStdString(src_item.block_name));
-
-         cell = table->item(i, 1);
-         if (!cell) {
-            cell = new QTableWidgetItem;
-            table->setItem(i, 1, cell);
-         }
-         cell->setText(QString::number(src_item.block_index));
-
-         cell = table->item(i, 2);
-         if (!cell) {
-            cell = new QTableWidgetItem;
-            table->setItem(i, 2, cell);
-         }
-         auto data = QVariant::fromValue(src_item.texture_set);
-         cell->setText(data.toString());
-         cell->setData(Qt::UserRole, data);
-      }
+      this->_model->replaceItems(this->_state.texture_swaps);
+   } else {
+      this->_model->replaceItems({});
    }
 }
 
 void DKFormNIFPickerDialog::_set_texture_set(size_t row, dovah::form_stub* stub) {
    if (!this->textureSwapsAllowed())
       return;
-
-   auto* table = this->ui.textureSwaps;
-   auto* cell  = table->item(row, 2);
-   if (!cell)
+   
+   if (row >= this->_state.texture_swaps.size())
       return;
-   if (stub) {
-      auto data = QVariant::fromValue(stub);
-      cell->setText(data.toString());
-      cell->setData(Qt::UserRole, data);
-   } else {
-      auto data = QVariant::fromValue(stub);
-      cell->setText("");
-      cell->setData(Qt::UserRole, data);
-   }
+
+   this->_state.texture_swaps[row].texture_set = stub;
+   this->_model->setTextureSet(row, stub);
 }

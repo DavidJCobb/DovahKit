@@ -10,6 +10,8 @@ namespace nifDK {
    class file;
 }
 
+class DKFormNIFPickerDialogTextureSwapModel;
+
 class DKFormNIFPickerDialog : public QDialog {
    Q_OBJECT;
    protected:
@@ -38,6 +40,7 @@ class DKFormNIFPickerDialog : public QDialog {
          bool supports_texture_swaps = false;
          std::vector<ui::types::nif_texture_swap> texture_swaps;
       } _state;
+      DKFormNIFPickerDialogTextureSwapModel* _model = nullptr;
 
       void _reload_all_nif_info();
 

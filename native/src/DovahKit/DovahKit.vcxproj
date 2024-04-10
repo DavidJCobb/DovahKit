@@ -895,6 +895,7 @@
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKFormNIFPickerDialog.h" />
     <QtMoc Include="widgets\DKFormPickerDialog.h" />
+    <ClInclude Include="ui\types\nif_texture_swap.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />

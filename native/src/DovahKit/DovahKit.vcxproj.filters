@@ -5624,6 +5624,9 @@
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\nif_texture_swap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
