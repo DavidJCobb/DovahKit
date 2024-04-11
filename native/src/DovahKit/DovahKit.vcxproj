@@ -873,6 +873,8 @@
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
@@ -880,6 +882,7 @@
     <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBoundScriptModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormDestructionStageListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
@@ -893,6 +896,7 @@
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKFormNIFPickerDialog.h" />
@@ -900,7 +904,8 @@
     <ClInclude Include="ui\types\nif_texture_swap.h" />
     <QtMoc Include="widgets\DKFormDestructionDataButton.h" />
     <ClInclude Include="ui\types\nif_for_form.h" />
-    <QtMoc Include="widgets\widget-dialogs\DKDestructionStageDialog.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKFormDestructionStageDialog.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKFormDestructionDataDialog.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />

@@ -1,7 +1,14 @@
 #include "./DKFormDestructionStageDialog.h"
+#include <limits>
 
 DKFormDestructionStageDialog::DKFormDestructionStageDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
+
+   this->ui.debris->setAllowedFormType(dovah::form_type::debris);
+   this->ui.explosion->setAllowedFormType(dovah::form_type::explosion);
+
+   // consistency with CK:
+   this->ui.selfDamage->setMaximum(std::numeric_limits<int32_t>::max());
 }
 
 DKFormDestructionStageDialog::DestructionStage DKFormDestructionStageDialog::value() const {

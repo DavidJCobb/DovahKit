@@ -2253,6 +2253,15 @@
     <ClCompile Include="ui\types\nif_for_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormDestructionStageListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5636,6 +5645,9 @@
     <ClInclude Include="ui\types\nif_for_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6210,7 +6222,10 @@
     <QtMoc Include="widgets\DKFormDestructionDataButton.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-dialogs\DKDestructionStageDialog.h">
+    <QtMoc Include="widgets\widget-dialogs\DKFormDestructionStageDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKFormDestructionDataDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

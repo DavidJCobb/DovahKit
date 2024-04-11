@@ -138,6 +138,9 @@
      </item>
      <item row="2" column="2">
       <widget class="QSpinBox" name="damageStage">
+       <property name="whatsThis">
+        <string>This value identifies this destruction stage to the object's NIF file. There is a special NiNode type calld BSDamageStage, which can be used to display 3D geometry only when the object's current Model Damage Stage falls within a given range.</string>
+       </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
        </property>
