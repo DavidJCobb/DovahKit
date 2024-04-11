@@ -26,4 +26,6 @@ class DKFormDestructionDataDialog : public QDialog {
    protected slots:
       void _deleteSelectedStage();
       void _editSelectedStage();
+
+      void _clearData();
 };

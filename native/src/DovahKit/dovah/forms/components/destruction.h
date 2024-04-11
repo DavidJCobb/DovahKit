@@ -30,7 +30,7 @@ namespace dovah {
          static constexpr int max_stage_count = std::numeric_limits<uint8_t>::max();
 
          struct Stage {
-            uint16_t         healthPercent;
+            uint8_t          healthPercent;
             uint8_t          damageStage;
             stage_flags_t    flags;
             uint32_t         selfDamageRate; // the object inflicts this much damage on itself per second (i.e. health decay)

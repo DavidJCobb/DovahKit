@@ -20,8 +20,11 @@ namespace dovah::loaded_forms::components {
                   break;
                case 'DSTD':
                   {
+                     uint8_t index;
+
                      auto& stage = this->stages.emplace_back();
                      subrecord.read(stage.healthPercent);
+                     subrecord.read(index);
                      subrecord.read(stage.damageStage);
                      subrecord.read(stage.flags);
                      subrecord.read(stage.selfDamageRate);
@@ -63,8 +66,11 @@ namespace dovah::loaded_forms::components {
                break;
             case 'DSTD':
                {
+                  uint8_t stage_index;
+
                   auto& stage = this->stages.emplace_back();
                   subrecord.read(stage.healthPercent);
+                  subrecord.read(stage_index);
                   subrecord.read(stage.damageStage);
                   subrecord.read(stage.flags);
                   subrecord.read(stage.selfDamageRate);
@@ -136,9 +142,12 @@ namespace dovah::loaded_forms::components {
       DEST.skip_bytes(2);
       DEST.close();
       //
-      for (auto& stage : this->stages) {
+      for (size_t i = 0; i < this->stages.size(); ++i) {
+         auto& stage = this->stages[i];
+
          auto& DSTD = record.open_next_subrecord('DSTD');
          DSTD.write(stage.healthPercent);
+         DSTD.write((uint8_t)i);
          DSTD.write(stage.damageStage);
          DSTD.write(stage.flags);
          DSTD.write(stage.selfDamageRate);
@@ -150,10 +159,8 @@ namespace dovah::loaded_forms::components {
          auto& model = stage.replacementModel;
          model.save(record, intfc, 'DMDL', 'DMDT', 'DMDS');
       }
-      if (!this->stages.empty()) {
-         auto& DSTF = record.open_next_subrecord('DSTF');
-         DSTF.close();
-      }
+      auto& DSTF = record.open_next_subrecord('DSTF');
+      DSTF.close();
    }
    void destruction_stage_data::clone_from(const destruction_stage_data& other, loaded_forms::Form& my_owner) noexcept {
       this->health = other.health;

@@ -63,9 +63,7 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
       this->ui.stages->setEnabled(checked);
       this->ui.flagVATSTargetable->setEnabled(checked);
       if (!checked) {
-         this->ui.health->setValue(1);
-         this->ui.flagVATSTargetable->setChecked(false);
-         this->_model->clear();
+         this->_clearData();
       }
    });
 
@@ -94,8 +92,12 @@ std::optional<DKFormDestructionDataDialog::DestructionData> DKFormDestructionDat
    return dst_opt;
 }
 void DKFormDestructionDataDialog::setData(const std::optional<DestructionData>& src_opt) {
-   this->ui.enabled->setChecked(src_opt.has_value()); // trigger own signal handler on purpose
+   this->ui.enabled->setChecked(src_opt.has_value());
    if (!src_opt.has_value()) {
+      this->ui.health->setEnabled(false);
+      this->ui.stages->setEnabled(false);
+      this->ui.flagVATSTargetable->setEnabled(false);
+      this->_clearData();
       return;
    }
    auto& src = src_opt.value();
@@ -155,4 +157,10 @@ void DKFormDestructionDataDialog::_editSelectedStage() {
    if (result == QDialog::DialogCode::Rejected)
       return;
    this->_model->setStage(row, dialog->value());
+}
+
+void DKFormDestructionDataDialog::_clearData() {
+   this->ui.health->setValue(1);
+   this->ui.flagVATSTargetable->setChecked(false);
+   this->_model->clear();
 }
