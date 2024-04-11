@@ -40,7 +40,7 @@ void FormDialogActivator::_load_impl() {
    
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
    this->ui.model->initializeFrom(working.model);
-   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Destruction Data is incomplete; needs a dialog and whatnot");
+   this->ui.destructionData->initializeFrom(working.destruction_data);
    this->ui.soundActivate->setFormStub(working.activation_sound.get_form_stub());
    this->ui.soundLooping->setFormStub(working.looping_sound.get_form_stub());
    {
@@ -124,6 +124,7 @@ void FormDialogActivator::_save_impl() {
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 
    this->ui.model->commitTo(working.model, working);
+   this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.scriptListPane->commit();
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME

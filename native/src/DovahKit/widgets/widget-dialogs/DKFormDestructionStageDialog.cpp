@@ -9,16 +9,19 @@ DKFormDestructionStageDialog::DKFormDestructionStageDialog(QWidget* parent) : QD
 
    // consistency with CK:
    this->ui.selfDamage->setMaximum(std::numeric_limits<int32_t>::max());
+
+   QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 DKFormDestructionStageDialog::DestructionStage DKFormDestructionStageDialog::value() const {
    DestructionStage out = {
-      .health_percent   = this->ui.healthPerc->value(),
-      .damage_stage     = this->ui.damageStage->value(),
-      .self_damage_rate = this->ui.selfDamage->value(),
+      .health_percent   = (uint16_t)this->ui.healthPerc->value(),
+      .damage_stage     = (uint8_t)this->ui.damageStage->value(),
+      .self_damage_rate = (uint32_t)this->ui.selfDamage->value(),
       .explosion        = this->ui.explosion->formStub(),
       .debris           = this->ui.debris->formStub(),
-      .debris_count     = this->ui.debrisCount->value(),
+      .debris_count     = (uint32_t)this->ui.debrisCount->value(),
    };
    if (this->ui.flagCapDamage->isChecked())
       out.flags |= DestructionStageFlag::cap_damage;

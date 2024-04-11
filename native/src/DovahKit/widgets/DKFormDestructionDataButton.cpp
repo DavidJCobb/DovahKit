@@ -1,8 +1,11 @@
 #include "./DKFormDestructionDataButton.h"
 #include <QBoxLayout>
+#if !defined(QT_DESIGNER_LIB)
+   #include "./widget-dialogs/DKFormDestructionDataDialog.h"
+#endif
 
 DKFormDestructionDataButton::DKFormDestructionDataButton(QWidget* parent) : QWidget(parent) {
-   auto* layout = new QBoxLayout(this);
+   auto* layout = new QHBoxLayout(this);
    this->setLayout(layout);
 
    layout->setContentsMargins(0, 0, 0, 0);
@@ -15,18 +18,31 @@ DKFormDestructionDataButton::DKFormDestructionDataButton(QWidget* parent) : QWid
 
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(button, &QPushButton::clicked, this, [this]() {
+         auto* dialog = new DKFormDestructionDataDialog(this);
+         dialog->setData(this->_value);
+
+         auto result = dialog->exec();
+         if (result == QDialog::DialogCode::Rejected)
+            return;
+
+         this->_value = dialog->data();
+         if (this->_value.has_value()) {
+            this->_button->setText(tr("Edit Destruction Data"));
+         } else {
+            this->_button->setText(tr("Add Destruction Data"));
+         }
       });
    #endif
 }
 
 #if !defined(QT_DESIGNER_LIB)
-void DKFormDestructionDataButton::initializeFrom(const std::optional<data_type>& src_opt) {
+void DKFormDestructionDataButton::initializeFrom(const std::optional<form_data_type>& src_opt) {
    if (src_opt.has_value()) {
       auto& src = src_opt.value();
       auto& dst = this->_value.emplace();
       
       dst.health = src.health;
-      dst.flags.vats_enabled = (src.flags & data_type::data_flag::vats_enabled) != 0;
+      dst.flags.vats_enabled = (src.flags & form_data_type::data_flag::vats_enabled) != 0;
 
       dst.stages.resize(src.stages.size());
       for (size_t i = 0; i < src.stages.size(); ++i) {
@@ -52,7 +68,7 @@ void DKFormDestructionDataButton::initializeFrom(const std::optional<data_type>&
       this->_button->setText(tr("Add Destruction Data"));
    }
 }
-void DKFormDestructionDataButton::commitTo(std::optional<data_type>& dst_opt, dovah::loaded_forms::Form& dst_owner) {
+void DKFormDestructionDataButton::commitTo(std::optional<form_data_type>& dst_opt, dovah::loaded_forms::Form& dst_owner) {
    if (dst_opt.has_value()) {
       dst_opt.value().clear(dst_owner);
       dst_opt = {};
@@ -63,7 +79,7 @@ void DKFormDestructionDataButton::commitTo(std::optional<data_type>& dst_opt, do
 
       dst.health = src.health;
       if (src.flags.vats_enabled)
-         dst.flags |= data_type::data_flag::vats_enabled;
+         dst.flags |= form_data_type::data_flag::vats_enabled;
 
       auto size = src.stages.size();
       dst.stages.resize(size);

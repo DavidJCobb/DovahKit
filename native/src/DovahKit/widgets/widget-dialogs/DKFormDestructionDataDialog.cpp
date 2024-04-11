@@ -1,6 +1,8 @@
 #include "./DKFormDestructionDataDialog.h"
+#include <QKeyEvent>
 #include "./DKFormDestructionStageDialog.h"
 #include "../widget-models/DKFormDestructionStageListModel.h"
+#include "../DKHeaderView.h"
 
 DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -13,11 +15,32 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
 
    {
       auto* view = this->ui.stages;
-      static_assert(false, "TODO: config table");
-      static_assert(false, "TODO: DKHeaderView and col widths");
+      view->installEventFilter(this); // for the Delete key
+      if (auto* vh = view->verticalHeader()) {
+         vh->setVisible(false);
+         vh->setSectionResizeMode(QHeaderView::ResizeToContents);
+      }
+      
+      QObject::connect(view, &QTableView::doubleClicked, this, [this](const QModelIndex& qmi) {
+         auto  row = qmi.row();
+         auto* src = this->_model->stage(row);
+         if (!src)
+            return;
 
-      static_assert(false, "TODO: double-click handler");
-      static_assert(false, "TODO: delete key handler");
+         auto* dialog = new DKFormDestructionStageDialog(this);
+         dialog->setValue(*src);
+         auto  result = dialog->exec();
+         dialog->deleteLater();
+         if (result == QDialog::DialogCode::Rejected)
+            return;
+
+         this->_model->setStage(row, dialog->value());
+         if (auto* sm = this->ui.stages->selectionModel()) {
+            auto lefthand  = qmi.siblingAtColumn(0);
+            auto righthand = qmi.siblingAtColumn(this->_model->columnCount({}) - 1);
+            sm->select(QItemSelection(lefthand, righthand), QItemSelectionModel::SelectionFlag::ClearAndSelect);
+         }
+      });
    }
    QObject::connect(this->ui.stageButtonAdd, &QPushButton::clicked, this, [this]() {
       auto* dialog = new DKFormDestructionStageDialog(this);
@@ -45,6 +68,9 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
          this->_model->clear();
       }
    });
+
+   QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 std::optional<DKFormDestructionDataDialog::DestructionData> DKFormDestructionDataDialog::data() const {
@@ -79,5 +105,54 @@ void DKFormDestructionDataDialog::setData(const std::optional<DestructionData>& 
    this->_model->replaceStages(src.stages);
 }
 
-void DKFormDestructionDataDialog::_deleteSelectedStage();
-void DKFormDestructionDataDialog::_editSelectedStage();
+/*virtual*/ bool DKFormDestructionDataDialog::eventFilter(QObject* target, QEvent* event) /*override*/ {
+   if (target != this->ui.stages)
+      return false;
+
+   if (event->type() == QEvent::KeyPress) {
+      if (auto* casted = static_cast<QKeyEvent*>(event)) {
+         if (!this->ui.stages->hasFocus())
+            return false;
+
+         this->_deleteSelectedStage();
+         return true;
+      }
+   }
+   return false;
+}
+
+void DKFormDestructionDataDialog::_deleteSelectedStage() {
+   auto* sm = this->ui.stages->selectionModel();
+   if (!sm)
+      return;
+
+   auto rows = sm->selectedRows();
+   if (rows.empty())
+      return;
+
+   auto row = rows[0].row();
+
+   this->_model->deleteItems(row, 1);
+}
+void DKFormDestructionDataDialog::_editSelectedStage() {
+   auto* sm = this->ui.stages->selectionModel();
+   if (!sm)
+      return;
+
+   auto rows = sm->selectedRows();
+   if (rows.empty())
+      return;
+
+   auto  row = rows[0].row();
+   auto* src = this->_model->stage(row);
+   if (!src)
+      return;
+
+   auto* dialog = new DKFormDestructionStageDialog(this);
+   dialog->setValue(*src);
+   auto  result = dialog->exec();
+   dialog->deleteLater();
+   if (result == QDialog::DialogCode::Rejected)
+      return;
+   this->_model->setStage(row, dialog->value());
+}

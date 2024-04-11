@@ -21,6 +21,8 @@ class DKFormDestructionDataDialog : public QDialog {
       Ui::DKFormDestructionDataDialog ui;
       DKFormDestructionStageListModel* _model = nullptr;
 
+      virtual bool eventFilter(QObject* target, QEvent*) override;
+
    protected slots:
       void _deleteSelectedStage();
       void _editSelectedStage();

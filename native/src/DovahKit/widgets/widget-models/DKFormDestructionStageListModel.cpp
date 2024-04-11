@@ -1,4 +1,5 @@
 #include "./DKFormDestructionStageListModel.h"
+#include "editor/form_stub_meta_type.h"
 
 QVariant DKFormDestructionStageListModel::data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
    switch (role) {
