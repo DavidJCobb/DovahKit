@@ -7,23 +7,129 @@
     <x>0</x>
     <y>0</y>
     <width>930</width>
-    <height>334</height>
+    <height>336</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Activator</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,0" columnstretch="1,1,1">
+   <property name="horizontalSpacing">
+    <number>12</number>
+   </property>
    <item row="0" column="0" rowspan="2">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="6" column="0" colspan="2">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Navmesh generation:</string>
+       </property>
+       <property name="buddy">
+        <cstring>navmeshGeneration</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Verb override:</string>
+       </property>
+       <property name="buddy">
+        <cstring>activateTextOverride</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="navmeshGeneration">
+       <item>
+        <property name="text">
+         <string>Collision</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Bounding box</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Filter</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Ground</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="DKFormPicker" name="waterType"/>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <layout class="QGridLayout" name="topLeftFields" columnstretch="0,1">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="editorID"/>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QPushButton" name="buttonDestruction">
+         <property name="text">
+          <string>Add Destruction Data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Model:</string>
+         </property>
+         <property name="buddy">
+          <cstring>model</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="DKFormNIFPicker" name="model"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Editor ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>editorID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0" colspan="2">
       <widget class="Line" name="line_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Water type:</string>
@@ -33,54 +139,7 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="0" colspan="2">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Model</string>
-       </property>
-       <property name="buddy">
-        <cstring>model</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Navmesh generation</string>
-       </property>
-       <property name="buddy">
-        <cstring>navmeshGeneration</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="1">
-      <widget class="QLineEdit" name="activateTextOverride"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Name</string>
-       </property>
-       <property name="buddy">
-        <cstring>name</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QCheckBox" name="flagNoDisplacement">
-       <property name="text">
-        <string>No displacement</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0" colspan="2">
+     <item row="1" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Sounds</string>
@@ -115,75 +174,35 @@
        </layout>
       </widget>
      </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
      <item row="5" column="1">
-      <widget class="QComboBox" name="navmeshGeneration">
-       <item>
-        <property name="text">
-         <string>Collision</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Bounding box</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Filter</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Ground</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
+      <widget class="QCheckBox" name="flagNoDisplacement">
        <property name="text">
-        <string>Editor ID</string>
-       </property>
-       <property name="buddy">
-        <cstring>editorID</cstring>
+        <string>No displacement</string>
        </property>
       </widget>
-     </item>
-     <item row="3" column="0" colspan="2">
-      <widget class="QPushButton" name="buttonDestruction">
-       <property name="text">
-        <string>Add Destruction Data</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="name"/>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Verb override:</string>
-       </property>
-       <property name="buddy">
-        <cstring>activateTextOverride</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="DKGameFilePicker" name="model"/>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="7" column="1">
-      <widget class="DKFormPicker" name="waterType"/>
+      <widget class="QLineEdit" name="activateTextOverride"/>
      </item>
     </layout>
    </item>
    <item row="0" column="1" rowspan="2">
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>6</number>
+     </property>
      <item>
       <layout class="QGridLayout" name="layoutFlags">
+       <property name="spacing">
+        <number>6</number>
+       </property>
        <item row="1" column="1">
         <widget class="QCheckBox" name="flagRandomAnimStart">
          <property name="text">
@@ -258,6 +277,9 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_3">
+       <property name="spacing">
+        <number>6</number>
+       </property>
        <item row="0" column="1">
         <widget class="DKColorPickerButton" name="defaultPrimitiveColor"/>
        </item>
@@ -288,6 +310,9 @@
      </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>6</number>
+       </property>
        <item>
         <widget class="QLabel" name="label_9">
          <property name="text">
@@ -350,11 +375,6 @@
    <header>widgets/DKFormListPane.h</header>
   </customwidget>
   <customwidget>
-   <class>DKGameFilePicker</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKGameFilePicker.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
@@ -364,12 +384,13 @@
    <extends>QWidget</extends>
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>editorID</tabstop>
-  <tabstop>name</tabstop>
-  <tabstop>model</tabstop>
-  <tabstop>buttonDestruction</tabstop>
   <tabstop>soundActivate</tabstop>
   <tabstop>soundLooping</tabstop>
   <tabstop>navmeshGeneration</tabstop>

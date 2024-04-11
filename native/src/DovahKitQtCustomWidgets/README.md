@@ -56,6 +56,9 @@ A drop-down usable for picking a form &mdash; or, if desired, a pair of drop-dow
 
 The only way to make enums compatible with MOC (and consequently, with Qt's property system and with Qt Designer) is to **a)** use the `Q_NAMESPACE` macro immediately after opening the containing namespace, and **b)** use the `Q_ENUM_NS` macro immediately after defining the namespace. You [cannot use these macros in more than one file](https://bugreports.qt.io/browse/QTBUG-68611) (even though namespaces C++ can exist in more than one file as a basic feature) and you can only use `Q_ENUM_NS` immediately after the enum's definition, so they're not suitable for enums defined in code files that are meant to be Qt-independent (say, DovahKit's backend). As a bit of trivia, `Q_NAMESPACE` also doesn't even support nested namespaces. The [only workaround](https://stackoverflow.com/a/74134619) would be to define an entire second, local, enum that parallels the one we want to use, and then `static_cast` everywhere. Everything about this design is utterly piss-poor, and it will in all likelihood never be fixed.
 
+### DKFormNIFPicker
+Similar to DKGameFilePicker, but for selecting a NIF for a form, with texture swap support as needed.
+
 ### DKGameFilePicker
 A textbox and browse button usable for inputting the path to a game asset file. The browse 
 button allows users to view the contents of all loaded BSAs and pick a file from inside.

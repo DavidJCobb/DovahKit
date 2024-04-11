@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DKFormDestructionStageDialog</class>
+ <widget class="QDialog" name="DKFormDestructionStageDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>479</width>
+    <height>234</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Destructible Object Stage</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0" columnstretch="2,1">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="3" column="1" colspan="2">
+      <widget class="DKFormPicker" name="explosion">
+       <property name="whatsThis">
+        <string>Explosion to spawn at this object once it enters this destruction stage.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Model Damage Stage:</string>
+       </property>
+       <property name="buddy">
+        <cstring>damageStage</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="2">
+      <widget class="DKFormPicker" name="debris">
+       <property name="whatsThis">
+        <string>Debris type to spawn at this object once it enters this destruction stage.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="2">
+      <widget class="DKFormNIFPicker" name="model">
+       <property name="whatsThis">
+        <string>If a NIF file is set here, then the object will switch to using that NIF when it enters this destruction stage.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="2">
+      <widget class="QSpinBox" name="healthPerc">
+       <property name="whatsThis">
+        <string>The object will enter this destruction stage when its health falls to this percentage.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QSpinBox" name="selfDamage">
+       <property name="whatsThis">
+        <string>Damage that this object deals to itself per second while in this destruction stage.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>99999</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Self Damage Per Second:</string>
+       </property>
+       <property name="buddy">
+        <cstring>selfDamage</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Explosion:</string>
+       </property>
+       <property name="buddy">
+        <cstring>explosion</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Debris Count:</string>
+       </property>
+       <property name="buddy">
+        <cstring>debrisCount</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Health Percentage:</string>
+       </property>
+       <property name="buddy">
+        <cstring>healthPerc</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="2">
+      <widget class="QSpinBox" name="debrisCount">
+       <property name="whatsThis">
+        <string>Number of debris to spawn at this object, if a debris type has been selected.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999</number>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Replacement Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QSpinBox" name="damageStage">
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="maximum">
+        <number>8</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Debris:</string>
+       </property>
+       <property name="buddy">
+        <cstring>debris</cstring>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Options</string>
+     </property>
+     <widget class="QCheckBox" name="flagIgnoreExternal">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>93</y>
+        <width>124</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="whatsThis">
+       <string>If enabled, the object cannot take damage from outside sources during this destruction stage; it will only take whatever self-damage it deals per second.</string>
+      </property>
+      <property name="text">
+       <string>Ignore External Dmg.</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="flagDestroyObject">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>70</y>
+        <width>96</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Destroy Object</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="flagDisableObject">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>47</y>
+        <width>92</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Disable Object</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="flagCapDamage">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>24</y>
+        <width>84</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="whatsThis">
+       <string>Prevents skipping through destruction stages. That is: If this setting is enabled and the object, while in this destruction stage, takes enough damage to progress through multiple destruction stages, it will instead progress only to the next stage.</string>
+      </property>
+      <property name="text">
+       <string>Cap Damage</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>healthPerc</tabstop>
+  <tabstop>selfDamage</tabstop>
+  <tabstop>damageStage</tabstop>
+  <tabstop>explosion</tabstop>
+  <tabstop>debris</tabstop>
+  <tabstop>debrisCount</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>flagCapDamage</tabstop>
+  <tabstop>flagDisableObject</tabstop>
+  <tabstop>flagDestroyObject</tabstop>
+  <tabstop>flagIgnoreExternal</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

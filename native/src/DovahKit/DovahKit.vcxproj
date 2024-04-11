@@ -741,6 +741,7 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
+    <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
@@ -854,6 +855,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
+    <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
@@ -896,6 +898,9 @@
     <QtMoc Include="widgets\widget-dialogs\DKFormNIFPickerDialog.h" />
     <QtMoc Include="widgets\DKFormPickerDialog.h" />
     <ClInclude Include="ui\types\nif_texture_swap.h" />
+    <QtMoc Include="widgets\DKFormDestructionDataButton.h" />
+    <ClInclude Include="ui\types\nif_for_form.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKDestructionStageDialog.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h" />
     <ClInclude Include="widgets\widget-models\bound-scripts\_forward_declarations.h" />
     <QtMoc Include="widgets\widget-models\DKBoundScriptModel.h" />
@@ -2197,6 +2202,8 @@
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
     <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKFormDestructionDataDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKFormDestructionStageDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormNIFPickerDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>

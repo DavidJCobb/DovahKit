@@ -109,6 +109,7 @@
   <ItemGroup>
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
+    <ClCompile Include="interfaces\DKFormNIFPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
@@ -118,6 +119,7 @@
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
+    <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
@@ -170,6 +172,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="interfaces\DKFormNIFPickerInterface.h" />
+    <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

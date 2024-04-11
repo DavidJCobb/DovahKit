@@ -50,7 +50,7 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
 
                case Qt::TextAlignmentRole:
                   if (column == Column::LeafIndex) {
-                     return (int)(Qt::AlignRight | Qt::AlignBaseline);
+                     return (int)(Qt::AlignRight | Qt::AlignVCenter);
                   }
                   return {};
 

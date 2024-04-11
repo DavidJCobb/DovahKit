@@ -23,9 +23,6 @@ FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent
    this->ui.defaultInteractKeyword->setAllowedFormType(dovah::form_type::keyword);
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
 
-   this->_nif_picker = new DKFormNIFPicker(this);
-   this->ui.model->parentWidget()->layout()->replaceWidget(this->ui.model, this->_nif_picker);
-
    this->load(); // this creates the working copy.
    //
    QObject::connect(this->ui.defaultPrimitiveColor, &DKColorPickerButton::colorChanged, this, [this](QColor value) {
@@ -42,10 +39,7 @@ void FormDialogActivator::_load_impl() {
    auto form_flags = this->stub->get_record_flags();
    
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   {
-      static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Model is incomplete; needs its own widget type to make room for texture swaps in the future");
-      this->_nif_picker->initializeFrom(working.model);
-   }
+   this->ui.model->initializeFrom(working.model);
    static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Destruction Data is incomplete; needs a dialog and whatnot");
    this->ui.soundActivate->setFormStub(working.activation_sound.get_form_stub());
    this->ui.soundLooping->setFormStub(working.looping_sound.get_form_stub());
@@ -129,7 +123,7 @@ void FormDialogActivator::_save_impl() {
    working.interact_keyword.set(working, this->ui.defaultInteractKeyword->formStub());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 
-   this->_nif_picker->commitTo(working.model, working);
+   this->ui.model->commitTo(working.model, working);
    this->ui.scriptListPane->commit();
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
