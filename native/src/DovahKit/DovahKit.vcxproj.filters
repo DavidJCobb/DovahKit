@@ -6255,6 +6255,7 @@
     <Text Include="helpers\ini\INI file grammar.txt" />
     <Text Include="helpers\ini\INI file grammar win32.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
+    <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />

@@ -8,7 +8,7 @@ namespace dovah {
 namespace ui::types {
    struct nif_texture_swap {
       std::string       block_name;
-      size_t            block_index = 0;
+      size_t            leaf_index  = 0;
       dovah::form_stub* texture_set = nullptr;
    };
 }

@@ -46,7 +46,7 @@ namespace dovah::loaded_forms::components {
          struct texture_swap { // MODS
             std::string      nif_block_name;
             form_reference_t texture_set;
-            uint32_t         nif_block_index;
+            uint32_t         nif_leaf_index;
          };
          std::vector<texture_swap> texture_swaps;
          

@@ -18,6 +18,7 @@
 //
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/TextureSet.h"
+#include "dovah/forms/factories/hardcoded.h"
 
 namespace nifDK {
    /*static*/ file_version file_version::from_string(const std::string& s) {
@@ -275,34 +276,56 @@ namespace nifDK {
    }
 
    void file::apply_texture_swaps(const dovah::loaded_forms::components::model_ts& defs) {
-      for (const auto& entry : defs.texture_swaps) {
-         if (!entry.texture_set)
-            continue;
-         auto* block = this->block_by_name(entry.nif_block_name);
-         if (!block)
-            continue;
-         //
-         auto txst = entry.texture_set.get_form_stub()->load().ptr_cast<dovah::loaded_forms::TextureSet>();
-         if (!txst)
-            continue;
-         //
-         block_types::BSShaderProperty* shader = nullptr;
-         if (auto* data = dynamic_cast<nifDK::block_types::NiGeometry*>(block)) {
-            shader = data->properties.shader;
-         } else if (auto* data = dynamic_cast<nifDK::block_types::BSTriShape*>(block)) {
-            shader = data->properties.shader;
+      size_t current_leaf_index = 0;
+      [this, &defs, &current_leaf_index](this auto&& recurse, block_types::NiAVObject* current_block) -> void {
+         if (!current_block)
+            return;
+
+         if (auto* node = dynamic_cast<const block_types::NiNode*>(current_block)) {
+            for (auto* child : node->children)
+               recurse(child);
+            return;
          }
-         if (!shader)
-            continue;
-         //
-         if (auto* bslp = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
-            if (auto* paths = bslp->texture.paths) {
-               for (size_t i = 0; i < paths->textures.list.size(); ++i)
-                  paths->textures.list[i] = std::string("textures\\") + txst->textures.list[i];
+
+         const dovah::loaded_forms::components::model_ts::texture_swap* tex_swap = nullptr;
+         for (auto& entry : defs.texture_swaps) {
+            if (entry.nif_leaf_index == current_leaf_index) {
+               tex_swap = &entry;
+               break;
             }
-            continue;
          }
-      }
+         if (tex_swap) {
+            block_types::BSShaderProperty* shader = nullptr;
+            if (auto* data = dynamic_cast<block_types::NiGeometry*>(current_block)) {
+               shader = data->properties.shader;
+            } else if (auto* data = dynamic_cast<block_types::BSTriShape*>(current_block)) {
+               shader = data->properties.shader;
+            }
+            if (shader) {
+               if (auto* bslp = dynamic_cast<nifDK::block_types::BSLightingShaderProperty*>(shader)) {
+                  auto* paths = bslp->texture.paths;
+                  if (!paths) {
+                     paths = bslp->texture.paths = new block_types::BSShaderTextureSet();
+                     paths->owner = this;
+                  }
+
+                  auto* textureset_stub = tex_swap->texture_set.get_form_stub();
+                  if (textureset_stub->formID == dovah::hardcoded_form_ids::NullTextureSet) { // TODO: if it's NullTextureSet
+                     current_block->flags |= block_types::NiAVObject::flag::culled_by_application;
+                  } else {
+                     auto txst = textureset_stub->load().ptr_cast<dovah::loaded_forms::TextureSet>();
+                     if (txst) {
+                        for (size_t i = 0; i < paths->textures.list.size(); ++i)
+                           paths->textures.list[i] = std::string("textures\\") + txst->textures.list[i];
+                     }
+                  }
+               }
+            }
+         }
+
+         ++current_leaf_index;
+
+      }(this->root_node);
    }
    void file::recalc_bounds() {
       this->bounds = {};

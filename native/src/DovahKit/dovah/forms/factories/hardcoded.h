@@ -25,6 +25,7 @@ namespace dovah {
       static constexpr bare_form_id_t MultiBoundMarker = 0x00000015;
       static constexpr bare_form_id_t DefaultWater     = 0x00000018;
       static constexpr bare_form_id_t RoomMarker       = 0x0000001F;
+      static constexpr bare_form_id_t NullTextureSet   = 0x00000028;
       static constexpr bare_form_id_t COCMarkerHeading = 0x00000032;
       static constexpr bare_form_id_t XMarkerHeading   = 0x00000034;
       static constexpr bare_form_id_t XMarker          = 0x0000003B;

@@ -153,7 +153,7 @@ namespace dovah {
       }
       {  // [DOOR:004]"PrisonMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x004;
+         stub->formID    = hardcoded_form_ids::PrisonMarker;
          stub->form_type = form_type_info::signature_to_form_type('DOOR');
          stub->editorID  = "PrisonMarker";
          // Flags: 0x800000
@@ -163,7 +163,7 @@ namespace dovah {
       }
       {  // [STAT:005]"DivineMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x005;
+         stub->formID    = hardcoded_form_ids::DivineMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "DivineMarker";
          // Flags: 0x800000
@@ -173,7 +173,7 @@ namespace dovah {
       }
       {  // [STAT:006]"TempleMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x006;
+         stub->formID    = hardcoded_form_ids::TempleMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "TempleMarker";
          // Flags: 0x800000
@@ -215,7 +215,7 @@ namespace dovah {
       }
       {  // [STAT:010]"MapMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x010;
+         stub->formID    = hardcoded_form_ids::MapMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "MapMarker";
          // Flags: 0x800000
@@ -225,7 +225,7 @@ namespace dovah {
       }
       {  // [STAT:012]"HorseMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x012;
+         stub->formID    = hardcoded_form_ids::HorseMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "HorseMarker";
          // Model File "Name: Marker_Horse.nif"
@@ -253,7 +253,7 @@ namespace dovah {
       }
       {  // [STAT:015]"MultiBoundMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x015;
+         stub->formID    = hardcoded_form_ids::MultiBoundMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "MultiBoundMarker";
          // Flags: 0x800000
@@ -330,7 +330,7 @@ namespace dovah {
          // Base form used for roombounds defined in the Creation Kit?
          //
          auto stub = new form_stub();
-         stub->formID    = 0x01F;
+         stub->formID    = hardcoded_form_ids::RoomMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "RoomMarker";
          // Flags: 0x800000
@@ -371,7 +371,7 @@ namespace dovah {
       }
       {  // [TXST:028]"NullTextureSet"
          auto stub = new form_stub();
-         stub->formID    = 0x028;
+         stub->formID    = hardcoded_form_ids::NullTextureSet;
          stub->form_type = form_type_info::signature_to_form_type('TXST');
          stub->editorID  = "NullTextureSet";
          lo._accept_hardcoded_form(stub);
@@ -417,7 +417,7 @@ namespace dovah {
       }
       {  // [STAT:034]"XMarkerHeading"
          auto stub = new form_stub();
-         stub->formID    = 0x034;
+         stub->formID    = hardcoded_form_ids::XMarkerHeading;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "XMarkerHeading";
          // Flags: 0x800000
@@ -475,7 +475,7 @@ namespace dovah {
       }
       {  // [STAT:03B]"XMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x03B;
+         stub->formID    = hardcoded_form_ids::XMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "XMarker";
          // Flags: 0x800000

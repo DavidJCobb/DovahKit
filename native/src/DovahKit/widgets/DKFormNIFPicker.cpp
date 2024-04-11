@@ -57,7 +57,7 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
          for (auto& item : ts.texture_swaps) {
             auto& dst = this->_state.texture_swaps.emplace_back();
             dst.block_name  = item.nif_block_name;
-            dst.block_index = item.nif_block_index;
+            dst.leaf_index  = item.nif_leaf_index;
             dst.texture_set = item.texture_set.get_form_stub();
          }
       }
@@ -79,8 +79,8 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
             if (!src.texture_set)
                continue;
             auto& dst = ts.texture_swaps.emplace_back();
-            dst.nif_block_name  = src.block_name;
-            dst.nif_block_index = src.block_index;
+            dst.nif_block_name = src.block_name;
+            dst.nif_leaf_index = src.leaf_index;
             dst.texture_set.set(dst_owner, src.texture_set);
          }
       }

@@ -1,0 +1,179 @@
+template<typename Key, typename Value>
+class BSScrapMap<Key, Value> {
+   public:
+      struct Node {
+         Node* next = nullptr; // 00
+         Key   key;   // 04
+         Value value; // 08 if sizeof(Key) == 4
+      };
+      
+   public:
+      #pragma region Virtual member functions
+         virtual ~BSScrapMap(); // 00
+         //
+         virtual uint32_t BucketOf(Key key) const = 0; // 01
+         virtual bool CompareKeys(Key a, Key b) const { // 02
+            return a == b;
+         }
+         virtual void SetNodeKeyValue(Node node, Key key, Value value) { // 03
+            node.key   = key;
+            node.value = value;
+         }
+         virtual void Unk_04(Node*) {} // 04
+         virtual Node* CreateNode() { // 05
+            return this->scrapheap->Allocate(sizeof(Node), alignof(Node));
+         }
+         virtual void DeleteNode(Node* node) { // 06
+            node->value = {};
+            this->scrapheap.Free(node);
+         }
+      #pragma endregion
+      
+      uint32_t capacity  = 0;       // 04
+      Node*    buckets   = nullptr; // 08
+      uint32_t size      = 0;       // 0C
+      void*    scrapheap = nullptr; // 10
+      
+      BSScrapMap(size_t capacity) {
+         size_t buffer_size = capacity * sizeof(Value);
+         
+         this->capacity  = capacity;
+         this->scrapheap = ???;
+         this->buckets   = this->scrapheap->Allocate(buffer_size, alignof(Value));
+         memset(this->buckets, 0, buffer_size);
+      }
+      
+      bool RemoveNodeByKey(Key desired) {
+         auto  bucket = this->BucketOf(desired);
+         auto* node   = this->buckets[bucket];
+         if (!node)
+            return false;
+         
+         if (this->CompareKeys(desired, node->key)) {
+            this->buckets[bucket] = node->next;
+            //
+            this->Unk_04(node);
+            this->DeleteNode(node);
+            --this->size;
+            return true;
+         }
+         Node* prev = node;
+         for(node = node->next; node != nullptr; node = node->next) {
+            if (this->CompareKeys(desired, node->key)) {
+               prev->next = node->next;
+               //
+               this->Unk_04(node);
+               this->DeleteNode(node);
+               --this->size;
+               return true;
+            }
+         }
+         return false;
+      }
+};
+
+template<>
+class BSScrapMap<int, TEX_SWAP*> {
+   public:
+      virtual uint32_t BucketOf(int key) const override {
+         return key / this->capacity;
+      }
+};
+
+/*
+
+   TESModelTextureSwap::ApplyToNodeTree
+   
+      We have a tree of nodes and a list of texture swaps,  and we want to apply the 
+      latter to the former. We start by copying the list of texture swaps into a map 
+      where the keys are  NIF block indices and the values are  pointers to the swap 
+      data. Then, we use a recursive function to traverse the NIF tree and apply the 
+      texture swaps, removing successfully-applied swaps from the map so that we can 
+      early-out once it's empty.
+      
+      The caller of this function is TESObjectREFR's virtual function 0x6A;  at this 
+      point, I'm 90% sure that that function  is directly responsible for setting up 
+      any non-special 3D  (i.e. anything besides water geom, collision prims, etc.).
+
+*/
+
+void TESModelTextureSwap::ApplyToNodeTree(NiNode* target) {
+   if (!target)
+      return;
+   
+   // weird stuff with locks
+   
+   BSScrapMap<int, TEX_SWAP*> scrapmap(this->swap_count);
+   
+   if (this->swap_count > 0) {
+      uint32_t ebx = 0;
+      do {
+         if (this->swaps[ebx].block_index == -1)
+            continue;
+         scrapmap.StoreKeyValuePair(this->swaps[ebx].block_index, &this->swaps[ebx]);
+      } while (++ebx = this->swap_count);
+   }
+   if (scrapmap.buffer != nullptr) {
+      int current_leaf_index = 0;
+      this->ApplyToNodeTree_Impl(target, scrapmap, current_leaf_index); // see below
+   }
+   
+   // weird stuff with locks
+   // destructors
+}
+
+// Success bool is used to early-out from recursion.
+bool TESModelTextureSwap::ApplyToNodeTree_Impl(NiNode* target, BSScrapMap<int, TEX_SWAP*>& scrapmap, int& current_leaf_index) {
+   if (!target)
+      return false;
+   
+   if (auto* node = target->GetAsNiNode()) {
+      for(size_t i = 0; i < node->childCount; ++i) {
+         auto* child = node->children[i];
+         if (!child)
+            continue;
+         if (this->ApplyToNodeTree_Impl(child, scrapmap, current_leaf_index)) // recurse
+            return true;
+      }
+      return false;
+   }
+   if (auto* geom = target->GetAsNiGeometry()) {
+      const TEX_SWAP* tex_swap = nullptr;
+      
+      if (scrapmap.Lookup(current_leaf_index, tex_swap)) {
+         if (tex_swap) {
+            if (tex_swap->form == ptrNullTextureSet) {
+               geom->m_flags |= 1; // set "culled" flag
+            } else {
+               auto* shader = geom->shader;
+               
+               bool is_bslp = NiObjectIsOfType(NiRTTI_BSLightingShaderProperty, shader);
+               is_bslp |= NiObjectIsOfType(NiRTTI_BSGrassShaderProperty, shader); // subclass of NiRTTI_BSLightingShaderProperty
+               
+               if (is_bslp) {
+                  BSShaderTextureSet* ebp = tex_swap->form->CreateBSShaderTextureSet(); // LE offset: 502460
+                  shader->sub454EB0();
+                  shader->material->unk50 = ebp;
+                  shader->material->Unk_09();
+                  shader->subC89810(0);
+                  
+                  NiGeometry* geom = target->GetAsNiGeometry(); // redundant...
+                  shader->subC89DD0(geom);
+               }
+            }
+            
+            //
+            // Remove successfully-applied texture swaps from the scrap-map, so we can 
+            // early-out when all swaps are successfully applied.
+            //
+            scrapmap.RemoveNodeByKey(current_leaf_index);
+            if (scrapmap.size == 0)
+               return true;
+         }
+      }
+   }
+   
+   ++current_leaf_index;
+   
+   return false;
+}

@@ -2232,6 +2232,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />

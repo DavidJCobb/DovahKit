@@ -126,9 +126,9 @@ namespace dovah::loaded_forms::components {
             // value. However, -1 is not treated as "ignore the block index," so in practice, these 
             // texture swaps would never actually apply.
             //
-            entry.nif_block_index = -1;
+            entry.nif_leaf_index = -1;
          } else {
-            subrecord.read(entry.nif_block_index);
+            subrecord.read(entry.nif_leaf_index);
          }
          //
          if (!entry.texture_set) // the game doesn't retain entries with no TextureSet form
@@ -294,7 +294,7 @@ namespace dovah::loaded_forms::components {
             for (auto& entry : this->texture_swaps) {
                subrecord.write_length_prefixed_string<4>(entry.nif_block_name);
                subrecord.write(entry.texture_set);
-               subrecord.write(entry.nif_block_index);
+               subrecord.write(entry.nif_leaf_index);
             }
             break;
       }
@@ -341,7 +341,7 @@ namespace dovah::loaded_forms::components {
          auto& entry = this->texture_swaps[i];
          auto& from = other.texture_swaps[i];
          entry.nif_block_name = from.nif_block_name;
-         entry.nif_block_index = from.nif_block_index;
+         entry.nif_leaf_index = from.nif_leaf_index;
          entry.texture_set.set(my_owner, from.texture_set);
       }
    }

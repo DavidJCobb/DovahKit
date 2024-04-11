@@ -11,6 +11,7 @@
 #include "nif/blocks/BSLightingShaderProperty.h"
 #include "nif/blocks/BSShaderTextureSet.h"
 #include "nif/blocks/NiGeometry.h"
+#include "nif/utils/find_all_retexturable_blocks.h"
 #include "nif/utils/precache_nif_info.h"
 #include "nif/file.h"
 
@@ -20,13 +21,17 @@
 #pragma region DKFormNIFPickerDialogTextureSwapModel
 #include "ui/models/DKGenericListModel.h"
 
+struct _model_node_type : public ui::types::nif_texture_swap {
+   bool is_in_nif = false;
+};
+
 class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNIFPickerDialogTextureSwapModel, ui::types::nif_texture_swap> {
    public:
       struct Column {
          Column() = delete;
          enum : size_t {
             BlockName,
-            BlockIndex,
+            LeafIndex,
             TextureSet,
          };
       };
@@ -44,7 +49,7 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
                   return QVariant::fromValue(node.texture_set);
 
                case Qt::TextAlignmentRole:
-                  if (column == Column::BlockIndex) {
+                  if (column == Column::LeafIndex) {
                      return (int)(Qt::AlignRight | Qt::AlignBaseline);
                   }
                   return {};
@@ -54,8 +59,8 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
                   switch (column) {
                      case Column::BlockName:
                         return QString::fromStdString(node.block_name);
-                     case Column::BlockIndex:
-                        return node.block_index;
+                     case Column::LeafIndex:
+                        return node.leaf_index;
                      case Column::TextureSet:
                         if (node.texture_set == nullptr)
                            return {};
@@ -77,7 +82,7 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
             switch (section) {
                case Column::BlockName:
                   return tr("3D Name");
-               case Column::BlockIndex:
+               case Column::LeafIndex:
                   return tr("3D Index");
                case Column::TextureSet:
                   return tr("New Texture");
@@ -183,10 +188,6 @@ void DKFormNIFPickerDialog::setModelPath(QString path) {
 }
 
 void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_texture_swap>& swaps) {
-   /*
-   this->_state.texture_swaps = swaps;
-   */
-
    //
    // We need to coalesce these sets. The general flow is that you set the model path, causing us 
    // to look up the NIF and precache its remappable-texture geometry blocks; and then you set any 
@@ -201,8 +202,8 @@ void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_tex
       bool found = false;
       bool maybe = false;
       for (auto& dst : this->_state.texture_swaps) {
-         bool index = dst.block_index == src.block_index;
-         bool name  = dst.block_name  == src.block_name;
+         bool index = dst.leaf_index == src.leaf_index;
+         bool name  = dst.block_name == src.block_name;
          if (index || name) {
             maybe = true;
             if (index && name) {
@@ -257,25 +258,14 @@ void DKFormNIFPickerDialog::_reload_all_nif_info() {
 void DKFormNIFPickerDialog::_reload_texture_swap_blocks(const nifDK::file& file) {
    this->_state.texture_swaps.clear();
 
-   for (size_t block_index = 0; block_index < file.all_blocks.size(); ++block_index) {
-      const auto* block = file.all_blocks[block_index];
-      if (!block)
-         continue;
-      auto* geometry = dynamic_cast<const nifDK::block_types::NiGeometry*>(block);
-      if (!geometry)
-         continue;
-      if (!geometry->properties.shader)
-         continue;
-      auto* shader = dynamic_cast<const nifDK::block_types::BSLightingShaderProperty*>(geometry->properties.shader);
-      if (!shader)
-         continue;
-      if (!(shader->shader_flags[0] & nifDK::SkyrimShaderPropertyFlagA::remappable_textures))
-         continue;
+   auto list = nifDK::utils::find_all_retexturable_blocks(file);
+   for (auto& item : list) {
       this->_state.texture_swaps.push_back({
-         .block_name  = geometry->name,
-         .block_index = block_index,
+         .block_name = item.second,
+         .leaf_index = item.first,
       });
    }
+   this->_state.end_of_nif_defined_swaps = this->_state.texture_swaps.size();
 }
 
 void DKFormNIFPickerDialog::_refresh_texture_swaps() {
