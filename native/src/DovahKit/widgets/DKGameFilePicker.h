@@ -2,6 +2,16 @@
 #include <QLineEdit>
 #include <QPushButton>
 
+//
+// Widget to let the user pick game files.
+// 
+// Different parts of the game use marginally different path formats, such as showing the 
+// Data directory or omitting the top-level directory (e.g. meshes or textures). Within 
+// the context of this widget, the "path" is the full path without the Data directory, 
+// and the "raw path" is the path in whatever underlying format you've chosen.
+// 
+// TODO: Should probably switch those around, or just rethink the naming on this generally.
+//
 class DKGameFilePicker : public QWidget {
    Q_OBJECT;
    public:

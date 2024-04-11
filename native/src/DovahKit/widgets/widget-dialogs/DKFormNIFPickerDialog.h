@@ -38,9 +38,7 @@ class DKFormNIFPickerDialog : public QDialog {
       struct {
          PrecachedNIFInfo precached_nif_info;
          bool supports_texture_swaps = false;
-
          std::vector<ui::types::nif_texture_swap> texture_swaps;
-         size_t end_of_nif_defined_swaps = 0; // all swaps at and past this index come from the user, not the NIF
       } _state;
       DKFormNIFPickerDialogTextureSwapModel* _model = nullptr;
 

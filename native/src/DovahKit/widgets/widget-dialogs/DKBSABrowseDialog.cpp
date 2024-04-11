@@ -344,7 +344,9 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    view->setLayoutMode(QListView::LayoutMode::Batched);
    view->setModel(model);
    view->installEventFilter(this);
-   this->state._delegate = new DKBSABrowseDialogItemDelegate(view);
+   this->item_delegates.icon = new DKBSABrowseDialogItemDelegate(view);
+   //this->item_delegates.list = view->itemDelegate();
+   this->item_delegates.list = new QStyledItemDelegate(view);
    QObject::connect(model, &QAbstractItemModel::modelReset, this, [this, view, model]() {
       if (this->state.pathStem.isEmpty())
          return;
@@ -610,11 +612,11 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setBatchSize(200);
          view->setResizeMode(QListView::ResizeMode::Fixed);
          view->setFlow(QListView::Flow::TopToBottom);
-         view->setGridSize({ 0, 0 }); // this actually applies to List Mode, and so must be cleared when switching back from Icon Mode
+         view->setGridSize({}); // this actually applies to List Mode, and so must be cleared when switching back from Icon Mode
          view->setSpacing(0);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setWordWrap(false);
-         view->setItemDelegate(nullptr);
+         view->setItemDelegate(this->item_delegates.list);
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
          break;
       case _::IconMode:
@@ -626,7 +628,7 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setSpacing(2);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel); // necessary to fix Qt-side scroll speed issues in icon view
          view->setWordWrap(true); // TODO: not enough, on its own, to allow variable-height rows
-         view->setItemDelegate(this->state._delegate);
+         view->setItemDelegate(this->item_delegates.icon);
          this->_updateIconColumnSpacing(QSize(), QSize());
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogContentsView));
          break;

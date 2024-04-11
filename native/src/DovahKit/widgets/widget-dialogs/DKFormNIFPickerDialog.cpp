@@ -181,10 +181,10 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
 }
 
 QString DKFormNIFPickerDialog::modelPath() const {
-   return this->ui.filePicker->path();
+   return this->ui.filePicker->rawPath();
 }
 void DKFormNIFPickerDialog::setModelPath(QString path) {
-   this->ui.filePicker->setPath(path);
+   this->ui.filePicker->setRawPath(path);
 }
 
 void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_texture_swap>& swaps) {
@@ -265,7 +265,6 @@ void DKFormNIFPickerDialog::_reload_texture_swap_blocks(const nifDK::file& file)
          .leaf_index = item.first,
       });
    }
-   this->_state.end_of_nif_defined_swaps = this->_state.texture_swaps.size();
 }
 
 void DKFormNIFPickerDialog::_refresh_texture_swaps() {

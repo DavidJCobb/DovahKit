@@ -107,8 +107,11 @@ class DKBSABrowseDialog : public QDialog {
          ValidationOptions validationOptions = 0;
          QString     _looseFilePath;
          QString     _finalResult;
-         DKBSABrowseDialogItemDelegate* _delegate = nullptr;
       } state;
+      struct {
+         QAbstractItemDelegate* list = nullptr;
+         DKBSABrowseDialogItemDelegate* icon = nullptr;
+      } item_delegates;
 
       virtual bool eventFilter(QObject* watched, QEvent* event) override;
 };
