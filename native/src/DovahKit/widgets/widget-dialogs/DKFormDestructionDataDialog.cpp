@@ -34,12 +34,9 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
          if (result == QDialog::DialogCode::Rejected)
             return;
 
-         this->_model->setStage(row, dialog->value());
-         if (auto* sm = this->ui.stages->selectionModel()) {
-            auto lefthand  = qmi.siblingAtColumn(0);
-            auto righthand = qmi.siblingAtColumn(this->_model->columnCount({}) - 1);
-            sm->select(QItemSelection(lefthand, righthand), QItemSelectionModel::SelectionFlag::ClearAndSelect);
-         }
+         auto new_qmi = this->_model->setStage(row, dialog->value());
+         if (new_qmi.isValid())
+            this->_selectRow(new_qmi);
       });
    }
    QObject::connect(this->ui.stageButtonAdd, &QPushButton::clicked, this, [this]() {
@@ -49,11 +46,9 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
       if (result == QDialog::DialogCode::Rejected)
          return;
 
-      auto qmi = this->_model->appendStage(dialog->value());
-      if (auto* sm = this->ui.stages->selectionModel()) {
-         auto righthand = qmi.siblingAtColumn(this->_model->columnCount({}) - 1);
-         sm->select(QItemSelection(qmi, righthand), QItemSelectionModel::SelectionFlag::ClearAndSelect);
-      }
+      auto qmi = this->_model->insertStage(dialog->value());
+      if (qmi.isValid())
+         this->_selectRow(qmi);
    });
    QObject::connect(this->ui.stageButtonEdit, &QPushButton::clicked, this, &DKFormDestructionDataDialog::_editSelectedStage);
    QObject::connect(this->ui.stageButtonDelete, &QPushButton::clicked, this, &DKFormDestructionDataDialog::_deleteSelectedStage);
@@ -156,11 +151,22 @@ void DKFormDestructionDataDialog::_editSelectedStage() {
    dialog->deleteLater();
    if (result == QDialog::DialogCode::Rejected)
       return;
-   this->_model->setStage(row, dialog->value());
+
+   auto qmi = this->_model->setStage(row, dialog->value());
+   if (qmi.isValid())
+      this->_selectRow(qmi);
 }
 
 void DKFormDestructionDataDialog::_clearData() {
    this->ui.health->setValue(1);
    this->ui.flagVATSTargetable->setChecked(false);
    this->_model->clear();
+}
+
+void DKFormDestructionDataDialog::_selectRow(const QModelIndex& qmi) {
+   if (auto* sm = this->ui.stages->selectionModel()) {
+      auto lefthand  = qmi.siblingAtColumn(0);
+      auto righthand = qmi.siblingAtColumn(this->_model->columnCount({}) - 1);
+      sm->select(QItemSelection(lefthand, righthand), QItemSelectionModel::SelectionFlag::ClearAndSelect);
+   }
 }

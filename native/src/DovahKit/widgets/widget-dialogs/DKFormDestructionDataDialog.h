@@ -28,4 +28,6 @@ class DKFormDestructionDataDialog : public QDialog {
       void _editSelectedStage();
 
       void _clearData();
+
+      void _selectRow(const QModelIndex&);
 };

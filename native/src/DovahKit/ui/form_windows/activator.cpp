@@ -22,6 +22,7 @@ FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent
    this->ui.waterType->setAllowedFormType(dovah::form_type::water_type);
    this->ui.defaultInteractKeyword->setAllowedFormType(dovah::form_type::keyword);
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
+   static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "Constrain activation and looping sound form-types");
 
    this->load(); // this creates the working copy.
    //

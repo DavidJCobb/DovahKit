@@ -34,9 +34,14 @@ class DKFormDestructionStageListModel : public DKGenericListModel<DKFormDestruct
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
       #pragma endregion
          
-      QModelIndex appendStage(const node_type&);
+      QModelIndex insertStage(const node_type&);
       void replaceStages(const std::vector<node_type>& items);
-      void setStage(int row, const node_type& src);
+      QModelIndex setStage(int row, const node_type& src); // returns index of overwritten stage after any re-sorting, etc., that may take place
 
       const node_type* stage(int row) const;
+
+   protected:
+      decltype(_nodes)::iterator _insertion_point_for(unsigned int health_percentage, unsigned int damage_stage);
+
+      static bool _sort_nodes(const node_type* a, const node_type* b);
 };
