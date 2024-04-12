@@ -2265,6 +2265,9 @@
     <ClCompile Include="ui\utils\bind.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5652,6 +5655,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\bind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\DKStyledItemDelegate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

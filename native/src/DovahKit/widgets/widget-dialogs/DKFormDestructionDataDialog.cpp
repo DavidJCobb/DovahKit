@@ -3,6 +3,7 @@
 #include "./DKFormDestructionStageDialog.h"
 #include "../widget-models/DKFormDestructionStageListModel.h"
 #include "../DKHeaderView.h"
+#include "ui/utils/DKStyledItemDelegate.h"
 
 DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -20,6 +21,9 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
          vh->setVisible(false);
          vh->setSectionResizeMode(QHeaderView::ResizeToContents);
       }
+
+      auto* delegate = new DKStyledItemDelegate(view);
+      view->setItemDelegate(delegate);
       
       QObject::connect(view, &QTableView::doubleClicked, this, [this](const QModelIndex& qmi) {
          auto  row = qmi.row();

@@ -744,6 +744,7 @@
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="ui\utils\bind.cpp" />
+    <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
@@ -898,6 +899,7 @@
     <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\utils\bind.h" />
+    <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
