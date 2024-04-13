@@ -102,12 +102,14 @@ namespace dovah::loaded_forms {
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
          //
          return;
-      //
+      
       form_id_t interact_keyword; // ACTI/KNAM
       form_id_t sound_activate;   // ACTI/VNAM
       form_id_t water_type;       // ACTI/WNAM
       form_id_t harvest_sound;    // FLOR/SNAM
       form_id_t ingredient;       // FLOR/PFIG
+      components::destruction_stage_data::use_info_builder destruction_uib(uib);
+
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             #pragma region ACTI subrecords
@@ -134,7 +136,7 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               components::destruction_stage_data::generate_use_info(subrecord, uib);
+               components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -167,6 +169,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(water_type);       // ACTI/WNAM
       uib.add_outbound_reference(harvest_sound);    // FLOR/SNAM
       uib.add_outbound_reference(ingredient);       // FLOR/PFIG
+      destruction_uib.done();
    }
    bool Flora::_clone_impl(Form* out) const noexcept {
       if (out->type != form_type)

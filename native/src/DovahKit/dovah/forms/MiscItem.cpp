@@ -84,10 +84,12 @@ namespace dovah::loaded_forms {
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
          //
          return;
-      //
+      
       form_id_t take_sound;
       form_id_t drop_sound;
       form_id_t form_id;
+      components::destruction_stage_data::use_info_builder destruction_uib(uib);
+
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -109,7 +111,7 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               components::destruction_stage_data::generate_use_info(subrecord, uib);
+               components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -134,6 +136,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(take_sound);
       uib.add_outbound_reference(drop_sound);
       uib.add_outbound_reference(form_id);
+      destruction_uib.done();
    }
    bool MiscItem::_clone_impl(Form* out) const noexcept {
       if (out->type != form_type)

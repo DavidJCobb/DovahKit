@@ -86,11 +86,13 @@ namespace dovah::loaded_forms {
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
          //
          return;
-      //
+      
       form_id_t interact_keyword;
       form_id_t sound_loop;
       form_id_t sound_activate;
       form_id_t water_type;
+      components::destruction_stage_data::use_info_builder destruction_uib(uib);
+
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -119,7 +121,7 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               components::destruction_stage_data::generate_use_info(subrecord, uib);
+               components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -141,6 +143,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(sound_loop);
       uib.add_outbound_reference(sound_activate);
       uib.add_outbound_reference(water_type, use_info_entry::flag::water_acti_type);
+      destruction_uib.done();
    }
    bool Activator::_clone_impl(Form* out) const noexcept {
       if (out->type != form_type)

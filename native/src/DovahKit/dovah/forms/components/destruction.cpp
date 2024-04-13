@@ -4,122 +4,165 @@
 #include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
+   void destruction_stage_data::use_info_builder::done() {
+      for (auto& stage : this->per_stage) {
+         if (stage.debris)
+            this->owner.add_outbound_reference(stage.debris);
+         if (stage.explosion)
+            this->owner.add_outbound_reference(stage.explosion);
+      }
+   }
+
    void destruction_stage_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      uint8_t stageCount = 0;
+      constexpr const auto no_stage = std::numeric_limits<size_t>::max();
+
+      size_t  last_loaded_stage  = no_stage;
+      size_t  nth_dstd_subrecord = 0; // for error reporting
+
+      auto _handle_dest = [this, &subrecord, &intfc]() {
+         if (subrecord.size() != 8) {
+            //
+            // Game doesn't read anything unless the subrecord is exactly 8 bytes.
+            //
+            this->stages.clear();
+            return;
+         }
+         uint8_t stage_count = 0;
+         subrecord.unchecked_read(this->health);
+         subrecord.unchecked_read(stage_count);
+         subrecord.unchecked_read(this->flags);
+         subrecord.skip_bytes(2);
+         this->stages.resize(stage_count);
+      };
+      auto _handle_dstd = [this, &last_loaded_stage, &nth_dstd_subrecord, &subrecord, &intfc]() {
+         uint8_t stage_index = 0;
+
+         decltype(Stage::healthPercent) health_percent = 0;
+         subrecord.read(health_percent);
+         subrecord.read(stage_index);
+         last_loaded_stage = stage_index;
+         //
+         if (stage_index >= this->stages.size()) {
+            detailed_notice warning;
+            warning.code = notice_code::destruction_stage_serialized_index_out_of_bounds;
+            warning.set_cause_subrecord(subrecord.signature());
+            warning.set_subrecord_index(nth_dstd_subrecord);
+            warning.extra_integers[0] = stage_index;
+            warning.extra_integers[1] = this->stages.size();
+            intfc.log_load_warning(warning);
+            //
+            ++nth_dstd_subrecord;
+            return;
+         }
+         auto& stage = this->stages[stage_index];
+         stage.healthPercent = health_percent;
+         //
+         subrecord.read(stage.damageStage);
+         subrecord.read(stage.flags);
+         subrecord.read(stage.selfDamageRate);
+         subrecord.read(stage.explosion);
+         subrecord.read(stage.debris);
+         subrecord.read(stage.debrisCount);
+                  
+         const auto& stub = intfc.target_stub;
+         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
+               .set_subrecord_index(nth_dstd_subrecord)
+         );
+         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
+               .set_subrecord_index(nth_dstd_subrecord)
+         );
+
+         ++nth_dstd_subrecord;
+      };
+
       #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
          auto& record = subrecord.get_containing_record();
-         for (; subrecord.exists() && subrecord.signature() != 'DSTF'; record.next_subrecord()) {
-            switch (subrecord.signature()) {
-               case 'DEST':
-                  subrecord.read(this->health);
-                  subrecord.read(stageCount);
-                  subrecord.read(this->flags);
-                  subrecord.skip_bytes(2);
-                  if (stageCount)
-                     this->stages.reserve(stageCount);
-                  break;
-               case 'DSTD':
-                  {
-                     uint8_t index;
-
-                     auto& stage = this->stages.emplace_back();
-                     subrecord.read(stage.healthPercent);
-                     subrecord.read(index);
-                     subrecord.read(stage.damageStage);
-                     subrecord.read(stage.flags);
-                     subrecord.read(stage.selfDamageRate);
-                     subrecord.read(stage.explosion);
-                     subrecord.read(stage.debris);
-                     subrecord.read(stage.debrisCount);
-                     //
-                     const auto& stub = intfc.target_stub;
-                     auto index = this->stages.size() - 1;
-                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
-                           .set_subrecord_index(index)
-                     );
-                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
-                           .set_subrecord_index(index)
-                     );
-                  }
-                  break;
-               case 'DMDL':
-               case 'DMDT':
-               case 'DMDS':
-                  if (this->stages.size()) {
-                     auto& stage = *this->stages.rbegin();
-                     stage.replacementModel.load(subrecord);
-                  }
-                  break;
+         if (subrecord.signature() == 'DEST') {
+            _handle_dest();
+            return;
+         }
+         if (subrecord.signature() == 'DSTD') {
+            _handle_dstd();
+            for (; subrecord.exists() && subrecord.signature() != 'DSTF'; record.next_subrecord()) {
+               switch (subrecord.signature()) {
+                  case 'DMDL':
+                  case 'DMDT':
+                  case 'DMDS':
+                     if (last_loaded_stage < this->stages.size()) {
+                        auto& stage = this->stages[last_loaded_stage];
+                        stage.replacementModel.load(subrecord, intfc);
+                     }
+                     break;
+               }
             }
+            last_loaded_stage = no_stage;
          }
       #else
          switch (subrecord.signature()) {
             case 'DEST':
-               subrecord.read(this->health);
-               subrecord.read(stageCount);
-               subrecord.read(this->flags);
-               subrecord.skip_bytes(2);
-               if (stageCount)
-                  this->stages.reserve(stageCount);
+               _handle_dest();
                break;
             case 'DSTD':
-               {
-                  uint8_t stage_index;
-
-                  auto& stage = this->stages.emplace_back();
-                  subrecord.read(stage.healthPercent);
-                  subrecord.read(stage_index);
-                  subrecord.read(stage.damageStage);
-                  subrecord.read(stage.flags);
-                  subrecord.read(stage.selfDamageRate);
-                  subrecord.read(stage.explosion);
-                  subrecord.read(stage.debris);
-                  subrecord.read(stage.debrisCount);
-                  //
-                  const auto& stub = intfc.target_stub;
-                  auto index = this->stages.size() - 1;
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
-                        .set_subrecord_index(index)
-                  );
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
-                        .set_subrecord_index(index)
-                  );
-               }
+               _handle_dstd();
                break;
             case 'DMDL':
             case 'DMDT':
             case 'DMDS':
-               if (this->stages.size()) {
-                  auto& stage = *this->stages.rbegin();
+               if (last_loaded_stage < this->stages.size()) {
+                  auto& stage = this->stages[last_loaded_stage];
                   stage.replacementModel.load(subrecord, intfc);
                }
                break;
             case 'DSTF': // end marker
+               last_loaded_stage = no_stage;
                break;
          }
       #endif
    }
-   /*static*/ void destruction_stage_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
+   /*static*/ void destruction_stage_data::generate_use_info(tes_subrecord_reader& subrecord, use_info_builder& uib) {
       form_id_t formID;
       switch (subrecord.signature()) {
          case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
+            if (subrecord.size() != 8) {
+               uib.per_stage.clear();
+               break;
+            }
+            subrecord.skip_bytes(4);
+            {
+               uint8_t stage_count;
+               subrecord.unchecked_read(stage_count);
+               if (stage_count) {
+                  uib.per_stage.clear();
+                  uib.per_stage.resize(stage_count);
+               }
+            }
+            // remaining bytes don't matter
             break;
          case 'DSTD': // destruction stage data
-            subrecord.skip_bytes(8);
-            if (subrecord.read(formID)) // explosion
-               uib.add_outbound_reference(formID);
-            if (subrecord.read(formID)) // debris
-               uib.add_outbound_reference(formID);
-            // remaining four bytes don't matter
+            {
+               uint8_t stage_index;
+               subrecord.skip_bytes(1);
+               if (subrecord.read(stage_index)) {
+                  if (stage_index >= uib.per_stage.size())
+                     break;
+                  subrecord.skip_bytes(6);
+
+                  auto& dst = uib.per_stage[stage_index];
+                  //
+                  if (subrecord.read(formID)) // explosion
+                     dst.explosion = formID;
+                  if (subrecord.read(formID)) // debris
+                     dst.debris = formID;
+               }
+            }
+            // remaining bytes don't matter
             break;
          case 'DMDL': // destruction stage model
          case 'DMDT': // 
          case 'DMDS': // 
-            model::generate_use_info(subrecord, uib);
+            model::generate_use_info(subrecord, uib.owner);
             break;
          case 'DSTF': // destruction stage end marker
             break;

@@ -115,6 +115,7 @@ namespace dovah {
          failed_to_create_cell_to_move_reference_to  = 0x0000006A, // The coordinates you wanted to move this REFR to lie outside of any existing cells, and attempting to create a new cell failed (e.g. no form ID available).
          cannot_reparent_hardcoded_reference         = 0x0000006B, // Hardcoded references typically don't exist in a parent cell, and cannot be reparented.
          operation_not_allowed_on_form_working_copy  = 0x0000006C,
+         destruction_stage_serialized_index_out_of_bounds = 0x0000006D, // A DSTD subrecord had a stage index that exceeds the list size specified by DEST.
       };
    };
 }

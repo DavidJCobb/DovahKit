@@ -360,6 +360,18 @@ In practice, there are some holes in this design, stemming in large part from th
 
   Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_list` for a "real" form and `std::vector<form_stub*>` for a working copy.
 
+## Get rid of notice codes because they suck and are bad
+
+DovahKit reports all backend warnings and errors via an enum called `dovah::notice_code` and a struct called `dovah::detailed_notice`. The notice codes are similar to WinAPI error codes, and the "detailed notice" struct contains fields for every possible piece of error information that a warning or error could provide.
+
+This sucks. We should instead design this similarly to exceptions -- not in the sense of them being thrown, but rather in the sense of:
+
+* Heap-allocating all "notices"
+* Having a common base class
+* Having subclasses for specific notice types
+
+This would remove the dependency on a massive enum (such that anything that emits a notice has to be recompiled if we ever edit the list of possible notices) and would also make most notice objects smaller, at the cost of some memory locality for lists of notices. We shouldn't be emitting *that* many notices during the load process, *especially* since we lazy-load forms (and form loading is where the bulk of possible notices during any sort of loading would come from), so taking a few trips to the heap for emitting notices shouldn't slow things down to any noticeabe degree.
+
 
 # Outside the backend
 
@@ -419,6 +431,14 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
   Ideally we'd add a "sync/async" option to `DKFormPicker`, with it filling async by default, and then have sync versions on Cell View and friends just so we have fewer changes to test.
 
 * Investigate adding icons for all of the form types. Investigate having these icons show up in the `DKFormPicker`.
+
+* `DKGenericListModel` isn't half bad as-is, but for a few issues. We should write a replacement.
+
+  * Because virtual functions like `moveRows` are implemented *and* are used by helper functions that are meant to be exposed to subclasses, there's no (good) way for subclasses to lock those off from the outside world. Perhaps we should have `static constexpr const bool`s for configuration, e.g. `allow_outside_callers_to_move_rows`, and then have the virtual functions conditionally (i.e. based on the configs) wrap private functions that always work.
+
+  * It'd be nice if we could add optional functionality (to be enabled by the subclasses) for self-sorting and self-filtering models, using behavior similar to what we have in `DKRefsInCellModel`.
+
+  * The model only supports rows. I can't think of any use cases where we'd want exclusively columns, but having a `constexpr` `Qt::Orientation` value wouldn't be a terrible idea.
 
 ### Object Window
 
