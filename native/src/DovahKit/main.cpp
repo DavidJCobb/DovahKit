@@ -15,9 +15,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - The TESFilePicker widget should allow the user to browse through loose files and 
-//    files in the loaded BSAs.
-//
 //  - When saving a new file, if the user enters the name of an existing file, then we 
 //    should prompt for permission to overwrite. If the name that the user enters is 
 //    the same name as one of the already-loaded files, we should fail.
@@ -82,14 +79,6 @@
 //       the latter, to carry out the abort. This means that every (file_loader) ends up with 
 //       a pointer to itself. At least we're able to leverage the same (file_loader) pointer 
 //       that (basic_reader) unfortunately has to offer.
-//
-//  - UI for editing Papyrus script data
-//
-//     - We have a loader for ACTI; we can write form save code and then build a UI 
-//       for it, and then test Papyrus editing.
-//
-//     - Once this UI is working, retroactively add it to the existing UI (if any) 
-//       for CELL, FACT, and WRLD, respectively.
 //
 //  - When loading the contents of cell GRUPs, we should log a warning if a record is 
 //    misplaced (e.g. WRLD/VTYP, WRLD/CELL/VTYP, etc.). We already log warnings for 
@@ -262,10 +251,6 @@
 //          within a master's WRLD, a REFR within a different one of the master's 
 //          WRLDs, and an ACHR within an interior cell. Ensure that the overridden 
 //          forms and their parents/ancestors are both properly saved to the file.
-//
-// UPCOMING TASKS:
-//
-//  - Should we convert Use Info and form-editing dialogs to QMdiSubWindows?
 //
 // DISTANT TASKS:
 //
@@ -560,12 +545,6 @@
 //          cyclical reference? What happens if a donor is overridden and the 
 //          override doesn't donate?
 //
-//  - Loading Papyrus data
-//
-//     - It seems like Papyrus data is coalesced? Maybe? Some elements, such as 
-//       properties, can be flagged as "removed" using a "status" field. Maybe 
-//       this is just for Bethesda's janky source control stuff.
-//
 //  - RefPickerWindow
 //
 //     - Current code is likely to break if the existing reference is not inside 
@@ -583,15 +562,6 @@
 //  - Location::_clone_impl and other missing functions
 //
 //  - UI for editing Activators
-//
-//     - UI for editing Papyrus data
-//
-//        - Allow users to open the contents of a script file in an external editor. 
-//          If the script file is stored in a BSA, then unpack it to %TEMP% and, if 
-//          changes are made to it, prompt the user as to whether they want to copy 
-//          it to the Data directory. See if it's possible to monitor how long the 
-//          temporary file is open in any external editor; we should track changes 
-//          for as long as it's open, and delete it once it's closed.
 //
 //  - UI for editing Factions
 //

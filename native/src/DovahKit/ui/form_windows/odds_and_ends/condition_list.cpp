@@ -12,7 +12,7 @@
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
 #include "condition_edit.h"
-#include "../../generic/QHeaderViewDKEx.h"
+#include "widgets/DKHeaderView.h"
 
 namespace {
    uint16_t _index_of_GetIsID() noexcept {
@@ -487,12 +487,12 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       }
       //
       {
-         auto* hdr = new QHeaderViewDKEx(Qt::Horizontal, list);
+         auto* hdr = new DKHeaderView(Qt::Horizontal, list);
          hdr->setFlexResizeEnabled(true);
          list->setHorizontalHeader(hdr);
       }
       //
-      auto header  = (QHeaderViewDKEx*)list->horizontalHeader();
+      auto header  = (DKHeaderView*)list->horizontalHeader();
       auto metrics = QFontMetrics(list->font());
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
