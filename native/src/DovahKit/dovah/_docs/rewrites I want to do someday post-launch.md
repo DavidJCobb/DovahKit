@@ -372,6 +372,53 @@ This sucks. We should instead design this similarly to exceptions -- not in the 
 
 This would remove the dependency on a massive enum (such that anything that emits a notice has to be recompiled if we ever edit the list of possible notices) and would also make most notice objects smaller, at the cost of some memory locality for lists of notices. We shouldn't be emitting *that* many notices during the load process, *especially* since we lazy-load forms (and form loading is where the bulk of possible notices during any sort of loading would come from), so taking a few trips to the heap for emitting notices shouldn't slow things down to any noticeabe degree.
 
+### Analysis
+
+Within the backend, it looks like all errors pass through these spots:
+
+* `file_load_order::_log_load_warning` and `file_load_order::_log_save_warning` ferry the passed-in `detailed_notice` to whatever (optional) callbacks have been stored on the load order, though only if the notice isn't empty.
+* The classes within `load_order_interfaces` mainly exist as conduits to ferry `detailed_notice`s to the "log warning" functions. There are two additional behaviors, though:
+  * `load_order_interfaces::file_load::log_load_warning` stores the warning in a list (if available) on the `file_load_order`'s "save/load state," before invoking the callback.
+  * `load_order_interfaces::file_load::log_load_error` doesn't pass the error to any callback; instead, the error is stored on the `file_load_order`'s "save/load state" as an error.
+
+**The best plan for this task, then, would be:**
+
+1. Add member functions to `DovahKitCore` that can take a subclassable "warning" object and a subclassable "error" object. The base classes should be polymorphic (i.e. virtual destructor) both to avoid potential leaks and to allow for `dynamic_cast` and `typeid(instance_ref)`.
+1. Add logging callbacks and helper functions to `file_load_order` which work with these new types. Add the requisite functionality to `DovahKitCore` and an overload to `editor_helpers::warning_or_error_to_string` to support handling the new types outside of the backend.
+1. Replace all warnings emitted by form loaders and form component loaders with dedicated warning structs. The overwhelming majority of these will be "warn if wrong type," where some given subrecord is pointed at a form of the wrong type (e.g. an Activator specifying a Quest as its water type; that kind of thing), so in practice we can knock out 196 emitted warnings with just a handful of warning types.
+   * Any notice codes that are converted from notice-code/detailed-notice to dedicated warning classes can also be removed from the code that prints warnings to the UI, which will be a modest but helpful additional reduction in the number of `detailed_notice` search hits.
+1. Modify the `load_order_interfaces` types to support logging the new warning types. Don't add anything for hard errors just yet.
+   * Once that's done, we can then start looking for calls to the detailed-notice logging functions and replacing those one by one.
+1. Investigate each case where `detailed_notice` is used for hard errors, and look into replacing those. This will be a bit of a challenge since `detailed_notice` can be empty, and several processes store a `detailed_notice` member and only track whether they've encountered an error based on whether that member is still empty. We'll have to handle these case-by-case.
+
+Statistics on `detailed_notice`:
+
+* 684 search hits for the classname across all H and CPP files in the project (using Notepad++ to search)
+* Many hits outside of form loaders and form component loaders come from pieces of code setting flags on `detailed_notice` to indicate what informational values are present. The actual number of times we *use* the class will be quite a bit lower.
+* 67 hits are just the class definition itself
+* 66 hits from `file_load_order` (header and CPP)
+* 196 hits come from warnings emitted by form loaders or form component loaders
+* 103 hits come from the function that converts `detailed_notice` instances to UI-printable strings, since many error messages check flags to see if certain information is present. (This is something else we can remove the need for by using class hierarchies and inheritance for warnings: a warning of a given type can *require* certain pertinent information to be present, such that its presence need not be checked for.)
+* 26 more hits come from UI code to display errors and warnings (e.g. during load, or for the log list window).
+* 82 hits come from Qt MOC.
+  * 8 hits come from Qt MOC for DovahKitCore, i.e. where `detailed_notice` is a signal parameter.
+  * 29 hits come from Qt MOC for `detailed_notice_dispatcher`, which IIRC is used to dispatch notices across threads.
+  * 4 hits come from Qt MOC for the log list view.
+  * The above are for Debug; duplicates exist for Release.
+* 23 hits come from `nifDK`. The NIF loading code uses the same design pattern, but a different class: `nifDK::detailed_notice`. These are used exclusively to report load errors, and never warnings.
+  * 1 hit comes from the class definition itself.
+  * 11 hits come from the code for loading NIF files (i.e. the `file` class), which tracks whether it's run into an error via a potentially-empty `nifDK::detailed_notice` member.
+  * 11 more hits from the NIF `file_reader`, which also has an "error" member.
+* That leaves 121 miscellaneous uses in the backend.
+
+Specific places where notice codes are used:
+
+* Data member `basic_reader::last_error`, set by some member functions on the class.
+* Data member `file_writer::error`, set internally when errors occur during saving.
+  * Related: `tes_file_writing::write_results::error`.
+* `file_load_order_normalizer::add(...)`, as a mechanism for returning an error with basic error information. The error is written to via a `detailed_notice&` argument. Notably, this function is recursive, since it has to handle dependencies of dependencies and so on, so it also checks whether the passed-in argument is *already* a logged error.
+* `file_header_reader::load`, where an optional pointer-type out-argument is used to signal errors when reading a file header (e.g. filesystem problem; malformed file).
+* Logging warnings when a form's full data is invalid; done by each individual form loader.
 
 # Outside the backend
 
