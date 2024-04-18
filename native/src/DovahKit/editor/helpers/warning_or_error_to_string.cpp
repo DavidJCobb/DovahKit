@@ -1064,6 +1064,19 @@ namespace editor_helpers {
                text = text.arg(form).arg(xa).arg(ya).arg(xb).arg(yb);
             }
             break;
+         case notice_code::destruction_stage_serialized_index_out_of_bounds:
+            {
+               text = QObject::tr("Destruction data for form %1 lists itself as containing %2 stages, but has a stage requesting slot %3. That stage has been discarded.");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form).arg(notice.extra_integers[1]).arg(notice.extra_integers[0]);
+            }
+            break;
+
             //
          case notice_code::unknown_error:
          default:

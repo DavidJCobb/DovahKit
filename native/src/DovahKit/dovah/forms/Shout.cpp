@@ -70,9 +70,7 @@ namespace dovah::loaded_forms {
       if (current_word != this->words.size()) {
          //
          // The game always assumes that SHOU will have three SNAMs. The Rule of One will not be properly 
-         // applied if a SHOU override supplies fewer than three SNAMs. We should, of course, double-check 
-         // this, by setting up tests with bad numbers of SNAM and using conditional breakpoints to see if 
-         // the game fails to clear data.
+         // applied if a SHOU override supplies fewer than three SNAMs.
          //
          detailed_notice warning;
          warning.code = notice_code::shout_has_wrong_word_count;

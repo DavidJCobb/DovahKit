@@ -1,0 +1,4 @@
+#undef MAKE_CLONE_OVERLOAD
+#pragma pop_macro("MAKE_CLONE_OVERLOAD")
+#undef MAKE_ERROR_OVERLOADS
+#pragma pop_macro("MAKE_ERROR_OVERLOADS")
