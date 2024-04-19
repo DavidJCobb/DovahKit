@@ -813,7 +813,9 @@ ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
 }
 QVector<dovah::form_type> ObjectWindowTree::allPrimaryFormTypes() const noexcept {
    auto* model = (model_type*) this->model();
-   return model->formTypesFor({ model->indexOfAllCategory() });
+   auto list = model->formTypesFor({ model->indexOfAllCategory() });
+   list.push_back(dovah::form_type::none); // don't forget the "Missing" category, which is outside of "All"!
+   return list;
 }
 ui::object_window::filter_info ObjectWindowTree::filterInfo() const noexcept {
    auto* sm    = this->selectionModel();
