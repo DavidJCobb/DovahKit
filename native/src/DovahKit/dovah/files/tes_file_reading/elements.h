@@ -128,11 +128,7 @@ namespace dovah {
             subrecord& next_subrecord() const;
             uint32_t peek_next_subrecord_type();
             //
-            void reset() {
-               this->data.clear();
-               this->offset = 0;
-               this->header.signature = 0;
-            }
+            void reset();
             void go_to_offset(uint32_t offset) {
                this->offset = offset;
             }

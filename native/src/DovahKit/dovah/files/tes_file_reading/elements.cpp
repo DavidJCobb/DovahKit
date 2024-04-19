@@ -109,6 +109,13 @@ namespace dovah {
          return 0;
       }
 
+      void record::reset() {
+         this->data.clear();
+         this->offset = 0;
+         this->header.signature = 0;
+         this->owner._subrecord.reset();
+      }
+
       form_stub* record::lookup_form_by_id(bare_form_id_t id) const noexcept {
          auto* file = this->owner.loader;
          if (!file)
