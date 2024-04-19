@@ -26,22 +26,24 @@ void QLinedTreeView::_BranchStyle::drawPrimitive(PrimitiveElement pe, const QSty
    painter->setPen(dotted);
    painter->setRenderHints({});
    #pragma region Draw branches
-      int y_start_even = y_start - (y_start % 2);
-      int y_mid_even   = y_mid   - (y_mid   % 2);
-      int y_end_even   = y_end   + ((y_end   % 2) ? 0 : 1);
-      //
-      // Vertical line:
-      //
-      if (opt->state & State_Sibling)
-         painter->drawLine(x_mid, y_start_even, x_mid, y_end_even);
-      else
-         painter->drawLine(x_mid, y_start_even, x_mid, y_mid_even);
-      //
-      // Horizontal line:
-      //
-      int y_horiz = (opt->state & State_Children) ? y_mid : y_mid_even + 2;
-      if (opt->state & State_Item)
-         painter->drawLine(x_mid, y_horiz, x_end - 1, y_horiz);
+      if (opt->state & (State_Sibling | State_Item)) {
+         int y_start_even = y_start - (y_start % 2);
+         int y_mid_even   = y_mid   - (y_mid   % 2);
+         int y_end_even   = y_end   + ((y_end   % 2) ? 0 : 1);
+         //
+         // Vertical line:
+         //
+         if (opt->state & State_Sibling)
+            painter->drawLine(x_mid, y_start_even, x_mid, y_end_even);
+         else
+            painter->drawLine(x_mid, y_start_even, x_mid, y_mid_even);
+         //
+         // Horizontal line:
+         //
+         int y_horiz = (opt->state & State_Children) ? y_mid : y_mid_even + 2;
+         if (opt->state & State_Item)
+            painter->drawLine(x_mid, y_horiz, x_end - 1, y_horiz);
+      }
    #pragma endregion
    painter->setPen(old_pen);
    painter->setRenderHints(hints);
