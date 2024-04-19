@@ -284,7 +284,7 @@ namespace dovah {
          if (!this->normalizer.add(results.error, *it))
             return false;
       }
-      if (results.error.is_defined())
+      if (results.failed())
          return false;
       if (!this->queued_load.active_file.empty()) {  // Force the active file to the end of the load order
          //
@@ -393,7 +393,7 @@ namespace dovah {
                   this->active_file = file;
                }
                if (!file->load(path.c_str())) {
-                  if (!results.error.is_defined()) {
+                  if (!results.failed()) {
                      results.error.code = notice_code::unknown_error;
                      results.error.set_cause_file(path);
                   }
@@ -480,7 +480,7 @@ namespace dovah {
       }
       //
       this->save_load_state.current_load_results = nullptr;
-      return !results.error.is_defined();
+      return !results.failed();
    }
    //
    bool file_load_order::is_loading() const noexcept {

@@ -15,5 +15,9 @@ namespace dovah::tes_file_reading {
 
          detailed_notice& add_warning() noexcept;
          void add_warning(detailed_notice&) noexcept;
+
+         constexpr bool failed() const {
+            return error.is_defined();
+         }
    };
 }

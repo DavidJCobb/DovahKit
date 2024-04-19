@@ -48,10 +48,10 @@ namespace dovah {
          bare_form_id_t fixedID = 0; // load-order-relative form ID, when available; zero otherwise
          form_type      type    = form_type::none;
          //
-         inline bool operator==(const relevant_form& other) const noexcept {
+         constexpr bool operator==(const relevant_form& other) const noexcept {
             return (this->localID == other.localID) && (this->fixedID == other.fixedID) && (this->type == other.type);
          }
-         inline bool operator!=(const relevant_form& other) const noexcept { return !(*this == other); }
+         constexpr bool operator!=(const relevant_form& other) const noexcept { return !(*this == other); }
       };
 
       notice_type    type    = notice_type::unspecified;
@@ -83,14 +83,14 @@ namespace dovah {
       static detailed_notice warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference);
 
       // Chainable setters:
-      inline detailed_notice& modify_flag(flags_t f, bool s) noexcept {
+      constexpr detailed_notice& modify_flag(flags_t f, bool s) noexcept {
          if (s)
             this->flags |= f;
          else
             this->flags &= ~f;
          return *this;
       }
-      inline detailed_notice& set_flag(flags_t f) noexcept {
+      constexpr detailed_notice& set_flag(flags_t f) noexcept {
          this->flags |= f;
          return *this;
       }
@@ -109,8 +109,8 @@ namespace dovah {
 
       detailed_notice& add_relevant_file(const std::string& filename);
 
-      inline bool is_defined() const noexcept { return this->code != default_notice_code; } // making this (operator bool) would be cool except that that breaks equality comparisons because this language sucks sometimes
-      inline bool is_winning_record() const noexcept { return this->flags & (flag::is_winning_record | flag::is_coalesced_record_data); }
+      constexpr bool is_defined() const noexcept { return this->code != default_notice_code; } // making this (operator bool) would be cool except that that breaks equality comparisons because this language sucks sometimes
+      constexpr bool is_winning_record() const noexcept { return this->flags & (flag::is_winning_record | flag::is_coalesced_record_data); }
 
       bool operator==(const detailed_notice&) const noexcept;
       inline bool operator!=(const detailed_notice& other) const noexcept { return !(*this == other); }
