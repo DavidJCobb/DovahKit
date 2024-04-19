@@ -11,10 +11,14 @@
 
 #include "../notices/form_load_warnings/by_form_type/landscape/excess_layers_per_quad.h"
 #include "../notices/form_load_warnings/by_form_type/landscape/invalid_quad_for_land_texture.h"
+#include "../notices/form_save_errors/by_form_type/landscape/heightmap_contains_too_steep_a_slope.h"
 
 namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::landscape;
+   }
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_type::landscape;
    }
 
    static constexpr float vertex_distance = dovah::loaded_forms::Cell::side_length / (dovah::loaded_forms::Landscape::vertices_per_side - 1);

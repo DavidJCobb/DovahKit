@@ -275,7 +275,7 @@ namespace editor_helpers {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   //
                   return QObject::tr(
-                     "Worldspace %1 is its own parent. The game will freeze when trying to load it.",
+                     "Worldspace %1 is its own parent. The game will freeze (infinite loading screen) when trying to load it.",
                      disambig
                   ).arg(subject);
                }

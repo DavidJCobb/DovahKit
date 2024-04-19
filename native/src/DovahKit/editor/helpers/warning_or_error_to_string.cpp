@@ -78,54 +78,6 @@ namespace editor_helpers {
                text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b).arg(final_signature);
             }
             break;
-         case notice_code::cell_flags_not_yet_found:
-            {
-               QString form      = QObject::tr("<unknown cell>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               text = QObject::tr("%1 contained subrecord %2, which is handled differently for interior and exterior cells; however, the cell's DATA subrecord has not yet appeared, so the cell will default to being an exterior.")
-                  .arg(form)
-                  .arg(subrecord);
-            }
-            break;
-         case notice_code::exterior_cell_data_in_interior_cell:
-            {
-               QString form      = QObject::tr("<unknown cell>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               text = QObject::tr("%1 contained at least one subrecord %2, exclusive to exterior cells, but the cell is flagged as an interior.")
-                  .arg(form)
-                  .arg(subrecord);
-            }
-            break;
-         case notice_code::interior_cell_data_in_exterior_cell:
-            {
-               QString form      = QObject::tr("<unknown cell>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               text = QObject::tr("%1 contained at least one subrecord %2, exclusive to interior cells, but the cell is flagged as an exterior.")
-                  .arg(form)
-                  .arg(subrecord);
-            }
-            break;
          case notice_code::unrecognized_subrecord:
             {
                QString form      = QObject::tr("<unknown form>", "log window");
@@ -202,35 +154,6 @@ namespace editor_helpers {
                   .replace("%3", referent)
                   .replace("%4", desired)
                   .replace("%5", QString::number(notice.cause_subrecord_index));
-            }
-            break;
-         case notice_code::shout_has_wrong_word_count:
-            {
-               QString form = QObject::tr("<unknown shout>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               auto word_count = notice.extra_integers[0];
-               text = QObject::tr("Form %1 defined %2 words. A shout record must have exactly three words.")
-                  .arg(form)
-                  .arg(word_count);
-            }
-            break;
-         case notice_code::package_event_dialogue_unrecognized_subrecord:
-            {
-               QString form      = QObject::tr("<unknown form>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               text = QObject::tr("A piece of package event dialogue data in form %1 contained at least one unrecognized subrecord with signature %2. This could be a serious problem, as package event dialogue data will blindly consume subrecords until it finds one it expects.")
-                  .arg(form)
-                  .arg(subrecord);
             }
             break;
          case notice_code::game_setting_record_is_nameless:
@@ -523,26 +446,6 @@ namespace editor_helpers {
                text = QObject::tr("File %2 is malformed: record %1 at offset %3 uses zero as its form ID.", "read error").arg(form).arg(file).arg(pos);
             }
             break;
-         case notice_code::container_item_has_bad_owner_form_type:
-            {
-               text = QObject::tr("Form %1 in file %2 has a malformed entry in its inventory: the item's owner is form %3, which is not an ActorBase or Faction. Because the owner is of an invalid type, the additional four-byte value paired with it is also of an invalid type and will be mishandled by the editor.", "log window");
-               QString file   = QObject::tr("<unknown filename>", "log window");
-               QString form_a = QObject::tr("<unknown form>",     "log window");
-               QString form_b = form_a;
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form_a = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  form_b = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               //
-               text = text.arg(form_a).arg(file).arg(form_b);
-            }
-            break;
          case notice_code::active_file_is_dependency:
             text = QObject::tr("The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.", "notice_code::active_file_is_dependency");
             break;
@@ -764,52 +667,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(file_sent_to).arg(file_initial).arg(topic_initial).arg(topic_sent_to);
             }
             break;
-         case notice_code::dialogue_branch_mishandled_owning_quest_id:
-            {
-               text = QObject::tr("DialogueBranch %1 uses Quest %2 as its owning quest. The game will not load this properly, because it  "
-                                  "accidentally performs the local-to-global form ID conversion twice, and this form ID can't survive "
-                                  "that conversion. DovahKit will not attempt to replicate this error -- we'll load the form ID properly -- "
-                                  "but you should be aware that this value won't work. If a quest's local and global form IDs aren't the "
-                                  "same, then it can't be safely used as a dialogue branch's owning quest.",
-                  "notice_code::dialogue_branch_mishandled_owning_quest_id"
-               );
-               //
-               QString dlbr = QObject::tr("<unknown form>", "log window");
-               QString qust = dlbr;
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  dlbr = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  qust = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               //
-               text = text.arg(dlbr).arg(qust);
-            }
-            break;
-         case notice_code::worldspace_is_its_own_parent:
-            {
-               text = QObject::tr("Worldspace %1 is its own parent. The game will freeze when trying to load it.", "notice_code::worldspace_is_its_own_parent");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form);
-            }
-            break;
-         case notice_code::quest_fragment_belongs_to_missing_log_entry:
-            {
-               text = QObject::tr("Quest %1 contains script data for log entry %3 in stage %2, but no such log entry exists. This data will be discarded by the editor.", "notice_code::quest_fragment_belongs_to_missing_log_entry");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
-            }
-            break;
          case notice_code::too_many_script_fragments_to_save:
             {
                text = QObject::tr("Form %1 contains %2 script fragments, but the file format can only encode up to %3 fragments.", "notice_code::too_many_script_fragments_to_save");
@@ -834,75 +691,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
-         case notice_code::alias_papyrus_data_specifies_wrong_quest:
-            {
-               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. Although the game allows one quest to transplant script data onto aliases in other quests, DovahKit is incapable of loading this data, so it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
-               //
-               QString quest = QObject::tr("<unknown form>", "log window");
-               QString other = quest;
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  quest = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  other = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               //
-               text = text.arg(quest).arg(notice.extra_integers[0]).arg(other);
-            }
-            break;
-         case notice_code::alias_papyrus_data_belongs_to_missing_alias:
-            {
-               text = QObject::tr("Quest %1 contains script data for a non-existent alias with ID %2.", "notice_code::info_response_subrecord_before_responses");
-               //
-               QString quest = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  quest = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(quest).arg(notice.extra_integers[0]);
-            }
-            break;
-         case notice_code::info_response_subrecord_before_responses:
-            {
-               text = QObject::tr("TopicInfo %1 in file %3 contained a %2 subrecord before its response data. This data will be discarded by the editor.", "notice_code::info_response_subrecord_before_responses");
-               //
-               QString form      = QObject::tr("<unknown form>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               QString file      = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(subrecord).arg(file);
-            }
-            break;
-         case notice_code::attack_data_expected_event_subrecord:
-            {
-               QString text;
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord)
-                  text = QObject::tr("An ATKR subrecord in form %2 (in file %3) was followed by a subrecord with signature %1, instead of the expected ATKE subrecord. The next subrecord will be misinterpreted as an ATKE subrecord.", "notice_code::attack_data_expected_event_subrecord")
-                  .arg(cobb::qt::four_cc_to_string(notice.cause_subrecord));
-               else
-                  text = QObject::tr("An ATKR subrecord in form %1 (in file %2) was not followed by an ATKE subrecord. The next subrecord will be misinterpreted as an ATKE subrecord.", "notice_code::attack_data_expected_event_subrecord");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(file);
-            }
-            break;
          case notice_code::the_game_doesnt_load_new_actor_value_infos:
             {
                text = QObject::tr("File %2 supplied new actor value definition %1, but Skyrim doesn't load new actor value infos; it only loads overrides of the hardcoded ones.", "notice_code::the_game_doesnt_load_new_actor_value_infos");
@@ -917,18 +705,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form).arg(file);
-            }
-            break;
-         case notice_code::non_texture_note_includes_texture_path:
-            {
-               text = QObject::tr("Note %1 is not a texture note but includes a texture path in an XNAM subrecord. Neither the game nor DovahKit will read the texture path.", "notice_code::non_texture_note_includes_texture_path");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form);
             }
             break;
          case notice_code::length_prefixed_string_was_too_long_to_save:
@@ -981,23 +757,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form);
-            }
-            break;
-            //
-         case notice_code::invalid_landscape_quad_index:
-            {
-               text = QObject::tr("Form %1 subrecord %2 specified landscape quad index %3, but quad indices must be between 0 and 3 inclusive.", "notice_code::invalid_landscape_quad_index");
-               //
-               QString form      = QObject::tr("<unknown form>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               text = text.arg(form).arg(subrecord).arg(notice.extra_integers[0]);
             }
             break;
             //
@@ -1062,18 +821,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form).arg(xa).arg(ya).arg(xb).arg(yb);
-            }
-            break;
-         case notice_code::destruction_stage_serialized_index_out_of_bounds:
-            {
-               text = QObject::tr("Destruction data for form %1 lists itself as containing %2 stages, but has a stage requesting slot %3. That stage has been discarded.");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(notice.extra_integers[1]).arg(notice.extra_integers[0]);
             }
             break;
 

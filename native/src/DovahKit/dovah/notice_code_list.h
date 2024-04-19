@@ -24,13 +24,13 @@ namespace dovah {
          unsaved_form_cleanup_failed                 = 0x0000000F, // Some forms were not saved to the file, but could not be deleted from memory. It is not safe to continue this editing session.
          form_override_has_type_mismatch             = 0x00000010,
          form_override_has_armo_arma_mismatch        = 0x00000011,
-         cell_flags_not_yet_found                    = 0x00000012, // CELL full load: a subrecord specific to interior or exterior cells was found before we discovered (by virtue of CELL/DATA) what type of cell this is.
-         interior_cell_data_in_exterior_cell         = 0x00000013, // CELL full load: a subrecord specific to interior cells was found in a cell that is flagged as an exterior.
-         exterior_cell_data_in_interior_cell         = 0x00000014, // CELL full load: a subrecord specific to exterior cells was found in a cell that is flagged as an interior.
+         //
+         //
+         //
          unrecognized_subrecord                      = 0x00000015, // FORM full load: a subrecord was unrecognized.
          form_reference_is_of_incorrect_type         = 0x00000016, // FORM full load: a (form_reference_t) ended up referring to a form of the wrong type.
-         shout_has_wrong_word_count                  = 0x00000017, // SHOU full load: the shout has too many, or too few, words.
-         package_event_dialogue_unrecognized_subrecord = 0x00000018, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
+         //
+         //
          game_setting_record_is_nameless             = 0x00000019, // A GMST record had no EDID or an empty EDID.
          game_setting_record_is_misordered           = 0x0000001A, // A GMST record has its EDID record in the wrong place.
          subrecord_has_extra_content                 = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
@@ -74,7 +74,7 @@ namespace dovah {
          active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
          record_found_in_wrong_top_level_group       = 0x00000042,
          cannot_inject_form_overtop_none_stub        = 0x00000043,
-         container_item_has_bad_owner_form_type      = 0x00000044, // An item in a container is not owned by an NPC_ or a FACT.
+         //
          unknown_error                               = 0x00000045,
          active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
          load_order_would_have_too_many_files        = 0x00000047, // We can't load this load order. It would have too many files (greater than 4096 lights, 255 heavies, or if an active file is selected, 255 or 254 total).
@@ -91,23 +91,23 @@ namespace dovah {
          quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
          parent_form_is_missing                      = 0x00000053, // Failed to load a file, because a form's parent form ID doesn't correspond to a valid form.
          partial_info_override_has_different_parent  = 0x00000054, // A partial-flagged INFO override has a different parent from the original. This can lead to all sorts of data mishandling in-game.
-         dialogue_branch_mishandled_owning_quest_id  = 0x00000055, // A bug in the game's loader will cause it to mishandle this DLBR/QNAM subrecord.
-         worldspace_is_its_own_parent                = 0x00000056, // A worldspace has been set to use itself as the parent world. The game will enter an infinite loading screen when trying to load it.
-         quest_fragment_belongs_to_missing_log_entry = 0x00000057,
+         //
+         //
+         //
          too_many_script_fragments_to_save           = 0x00000058, // A form has too many script fragments, and cannot be saved.
          too_many_aliases_with_scripts_to_save       = 0x00000059, // A quest has too many aliases with script data, and cannot be saved.
-         alias_papyrus_data_specifies_wrong_quest    = 0x0000005A, // An alias's Papyrus data was skipped because it claims to belong to a quest other than the containing quest.
-         alias_papyrus_data_belongs_to_missing_alias = 0x0000005B, // A quest's VMAD subrecord supplied Papyrus data for an alias that doesn't actually exist.
-         info_response_subrecord_before_responses    = 0x0000005C, // An INFO contains LNAM or SNAM subrecords outside of any response.
-         attack_data_expected_event_subrecord        = 0x0000005D, // An ATKR subrecord was not followed by an ATKE subrecord; it will "eat" the next subrecord and assume it's ATKE.
+         //
+         //
+         //
+         //
          the_game_doesnt_load_new_actor_value_infos  = 0x0000005E, // Skyrim doesn't load new AVIF records. AVIF records that don't override a hardcoded AVIF form will be ignored.
-         non_texture_note_includes_texture_path      = 0x0000005F, // A NOTE form included an XNAM subrecord but is not a texture note.
+         //
          length_prefixed_string_was_too_long_to_save = 0x00000060,
          too_many_destruction_stages_to_save         = 0x00000061,
          papyrus_property_has_multiple_scalar_values = 0x00000062, // Cannot save a non-array Papyrus property when it has multiple values in-memory. Something edited the property incorrectly.
          papyrus_property_is_scalar_but_empty        = 0x00000063, // Attempted to save a non-array Papyrus property that had no value. Something edited the property incorrectly. We saved it with a default.
-         invalid_landscape_quad_index                = 0x00000064, // LAND full load: something tried to specify an out-of-bounds quad.
-         landscape_quads_can_only_have_six_layers    = 0x00000065, // LAND full load: a landscape quad can only have six layers; higher layers overwrite the sixth at run-time.
+         //
+         //
          havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
          landscape_heights_are_too_steep             = 0x00000067, // This landscape cannot be saved, because there is too steep a slope somewhere in its heightmap.
          cannot_set_position_of_orphaned_reference   = 0x00000068, // This REFR has no parent (e.g. PlayerRef) and so cannot be moved.
@@ -115,7 +115,6 @@ namespace dovah {
          failed_to_create_cell_to_move_reference_to  = 0x0000006A, // The coordinates you wanted to move this REFR to lie outside of any existing cells, and attempting to create a new cell failed (e.g. no form ID available).
          cannot_reparent_hardcoded_reference         = 0x0000006B, // Hardcoded references typically don't exist in a parent cell, and cannot be reparented.
          operation_not_allowed_on_form_working_copy  = 0x0000006C,
-         destruction_stage_serialized_index_out_of_bounds = 0x0000006D, // A DSTD subrecord had a stage index that exceeds the list size specified by DEST.
       };
    };
 }
